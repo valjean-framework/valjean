@@ -50,8 +50,9 @@ class WorkerThread(threading.Thread):
 
 
 class QueueStrategy:
-    def __init__(self, n_workers=1):
+    def __init__(self, n_workers=1, sleep_interval=1.0):
         self.n_workers = n_workers
+        self.sleep_interval = sleep_interval
 
     def schedule(self, tasks, graph):
         threads = []
@@ -84,8 +85,8 @@ class QueueStrategy:
             if n_tasks_left == len(tasks_left):
                 logging.info('worker queue is starving because '
                              'of dependencies, sleeping for '
-                             '5 seconds...')
-                time.sleep(5)
+                             '%f seconds...', self.sleep_interval)
+                time.sleep(self.sleep_interval)
 
         # block until all tasks are done
         q.join()

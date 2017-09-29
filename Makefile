@@ -2,7 +2,7 @@
 #	pip install -r requirements.txt
 
 test:
-	py.test tests
+	py.test -v tests
 
 .PHONY: test
 #.PHONY: init test

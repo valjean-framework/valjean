@@ -3,6 +3,7 @@
 from hypothesis import given, note
 from hypothesis.strategies import dictionaries, integers, frozensets
 import copy
+import pytest
 
 #from context import depgraph
 from context import depgraph
@@ -81,3 +82,8 @@ class TestDepGraph:
         note('dag: {}\ng.edges: {}\nnew_g.edges: {}'
              .format(dag, g.edges, new_g.edges))
         assert new_g.isomorphic_to(g)
+
+    def test_cyclic_raises(self):
+        g = depgraph.DepGraph({0: [1], 1: [0]})
+        with pytest.raises(depgraph.DepGraphError):
+            l = g.topological_sort()
