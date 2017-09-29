@@ -1,5 +1,10 @@
-from enum import Enum
-from copy import deepcopy
+import enum
+import copy
+import logging
+
+logging.basicConfig(format='%(levelname)s (%(name)s): %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class DepGraphError(Exception):
@@ -7,35 +12,44 @@ class DepGraphError(Exception):
 
 
 class DepGraph:
-    Marks = Enum('Marks', 'TEMP PERM')
+    Marks = enum.Enum('Marks', 'TEMP PERM')
 
     def __init__(self, dependencies):
-        # first, complete the dependency dictionary so that all values also
-        # appear as keys, possibly with an empty value
-        full_graph = self.complete(dependencies)
-
         # self.nodes is the list of the graph nodes
-        self.nodes = list(full_graph.keys())
+        self.nodes = list(
+            frozenset(dependencies.keys())
+            | frozenset(v for vs in dependencies.values() for v in vs)
+            )
+        logger.debug('nodes: %s', self.nodes)
+
         # the self.index dictionary translated from node objects to integer
         # indices
         self.index = {x: i for i, x in enumerate(self.nodes)}
+        logger.debug('index: %s', self.index)
 
+        # translate the dependency dictionary elements to ints
         self.edges = {}
-        for key, values in full_graph.items():
+        for key, values in dependencies.items():
             new_key = self.index[key]
             new_values = list(map(lambda v: self.index[v], values))
             self.edges[new_key] = frozenset(new_values)
+        logger.debug('incomplete graph: %s', self.edges)
+
+        # finally, complete the dependency dictionary so that all values also
+        # appear as keys, possibly with empty values
+        self.edges = self.complete(self.edges)
+        logger.debug('full graph: %s', self.edges)
 
     def __repr__(self):
         return str(self.edges)
 
     @staticmethod
     def complete(d):
-        complete_d = deepcopy(d)
+        complete_d = copy.copy(d)
         for vs in d.values():
             for v in vs:
                 if v not in complete_d:
-                    complete_d[v] = []
+                    complete_d[v] = frozenset()
         return complete_d
 
     def invert(self):
@@ -72,6 +86,15 @@ class DepGraph:
 
     def isomorphic_to(self, other):
         return self.edges == other.edges
+
+    def dependencies(self, task):
+        '''Return an iterable over the dependencies of the given task'''
+
+        indices = self.edges.get(self.index[task], [])
+        result = map(lambda i: self.nodes[i], indices)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('dependencies: %s -> %s', task, list(result))
+        return result
 
 
 if __name__ == '__main__':
