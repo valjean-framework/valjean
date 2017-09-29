@@ -1,4 +1,6 @@
-from hypothesis import given
+#!/usr/bin/env python3
+
+from hypothesis import given, note
 from hypothesis.strategies import dictionaries, integers, lists
 import unittest
 from copy import deepcopy
@@ -6,22 +8,52 @@ from copy import deepcopy
 from context import depgraph
 
 
+def remove_cycles(d):
+    '''Suppress cycles in a graph
+
+    The graph d is expressed as an adjacency dictionary of integers.  We
+    remove cycles by ensuring that, for each (key, [value_1, value2, ...])
+    pair, we always have value_i>key.
+    '''
+
+    dag = deepcopy(d)
+    for k, vals in d.items():
+        new_vals = dag[k]
+        for i, val in enumerate(vals):
+            if val <= k:
+                new_val = 2*k-val+1
+                new_vals[i] = new_val
+    return dag
+
 class TestDepGraph(unittest.TestCase):
 
-    @given(d=dictionaries(integers(0, 10),
-                          lists(integers(0, 10), average_size=2),
-                          average_size=10))
-    def test_topological_sort(self, d):
-        # We need to avoid circular dependencies in the generated dictionary.
-        # We do this by ensuring that, for each (key, [value_1, value2, ...])
-        # pair, we always have value_i>key.
-        dag = deepcopy(d)
-        for k, vals in d.items():
-            new_vals = dag[k]
-            for i, val in enumerate(vals):
-                if val <= k:
-                    new_val = 2*k-val+1
-                    new_vals[i] = new_val
+    @given(dag=dictionaries(integers(0, 10),
+           lists(integers(0, 10), average_size=2), average_size=10))
+    def test_complete(self, dag):
+        '''Test that the generated edge dictionary is complete'''
+
+        g = depgraph.DepGraph(dag)
+        assert self.edges_dict_is_complete(g)
+
+    def edges_dict_is_complete(self, graph):
+        keys = set()
+        values = set()
+        for k, vs in graph.edges.items():
+            keys.add(k)
+            for v in vs:
+                values.add(v)
+        note('keys: {}\nvalues: {}'.format(keys,values))
+        return values <= keys
+
+    @given(dag=dictionaries(integers(0, 10),
+           lists(integers(0, 10), average_size=2), average_size=10)
+           .map(remove_cycles))
+    def test_topological_sort(self, dag):
+        '''Test the topological sort invariant
+
+        Ensure that items appearing later in the list do not depend on any of
+        the items appearing earlier.
+        '''
 
         g = depgraph.DepGraph(dag)
         l = list(g.topological_sort())
@@ -36,6 +68,16 @@ class TestDepGraph(unittest.TestCase):
                 return False
             seen.add(item)
         return True
+
+    @given(dag=dictionaries(integers(0, 10),
+           lists(integers(0, 10), average_size=2), average_size=10))
+    def test_invert_roundtrip(self, dag):
+        '''Test that DepGraph.invert() is idempotent.'''
+
+        g = depgraph.DepGraph(dag)
+        new_g = g.invert().invert()
+        note('g.edges: {}\nnew_g.edges: {}'.format(g.edges, new_g.edges))
+        assert new_g.isomorphic_to(g)
 
 
 if __name__ == '__main__':

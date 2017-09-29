@@ -1,4 +1,5 @@
 from enum import Enum
+from copy import deepcopy
 
 
 class DepGraphError(Exception):
@@ -8,17 +9,39 @@ class DepGraphError(Exception):
 class DepGraph:
     Marks = Enum('Marks', 'TEMP PERM')
 
-    def __init__(self, dictionary):
-        self.edges = dictionary
-        self.nodes = frozenset(dictionary.keys()) \
-            | frozenset(x for l in dictionary.values() for x in l)
+    def __init__(self, dependencies):
+        # first, complete the dependency dictionary so that all values also
+        # appear as keys, possibly with an empty value
+        full_graph = self.complete(dependencies)
+
+        # self.nodes is the list of the graph nodes
+        self.nodes = list(full_graph.keys())
+        # the self.index dictionary translated from node objects to integer
+        # indices
+        self.index = {x: i for i, x in enumerate(self.nodes)}
+
+        self.edges = {}
+        for key, values in full_graph.items():
+            new_key = self.index[key]
+            new_values = list(map(lambda v: self.index[v], values))
+            self.edges[new_key] = frozenset(new_values)
 
     def __repr__(self):
         return str(self.edges)
 
+    @staticmethod
+    def complete(d):
+        complete_d = deepcopy(d)
+        for vs in d.values():
+            for v in vs:
+                if v not in complete_d:
+                    complete_d[v] = []
+        return complete_d
+
     def invert(self):
         inv_dict = {}
         for k, vs in self.edges.items():
+            inv_dict.setdefault(k, [])
             for v in vs:
                 inv_dict.setdefault(v, []).append(k)
 
@@ -46,6 +69,9 @@ class DepGraph:
             visit(node)
 
         return result
+
+    def isomorphic_to(self, other):
+        return self.edges == other.edges
 
 
 if __name__ == '__main__':
