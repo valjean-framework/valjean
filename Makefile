@@ -1,8 +1,10 @@
-#init:
-#	pip install -r requirements.txt
+install-deps:
+	pip install -r requirements.txt
 
 test:
-	py.test -v tests
+	py.test tests
 
-.PHONY: test
-#.PHONY: init test
+html:
+	cd doc && $(MAKE) html
+
+.PHONY: install-deps test html
