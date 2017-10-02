@@ -2,10 +2,10 @@
 
 import random
 
-from context import depgraph, scheduler, task
-from depgraph import DepGraph
-from scheduler import Scheduler, QueueStrategy
-from task import DelayTask
+import context
+from velvet.depgraph import DepGraph
+from velvet.scheduler import Scheduler, QueueStrategy
+from velvet.task import DelayTask
 
 
 class TestScheduler:

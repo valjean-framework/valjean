@@ -3,7 +3,8 @@ import threading
 import time
 import logging
 
-from depgraph import DepGraph
+print(__name__)
+from .depgraph import DepGraph
 
 
 logger = logging.getLogger(__name__)

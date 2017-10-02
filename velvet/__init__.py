@@ -1,7 +1,7 @@
 import logging
 
 __all__ = ['depgraph', 'task', 'scheduler']
-__version__ = '0.2'
+__version__ = '0.1'
 
 logging.basicConfig(format='%(levelname)s (%(name)s): %(message)s')
 

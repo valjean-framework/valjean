@@ -6,7 +6,8 @@ import copy
 import pytest
 
 #from context import depgraph
-from context import depgraph
+import context
+import velvet.depgraph as depgraph
 
 
 def remove_cycles(d):
