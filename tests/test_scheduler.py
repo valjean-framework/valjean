@@ -5,7 +5,7 @@ import random
 from context import depgraph, scheduler, task
 from depgraph import DepGraph
 from scheduler import Scheduler, QueueStrategy
-from task import Task
+from task import DelayTask
 
 
 class TestScheduler:
@@ -38,7 +38,7 @@ class TestScheduler:
         task_deps = {}
         all_tasks = []
         for i in range(n_tasks):
-            task = Task(str(i), task_duration)
+            task = DelayTask(str(i), task_duration)
             dependees = [t for t in all_tasks if random.random() < dep_fraction]
             task_deps[task] = dependees
             all_tasks.append(task)
