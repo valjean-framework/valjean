@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 '''Task specification.
 
-This module collects a few useful Task classes that can be used with the
-:mod:`~.scheduler` module.
+This module collects a few useful task classes that can be used with the
+:mod:`~.scheduler` and :mod:`~.depgraph` modules.
 
-Any class with a :meth:`do()` method qualifies as a Task.
+This module defines a dummy :class:`Task` class that may be used as a base
+class and extended. However, the current implementation of :meth:`.Task.do()`
+is a no-op and any class with a :meth:`do()` method works just as well.
 '''
 
 import time
@@ -15,23 +17,39 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-class DelayTask:
+class Task:
+    '''Base class for other task classes.
+
+    :param name str: The name of the task
+    '''
+
+    def __init__(self, name):
+
+        self.name = name
+
+    def do(self, name):
+        '''Perform a task.'''
+
+        pass
+
+    def __repr__(self):
+        return '"Task {}"'.format(self.name)
+
+
+class DelayTask(Task):
     '''Task that waits for the specified number of seconds.
 
     This task is useful to test scheduling algorithms under different load
     conditions.
 
-    :param name str: The name of the task
     :param delay float: The amount of time (in seconds) that this task will
                         wait when executed.
     '''
 
     def __init__(self, name, delay=1.):
-        self.name = name
-        self.delay = float(delay)
 
-    def __repr__(self):
-        return '"DelayTask {}"'.format(self.name)
+        super().__init__(name)
+        self.delay = float(delay)
 
     def do(self):
         '''Perform the task (i.e. sleep; I wish my life was like that).'''
