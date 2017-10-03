@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+'''
+'''
+
 import enum
 import copy
 import logging
@@ -12,6 +16,8 @@ class DepGraphError(Exception):
 
 
 class DepGraph:
+    '''Test docstring'''
+
     Marks = enum.Enum('Marks', 'TEMP PERM')
 
     def __init__(self, dependencies):

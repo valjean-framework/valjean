@@ -4,7 +4,7 @@ import random
 
 import context
 from velvet.depgraph import DepGraph
-from velvet.scheduler import Scheduler, QueueStrategy
+from velvet.scheduler import Scheduler, QueueScheduling
 from velvet.task import DelayTask
 
 
@@ -31,7 +31,7 @@ class TestScheduler:
     def run(self, n_tasks, n_workers, task_duration, dep_fraction):
         task_deps, all_tasks = self.create_tasks(n_tasks, task_duration, dep_fraction)
         g = DepGraph(task_deps)
-        s = Scheduler(g, QueueStrategy(n_workers=n_workers, sleep_interval=0.01))
+        s = Scheduler(g, QueueScheduling(n_workers=n_workers, sleep_interval=0.01))
         s.schedule()
 
     def create_tasks(self, n_tasks, task_duration, dep_fraction):
