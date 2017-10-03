@@ -153,9 +153,16 @@ class Scheduler:
     def __init__(self, depgraph: DepGraph, backend=None):
 
         if not isinstance(depgraph, DepGraph):
-            raise SchedulerError(
-                    'Scheduler must be initialised with a DepGraph'
-                    )
+            raise SchedulerError('Scheduler must be initialised with a '
+                                 'DepGraph')
+
+        # check that all the nodes of the graph can be executed (i.e. they
+        # should have a do() method)
+        for node in depgraph.nodes:
+            if not hasattr(node, 'do') or not hasattr(node.do, '__call__'):
+                raise SchedulerError('Cannot schedule tasks for execution: '
+                                     'node {} does not have a do() method'
+                                     .format(node))
 
         self.depgraph = depgraph
         self.sorted_list = depgraph.topological_sort()
