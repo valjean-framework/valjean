@@ -101,10 +101,3 @@ class DepGraph:
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('dependencies: %s -> %s', task, list(result))
         return result
-
-
-if __name__ == '__main__':
-    g = DepGraph({1: [2, 3], 5: [7, 4, 1, 2]})
-    l = list(g.topological_sort())
-    print(g)
-    print(l)
