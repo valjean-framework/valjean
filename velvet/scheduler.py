@@ -63,8 +63,9 @@ class QueueScheduling:
         threads = []
         q = queue.Queue(self.n_workers)
         tasks_done = {task: False for task in tasks}
+        tasks_done_lock = threading.Lock()
         for i in range(self.n_workers):
-            t = QueueScheduling.WorkerThread(q, tasks_done)
+            t = QueueScheduling.WorkerThread(q, tasks_done, tasks_done_lock)
             t.start()
             threads.append(t)
 
@@ -74,7 +75,9 @@ class QueueScheduling:
             n_tasks_left = len(tasks_left)
             for task in tasks_left:
                 deps = graph.dependencies(task)
-                if all(map(lambda t: tasks_done.get(t, True), deps)):
+                with tasks_done_lock:
+                    can_run = all(map(lambda t: tasks_done.get(t, True), deps))
+                if can_run:
                     q.put(task)
                     n_tasks_left -= 1
                     logger.info('task %s scheduled, %d left',
@@ -103,10 +106,11 @@ class QueueScheduling:
             t.join()
 
     class WorkerThread(threading.Thread):
-        def __init__(self, q, tasks_done):
+        def __init__(self, q, tasks_done, tasks_done_lock):
             super().__init__()
             self.queue = q
             self.tasks_done = tasks_done
+            self.tasks_done_lock = tasks_done_lock
 
         def run(self):
             logger.debug('worker %s starting', self.name)
@@ -118,7 +122,8 @@ class QueueScheduling:
                     break
                 task.do()
                 logger.debug('worker %s completed task %s', self.name, task)
-                self.tasks_done[task] = True
+                with self.tasks_done_lock:
+                    self.tasks_done[task] = True
                 self.queue.task_done()
 
 
