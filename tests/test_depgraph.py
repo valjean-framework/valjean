@@ -5,8 +5,7 @@ from hypothesis.strategies import dictionaries, integers, frozensets
 import copy
 import pytest
 
-#from context import depgraph
-import context
+import context  # noqa: F401
 import velvet.depgraph as depgraph
 
 
@@ -87,4 +86,4 @@ class TestDepGraph:
     def test_cyclic_raises(self):
         g = depgraph.DepGraph({0: [1], 1: [0]})
         with pytest.raises(depgraph.DepGraphError):
-            l = g.topological_sort()
+            g.topological_sort()

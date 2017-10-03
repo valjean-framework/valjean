@@ -33,8 +33,8 @@ sys.path.insert(0, os.path.abspath(
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo']
+              'sphinx.ext.doctest',
+              'sphinx.ext.todo']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -50,8 +50,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'velvet'
-copyright = '2017, Davide Mancusi, Ève Le Ménédeu'
-author = 'Davide Mancusi, Ève Le Ménédeu'
+copyright = u'2017, Davide Mancusi, Ève Le Ménédeu'
+author = u'Davide Mancusi, Ève Le Ménédeu'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -99,22 +99,6 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-# # Custom sidebar templates, must be a dictionary that maps document names
-# # to template names.
-# #
-# # This is required for the alabaster theme
-# # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-# html_sidebars = {
-#     '**': [
-#         'about.html',
-#         'navigation.html',
-#         'relations.html',  # needs 'show_related': True theme option to display
-#         'searchbox.html',
-#         'donate.html',
-#     ]
-# }
-
-
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
@@ -146,7 +130,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'velvet.tex', 'velvet Documentation',
-     'Davide Mancusi, Ève Le Ménédeu', 'manual'),
+     u'Davide Mancusi, Ève Le Ménédeu', 'manual'),
 ]
 
 
@@ -170,6 +154,3 @@ texinfo_documents = [
      author, 'velvet', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

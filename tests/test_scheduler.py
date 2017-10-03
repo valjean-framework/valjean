@@ -4,7 +4,7 @@ import random
 from hypothesis import given, settings
 from hypothesis.strategies import lists, floats, integers, just
 
-import context
+import context  # noqa: F401
 from velvet.depgraph import DepGraph
 from velvet.scheduler import Scheduler, QueueScheduling
 from velvet.task import DelayTask
@@ -18,8 +18,9 @@ class TestScheduler:
         all_tasks = []
         for i, task_duration in enumerate(task_durations):
             task = DelayTask(str(i), task_duration)
-            if dep_frac>0.0:
-                dependees = [t for t in all_tasks if random.random() < dep_frac]
+            if dep_frac > 0.0:
+                dependees = [t for t in all_tasks
+                             if random.random() < dep_frac]
                 task_deps[task] = dependees
             else:
                 task_deps[task] = []
