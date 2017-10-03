@@ -10,6 +10,7 @@ Welcome to velvet's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   task
    depgraph
    scheduler
 

@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-'''
+'''Task specification.
+
+This module collects a few useful Task classes that can be used with the
+:mod:`~.scheduler` module.
+
+Any class with a :meth:`do()` method qualifies as a Task.
 '''
 
 import time
