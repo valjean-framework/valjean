@@ -51,8 +51,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'velvet'
-copyright = u'2017, Davide Mancusi, Ève Le Ménédeu'
-author = u'Davide Mancusi, Ève Le Ménédeu'
+copyright = u'2017, Ève Le Ménédeu, Davide Mancusi'
+author = u'Ève Le Ménédeu, Davide Mancusi'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -131,7 +131,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'velvet.tex', 'velvet Documentation',
-     u'Davide Mancusi, Ève Le Ménédeu', 'manual'),
+     u'Ève Le Ménédeu, Davide Mancusi', 'manual'),
 ]
 
 
