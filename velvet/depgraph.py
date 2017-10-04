@@ -18,36 +18,27 @@ class DepGraphError(Exception):
 class DepGraph:
     '''Test docstring'''
 
-    Marks = enum.Enum('Marks', 'TEMP PERM')
+    _Marks = enum.Enum('Marks', 'TEMP PERM')
 
-    def __init__(self, dependencies):
-        # self.nodes is the list of the graph nodes
-        self.nodes = list(
+    @classmethod
+    def from_dependency_dictionary(cls, dependencies):
+        # the list of the graph nodes
+        nodes = list(
             frozenset(dependencies.keys())
             | frozenset(v for vs in dependencies.values() for v in vs)
             )
-        logger.debug('nodes: %s', self.nodes)
 
-        # the self.index dictionary translated from node objects to integer
-        # indices
-        self.index = {x: i for i, x in enumerate(self.nodes)}
-        logger.debug('index: %s', self.index)
+        # the index dictionary translates from node objects to integer indices
+        index = {x: i for i, x in enumerate(nodes)}
 
-        # translate the dependency dictionary elements to ints
-        self.edges = {}
+        # translate the dependency dictionary elements to indices
+        edges = {}
         for key, values in dependencies.items():
-            new_key = self.index[key]
-            new_values = list(map(lambda v: self.index[v], values))
-            self.edges[new_key] = frozenset(new_values)
-        logger.debug('incomplete graph: %s', self.edges)
+            new_key = index[key]
+            new_values = list(map(lambda v: index[v], values))
+            edges[new_key] = frozenset(new_values)
 
-        # finally, complete the dependency dictionary so that all values also
-        # appear as keys, possibly with empty values
-        self.edges = self.complete(self.edges)
-        logger.debug('full graph: %s', self.edges)
-
-    def __repr__(self):
-        return str(self.edges)
+        return cls(nodes, index, edges)
 
     @staticmethod
     def complete(d):
@@ -56,16 +47,36 @@ class DepGraph:
             for v in vs:
                 if v not in complete_d:
                     complete_d[v] = frozenset()
+        complete_d = { k: frozenset(v) for k, v in complete_d.items() }
         return complete_d
 
-    def invert(self):
-        inv_dict = {}
-        for k, vs in self.edges.items():
-            inv_dict.setdefault(k, [])
-            for v in vs:
-                inv_dict.setdefault(v, []).append(k)
+    def __init__(self, nodes, index, edges):
+        # self.nodes is the list of the graph nodes
+        self.nodes = list(nodes)
+        logger.debug('nodes: %s', self.nodes)
 
-        return DepGraph(inv_dict)
+        # the self.index dictionary translates from node objects to integer
+        # indices
+        self.index = index
+        logger.debug('index: %s', self.index)
+
+        # finally, complete the edges dictionary so that all values also appear
+        # as keys, possibly with empty values
+        logger.debug('incomplete graph edges: %s', edges)
+        self.edges = DepGraph.complete(edges)
+        logger.debug('full graph edges: %s', self.edges)
+
+    def __repr__(self):
+        return str(self.edges)
+
+    def invert(self):
+        inv_edges = {}
+        for k, vs in self.edges.items():
+            inv_edges.setdefault(k, [])
+            for v in vs:
+                inv_edges.setdefault(v, []).append(k)
+
+        return DepGraph(self.nodes, self.index, inv_edges)
 
     def topological_sort(self):
         result = []
@@ -73,14 +84,14 @@ class DepGraph:
 
         def visit(node):
             mark = marks.get(node, None)
-            if mark == self.Marks.TEMP:
+            if mark == self._Marks.TEMP:
                 raise DepGraphError('Dependency graph is cyclic!')
-            if mark == self.Marks.PERM:
+            if mark == self._Marks.PERM:
                 return
-            marks[node] = self.Marks.TEMP
+            marks[node] = self._Marks.TEMP
             for target in self.edges.get(node, []):
                 visit(target)
-            marks[node] = self.Marks.PERM
+            marks[node] = self._Marks.PERM
             result.append(node)
 
         for node in self.nodes:

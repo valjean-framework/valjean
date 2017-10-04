@@ -52,7 +52,7 @@ class TestScheduler:
         self.run(TestScheduler.create_tasks([1.0], 0.0), 1000)
 
     def run(self, task_deps, n_workers):
-        g = DepGraph(task_deps)
+        g = DepGraph.from_dependency_dictionary(task_deps)
         s = Scheduler(g, QueueScheduling(n_workers=n_workers,
                                          sleep_interval=1e-5))
         s.schedule()

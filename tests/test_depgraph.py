@@ -35,7 +35,7 @@ class TestDepGraph:
     def test_complete(self, dag):
         '''Test that the generated edge dictionary is complete'''
 
-        g = depgraph.DepGraph(dag)
+        g = depgraph.DepGraph.from_dependency_dictionary(dag)
         assert self.edges_dict_is_complete(g)
 
     def edges_dict_is_complete(self, graph):
@@ -58,7 +58,7 @@ class TestDepGraph:
         the items appearing earlier.
         '''
 
-        g = depgraph.DepGraph(dag)
+        g = depgraph.DepGraph.from_dependency_dictionary(dag)
         l = list(g.topological_sort())
         assert self.successful_topological_sort(g, l)
 
@@ -77,13 +77,13 @@ class TestDepGraph:
     def test_invert_roundtrip(self, dag):
         '''Test that DepGraph.invert() is idempotent.'''
 
-        g = depgraph.DepGraph(dag)
+        g = depgraph.DepGraph.from_dependency_dictionary(dag)
         new_g = g.invert().invert()
         note('dag: {}\ng.edges: {}\nnew_g.edges: {}'
              .format(dag, g.edges, new_g.edges))
         assert new_g.isomorphic_to(g)
 
     def test_cyclic_raises(self):
-        g = depgraph.DepGraph({0: [1], 1: [0]})
+        g = depgraph.DepGraph.from_dependency_dictionary({0: [1], 1: [0]})
         with pytest.raises(depgraph.DepGraphError):
             g.topological_sort()

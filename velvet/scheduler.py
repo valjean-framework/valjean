@@ -17,7 +17,7 @@ Example usage:
    >>> spam = DelayTask('spam', 0.1)
    >>> eggs = DelayTask('eggs', 0.2)
    >>> bacon = DelayTask('bacon', 0.2)
-   >>> g = DepGraph({spam: [], bacon: [spam], eggs: []})
+   >>> g = DepGraph.from_dependency_dictionary({spam: [], bacon: [spam], eggs: []})
    >>> s = Scheduler(g)
    >>> s.schedule()
 '''
