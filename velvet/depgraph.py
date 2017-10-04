@@ -219,6 +219,7 @@ class DepGraph:
         :returns: The nodes of the graph, as a list, with the invariant that
                   each node appears in the list after all the nodes it depends
                   on.
+        :raises DepGraphError: if the graph is cyclic.
                   '''
 
         result = []
@@ -259,4 +260,3 @@ class DepGraph:
         return self.edges == other.edges \
                and self.nodes == other.nodes \
                and self.index == other.index
-
