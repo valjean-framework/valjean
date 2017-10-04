@@ -1,5 +1,5 @@
-scheduler
-=========
+:mod:`~.scheduler`: task scheduling and dependency handling
+===========================================================
 
 .. automodule:: velvet.scheduler
    :synopsis: Task scheduling and dependency handling

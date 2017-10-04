@@ -1,5 +1,5 @@
-task
-====
+:mod:`~.task`: task specification
+=================================
 
 .. automodule:: velvet.task
    :synopsis: Task specification
