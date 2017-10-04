@@ -1,5 +1,95 @@
 # -*- coding: utf-8 -*-
-'''
+'''Dependency graphs.
+
+The :class:`DepGraph` class encapsulates a number of useful methods to deal
+with interdependent items. It represents the workhorse for the scheduling
+algorithms in the :mod:`~.scheduler` module.
+
+A dependency graph is a directed acyclic graph which may be represented as
+follows:
+
+.. digraph:: depgraph
+   :align: center
+
+   "bacon" -> "spam";
+   "sausage" -> "eggs", "spam";
+
+The convention here is that if an edge goes from `A` to `B`, then `A` depends
+on `B`.
+
+The conventional way to create a :class:`DepGraph` is to pass a dictionary
+representing the dependencies between items to the
+:meth:`~DepGraph.from_dependency_dictionary` class method:
+
+.. testsetup:: depgraph
+
+   from velvet.depgraph import DepGraph
+
+.. doctest:: depgraph
+
+   >>> from pprint import pprint
+   >>> deps = {'bacon': ['spam'], 'sausage': ['eggs', 'spam']}
+   >>> pprint(deps)
+   {'bacon': ['spam'], 'sausage': ['eggs', 'spam']}
+   >>> g = DepGraph.from_dependency_dictionary(deps)
+
+In this example, `sausage` depends on `eggs` and `spam`, and `bacon` depends on
+`spam`; `spam` and `eggs` have no dependencies. Note that the dependency
+dictionary may be seen as a sparse representation of the graph adjacency
+matrix.
+
+Some things you should be aware of when using :class:`DepGraph`:
+
+* The type of the items in the graph is irrelevant, but since they need to be
+  stored in a dictionary, they must be *hashable*;
+* You need to use a single-element list if you want to express a single
+  dependency, as in the case of `bacon`. So this is wrong:
+
+    >>> deps = {0: 1, 7: [0, 42]}                      # error, should be [1]
+    >>> g = DepGraph.from_dependency_dictionary(deps)  # will raise a TypeError
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+        [...]
+    TypeError: 'int' object is not iterable
+
+If you print the dictionary, you will notice that `spam` and `eggs` have been
+added as nodes with no dependencies:
+
+.. doctest:: depgraph
+
+   >>> print(g)
+   {bacon: [spam], eggs: [], sausage: [eggs, spam], spam: []}
+
+What if a node has no dependencies and no other node depends on it? Just add it
+to the dictionary with the empty list as a value:
+
+.. doctest:: depgraph
+
+   >>> free = DepGraph.from_dependency_dictionary({'kazantzakis': []})
+
+You can inspect the nodes of the graph:
+
+.. doctest:: depgraph
+
+   >>> print(sorted(g.nodes))
+   ['bacon', 'eggs', 'sausage', 'spam']
+
+or ask for the dependencies of a node:
+
+.. doctest:: depgraph
+
+   >>> print(sorted(list(g.dependencies('sausage'))))
+   ['eggs', 'spam']
+
+You can also do a topological sort of the graph. The result is a list of the
+graph nodes, with the property that each node is guaranteed to appear after all
+the nodes it depends on. Note that in general there are several possible
+topological sorts for a given graph.
+
+.. doctest:: depgraph
+
+   >>> print(g.topological_sort())  # doctest: +SKIP
+   ['eggs', 'spam', 'bacon', 'sausage']
 '''
 
 import enum
@@ -16,12 +106,31 @@ class DepGraphError(Exception):
 
 
 class DepGraph:
-    '''Test docstring'''
+    '''A dependency graph.
+
+    The preferred way to instantiate this class is to use the
+    :meth:`from_dependency_dictionary` class method. Alternatively, you may use
+    the direct constructor; in this case, the graph `edges` are represented as
+    a dictionary between integers, with the convention that each node is
+    represented by its index in the `nodes` list. So `nodes` can be seen as a
+    mapping from integers to nodes. The inverse mapping is called `index` and
+    may be passed to the constructor if it is available to the caller as a
+    dictionary; if not, it will be constructed internally.
+
+    :param list nodes: List of the nodes of the graph.
+    :param mapping edges: A mapping between integers representing the nodes.
+    :param mapping index: The inverse mapping to `nodes`. The constructor
+        checks that the following invariant holds::
+
+            all(i == index[node] for i, node in enumerate(nodes))
+    '''
 
     _Marks = enum.Enum('Marks', 'TEMP PERM')
 
     @classmethod
     def from_dependency_dictionary(cls, dependencies):
+        '''Generate a :class:`DepGraph` from a dependency dictionary.'''
+
         # the list of the graph nodes
         nodes = list(
             frozenset(dependencies.keys())
@@ -91,6 +200,11 @@ class DepGraph:
         return result
 
     def invert(self):
+        '''Invert the graph.
+
+        :returns: A new graph having the same nodes but all edges inverted.
+        '''
+
         inv_edges = {}
         for k, vs in self.edges.items():
             inv_edges.setdefault(k, [])
@@ -100,6 +214,13 @@ class DepGraph:
         return DepGraph(self.nodes, inv_edges, self.index)
 
     def topological_sort(self):
+        '''Perform a topological sort of the graph.
+
+        :returns: The nodes of the graph, as a list, with the invariant that
+                  each node appears in the list after all the nodes it depends
+                  on.
+                  '''
+
         result = []
         marks = {}
 
@@ -123,14 +244,19 @@ class DepGraph:
 
         return result
 
-    def isomorphic_to(self, other):
-        return self.edges == other.edges
+    def dependencies(self, node):
+        '''Query the graph about the dependencies of `node`.
 
-    def dependencies(self, task):
-        '''Return an iterable over the dependencies of the given task'''
+        :returns: An iterable over the dependencies of `node`.'''
 
-        indices = self.edges.get(self.index[task], [])
+        indices = self.edges.get(self.index[node], [])
         result = map(lambda i: self.nodes[i], indices)
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('dependencies: %s -> %s', task, list(result))
+            logger.debug('dependencies: %s -> %s', node, list(result))
         return result
+
+    def __eq__(self, other):
+        return self.edges == other.edges \
+               and self.nodes == other.nodes \
+               and self.index == other.index
+
