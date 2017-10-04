@@ -77,8 +77,18 @@ class DepGraph:
         self.edges = DepGraph._complete(edges)
         logger.debug('full graph edges: %s', self.edges)
 
-    def __repr__(self):
-        return str(self.edges)
+    def __str__(self):
+
+        assoc_list = [(self.nodes[k], map(lambda v: self.nodes[v], vs))
+                      for k, vs in self.edges.items()]
+        results = []
+        for k, vs in sorted(assoc_list):
+            result = str(k) + ': ['
+            vs_str = [str(v) for v in sorted(vs)]
+            result += ', '.join(vs_str) + ']'
+            results.append(result)
+        result = '{' + ', '.join(results) + '}'
+        return result
 
     def invert(self):
         inv_edges = {}

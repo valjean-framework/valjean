@@ -32,7 +32,7 @@ class Task:
 
         pass
 
-    def __repr__(self):
+    def __str__(self):
         return '"Task {}"'.format(self.name)
 
 
