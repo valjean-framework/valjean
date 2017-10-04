@@ -40,7 +40,7 @@ class QueueScheduling:
     Uses :mod:`threading` and :mod:`queue` to handle concurrent execution of
     tasks.
 
-    :param int n_workers: The number of worker threads to use
+    :param int n_workers: The number of worker threads to use.
     :param float sleep_interval: The delay (in seconds) to wait before retrying
         to execute further jobs if the worker queue is starving. This typically
         happens when there are more workers available than tasks pending
@@ -106,6 +106,7 @@ class QueueScheduling:
             t.join()
 
     class WorkerThread(threading.Thread):
+
         def __init__(self, q, tasks_done, tasks_done_lock):
             super().__init__()
             self.queue = q
@@ -135,18 +136,18 @@ class Scheduler:
     '''Schedule a number of tasks.
 
     The Scheduler class has the responsibility of scheduling and executing a
-    number of tasks.  Here ``depgraph`` is a :class:`~.depgraph.DepGraph`
-    describing the dependencies among the tasks to be executed, and ``backend``
-    should be an instance of a ``*Scheduling`` class such as
+    number of tasks.  Here `depgraph` is a :class:`~.depgraph.DepGraph`
+    describing the dependencies among the tasks to be executed, and `backend`
+    should be an instance of a `*Scheduling` class such as
     :class:`.QueueScheduling`, or at any rate a class that exhibits an
-    :meth:`execute_tasks` method. If ``backend`` is `None`, the default backend
+    :meth:`~.execute_tasks` method. If `backend` is `None`, the default backend
     will be used.
 
-    :param depgraph: The task dependency graph
-    :param backend: The scheduling backend
+    :param depgraph: The task dependency graph.
+    :param backend: The scheduling backend.
     :type depgraph: DepGraph
     :type backend: None or QueueScheduling
-    :raises SchedulerError: if ``depgraph`` is not an instance of
+    :raises SchedulerError: if `depgraph` is not an instance of
         :class:`~.DepGraph`.
     '''
 
