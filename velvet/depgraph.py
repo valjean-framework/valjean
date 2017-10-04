@@ -41,13 +41,15 @@ class DepGraph:
         return cls(nodes, edges, index)
 
     @staticmethod
-    def complete(d):
+    def _complete(d):
+        '''Add singleton nodes to the dictionary.'''
+
         complete_d = copy.copy(d)
         for vs in d.values():
             for v in vs:
                 if v not in complete_d:
                     complete_d[v] = frozenset()
-        complete_d = { k: frozenset(v) for k, v in complete_d.items() }
+        complete_d = {k: frozenset(v) for k, v in complete_d.items()}
         return complete_d
 
     def __init__(self, nodes, edges, index=None):
@@ -72,7 +74,7 @@ class DepGraph:
         # finally, complete the edges dictionary so that all values also appear
         # as keys, possibly with empty values
         logger.debug('incomplete graph edges: %s', edges)
-        self.edges = DepGraph.complete(edges)
+        self.edges = DepGraph._complete(edges)
         logger.debug('full graph edges: %s', self.edges)
 
     def __repr__(self):
