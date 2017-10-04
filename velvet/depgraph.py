@@ -38,7 +38,7 @@ class DepGraph:
             new_values = list(map(lambda v: index[v], values))
             edges[new_key] = frozenset(new_values)
 
-        return cls(nodes, index, edges)
+        return cls(nodes, edges, index)
 
     @staticmethod
     def complete(d):
@@ -50,14 +50,23 @@ class DepGraph:
         complete_d = { k: frozenset(v) for k, v in complete_d.items() }
         return complete_d
 
-    def __init__(self, nodes, index, edges):
+    def __init__(self, nodes, edges, index=None):
         # self.nodes is the list of the graph nodes
         self.nodes = list(nodes)
         logger.debug('nodes: %s', self.nodes)
 
         # the self.index dictionary translates from node objects to integer
         # indices
-        self.index = index
+        if index is None:
+            self.index = {x: i for i, x in enumerate(self.nodes)}
+        else:
+            # do a sanity check on index
+            check = all(i == index[node] for i, node in enumerate(self.nodes))
+            if not check:
+                raise DepGraphError('index and nodes are inconsistent\n'
+                                    'index = {index}\nnodes = {nodes}'
+                                    .format(index=index, nodes=self.nodes))
+            self.index = index
         logger.debug('index: %s', self.index)
 
         # finally, complete the edges dictionary so that all values also appear
@@ -76,7 +85,7 @@ class DepGraph:
             for v in vs:
                 inv_edges.setdefault(v, []).append(k)
 
-        return DepGraph(self.nodes, self.index, inv_edges)
+        return DepGraph(self.nodes, inv_edges, self.index)
 
     def topological_sort(self):
         result = []
