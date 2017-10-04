@@ -154,3 +154,7 @@ texinfo_documents = [
      author, 'velvet', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+# Do not use doctest to test code examples that are not explicitly marked as
+# doctest
+doctest_test_doctest_blocks = ''
