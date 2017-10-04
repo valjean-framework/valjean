@@ -12,4 +12,7 @@ doctest:
 html:
 	cd doc && $(MAKE) html
 
-.PHONY: install-deps test html
+clean:
+	cd doc && $(MAKE) clean
+
+.PHONY: all install-deps test doctest html clean
