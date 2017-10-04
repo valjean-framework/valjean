@@ -23,7 +23,7 @@ def remove_cycles(d):
         for i, val in enumerate(vals):
             if val <= k:
                 if isinstance(val, str):
-                    new_val = k + val
+                    new_val = k + 'z' + val
                 else:
                     new_val = 2*k-val+1
                 new_vals[i] = new_val
