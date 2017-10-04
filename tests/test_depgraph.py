@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from hypothesis import given, note
-from hypothesis.strategies import dictionaries, integers, frozensets
+from hypothesis.strategies import dictionaries, integers, frozensets, text
 import copy
 import pytest
 
@@ -22,7 +22,10 @@ def remove_cycles(d):
         new_vals = list(vals)
         for i, val in enumerate(vals):
             if val <= k:
-                new_val = 2*k-val+1
+                if isinstance(val, str):
+                    new_val = k + val
+                else:
+                    new_val = 2*k-val+1
                 new_vals[i] = new_val
         dag[k] = frozenset(new_vals)
     return dag
@@ -51,7 +54,20 @@ class TestDepGraph:
     @given(dag=dictionaries(integers(0, 10),
            frozensets(integers(0, 10), average_size=2), average_size=10)
            .map(remove_cycles))
-    def test_topological_sort(self, dag):
+    def test_topological_sort_int(self, dag):
+        '''Test the topological sort invariant with integer dicts.'''
+
+        self.do_test_topological_sort(dag)
+
+    @given(dag=dictionaries(text(average_size=10),
+           frozensets(text(average_size=10), average_size=2), average_size=10)
+           .map(remove_cycles))
+    def test_topological_sort_str(self, dag):
+        '''Test the topological sort invariant with string dicts.'''
+
+        self.do_test_topological_sort(dag)
+
+    def do_test_topological_sort(self, dag):
         '''Test the topological sort invariant
 
         Ensure that items appearing later in the list do not depend on any of
