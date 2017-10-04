@@ -82,7 +82,7 @@ class TestDepGraph:
     def successful_topological_sort(self, graph, sorted_list):
         seen = set()
         for item in sorted_list:
-            dependencies = graph.edges.get(item, frozenset())
+            dependencies = graph.dependencies(item)
             ok = all(x in seen for x in dependencies)
             if not ok:
                 return False
@@ -97,8 +97,8 @@ class TestDepGraph:
         g = depgraph.DepGraph.from_dependency_dictionary(dag)
         new_g = g.invert().invert()
         note('dag: {}\ng.edges: {}\nnew_g.edges: {}'
-             .format(dag, g.edges, new_g.edges))
-        assert new_g.isomorphic_to(g)
+             .format(str(dag), g.edges, new_g.edges))
+        assert new_g == g
 
     def test_cyclic_raises(self):
         g = depgraph.DepGraph.from_dependency_dictionary({0: [1], 1: [0]})
