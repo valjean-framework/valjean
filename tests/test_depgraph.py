@@ -76,6 +76,7 @@ class TestDepGraph:
 
         g = depgraph.DepGraph.from_dependency_dictionary(dag)
         l = list(g.topological_sort())
+        note('topological sort: {}'.format(l))
         assert self.successful_topological_sort(g, l)
 
     def successful_topological_sort(self, graph, sorted_list):
