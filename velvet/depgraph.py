@@ -100,8 +100,9 @@ class DepGraph:
             if mark == self._Marks.PERM:
                 return
             marks[node] = self._Marks.TEMP
-            for target in self.edges.get(node, []):
-                visit(target)
+            index = self.index[node]
+            for target in self.edges.get(index, []):
+                visit(self.nodes[target])
             marks[node] = self._Marks.PERM
             result.append(node)
 
