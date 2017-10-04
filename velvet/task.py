@@ -20,7 +20,7 @@ logger.setLevel(logging.WARNING)
 class Task:
     '''Base class for other task classes.
 
-    :param name str: The name of the task
+    :param str name: The name of the task
     '''
 
     def __init__(self, name):
@@ -42,7 +42,7 @@ class DelayTask(Task):
     This task is useful to test scheduling algorithms under different load
     conditions.
 
-    :param delay float: The amount of time (in seconds) that this task will
+    :param float delay: The amount of time (in seconds) that this task will
                         wait when executed.
     '''
 

@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 '''Task scheduling and dependency handling.
 
+This module provides classes to schedule the execution of several tasks,
+possibly dependent on each other.
+
+Example usage:
+
 .. testsetup:: scheduler
 
    from velvet.depgraph import DepGraph
    from velvet.task import DelayTask
    from velvet.scheduler import Scheduler
-
-This module provides classes to schedule the execution of several tasks,
-possibly dependent on each other.
-
-Example usage:
 
 .. doctest:: scheduler
 
@@ -40,8 +40,8 @@ class QueueScheduling:
     Uses :mod:`threading` and :mod:`queue` to handle concurrent execution of
     tasks.
 
-    :param n_workers int: The number of worker threads to use
-    :param sleep_interval float: The delay (in seconds) to wait before retrying
+    :param int n_workers: The number of worker threads to use
+    :param float sleep_interval: The delay (in seconds) to wait before retrying
         to execute further jobs if the worker queue is starving. This typically
         happens when there are more workers available than tasks pending
         because of dependencies between the tasks.
