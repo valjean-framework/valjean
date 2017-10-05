@@ -1,5 +1,5 @@
-:mod:`~.task`: task specification
-=================================
+Task specification (:mod:`~.task`)
+==================================
 
 .. automodule:: valjean.task
    :synopsis: Task specification

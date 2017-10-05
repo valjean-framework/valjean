@@ -1,5 +1,5 @@
-:mod:`~.depgraph`: dependency graphs
-====================================
+Dependency graphs (:mod:`~.depgraph`)
+=====================================
 
 .. automodule:: valjean.depgraph
    :synopsis: Dependency graphs

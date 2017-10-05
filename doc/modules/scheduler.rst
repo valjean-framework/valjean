@@ -1,5 +1,5 @@
-:mod:`~.scheduler`: task scheduling and dependency handling
-===========================================================
+Task scheduling and dependency handling (:mod:`~.scheduler`)
+============================================================
 
 .. automodule:: valjean.scheduler
    :synopsis: Task scheduling and dependency handling
