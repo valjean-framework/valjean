@@ -1,6 +1,6 @@
 :mod:`~.depgraph`: dependency graphs
 ====================================
 
-.. automodule:: velvet.depgraph
+.. automodule:: valjean.depgraph
    :synopsis: Dependency graphs
    :members:

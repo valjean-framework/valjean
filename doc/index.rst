@@ -1,5 +1,5 @@
-Welcome to velvet's documentation!
-==================================
+Welcome to valjean's documentation!
+===================================
 
 .. toctree::
    :maxdepth: 2

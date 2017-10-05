@@ -6,7 +6,7 @@ import copy
 import pytest
 
 import context  # noqa: F401
-import velvet.depgraph as depgraph
+import valjean.depgraph as depgraph
 
 
 def remove_cycles(d):

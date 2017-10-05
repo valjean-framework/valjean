@@ -1,5 +1,5 @@
-Installing :mod:`velvet`
-========================
+Installing :mod:`valjean`
+=========================
 
 .. todo::
 

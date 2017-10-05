@@ -1,11 +1,11 @@
 :mod:`~.scheduler`: task scheduling and dependency handling
 ===========================================================
 
-.. automodule:: velvet.scheduler
+.. automodule:: valjean.scheduler
    :synopsis: Task scheduling and dependency handling
 
-.. autoclass:: velvet.scheduler.Scheduler
+.. autoclass:: valjean.scheduler.Scheduler
    :members:
 
-.. autoclass:: velvet.scheduler.QueueScheduling
+.. autoclass:: valjean.scheduler.QueueScheduling
    :members:

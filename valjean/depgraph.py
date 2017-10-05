@@ -23,7 +23,7 @@ representing the dependencies between items to the
 
 .. testsetup:: depgraph
 
-   from velvet.depgraph import DepGraph
+   from valjean.depgraph import DepGraph
 
 .. doctest:: depgraph
 
