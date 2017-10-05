@@ -45,6 +45,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
+class TaskError(Exception):
+    pass
+
+
 class Task:
     '''Base class for other task classes.
 
@@ -115,3 +119,26 @@ class ExecuteTask(Task):
         import subprocess
         args = shlex.split(self.command)
         subprocess.check_call(args, universal_newlines=True, **self.kwargs)
+
+
+class QsubWrapperTask(Task):
+
+    def __init__(self, task):
+        if not isinstance(task, ExecuteTask):
+            raise TaskError('QsubWrapperTask may only wrap classes derived '
+                            'from ExecuteTask')
+
+        super().__init__('qsubwrap_' + task.name)
+        self.task = task
+
+    def do(self):
+
+        import os.path
+        import tempfile
+        cwd = self.task.kwargs.get('cwd', os.path.curdir)
+        with tempfile.NamedTemporaryFile(dir=cwd, delete=False,
+                                         prefix='qsub_job', suffix='.sh') as f:
+            content = '''#!/bin/sh
+{command}
+'''.format(command=self.task.command).encode('utf-8')
+            f.write(content)
