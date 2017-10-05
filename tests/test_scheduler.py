@@ -4,7 +4,7 @@ import random
 from hypothesis import given, settings
 from hypothesis.strategies import lists, floats, integers, just
 
-import context  # noqa: F401
+from .context import valjean  # noqa: F401
 from valjean.depgraph import DepGraph
 from valjean.scheduler import Scheduler, QueueScheduling
 from valjean.task import DelayTask

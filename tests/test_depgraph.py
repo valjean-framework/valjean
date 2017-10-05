@@ -5,7 +5,7 @@ from hypothesis.strategies import dictionaries, integers, frozensets, text
 import copy
 import pytest
 
-import context  # noqa: F401
+from .context import valjean  # noqa: F401
 import valjean.depgraph as depgraph
 
 
