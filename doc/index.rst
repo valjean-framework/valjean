@@ -7,6 +7,7 @@ Welcome to valjean's documentation!
 
    getting_started
    modules
+   tests
 
 
 TODO list
