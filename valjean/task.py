@@ -11,6 +11,8 @@ is a no-op and any class with a :meth:`do()` method works just as well.
 
 import time
 import logging
+import subprocess
+import shlex
 
 
 logger = logging.getLogger(__name__)
@@ -58,3 +60,25 @@ class DelayTask(Task):
                     self, self.delay)
         time.sleep(self.delay)
         logger.info('DelayTask %s waking up!', self)
+
+
+class ExecuteTask(Task):
+    '''Task that executes the specified shell command and waits for its
+    completion.
+
+    :param str name: The name of this task.
+    :param str command: The command line to be executed. Note that the command
+                        line is not interpreted by a shell, so shell constructs
+                        such as ``&&`` or ``||`` cannot be used.
+    '''
+
+    def __init__(self, name, command):
+
+        super().__init__(name)
+        self.command = command
+
+    def do(self):
+        '''Execute the specified command and wait for its completion.'''
+
+        args = shlex.split(self.command)
+        subprocess.check_call(args, universal_newlines=True)

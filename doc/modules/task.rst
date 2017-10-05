@@ -3,9 +3,5 @@
 
 .. automodule:: valjean.task
    :synopsis: Task specification
-
-.. autoclass:: valjean.task.Task
    :members:
-
-.. autoclass:: valjean.task.DelayTask
-   :members:
+   :member-order: bysource
