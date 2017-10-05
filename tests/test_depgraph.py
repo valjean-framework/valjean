@@ -10,11 +10,18 @@ import valjean.depgraph as depgraph
 
 
 def remove_cycles(d):
-    '''Suppress cycles in a graph
+    '''Suppress cycles in a graph.
 
-    The graph d is expressed as an adjacency dictionary of integers.  We
-    remove cycles by ensuring that, for each (key, [value_1, value2, ...])
-    pair, we always have value_i>key.
+    The graph `d` is expressed as an adjacency dictionary of integers or
+    strings.  The strategy to remove cycles is to ensure that, for each (key,
+    [value_1, value2, ...]) pair, we always have value_i>key. For integers,
+    this is ensured by incrementing the values; for strings, we replace the old
+    value with::
+
+        new_value = key + 'z' + old_value
+
+    :param d: The graph, in the form of a dictionary
+    :type d: A dictionary of integers or strings
     '''
 
     dag = copy.copy(d)
