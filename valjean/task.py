@@ -7,6 +7,35 @@ This module collects a few useful task classes that can be used with the
 This module defines a dummy :class:`Task` class that may be used as a base
 class and extended. However, the current implementation of :meth:`.Task.do()`
 is a no-op and any class with a :meth:`do()` method works just as well.
+
+The :class:`ExecuteTask` class is the basic building block to execute tasks
+that consist in spawning external processes and waiting for their completion.
+It makes it possible to execute arbitrary commands. Consider:
+
+.. testsetup:: task
+
+   from valjean.task import ExecuteTask
+
+.. doctest:: task
+
+   >>> task = ExecuteTask(name='say', command='echo "ni!"')
+   >>> task.do()  # doctest: +SKIP
+   ni!
+
+Note that the `command` is not parsed by a shell. So the following will not do
+what you may expect:
+
+.. doctest:: task
+
+   >>> task = ExecuteTask(name='want',
+                          command='echo "We want..." '
+                                  '&& sleep 2 '
+                                  '&& echo "...a shrubbery!"')
+   >>> task.do()
+   We want... && sleep 2 && echo ... a shrubbery!
+
+If you need to execute several commands, either wrap them in a shell script or
+create separate tasks for them.
 '''
 
 import time
@@ -70,15 +99,19 @@ class ExecuteTask(Task):
     :param str command: The command line to be executed. Note that the command
                         line is not interpreted by a shell, so shell constructs
                         such as ``&&`` or ``||`` cannot be used.
+
+    Any other keyword arguments will be passed to the
+    :class:`.subprocess.Popen` constructor.
     '''
 
-    def __init__(self, name, command):
+    def __init__(self, name, command, **kwargs):
 
         super().__init__(name)
         self.command = command
+        self.kwargs = kwargs
 
     def do(self):
         '''Execute the specified command and wait for its completion.'''
 
         args = shlex.split(self.command)
-        subprocess.check_call(args, universal_newlines=True)
+        subprocess.check_call(args, universal_newlines=True, **self.kwargs)
