@@ -22,9 +22,7 @@ Example usage:
    >>> s.schedule()
 '''
 
-import queue
 import threading
-import time
 import logging
 
 from .depgraph import DepGraph
@@ -59,6 +57,9 @@ class QueueScheduling:
                       to some order.
         :param graph: Dependency graph, as a :class:`~.DepGraph`.
         '''
+
+        import time
+        import queue
 
         threads = []
         q = queue.Queue(self.n_workers)

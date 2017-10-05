@@ -38,10 +38,7 @@ If you need to execute several commands, either wrap them in a shell script or
 create separate tasks for them.
 '''
 
-import time
 import logging
-import subprocess
-import shlex
 
 
 logger = logging.getLogger(__name__)
@@ -85,6 +82,7 @@ class DelayTask(Task):
     def do(self):
         '''Perform the task (i.e. sleep; I wish my life was like that).'''
 
+        import time
         logger.info('DelayTask %s sleeping %f seconds...',
                     self, self.delay)
         time.sleep(self.delay)
@@ -113,5 +111,7 @@ class ExecuteTask(Task):
     def do(self):
         '''Execute the specified command and wait for its completion.'''
 
+        import shlex
+        import subprocess
         args = shlex.split(self.command)
         subprocess.check_call(args, universal_newlines=True, **self.kwargs)

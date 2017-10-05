@@ -92,8 +92,6 @@ topological sorts for a given graph.
    ['eggs', 'spam', 'bacon', 'sausage']
 '''
 
-import enum
-import copy
 import logging
 
 logging.basicConfig(format='%(levelname)s (%(name)s): %(message)s')
@@ -125,6 +123,7 @@ class DepGraph:
             all(i == index[node] for i, node in enumerate(nodes))
     '''
 
+    import enum
     _Marks = enum.Enum('Marks', 'TEMP PERM')
 
     @classmethod
@@ -153,6 +152,7 @@ class DepGraph:
     def _complete(d):
         '''Add singleton nodes to the dictionary.'''
 
+        import copy
         complete_d = copy.copy(d)
         for vs in d.values():
             for v in vs:
