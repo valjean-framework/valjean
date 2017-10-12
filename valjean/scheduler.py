@@ -9,7 +9,7 @@ Example usage:
 .. testsetup:: scheduler
 
    from valjean.depgraph import DepGraph
-   from valjean.task import DelayTask
+   from valjean.task.task import DelayTask
    from valjean.scheduler import Scheduler
 
 .. doctest:: scheduler

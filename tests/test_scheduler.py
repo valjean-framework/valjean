@@ -7,7 +7,7 @@ from hypothesis.strategies import lists, floats, integers, just
 from .context import valjean  # noqa: F401
 from valjean.depgraph import DepGraph
 from valjean.scheduler import Scheduler, QueueScheduling
-from valjean.task import DelayTask
+from valjean.task.task import DelayTask
 
 
 class TestScheduler:

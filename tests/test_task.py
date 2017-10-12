@@ -7,7 +7,7 @@ import tempfile
 import os.path
 
 from .context import valjean  # noqa: F401
-import valjean.task as task
+import valjean.task.task as task
 
 
 @pytest.fixture(scope='module')

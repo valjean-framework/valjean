@@ -14,7 +14,7 @@ It makes it possible to execute arbitrary commands. Consider:
 
 .. testsetup:: task
 
-   from valjean.task import ExecuteTask
+   from valjean.task.task import ExecuteTask
 
 .. doctest:: task
 
