@@ -239,14 +239,10 @@ class DepGraph:
 
         :param node: The node for which the dependency is specified.
         :param on: The node `node` depends on.
-        :raises KeyError: if either node does not already belong to the graph.
         '''
 
-        if node not in self._index:
-            raise KeyError('Node {} does not belong to the graph'.format(node))
-        if on not in self._index:
-            raise KeyError('Node {} does not belong to the graph'.format(on))
-
+        self.add_node(node)
+        self.add_node(on)
         i_node = self._index[node]
         i_on = self._index[on]
         self._edges[i_node].add(i_on)
