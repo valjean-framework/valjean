@@ -28,10 +28,10 @@ what you may expect:
 .. doctest:: task
 
    >>> task = ExecuteTask(name='want',
-                          command='echo "We want..." '
-                                  '&& sleep 2 '
-                                  '&& echo "...a shrubbery!"')
-   >>> task.do()
+   ...                    command='echo "We want..." '
+   ...                         '&& sleep 2 '
+   ...                         '&& echo "...a shrubbery!"')
+   >>> task.do()  # doctest: +SKIP
    We want... && sleep 2 && echo ... a shrubbery!
 
 If you need to execute several commands, either wrap them in a shell script or
