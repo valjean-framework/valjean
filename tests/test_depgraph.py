@@ -26,17 +26,14 @@ class TestDepGraph:
     @given(g=depgraphs())
     def test_complete(self, g):
         '''Test that the generated edge dictionary is complete'''
-        assert self.edges_dict_is_complete(g)
-
-    def edges_dict_is_complete(self, graph):
         keys = set()
         values = set()
-        for k, vs in graph.edges.items():
+        for k, vs in g:
             keys.add(k)
             for v in vs:
                 values.add(v)
         note('keys: {}\nvalues: {}'.format(keys, values))
-        return values <= keys
+        assert values <= keys
 
     @given(g=depgraphs())
     def test_topological_sort_int(self, g):
