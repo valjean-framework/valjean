@@ -161,7 +161,13 @@ class DepGraph:
         complete_d = {k: set(v) for k, v in complete_d.items()}
         return complete_d
 
-    def __init__(self, nodes, edges, index=None):
+    def __init__(self, nodes=None, edges=None, index=None):
+
+        if nodes is None or edges is None:
+            self.nodes = []
+            self.edges = {}
+            return
+
         # self.nodes is the list of the graph nodes
         self.nodes = list(nodes)
         logger.debug('nodes: %s', self.nodes)
