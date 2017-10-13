@@ -232,6 +232,7 @@ class DepGraph:
         self._nodes[new_index] = node
         self._index[node] = new_index
         self._edges[new_index] = set()
+        return self
 
     def add_dependency(self, node, on):
         '''Add a new dependency to the graph.
@@ -249,6 +250,7 @@ class DepGraph:
         i_node = self._index[node]
         i_on = self._index[on]
         self._edges[i_node].add(i_on)
+        return self
 
     def invert(self):
         '''Invert the graph.
