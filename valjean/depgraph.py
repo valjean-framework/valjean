@@ -58,7 +58,8 @@ added as nodes with no dependencies:
 .. doctest:: depgraph
 
    >>> print(g)
-   {bacon: [spam], eggs: [], sausage: [eggs, spam], spam: []}
+   [('bacon', ['spam']), ('eggs', []), ('sausage', ['eggs', 'spam']), \
+('spam', [])]
 
 What if a node has no dependencies and no other node depends on it? Just add it
 to the dictionary with the empty list as a value:
@@ -71,7 +72,7 @@ You can inspect the nodes of the graph:
 
 .. doctest:: depgraph
 
-   >>> print(sorted(g.nodes))
+   >>> print(sorted(g.get_nodes()))
    ['bacon', 'eggs', 'sausage', 'spam']
 
 or ask for the dependencies of a node:
@@ -115,10 +116,13 @@ class DepGraph:
     may be passed to the constructor if it is available to the caller as a
     dictionary; if not, it will be constructed internally.
 
-    :param list nodes: List of the nodes of the graph.
-    :param mapping edges: A mapping between integers representing the nodes.
-    :param mapping index: The inverse mapping to `nodes`. The constructor
-        checks that the following invariant holds::
+    :param list nodes: An iterable over the nodes of the graph, or `None` for
+        an empty graph.
+    :param mapping edges: A mapping between integers representing the nodes, or
+        `None` for an empty graph.
+    :param mapping index: The inverse mapping to `nodes`, or `None` if it is
+        not available. The constructor checks that the following invariant
+        holds::
 
             all(i == index[node] for i, node in enumerate(nodes))
     '''
@@ -164,21 +168,21 @@ class DepGraph:
     def __init__(self, nodes=None, edges=None, index=None):
 
         if nodes is None or edges is None:
-            self.nodes = []
+            self.nodes = {}
             self.edges = {}
             return
 
         # self.nodes is the list of the graph nodes
-        self.nodes = list(nodes)
+        self.nodes = {i: node for i, node in enumerate(nodes)}
         logger.debug('nodes: %s', self.nodes)
 
         # the self.index dictionary translates from node objects to integer
         # indices
         if index is None:
-            self.index = {x: i for i, x in enumerate(self.nodes)}
+            self.index = {x: i for i, x in self.nodes.items()}
         else:
             # do a sanity check on index
-            check = all(i == index[node] for i, node in enumerate(self.nodes))
+            check = all(i == index[node] for i, node in self.nodes.items())
             if not check:
                 raise DepGraphError('index and nodes are inconsistent\n'
                                     'index = {index}\nnodes = {nodes}'
@@ -217,7 +221,7 @@ class DepGraph:
             for v in vs:
                 inv_edges.setdefault(v, []).append(k)
 
-        return DepGraph(self.nodes, inv_edges, self.index)
+        return DepGraph(self.nodes.values(), inv_edges, self.index)
 
     def topological_sort(self):
         '''Perform a topological sort of the graph.
@@ -244,12 +248,15 @@ class DepGraph:
             marks[node] = self._Marks.PERM
             result.append(node)
 
-        for node in self.nodes:
+        for node in self.nodes.values():
             if node in marks:
                 continue
             visit(node)
 
         return result
+
+    def get_nodes(self):
+        return self.nodes.values()
 
     def dependencies(self, node):
         '''Query the graph about the dependencies of `node`.
