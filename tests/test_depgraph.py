@@ -111,3 +111,37 @@ class TestDepGraph:
         g = depgraph.DepGraph.from_dependency_dictionary({0: [1], 1: [0]})
         with pytest.raises(depgraph.DepGraphError):
             g.topological_sort()
+
+    @given(dag=dictionaries(integers(0, 10),
+           sets(integers(0, 10), average_size=2), average_size=10))
+    def test_equivalent_constructors(self, dag):
+        '''Test that incrementally and automatically generated graphs are
+        equivalent.'''
+
+        g_auto = depgraph.DepGraph.from_dependency_dictionary(dag)
+
+        g_incr = depgraph.DepGraph()
+        for k, vs in dag.items():
+            g_incr.add_node(k)
+            for v in vs:
+                g_incr.add_node(v)
+                g_incr.add_dependency(k, v)
+
+        assert g_auto.isomorphic_to(g_incr)
+
+    @given(dag=dictionaries(integers(0, 10),
+           sets(integers(0, 10), average_size=2), average_size=10))
+    def test_self_isomorphism(self, dag):
+        '''Test that each graph is isomorphic to itself.'''
+
+        g = depgraph.DepGraph.from_dependency_dictionary(dag)
+        assert g.isomorphic_to(g)
+
+    @given(dag=dictionaries(integers(0, 10),
+           sets(integers(0, 10), average_size=2), average_size=10))
+    def test_dict_roundtrip(self, dag):
+        '''Test that each graph is isomorphic to itself.'''
+
+        g = depgraph.DepGraph.from_dependency_dictionary(dag)
+        g_roundtrip = depgraph.DepGraph.from_dependency_dictionary(dict(g))
+        assert g == g_roundtrip

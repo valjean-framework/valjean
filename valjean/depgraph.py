@@ -198,11 +198,57 @@ class DepGraph:
         logger.debug('full graph edges: %s', self.edges)
 
     def __str__(self):
-
         assoc_list = sorted([(str(self.nodes[k]),
                              sorted(map(lambda v: str(self.nodes[v]), vs)))
                              for k, vs in self.edges.items()])
         return str(assoc_list)
+
+    def __repr__(self):
+        return 'DepGraph(nodes={nodes}, edges={edges}, index={index})'\
+               .format(nodes=self.nodes, edges=self.edges, index=self.index)
+
+    def __eq__(self, other):
+        return self.isomorphic_to(other)
+
+    def __iter__(self):
+        for i, node in self.nodes.items():
+            values = map(lambda j: self.nodes[j], self.edges[i])
+            yield (node, set(values))
+
+    def isomorphic_to(self, other):
+        return dict(self) == dict(other)
+
+    def add_node(self, node):
+        '''Add a new node to the graph.
+
+        :param node: The new node.
+        '''
+
+        if node in self.index:
+            logging.info('Node {} already belongs to the graph'.format(node))
+            return
+
+        new_index = len(self.nodes)
+        self.nodes[new_index] = node
+        self.index[node] = new_index
+        self.edges[new_index] = set()
+
+    def add_dependency(self, node, on):
+        '''Add a new dependency to the graph.
+
+        :param node: The node for which the dependency is specified.
+        :param on: The node `node` depends on.
+        :raises KeyError: if either node does not already belong to the graph.
+        '''
+
+        if node not in self.index:
+            raise KeyError('Node {} does not belong to the graph'.format(node))
+        if on not in self.index:
+            raise KeyError('Node {} does not belong to the graph'.format(on))
+
+        i_node = self.index[node]
+        i_on = self.index[on]
+        self.edges[i_node].add(i_on)
 
     def invert(self):
         '''Invert the graph.
@@ -263,8 +309,3 @@ class DepGraph:
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('dependencies: %s -> %s', node, list(result))
         return result
-
-    def __eq__(self, other):
-        return self.edges == other.edges \
-               and self.nodes == other.nodes \
-               and self.index == other.index
