@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from hypothesis import given, note
-from hypothesis.strategies import dictionaries, integers, frozensets, text
+from hypothesis.strategies import dictionaries, integers, sets, text
 import copy
 import pytest
 
@@ -34,14 +34,14 @@ def remove_cycles(d):
                 else:
                     new_val = 2*k-val+1
                 new_vals[i] = new_val
-        dag[k] = frozenset(new_vals)
+        dag[k] = set(new_vals)
     return dag
 
 
 class TestDepGraph:
 
     @given(dag=dictionaries(integers(0, 10),
-           frozensets(integers(0, 10), average_size=2), average_size=10))
+           sets(integers(0, 10), average_size=2), average_size=10))
     def test_complete(self, dag):
         '''Test that the generated edge dictionary is complete'''
 
@@ -59,7 +59,7 @@ class TestDepGraph:
         return values <= keys
 
     @given(dag=dictionaries(integers(0, 10),
-           frozensets(integers(0, 10), average_size=2), average_size=10)
+           sets(integers(0, 10), average_size=2), average_size=10)
            .map(remove_cycles))
     def test_topological_sort_int(self, dag):
         '''Test the topological sort invariant with integer dicts.'''
@@ -67,7 +67,7 @@ class TestDepGraph:
         self.do_test_topological_sort(dag)
 
     @given(dag=dictionaries(text(average_size=10),
-           frozensets(text(average_size=10), average_size=2), average_size=10)
+           sets(text(average_size=10), average_size=2), average_size=10)
            .map(remove_cycles))
     def test_topological_sort_str(self, dag):
         '''Test the topological sort invariant with string dicts.'''
@@ -97,7 +97,7 @@ class TestDepGraph:
         return True
 
     @given(dag=dictionaries(integers(0, 10),
-           frozensets(integers(0, 10), average_size=2), average_size=10))
+           sets(integers(0, 10), average_size=2), average_size=10))
     def test_invert_roundtrip(self, dag):
         '''Test that DepGraph.invert() is idempotent.'''
 

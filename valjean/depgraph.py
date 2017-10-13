@@ -132,8 +132,8 @@ class DepGraph:
 
         # the list of the graph nodes
         nodes = list(
-            frozenset(dependencies.keys())
-            | frozenset(v for vs in dependencies.values() for v in vs)
+            set(dependencies.keys())
+            | set(v for vs in dependencies.values() for v in vs)
             )
 
         # the index dictionary translates from node objects to integer indices
@@ -143,8 +143,8 @@ class DepGraph:
         edges = {}
         for key, values in dependencies.items():
             new_key = index[key]
-            new_values = list(map(lambda v: index[v], values))
-            edges[new_key] = frozenset(new_values)
+            new_values = set(map(lambda v: index[v], values))
+            edges[new_key] = new_values
 
         return cls(nodes, edges, index)
 
@@ -157,8 +157,8 @@ class DepGraph:
         for vs in d.values():
             for v in vs:
                 if v not in complete_d:
-                    complete_d[v] = frozenset()
-        complete_d = {k: frozenset(v) for k, v in complete_d.items()}
+                    complete_d[v] = set()
+        complete_d = {k: set(v) for k, v in complete_d.items()}
         return complete_d
 
     def __init__(self, nodes, edges, index=None):
