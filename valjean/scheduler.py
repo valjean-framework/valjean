@@ -164,7 +164,7 @@ class Scheduler:
 
         # check that all the nodes of the graph can be executed (i.e. they
         # should have a do() method)
-        for node in depgraph.get_nodes():
+        for node in depgraph.nodes():
             if not hasattr(node, 'do') or not hasattr(node.do, '__call__'):
                 raise SchedulerError('Cannot schedule tasks for execution: '
                                      'node {} does not have a do() method'

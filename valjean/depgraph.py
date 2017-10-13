@@ -72,7 +72,7 @@ You can inspect the nodes of the graph:
 
 .. doctest:: depgraph
 
-   >>> print(sorted(g.get_nodes()))
+   >>> print(sorted(g.nodes()))
    ['bacon', 'eggs', 'sausage', 'spam']
 
 or ask for the dependencies of a node:
@@ -168,51 +168,51 @@ class DepGraph:
     def __init__(self, nodes=None, edges=None, index=None):
 
         if nodes is None or edges is None:
-            self.nodes = {}
-            self.index = {}
-            self.edges = {}
+            self._nodes = {}
+            self._index = {}
+            self._edges = {}
             return
 
-        # self.nodes is the list of the graph nodes
-        self.nodes = {i: node for i, node in enumerate(nodes)}
-        logger.debug('nodes: %s', self.nodes)
+        # self._nodes is the list of the graph nodes
+        self._nodes = {i: node for i, node in enumerate(nodes)}
+        logger.debug('nodes: %s', self._nodes)
 
-        # the self.index dictionary translates from node objects to integer
+        # the self._index dictionary translates from node objects to integer
         # indices
         if index is None:
-            self.index = {x: i for i, x in self.nodes.items()}
+            self._index = {x: i for i, x in self._nodes.items()}
         else:
             # do a sanity check on index
-            check = all(i == index[node] for i, node in self.nodes.items())
+            check = all(i == index[node] for i, node in self._nodes.items())
             if not check:
                 raise DepGraphError('index and nodes are inconsistent\n'
                                     'index = {index}\nnodes = {nodes}'
-                                    .format(index=index, nodes=self.nodes))
-            self.index = index
-        logger.debug('index: %s', self.index)
+                                    .format(index=index, nodes=self._nodes))
+            self._index = index
+        logger.debug('index: %s', self._index)
 
         # finally, complete the edges dictionary so that all values also appear
         # as keys, possibly with empty values
         logger.debug('incomplete graph edges: %s', edges)
-        self.edges = DepGraph._complete(edges)
-        logger.debug('full graph edges: %s', self.edges)
+        self._edges = DepGraph._complete(edges)
+        logger.debug('full graph edges: %s', self._edges)
 
     def __str__(self):
-        assoc_list = sorted([(str(self.nodes[k]),
-                             sorted(map(lambda v: str(self.nodes[v]), vs)))
-                             for k, vs in self.edges.items()])
+        assoc_list = sorted([(str(self._nodes[k]),
+                             sorted(map(lambda v: str(self._nodes[v]), vs)))
+                             for k, vs in self._edges.items()])
         return str(assoc_list)
 
     def __repr__(self):
         return 'DepGraph(nodes={nodes}, edges={edges}, index={index})'\
-               .format(nodes=self.nodes, edges=self.edges, index=self.index)
+               .format(nodes=self._nodes, edges=self._edges, index=self._index)
 
     def __eq__(self, other):
         return self.isomorphic_to(other)
 
     def __iter__(self):
-        for i, node in self.nodes.items():
-            values = map(lambda j: self.nodes[j], self.edges[i])
+        for i, node in self._nodes.items():
+            values = map(lambda j: self._nodes[j], self._edges[i])
             yield (node, set(values))
 
     def isomorphic_to(self, other):
@@ -224,14 +224,14 @@ class DepGraph:
         :param node: The new node.
         '''
 
-        if node in self.index:
+        if node in self._index:
             logging.info('Node {} already belongs to the graph'.format(node))
             return
 
-        new_index = len(self.nodes)
-        self.nodes[new_index] = node
-        self.index[node] = new_index
-        self.edges[new_index] = set()
+        new_index = len(self._nodes)
+        self._nodes[new_index] = node
+        self._index[node] = new_index
+        self._edges[new_index] = set()
 
     def add_dependency(self, node, on):
         '''Add a new dependency to the graph.
@@ -241,14 +241,14 @@ class DepGraph:
         :raises KeyError: if either node does not already belong to the graph.
         '''
 
-        if node not in self.index:
+        if node not in self._index:
             raise KeyError('Node {} does not belong to the graph'.format(node))
-        if on not in self.index:
+        if on not in self._index:
             raise KeyError('Node {} does not belong to the graph'.format(on))
 
-        i_node = self.index[node]
-        i_on = self.index[on]
-        self.edges[i_node].add(i_on)
+        i_node = self._index[node]
+        i_on = self._index[on]
+        self._edges[i_node].add(i_on)
 
     def invert(self):
         '''Invert the graph.
@@ -257,12 +257,12 @@ class DepGraph:
         '''
 
         inv_edges = {}
-        for k, vs in self.edges.items():
+        for k, vs in self._edges.items():
             inv_edges.setdefault(k, [])
             for v in vs:
                 inv_edges.setdefault(v, []).append(k)
 
-        return DepGraph(self.nodes.values(), inv_edges, self.index)
+        return DepGraph(self._nodes.values(), inv_edges, self._index)
 
     def topological_sort(self):
         '''Perform a topological sort of the graph.
@@ -283,29 +283,29 @@ class DepGraph:
             if mark == self._Marks.PERM:
                 return
             marks[node] = self._Marks.TEMP
-            index = self.index[node]
-            for target in self.edges.get(index, []):
-                visit(self.nodes[target])
+            index = self._index[node]
+            for target in self._edges.get(index, []):
+                visit(self._nodes[target])
             marks[node] = self._Marks.PERM
             result.append(node)
 
-        for node in self.nodes.values():
+        for node in self._nodes.values():
             if node in marks:
                 continue
             visit(node)
 
         return result
 
-    def get_nodes(self):
-        return self.nodes.values()
+    def nodes(self):
+        return self._nodes.values()
 
     def dependencies(self, node):
         '''Query the graph about the dependencies of `node`.
 
         :returns: An iterable over the dependencies of `node`.'''
 
-        indices = self.edges.get(self.index[node], [])
-        result = map(lambda i: self.nodes[i], indices)
+        indices = self._edges.get(self._index[node], [])
+        result = map(lambda i: self._nodes[i], indices)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('dependencies: %s -> %s', node, list(result))
         return result
