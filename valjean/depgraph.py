@@ -17,7 +17,7 @@ follows:
 The convention here is that if an edge goes from `A` to `B`, then `A` depends
 on `B`.
 
-The conventional way to create a :class:`DepGraph` is to pass a dictionary
+You can create a :class:`DepGraph` in of two ways. Either you pass a dictionary
 representing the dependencies between items to the
 :meth:`~DepGraph.from_dependency_dictionary` class method:
 
@@ -33,10 +33,40 @@ representing the dependencies between items to the
    {'bacon': ['spam'], 'sausage': ['eggs', 'spam']}
    >>> g = DepGraph.from_dependency_dictionary(deps)
 
-In this example, `sausage` depends on `eggs` and `spam`, and `bacon` depends on
-`spam`; `spam` and `eggs` have no dependencies. Note that the dependency
+or you create an empty graph and add nodes and dependencies by hand:
+
+.. doctest:: depgraph
+
+   >>> h = DepGraph().add_dependency('bacon', on='spam') \\
+   ...               .add_dependency('sausage', on='eggs') \\
+   ...               .add_dependency('sausage', on='spam')
+   >>> print(g == h)
+   True
+
+In these examples, `sausage` depends on `eggs` and `spam`, and `bacon` depends
+on `spam`; `spam` and `eggs` have no dependencies. Note that the dependency
 dictionary may be seen as a sparse representation of the graph adjacency
 matrix.
+
+You can recover the dependency dictionary by passing the graph to
+:func:`dict()`:
+
+.. doctest:: depgraph
+
+   >>> pprint(dict(g))  # doctest: +SKIP
+   {'bacon': {'spam'}, 'eggs': set(), 'sausage': {'eggs', 'spam'}, \
+'spam': set()}
+
+and you can also iterate over graphs:
+
+.. doctest:: depgraph
+
+   >>> for k, vs in sorted(g):
+   ...     for v in sorted(vs):
+   ...         print("You can't have {} without {}!".format(k, v))
+   You can't have bacon without spam!
+   You can't have sausage without eggs!
+   You can't have sausage without spam!
 
 Some things you should be aware of when using :class:`DepGraph`:
 
@@ -45,8 +75,8 @@ Some things you should be aware of when using :class:`DepGraph`:
 * You need to use a single-element list if you want to express a single
   dependency, as in the case of `bacon`. So this is wrong:
 
-    >>> deps = {0: 1, 7: [0, 42]}                      # error, should be [1]
-    >>> g = DepGraph.from_dependency_dictionary(deps)  # will raise a TypeError
+    >>> bad_deps = {0: 1, 7: [0, 42]}  # error, should be [1]
+    >>> bad = DepGraph.from_dependency_dictionary(deps)
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
         [...]
@@ -67,6 +97,14 @@ to the dictionary with the empty list as a value:
 .. doctest:: depgraph
 
    >>> free = DepGraph.from_dependency_dictionary({'kazantzakis': []})
+
+You can also add it after creating the graph:
+
+.. doctest:: depgraph
+
+   >>> also_free = DepGraph().add_node('kazantzakis')
+   >>> print(free == also_free)
+   True
 
 You can inspect the nodes of the graph:
 
