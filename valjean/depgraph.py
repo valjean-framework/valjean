@@ -198,16 +198,10 @@ class DepGraph:
 
     def __str__(self):
 
-        assoc_list = [(self.nodes[k], map(lambda v: self.nodes[v], vs))
-                      for k, vs in self.edges.items()]
-        results = []
-        for k, vs in sorted(assoc_list):
-            result = str(k) + ': ['
-            vs_str = [str(v) for v in sorted(vs)]
-            result += ', '.join(vs_str) + ']'
-            results.append(result)
-        result = '{' + ', '.join(results) + '}'
-        return result
+        assoc_list = sorted([(str(self.nodes[k]),
+                             sorted(map(lambda v: str(self.nodes[v]), vs)))
+                             for k, vs in self.edges.items()])
+        return str(assoc_list)
 
     def invert(self):
         '''Invert the graph.
