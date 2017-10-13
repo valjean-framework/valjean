@@ -169,6 +169,7 @@ class DepGraph:
 
         if nodes is None or edges is None:
             self.nodes = {}
+            self.index = {}
             self.edges = {}
             return
 
