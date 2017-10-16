@@ -134,3 +134,10 @@ class TestDepGraph:
         note(repr(g))
         assert g1 <= g
         assert g2 <= g
+
+    @given(g=depgraphs())
+    def test_transitive_reduction_subgraph(self, g):
+        '''Test that transitive reduction results in a subgraph.'''
+        g_tr = g.copy().transitive_reduction()
+        note('reduced graph: {}'.format(repr(g_tr)))
+        assert g_tr <= g

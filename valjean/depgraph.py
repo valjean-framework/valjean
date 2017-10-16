@@ -137,11 +137,29 @@ Given two graphs, possibly sharing some nodes and edges, you can construct the
    >>> g1 = sub_g
    >>> g2 = DepGraph().add_dependency('sausage', on='spam')
    >>> g12 = g1 + g2
-   >>> print(g12 == g)
+   >>> g12 == g
    True
    >>> _ = g2.merge(g1)  # in-place merge
-   >>> print(g2 == g)
+   >>> g2 == g
    True
+
+It is also possible to compute the transitive reduction of the graph. Let `g`
+be an acyclic graph. The transitive reduction `tr(g)` is the minimal (in the
+number of edges), provably unique subgraph of `g` over the same vertices with
+the following property: for each pair of nodes `A` and `B`, `A` is reachable
+from `B` within `g` iff it is reachable within `tr(g)`.
+
+.. doctest:: depgraph
+
+   >>> g_redundant = DepGraph() \\
+   ...     .add_dependency('eggs', on='bacon') \\
+   ...     .add_dependency('bacon', on='spam') \\
+   ...     .add_dependency('eggs', on='spam')  # this edge is redundant
+   >>> g_tr = g_redundant.copy()
+   >>> print(g_tr.transitive_reduction())
+   [('bacon', ['spam']), ('eggs', ['bacon']), ('spam', [])]
+   >>> 'spam' in g_tr.dependencies('eggs')
+   False
 
 You can also do a topological sort of the graph. The result is a list of the
 graph nodes, with the property that each node is guaranteed to appear after all
@@ -355,6 +373,22 @@ class DepGraph:
         self._edges[i_node].add(i_on)
         return self
 
+    def remove_dependency(self, node, on):
+        '''Remove a dependency from the graph.
+
+        :param node: The node for which the dependency is specified.
+        :param on: The node `node` depends on.
+        '''
+
+        i_node = self._index[node]
+        i_on = self._index[on]
+        try:
+            self._edges[i_node].remove(i_on)
+        except KeyError:
+            raise KeyError('trying to remove missing edge {} -> {}'
+                           .format(node, on))
+        return self
+
     def invert(self):
         '''Invert the graph.
 
@@ -436,3 +470,44 @@ class DepGraph:
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('dependencies: %s -> %s', node, list(result))
         return result
+
+    def to_graphviz(self):
+        '''Convert the graph to graphviz format.
+
+        :returns: A string describing the file in graphviz format.
+        '''
+
+        gv = [r'digraph {']
+        for k, vs in self._edges.items():
+            from_node = str(self._nodes[k])
+            for v in vs:
+                to_node = str(self._nodes[v])
+                gv.append(from_node + ' -> ' + to_node)
+        gv.append(r'}')
+        return '\n'.join(gv)
+
+    def transitive_reduction(self):
+        '''Perform a transitive reduction of the graph in place.'''
+
+        def visit(start_edges, current):
+            current_edges = self._edges[current]
+            logger.debug('visiting: {}: {}, {}'
+                         .format(current, current_edges, start_edges))
+            to_remove = set()
+            for dest in current_edges:
+                if dest in start_edges:
+                    logger.debug('  marking {} for removal'.format(dest))
+                    to_remove.add(dest)
+                logger.debug('  recursing into {}'.format(dest))
+                to_remove |= visit(start_edges, dest)
+            return to_remove
+
+        logger.debug(repr(self))
+        for i_node, node in enumerate(self._nodes):
+            to_remove = set()
+            for j_node in self._edges[i_node]:
+                to_remove |= visit(self._edges[i_node], j_node)
+            for j in to_remove:
+                self._edges[i_node].remove(j)
+
+        return self
