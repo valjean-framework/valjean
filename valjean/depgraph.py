@@ -206,22 +206,22 @@ class DepGraph:
     def __init__(self, nodes=None, edges=None, index=None):
 
         if nodes is None or edges is None:
-            self._nodes = {}
+            self._nodes = []
             self._index = {}
             self._edges = {}
             return
 
         # self._nodes is the list of the graph nodes
-        self._nodes = {i: node for i, node in enumerate(nodes)}
+        self._nodes = list(nodes)
         logger.debug('nodes: %s', self._nodes)
 
         # the self._index dictionary translates from node objects to integer
         # indices
         if index is None:
-            self._index = {x: i for i, x in self._nodes.items()}
+            self._index = {x: i for i, x in enumerate(self._nodes)}
         else:
             # do a sanity check on index
-            check = all(i == index[node] for i, node in self._nodes.items())
+            check = all(i == index[node] for i, node in enumerate(self._nodes))
             if not check:
                 raise DepGraphError('index and nodes are inconsistent\n'
                                     'index = {index}\nnodes = {nodes}'
@@ -249,7 +249,7 @@ class DepGraph:
         return self.isomorphic_to(other)
 
     def __iter__(self):
-        for i, node in self._nodes.items():
+        for i, node in enumerate(self._nodes):
             values = map(lambda j: self._nodes[j], self._edges[i])
             yield (node, set(values))
 
@@ -273,9 +273,8 @@ class DepGraph:
     def __le__(self, other):
         '''`g` <= `h` if `g` is a subgraph of `h`'''
 
-        return (all(node in other._nodes.values()
-                    for node in self._nodes.values())
-                and all(dep in other[node] for node in self._nodes.values()
+        return (all(node in other._nodes for node in self._nodes)
+                and all(dep in other[node] for node in self._nodes
                         for dep in self[node]))
 
     def isomorphic_to(self, other):
@@ -292,7 +291,7 @@ class DepGraph:
             return
 
         new_index = len(self._nodes)
-        self._nodes[new_index] = node
+        self._nodes.append(node)
         self._index[node] = new_index
         self._edges[new_index] = set()
         return self
@@ -323,7 +322,7 @@ class DepGraph:
             for v in vs:
                 inv_edges.setdefault(v, []).append(k)
 
-        return DepGraph(self._nodes.values(), inv_edges, self._index)
+        return DepGraph(self._nodes, inv_edges, self._index)
 
     def topological_sort(self):
         '''Perform a topological sort of the graph.
@@ -350,7 +349,7 @@ class DepGraph:
             marks[node] = self._Marks.PERM
             result.append(node)
 
-        for node in self._nodes.values():
+        for node in self._nodes:
             if node in marks:
                 continue
             visit(node)
@@ -363,8 +362,7 @@ class DepGraph:
         Note that the graph nodes are always shared.
         '''
 
-        return DepGraph(self._nodes.values(), self._edges.copy(),
-                        self._index.copy())
+        return DepGraph(self._nodes, self._edges.copy(), self._index.copy())
 
     def merge(self, other):
         '''Merge this graph in place with another one.
@@ -379,7 +377,7 @@ class DepGraph:
         return self
 
     def nodes(self):
-        return self._nodes.values()
+        return self._nodes
 
     def dependencies(self, node):
         '''Query the graph about the dependencies of `node`.
