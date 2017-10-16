@@ -17,6 +17,10 @@ follows:
 The convention here is that if an edge goes from `A` to `B`, then `A` depends
 on `B`.
 
+
+Building
+--------
+
 You can create a :class:`DepGraph` in of two ways. Either you pass a dictionary
 representing the dependencies between items to the
 :meth:`~DepGraph.from_dependency_dictionary` class method:
@@ -57,31 +61,6 @@ You can recover the dependency dictionary by passing the graph to
    {'bacon': {'spam'}, 'eggs': set(), 'sausage': {'eggs', 'spam'}, \
 'spam': set()}
 
-and you can also iterate over graphs:
-
-.. doctest:: depgraph
-
-   >>> for k, vs in sorted(g):
-   ...     for v in sorted(vs):
-   ...         print("You can't have {} without {}!".format(k, v))
-   You can't have bacon without spam!
-   You can't have sausage without eggs!
-   You can't have sausage without spam!
-
-Some things you should be aware of when using :class:`DepGraph`:
-
-* The type of the items in the graph is irrelevant, but since they need to be
-  stored in a dictionary, they must be *hashable*;
-* You need to use a single-element list if you want to express a single
-  dependency, as in the case of `bacon`. So this is wrong:
-
-    >>> bad_deps = {0: 1, 7: [0, 42]}  # error, should be [1]
-    >>> bad = DepGraph.from_dependency_dictionary(deps)
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-        [...]
-    TypeError: 'int' object is not iterable
-
 If you print the dictionary, you will notice that `spam` and `eggs` have been
 added as nodes with no dependencies:
 
@@ -106,6 +85,10 @@ You can also add it after creating the graph:
    >>> print(free == also_free)
    True
 
+
+Querying
+--------
+
 You can inspect the nodes of the graph:
 
 .. doctest:: depgraph
@@ -117,8 +100,48 @@ or ask for the dependencies of a node:
 
 .. doctest:: depgraph
 
-   >>> print(sorted(list(g.dependencies('sausage'))))
+   >>> print(sorted(g.dependencies('sausage')))
    ['eggs', 'spam']
+   >>> print(sorted(g['sausage']))  # equivalent, shorter syntax
+   ['eggs', 'spam']
+
+You can also iterate over graphs:
+
+.. doctest:: depgraph
+
+   >>> for k, vs in sorted(g):
+   ...     for v in sorted(vs):
+   ...         print("You can't have {} without {}!".format(k, v))
+   You can't have bacon without spam!
+   You can't have sausage without eggs!
+   You can't have sausage without spam!
+
+Finally, you can check if a graph is a subgraph of another one:
+
+.. doctest:: depgraph
+
+   >>> sub_g = DepGraph().add_dependency('bacon', on='spam') \\
+   ...                   .add_dependency('sausage', on='eggs')
+   >>> print(sub_g <= g)
+   True
+
+
+Merging, sorting and other operations
+-------------------------------------
+
+Given two graphs, possibly sharing some nodes and edges, you can construct the
+*union* `g12` as follows:
+
+.. doctest:: depgraph
+
+   >>> g1 = sub_g
+   >>> g2 = DepGraph().add_dependency('sausage', on='spam')
+   >>> g12 = g1 + g2
+   >>> print(g12 == g)
+   True
+   >>> _ = g2.merge(g1)  # in-place merge
+   >>> print(g2 == g)
+   True
 
 You can also do a topological sort of the graph. The result is a list of the
 graph nodes, with the property that each node is guaranteed to appear after all
@@ -129,6 +152,24 @@ topological sorts for a given graph.
 
    >>> print(g.topological_sort())  # doctest: +SKIP
    ['eggs', 'spam', 'bacon', 'sausage']
+
+Caveats
+-------
+
+Some things you should be aware of when using :class:`DepGraph`:
+
+* The type of the items in the graph is irrelevant, but since they need to be
+  stored in a dictionary, they must be *hashable*;
+* You need to use a single-element list if you want to express a single
+  dependency, as in the case of `bacon`. So this is wrong:
+
+    >>> bad_deps = {0: 1, 7: [0, 42]}  # error, should be [1]
+    >>> bad = DepGraph.from_dependency_dictionary(deps)
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+        [...]
+    TypeError: 'int' object is not iterable
+
 '''
 
 import logging
@@ -145,22 +186,27 @@ class DepGraphError(Exception):
 class DepGraph:
     '''A dependency graph.
 
-    The preferred way to instantiate this class is to use the
-    :meth:`from_dependency_dictionary` class method. Alternatively, you may use
-    the direct constructor; in this case, the graph `edges` are represented as
-    a dictionary between integers, with the convention that each node is
-    represented by its index in the `nodes` list. So `nodes` can be seen as a
-    mapping from integers to nodes. The inverse mapping is called `index` and
-    may be passed to the constructor if it is available to the caller as a
-    dictionary; if not, it will be constructed internally.
+    There are two preferred ways to instantiate this class:
+
+    * using the :meth:`from_dependency_dictionary` class method;
+    * constructing an empty graph and repeatedly calling :meth:`add_dependency`
+      and/or :meth:`add_node`.
+
+    Alternatively, you may also use the full form of the constructor; in this
+    case, the graph `edges` are represented as a dictionary between integers,
+    with the convention that each node is represented by its index in the
+    `nodes` list.  So `nodes` can be seen as a mapping from integers to nodes.
+    The inverse mapping is called `index` and may be passed to the constructor
+    if it is available to the caller as a dictionary; if not, it will be
+    constructed internally.
 
     :param list nodes: An iterable over the nodes of the graph, or `None` for
         an empty graph.
     :param mapping edges: A mapping between integers representing the nodes, or
         `None` for an empty graph.
     :param mapping index: The inverse mapping to `nodes`, or `None` if it is
-        not available. The constructor checks that the following invariant
-        holds::
+        not available. If it is passed, the constructor checks that the
+        following invariant holds::
 
             all(i == index[node] for i, node in enumerate(nodes))
     '''
@@ -253,10 +299,9 @@ class DepGraph:
             values = map(lambda j: self._nodes[j], self._edges[i])
             yield (node, set(values))
 
-    def __iadd__(self, other):
-        return self.merge(other)
-
     def __add__(self, other):
+        '''Merge two graphs, return the result as a new graph.'''
+
         return self.copy().merge(other)
 
     __radd__ = __add__
@@ -375,6 +420,8 @@ class DepGraph:
             for v in vs:
                 self.add_dependency(k, on=v)
         return self
+
+    __iadd__ = merge
 
     def nodes(self):
         return self._nodes
