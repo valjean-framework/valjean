@@ -59,9 +59,8 @@ class Task:
 
         self.name = name
 
-    def do(self, name):
+    def do(self):
         '''Perform a task.'''
-
         pass
 
     def __str__(self):
