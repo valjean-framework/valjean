@@ -44,7 +44,7 @@ or you create an empty graph and add nodes and dependencies by hand:
    >>> h = DepGraph().add_dependency('bacon', on='spam') \\
    ...               .add_dependency('sausage', on='eggs') \\
    ...               .add_dependency('sausage', on='spam')
-   >>> print(g == h)
+   >>> g == h
    True
 
 In these examples, `sausage` depends on `eggs` and `spam`, and `bacon` depends
@@ -82,7 +82,7 @@ You can also add it after creating the graph:
 .. doctest:: depgraph
 
    >>> also_free = DepGraph().add_node('kazantzakis')
-   >>> print(free == also_free)
+   >>> free == also_free
    True
 
 
@@ -93,16 +93,16 @@ You can inspect the nodes of the graph:
 
 .. doctest:: depgraph
 
-   >>> print(sorted(g.nodes()))
+   >>> sorted(g.nodes())
    ['bacon', 'eggs', 'sausage', 'spam']
 
 or ask for the dependencies of a node:
 
 .. doctest:: depgraph
 
-   >>> print(sorted(g.dependencies('sausage')))
+   >>> sorted(g.dependencies('sausage'))
    ['eggs', 'spam']
-   >>> print(sorted(g['sausage']))  # equivalent, shorter syntax
+   >>> sorted(g['sausage'])  # equivalent, shorter syntax
    ['eggs', 'spam']
 
 You can also iterate over graphs:
@@ -122,7 +122,7 @@ Finally, you can check if a graph is a subgraph of another one:
 
    >>> sub_g = DepGraph().add_dependency('bacon', on='spam') \\
    ...                   .add_dependency('sausage', on='eggs')
-   >>> print(sub_g <= g)
+   >>> sub_g <= g
    True
 
 
@@ -168,7 +168,7 @@ topological sorts for a given graph.
 
 .. doctest:: depgraph
 
-   >>> print(g.topological_sort())  # doctest: +SKIP
+   >>> g.topological_sort()  # doctest: +SKIP
    ['eggs', 'spam', 'bacon', 'sausage']
 
 Caveats
