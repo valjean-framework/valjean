@@ -253,6 +253,31 @@ class DepGraph:
             values = map(lambda j: self._nodes[j], self._edges[i])
             yield (node, set(values))
 
+    def __iadd__(self, other):
+        return self.merge(other)
+
+    def __add__(self, other):
+        return self.copy().merge(other)
+
+    __radd__ = __add__
+
+    def __getitem__(self, node):
+        '''Get the dependencies of `node`.
+
+        :param node: The node we are querying.
+        :returns: An iterable over the dependencies of `node`.
+        '''
+
+        return map(lambda i: self._nodes[i], self._edges[self._index[node]])
+
+    def __le__(self, other):
+        '''`g` <= `h` if `g` is a subgraph of `h`'''
+
+        return (all(node in other._nodes.values()
+                    for node in self._nodes.values())
+                and all(dep in other[node] for node in self._nodes.values()
+                        for dep in self[node]))
+
     def isomorphic_to(self, other):
         return dict(self) == dict(other)
 
@@ -331,6 +356,27 @@ class DepGraph:
             visit(node)
 
         return result
+
+    def copy(self):
+        '''Return a copy of this graph.
+
+        Note that the graph nodes are always shared.
+        '''
+
+        return DepGraph(self._nodes.values(), self._edges.copy(),
+                        self._index.copy())
+
+    def merge(self, other):
+        '''Merge this graph in place with another one.
+
+        :param DepGraph other: The graph to merge.
+        '''
+
+        for k, vs in other:
+            self.add_node(k)
+            for v in vs:
+                self.add_dependency(k, on=v)
+        return self
 
     def nodes(self):
         return self._nodes.values()

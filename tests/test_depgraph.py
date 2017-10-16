@@ -3,7 +3,6 @@
 from hypothesis import given, note
 from hypothesis.strategies import (integers, sets, text, lists, composite,
                                    sampled_from)
-import copy
 import pytest
 
 from .context import valjean  # noqa: F401
@@ -102,3 +101,36 @@ class TestDepGraph:
         '''Test that each graph is isomorphic to itself.'''
         g_roundtrip = depgraph.DepGraph.from_dependency_dictionary(dict(g))
         assert g == g_roundtrip
+
+    @given(g=depgraphs())
+    def test_subgraph_self(self, g):
+        '''Test that merging with self results in the identity.'''
+        assert g <= g
+
+    @given(g=depgraphs())
+    def test_merge_with_self_is_identity(self, g):
+        '''Test that merging with self results in the identity.'''
+        assert g + g == g
+
+    @given(g=depgraphs())
+    def test_merge_with_empty_is_identity(self, g):
+        '''Test that merging with the empty graph results in the identity.'''
+        assert g + depgraph.DepGraph() == g
+
+    @given(g1=depgraphs(), g2=depgraphs(), g3=depgraphs())
+    def test_merge_associative(self, g1, g2, g3):
+        '''Test that merging graphs is associative.'''
+        assert (g1 + g2) + g3 == g1 + (g2 + g3)
+
+    @given(g1=depgraphs(), g2=depgraphs())
+    def test_merge_commutative(self, g1, g2):
+        '''Test that merging graphs is commutative.'''
+        assert g1 + g2 == g2 + g1
+
+    @given(g1=depgraphs(), g2=depgraphs())
+    def test_merge_containment(self, g1, g2):
+        '''Test that the merged graph contains both operands as subgraphs.'''
+        g = g1 + g2
+        note(repr(g))
+        assert g1 <= g
+        assert g2 <= g
