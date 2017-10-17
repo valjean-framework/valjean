@@ -22,7 +22,9 @@ class TestExecuteTask:
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
             t = task.ExecuteTask('echo', 'echo test', stdout=f_out)
-            t.do()
+            env = {}
+            t.do(env)
+        assert env['results']['echo']['return_code'] == 0
 
         with open(filename) as f_in:
             result = f_in.readline()

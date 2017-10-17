@@ -23,7 +23,7 @@ Example usage:
    ...         eggs: []
    ...     })
    >>> s = Scheduler(g)
-   >>> s.schedule()
+   >>> s.schedule()  # executes the tasks in the correct order
 '''
 
 import threading
@@ -54,12 +54,13 @@ class QueueScheduling:
         self.n_workers = n_workers
         self.sleep_interval = sleep_interval
 
-    def execute_tasks(self, tasks, graph):
+    def execute_tasks(self, tasks, graph, env={}):
         '''Execute the tasks.
 
-        :param tasks: List of tasks to be executed, possibly sorted according
-                      to some order.
-        :param graph: Dependency graph, as a :class:`~.DepGraph`.
+        :param iterable tasks: Iterable over tasks to be executed, possibly
+                               sorted according to some order.
+        :param DepGraph graph: Dependency graph for the tasks.
+        :param env: An initial environment for the scheduled tasks.
         '''
 
         import time
@@ -70,7 +71,7 @@ class QueueScheduling:
         tasks_done = {task: False for task in tasks}
         tasks_done_lock = threading.Lock()
         for i in range(self.n_workers):
-            t = QueueScheduling.WorkerThread(q, tasks_done, tasks_done_lock)
+            t = QueueScheduling.WorkerThread(q, tasks_done, tasks_done_lock, env)
             t.start()
             threads.append(t)
 
@@ -112,11 +113,12 @@ class QueueScheduling:
 
     class WorkerThread(threading.Thread):
 
-        def __init__(self, q, tasks_done, tasks_done_lock):
+        def __init__(self, q, tasks_done, tasks_done_lock, env):
             super().__init__()
             self.queue = q
             self.tasks_done = tasks_done
             self.tasks_done_lock = tasks_done_lock
+            self.env = env
 
         def run(self):
             logger.debug('worker %s starting', self.name)
@@ -126,7 +128,7 @@ class QueueScheduling:
                 if task is None:
                     logger.debug('worker %s exiting', self.name)
                     break
-                task.do()
+                task.do(self.env)
                 logger.debug('worker %s completed task %s', self.name, task)
                 with self.tasks_done_lock:
                     self.tasks_done[task] = True
@@ -145,8 +147,9 @@ class Scheduler:
     describing the dependencies among the tasks to be executed, and `backend`
     should be an instance of a `*Scheduling` class such as
     :class:`.QueueScheduling`, or at any rate a class that exhibits an
-    :meth:`~.execute_tasks` method. If `backend` is `None`, the default backend
-    will be used.
+    :meth:`~.execute_tasks` method with the correct signature (see
+    :meth:`.QueueScheduling.execute_tasks`). If `backend` is `None`, the
+    default backend will be used.
 
     :param depgraph: The task dependency graph.
     :param backend: The scheduling backend.
@@ -177,7 +180,22 @@ class Scheduler:
         else:
             self.backend = backend
 
-    def schedule(self):
-        '''Schedule the tasks!'''
+    def schedule(self, env={}):
+        '''Schedule the tasks!
 
-        self.backend.execute_tasks(self.sorted_list, self.depgraph)
+        :param env: An initial environment for the scheduled tasks. This allows
+                    completed tasks to inform other, dependent tasks of e.g.
+                    the location of interesting files.
+
+                    The type of this object is arbitrary and its use is
+                    entirely defined by the tasks themselves, which are also
+                    responsible for the updates. The scheduler is only
+                    responsible for threading the environment down to the
+                    executed tasks. A reasonable choice for the type of this
+                    object is probably some kind of key-value mapping. Hence,
+                    the default value is an empty dictionary.
+
+        :returns: The modified environment.
+        '''
+
+        self.backend.execute_tasks(self.sorted_list, self.depgraph, env)
