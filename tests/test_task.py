@@ -24,7 +24,7 @@ class TestExecuteTask:
             t = task.ExecuteTask('echo', ['echo', 'test'], stdout=f_out)
             env = {}
             t.do(env)
-        assert env['results']['echo']['return_code'] == 0
+        assert env['tasks']['echo']['return_code'] == 0
 
         with open(filename) as f_in:
             result = f_in.readline()

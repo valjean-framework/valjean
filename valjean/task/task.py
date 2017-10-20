@@ -31,7 +31,7 @@ It makes it possible to execute arbitrary commands. Consider:
    >>> env = {}
    >>> task.do(env) # 'ni!' printed to stdout
    >>> pprint(env)  # doctest: +NORMALIZE_WHITESPACE
-   {'results': {'say': {'return_code': 0, 'wallclock_time': ...}}}
+   {'tasks': {'say': {'return_code': 0, 'wallclock_time': ...}}}
 
 Note that the `command` is not parsed by a shell. So the following will not do
 what you may expect:
@@ -130,16 +130,16 @@ class ExecuteTask(Task):
     def do(self, env):
         '''Execute the specified command and wait for its completion.
 
-        When executed, the task will insert its name in the 'results'
+        When executed, the task will insert its name in the 'tasks'
         environment dictionary::
 
-            env['results'][self.name] = {}
+            env['tasks'][task.name] = {}
 
         On completion, the dictionary will be filled with the return code and
         execution time of the task::
 
-            env['results'][self.name]['return_code'] = return_code
-            env['results'][self.name]['wallclock_time'] = wallclock_time
+            env['tasks'][task.name]['return_code'] = return_code
+            env['tasks'][task.name]['wallclock_time'] = wallclock_time
 
         Therefore, an empty dictionary entry for ``self.name`` may be taken to
         indicate a running task.
@@ -149,13 +149,13 @@ class ExecuteTask(Task):
 
         from subprocess import call
         from time import time
-        env.setdefault('results', {})[self.name] = {}
+        env.setdefault('tasks', {}).setdefault(self.name, {})
         start_time = time()
         result = call(self.cli, universal_newlines=True, **self.kwargs)
         end_time = time()
         # Here we assume that env is a mapping
-        env['results'][self.name] = {'return_code': result,
-                                     'wallclock_time': end_time-start_time}
+        env['tasks'][self.name] = {'return_code': result,
+                                   'wallclock_time': end_time-start_time}
 
 
 class QsubWrapperTask(Task):
