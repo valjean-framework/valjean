@@ -26,10 +26,11 @@ It makes it possible to execute arbitrary commands. Consider:
 .. doctest:: task
 
    >>> from pprint import pprint
-   >>> task = ExecuteTask(name='say', command='echo "ni!"')
+   >>> task = ExecuteTask(name='say',
+   ...                    cli=['echo', 'ni!'])
    >>> env = {}
    >>> task.do(env) # 'ni!' printed to stdout
-   >>> pprint(env) # doctest: +NORMALIZE_WHITESPACE
+   >>> pprint(env)  # doctest: +NORMALIZE_WHITESPACE
    {'results': {'say': {'return_code': 0, 'wallclock_time': ...}}}
 
 Note that the `command` is not parsed by a shell. So the following will not do
@@ -38,9 +39,9 @@ what you may expect:
 .. doctest:: task
 
    >>> task = ExecuteTask(name='want',
-   ...                    command='echo "We want..." '
-   ...                         '&& sleep 2 '
-   ...                         '&& echo "...a shrubbery!"')
+   ...                    cli=['echo', 'We want...', '&&',
+   ...                         'sleep', '2', '&&',
+   ...                         'echo', '...a shrubbery!'])
    >>> env = {}
    >>> task.do(env)  # prints 'We want... && sleep 2 && echo ... a shrubbery!'
 
@@ -113,17 +114,17 @@ class ExecuteTask(Task):
     completion.
 
     :param str name: The name of this task.
-    :param str command: The command line to be executed. Note that the command
-                        line is not interpreted by a shell, so shell constructs
-                        such as ``&&`` or ``||`` cannot be used.
+    :param list cli: The command line to be executed, as a list. The first
+                     element is the command and the following ones are its
+                     arguments.
     :param mapping kwargs: Any keyword arguments will be passed to the
                            :class:`.subprocess.Popen` constructor.
     '''
 
-    def __init__(self, name, command, **kwargs):
+    def __init__(self, name, cli, **kwargs):
 
         super().__init__(name)
-        self.command = command
+        self.cli = cli
         self.kwargs = kwargs
 
     def do(self, env):
@@ -146,13 +147,11 @@ class ExecuteTask(Task):
         :param mapping env: The task environment.
          '''
 
-        from shlex import split
         from subprocess import call
         from time import time
         env.setdefault('results', {})[self.name] = {}
-        args = split(self.command)
         start_time = time()
-        result = call(args, universal_newlines=True, **self.kwargs)
+        result = call(self.cli, universal_newlines=True, **self.kwargs)
         end_time = time()
         # Here we assume that env is a mapping
         env['results'][self.name] = {'return_code': result,

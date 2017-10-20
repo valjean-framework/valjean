@@ -21,7 +21,7 @@ class TestExecuteTask:
     def test_echo(self, tempdir):
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
-            t = task.ExecuteTask('echo', 'echo test', stdout=f_out)
+            t = task.ExecuteTask('echo', ['echo', 'test'], stdout=f_out)
             env = {}
             t.do(env)
         assert env['results']['echo']['return_code'] == 0
