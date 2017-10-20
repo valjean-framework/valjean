@@ -29,3 +29,23 @@ class TestExecuteTask:
         with open(filename) as f_in:
             result = f_in.readline()
             assert result == 'test\n'
+
+
+class TestShellTask:
+
+    def test_shell(self, tempdir):
+        script = r'''echo here
+        echo there
+        echo and everywhere
+        '''
+
+        filename = os.path.join(tempdir, 'testfile')
+        with open(filename, 'w') as f_out:
+            t = task.ShellTask('script', script, stdout=f_out)
+            env = {}
+            t.do(env)
+        assert env['tasks']['script']['return_code'] == 0
+
+        with open(filename) as f_in:
+            result = f_in.read()
+            assert result == 'here\nthere\nand everywhere\n'

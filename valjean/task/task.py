@@ -158,6 +158,60 @@ class ExecuteTask(Task):
                                    'wallclock_time': end_time-start_time}
 
 
+class ShellTask(Task):
+    '''Task that executes the specified shell script.
+
+    The script file will be created in a temporary directory (or the directory
+    specified by ``dir``) and can be kept for inspection by passing
+    ``delete=False`` to the constructor. The script filename can be read from
+    the task environment as ``env['tasks'][task.name]['dir']``.
+
+    :param str name: The name of this task.
+    :param str script: A script to be executed, as a string.
+    :param str shell: The path to the shell that should be used to execute the
+                      script.
+    :param bool delete: If true, delete the shell script when done.
+    :param dir: The path to the directory where the temporary script file will
+                be created, or ``None`` (in which case the default system
+                directory will be used).
+    :type dir: str or None
+    :param mapping kwargs: Any keyword arguments will be passed to the
+                           :class:`.subprocess.Popen` constructor.
+    '''
+
+    def __init__(self, name, script, shell='/bin/bash',
+                 delete=True, dir=None, **kwargs):
+
+        super().__init__(name)
+        self.script = script
+        self.shell = shell
+        self.delete = delete
+        self.dir = dir
+        self.kwargs = kwargs
+
+    @staticmethod
+    def sanitize_filename(name):
+        return ''.join(c if c.isalnum() else '_' for c in name)
+
+    def do(self, env):
+        '''Execute the script and wait for its completion.'''
+
+        import tempfile
+        sanitized = self.sanitize_filename(self.name)
+        with tempfile.NamedTemporaryFile(prefix=sanitized,
+                                         delete=self.delete,
+                                         dir=self.dir) as f:
+            f.write(self.script.encode('utf-8'))
+            f.seek(0)
+            # store the script filename in the environment dict
+            env.setdefault('tasks', {}).setdefault(self.name, {
+                'script_filename': f.name
+                })
+            subtask = ExecuteTask(self.name, [self.shell, f.name],
+                                  **self.kwargs)
+            subtask.do(env)
+
+
 class QsubWrapperTask(Task):
 
     def __init__(self, task):
