@@ -210,26 +210,3 @@ class ShellTask(Task):
             subtask = ExecuteTask(self.name, [self.shell, f.name],
                                   **self.kwargs)
             subtask.do(env)
-
-
-class QsubWrapperTask(Task):
-
-    def __init__(self, task):
-        if not isinstance(task, ExecuteTask):
-            raise TaskError('QsubWrapperTask may only wrap classes derived '
-                            'from ExecuteTask')
-
-        super().__init__('qsubwrap_' + task.name)
-        self.task = task
-
-    def do(self, env):
-
-        import os.path
-        import tempfile
-        cwd = self.task.kwargs.get('cwd', os.path.curdir)
-        with tempfile.NamedTemporaryFile(dir=cwd, delete=False,
-                                         prefix='qsub_job', suffix='.sh') as f:
-            content = '''#!/bin/sh
-{command}
-'''.format(command=self.task.command).encode('utf-8')
-            f.write(content)
