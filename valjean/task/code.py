@@ -43,7 +43,7 @@ class CheckoutTask(ShellTask):
             script = self._git_template.format(git=GIT, flags=_flags,
                                                repository=repository,
                                                checkout_dir=checkout_dir,
-                                               ref=ref)
+                                               ref=_ref)
         elif vcs == 'svn':
             raise NotImplementedError('SVN checkout not implemented yet')
         elif vcs == 'cvs':
