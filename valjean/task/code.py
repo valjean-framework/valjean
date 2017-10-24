@@ -27,8 +27,8 @@ class CheckoutTask(ShellTask):
                 trunk for ``svn`` or ``cvs``, etc.).
     :type ref: None or str
     :param str checkout_dir: The path to the checkout directory.
-    :param list flags: A list of flags (as strings) to be passed to the
-                       checkout/clone command.
+    :param str flags: Any additional flag (as a string) to be passed to the
+                      checkout/clone command.
     :param str vcs: The version-control system to use. Must be one of: ``git``.
     '''
 
