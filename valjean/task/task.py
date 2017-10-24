@@ -75,7 +75,7 @@ class Task:
 
         :param env: The environment for this task.
         '''
-        pass
+        raise NotImplementedError('do() not implemented for Task')
 
     def __str__(self):
         return '"Task {}"'.format(self.name)
