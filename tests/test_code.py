@@ -4,7 +4,7 @@
 
 import pytest
 import tempfile
-import os.path
+import os
 
 from .context import valjean  # noqa: F401
 import valjean.task.code as code
