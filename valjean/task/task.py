@@ -53,7 +53,6 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 
 class TaskError(Exception):
@@ -188,6 +187,11 @@ class ShellTask(Task):
         self.delete = delete
         self.dir = dir
         self.kwargs = kwargs
+        logger.info('Created %s task %s', self.__class__.__name__, self.name)
+        logger.info('  - shell = %s', self.shell)
+        logger.info('  - delete = %s', self.delete)
+        logger.info('  - dir = %s', self.dir)
+        logger.debug('  - script = %s', self.script)
 
     @staticmethod
     def sanitize_filename(name):
@@ -196,6 +200,7 @@ class ShellTask(Task):
     def do(self, env):
         '''Execute the script and wait for its completion.'''
 
+        logger.info('Executing %s task %s', self.__class__.__name__, self.name)
         import tempfile
         sanitized = self.sanitize_filename(self.name)
         with tempfile.NamedTemporaryFile(prefix=sanitized,

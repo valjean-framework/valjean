@@ -33,7 +33,6 @@ from .depgraph import DepGraph
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 
 class QueueScheduling:
@@ -97,9 +96,9 @@ class QueueScheduling:
                 break
 
             if n_tasks_left == len(tasks_left):
-                logging.info('worker queue is starving because '
-                             'of dependencies, sleeping for '
-                             '%f seconds...', self.sleep_interval)
+                logger.info('worker queue is starving because '
+                            'of dependencies, sleeping for '
+                            '%f seconds...', self.sleep_interval)
                 time.sleep(self.sleep_interval)
 
         # block until all tasks are done

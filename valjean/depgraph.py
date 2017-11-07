@@ -192,9 +192,7 @@ Some things you should be aware of when using :class:`DepGraph`:
 
 import logging
 
-logging.basicConfig(format='%(levelname)s (%(name)s): %(message)s')
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 
 class DepGraphError(Exception):
@@ -350,7 +348,7 @@ class DepGraph:
         '''
 
         if node in self._index:
-            logging.info('Node {} already belongs to the graph'.format(node))
+            logger.info('Node %s already belongs to the graph', node)
             return
 
         new_index = len(self._nodes)
@@ -491,14 +489,14 @@ class DepGraph:
 
         def visit(start_edges, current):
             current_edges = self._edges[current]
-            logger.debug('visiting: {}: {}, {}'
-                         .format(current, current_edges, start_edges))
+            logger.debug('visiting: %s: %s, %s',
+                         current, current_edges, start_edges)
             to_remove = set()
             for dest in current_edges:
                 if dest in start_edges:
-                    logger.debug('  marking {} for removal'.format(dest))
+                    logger.debug('  marking %s for removal', dest)
                     to_remove.add(dest)
-                logger.debug('  recursing into {}'.format(dest))
+                logger.debug('  recursing into %s', dest)
                 to_remove |= visit(start_edges, dest)
             return to_remove
 

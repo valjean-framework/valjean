@@ -53,6 +53,10 @@ class CheckoutTask(ShellTask):
         super().__init__(name, script)
         self.checkout_dir = checkout_dir
         self.repository = repository
+        logger.info('Created %s task %s', self.__class__.__name__, self.name)
+        logger.info('  - repository = %s', self.repository)
+        logger.info('  - checkout_log = %s', self.checkout_log)
+        logger.info('  - checkout_dir = %s', self.checkout_dir)
 
     def do(self, env):
         '''Check out the code as specified. This method populates the
