@@ -194,8 +194,12 @@ class ShellTask(Task):
         logger.debug('  - script = %s', self.script)
 
     @staticmethod
+    def _allowed_char(c):
+        return c.isalnum() or c == '.'
+
+    @staticmethod
     def sanitize_filename(name):
-        return ''.join(c if c.isalnum() else '_' for c in name)
+        return ''.join(c if ShellTask._allowed_char(c) else '_' for c in name)
 
     def do(self, env):
         '''Execute the script and wait for its completion.'''
