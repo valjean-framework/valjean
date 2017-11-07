@@ -12,3 +12,4 @@ Tasks for checking out and building code (:mod:`.task.code`)
 .. automodule:: valjean.task.code
    :synopsis: Code-specific tasks
    :members:
+   :member-order: bysource
