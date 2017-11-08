@@ -32,6 +32,7 @@ An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
 
 .. doctest:: task.code
 
+   >>> import os
    >>> test_dir = '/path/to/test_project'
    >>> source_dir = os.path.join(test_dir, 'src')
    >>> build_dir = os.path.join(test_dir, 'build')

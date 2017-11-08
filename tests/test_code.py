@@ -32,15 +32,22 @@ class TestCodeTasks:
 
     def test_checkout(self, git_repo):
         with tempfile.TemporaryDirectory() as tmpdir:
-            t = code.CheckoutTask('test_checkout', git_repo, 'master', tmpdir,
-                                  vcs='git')
-            env = {}
-            t.do(env)
-            assert env['tasks']['test_checkout']['return_code'] == 0
-            assert env['checkout']['test_checkout']['repository'] == git_repo
-            assert env['checkout']['test_checkout']['checkout_dir'] == tmpdir
+            with tempfile.TemporaryDirectory() as logdir:
+                t = code.CheckoutTask(name='test_checkout',
+                                      repository=git_repo,
+                                      log_dir=logdir,
+                                      checkout_dir=tmpdir,
+                                      ref='master',
+                                      vcs='git')
+                env = {}
+                t.do(env)
+                assert env['tasks']['test_checkout']['return_code'] == 0
+                assert env['checkout']['test_checkout']['repository'] == \
+                    git_repo
+                assert env['checkout']['test_checkout']['checkout_dir'] == \
+                    tmpdir
 
-            filename = os.path.join(tmpdir, 'testfile')
-            with open(filename) as f:
-                content = f.read()
-            assert content == SAMPLE_TEXT
+                filename = os.path.join(tmpdir, 'testfile')
+                with open(filename) as f:
+                    content = f.read()
+                assert content == SAMPLE_TEXT

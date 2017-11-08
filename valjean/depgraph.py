@@ -329,7 +329,7 @@ class DepGraph:
         :returns: An iterable over the dependencies of `node`.
         '''
 
-        return map(lambda i: self._nodes[i], self._edges[self._index[node]])
+        return self.dependencies(node)
 
     def __le__(self, other):
         '''`g` <= `h` if `g` is a subgraph of `h`'''
@@ -463,10 +463,13 @@ class DepGraph:
 
         :returns: An iterable over the dependencies of `node`.'''
 
-        indices = self._edges.get(self._index[node], [])
-        result = map(lambda i: self._nodes[i], indices)
+        result = map(lambda i: self._nodes[i], self._edges[self._index[node]])
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('dependencies: %s -> %s', node, list(result))
+            # we need a new iterable for the logging; if we convert result to a
+            # list, we will consume it!
+            copy = map(lambda i: self._nodes[i],
+                       self._edges[self._index[node]])
+            logger.debug('dependencies: %s -> %s', node, list(copy))
         return result
 
     def to_graphviz(self):
