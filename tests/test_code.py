@@ -45,7 +45,7 @@ add_executable(test_exe "${SOURCE_FILENAME}")'''
 
 class TestCodeTasks:
 
-    def test_checkout(self, git_repo):
+    def test_git_checkout(self, git_repo):
         with tempfile.TemporaryDirectory() as tmpdir:
             with tempfile.TemporaryDirectory() as logdir:
                 t = code.CheckoutTask(name='test_checkout',
@@ -67,7 +67,7 @@ class TestCodeTasks:
                     content = f.read()
                 assert content == SAMPLE_TEXT
 
-    def test_build(self, cmake_project):
+    def test_cmake_build(self, cmake_project):
         with tempfile.TemporaryDirectory() as tmpdir:
             t = code.BuildTask(name='test_build',
                                source_dir=cmake_project,
