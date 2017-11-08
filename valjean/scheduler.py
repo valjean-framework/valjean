@@ -70,7 +70,8 @@ class QueueScheduling:
         tasks_done = {task: False for task in tasks}
         tasks_done_lock = threading.Lock()
         for i in range(self.n_workers):
-            t = QueueScheduling.WorkerThread(q, tasks_done, tasks_done_lock, env)
+            t = QueueScheduling.WorkerThread(q, tasks_done,
+                                             tasks_done_lock, env)
             t.start()
             threads.append(t)
 
