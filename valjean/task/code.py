@@ -111,8 +111,7 @@ class CheckoutTask(ShellTask):
                     ``'git'``.
     '''
 
-    _git_template = \
-r'''test -d {checkout_dir} || mkdir -p {checkout_dir}
+    _git_template = r'''test -d {checkout_dir} || mkdir -p {checkout_dir}
 {{
     {git} clone {flags} -- {repository} {checkout_dir}
     {git} -C {checkout_dir} checkout {ref}
@@ -199,15 +198,13 @@ class BuildTask(ShellTask):
                              ``'cmake'``.
     '''
 
-    _cmake_template = \
-        r'''test -d {build_dir} || mkdir -p {build_dir}
+    _cmake_template = r'''test -d {build_dir} || mkdir -p {build_dir}
 cd {build_dir}
 {cmake} {cflags} {source_dir} >{configure_log} 2>&1
 {cmake_build_commands}'''
 
-    _cmake_build_template = \
-        r'''{cmake} --build {build_dir} {target_flag} ''' \
-        '''{bflags} >{build_log} 2>&1'''
+    _cmake_build_template = (r'''{cmake} --build {build_dir} {target_flag} '''
+                             '''{bflags} >{build_log} 2>&1''')
 
     def __init__(self,
                  name: str,

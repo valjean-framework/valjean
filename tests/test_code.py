@@ -64,10 +64,10 @@ class TestCodeTasks:
                 env = {}
                 t.do(env)
                 assert env['tasks']['test_checkout']['return_code'] == 0
-                assert env['checkout']['test_checkout']['repository'] == \
-                    git_repo
-                assert env['checkout']['test_checkout']['checkout_dir'] == \
-                    tmpdir
+                assert (env['checkout']['test_checkout']['repository']
+                        == git_repo)
+                assert (env['checkout']['test_checkout']['checkout_dir']
+                        == tmpdir)
 
                 filename = os.path.join(tmpdir, 'testfile')
                 with open(filename) as f:
@@ -99,11 +99,13 @@ class TestCodeTasks:
             env = {}
             t.do(env)
             assert env['tasks']['test_build']['return_code'] == 0
-            configure_log_dir = \
-                os.path.dirname(env['build']['test_build']['configure_log'])
+            configure_log_dir = os.path.dirname(
+                env['build']['test_build']['configure_log']
+                )
             assert os.path.samefile(configure_log_dir, tmpdir)
-            build_log_dir = \
-                os.path.dirname(env['build']['test_build']['build_log'])
+            build_log_dir = os.path.dirname(
+                env['build']['test_build']['build_log']
+                )
             assert os.path.samefile(build_log_dir, tmpdir)
 
             exe_name = os.path.join(tmpdir, 'test_exe')

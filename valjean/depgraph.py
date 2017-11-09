@@ -304,8 +304,9 @@ class DepGraph:
         return str(assoc_list)
 
     def __repr__(self):
-        return 'DepGraph(nodes={nodes}, edges={edges}, index={index})'\
-               .format(nodes=self._nodes, edges=self._edges, index=self._index)
+        return 'DepGraph(nodes={nodes}, edges={edges}, index={index})'.format(
+            nodes=self._nodes, edges=self._edges, index=self._index
+            )
 
     def __eq__(self, other):
         return self.isomorphic_to(other)
