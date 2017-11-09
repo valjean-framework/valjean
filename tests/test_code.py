@@ -46,13 +46,20 @@ add_executable(test_exe "${SOURCE_FILENAME}")'''
 class TestCodeTasks:
 
     def test_git_checkout(self, git_repo):
+        return self.do_git_checkout(git_repo)
+
+    def test_git_checkout_extra(self, git_repo):
+        return self.do_git_checkout(git_repo, ref='master', flags='--depth 1')
+
+    def do_git_checkout(self, git_repo, ref=None, flags=None):
         with tempfile.TemporaryDirectory() as tmpdir:
             with tempfile.TemporaryDirectory() as logdir:
                 t = code.CheckoutTask(name='test_checkout',
                                       repository=git_repo,
                                       log_dir=logdir,
                                       checkout_dir=tmpdir,
-                                      ref='master',
+                                      ref=ref,
+                                      flags=flags,
                                       vcs='git')
                 env = {}
                 t.do(env)
@@ -68,11 +75,26 @@ class TestCodeTasks:
                 assert content == SAMPLE_TEXT
 
     def test_cmake_build(self, cmake_project):
+        return self.do_cmake_build(cmake_project)
+
+    def test_cmake_build_extra(self, cmake_project):
+        return self.do_cmake_build(cmake_project,
+                                   configure_flags='-DCMAKE_BUILD_TYPE=Debug',
+                                   build_targets=['test_exe', 'all'],
+                                   build_flags='-- -j1')
+
+    def do_cmake_build(self, cmake_project,
+                       configure_flags=None,
+                       build_flags=None,
+                       build_targets=None):
         with tempfile.TemporaryDirectory() as tmpdir:
             t = code.BuildTask(name='test_build',
                                source_dir=cmake_project,
                                build_dir=tmpdir,
                                log_dir=tmpdir,
+                               configure_flags=configure_flags,
+                               build_flags=build_flags,
+                               build_targets=build_targets,
                                build_system='cmake')
             env = {}
             t.do(env)

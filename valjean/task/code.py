@@ -71,6 +71,23 @@ from .task import ShellTask
 
 logger = logging.getLogger(__name__)
 
+
+def _q(string):
+    '''Quote a string so that it is correctly interpreted by shell scripts.'''
+    import shlex
+    if len(string) == 0:
+        return string
+    return shlex.quote(string)
+
+
+def _sq(string):
+    '''Split a string, quote the pieces and put everything back together.'''
+    import shlex
+    if len(string) == 0:
+        return string
+    return ' '.join(map(shlex.quote, shlex.split(string)))
+
+
 #: Path to the git executable.
 GIT = 'git'
 
@@ -94,27 +111,35 @@ class CheckoutTask(ShellTask):
                     ``'git'``.
     '''
 
-    _git_template = r'''
-test -d {checkout_dir} || mkdir -p {checkout_dir}
+    _git_template = \
+r'''test -d {checkout_dir} || mkdir -p {checkout_dir}
 {{
     {git} clone {flags} -- {repository} {checkout_dir}
     {git} -C {checkout_dir} checkout {ref}
-}} >{checkout_log} 2>&1
-'''
+}} >{checkout_log} 2>&1'''
 
-    def __init__(self, name: str, repository: str, checkout_dir: str,
-                 log_dir: str, ref=None, flags=None, vcs='git'):
+    def __init__(self,
+                 name: str,
+                 repository: str,
+                 checkout_dir: str,
+                 log_dir: str,
+                 ref=None,
+                 flags=None,
+                 vcs='git'):
         self.checkout_log = \
             os.path.join(log_dir,
                          self.sanitize_filename('checkout_' + name + '.log'))
         if vcs == 'git':
             _flags = flags if flags is not None else ''
             _ref = ref if ref is not None else 'master'
-            script = self._git_template.format(git=GIT, flags=_flags,
-                                               repository=repository,
-                                               checkout_dir=checkout_dir,
-                                               ref=_ref,
-                                               checkout_log=self.checkout_log)
+            script = self._git_template.format(
+                git=_q(GIT),
+                flags=_sq(_flags),
+                repository=_q(repository),
+                checkout_dir=_q(checkout_dir),
+                ref=_q(_ref),
+                checkout_log=_q(self.checkout_log)
+                )
         elif vcs == 'svn':
             raise NotImplementedError('SVN checkout not implemented yet')
         elif vcs == 'cvs':
@@ -174,16 +199,25 @@ class BuildTask(ShellTask):
                              ``'cmake'``.
     '''
 
-    _cmake_template = r'''
-test -d {build_dir} || mkdir -p {build_dir}
+    _cmake_template = \
+        r'''test -d {build_dir} || mkdir -p {build_dir}
 cd {build_dir}
 {cmake} {cflags} {source_dir} >{configure_log} 2>&1
-{cmake} --build {build_dir} {target_flag} {bflags} >{build_log} 2>&1
-'''
+{cmake_build_commands}'''
 
-    def __init__(self, name: str, source_dir: str, build_dir: str,
-                 log_dir: str, configure_flags=None, build_flags=None,
-                 build_target=None, build_system='cmake'):
+    _cmake_build_template = \
+        r'''{cmake} --build {build_dir} {target_flag} ''' \
+        '''{bflags} >{build_log} 2>&1'''
+
+    def __init__(self,
+                 name: str,
+                 source_dir: str,
+                 build_dir: str,
+                 log_dir: str,
+                 configure_flags=None,
+                 build_flags=None,
+                 build_targets=None,
+                 build_system='cmake'):
         _cflags = configure_flags if configure_flags is not None else ''
         _bflags = build_flags if build_flags is not None else ''
         self.configure_log = os.path.join(log_dir, self.sanitize_filename(
@@ -191,18 +225,31 @@ cd {build_dir}
         self.build_log = \
             os.path.join(log_dir,
                          self.sanitize_filename('build_' + name + '.log'))
+        _build_targets = [None] if build_targets is None else build_targets
         if build_system == 'cmake':
-            _target_flag = ('--target ' + build_target
-                            if build_target is not None else '')
-            script = self._cmake_template.format(
-                    cmake=CMAKE,
-                    build_dir=build_dir,
-                    source_dir=source_dir,
-                    cflags=_cflags, bflags=_bflags,
+
+            format_env = {
+                'cmake': _q(CMAKE),
+                'source_dir': _q(source_dir),
+                'build_dir': _q(build_dir),
+                'bflags': _sq(_bflags),
+                'cflags': _sq(_cflags),
+                'configure_log': _q(self.configure_log),
+                'build_log': _q(self.build_log)
+                }
+
+            cmake_build_list = []
+            for target in _build_targets:
+                _target_flag = '' if target is None else '--target ' + target
+                cmake_build_command = self._cmake_build_template.format(
                     target_flag=_target_flag,
-                    configure_log=self.configure_log,
-                    build_log=self.build_log
-                    )
+                    **format_env)
+                cmake_build_list.append(cmake_build_command)
+            cmake_build_commands = '\n'.join(cmake_build_list)
+            format_env['cmake_build_commands'] = cmake_build_commands
+
+            script = self._cmake_template.format(**format_env)
+
         elif build_system == 'autoconf' or build_system == 'configure':
             raise NotImplementedError('configure build not implemented yet')
         super().__init__(name, script)

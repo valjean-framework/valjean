@@ -191,7 +191,8 @@ class ShellTask(Task):
         logger.info('  - shell = %s', self.shell)
         logger.info('  - delete = %s', self.delete)
         logger.info('  - dir = %s', self.dir)
-        logger.debug('  - script = %s', self.script)
+        logger.debug('  - script = \n###### SCRIPT START #####\n'
+                     '%s\n#####  SCRIPT END  #####', self.script)
 
     @staticmethod
     def _allowed_char(c):
