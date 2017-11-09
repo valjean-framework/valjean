@@ -125,9 +125,10 @@ class CheckoutTask(ShellTask):
                  ref=None,
                  flags=None,
                  vcs='git'):
-        self.checkout_log = \
-            os.path.join(log_dir,
-                         self.sanitize_filename('checkout_' + name + '.log'))
+        self.checkout_log = os.path.join(
+            os.path.expanduser(log_dir),
+            self.sanitize_filename('checkout_' + name + '.log')
+            )
         if vcs == 'git':
             _flags = flags if flags is not None else ''
             _ref = ref if ref is not None else 'master'
@@ -217,11 +218,13 @@ cd {build_dir}
                  build_system='cmake'):
         _cflags = configure_flags if configure_flags is not None else ''
         _bflags = build_flags if build_flags is not None else ''
-        self.configure_log = os.path.join(log_dir, self.sanitize_filename(
-                'configure_' + name + '.log'))
-        self.build_log = \
-            os.path.join(log_dir,
-                         self.sanitize_filename('build_' + name + '.log'))
+        self.configure_log = os.path.join(
+            os.path.expanduser(log_dir),
+            self.sanitize_filename('configure_' + name + '.log'))
+        self.build_log = os.path.join(
+            os.path.expanduser(log_dir),
+            self.sanitize_filename('build_' + name + '.log')
+            )
         _build_targets = [None] if build_targets is None else build_targets
         if build_system == 'cmake':
 
