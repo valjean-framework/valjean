@@ -4,7 +4,10 @@ install-deps:
 	pip install -r requirements.txt
 
 test tests:
-	py.test -v -s --hypothesis-show-statistics tests
+	py.test
+
+test-verbose tests-verbose:
+	py.test --valjean-verbose
 
 doctest:
 	cd doc && $(MAKE) doctest
