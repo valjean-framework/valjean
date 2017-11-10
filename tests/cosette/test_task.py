@@ -10,7 +10,7 @@ from ..context import valjean  # noqa: F401
 import valjean.cosette.task.task as task
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def tempdir():
     with tempfile.TemporaryDirectory() as tmpdir:
         yield tmpdir

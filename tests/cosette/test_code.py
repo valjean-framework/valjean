@@ -13,7 +13,7 @@ import valjean.cosette.task.code as code
 SAMPLE_TEXT = 'spidiguda'
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def git_repo():
     '''Set up a minimalist git repository.'''
 
@@ -28,7 +28,7 @@ def git_repo():
         yield repo_dir
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def cmake_project():
     '''Set up a minimalist CMake project.'''
 
