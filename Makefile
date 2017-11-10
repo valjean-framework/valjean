@@ -18,7 +18,7 @@ html:
 	cd doc && $(MAKE) html
 
 lint:
-	@flake8 || echo 'Error: you need to install flake8'
+	@flake8
 
 clean:
 	cd doc && $(MAKE) clean
