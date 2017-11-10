@@ -3,6 +3,4 @@ Modules
 
 .. toctree::
 
-   modules/task
-   modules/depgraph
-   modules/scheduler
+   modules/cosette

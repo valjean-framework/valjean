@@ -8,9 +8,9 @@ Example usage:
 
 .. testsetup:: scheduler
 
-   from valjean.depgraph import DepGraph
-   from valjean.task.task import DelayTask
-   from valjean.scheduler import Scheduler
+   from valjean.cosette.depgraph import DepGraph
+   from valjean.cosette.task.task import DelayTask
+   from valjean.cosette.scheduler import Scheduler
 
 .. doctest:: scheduler
 

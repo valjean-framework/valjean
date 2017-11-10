@@ -6,8 +6,8 @@ import pytest
 import tempfile
 import os
 
-from .context import valjean  # noqa: F401
-import valjean.task.code as code
+from ..context import valjean  # noqa: F401
+import valjean.cosette.task.code as code
 
 
 SAMPLE_TEXT = 'spidiguda'

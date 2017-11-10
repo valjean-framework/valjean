@@ -5,8 +5,8 @@ from hypothesis.strategies import (integers, sets, text, lists, composite,
                                    sampled_from)
 import pytest
 
-from .context import valjean  # noqa: F401
-import valjean.depgraph as depgraph
+from ..context import valjean  # noqa: F401
+import valjean.cosette.depgraph as depgraph
 
 
 @composite

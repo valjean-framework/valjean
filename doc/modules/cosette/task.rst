@@ -1,7 +1,7 @@
 Task specification (:mod:`~.task`)
 ==================================
 
-.. automodule:: valjean.task.task
+.. automodule:: valjean.cosette.task.task
    :synopsis: Task specification
    :members:
    :member-order: bysource
@@ -9,7 +9,7 @@ Task specification (:mod:`~.task`)
 Tasks for checking out and building code (:mod:`.task.code`)
 ------------------------------------------------------------
 
-.. automodule:: valjean.task.code
+.. automodule:: valjean.cosette.task.code
    :synopsis: Code-specific tasks
    :members:
    :member-order: bysource

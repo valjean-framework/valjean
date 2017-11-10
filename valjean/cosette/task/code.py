@@ -28,7 +28,7 @@ An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
 
 .. testsetup:: task.code
 
-   from valjean.task.code import CheckoutTask, BuildTask
+   from valjean.cosette.task.code import CheckoutTask, BuildTask
 
 .. doctest:: task.code
 

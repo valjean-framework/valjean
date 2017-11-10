@@ -1,6 +1,7 @@
 import logging
 
-__all__ = ['depgraph', 'task', 'task.task', 'task.code', 'scheduler']
+_cosette = ['depgraph', 'task', 'task.task', 'task.code', 'scheduler']
+__all__ = list(map(lambda x: 'cosette.' + x, _cosette))
 __version__ = '0.1'
 
 logging.basicConfig(format='%(levelname)s (%(name)s) %(asctime)s: %(message)s',

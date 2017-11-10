@@ -4,10 +4,10 @@ import random
 from hypothesis import given, settings
 from hypothesis.strategies import lists, floats, integers, composite
 
-from .context import valjean  # noqa: F401
-from valjean.depgraph import DepGraph
-from valjean.scheduler import Scheduler, QueueScheduling
-from valjean.task.task import DelayTask
+from ..context import valjean  # noqa: F401
+from valjean.cosette.depgraph import DepGraph
+from valjean.cosette.scheduler import Scheduler, QueueScheduling
+from valjean.cosette.task.task import DelayTask
 
 
 @composite

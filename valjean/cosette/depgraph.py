@@ -27,7 +27,7 @@ representing the dependencies between items to the
 
 .. testsetup:: depgraph
 
-   from valjean.depgraph import DepGraph
+   from valjean.cosette.depgraph import DepGraph
 
 .. doctest:: depgraph
 

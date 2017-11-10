@@ -6,8 +6,8 @@ import pytest
 import tempfile
 import os
 
-from .context import valjean  # noqa: F401
-import valjean.task.task as task
+from ..context import valjean  # noqa: F401
+import valjean.cosette.task.task as task
 
 
 @pytest.fixture(scope='module')
