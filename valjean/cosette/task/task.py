@@ -88,6 +88,9 @@ class Task:
     def __str__(self):
         return '"Task {}"'.format(self.name)
 
+    def __repr__(self):
+        return "Task('{}')".format(self.name)
+
 
 class DelayTask(Task):
     '''Task that waits for the specified number of seconds.
