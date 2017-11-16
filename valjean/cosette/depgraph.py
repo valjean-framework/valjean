@@ -465,11 +465,15 @@ class DepGraph:
     def nodes(self):
         return self._nodes
 
-    def dependencies(self, node):
-        '''Query the graph about the dependencies of `node`.
+    def dependencies(self, node, recurse=False):
+        '''Query the graph about the dependencies of `node`. If `recurse` is
+        ``True``, also return indirect dependencies (the transitive closure of
+        the specified node).
 
+        :param bool recurse: If true, return indirect dependencies as well.
         :returns: An iterable over the dependencies of `node`.'''
 
+        from itertools import chain
         result = map(lambda i: self._nodes[i], self._edges[self._index[node]])
         if logger.isEnabledFor(logging.DEBUG):
             # we need a new iterable for the logging; if we convert result to a
@@ -477,7 +481,13 @@ class DepGraph:
             copy = map(lambda i: self._nodes[i],
                        self._edges[self._index[node]])
             logger.debug('dependencies: %s -> %s', node, list(copy))
-        return result
+        if recurse:
+            nodes = list(result)
+            sub_deps = chain.from_iterable(self.dependencies(d, recurse)
+                                           for d in nodes)
+            return frozenset(sub_deps) | frozenset(nodes)
+        else:
+            return result
 
     def to_graphviz(self):
         '''Convert the graph to graphviz format.
@@ -517,5 +527,31 @@ class DepGraph:
                 to_remove |= visit(self._edges[i_node], j_node)
             for j in to_remove:
                 self._edges[i_node].remove(j)
+
+        return self
+
+    def transitive_closure(self):
+        '''Perform a transitive closure of the graph in place.'''
+
+        def visit(start_edges, current):
+            current_edges = self._edges[current]
+            logger.debug('visiting: %s: %s, %s',
+                         current, current_edges, start_edges)
+            to_add = set()
+            for dest in current_edges:
+                if dest not in start_edges:
+                    logger.debug('  marking %s for insertion', dest)
+                    to_add.add(dest)
+                logger.debug('  recursing into %s', dest)
+                to_add |= visit(start_edges, dest)
+            return to_add
+
+        logger.debug(repr(self))
+        for i_node, node in enumerate(self._nodes):
+            to_add = set()
+            for j_node in self._edges[i_node]:
+                to_add |= visit(self._edges[i_node], j_node)
+            for j in to_add:
+                self._edges[i_node].add(j)
 
         return self

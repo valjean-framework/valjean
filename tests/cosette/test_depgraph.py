@@ -141,3 +141,68 @@ class TestDepGraph:
         g_tr = g.copy().transitive_reduction()
         note('reduced graph: {}'.format(repr(g_tr)))
         assert g_tr <= g
+
+    @given(g=depgraphs())
+    def test_transitive_reduction_same_nodes(self, g):
+        '''Test that transitive reduction results in a graph over the same
+        nodes.'''
+        g_tr = g.copy().transitive_reduction()
+        note('reduced graph: {}'.format(repr(g_tr)))
+        assert sorted(g_tr.nodes()) == sorted(g.nodes())
+
+    @given(g=depgraphs())
+    def test_transitive_reduction_same_reachability(self, g):
+        '''Test that transitive reduction results in a graph with the same
+        reachability.'''
+        g_tr = g.copy().transitive_reduction()
+        for node in g.nodes():
+            all_deps = g.dependencies(node, recurse=True)
+            all_deps_tr = g_tr.dependencies(node, recurse=True)
+            assert sorted(all_deps) == sorted(all_deps_tr)
+
+    @given(g=depgraphs())
+    def test_transitive_reduction_idempotent(self, g):
+        '''Test that transitive reduction is idempotent.'''
+        g_tr = g.copy().transitive_reduction()
+        g_tr2 = g_tr.copy().transitive_reduction()
+        assert g_tr == g_tr2
+
+    @given(g=depgraphs())
+    def test_transitive_closure_supergraph(self, g):
+        '''Test that transitive closure results in a supergraph.'''
+        g_cl = g.copy().transitive_closure()
+        note('closure graph: {}'.format(repr(g_cl)))
+        assert g <= g_cl
+
+    @given(g=depgraphs())
+    def test_transitive_closure_same_nodes(self, g):
+        '''Test that transitive closure results in a graph over the same
+        nodes.'''
+        g_cl = g.copy().transitive_closure()
+        note('closure graph: {}'.format(repr(g_cl)))
+        assert sorted(g_cl.nodes()) == sorted(g.nodes())
+
+    @given(g=depgraphs())
+    def test_transitive_closure_same_reachability(self, g):
+        '''Test that transitive closure results in a graph with the same
+        reachability.'''
+        g_cl = g.copy().transitive_closure()
+        for node in g.nodes():
+            all_deps = g.dependencies(node, recurse=True)
+            all_deps_cl = g_cl.dependencies(node, recurse=True)
+            assert sorted(all_deps) == sorted(all_deps_cl)
+
+    @given(g=depgraphs())
+    def test_transitive_closure_idempotent(self, g):
+        '''Test that transitive closure is idempotent.'''
+        g_cl = g.copy().transitive_closure()
+        g_cl2 = g_cl.copy().transitive_closure()
+        assert g_cl == g_cl2
+
+    @given(g=depgraphs())
+    def test_transitive_closure_same_as_dependencies(self, g):
+        '''Test that transitive closure is idempotent.'''
+        g_cl = g.copy().transitive_closure()
+        for node in g.nodes():
+            assert (sorted(g.dependencies(node, recurse=True)) ==
+                    sorted(g_cl.dependencies(node, recurse=False)))
