@@ -7,5 +7,11 @@ Task scheduling and dependency handling (:mod:`~.scheduler`)
 .. autoclass:: valjean.cosette.scheduler.Scheduler
    :members:
 
-.. autoclass:: valjean.cosette.scheduler.QueueScheduling
+
+Scheduling backends
+-------------------
+
+.. automodule:: valjean.cosette.backends.queue
+   :synopsis: Scheduling tasks based on Python threads and queues
    :members:
+   :member-order: bysource

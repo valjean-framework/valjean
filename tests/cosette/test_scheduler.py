@@ -6,7 +6,8 @@ from hypothesis.strategies import lists, floats, integers, composite
 from ..context import valjean  # noqa: F401
 from valjean import get_log_level, set_log_level
 from valjean.cosette.depgraph import DepGraph
-from valjean.cosette.scheduler import Scheduler, QueueScheduling, TaskStatus
+from valjean.cosette.scheduler import Scheduler, QueueScheduling
+from valjean.cosette.task import TaskStatus
 from valjean.cosette.task.task import DelayTask, Task
 
 

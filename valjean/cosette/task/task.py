@@ -183,7 +183,7 @@ class ShellTask(Task):
     :param dir: The path to the directory where the temporary script file will
                 be created, or ``None`` (in which case the default system
                 directory will be used).
-    :type dir: str or None
+    :type dir: None or str
     :param mapping kwargs: Any keyword arguments will be passed to the
                            :class:`.subprocess.Popen` constructor.
     '''
