@@ -28,12 +28,16 @@ Example usage:
 
 import threading
 import logging
+import enum
 from collections.abc import MutableMapping
 
 from .depgraph import DepGraph
 
 
 logger = logging.getLogger(__name__)
+
+TaskStatus = enum.Enum('TaskStatus',
+                       'SCHEDULED PENDING SUCCESS FAILURE NOTRUN')
 
 
 class QueueScheduling:
@@ -68,7 +72,7 @@ class QueueScheduling:
 
         threads = []
         q = queue.Queue(self.n_workers)
-        tasks_done = {task: False for task in tasks}
+        tasks_done = {task: TaskStatus.SCHEDULED for task in tasks}
         tasks_done_lock = threading.Lock()
         env_lock = threading.Lock()
         for i in range(self.n_workers):
@@ -82,15 +86,39 @@ class QueueScheduling:
             tasks_still_left = []
             n_tasks_left = len(tasks_left)
             for task in tasks_left:
-                deps = graph.dependencies(task)
                 with tasks_done_lock:
-                    can_run = all(map(lambda t: tasks_done.get(t, True), deps))
-                if can_run:
+                    status = tasks_done[task]
+                logger.debug('status of task %s: %s', task, status)
+
+                if status != TaskStatus.SCHEDULED:
+                    continue
+
+                deps = list(graph.dependencies(task))
+                with tasks_done_lock:
+                    failed_deps = any(tasks_done[t] == TaskStatus.FAILURE
+                                      or tasks_done[t] == TaskStatus.NOTRUN
+                                      for t in deps)
+                    can_run = all(tasks_done[t] == TaskStatus.SUCCESS
+                                  for t in deps)
+                logger.debug('task %s has failed deps: %s', task, failed_deps)
+                logger.debug('task %s can run: %s', task, can_run)
+                if failed_deps:
+                    with tasks_done_lock:
+                        tasks_done[task] = TaskStatus.NOTRUN
+                    with env_lock:
+                        env.setdefault('tasks', {}).setdefault(task.name, {
+                            'exit_status': TaskStatus.NOTRUN
+                            })
+                    n_tasks_left -= 1
+                    logger.info('task %s cannot be run, %d left',
+                                task, n_tasks_left)
+                elif can_run:
                     q.put(task)
                     n_tasks_left -= 1
                     logger.info('task %s scheduled, %d left',
                                 task, n_tasks_left)
                 else:
+                    logger.debug('reappending task %s', task)
                     tasks_still_left.append(task)
             tasks_left = tasks_still_left
 
@@ -123,7 +151,7 @@ class QueueScheduling:
             self.env = env
             self.env_lock = env_lock
 
-        def apply(self, env_update):
+        def apply(self, env_update, task_name, exit_status):
             '''Apply un update to an existing environment.'''
 
             def apply_worker(update, old):
@@ -137,9 +165,12 @@ class QueueScheduling:
                     else:
                         old[k] = v
 
-            if env_update is not None:
-                with self.env_lock:
+            with self.env_lock:
+                if env_update is not None:
                     apply_worker(env_update, self.env)
+                self.env.setdefault('tasks', {}).setdefault(task_name, {
+                    'exit_status': exit_status
+                    })
 
         def run(self):
             logger.debug('worker %s starting', self.name)
@@ -149,11 +180,31 @@ class QueueScheduling:
                 if task is None:
                     logger.debug('worker %s exiting', self.name)
                     break
-                env_update = task.do(self.env)
-                logger.debug('worker %s completed task %s', self.name, task)
+
                 with self.tasks_done_lock:
-                    self.tasks_done[task] = True
-                self.apply(env_update)
+                    # we start to work on the task
+                    self.tasks_done[task] = TaskStatus.PENDING
+
+                try:
+                    env_update = task.do(self.env)
+                except Exception as ex:
+                    logger.exception('task %s on worker %s failed: %s',
+                                     task, self.name, ex)
+                    with self.tasks_done_lock:
+                        self.tasks_done[task] = TaskStatus.FAILURE
+                        logger.debug('task %s failed', task)
+                    logger.debug('saving FAILURE status in the environment...')
+                    self.apply(None, task.name, TaskStatus.FAILURE)
+                    logger.debug('environment updated: %s', self.env)
+                else:
+                    logger.debug('task %s on worker %s succeeded',
+                                 task, self.name)
+                    with self.tasks_done_lock:
+                        self.tasks_done[task] = TaskStatus.SUCCESS
+                    logger.debug('proposed environment update: %s', env_update)
+                    self.apply(env_update, task.name, TaskStatus.SUCCESS)
+
+                logger.debug('worker %s wants more!', self.name)
                 self.queue.task_done()
 
 
@@ -220,4 +271,6 @@ class Scheduler:
         :returns: The modified environment.
         '''
 
+        logger.info('scheduling tasks')
+        logger.debug('for graph %s', self.depgraph)
         self.backend.execute_tasks(self.sorted_list, self.depgraph, env)
