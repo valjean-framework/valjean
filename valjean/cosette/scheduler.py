@@ -58,13 +58,14 @@ class QueueScheduling:
         self.n_workers = n_workers
         self.sleep_interval = sleep_interval
 
-    def execute_tasks(self, tasks, graph, env={}):
+    def execute_tasks(self, tasks, graph, env=None):
         '''Execute the tasks.
 
         :param iterable tasks: Iterable over tasks to be executed, possibly
                                sorted according to some order.
         :param DepGraph graph: Dependency graph for the tasks.
         :param env: An initial environment for the scheduled tasks.
+        :type env: mapping or None
         '''
 
         import time
@@ -74,6 +75,8 @@ class QueueScheduling:
         q = queue.Queue(self.n_workers)
         tasks_done = {task: TaskStatus.SCHEDULED for task in tasks}
         tasks_done_lock = threading.Lock()
+        if env is None:
+            env = {}
         env_lock = threading.Lock()
         for i in range(self.n_workers):
             t = QueueScheduling.WorkerThread(q, tasks_done, tasks_done_lock,
@@ -253,7 +256,7 @@ class Scheduler:
         else:
             self.backend = backend
 
-    def schedule(self, env={}):
+    def schedule(self, env=None):
         '''Schedule the tasks!
 
         :param env: An initial environment for the scheduled tasks. This allows
@@ -273,4 +276,6 @@ class Scheduler:
 
         logger.info('scheduling tasks')
         logger.debug('for graph %s', self.depgraph)
+        if env is None:
+            env = {}
         self.backend.execute_tasks(self.sorted_list, self.depgraph, env)
