@@ -128,7 +128,7 @@ class TestSchedulerOnFailure:
         '''Check that a failing task is marked as failed in the environment.'''
         env = run(graph, n_workers)
         for task in graph.nodes():
-            assert env['tasks'][task.name]['exit_status'] == TaskStatus.FAILURE
+            assert env['tasks'][task.name]['status'] == TaskStatus.FAILURE
 
     @given(graph=graphs(delay_tasks(min_duration=0.0, max_duration=0.0,
                                     average_size=10, min_size=3),
@@ -155,16 +155,16 @@ class TestSchedulerOnFailure:
             if node in deps or node == task:
                 # check that the failing task blocked `task` and all the other
                 # tasks that depended on it
-                assert (env['tasks'][node.name]['exit_status']
+                assert (env['tasks'][node.name]['status']
                         == TaskStatus.NOTRUN)
                 n_blocked += 1
             elif node == failing_task:
                 # check that the failing task failed (duh)
-                assert (env['tasks'][node.name]['exit_status']
+                assert (env['tasks'][node.name]['status']
                         == TaskStatus.FAILURE)
             else:
                 # check that all the other tasks ran normally
-                assert (env['tasks'][node.name]['exit_status']
+                assert (env['tasks'][node.name]['status']
                         == TaskStatus.SUCCESS)
 
         # record the number of blocked tasks
