@@ -332,6 +332,12 @@ class DepGraph:
 
         return self.dependencies(node)
 
+    def __len__(self):
+        return len(self._nodes)
+
+    def __contains__(self, x):
+        return x in self._nodes
+
     def __le__(self, other):
         '''`g` <= `h` if `g` is a subgraph of `h`'''
 
