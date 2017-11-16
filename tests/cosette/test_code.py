@@ -61,12 +61,11 @@ class TestCodeTasks:
                                       ref=ref,
                                       flags=flags,
                                       vcs='git')
-                env = {}
-                t.do(env)
-                assert env['tasks']['test_checkout']['return_code'] == 0
-                assert (env['checkout']['test_checkout']['repository']
+                env_up = t.do({})
+                assert env_up['tasks']['test_checkout']['return_code'] == 0
+                assert (env_up['checkout']['test_checkout']['repository']
                         == git_repo)
-                assert (env['checkout']['test_checkout']['checkout_dir']
+                assert (env_up['checkout']['test_checkout']['checkout_dir']
                         == tmpdir)
 
                 filename = os.path.join(tmpdir, 'testfile')
@@ -96,15 +95,14 @@ class TestCodeTasks:
                                build_flags=build_flags,
                                build_targets=build_targets,
                                build_system='cmake')
-            env = {}
-            t.do(env)
-            assert env['tasks']['test_build']['return_code'] == 0
+            env_up = t.do({})
+            assert env_up['tasks']['test_build']['return_code'] == 0
             configure_log_dir = os.path.dirname(
-                env['build']['test_build']['configure_log']
+                env_up['build']['test_build']['configure_log']
                 )
             assert os.path.samefile(configure_log_dir, tmpdir)
             build_log_dir = os.path.dirname(
-                env['build']['test_build']['build_log']
+                env_up['build']['test_build']['build_log']
                 )
             assert os.path.samefile(build_log_dir, tmpdir)
 

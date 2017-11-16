@@ -21,32 +21,41 @@ It makes it possible to execute arbitrary commands. Consider:
 
 .. testsetup:: task
 
-   from valjean.cosette.task.task import ExecuteTask
+   from valjean.cosette.task.task import ExecuteTask, ShellTask
 
 .. doctest:: task
 
    >>> from pprint import pprint
    >>> task = ExecuteTask(name='say',
    ...                    cli=['echo', 'ni!'])
-   >>> env = {}
-   >>> task.do(env) # 'ni!' printed to stdout
-   >>> pprint(env)  # doctest: +NORMALIZE_WHITESPACE
+   >>> env_update = task.do({}) # 'ni!' printed to stdout
+   >>> pprint(env_update)  # doctest: +NORMALIZE_WHITESPACE
    {'tasks': {'say': {'return_code': 0, 'wallclock_time': ...}}}
 
-Note that the `command` is not parsed by a shell. So the following will not do
-what you may expect:
+Note that the `command` is not parsed by a shell. So the following may not do
+what you expect:
 
 .. doctest:: task
 
    >>> task = ExecuteTask(name='want',
    ...                    cli=['echo', 'We want...', '&&',
-   ...                         'sleep', '2', '&&',
    ...                         'echo', '...a shrubbery!'])
-   >>> env = {}
-   >>> task.do(env)  # prints 'We want... && sleep 2 && echo ... a shrubbery!'
+   >>> env_update = task.do({})
+   >>> # prints 'We want... && echo ...a shrubbery!'
 
 If you need to execute several commands, either wrap them in a shell script or
-create separate tasks for them.
+create separate tasks for them. This is made easier by the :class:`ShellTask`
+class:
+
+.. doctest:: task
+
+   >>> task = ShellTask(name='want',
+   ...                  shell='/bin/sh',  # optional, defaults to '/bin/bash'
+   ...                  script="""
+   ... echo 'We want...'
+   ... echo '...a shrubbery!'
+   ... """)
+   >>> env_update = task.do({})  # executes the shell script
 '''
 
 import logging
@@ -129,32 +138,30 @@ class ExecuteTask(Task):
     def do(self, env):
         '''Execute the specified command and wait for its completion.
 
-        When executed, the task will insert its name in the 'tasks'
-        environment dictionary::
-
-            env['tasks'][task.name] = {}
-
-        On completion, the dictionary will be filled with the return code and
-        execution time of the task::
+        On completion, this method proposes the following updates to the
+        environment::
 
             env['tasks'][task.name]['return_code'] = return_code
             env['tasks'][task.name]['wallclock_time'] = wallclock_time
 
-        Therefore, an empty dictionary entry for ``self.name`` may be taken to
-        indicate a running task.
+        Here ``return_code`` is the return code of the executed command, and
+        ``wallclock_time`` is the time it took.
 
         :param mapping env: The task environment.
-         '''
+        :returns: The proposed environment update.
+        '''
 
         from subprocess import call
         from time import time
-        env.setdefault('tasks', {}).setdefault(self.name, {})
         start_time = time()
         result = call(self.cli, universal_newlines=True, **self.kwargs)
         end_time = time()
         # Here we assume that env is a mapping
-        env['tasks'][self.name] = {'return_code': result,
-                                   'wallclock_time': end_time-start_time}
+        env_up = {'tasks': {self.name: {
+                  'return_code': result,
+                  'wallclock_time': end_time-start_time
+                  }}}
+        return env_up
 
 
 class ShellTask(Task):
@@ -203,7 +210,16 @@ class ShellTask(Task):
         return ''.join(c if ShellTask._allowed_char(c) else '_' for c in name)
 
     def do(self, env):
-        '''Execute the script and wait for its completion.'''
+        '''Execute the script and wait for its completion.
+
+        In addition to the environment updates proposed by
+        :meth:`ExecuteTask.do()`, this method also proposes::
+
+            env['tasks'][task.name]['script_filename'] = script_filename
+
+        :param mapping env: The task environment.
+        :returns: The proposed environment update.
+        '''
 
         logger.info('Executing %s task %s', self.__class__.__name__, self.name)
         import tempfile
@@ -214,9 +230,10 @@ class ShellTask(Task):
             f.write(self.script.encode('utf-8'))
             f.seek(0)
             # store the script filename in the environment dict
-            env.setdefault('tasks', {}).setdefault(self.name, {
-                'script_filename': f.name
-                })
             subtask = ExecuteTask(self.name, [self.shell, f.name],
                                   **self.kwargs)
-            subtask.do(env)
+            env_up = subtask.do(env)
+            env_up.setdefault('tasks', {}).setdefault(self.name, {
+                'script_filename': f.name
+                })
+            return env_up

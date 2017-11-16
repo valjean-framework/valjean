@@ -22,9 +22,8 @@ class TestExecuteTask:
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
             t = task.ExecuteTask('echo', ['echo', 'test'], stdout=f_out)
-            env = {}
-            t.do(env)
-        assert env['tasks']['echo']['return_code'] == 0
+            env_up = t.do({})
+        assert env_up['tasks']['echo']['return_code'] == 0
 
         with open(filename) as f_in:
             result = f_in.readline()
@@ -42,9 +41,8 @@ class TestShellTask:
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
             t = task.ShellTask('script', script, stdout=f_out)
-            env = {}
-            t.do(env)
-        assert env['tasks']['script']['return_code'] == 0
+            env_up = t.do({})
+        assert env_up['tasks']['script']['return_code'] == 0
 
         with open(filename) as f_in:
             result = f_in.read()

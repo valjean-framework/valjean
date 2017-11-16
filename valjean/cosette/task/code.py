@@ -46,22 +46,23 @@ An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
    ...                build_flags='-- -j4',
    ...                log_dir=test_dir)
    >>> env = {}
-   >>> ct.do(env)  # doctest: +SKIP
-   >>> bt.do(env)  # doctest: +SKIP
-   >>> pprint(env) # doctest: +SKIP
-   {'build': {'project_build': {'build_log': \
-'/path/to/test_project/build_project_build.log',
-                                'configure_log': \
-'/path/to/test_project/configure_project_build.log'}},
-    'checkout': {'project_checkout': {'checkout_dir': \
+   >>> ct_up = ct.do({})  # doctest: +SKIP
+   >>> pprint(ct_up) # doctest: +SKIP
+   {'checkout': {'project_checkout': {'checkout_dir': \
 '/path/to/test_project/src',
                                       'checkout_log': \
 '/path/to/test_project/checkout_project_checkout.log',
                                       'repository': '/path/to/project.git'}},
-    'tasks': {'project_build': {'return_code': 0,
-                                'wallclock_time': 173.11953258514404},
-              'project_checkout': {'return_code': 0,
+    'tasks': {'project_checkout': {'return_code': 0,
                                    'wallclock_time': 0.34877443313598633}}}
+   >>> bt_up = bt.do({})  # doctest: +SKIP
+   >>> pprint(bt_up) # doctest: +SKIP
+   {'build': {'project_build': {'build_log': \
+'/path/to/test_project/build_project_build.log',
+                                'configure_log': \
+'/path/to/test_project/configure_project_build.log'}},
+    'tasks': {'project_build': {'return_code': 0,
+                                'wallclock_time': 173.11953258514404}}}
 '''
 
 import logging
@@ -155,24 +156,25 @@ class CheckoutTask(ShellTask):
         logger.info('  - checkout_dir = %s', self.checkout_dir)
 
     def do(self, env):
-        '''Check out the code as specified. In addition to populating the
-        ``env['tasks']`` argument with the execution result/time of the
-        underlying checkout shell script (see :class:`.ExecuteTask`), this
-        method sets the following fields::
+        '''Check out the code as specified. In addition to proposing updates to
+        the ``env['tasks']`` dictionary with the execution result/time of the
+        underlying checkout shell script (see :meth:`.ShellTask.do()`), this
+        method proposes::
 
             env['checkout'][task.name]['checkout_dir'] = checkout_dir
             env['checkout'][task.name]['repository'] = repository
             env['checkout'][task.name]['checkout_log'] = checkout_log
 
-        This allows later tasks to retrieve the location of the source files
-        and e.g. build the code.
+        :param mapping env: The environment for the execution of this task.
+        :returns: The proposed environment updates.
         '''
 
-        super().do(env)
-        env.setdefault('checkout', {}).setdefault(self.name, {})
-        env['checkout'][self.name]['checkout_dir'] = self.checkout_dir
-        env['checkout'][self.name]['repository'] = self.repository
-        env['checkout'][self.name]['checkout_log'] = self.checkout_log
+        env_up = super().do(env)
+        env_up.setdefault('checkout', {}).setdefault(self.name, {})
+        env_up['checkout'][self.name]['checkout_dir'] = self.checkout_dir
+        env_up['checkout'][self.name]['repository'] = self.repository
+        env_up['checkout'][self.name]['checkout_log'] = self.checkout_log
+        return env_up
 
 
 #: Path to the cmake executable.
@@ -260,19 +262,20 @@ cd {build_dir}
         logger.info('  - build_log = %s', self.build_log)
 
     def do(self, env):
-        '''Invoke the build tool as specified. In addition to populating the
-        ``env['tasks']`` argument with the execution result/time of the
-        underlying checkout shell script (see :class:`.ExecuteTask`), this
-        method sets the following fields::
+        '''Invoke the build tool as specified. In addition to proposing updates
+        to the ``env['tasks']`` argument with the execution result/time of the
+        underlying checkout shell script (see :meth:`.ShellTask.do()`), this
+        method proposes::
 
             env['build'][task.name]['configure_log'] = configure_log
             env['build'][task.name]['build_log'] = build_log
 
-        This allows later tasks to retrieve the location of the source files
-        and e.g. build the code.
+        :param mapping env: The environment for the execution of this task.
+        :returns: The proposed environment updates.
         '''
 
-        super().do(env)
-        env.setdefault('build', {}).setdefault(self.name, {})
-        env['build'][self.name]['configure_log'] = self.configure_log
-        env['build'][self.name]['build_log'] = self.build_log
+        env_up = super().do(env)
+        env_up.setdefault('build', {}).setdefault(self.name, {})
+        env_up['build'][self.name]['configure_log'] = self.configure_log
+        env_up['build'][self.name]['build_log'] = self.build_log
+        return env_up

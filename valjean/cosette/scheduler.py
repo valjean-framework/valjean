@@ -28,6 +28,7 @@ Example usage:
 
 import threading
 import logging
+from collections.abc import MutableMapping
 
 from .depgraph import DepGraph
 
@@ -69,9 +70,10 @@ class QueueScheduling:
         q = queue.Queue(self.n_workers)
         tasks_done = {task: False for task in tasks}
         tasks_done_lock = threading.Lock()
+        env_lock = threading.Lock()
         for i in range(self.n_workers):
-            t = QueueScheduling.WorkerThread(q, tasks_done,
-                                             tasks_done_lock, env)
+            t = QueueScheduling.WorkerThread(q, tasks_done, tasks_done_lock,
+                                             env, env_lock)
             t.start()
             threads.append(t)
 
@@ -113,12 +115,31 @@ class QueueScheduling:
 
     class WorkerThread(threading.Thread):
 
-        def __init__(self, q, tasks_done, tasks_done_lock, env):
+        def __init__(self, q, tasks_done, tasks_done_lock, env, env_lock):
             super().__init__()
             self.queue = q
             self.tasks_done = tasks_done
             self.tasks_done_lock = tasks_done_lock
             self.env = env
+            self.env_lock = env_lock
+
+        def apply(self, env_update):
+            '''Apply un update to an existing environment.'''
+
+            def apply_worker(update, old):
+                for k, v in update.items():
+                    if isinstance(v, MutableMapping):
+                        if k in old:
+                            # recursively update this dictionary
+                            apply_worker(v, old[k])
+                        else:
+                            old[k] = v
+                    else:
+                        old[k] = v
+
+            if env_update is not None:
+                with self.env_lock:
+                    apply_worker(env_update, self.env)
 
         def run(self):
             logger.debug('worker %s starting', self.name)
@@ -128,10 +149,11 @@ class QueueScheduling:
                 if task is None:
                     logger.debug('worker %s exiting', self.name)
                     break
-                task.do(self.env)
+                env_update = task.do(self.env)
                 logger.debug('worker %s completed task %s', self.name, task)
                 with self.tasks_done_lock:
                     self.tasks_done[task] = True
+                self.apply(env_update)
                 self.queue.task_done()
 
 
