@@ -81,8 +81,6 @@ class Scheduler:
         else:
             self.backend = backend
 
-        tasks = depgraph.nodes()
-
     def schedule(self, env=None):
         '''Schedule the tasks!
 

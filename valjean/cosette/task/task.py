@@ -104,7 +104,6 @@ class DelayTask(Task):
     to test scheduling algorithms under different load conditions.
     '''
 
-
     def __init__(self, name, delay=1.):
         '''Initialize the task from a given delay.
 

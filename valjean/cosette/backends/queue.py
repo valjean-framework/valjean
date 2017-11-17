@@ -5,10 +5,7 @@ queues (:mod:`~queue` module).
 '''
 
 import threading
-from collections.abc import MutableMapping
 import logging
-
-from ..task import TaskStatus
 
 
 logger = logging.getLogger(__name__)

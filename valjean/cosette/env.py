@@ -101,6 +101,7 @@ def _add_enum_accessors(enum):
             getter.__doc__ = ("Returns True if `task`'s "
                               "status is `{}`.".format(name))
             return getter
+
         def setter_factory(name, status):
             def setter(self, task):
                 self.set_status(task, status)
