@@ -213,16 +213,6 @@ class DepGraph:
     The inverse mapping is called `index` and may be passed to the constructor
     if it is available to the caller as a dictionary; if not, it will be
     constructed internally.
-
-    :param list nodes: An iterable over the nodes of the graph, or `None` for
-        an empty graph.
-    :param mapping edges: A mapping between integers representing the nodes, or
-        `None` for an empty graph.
-    :param mapping index: The inverse mapping to `nodes`, or `None` if it is
-        not available. If it is passed, the constructor checks that the
-        following invariant holds::
-
-            all(i == index[node] for i, node in enumerate(nodes))
     '''
 
     import enum
@@ -265,7 +255,20 @@ class DepGraph:
 
     def __init__(self, nodes=None, edges=None, index=None):
         '''Initialize the object from a list of nodes, and edge dictionary and
-        an optional edge index.'''
+        an optional edge index.
+
+        :param iterable nodes: An iterable over the nodes of the graph, or
+                              `None` for an empty graph.
+        :param mapping edges: A mapping between integers representing the
+                              nodes, or `None` for an empty graph.
+        :param mapping index: The inverse mapping to `nodes`, or `None` if it
+                              is not available. If it is passed, the
+                              constructor checks that the following invariant
+                              holds::
+
+                                  all(i == index[node] for i, node in \
+enumerate(nodes))
+        '''
 
         if nodes is None or edges is None:
             self._nodes = []
@@ -327,7 +330,7 @@ class DepGraph:
         '''Get the dependencies of `node`.
 
         :param node: The node we are querying.
-        :returns: An iterable over the dependencies of `node`.
+        :returns: A list containing the dependencies of `node`.
         '''
 
         return self.dependencies(node)
@@ -474,21 +477,18 @@ class DepGraph:
         the specified node).
 
         :param bool recurse: If true, return indirect dependencies as well.
-        :returns: An iterable over the dependencies of `node`.'''
+        :returns: A list containing the dependencies of `node`.
+        '''
 
         from itertools import chain
-        result = map(lambda i: self._nodes[i], self._edges[self._index[node]])
-        if logger.isEnabledFor(logging.DEBUG):
-            # we need a new iterable for the logging; if we convert result to a
-            # list, we will consume it!
-            copy = map(lambda i: self._nodes[i],
-                       self._edges[self._index[node]])
-            logger.debug('dependencies: %s -> %s', node, list(copy))
+        result = list(
+            map(lambda i: self._nodes[i], self._edges[self._index[node]])
+            )
+        logger.debug('dependencies: %s -> %s', node, result)
         if recurse:
-            nodes = list(result)
             sub_deps = chain.from_iterable(self.dependencies(d, recurse)
-                                           for d in nodes)
-            return frozenset(sub_deps) | frozenset(nodes)
+                                           for d in result)
+            return list(frozenset(sub_deps) | frozenset(result))
         else:
             return result
 
