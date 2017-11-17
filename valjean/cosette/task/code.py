@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-u'''Tasks for checking out and building code.
-
-This submodule contains a few useful tasks for checking out, configuring, and
-building arbitrary code.
+u'''This submodule contains a few useful tasks for checking out, configuring,
+and building arbitrary code.
 
 The :class:`CheckoutTask` task class checks out a version-controlled
 repository. For the moment, only ``git`` repositories are supported. The path

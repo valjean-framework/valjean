@@ -1,7 +1,5 @@
-Dependency graphs (:mod:`~.depgraph`)
+:mod:`~.depgraph` — Dependency graphs
 =====================================
 
 .. automodule:: valjean.cosette.depgraph
    :synopsis: Dependency graphs
-   :members:
-   :special-members:

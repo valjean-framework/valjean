@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-'''Thread-based scheduling backend.
-
-This module contains an implementation of a scheduling backend that leverages
-Python "threads" (:mod:`~threading` module) and producer-consumer queues
-(:mod:`~queue` module).
+'''This module contains an implementation of a scheduling backend that
+leverages Python "threads" (:mod:`~threading` module) and producer-consumer
+queues (:mod:`~queue` module).
 '''
 
 import threading
@@ -21,15 +19,20 @@ class QueueScheduling:
 
     Uses :mod:`threading` and :mod:`queue` to handle concurrent execution of
     tasks.
-
-    :param int n_workers: The number of worker threads to use.
-    :param float sleep_interval: The delay (in seconds) to wait before retrying
-        to execute further jobs if the worker queue is starving. This typically
-        happens when there are more workers available than tasks pending
-        because of dependencies between the tasks.
     '''
 
-    def __init__(self, n_workers=1, sleep_interval=1.0):
+    def __init__(self, n_workers=10, sleep_interval=1.0):
+
+        '''Initialize the queue backend.
+
+        :param int n_workers: The number of worker threads to use.
+        :param float sleep_interval: The delay (in seconds) to wait before
+                                     retrying to execute further jobs if the
+                                     worker queue is starving. This typically
+                                     happens when there are more workers
+                                     available than tasks pending because of
+                                     dependencies between the tasks.
+        '''
 
         self.n_workers = n_workers
         self.sleep_interval = sleep_interval
@@ -126,14 +129,16 @@ class QueueScheduling:
     class WorkerThread(threading.Thread):
         '''Workhorse class for :class:`QueueScheduling`. This class consumes
         (i.e. executes) tasks passed to it through the queue.
-
-        :param queue: The producer-consumer task queue.
-        :param env: The execution environment for the tasks.
-        :param env_lock: A lock that must be held for any atomic modification
-                         of `env`.
         '''
 
         def __init__(self, queue, env, env_lock):
+            '''Initialize the thread.
+
+            :param queue: The producer-consumer task queue.
+            :param env: The execution environment for the tasks.
+            :param env_lock: A lock that must be held for any atomic modification
+                             of `env`.
+            '''
             super().__init__()
             self.queue = queue
             self.env = env

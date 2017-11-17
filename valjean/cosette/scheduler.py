@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-'''Task scheduling and dependency handling.
-
-This module provides classes to schedule the execution of several tasks,
+'''This module provides classes to schedule the execution of several tasks,
 possibly dependent on each other.
 
 Example usage:
@@ -61,6 +59,7 @@ class Scheduler:
     '''
 
     def __init__(self, depgraph: DepGraph, backend=None):
+        '''Initialize the scheduler with a graph.'''
 
         if not isinstance(depgraph, DepGraph):
             raise SchedulerError('Scheduler must be initialised with a '

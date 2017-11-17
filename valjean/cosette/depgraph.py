@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-'''Dependency graphs.
-
-The :class:`DepGraph` class encapsulates a number of useful methods to deal
+'''The :class:`DepGraph` class encapsulates a number of useful methods to deal
 with interdependent items. It represents the workhorse for the scheduling
 algorithms in the :mod:`~.scheduler` module.
 
@@ -266,6 +264,8 @@ class DepGraph:
         return complete_d
 
     def __init__(self, nodes=None, edges=None, index=None):
+        '''Initialize the object from a list of nodes, and edge dictionary and
+        an optional edge index.'''
 
         if nodes is None or edges is None:
             self._nodes = []
@@ -333,9 +333,11 @@ class DepGraph:
         return self.dependencies(node)
 
     def __len__(self):
+        '''Return the number of vertices in the graph.'''
         return len(self._nodes)
 
     def __contains__(self, x):
+        '''Returns `True` if `x` is one of the nodes.'''
         return x in self._nodes
 
     def __le__(self, other):
@@ -346,6 +348,7 @@ class DepGraph:
                         for dep in self[node]))
 
     def isomorphic_to(self, other):
+        '''Returns `True` if this graph is isomorphic to `other`.'''
         return dict(self) == dict(other)
 
     def add_node(self, node):

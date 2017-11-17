@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-'''Task specification.
-
-This module collects a few task classes that can be used with the
+'''This module collects a few task classes that can be used with the
 :mod:`~.scheduler` and :mod:`~.depgraph` modules.
 
 This module defines a dummy :class:`Task` class that may be used as a base
@@ -69,13 +67,13 @@ class TaskError(Exception):
 
 
 class Task:
-    '''Base class for other task classes.
-
-    :param str name: The name of the task
-    '''
+    '''Base class for other task classes.'''
 
     def __init__(self, name):
+        '''Initialize the task.
 
+        :param str name: The name of the task.
+        '''
         self.name = name
 
     def do(self, env=None):
@@ -93,17 +91,17 @@ class Task:
 
 
 class DelayTask(Task):
-    '''Task that waits for the specified number of seconds.
-
-    This task is useful to test scheduling algorithms under different load
-    conditions.
-
-    :param float delay: The amount of time (in seconds) that this task will
-                        wait when executed.
+    '''Task that waits for the specified number of seconds. This task is useful
+    to test scheduling algorithms under different load conditions.
     '''
 
-    def __init__(self, name, delay=1.):
 
+    def __init__(self, name, delay=1.):
+        '''Initialize the task from a given delay.
+
+        :param float delay: The amount of time (in seconds) that this task will
+                            wait when executed.
+        '''
         super().__init__(name)
         self.delay = float(delay)
 
@@ -123,17 +121,18 @@ class DelayTask(Task):
 class ExecuteTask(Task):
     '''Task that executes the specified shell command and waits for its
     completion.
-
-    :param str name: The name of this task.
-    :param list cli: The command line to be executed, as a list. The first
-                     element is the command and the following ones are its
-                     arguments.
-    :param mapping kwargs: Any keyword arguments will be passed to the
-                           :class:`.subprocess.Popen` constructor.
     '''
 
     def __init__(self, name, cli, **kwargs):
+        '''Initialize this task from a command line.
 
+        :param str name: The name of this task.
+        :param list cli: The command line to be executed, as a list. The first
+                         element is the command and the following ones are its
+                         arguments.
+        :param mapping kwargs: Any keyword arguments will be passed to the
+                               :class:`.subprocess.Popen` constructor.
+        '''
         super().__init__(name)
         self.cli = cli
         self.kwargs = kwargs
@@ -168,28 +167,29 @@ class ExecuteTask(Task):
 
 
 class ShellTask(Task):
-    '''Task that executes the specified shell script.
-
-    The script file will be created in a temporary directory (or the directory
-    specified by ``dir``) and can be kept for inspection by passing
-    ``delete=False`` to the constructor. The script filename can be read from
-    the task environment as ``env['tasks'][task.name]['dir']``.
-
-    :param str name: The name of this task.
-    :param str script: A script to be executed, as a string.
-    :param str shell: The path to the shell that should be used to execute the
-                      script.
-    :param bool delete: If true, delete the shell script when done.
-    :param dir: The path to the directory where the temporary script file will
-                be created, or ``None`` (in which case the default system
-                directory will be used).
-    :type dir: None or str
-    :param mapping kwargs: Any keyword arguments will be passed to the
-                           :class:`.subprocess.Popen` constructor.
+    '''Task that executes the specified shell script.  The script file will be
+    created in a temporary directory (or the directory specified by ``dir``)
+    and can be kept for inspection by passing ``delete=False`` to the
+    constructor. The script filename can be read from the task environment as
+    ``env['tasks'][task.name]['dir']``.
     '''
 
     def __init__(self, name, script, shell='/bin/bash',
                  delete=True, dir=None, **kwargs):
+        '''Initialize the task from the following arguments:
+
+        :param str name: The name of this task.
+        :param str script: A script to be executed, as a string.
+        :param str shell: The path to the shell that should be used to execute
+                          the script.
+        :param bool delete: If true, delete the shell script when done.
+        :param dir: The path to the directory where the temporary script file
+                    will be created, or ``None`` (in which case the default
+                    system directory will be used).
+        :type dir: None or str
+        :param mapping kwargs: Any keyword arguments will be passed to the
+                               :class:`.subprocess.Popen` constructor.
+        '''
 
         super().__init__(name)
         self.script = script

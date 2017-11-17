@@ -158,6 +158,26 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
+
+# -- doctest options ------------------------------------------------------
+
 # Do not use doctest to test code examples that are not explicitly marked as
 # doctest
 doctest_test_doctest_blocks = ''
+
+
+# -- autodoc options ------------------------------------------------------
+
+# always list all class members
+autodoc_default_flags = ['members', 'special-members']
+
+# list members by order of appearance in the source file
+autodoc_member_order = 'bysource'
+
+def skip_weakref(app, what, name, obj, skip, options):
+    if name.endswith('__weakref__'):
+        return True
+    return skip
+
+def setup(app):
+    app.connect('autodoc-skip-member', skip_weakref)
