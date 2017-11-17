@@ -7,6 +7,7 @@ from ..context import valjean  # noqa: F401
 from valjean import get_log_level, set_log_level
 from valjean.cosette.depgraph import DepGraph
 from valjean.cosette.scheduler import Scheduler, QueueScheduling
+from valjean.cosette.env import Env
 from valjean.cosette.task import TaskStatus
 from valjean.cosette.task.task import DelayTask, Task
 
@@ -68,7 +69,7 @@ def failing_tasks(draw, min_size=1, max_size=20):
 
 
 def run(graph, n_workers):
-    env = {}
+    env = Env.from_graph(graph)
     s = Scheduler(graph, QueueScheduling(n_workers=n_workers,
                                          sleep_interval=1e-5))
     s.schedule(env)
@@ -129,7 +130,7 @@ class TestSchedulerOnFailure:
         '''Check that a failing task is marked as failed in the environment.'''
         env = run(graph, n_workers)
         for task in graph.nodes():
-            assert env['tasks'][task.name]['status'] == TaskStatus.FAILURE
+            assert env.get_status(task) == TaskStatus.FAILED
 
     @given(graph=graphs(delay_tasks(min_duration=0.0, max_duration=0.0,
                                     average_size=10, min_size=3),
@@ -157,16 +158,16 @@ class TestSchedulerOnFailure:
                 # check that the failing task blocked `task` and all the other
                 # tasks that depended on it
                 assert (env['tasks'][node.name]['status']
-                        == TaskStatus.NOTRUN)
+                        == TaskStatus.SKIPPED)
                 n_blocked += 1
             elif node == failing_task:
                 # check that the failing task failed (duh)
                 assert (env['tasks'][node.name]['status']
-                        == TaskStatus.FAILURE)
+                        == TaskStatus.FAILED)
             else:
                 # check that all the other tasks ran normally
                 assert (env['tasks'][node.name]['status']
-                        == TaskStatus.SUCCESS)
+                        == TaskStatus.DONE)
 
         # record the number of blocked tasks
         event('blocked tasks = {}'.format(n_blocked))

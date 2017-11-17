@@ -44,7 +44,7 @@ class QueueScheduling:
                                sorted according to some order.
         :param DepGraph graph: Dependency graph for the tasks.
         :param env: An initial environment for the scheduled tasks.
-        :type env: mapping or None
+        :type env: Env
         '''
 
         import time
@@ -52,17 +52,10 @@ class QueueScheduling:
 
         threads = []
         q = queue.Queue(self.n_workers)
-        env_lock = threading.Lock()
-
-        # initialize the environment
-        for task in tasks:
-            env.setdefault('tasks', {}).setdefault(task.name, {
-                'status': TaskStatus.SCHEDULED
-                })
 
         # spawn workers
         for i in range(self.n_workers):
-            t = QueueScheduling.WorkerThread(q, env, env_lock)
+            t = QueueScheduling.WorkerThread(q, env)
             t.start()
             threads.append(t)
 
@@ -72,28 +65,24 @@ class QueueScheduling:
             tasks_still_left = []
             n_tasks_left = len(tasks_left)
             for task in tasks_left:
-                with env_lock:
-                    status = env['tasks'][task.name]['status']
-                logger.debug('status of task %s: %s', task, status)
+                logger.debug('status of task %s: %s',
+                             task, env.get_status(task))
 
                 # skip failed/notrun/completed tasks
-                if status != TaskStatus.SCHEDULED:
+                if not env.is_waiting(task):
                     continue
 
                 deps = list(graph.dependencies(task))
-                with env_lock:
-                    failed_deps = any(
-                        env['tasks'][t.name]['status'] == TaskStatus.FAILURE
-                        or env['tasks'][t.name]['status'] == TaskStatus.NOTRUN
-                        for t in deps)
-                    can_run = all(
-                        env['tasks'][t.name]['status'] == TaskStatus.SUCCESS
-                        for t in deps)
+                def check_deps(env_):
+                    failed_deps = any(env_.is_failed(t) or env_.is_skipped(t)
+                                      for t in deps)
+                    can_run = all(env_.is_done(t) for t in deps)
+                    return failed_deps, can_run
+                failed_deps, can_run = env.atomically(check_deps)
                 logger.debug('task %s has failed deps: %s', task, failed_deps)
                 logger.debug('task %s can run: %s', task, can_run)
                 if failed_deps:
-                    with env_lock:
-                        env['tasks'][task.name]['status'] = TaskStatus.NOTRUN
+                    env.set_skipped(task)
                     n_tasks_left -= 1
                     logger.info('task %s cannot be run, %d left',
                                 task, n_tasks_left)
@@ -131,39 +120,15 @@ class QueueScheduling:
         (i.e. executes) tasks passed to it through the queue.
         '''
 
-        def __init__(self, queue, env, env_lock):
+        def __init__(self, queue, env):
             '''Initialize the thread.
 
             :param queue: The producer-consumer task queue.
             :param env: The execution environment for the tasks.
-            :param env_lock: A lock that must be held for any atomic modification
-                             of `env`.
             '''
             super().__init__()
             self.queue = queue
             self.env = env
-            self.env_lock = env_lock
-
-        def apply(self, env_update, task_name, status):
-            '''Apply un update to an existing environment.'''
-
-            def apply_worker(update, old):
-                for k, v in update.items():
-                    if isinstance(v, MutableMapping):
-                        if k in old:
-                            # recursively update this dictionary
-                            apply_worker(v, old[k])
-                        else:
-                            old[k] = v
-                    else:
-                        old[k] = v
-
-            with self.env_lock:
-                if env_update is not None:
-                    apply_worker(env_update, self.env)
-                self.env.setdefault('tasks', {}).setdefault(task_name, {
-                    'status': status
-                    })
 
         def run(self):
             '''Main method: run this thread.'''
@@ -176,30 +141,22 @@ class QueueScheduling:
                     logger.debug('worker %s exiting', self.name)
                     break
 
-                with self.env_lock:
-                    # we start to work on the task
-                    self.env['tasks'][task.name]['status'] = TaskStatus.PENDING
+                # we start to work on the task
+                self.env.set_pending(task)
 
                 try:
                     env_update = task.do(self.env)
                 except Exception as ex:
                     logger.exception('task %s on worker %s failed: %s',
                                      task, self.name, ex)
-                    with self.env_lock:
-                        self.env['tasks'][task.name]['status'] = \
-                                TaskStatus.FAILURE
-                        logger.error('task %s failed', task)
-                    logger.debug('saving FAILURE status in the environment...')
-                    self.apply(None, task.name, TaskStatus.FAILURE)
-                    logger.debug('environment updated: %s', self.env)
+                    logger.debug('setting FAILED status in the environment...')
+                    self.env.set_failed(task)
                 else:
                     logger.debug('task %s on worker %s succeeded',
                                  task, self.name)
-                    with self.env_lock:
-                        self.env['tasks'][task.name]['status'] = \
-                                TaskStatus.SUCCESS
                     logger.debug('proposed environment update: %s', env_update)
-                    self.apply(env_update, task.name, TaskStatus.SUCCESS)
+                    self.env.set_done(task)
+                    self.env.apply(env_update)
 
                 logger.debug('worker %s wants more!', self.name)
                 self.queue.task_done()

@@ -28,6 +28,7 @@ import logging
 
 from .depgraph import DepGraph
 from .backends.queue import QueueScheduling
+from .env import Env
 
 
 logger = logging.getLogger(__name__)
@@ -81,19 +82,6 @@ class Scheduler:
             self.backend = backend
 
         tasks = depgraph.nodes()
-        self.check_unique_task_names(tasks)
-
-    def check_unique_task_names(self, tasks):
-        names = set()
-        for task in tasks:
-            # check that task names are unique
-            name = task.name
-            if name in names:
-                raise SchedulerError(
-                    'task names must be unique; {} appears more than once'
-                    .format(name)
-                    )
-            names.add(name)
 
     def schedule(self, env=None):
         '''Schedule the tasks!
@@ -116,5 +104,5 @@ class Scheduler:
         logger.info('scheduling tasks')
         logger.debug('for graph %s', self.depgraph)
         if env is None:
-            env = {}
+            env = Env.from_graph(self.depgraph)
         self.backend.execute_tasks(self.sorted_list, self.depgraph, env)

@@ -11,7 +11,12 @@ environment for task execution. The idea of the environment is that tasks may
 use it to store information about their execution. For instance, a task may
 create a file and store its location in the environment, so that later tasks
 may be able to retrieve it.  The type of `env` is really immaterial, but it is
-probably natural to use a key-value mapping of some kind.
+probably natural to use a key-value mapping of some kind. Note, however, that
+most of the tasks defined in the :mod:`~.task` module hierarchy expect `env` to
+be an :class:`~.Env` object.
+
+Spawning external processes
+---------------------------
 
 The :class:`ExecuteTask` class is the basic building block to execute tasks
 that consist in spawning external processes and waiting for their completion.
