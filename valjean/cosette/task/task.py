@@ -31,7 +31,9 @@ It makes it possible to execute arbitrary commands. Consider:
    >>> from pprint import pprint
    >>> task = ExecuteTask(name='say',
    ...                    cli=['echo', 'ni!'])
-   >>> env_update = task.do({}) # 'ni!' printed to stdout
+   >>> env_update, status = task.do({}) # 'ni!' printed to stdout
+   >>> print(status)
+   TaskStatus.DONE
    >>> pprint(env_update)  # doctest: +NORMALIZE_WHITESPACE
    {'tasks': {'say': {'return_code': 0, 'wallclock_time': ...}}}
 
@@ -43,7 +45,7 @@ what you expect:
    >>> task = ExecuteTask(name='want',
    ...                    cli=['echo', 'We want...', '&&',
    ...                         'echo', '...a shrubbery!'])
-   >>> env_update = task.do({})
+   >>> env_update, status = task.do({})
    >>> # prints 'We want... && echo ...a shrubbery!'
 
 If you need to execute several commands, either wrap them in a shell script or
@@ -58,10 +60,12 @@ class:
    ... echo 'We want...'
    ... echo '...a shrubbery!'
    ... """)
-   >>> env_update = task.do({})  # executes the shell script
+   >>> env_update, status = task.do({})  # executes the shell script
 '''
 
 import logging
+
+from . import TaskStatus
 
 
 logger = logging.getLogger(__name__)
@@ -121,6 +125,7 @@ class DelayTask(Task):
                     self, self.delay)
         sleep(self.delay)
         logger.info('DelayTask %s waking up!', self)
+        return dict(), TaskStatus.DONE
 
 
 class ExecuteTask(Task):
@@ -168,7 +173,11 @@ class ExecuteTask(Task):
                   'return_code': result,
                   'wallclock_time': end_time-start_time
                   }}}
-        return env_up
+        if result == 0:
+            status = TaskStatus.DONE
+        else:
+            status = TaskStatus.FAILED
+        return env_up, status
 
 
 class ShellTask(Task):
@@ -240,8 +249,8 @@ class ShellTask(Task):
             # store the script filename in the environment dict
             subtask = ExecuteTask(self.name, [self.shell, f.name],
                                   **self.kwargs)
-            env_up = subtask.do(env)
+            env_up, status = subtask.do(env)
             env_up.setdefault('tasks', {}).setdefault(self.name, {
                 'script_filename': f.name
                 })
-            return env_up
+            return env_up, status

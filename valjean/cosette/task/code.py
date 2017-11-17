@@ -43,9 +43,10 @@ An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
    ...                build_dir=build_dir,
    ...                build_flags='-- -j4',
    ...                log_dir=test_dir)
-   >>> env = {}
-   >>> ct_up = ct.do({})  # doctest: +SKIP
-   >>> pprint(ct_up) # doctest: +SKIP
+   >>> ct_up, ct_status = ct.do({})  # doctest: +SKIP
+   >>> print(ct_status)             # doctest: +SKIP
+   TaskStatus.DONE
+   >>> pprint(ct_up)                 # doctest: +SKIP
    {'checkout': {'project_checkout': {'checkout_dir': \
 '/path/to/test_project/src',
                                       'checkout_log': \
@@ -53,8 +54,10 @@ An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
                                       'repository': '/path/to/project.git'}},
     'tasks': {'project_checkout': {'return_code': 0,
                                    'wallclock_time': 0.34877443313598633}}}
-   >>> bt_up = bt.do({})  # doctest: +SKIP
-   >>> pprint(bt_up) # doctest: +SKIP
+   >>> bt_up, bt_status = bt.do({})  # doctest: +SKIP
+   >>> print(bt_status)             # doctest: +SKIP
+   TaskStatus.DONE
+   >>> pprint(bt_up)                 # doctest: +SKIP
    {'build': {'project_build': {'build_log': \
 '/path/to/test_project/build_project_build.log',
                                 'configure_log': \
@@ -167,12 +170,12 @@ class CheckoutTask(ShellTask):
         :returns: The proposed environment updates.
         '''
 
-        env_up = super().do(env)
+        env_up, status = super().do(env)
         env_up.setdefault('checkout', {}).setdefault(self.name, {})
         env_up['checkout'][self.name]['checkout_dir'] = self.checkout_dir
         env_up['checkout'][self.name]['repository'] = self.repository
         env_up['checkout'][self.name]['checkout_log'] = self.checkout_log
-        return env_up
+        return env_up, status
 
 
 #: Path to the cmake executable.
@@ -272,8 +275,8 @@ cd {build_dir}
         :returns: The proposed environment updates.
         '''
 
-        env_up = super().do(env)
+        env_up, status = super().do(env)
         env_up.setdefault('build', {}).setdefault(self.name, {})
         env_up['build'][self.name]['configure_log'] = self.configure_log
         env_up['build'][self.name]['build_log'] = self.build_log
-        return env_up
+        return env_up, status

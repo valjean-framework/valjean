@@ -8,6 +8,7 @@ import os
 
 from ..context import valjean  # noqa: F401
 import valjean.cosette.task.task as task
+from valjean.cosette.task import TaskStatus
 
 
 @pytest.fixture(scope='function')
@@ -22,7 +23,8 @@ class TestExecuteTask:
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
             t = task.ExecuteTask('echo', ['echo', 'test'], stdout=f_out)
-            env_up = t.do({})
+            env_up, status = t.do({})
+        assert status == TaskStatus.DONE
         assert env_up['tasks']['echo']['return_code'] == 0
 
         with open(filename) as f_in:
@@ -41,7 +43,8 @@ class TestShellTask:
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
             t = task.ShellTask('script', script, stdout=f_out)
-            env_up = t.do({})
+            env_up, status = t.do({})
+        assert status == TaskStatus.DONE
         assert env_up['tasks']['script']['return_code'] == 0
 
         with open(filename) as f_in:

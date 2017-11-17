@@ -145,17 +145,17 @@ class QueueScheduling:
                 self.env.set_pending(task)
 
                 try:
-                    env_update = task.do(self.env)
+                    env_update, status = task.do(self.env)
                 except Exception as ex:
                     logger.exception('task %s on worker %s failed: %s',
                                      task, self.name, ex)
                     logger.debug('setting FAILED status in the environment...')
                     self.env.set_failed(task)
                 else:
-                    logger.debug('task %s on worker %s succeeded',
-                                 task, self.name)
+                    logger.debug('task %s on worker %s completed with status %s',
+                                 task, self.name, status)
                     logger.debug('proposed environment update: %s', env_update)
-                    self.env.set_done(task)
+                    self.env.set_status(task, status)
                     self.env.apply(env_update)
 
                 logger.debug('worker %s wants more!', self.name)

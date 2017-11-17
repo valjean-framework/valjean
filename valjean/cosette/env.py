@@ -30,8 +30,8 @@ follows:
 
 .. doctest:: env
 
-    >>> env.get_status(tasks[0])
-    <TaskStatus.WAITING: ...>
+    >>> print(env.get_status(tasks[0]))
+    TaskStatus.WAITING
     >>> env.is_waiting(tasks[0])  # equivalently
     True
 

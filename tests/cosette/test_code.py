@@ -8,6 +8,7 @@ import os
 
 from ..context import valjean  # noqa: F401
 import valjean.cosette.task.code as code
+from valjean.cosette.task import TaskStatus
 
 
 SAMPLE_TEXT = 'spidiguda'
@@ -61,7 +62,8 @@ class TestCodeTasks:
                                       ref=ref,
                                       flags=flags,
                                       vcs='git')
-                env_up = t.do({})
+                env_up, status = t.do({})
+                assert status == TaskStatus.DONE
                 assert env_up['tasks']['test_checkout']['return_code'] == 0
                 assert (env_up['checkout']['test_checkout']['repository']
                         == git_repo)
@@ -95,7 +97,8 @@ class TestCodeTasks:
                                build_flags=build_flags,
                                build_targets=build_targets,
                                build_system='cmake')
-            env_up = t.do({})
+            env_up, status = t.do({})
+            assert status == TaskStatus.DONE
             assert env_up['tasks']['test_build']['return_code'] == 0
             configure_log_dir = os.path.dirname(
                 env_up['build']['test_build']['configure_log']
