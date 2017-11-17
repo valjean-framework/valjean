@@ -1,7 +1,11 @@
 import logging
 
-_cosette = ['depgraph', 'task', 'task.task', 'task.code', 'scheduler']
-__all__ = list(map(lambda x: 'cosette.' + x, _cosette))
+_all_dict = {'cosette': ['depgraph', 'env', 'task', 'task.task', 'task.code',
+                         'scheduler', 'backends', 'backends.queue']
+             }
+__all__ = (['{}.{}'.format(k, v) for k, vs in _all_dict.items() for v in vs]
+           + list(_all_dict.keys()))
+
 __version__ = '0.1'
 
 log_level = logging.INFO
