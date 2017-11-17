@@ -70,8 +70,7 @@ def failing_tasks(draw, min_size=1, max_size=20):
 
 def run(graph, n_workers):
     env = Env.from_graph(graph)
-    s = Scheduler(graph, QueueScheduling(n_workers=n_workers,
-                                         sleep_interval=1e-5))
+    s = Scheduler(graph, QueueScheduling(n_workers=n_workers))
     s.schedule(env)
     return env
 
