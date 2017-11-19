@@ -3,3 +3,5 @@ __pycache__
 .cache
 doc/_build
 *.pyc
+htmlcov
+.coverage

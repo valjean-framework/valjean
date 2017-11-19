@@ -1,0 +1,10 @@
+[run]
+omit = tests/*
+branch = True
+data_file = tests/.coverage
+
+[html]
+directory = tests/htmlcov
+
+[xml]
+output = tests/coverage.xml
