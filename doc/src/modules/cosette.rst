@@ -8,6 +8,8 @@ cosette — COnStruction et ExécuTion de TâchEs
 
    Cosette, fille adoptive de Jean Valjean, illustrée par Émile Bayard (1862).
 
+.. automodule:: valjean.cosette
+   :undoc-members:
 
 .. toctree::
 

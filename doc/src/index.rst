@@ -14,6 +14,7 @@ Welcome to valjean's documentation!
    :caption: Contents:
 
    getting_started
+   devs
    modules
    tests
 
