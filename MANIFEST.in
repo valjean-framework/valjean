@@ -1,0 +1,3 @@
+graft doc
+include VERSION
+include README.rst

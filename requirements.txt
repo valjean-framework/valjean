@@ -1,5 +1,0 @@
-Sphinx
-sphinx_rtd_theme
-hypothesis
-pytest
-pytest-cov

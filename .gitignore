@@ -1,7 +1,12 @@
 __pycache__
 .hypothesis
 .cache
-doc/_build
+doc/build
 *.pyc
 htmlcov
 .coverage
+.eggs
+build
+dist
+*.egg
+*.egg-info

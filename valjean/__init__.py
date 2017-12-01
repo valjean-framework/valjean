@@ -1,4 +1,5 @@
 import logging
+from pkg_resources import resource_filename
 
 _all_dict = {'cosette': ['depgraph', 'env', 'task', 'task.task', 'task.code',
                          'scheduler', 'backends', 'backends.queue']
@@ -6,7 +7,9 @@ _all_dict = {'cosette': ['depgraph', 'env', 'task', 'task.task', 'task.code',
 __all__ = (['{}.{}'.format(k, v) for k, vs in _all_dict.items() for v in vs]
            + list(_all_dict.keys()))
 
-__version__ = '0.1'
+version_file = resource_filename(__name__, 'VERSION')
+with open(version_file) as f:
+    __version__ = f.read().strip()
 
 log_level = logging.INFO
 
