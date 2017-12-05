@@ -53,9 +53,9 @@ class TestDepGraph:
         the items appearing earlier.
         '''
 
-        l = list(g.topological_sort())
-        note('topological sort: {}'.format(l))
-        assert self.successful_topological_sort(g, l)
+        sort = list(g.topological_sort())
+        note('topological sort: {}'.format(sort))
+        assert self.successful_topological_sort(g, sort)
 
     def successful_topological_sort(self, graph, sorted_list):
         seen = set()
