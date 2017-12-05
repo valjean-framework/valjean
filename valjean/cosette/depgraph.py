@@ -223,7 +223,7 @@ Here `chief_weapons` is a :class:`DepGraph` itself, but it is also a node of
    >>> spanish.graft(chief_weapons)
    DepGraph(...)
 
-This yields the following graph:
+This yields the following graph
 
 .. digraph:: depgraph
    :align: center
@@ -265,8 +265,9 @@ Caveats
 
 Some things you should be aware of when using :class:`DepGraph`:
 
-* The type of the items in the graph is irrelevant, but since they need to be
-  stored in a dictionary, they must be *hashable*;
+* The type of the items in the graph is irrelevant, but if you want to use the
+  :meth:`~.DepGraph.from_dependency_dictionary()` constructor they need to be
+  stored in a dictionary, and therefore they must be *hashable*;
 * You need to use a single-element list if you want to express a single
   dependency, as in the case of `bacon`. So this is wrong:
 
@@ -451,7 +452,24 @@ enumerate(nodes))
 
     def isomorphic_to(self, other):
         '''Returns `True` if this graph is isomorphic to `other`.'''
-        return dict(self) == dict(other)
+
+        size = len(self)
+        if size != len(other):
+            return False
+        i2o = [None] * size
+        o2i = [None] * size
+        for i, n in enumerate(self._nodes):
+            try:
+                other_i = other._nodes.index(n)
+            except ValueError:
+                return False
+            i2o[i] = other_i
+            o2i[other_i] = i
+        for k, vs in self._edges.items():
+            other_vs = map(lambda o: o2i[o], other._edges[i2o[k]])
+            if set(vs) != set(other_vs):
+                return False
+        return True
 
     def add_node(self, node):
         '''Add a new node to the graph.
@@ -821,7 +839,7 @@ enumerate(nodes))
         :param n2: The second node.
         :param bool recurse: If true, look at indirect dependencies, too.
         :returns: ``True`` if `n1` depends directly (``recurse == False``) or
-        indirectly (``recurse == True``) on `n2`.
+                  indirectly (``recurse == True``) on `n2`.
         '''
 
         import itertools
@@ -833,6 +851,6 @@ enumerate(nodes))
             depends = i2 in deps1
             if depends or not recurse:
                 return depends
-            deps1 = list(itertools.chain.from_iterable(self._edges[i] for i in deps1))
+            deps1 = list(itertools.chain.from_iterable(self._edges[i]
+                                                       for i in deps1))
         return depends
-

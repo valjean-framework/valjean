@@ -91,6 +91,8 @@ class TestDepGraph:
                 g_incr.add_node(v)
                 g_incr.add_dependency(k, v)
 
+        note('g: {}'.format(repr(g)))
+        note('g_incr: {}'.format(repr(g_incr)))
         assert g.isomorphic_to(g_incr)
 
     @given(g=depgraphs())
