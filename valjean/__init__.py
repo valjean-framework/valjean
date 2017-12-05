@@ -13,7 +13,7 @@ with open(version_file) as f:
 
 log_level = logging.INFO
 
-logging.basicConfig(format='%(levelname)s (%(name)s) %(asctime)s: %(message)s',
+logging.basicConfig(format='%(levelname)s (%(name)s/%(funcName)s()) %(asctime)s: %(message)s',
                     level=log_level)
 
 
