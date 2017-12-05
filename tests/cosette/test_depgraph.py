@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from hypothesis import given, note
+from hypothesis import given, note, assume, event
 from hypothesis.strategies import (integers, sets, text, lists, composite,
-                                   sampled_from)
+                                   sampled_from, data, booleans)
 import pytest
 
 from ..context import valjean  # noqa: F401
@@ -10,12 +10,14 @@ import valjean.cosette.depgraph as depgraph
 
 
 @composite
-def depgraphs(draw, elements=integers(0, 10), average_size=10, average_deps=2):
+def depgraphs(draw, elements=integers(0, 10), average_size=10, average_deps=2,
+              **kwargs):
     '''Composite Hypothesis strategy to generate acyclic DepGraph objects.'''
-    ks = draw(lists(elements, average_size=average_size).map(sorted))
+    ks = draw(lists(elements, average_size=average_size,
+                    unique=True, **kwargs).map(sorted))
     dag = {}
     for i, k in enumerate(ks):
-        vs = draw(sets(sampled_from(ks[i+1:])))
+        vs = draw(sets(sampled_from(ks[i+1:]), average_size=average_deps))
         dag[k] = vs
     return depgraph.DepGraph.from_dependency_dictionary(dag)
 
@@ -206,3 +208,144 @@ class TestDepGraph:
         for node in g.nodes():
             assert (sorted(g.dependencies(node, recurse=True)) ==
                     sorted(g_cl.dependencies(node, recurse=False)))
+
+    @given(g=depgraphs(), recurse=booleans())
+    def test_depends(self, g, recurse):
+        '''Test that dependencies are correctly detected.'''
+        nodes = set(g.nodes())
+        count_deps = 0
+        count_no_deps = 0
+        for n in nodes:
+            deps = set(g.dependencies(n, recurse))
+            for d in deps:
+                assert g.depends(n, d, recurse)
+                count_deps += 1
+            for d in nodes - deps:
+                assert not g.depends(n, d, recurse)
+                count_no_deps += 1
+        if count_deps < 5:
+            event('count_deps = {}'.format(count_deps))
+        else:
+            event('count_deps > 5')
+        if count_no_deps < 5:
+            event('count_no_deps = {}'.format(count_no_deps))
+        else:
+            event('count_no_deps > 5')
+        event('recurse = {}'.format(recurse))
+
+    @given(g=depgraphs())
+    def test_terminal_no_edge(self, g):
+        '''Test that terminal nodes have no outgoing edge.'''
+        terms = g.terminal()
+        for term in terms:
+            assert len(g[term]) == 0
+
+    @given(g=depgraphs())
+    def test_initial_terminal_invert(self, g):
+        '''Test that initial nodes are terminal nodes of the inverse graph.'''
+        inits = g.initial()
+        g_inv = g.invert()
+        terms_inv = g_inv.terminal()
+        assert sorted(inits) == sorted(terms_inv)
+
+    @given(g=depgraphs())
+    def test_terminal_initial_invert(self, g):
+        '''Test that terminal nodes are initial nodes of the inverse graph.'''
+        terms = g.terminal()
+        g_inv = g.invert()
+        inits_inv = g_inv.initial()
+        assert sorted(inits_inv) == sorted(terms)
+
+    @given(g=depgraphs(), data=data())
+    def test_swap_indices_isomorphism(self, g, data):
+        '''Test that swapping two nodes results in an isomorphic graph.'''
+        i = data.draw(sampled_from(range(len(g))))
+        j = data.draw(sampled_from(range(len(g))))
+        g_swapped = g.copy()._swap_indices(i, j)
+        assert g.isomorphic_to(g_swapped)
+
+    @given(g=depgraphs(), new=integers())
+    def test_add_remove_is_identity(self, g, new):
+        '''Test that adding and removing a node results in the same graph.'''
+        assume(new not in g)
+        g_copy = g.copy().add_node(new)
+        if len(g) > 1:
+            event("added incoming edge")
+            old = g._nodes[1]
+            g_copy.add_dependency(old, on=new)
+        elif len(g) > 0:
+            event("added incoming and outgoing edge")
+            old = g._nodes[0]
+            g_copy.add_dependency(new, on=old)
+        else:
+            event("no edges added")
+        g_copy.remove_node(new)
+        assert g == g_copy
+
+    @given(g1=depgraphs(min_size=2), g2=depgraphs())
+    def test_flatten_dependencies(self, g1, g2):
+        '''Test that grafting one graph into another respects the dependency
+        topology.
+        '''
+        # add g2 into g1; g1 has at least two nodes
+        n0 = g1._nodes[0]
+        n1 = g1._nodes[1]
+        g1.add_dependency(n0, on=g2)
+        g1.add_dependency(g2, on=n1)
+        g1.flatten()
+        for n in g2.nodes():
+            assert g1.depends(n0, n, recurse=True)
+            assert g1.depends(n, n1, recurse=True)
+        event('min_graph_size={}'.format(min(len(g1), len(g2))))
+
+    @given(g1=depgraphs(min_size=2), g2=depgraphs())
+    def test_flatten_size(self, g1, g2):
+        '''Test that grafting one graph into another yields a graph with the
+        correct size.
+        '''
+        expected_nodes = set(g1.nodes()) | set(g2.nodes())
+        note('g1: {}'.format(repr(g1)))
+        note('g2: {}'.format(repr(g2)))
+        note('expected_nodes: {}'.format(expected_nodes))
+        expected_n_nodes = len(expected_nodes)
+        # add g2 into g1; g1 has at least two nodes
+        g1.add_dependency(g1._nodes[0], on=g2)
+        g1.add_dependency(g2, on=g1._nodes[1])
+        note('before flattening: {}'.format(repr(g1)))
+        g1.flatten()
+        note('after flattening: {}'.format(repr(g1)))
+        observed_n_nodes = len(g1)
+        event('min_graph_size={}'.format(min(len(g1), len(g2))))
+        assert expected_n_nodes == observed_n_nodes
+
+    @given(g1=depgraphs(min_size=2), g2=depgraphs(min_size=2), g3=depgraphs())
+    def test_recursive_flatten_size(self, g1, g2, g3):
+        '''Test that grafting three nested graphs yields a graph with the
+        correct size.
+        '''
+        expected_nodes = set(g1.nodes()) | set(g2.nodes()) | set(g3.nodes())
+        note('g1: {}'.format(repr(g1)))
+        note('g2: {}'.format(repr(g2)))
+        note('g3: {}'.format(repr(g3)))
+        note('expected_nodes: {}'.format(expected_nodes))
+        expected_n_nodes = len(expected_nodes)
+        # add g3 into g2; g2 has at least two nodes
+        g2.add_dependency(g2._nodes[0], on=g3)
+        g2.add_dependency(g3, on=g2._nodes[1])
+        # add g2 into g1; g1 has at least two nodes
+        g1.add_dependency(g1._nodes[0], on=g2)
+        g1.add_dependency(g2, on=g1._nodes[1])
+        note('before flattening: {}'.format(repr(g1)))
+        g1.flatten()
+        note('after flattening: {}'.format(repr(g1)))
+        observed_n_nodes = len(g1)
+        event('min_graph_size={}'.format(min(len(g1), len(g2), len(g3))))
+        assert expected_n_nodes == observed_n_nodes
+
+    @given(g=depgraphs(min_size=1))
+    def test_dependees(self, g):
+        '''Test that dependees are correctly computed.'''
+        n0 = g._nodes[0]
+        dependees = g.dependees(n0)
+        for d in dependees:
+            assert n0 in g[d]
