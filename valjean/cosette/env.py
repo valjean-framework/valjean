@@ -87,6 +87,7 @@ from .depgraph import DepGraph
 
 
 class EnvError(Exception):
+    '''An error that may be raised by the :mod:`~Env` class.'''
     pass
 
 
@@ -94,34 +95,35 @@ def _add_enum_accessors(enum):
     '''Dynamically instantiate is_* and set_* methods for the :class:`Env`
     class, based on the values of the :class:`~.TaskStatus` enum.
     '''
-    def decorator(cls):
-        def getter_factory(name, status):
-            def getter(self, task):
+    def _decorator(cls):
+        def _getter_factory(name, status):
+            '''Produce a getter with a suitable docstring.'''
+            def _getter(self, task):
                 return self.get_status(task) == status
-            getter.__doc__ = ("Returns True if `task`'s "
-                              "status is `{}`.".format(name))
-            return getter
+            _getter.__doc__ = ("Returns True if `task`'s "
+                               "status is `{}`.".format(name))
+            return _getter
 
-        def setter_factory(name, status):
-            def setter(self, task):
+        def _setter_factory(name, status):
+            def _setter(self, task):
                 self.set_status(task, status)
-            setter.__doc__ = "Sets `task`'s status to `{}`.".format(name)
-            return setter
+            _setter.__doc__ = "Sets `task`'s status to `{}`.".format(name)
+            return _setter
 
-        for name, status in TaskStatus.__members__.items():
+        for name, status in enum.__members__.items():
             lname = name.lower()
 
             # add the getter
-            getter = getter_factory(name, status)
+            getter = _getter_factory(name, status)
             getter_name = 'is_' + lname
             setattr(cls, getter_name, getter)
 
             # add the setter
-            setter = setter_factory(name, status)
+            setter = _setter_factory(name, status)
             setter_name = 'set_' + lname
             setattr(cls, setter_name, setter)
         return cls
-    return decorator
+    return _decorator
 
 
 @_add_enum_accessors(TaskStatus)
@@ -133,6 +135,7 @@ class Env(dict):
 
     def __init__(self, dictionary=None):
         '''Construct an object based on an existing dictionary.'''
+        super().__init__()
         self.lock = threading.RLock()
         if dictionary is not None:
             with self.lock:
@@ -204,19 +207,19 @@ class Env(dict):
     def apply(self, env_update):
         '''Apply un update to the dictionary.'''
 
-        def apply_worker(update, old):
-            for k, v in update.items():
-                if isinstance(v, MutableMapping):
-                    if k in old:
+        def _apply_worker(update, old):
+            for key, val in update.items():
+                if isinstance(val, MutableMapping):
+                    if key in old:
                         # recursively update this dictionary
-                        apply_worker(v, old[k])
+                        _apply_worker(val, old[key])
                     else:
-                        old[k] = v
+                        old[key] = val
                 else:
-                    old[k] = v
+                    old[key] = val
 
         if env_update is None:
             return
 
         with self.lock:
-            apply_worker(env_update, self)
+            _apply_worker(env_update, self)

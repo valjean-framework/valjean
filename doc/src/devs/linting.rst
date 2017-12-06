@@ -63,13 +63,18 @@ end of the line:
 Note the ``E402`` error code, which matches :command:`flake8`'s output message.
 Now :command:`flake8` will see the annotation and will not complain any more.
 
+At the time of writing, both :mod:`valjean` and the unit tests are
+:command:`flake8`-clean.
+
 :command:`pylint`
 -----------------
 
-The :command:`pylint` linter is much more aggressive than :command:`flake8`. At
-the time of writing, :mod:`valjean` is :command:`flake8`-clean, but not
-:command:`pylint`-clean.
+The :command:`pylint` linter is much more aggressive than :command:`flake8`; it
+seems to have very clear (albeit configurable) ideas about what your variable
+names should and should not be, how many public methods your classes should
+have... At the time of writing, :mod:`valjean` is :command:`pylint`-clean, but
+the tests are not.
 
 .. todo::
 
-   Fix the :command:`pylint` warnings.
+   Fix the :command:`pylint` warnings in the unit tests.

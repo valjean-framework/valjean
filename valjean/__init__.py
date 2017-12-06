@@ -1,29 +1,33 @@
+'''Top-level module for the valjean package.'''
+
 import logging
 from pkg_resources import resource_filename
 
-_all_dict = {'cosette': ['depgraph', 'env', 'task', 'task.task', 'task.code',
+_ALL_DICT = {'cosette': ['depgraph', 'env', 'task', 'task.task', 'task.code',
                          'scheduler', 'backends', 'backends.queue']
-             }
-_submods = (['{}.{}'.format(k, v) for k, vs in _all_dict.items() for v in vs]
-            + list(_all_dict.keys()))
+            }
+_SUBMODS = (['{}.{}'.format(k, v) for k, vs in _ALL_DICT.items() for v in vs]
+            + list(_ALL_DICT.keys()))
 
-version_file = resource_filename(__name__, 'VERSION')
-with open(version_file) as f:
+VERSION_FILE = resource_filename(__name__, 'VERSION')
+with open(VERSION_FILE) as f:
     __version__ = f.read().strip()
 
-log_level = logging.INFO
+LOG_LEVEL = logging.INFO
 
 logging.basicConfig(format='%(levelname)s (%(name)s/%(funcName)s()) '
-                    '%(asctime)s: %(message)s', level=log_level)
+                    '%(asctime)s: %(message)s', level=LOG_LEVEL)
 
 
 def set_log_level(level):
-    global log_level
-    for module in _submods:
+    '''Set the logging level in all the submodules.'''
+    global LOG_LEVEL  # pylint: disable=global-statement
+    for module in _SUBMODS:
         logger = logging.getLogger(__name__ + '.' + module)
         logger.setLevel(level)
-        log_level = level
+        LOG_LEVEL = level
 
 
 def get_log_level():
-    return log_level
+    '''Return the current global log level.'''
+    return LOG_LEVEL

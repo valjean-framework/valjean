@@ -31,10 +31,11 @@ from .backends.queue import QueueScheduling
 from .env import Env
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class SchedulerError(Exception):
+    '''An error that may be raised by the :class:`Scheduler` class.'''
     pass
 
 
@@ -99,8 +100,8 @@ class Scheduler:
         :returns: The modified environment.
         '''
 
-        logger.info('scheduling tasks')
-        logger.debug('for graph %s', self.depgraph)
+        LOGGER.info('scheduling tasks')
+        LOGGER.debug('for graph %s', self.depgraph)
         if env is None:
             env = Env.from_graph(self.depgraph)
         self.backend.execute_tasks(self.sorted_list, self.depgraph, env)

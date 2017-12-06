@@ -255,9 +255,9 @@ build complex graphs. Just build smaller subgraphs and assemble them together
 as if they were nodes! The :meth:`flatten()` method will recursively graft all
 graph nodes into the main graph.
 
-(Fun fact: the :class:`DepGraph` type is a monad, with
-:meth:`flatten(recurse=False)` playing the role of ``join``. If what I just
-wrote makes no sense to you, don't worry.)
+(Fun fact: the :class:`DepGraph` type is a monad, with :meth:`flatten()`
+playing the role of ``join``. If what I just wrote makes no sense to you, don't
+worry.)
 
 
 Caveats
@@ -285,7 +285,7 @@ Some things you should be aware of when using :class:`DepGraph`:
 
 import logging
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class DepGraphError(Exception):
@@ -293,7 +293,7 @@ class DepGraphError(Exception):
     pass
 
 
-class DepGraph:
+class DepGraph:  # pylint: disable=too-many-public-methods
     '''A dependency graph.
 
     There are two preferred ways to instantiate this class:
@@ -337,17 +337,17 @@ class DepGraph:
         return cls(nodes, edges, index)
 
     @staticmethod
-    def _complete(d):
+    def _complete(dct):
         '''Add singleton nodes to the dictionary.'''
 
         import copy
-        complete_d = copy.copy(d)
-        for vs in d.values():
-            for v in vs:
-                if v not in complete_d:
-                    complete_d[v] = set()
-        complete_d = {k: set(v) for k, v in complete_d.items()}
-        return complete_d
+        complete_dct = copy.copy(dct)
+        for vals in dct.values():
+            for val in vals:
+                if val not in complete_dct:
+                    complete_dct[val] = set()
+        complete_dct = {k: set(v) for k, v in complete_dct.items()}
+        return complete_dct
 
     def __init__(self, nodes=None, edges=None, index=None):
         '''Initialize the object from a list of nodes, and edge dictionary and
@@ -377,7 +377,7 @@ enumerate(nodes))
 
         # self._nodes is the list of the graph nodes
         self._nodes = list(nodes)
-        logger.debug('nodes: %s', self._nodes)
+        LOGGER.debug('nodes: %s', self._nodes)
 
         # the self._index dictionary translates from node objects to integer
         # indices
@@ -392,17 +392,17 @@ enumerate(nodes))
                                     'index = {index}\nnodes = {nodes}'
                                     .format(index=index, nodes=self._nodes))
             self._index = index
-        logger.debug('index: %s', self._index)
+        LOGGER.debug('index: %s', self._index)
 
         # finally, complete the edges dictionary so that all values also appear
         # as keys, possibly with empty values
-        logger.debug('incomplete graph edges: %s', edges)
+        LOGGER.debug('incomplete graph edges: %s', edges)
         self._edges = DepGraph._complete(edges)
-        logger.debug('full graph edges: %s', self._edges)
+        LOGGER.debug('full graph edges: %s', self._edges)
 
     def __str__(self):
         assoc_list = sorted([(str(self._nodes[k]),
-                             sorted(map(lambda v: str(self._nodes[v]), vs)))
+                              sorted(map(lambda v: str(self._nodes[v]), vs)))
                              for k, vs in self._edges.items()])
         return str(assoc_list)
 
@@ -411,9 +411,6 @@ enumerate(nodes))
             nodes=self._nodes, edges=self._edges, index=self._index
             )
 
-    def __eq__(self, other):
-        return isinstance(other, DepGraph) and self.isomorphic_to(other)
-
     def __iter__(self):
         for i, node in enumerate(self._nodes):
             values = map(lambda j: self._nodes[j], self._edges[i])
@@ -421,55 +418,53 @@ enumerate(nodes))
 
     def __add__(self, other):
         '''Merge two graphs, return the result as a new graph.'''
-
         return self.copy().merge(other)
 
     __radd__ = __add__
-
-    def __getitem__(self, node):
-        '''Get the dependencies of `node`.
-
-        :param node: The node we are querying.
-        :returns: A list containing the dependencies of `node`.
-        '''
-
-        return self.dependencies(node)
 
     def __len__(self):
         '''Return the number of vertices in the graph.'''
         return len(self._nodes)
 
-    def __contains__(self, x):
+    def __contains__(self, node):
         '''Returns `True` if `x` is one of the nodes.'''
-        return x in self._nodes
+        return id(node) in self._index
 
     def __le__(self, other):
         '''`g` <= `h` if `g` is a subgraph of `h`'''
-
-        return (all(node in other._nodes for node in self._nodes)
-                and all(dep in other[node] for node in self._nodes
-                        for dep in self[node]))
+        if not isinstance(other, DepGraph):
+            return False
+        # pylint: disable=protected-access
+        return (all(node in other._nodes for node in self._nodes) and
+                all(dep in other[node] for node in self._nodes
+                    for dep in self[node]))
 
     def isomorphic_to(self, other):
         '''Returns `True` if this graph is isomorphic to `other`.'''
+
+        if not isinstance(other, DepGraph):
+            return False
 
         size = len(self)
         if size != len(other):
             return False
         i2o = [None] * size
         o2i = [None] * size
-        for i, n in enumerate(self._nodes):
+        for i, node in enumerate(self._nodes):
             try:
-                other_i = other._nodes.index(n)
+                other_i = other._nodes.index(node)  # pylint: disable=W0212
             except ValueError:
                 return False
             i2o[i] = other_i
             o2i[other_i] = i
-        for k, vs in self._edges.items():
-            other_vs = map(lambda o: o2i[o], other._edges[i2o[k]])
-            if set(vs) != set(other_vs):
+        for k, vals in self._edges.items():
+            # pylint: disable=protected-access
+            other_vals = map(lambda o: o2i[o], other._edges[i2o[k]])
+            if set(vals) != set(other_vals):
                 return False
         return True
+
+    __eq__ = isomorphic_to
 
     def add_node(self, node):
         '''Add a new node to the graph.
@@ -478,7 +473,7 @@ enumerate(nodes))
         '''
 
         if id(node) in self._index:
-            logger.info('Node %s already belongs to the graph', node)
+            LOGGER.info('Node %s already belongs to the graph', node)
             return
 
         new_index = len(self._nodes)
@@ -497,7 +492,7 @@ enumerate(nodes))
 
         i = self._index.get(id(node), None)
         if i is None:
-            logger.warn('Cannot remove node %s: not in graph', node)
+            LOGGER.warning('Cannot remove node %s: not in graph', node)
             return
 
         # first, we need to put the selected node at the end of the _nodes list
@@ -508,8 +503,8 @@ enumerate(nodes))
         # remove edges from last
         del self._edges[last]
         # remove edges into last
-        for k, vs in self._edges.items():
-            self._edges[k] = set(n for n in vs if n != last)
+        for k, vals in self._edges.items():
+            self._edges[k] = set(n for n in vals if n != last)
 
         # remove the node from the _index dictionary
         del self._index[id(node)]
@@ -541,15 +536,16 @@ enumerate(nodes))
         self._edges[i] = self._edges[j]
         self._edges[j] = tmp
 
-        def swapper(k):
+        def _swapper(k):
+            '''Swap i and j, otherwise return the argument.'''
             if k == i:
                 return j
             elif k == j:
                 return i
             return k
 
-        for k, vs in self._edges.items():
-            self._edges[k] = set(map(swapper, vs))
+        for k, vals in self._edges.items():
+            self._edges[k] = set(map(_swapper, vals))
 
         return self
 
@@ -590,10 +586,10 @@ enumerate(nodes))
         '''
 
         inv_edges = {}
-        for k, vs in self._edges.items():
-            inv_edges.setdefault(k, [])
-            for v in vs:
-                inv_edges.setdefault(v, []).append(k)
+        for key, vals in self._edges.items():
+            inv_edges.setdefault(key, [])
+            for val in vals:
+                inv_edges.setdefault(val, []).append(key)
 
         return DepGraph(self._nodes, inv_edges, self._index)
 
@@ -609,7 +605,7 @@ enumerate(nodes))
         result = []
         marks = {}
 
-        def visit(node):
+        def _visit(node):
             mark = marks.get(node, None)
             if mark == self._Marks.TEMP:
                 raise DepGraphError('Dependency graph is cyclic!')
@@ -618,14 +614,14 @@ enumerate(nodes))
             marks[node] = self._Marks.TEMP
             index = self._index[id(node)]
             for target in self._edges.get(index, []):
-                visit(self._nodes[target])
+                _visit(self._nodes[target])
             marks[node] = self._Marks.PERM
             result.append(node)
 
         for node in self._nodes:
             if node in marks:
                 continue
-            visit(node)
+            _visit(node)
 
         return result
 
@@ -643,15 +639,16 @@ enumerate(nodes))
         :param DepGraph other: The graph to merge.
         '''
 
-        for k, vs in other:
-            self.add_node(k)
-            for v in vs:
-                self.add_dependency(k, on=v)
+        for key, vals in other:
+            self.add_node(key)
+            for val in vals:
+                self.add_dependency(key, on=val)
         return self
 
     __iadd__ = merge
 
     def nodes(self):
+        '''Returns the graph nodes.'''
         return self._nodes
 
     def dependencies(self, node, recurse=False):
@@ -667,13 +664,14 @@ enumerate(nodes))
         result = list(
             map(lambda i: self._nodes[i], self._edges[self._index[id(node)]])
             )
-        logger.debug('dependencies: %s -> %s', node, result)
+        LOGGER.debug('dependencies: %s -> %s', node, result)
         if recurse:
             sub_deps = chain.from_iterable(self.dependencies(d, recurse)
                                            for d in result)
             return list(frozenset(sub_deps) | frozenset(result))
-        else:
-            return result
+        return result
+
+    __getitem__ = dependencies
 
     def dependees(self, node):
         '''Collect the nodes that depend on the given node. This operation is
@@ -691,37 +689,37 @@ enumerate(nodes))
         :returns: A string describing the file in graphviz format.
         '''
 
-        gv = [r'digraph {']
-        for k, vs in self._edges.items():
-            from_node = str(self._nodes[k])
-            gv.append(from_node + ';')
-            for v in vs:
-                to_node = str(self._nodes[v])
-                gv.append(from_node + ' -> ' + to_node)
-        gv.append(r'}')
-        return '\n'.join(gv)
+        gviz = [r'digraph {']
+        for key, vals in self._edges.items():
+            from_node = str(self._nodes[key])
+            gviz.append(from_node + ';')
+            for val in vals:
+                to_node = str(self._nodes[val])
+                gviz.append(from_node + ' -> ' + to_node)
+        gviz.append(r'}')
+        return '\n'.join(gviz)
 
     def transitive_reduction(self):
         '''Perform a transitive reduction of the graph in place.'''
 
-        def visit(start_edges, current):
+        def _visit(start_edges, current):
             current_edges = self._edges[current]
-            logger.debug('visiting: %s: %s, %s',
+            LOGGER.debug('visiting: %s: %s, %s',
                          current, current_edges, start_edges)
             to_remove = set()
             for dest in current_edges:
                 if dest in start_edges:
-                    logger.debug('  marking %s for removal', dest)
+                    LOGGER.debug('  marking %s for removal', dest)
                     to_remove.add(dest)
-                logger.debug('  recursing into %s', dest)
-                to_remove |= visit(start_edges, dest)
+                LOGGER.debug('  recursing into %s', dest)
+                to_remove |= _visit(start_edges, dest)
             return to_remove
 
-        logger.debug(repr(self))
-        for i_node, node in enumerate(self._nodes):
+        LOGGER.debug(repr(self))
+        for i_node in range(len(self)):
             to_remove = set()
             for j_node in self._edges[i_node]:
-                to_remove |= visit(self._edges[i_node], j_node)
+                to_remove |= _visit(self._edges[i_node], j_node)
             for j in to_remove:
                 self._edges[i_node].remove(j)
 
@@ -730,24 +728,24 @@ enumerate(nodes))
     def transitive_closure(self):
         '''Perform a transitive closure of the graph in place.'''
 
-        def visit(start_edges, current):
+        def _visit(start_edges, current):
             current_edges = self._edges[current]
-            logger.debug('visiting: %s: %s, %s',
+            LOGGER.debug('visiting: %s: %s, %s',
                          current, current_edges, start_edges)
             to_add = set()
             for dest in current_edges:
                 if dest not in start_edges:
-                    logger.debug('  marking %s for insertion', dest)
+                    LOGGER.debug('  marking %s for insertion', dest)
                     to_add.add(dest)
-                logger.debug('  recursing into %s', dest)
-                to_add |= visit(start_edges, dest)
+                LOGGER.debug('  recursing into %s', dest)
+                to_add |= _visit(start_edges, dest)
             return to_add
 
-        logger.debug(repr(self))
-        for i_node, node in enumerate(self._nodes):
+        LOGGER.debug(repr(self))
+        for i_node in range(len(self)):
             to_add = set()
             for j_node in self._edges[i_node]:
-                to_add |= visit(self._edges[i_node], j_node)
+                to_add |= _visit(self._edges[i_node], j_node)
             for j in to_add:
                 self._edges[i_node].add(j)
 
@@ -764,8 +762,8 @@ enumerate(nodes))
 
         index_set = set(range(len(self)))
         itarget_set = set()
-        for vs in self._edges.values():
-            itarget_set |= set(vs)
+        for vals in self._edges.values():
+            itarget_set |= set(vals)
         index_set.difference_update(itarget_set)
         return [self._nodes[i] for i in index_set]
 
@@ -795,23 +793,23 @@ enumerate(nodes))
         # and outgoing edges from its terminal nodes
         inits = node.initial()
         terms = node.terminal()
-        logger.debug('Initial nodes: {}'.format(inits))
-        logger.debug('Terminal nodes: {}'.format(terms))
-        logger.debug('Dependencies: {}'.format(deps))
-        logger.debug('Dependees: {}'.format(dependees))
+        LOGGER.debug('Initial nodes = %s', inits)
+        LOGGER.debug('Terminal nodes = %s', terms)
+        LOGGER.debug('Dependencies = %s', deps)
+        LOGGER.debug('Dependees = %s', dependees)
         self += node  # merge
-        logger.debug('Merged graph: {}'.format(repr(self)))
+        LOGGER.debug('Merged graph = %s', repr(self))
         for dep in deps:
             for term in terms:
-                logger.debug('Adding dependency of {} on {}'
-                             .format(term, dep))
+                LOGGER.debug('Adding dependency of %s on %s',
+                             term, dep)
                 self.add_dependency(term, on=dep)
         for dependee in dependees:
             for init in inits:
-                logger.debug('Adding dependency of {} on {}'
-                             .format(dependee, init))
+                LOGGER.debug('Adding dependency of %s on %s',
+                             dependee, init)
                 self.add_dependency(dependee, on=init)
-        logger.debug('Grafted graph: {}'.format(repr(self)))
+        LOGGER.debug('Grafted graph = %s', repr(self))
 
         return self
 
@@ -822,33 +820,33 @@ enumerate(nodes))
                              all nodes are flat.
         '''
         nodes = [n for n in self._nodes if isinstance(n, DepGraph)]
-        while len(nodes) > 0:
-            logger.debug('flatten() will graft the following nodes: {}'
-                         .format(nodes))
-            for n in nodes:
-                self.graft(n)
+        while nodes:
+            LOGGER.debug('flatten() will graft the following nodes: %s',
+                         nodes)
+            for node in nodes:
+                self.graft(node)
             if not recurse:
                 break
             nodes = [n for n in self._nodes if isinstance(n, DepGraph)]
         return self
 
-    def depends(self, n1, n2, recurse=False):
-        '''Return ``True`` if the node `n1` depends on `n2`.
+    def depends(self, node1, node2, recurse=False):
+        '''Return ``True`` if the node `node1` depends on `node2`.
 
-        :param n1: The first node.
-        :param n2: The second node.
+        :param node1: The first node.
+        :param node2: The second node.
         :param bool recurse: If true, look at indirect dependencies, too.
-        :returns: ``True`` if `n1` depends directly (``recurse == False``) or
-                  indirectly (``recurse == True``) on `n2`.
+        :returns: ``True`` if `node1` directly (``recurse == False``) or
+                  indirectly (``recurse == True``) depends on `node2`.
         '''
 
         import itertools
-        i1 = self._index[id(n1)]
-        i2 = self._index[id(n2)]
-        deps1 = self._edges[i1]
+        ind1 = self._index[id(node1)]
+        ind2 = self._index[id(node2)]
+        deps1 = self._edges[ind1]
         depends = False
-        while len(deps1) > 0:
-            depends = i2 in deps1
+        while deps1:
+            depends = ind2 in deps1
             if depends or not recurse:
                 return depends
             deps1 = list(itertools.chain.from_iterable(self._edges[i]

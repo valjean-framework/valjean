@@ -62,7 +62,7 @@ class TestCodeTasks:
                                       ref=ref,
                                       flags=flags,
                                       vcs='git')
-                env_up, status = t.do({})
+                env_up, status = t.do(dict())
                 assert status == TaskStatus.DONE
                 assert env_up['tasks']['test_checkout']['return_code'] == 0
                 assert (env_up['checkout']['test_checkout']['repository']
@@ -97,7 +97,7 @@ class TestCodeTasks:
                                build_flags=build_flags,
                                build_targets=build_targets,
                                build_system='cmake')
-            env_up, status = t.do({})
+            env_up, status = t.do(dict())
             assert status == TaskStatus.DONE
             assert env_up['tasks']['test_build']['return_code'] == 0
             configure_log_dir = os.path.dirname(

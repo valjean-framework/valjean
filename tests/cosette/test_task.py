@@ -23,7 +23,7 @@ class TestExecuteTask:
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
             t = task.ExecuteTask('echo', ['echo', 'test'], stdout=f_out)
-            env_up, status = t.do({})
+            env_up, status = t.do(dict())
         assert status == TaskStatus.DONE
         assert env_up['tasks']['echo']['return_code'] == 0
 
@@ -43,7 +43,7 @@ class TestShellTask:
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
             t = task.ShellTask('script', script, stdout=f_out)
-            env_up, status = t.do({})
+            env_up, status = t.do(dict())
         assert status == TaskStatus.DONE
         assert env_up['tasks']['script']['return_code'] == 0
 

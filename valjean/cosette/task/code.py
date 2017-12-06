@@ -43,7 +43,7 @@ An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
    ...                build_dir=build_dir,
    ...                build_flags='-- -j4',
    ...                log_dir=test_dir)
-   >>> ct_up, ct_status = ct.do({})  # doctest: +SKIP
+   >>> ct_up, ct_status = ct.do(dict())  # doctest: +SKIP
    >>> print(ct_status)             # doctest: +SKIP
    TaskStatus.DONE
    >>> pprint(ct_up)                 # doctest: +SKIP
@@ -54,7 +54,7 @@ An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
                                       'repository': '/path/to/project.git'}},
     'tasks': {'project_checkout': {'return_code': 0,
                                    'wallclock_time': 0.34877443313598633}}}
-   >>> bt_up, bt_status = bt.do({})  # doctest: +SKIP
+   >>> bt_up, bt_status = bt.do(dict())  # doctest: +SKIP
    >>> print(bt_status)             # doctest: +SKIP
    TaskStatus.DONE
    >>> pprint(bt_up)                 # doctest: +SKIP
@@ -71,13 +71,13 @@ import os
 from .task import ShellTask
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def _q(string):
     '''Quote a string so that it is correctly interpreted by shell scripts.'''
     import shlex
-    if len(string) == 0:
+    if not string:
         return string
     return shlex.quote(string)
 
@@ -85,7 +85,7 @@ def _q(string):
 def _sq(string):
     '''Split a string, quote the pieces and put everything back together.'''
     import shlex
-    if len(string) == 0:
+    if not string:
         return string
     return ' '.join(map(shlex.quote, shlex.split(string)))
 
@@ -119,6 +119,7 @@ class CheckoutTask(ShellTask):
     {git} -C {checkout_dir} checkout {ref}
 }} >{checkout_log} 2>&1'''
 
+    # pylint: disable=too-many-arguments
     def __init__(self,
                  name: str,
                  repository: str,
@@ -151,10 +152,10 @@ class CheckoutTask(ShellTask):
         super().__init__(name, script)
         self.checkout_dir = checkout_dir
         self.repository = repository
-        logger.info('Created %s task %s', self.__class__.__name__, self.name)
-        logger.info('  - repository = %s', self.repository)
-        logger.info('  - checkout_log = %s', self.checkout_log)
-        logger.info('  - checkout_dir = %s', self.checkout_dir)
+        LOGGER.info('Created %s task %s', self.__class__.__name__, self.name)
+        LOGGER.info('  - repository = %s', self.repository)
+        LOGGER.info('  - checkout_log = %s', self.checkout_log)
+        LOGGER.info('  - checkout_dir = %s', self.checkout_dir)
 
     def do(self, env):
         '''Check out the code as specified. In addition to proposing updates to
@@ -210,6 +211,7 @@ cd {build_dir}
     _cmake_build_template = (r'''{cmake} --build {build_dir} {target_flag} '''
                              '''{bflags} >{build_log} 2>&1''')
 
+    # pylint: disable=too-many-arguments
     def __init__(self,
                  name: str,
                  source_dir: str,
@@ -219,8 +221,8 @@ cd {build_dir}
                  build_flags=None,
                  build_targets=None,
                  build_system='cmake'):
-        _cflags = configure_flags if configure_flags is not None else ''
-        _bflags = build_flags if build_flags is not None else ''
+        self.cflags = configure_flags if configure_flags is not None else ''
+        self.bflags = build_flags if build_flags is not None else ''
         self.configure_log = os.path.join(
             os.path.expanduser(log_dir),
             self.sanitize_filename('configure_' + name + '.log'))
@@ -228,39 +230,49 @@ cd {build_dir}
             os.path.expanduser(log_dir),
             self.sanitize_filename('build_' + name + '.log')
             )
-        _build_targets = [None] if build_targets is None else build_targets
+        self.source_dir = source_dir
+        self.build_dir = build_dir
+        self.build_targets = [None] if build_targets is None else build_targets
         if build_system == 'cmake':
-
-            format_env = {
-                'cmake': _q(CMAKE),
-                'source_dir': _q(source_dir),
-                'build_dir': _q(build_dir),
-                'bflags': _sq(_bflags),
-                'cflags': _sq(_cflags),
-                'configure_log': _q(self.configure_log),
-                'build_log': _q(self.build_log)
-                }
-
-            cmake_build_list = []
-            for target in _build_targets:
-                _target_flag = '' if target is None else '--target ' + target
-                cmake_build_command = self._cmake_build_template.format(
-                    target_flag=_target_flag,
-                    **format_env)
-                cmake_build_list.append(cmake_build_command)
-            cmake_build_commands = '\n'.join(cmake_build_list)
-            format_env['cmake_build_commands'] = cmake_build_commands
-
-            script = self._cmake_template.format(**format_env)
-
+            script = self._make_cmake_script()
         elif build_system == 'autoconf' or build_system == 'configure':
-            raise NotImplementedError('configure build not implemented yet')
+            script = self._make_configure_script()
+        else:
+            raise ValueError('unrecognized build system: {}'
+                             .format(build_system))
         super().__init__(name, script)
-        logger.info('Created %s task %s', self.__class__.__name__, self.name)
-        logger.info('  - source_dir = %s', source_dir)
-        logger.info('  - build_dir = %s', build_dir)
-        logger.info('  - configure_log = %s', self.configure_log)
-        logger.info('  - build_log = %s', self.build_log)
+        LOGGER.info('Created %s task %s', self.__class__.__name__, self.name)
+        LOGGER.info('  - source_dir = %s', source_dir)
+        LOGGER.info('  - build_dir = %s', build_dir)
+        LOGGER.info('  - configure_log = %s', self.configure_log)
+        LOGGER.info('  - build_log = %s', self.build_log)
+
+    def _make_cmake_script(self):
+        _format_env = {
+            'cmake': _q(CMAKE),
+            'source_dir': _q(self.source_dir),
+            'build_dir': _q(self.build_dir),
+            'bflags': _sq(self.bflags),
+            'cflags': _sq(self.cflags),
+            'configure_log': _q(self.configure_log),
+            'build_log': _q(self.build_log)
+            }
+
+        cmake_build_list = []
+        for target in self.build_targets:
+            _target_flag = '' if target is None else '--target ' + target
+            cmake_build_command = self._cmake_build_template.format(
+                target_flag=_target_flag,
+                **_format_env)
+            cmake_build_list.append(cmake_build_command)
+        cmake_build_commands = '\n'.join(cmake_build_list)
+        _format_env['cmake_build_commands'] = cmake_build_commands
+
+        script = self._cmake_template.format(**_format_env)
+        return script
+
+    def _make_configure_script(self):
+        raise NotImplementedError('configure build not implemented yet')
 
     def do(self, env):
         '''Invoke the build tool as specified. In addition to proposing updates

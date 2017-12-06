@@ -31,7 +31,7 @@ It makes it possible to execute arbitrary commands. Consider:
    >>> from pprint import pprint
    >>> task = ExecuteTask(name='say',
    ...                    cli=['echo', 'ni!'])
-   >>> env_update, status = task.do({}) # 'ni!' printed to stdout
+   >>> env_update, status = task.do(dict()) # 'ni!' printed to stdout
    >>> print(status)
    TaskStatus.DONE
    >>> pprint(env_update)  # doctest: +NORMALIZE_WHITESPACE
@@ -45,7 +45,7 @@ what you expect:
    >>> task = ExecuteTask(name='want',
    ...                    cli=['echo', 'We want...', '&&',
    ...                         'echo', '...a shrubbery!'])
-   >>> env_update, status = task.do({})
+   >>> env_update, status = task.do(dict())
    >>> # prints 'We want... && echo ...a shrubbery!'
 
 If you need to execute several commands, either wrap them in a shell script or
@@ -60,7 +60,7 @@ class:
    ... echo 'We want...'
    ... echo '...a shrubbery!'
    ... """)
-   >>> env_update, status = task.do({})  # executes the shell script
+   >>> env_update, status = task.do(dict())  # executes the shell script
 '''
 
 import logging
@@ -68,10 +68,11 @@ import logging
 from . import TaskStatus
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class TaskError(Exception):
+    '''An error that may be raised by :mod:`~Task` classes.'''
     pass
 
 
@@ -85,7 +86,7 @@ class Task:
         '''
         self.name = name
 
-    def do(self, env=None):
+    def do(self, env):
         '''Perform a task.
 
         :param env: The environment for this task.
@@ -113,17 +114,17 @@ class DelayTask(Task):
         super().__init__(name)
         self.delay = float(delay)
 
-    def do(self, env=None):
+    def do(self, env):
         '''Perform the task (i.e. sleep; I wish my life was like that).
 
         :param env: The environment. Ignored.
         '''
 
         from time import sleep
-        logger.info('DelayTask %s sleeping %f seconds...',
+        LOGGER.info('DelayTask %s sleeping %f seconds...',
                     self, self.delay)
         sleep(self.delay)
-        logger.info('DelayTask %s waking up!', self)
+        LOGGER.info('DelayTask %s waking up!', self)
         return dict(), TaskStatus.DONE
 
 
@@ -169,9 +170,9 @@ class ExecuteTask(Task):
         end_time = time()
         # Here we assume that env is a mapping
         env_up = {'tasks': {self.name: {
-                  'return_code': result,
-                  'wallclock_time': end_time-start_time
-                  }}}
+            'return_code': result,
+            'wallclock_time': end_time-start_time
+            }}}
         if result == 0:
             status = TaskStatus.DONE
         else:
@@ -187,8 +188,9 @@ class ShellTask(Task):
     ``env['tasks'][task.name]['dir']``.
     '''
 
+    # pylint: disable=too-many-arguments
     def __init__(self, name, script, shell='/bin/bash',
-                 delete=True, dir=None, **kwargs):
+                 delete=True, directory=None, **kwargs):
         '''Initialize the task from the following arguments:
 
         :param str name: The name of this task.
@@ -196,10 +198,10 @@ class ShellTask(Task):
         :param str shell: The path to the shell that should be used to execute
                           the script.
         :param bool delete: If true, delete the shell script when done.
-        :param dir: The path to the directory where the temporary script file
-                    will be created, or ``None`` (in which case the default
-                    system directory will be used).
-        :type dir: None or str
+        :param directory: The path to the directory where the temporary script
+                          file will be created, or ``None`` (in which case the
+                          default system directory will be used).
+        :type directory: None or str
         :param mapping kwargs: Any keyword arguments will be passed to the
                                :class:`.subprocess.Popen` constructor.
         '''
@@ -208,21 +210,22 @@ class ShellTask(Task):
         self.script = script
         self.shell = shell
         self.delete = delete
-        self.dir = dir
+        self.dir = directory
         self.kwargs = kwargs
-        logger.info('Created %s task %s', self.__class__.__name__, self.name)
-        logger.info('  - shell = %s', self.shell)
-        logger.info('  - delete = %s', self.delete)
-        logger.info('  - dir = %s', self.dir)
-        logger.debug('  - script = \n###### SCRIPT START #####\n'
+        LOGGER.info('Created %s task %s', self.__class__.__name__, self.name)
+        LOGGER.info('  - shell = %s', self.shell)
+        LOGGER.info('  - delete = %s', self.delete)
+        LOGGER.info('  - directory = %s', self.dir)
+        LOGGER.debug('  - script = \n###### SCRIPT START #####\n'
                      '%s\n#####  SCRIPT END  #####', self.script)
 
     @staticmethod
-    def _allowed_char(c):
-        return c.isalnum() or c == '.'
+    def _allowed_char(char):
+        return char.isalnum() or char == '.'
 
     @staticmethod
     def sanitize_filename(name):
+        '''Sanitize a string so that it may be used as a filename.'''
         return ''.join(c if ShellTask._allowed_char(c) else '_' for c in name)
 
     def do(self, env):
@@ -237,19 +240,19 @@ class ShellTask(Task):
         :returns: The proposed environment update.
         '''
 
-        logger.info('Executing %s task %s', self.__class__.__name__, self.name)
+        LOGGER.info('Executing %s task %s', self.__class__.__name__, self.name)
         import tempfile
         sanitized = self.sanitize_filename(self.name)
         with tempfile.NamedTemporaryFile(prefix=sanitized,
                                          delete=self.delete,
-                                         dir=self.dir) as f:
-            f.write(self.script.encode('utf-8'))
-            f.seek(0)
+                                         dir=self.dir) as file_:
+            file_.write(self.script.encode('utf-8'))
+            file_.seek(0)
             # store the script filename in the environment dict
-            subtask = ExecuteTask(self.name, [self.shell, f.name],
+            subtask = ExecuteTask(self.name, [self.shell, file_.name],
                                   **self.kwargs)
             env_up, status = subtask.do(env)
             env_up.setdefault('tasks', {}).setdefault(self.name, {
-                'script_filename': f.name
+                'script_filename': file_.name
                 })
             return env_up, status
