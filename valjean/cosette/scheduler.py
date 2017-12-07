@@ -7,7 +7,7 @@ Example usage:
 .. testsetup:: scheduler
 
    from valjean.cosette.depgraph import DepGraph
-   from valjean.cosette.task.task import DelayTask
+   from valjean.cosette.task import DelayTask
    from valjean.cosette.scheduler import Scheduler
 
 .. doctest:: scheduler

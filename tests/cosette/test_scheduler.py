@@ -8,8 +8,7 @@ from valjean import get_log_level, set_log_level
 from valjean.cosette.depgraph import DepGraph
 from valjean.cosette.scheduler import Scheduler, QueueScheduling
 from valjean.cosette.env import Env
-from valjean.cosette.task import TaskStatus
-from valjean.cosette.task.task import DelayTask, Task
+from valjean.cosette.task import TaskStatus, DelayTask, Task
 
 
 @composite

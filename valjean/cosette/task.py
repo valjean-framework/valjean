@@ -24,7 +24,7 @@ It makes it possible to execute arbitrary commands. Consider:
 
 .. testsetup:: task
 
-   from valjean.cosette.task.task import ExecuteTask, ShellTask
+   from valjean.cosette.task import ExecuteTask, ShellTask
 
 .. doctest:: task
 
@@ -64,8 +64,11 @@ class:
 '''
 
 import logging
+import enum
 
-from . import TaskStatus
+#: Enumeration for the task status
+TaskStatus = enum.Enum('TaskStatus',  # pylint: disable=invalid-name
+                       'WAITING PENDING DONE FAILED SKIPPED')
 
 
 LOGGER = logging.getLogger(__name__)

@@ -21,7 +21,7 @@ tasks handy, you can generate an :class:`Env` object from them using the
 
 .. doctest:: env
 
-    >>> from valjean.cosette.task.task import Task
+    >>> from valjean.cosette.task import Task
     >>> tasks = [Task(str(i)) for i in range(10)]
     >>> env = Env.from_tasks(tasks)
 

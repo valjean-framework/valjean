@@ -18,3 +18,4 @@ cosette — COnStruction et ExécuTion de TâchEs
    cosette/depgraph
    cosette/env
    cosette/scheduler
+   cosette/code

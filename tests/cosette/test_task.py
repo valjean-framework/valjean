@@ -7,7 +7,7 @@ import tempfile
 import os
 
 from ..context import valjean  # noqa: F401
-import valjean.cosette.task.task as task
+import valjean.cosette.task as task
 from valjean.cosette.task import TaskStatus
 
 

@@ -7,6 +7,9 @@ Tests for the :mod:`~.task` module
 .. automodule:: tests.cosette.test_task
    :undoc-members:
 
+Tests for the :mod:`~.code` module
+----------------------------------
+
 .. automodule:: tests.cosette.test_code
    :undoc-members:
 

@@ -24,11 +24,11 @@ variable.
 
 An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
 
-.. testsetup:: task.code
+.. testsetup:: code
 
-   from valjean.cosette.task.code import CheckoutTask, BuildTask
+   from valjean.cosette.code import CheckoutTask, BuildTask
 
-.. doctest:: task.code
+.. doctest:: code
 
    >>> import os
    >>> test_dir = '/path/to/test_project'
@@ -69,6 +69,7 @@ An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
 import logging
 import os
 from .task import ShellTask
+from .depgraph import DepGraph
 
 
 LOGGER = logging.getLogger(__name__)

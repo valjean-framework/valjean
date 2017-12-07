@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-'''Test classes for the :mod:`~.task.code` module.'''
+'''Test classes for the :mod:`~.code` module.'''
 
 import pytest
 import tempfile
 import os
 
 from ..context import valjean  # noqa: F401
-import valjean.cosette.task.code as code
+import valjean.cosette.code as code
 from valjean.cosette.task import TaskStatus
 
 
