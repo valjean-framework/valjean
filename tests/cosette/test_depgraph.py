@@ -2,7 +2,7 @@
 
 from hypothesis import given, note, assume, event
 from hypothesis.strategies import (integers, sets, text, lists, composite,
-                                   sampled_from, data, booleans)
+                                   sampled_from, booleans)
 import pytest
 
 from ..context import valjean  # noqa: F401
@@ -257,14 +257,6 @@ class TestDepGraph:
         g_inv = g.invert()
         inits_inv = g_inv.initial()
         assert sorted(inits_inv) == sorted(terms)
-
-    @given(g=depgraphs(), data=data())
-    def test_swap_indices_isomorphism(self, g, data):
-        '''Test that swapping two nodes results in an isomorphic graph.'''
-        i = data.draw(sampled_from(range(len(g))))
-        j = data.draw(sampled_from(range(len(g))))
-        g_swapped = g.copy()._swap_indices(i, j)
-        assert g.isomorphic_to(g_swapped)
 
     @given(g=depgraphs(), new=integers())
     def test_add_remove_is_identity(self, g, new):

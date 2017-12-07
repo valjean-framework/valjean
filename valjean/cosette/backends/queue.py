@@ -136,8 +136,8 @@ class QueueScheduling:
 
             :param queue: The producer-consumer task queue.
             :param env: The execution environment for the tasks.
-            :param cond_var: A condition variable to notify when we are finished
-                             running a task
+            :param cond_var: A condition variable to notify when we are
+                             finished running a task
             '''
             super().__init__()
             self.queue = queue

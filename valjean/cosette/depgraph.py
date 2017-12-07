@@ -206,14 +206,17 @@ Here is the code that generates it:
 
 .. doctest:: depgraph
 
+   >>> spanish_inq = 'Spanish Inquisition'
+   >>> surprise, fear, efficiency = 'surprise', 'fear', 'efficiency'
+   >>> devotion, uniforms = 'devotion', 'nice red uniforms'
    >>> chief_weapons = DepGraph.from_dependency_dictionary({
-   ...    'surprise': ['fear', 'efficiency'],
-   ...    'fear': ['devotion'],
-   ...    'efficiency': ['devotion']
+   ...    surprise: [fear, efficiency],
+   ...    fear: [devotion],
+   ...    efficiency: [devotion]
    ...    })
    >>> spanish = DepGraph() \\
-   ...     .add_dependency('Spanish Inquisition', on=chief_weapons) \\
-   ...     .add_dependency(chief_weapons, on='nice red uniforms')
+   ...     .add_dependency(spanish_inq, on=chief_weapons) \\
+   ...     .add_dependency(chief_weapons, on=uniforms)
 
 Here `chief_weapons` is a :class:`DepGraph` itself, but it is also a node of
 `spanish`. You can graft `chief_weapons` inside `spanish` like so:
@@ -241,11 +244,11 @@ as you can verify yourself:
 .. doctest:: depgraph
 
    >>> full_graph = DepGraph.from_dependency_dictionary({
-   ...    'Spanish Inquisition': ['surprise'],
-   ...    'surprise': ['fear', 'efficiency'],
-   ...    'fear': ['devotion'],
-   ...    'efficiency': ['devotion'],
-   ...    'devotion': ['nice red uniforms']
+   ...    spanish_inq: [surprise],
+   ...    surprise: [fear, efficiency],
+   ...    fear: [devotion],
+   ...    efficiency: [devotion],
+   ...    devotion: [uniforms]
    ...    })
    >>> full_graph == spanish
    True
@@ -284,6 +287,7 @@ Some things you should be aware of when using :class:`DepGraph`:
 '''
 
 import logging
+from .rlist import RList
 
 LOGGER = logging.getLogger(__name__)
 
@@ -293,7 +297,7 @@ class DepGraphError(Exception):
     pass
 
 
-class DepGraph:  # pylint: disable=too-many-public-methods
+class DepGraph:
     '''A dependency graph.
 
     There are two preferred ways to instantiate this class:
@@ -324,17 +328,14 @@ class DepGraph:  # pylint: disable=too-many-public-methods
             | set(v for vs in dependencies.values() for v in vs)
             )
 
-        # the index dictionary translates from node IDs to integer indices
-        index = {id(x): i for i, x in enumerate(nodes)}
-
         # translate the dependency dictionary elements to indices
         edges = {}
         for key, values in dependencies.items():
-            new_key = index[id(key)]
-            new_values = set(map(lambda v: index[id(v)], values))
+            new_key = nodes.index(key)
+            new_values = set(map(nodes.index, values))
             edges[new_key] = new_values
 
-        return cls(nodes, edges, index)
+        return cls(nodes, edges)
 
     @staticmethod
     def _complete(dct):
@@ -349,50 +350,23 @@ class DepGraph:  # pylint: disable=too-many-public-methods
         complete_dct = {k: set(v) for k, v in complete_dct.items()}
         return complete_dct
 
-    def __init__(self, nodes=None, edges=None, index=None):
-        '''Initialize the object from a list of nodes, and edge dictionary and
-        an optional edge index.
+    def __init__(self, nodes=None, edges=None):
+        '''Initialize the object from a list of nodes and an edge dictionary.
 
         :param iterable nodes: An iterable over the nodes of the graph, or
                               `None` for an empty graph.
         :param mapping edges: A mapping between integers representing the
                               nodes, or `None` for an empty graph.
-        :param mapping index: The inverse mapping to `nodes`, or `None` if it
-                              is not available (in which case it will be
-                              constructed). The `index` maps node IDs (as
-                              returned by the :func:`id()` function) to node
-                              objects. If the caller passes the `index`
-                              parameter, the constructor checks that the
-                              following invariant holds::
-
-                                  all(i == index[id(node)] for i, node in \
-enumerate(nodes))
         '''
 
         if nodes is None or edges is None:
-            self._nodes = []
-            self._index = {}
+            self._nodes = RList()
             self._edges = {}
             return
 
         # self._nodes is the list of the graph nodes
-        self._nodes = list(nodes)
+        self._nodes = RList(nodes)
         LOGGER.debug('nodes: %s', self._nodes)
-
-        # the self._index dictionary translates from node objects to integer
-        # indices
-        if index is None:
-            self._index = {id(x): i for i, x in enumerate(self._nodes)}
-        else:
-            # do a sanity check on index
-            check = all(i == index[id(node)]
-                        for i, node in enumerate(self._nodes))
-            if not check:
-                raise DepGraphError('index and nodes are inconsistent\n'
-                                    'index = {index}\nnodes = {nodes}'
-                                    .format(index=index, nodes=self._nodes))
-            self._index = index
-        LOGGER.debug('index: %s', self._index)
 
         # finally, complete the edges dictionary so that all values also appear
         # as keys, possibly with empty values
@@ -407,8 +381,8 @@ enumerate(nodes))
         return str(assoc_list)
 
     def __repr__(self):
-        return 'DepGraph(nodes={nodes}, edges={edges}, index={index})'.format(
-            nodes=self._nodes, edges=self._edges, index=self._index
+        return 'DepGraph(nodes={nodes}, edges={edges})'.format(
+            nodes=repr(self._nodes), edges=repr(self._edges)
             )
 
     def __iter__(self):
@@ -428,7 +402,7 @@ enumerate(nodes))
 
     def __contains__(self, node):
         '''Returns `True` if `x` is one of the nodes.'''
-        return id(node) in self._index
+        return node in self._nodes
 
     def __le__(self, other):
         '''`g` <= `h` if `g` is a subgraph of `h`'''
@@ -451,17 +425,26 @@ enumerate(nodes))
         i2o = [None] * size
         o2i = [None] * size
         for i, node in enumerate(self._nodes):
-            try:
-                other_i = other._nodes.index(node)  # pylint: disable=W0212
-            except ValueError:
+            # pylint: disable=W0212
+            other_i = other._nodes.get_index(node, None)
+            if other_i is None:
+                LOGGER.debug('could not find node %s, not isomorphic', node)
                 return False
+            LOGGER.debug('node %s found: %d -> %d', node, i, other_i)
             i2o[i] = other_i
             o2i[other_i] = i
-        for k, vals in self._edges.items():
+        if any(i is None for i in o2i):
+            LOGGER.debug('some node is in other but not in self, '
+                         'not isomorphic')
+            return False
+        for key, vals in self._edges.items():
             # pylint: disable=protected-access
-            other_vals = map(lambda o: o2i[o], other._edges[i2o[k]])
+            other_vals = set(o2i[o] for o in other._edges[i2o[key]])
             if set(vals) != set(other_vals):
+                LOGGER.debug('node %d fails isomorphism check (%s != %s)',
+                             key, vals, other_vals)
                 return False
+        LOGGER.debug('graphs are isomorphic')
         return True
 
     __eq__ = isomorphic_to
@@ -472,13 +455,12 @@ enumerate(nodes))
         :param node: The new node.
         '''
 
-        if id(node) in self._index:
+        if node in self:
             LOGGER.info('Node %s already belongs to the graph', node)
             return
 
         new_index = len(self._nodes)
         self._nodes.append(node)
-        self._index[id(node)] = new_index
         self._edges[new_index] = set()
         return self
 
@@ -490,15 +472,27 @@ enumerate(nodes))
         :param node: The node to be removed.
         '''
 
-        i = self._index.get(id(node), None)
+        i = self._nodes.get_index(node, None)
         if i is None:
             LOGGER.warning('Cannot remove node %s: not in graph', node)
             return
 
         # first, we need to put the selected node at the end of the _nodes list
         last = len(self._nodes) - 1
-        self._swap_indices(i, last)
+        self._nodes.swap(i, last)
+        # swap nodes in the _edges dictionary
+        tmp = self._edges[i]
+        self._edges[i] = self._edges[last]
+        self._edges[last] = tmp
 
+        def _swapper(k):
+            if k == i:
+                return last
+            elif k == last:
+                return i
+            return k
+        for k, vals in self._edges.items():
+            self._edges[k] = set(map(_swapper, vals))
         # now we can remove the edges
         # remove edges from last
         del self._edges[last]
@@ -506,46 +500,8 @@ enumerate(nodes))
         for k, vals in self._edges.items():
             self._edges[k] = set(n for n in vals if n != last)
 
-        # remove the node from the _index dictionary
-        del self._index[id(node)]
-
         # finally, we can remove the node itself
-        self._nodes = [n for n in self._nodes if n is not node]
-
-        return self
-
-    def _swap_indices(self, i, j):
-        '''Swap two indices in the graph.
-
-        After this operation, the ith and jth nodes will be swapped in the
-        internal representation, but the graph will be isomorphic.
-
-        :param int i: The first index to swap.
-        :param int j: The second index to swap.
-        '''
-
-        # swap nodes in _nodes and _index
-        tmp = self._nodes[i]
-        self._nodes[i] = self._nodes[j]
-        self._nodes[j] = tmp
-        self._index[id(self._nodes[i])] = i
-        self._index[id(self._nodes[j])] = j
-
-        # swap nodes in the _edges dictionary
-        tmp = self._edges[i]
-        self._edges[i] = self._edges[j]
-        self._edges[j] = tmp
-
-        def _swapper(k):
-            '''Swap i and j, otherwise return the argument.'''
-            if k == i:
-                return j
-            elif k == j:
-                return i
-            return k
-
-        for k, vals in self._edges.items():
-            self._edges[k] = set(map(_swapper, vals))
+        del self._nodes[last]
 
         return self
 
@@ -558,8 +514,8 @@ enumerate(nodes))
 
         self.add_node(node)
         self.add_node(on)
-        i_node = self._index[id(node)]
-        i_on = self._index[id(on)]
+        i_node = self._nodes.index(node)
+        i_on = self._nodes.index(on)
         self._edges[i_node].add(i_on)
         return self
 
@@ -570,8 +526,8 @@ enumerate(nodes))
         :param on: The node `node` depends on.
         '''
 
-        i_node = self._index[id(node)]
-        i_on = self._index[id(on)]
+        i_node = self._nodes.index(node)
+        i_on = self._nodes.index(on)
         try:
             self._edges[i_node].remove(i_on)
         except KeyError:
@@ -591,7 +547,7 @@ enumerate(nodes))
             for val in vals:
                 inv_edges.setdefault(val, []).append(key)
 
-        return DepGraph(self._nodes, inv_edges, self._index)
+        return DepGraph(self._nodes, inv_edges)
 
     def topological_sort(self):
         '''Perform a topological sort of the graph.
@@ -612,7 +568,7 @@ enumerate(nodes))
             if mark == self._Marks.PERM:
                 return
             marks[node] = self._Marks.TEMP
-            index = self._index[id(node)]
+            index = self._nodes.index(node)
             for target in self._edges.get(index, []):
                 _visit(self._nodes[target])
             marks[node] = self._Marks.PERM
@@ -626,12 +582,8 @@ enumerate(nodes))
         return result
 
     def copy(self):
-        '''Return a copy of this graph.
-
-        Note that the graph nodes are always shared.
-        '''
-
-        return DepGraph(self._nodes, self._edges.copy(), self._index.copy())
+        '''Return a copy of this graph. '''
+        return DepGraph(self._nodes.copy(), self._edges.copy())
 
     def merge(self, other):
         '''Merge this graph in place with another one.
@@ -662,7 +614,7 @@ enumerate(nodes))
 
         from itertools import chain
         result = list(
-            map(lambda i: self._nodes[i], self._edges[self._index[id(node)]])
+            map(lambda i: self._nodes[i], self._edges[self._nodes.index(node)])
             )
         LOGGER.debug('dependencies: %s -> %s', node, result)
         if recurse:
@@ -679,7 +631,7 @@ enumerate(nodes))
 
         :returns: A set containing the dependees of `node`.
         '''
-        i = self._index[id(node)]
+        i = self._nodes.index(node)
         indices = set(n for n in range(len(self)) if i in self._edges[n])
         return list(self._nodes[i] for i in indices)
 
@@ -841,8 +793,8 @@ enumerate(nodes))
         '''
 
         import itertools
-        ind1 = self._index[id(node1)]
-        ind2 = self._index[id(node2)]
+        ind1 = self._nodes.index(node1)
+        ind2 = self._nodes.index(node2)
         deps1 = self._edges[ind1]
         depends = False
         while deps1:

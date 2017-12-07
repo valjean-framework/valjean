@@ -4,8 +4,7 @@ import logging
 from pkg_resources import resource_filename
 
 _ALL_DICT = {'cosette': ['depgraph', 'env', 'task', 'task.task', 'task.code',
-                         'scheduler', 'backends', 'backends.queue']
-            }
+                         'scheduler', 'backends', 'backends.queue']}
 _SUBMODS = (['{}.{}'.format(k, v) for k, vs in _ALL_DICT.items() for v in vs]
             + list(_ALL_DICT.keys()))
 

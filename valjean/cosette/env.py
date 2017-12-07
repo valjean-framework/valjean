@@ -9,8 +9,8 @@ existing dictionary as follows:
 
 .. doctest:: env
 
-    >>> d = {'parrot': 'stiff', 'plumage': 'beautiful'}
-    >>> env_d = Env(d)  # a shallow copy of `d` is performed
+    >>> quest = {'name': 'Sir Galahad', 'favourite colour': 'blue'}
+    >>> env_quest = Env(quest)  # a shallow copy of `quest` is performed
 
 You can use an :class:`Env` object as a glorified dicitionary (:class:`Env`
 inherits from :class:`dict`), but its main purpose is really to store

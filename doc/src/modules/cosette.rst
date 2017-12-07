@@ -14,6 +14,7 @@ cosette — COnStruction et ExécuTion de TâchEs
 .. toctree::
 
    cosette/task
+   cosette/rlist
    cosette/depgraph
    cosette/env
    cosette/scheduler
