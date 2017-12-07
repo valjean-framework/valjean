@@ -75,7 +75,7 @@ class Scheduler:
                                      'node {} does not have a do() method'
                                      .format(node))
 
-        self.depgraph = depgraph
+        self.depgraph = depgraph.copy().flatten()
         self.sorted_list = depgraph.topological_sort()
         if backend is None:
             self.backend = QueueScheduling()
