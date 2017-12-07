@@ -141,7 +141,7 @@ class RList(MutableSequence):
         return len(self._seq)
 
     def __repr__(self):
-        return 'RList({})'.format(self._seq.__repr__())
+        return 'RList({!r})'.format(self._seq)
 
     def __str__(self):
         return self._seq.__str__()

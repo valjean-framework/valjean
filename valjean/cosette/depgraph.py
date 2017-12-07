@@ -750,7 +750,7 @@ class DepGraph:
         LOGGER.debug('Dependencies = %s', deps)
         LOGGER.debug('Dependees = %s', dependees)
         self += node  # merge
-        LOGGER.debug('Merged graph = %s', repr(self))
+        LOGGER.debug('Merged graph = %r', self)
         for dep in deps:
             for term in terms:
                 LOGGER.debug('Adding dependency of %s on %s',
@@ -761,7 +761,7 @@ class DepGraph:
                 LOGGER.debug('Adding dependency of %s on %s',
                              dependee, init)
                 self.add_dependency(dependee, on=init)
-        LOGGER.debug('Grafted graph = %s', repr(self))
+        LOGGER.debug('Grafted graph = %r', self)
 
         return self
 

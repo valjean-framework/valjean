@@ -91,8 +91,8 @@ class TestDepGraph:
                 g_incr.add_node(v)
                 g_incr.add_dependency(k, v)
 
-        note('g: {}'.format(repr(g)))
-        note('g_incr: {}'.format(repr(g_incr)))
+        note('g: {!r}'.format(g))
+        note('g_incr: {!r}'.format(g_incr))
         assert g.isomorphic_to(g_incr)
 
     @given(g=depgraphs())
@@ -135,7 +135,7 @@ class TestDepGraph:
     def test_merge_containment(self, g1, g2):
         '''Test that the merged graph contains both operands as subgraphs.'''
         g = g1 + g2
-        note(repr(g))
+        note('merged graph: {!r}'.format(g))
         assert g1 <= g
         assert g2 <= g
 
@@ -143,7 +143,7 @@ class TestDepGraph:
     def test_transitive_reduction_subgraph(self, g):
         '''Test that transitive reduction results in a subgraph.'''
         g_tr = g.copy().transitive_reduction()
-        note('reduced graph: {}'.format(repr(g_tr)))
+        note('reduced graph: {!r}'.format(g_tr))
         assert g_tr <= g
 
     @given(g=depgraphs())
@@ -151,7 +151,7 @@ class TestDepGraph:
         '''Test that transitive reduction results in a graph over the same
         nodes.'''
         g_tr = g.copy().transitive_reduction()
-        note('reduced graph: {}'.format(repr(g_tr)))
+        note('reduced graph: {!r}'.format(g_tr))
         assert sorted(g_tr.nodes()) == sorted(g.nodes())
 
     @given(g=depgraphs())
@@ -175,7 +175,7 @@ class TestDepGraph:
     def test_transitive_closure_supergraph(self, g):
         '''Test that transitive closure results in a supergraph.'''
         g_cl = g.copy().transitive_closure()
-        note('closure graph: {}'.format(repr(g_cl)))
+        note('closure graph: {!r}'.format(g_cl))
         assert g <= g_cl
 
     @given(g=depgraphs())
@@ -183,7 +183,7 @@ class TestDepGraph:
         '''Test that transitive closure results in a graph over the same
         nodes.'''
         g_cl = g.copy().transitive_closure()
-        note('closure graph: {}'.format(repr(g_cl)))
+        note('closure graph: {!r}'.format(g_cl))
         assert sorted(g_cl.nodes()) == sorted(g.nodes())
 
     @given(g=depgraphs())
@@ -298,16 +298,16 @@ class TestDepGraph:
         correct size.
         '''
         expected_nodes = set(g1.nodes()) | set(g2.nodes())
-        note('g1: {}'.format(repr(g1)))
-        note('g2: {}'.format(repr(g2)))
+        note('g1: {!r}'.format(g1))
+        note('g2: {!r}'.format(g2))
         note('expected_nodes: {}'.format(expected_nodes))
         expected_n_nodes = len(expected_nodes)
         # add g2 into g1; g1 has at least two nodes
         g1.add_dependency(g1._nodes[0], on=g2)
         g1.add_dependency(g2, on=g1._nodes[1])
-        note('before flattening: {}'.format(repr(g1)))
+        note('before flattening: {!r}'.format(g1))
         g1.flatten()
-        note('after flattening: {}'.format(repr(g1)))
+        note('after flattening: {!r}'.format(g1))
         observed_n_nodes = len(g1)
         event('min_graph_size={}'.format(min(len(g1), len(g2))))
         assert expected_n_nodes == observed_n_nodes
@@ -318,9 +318,9 @@ class TestDepGraph:
         correct size.
         '''
         expected_nodes = set(g1.nodes()) | set(g2.nodes()) | set(g3.nodes())
-        note('g1: {}'.format(repr(g1)))
-        note('g2: {}'.format(repr(g2)))
-        note('g3: {}'.format(repr(g3)))
+        note('g1: {!r}'.format(g1))
+        note('g2: {!r}'.format(g2))
+        note('g3: {!r}'.format(g3))
         note('expected_nodes: {}'.format(expected_nodes))
         expected_n_nodes = len(expected_nodes)
         # add g3 into g2; g2 has at least two nodes
@@ -329,9 +329,9 @@ class TestDepGraph:
         # add g2 into g1; g1 has at least two nodes
         g1.add_dependency(g1._nodes[0], on=g2)
         g1.add_dependency(g2, on=g1._nodes[1])
-        note('before flattening: {}'.format(repr(g1)))
+        note('before flattening: {!r}'.format(g1))
         g1.flatten()
-        note('after flattening: {}'.format(repr(g1)))
+        note('after flattening: {!r}'.format(g1))
         observed_n_nodes = len(g1)
         event('min_graph_size={}'.format(min(len(g1), len(g2), len(g3))))
         assert expected_n_nodes == observed_n_nodes

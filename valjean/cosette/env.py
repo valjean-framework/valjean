@@ -171,7 +171,7 @@ class Env(dict):
         return cls.from_tasks(graph.nodes())
 
     def __repr__(self):
-        return 'Env({})'.format(super().__repr__())
+        return 'Env({!r})'.format(super())
 
     @staticmethod
     def _check_unique_task_names(tasks):
