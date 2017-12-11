@@ -151,8 +151,12 @@ class RList(MutableSequence):
         n_elems = len(self)
         if index < 0:
             index += n_elems
-        # normalize the index so that it is valid in the extended list
-        # things like [1,2,3].insert(42, 4) are allowed with Python lists
+        # Normalize the index so that it is valid in the extended list.  Things
+        # like the following
+        #   >>> lst = [1,2,3]
+        #   >>> lst.insert(42, 4)
+        # are allowed with Python lists, so we want to allow them with RLists,
+        # too.
         index = min(n_elems, max(0, index))
         # Increase all mapped indices
         for obj_id, indices in self._index.items():

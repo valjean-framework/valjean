@@ -1,5 +1,19 @@
-valjean — VALidation Journalière et ANalyse
-===========================================
+valjean — VALidation, Journal d'Évolution et ANalyse
+====================================================
+
+.. figure:: ../images/valjean.jpg
+   :align: center
+   :figwidth: 110%
+   :alt: Jean Valjean
+
+   Jean Valjean avec ses chandeliers, illustré par Émile Bayard (1862).
 
 .. automodule:: valjean
    :undoc-members:
+
+Submodules
+----------
+
+.. toctree::
+
+   valjean/config

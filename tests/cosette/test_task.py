@@ -22,7 +22,8 @@ class TestExecuteTask:
     def test_echo(self, tempdir):
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
-            t = task.ExecuteTask('echo', ['echo', 'test'], stdout=f_out)
+            t = task.ExecuteTask('echo', ['echo', 'test'],
+                                 subprocess_args={'stdout': f_out})
             env_up, status = t.do(dict())
         assert status == TaskStatus.DONE
         assert env_up['tasks']['echo']['return_code'] == 0
@@ -36,13 +37,14 @@ class TestShellTask:
 
     def test_shell(self, tempdir):
         script = r'''echo here
-        echo there
-        echo and everywhere
-        '''
+echo there
+echo and everywhere
+'''
 
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
-            t = task.ShellTask('script', script, stdout=f_out)
+            t = task.ShellTask('script', script,
+                               subprocess_args={'stdout': f_out})
             env_up, status = t.do(dict())
         assert status == TaskStatus.DONE
         assert env_up['tasks']['script']['return_code'] == 0

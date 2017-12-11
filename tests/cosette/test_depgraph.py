@@ -108,12 +108,12 @@ class TestDepGraph:
 
     @given(g=depgraphs())
     def test_subgraph_self(self, g):
-        '''Test that merging with self results in the identity.'''
+        '''Test that merging with `self` results in the identity.'''
         assert g <= g
 
     @given(g=depgraphs())
     def test_merge_with_self_is_identity(self, g):
-        '''Test that merging with self results in the identity.'''
+        '''Test that merging with `self` results in the identity.'''
         assert g + g == g
 
     @given(g=depgraphs())

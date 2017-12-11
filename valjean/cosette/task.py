@@ -66,12 +66,30 @@ class:
 import logging
 import enum
 
-#: Enumeration for the task status
+#: Enumeration for the task status.
 TaskStatus = enum.Enum('TaskStatus',  # pylint: disable=invalid-name
                        'WAITING PENDING DONE FAILED SKIPPED')
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _q(arg):
+    '''Quote `arg` so that it is correctly interpreted by shell scripts.
+
+    If `arg` is a string, quote it. If `arg` is a list, quote each element and
+    join them with spaces.
+
+    :raises ValueError: if `arg` is neither a string or a list of strings.
+    '''
+
+    import shlex
+    if isinstance(arg, str):
+        return shlex.quote(arg)
+    elif isinstance(arg, list):
+        return ' '.join(map(_q, arg))
+    else:
+        raise ValueError('argument must be a string or a list of strings')
 
 
 class TaskError(Exception):
@@ -134,21 +152,40 @@ class DelayTask(Task):
 class ExecuteTask(Task):
     '''Task that executes the specified shell command and waits for its
     completion.
+
+    The command line is passed in as a list of strings. It may contain Python
+    format strings of the form ``'{spam}'``. When the :meth:`do()` method is
+    called, the command line is formatted using the keyword-value pairs that
+    were passed to the constructor. Additionally, the special `config`
+    parameter will also be passed to the :meth:`format()` call and will contain
+    the global current :class:`~.Config` object.
     '''
 
-    def __init__(self, name, cli, **kwargs):
+    def __init__(self, name, cli, subprocess_args=None, **kwargs):
         '''Initialize this task from a command line.
 
         :param str name: The name of this task.
         :param list cli: The command line to be executed, as a list. The first
                          element is the command and the following ones are its
                          arguments.
-        :param mapping kwargs: Any keyword arguments will be passed to the
-                               :class:`.subprocess.Popen` constructor.
+        :param dict subprocess_args: Dictionary of options to be passed to the
+                                     :class:`.subprocess.Popen` constructor.
+        :param dict kwargs: Any leftover keyword arguments will be used to
+                            format the command line.
         '''
         super().__init__(name)
         self.cli = cli
+        if subprocess_args is None:
+            self.subprocess_args = dict()
+        else:
+            self.subprocess_args = subprocess_args
         self.kwargs = kwargs
+        LOGGER.debug('Created %s task %s', self.__class__.__name__, self.name)
+        LOGGER.debug('  - cli = %s', self.cli)
+        if subprocess_args is not None:
+            LOGGER.debug('  - subprocess_args = %s', self.subprocess_args)
+        if self.kwargs:
+            LOGGER.debug('  - kwargs = %s', self.kwargs)
 
     def do(self, env):
         '''Execute the specified command and wait for its completion.
@@ -162,14 +199,23 @@ class ExecuteTask(Task):
         Here ``return_code`` is the return code of the executed command, and
         ``wallclock_time`` is the time it took.
 
-        :param mapping env: The task environment.
+        :param Env env: The task environment.
         :returns: The proposed environment update.
         '''
 
         from subprocess import call
         from time import time
         start_time = time()
-        result = call(self.cli, universal_newlines=True, **self.kwargs)
+
+        # format the command line according to the global configuration
+        config = env.get('config', None)
+        q_kwargs = {key: _q(val) for key, val in self.kwargs.items()}
+        formatted_cli = [c.format(config=config, **q_kwargs).format(env=env)
+                         for c in self.cli]
+        LOGGER.debug('  - formatted cli = %s', formatted_cli)
+
+        result = call(formatted_cli, universal_newlines=True,
+                      **self.subprocess_args)
         end_time = time()
         # Here we assume that env is a mapping
         env_up = {'tasks': {self.name: {
@@ -189,11 +235,18 @@ class ShellTask(Task):
     and can be kept for inspection by passing ``delete=False`` to the
     constructor. The script filename can be read from the task environment as
     ``env['tasks'][task.name]['dir']``.
+
+    The script is passed in as a string, but it may contain Python format
+    strings of the form ``'{spam}'``. When the :meth:`do()` method is called,
+    the script string is formatted using the keyword-value pairs that were
+    passed to the constructor. Additionally, the special `config` parameter
+    will also be passed to the :meth:`format()` call and will contain the
+    global current :class:`~.Config` object.
     '''
 
     # pylint: disable=too-many-arguments
-    def __init__(self, name, script, shell='/bin/bash',
-                 delete=True, directory=None, **kwargs):
+    def __init__(self, name, script, shell='/bin/bash', delete=True,
+                 directory=None, subprocess_args=None, **kwargs):
         '''Initialize the task from the following arguments:
 
         :param str name: The name of this task.
@@ -205,8 +258,10 @@ class ShellTask(Task):
                           file will be created, or ``None`` (in which case the
                           default system directory will be used).
         :type directory: None or str
-        :param mapping kwargs: Any keyword arguments will be passed to the
-                               :class:`.subprocess.Popen` constructor.
+        :param dict subprocess_args: Dictionary of options to be passed to the
+                                     :class:`.subprocess.Popen` constructor.
+        :param dict kwargs: Any leftover keyword arguments will be used to
+                            format the script.
         '''
 
         super().__init__(name)
@@ -214,13 +269,17 @@ class ShellTask(Task):
         self.shell = shell
         self.delete = delete
         self.dir = directory
+        self.subprocess_args = subprocess_args
         self.kwargs = kwargs
-        LOGGER.info('Created %s task %s', self.__class__.__name__, self.name)
-        LOGGER.info('  - shell = %s', self.shell)
-        LOGGER.info('  - delete = %s', self.delete)
-        LOGGER.info('  - directory = %s', self.dir)
-        LOGGER.debug('  - script = \n###### SCRIPT START #####\n'
-                     '%s\n#####  SCRIPT END  #####', self.script)
+        LOGGER.debug('Created %s task %s', self.__class__.__name__, self.name)
+        LOGGER.debug('  - shell = %s', self.shell)
+        LOGGER.debug('  - delete = %s', self.delete)
+        if self.dir is not None:
+            LOGGER.debug('  - directory = %s', self.dir)
+        if self.subprocess_args is not None:
+            LOGGER.debug('  - subprocess_args = %s', self.subprocess_args)
+        LOGGER.debug('  - script = \n###### UNFORMATTED SCRIPT/START #####\n'
+                     '%s\n#####  UNFORMATTED SCRIPT/END  #####', self.script)
 
     @staticmethod
     def _allowed_char(char):
@@ -239,23 +298,36 @@ class ShellTask(Task):
 
             env['tasks'][task.name]['script_filename'] = script_filename
 
-        :param mapping env: The task environment.
+        :param Env env: The task environment.
         :returns: The proposed environment update.
         '''
 
-        LOGGER.info('Executing %s task %s', self.__class__.__name__, self.name)
+        LOGGER.debug('Executing %s task %s', self.__class__.__name__,
+                     self.name)
         import tempfile
         sanitized = self.sanitize_filename(self.name)
         with tempfile.NamedTemporaryFile(prefix=sanitized,
                                          delete=self.delete,
                                          dir=self.dir) as file_:
-            file_.write(self.script.encode('utf-8'))
+            # format the script according to the global configuration
+            config = env.get('config', None)
+            q_kwargs = {key: _q(val) for key, val in self.kwargs.items()}
+            fmt_script = (self.script
+                          .format(config=config, **q_kwargs)
+                          .format(env=env))
+            LOGGER.debug('  - script = \n###### SCRIPT/START #####\n'
+                         '%s\n#####  SCRIPT/END  #####', fmt_script)
+            file_.write(fmt_script.encode('utf-8'))
             file_.seek(0)
             # store the script filename in the environment dict
             subtask = ExecuteTask(self.name, [self.shell, file_.name],
+                                  subprocess_args=self.subprocess_args,
                                   **self.kwargs)
             env_up, status = subtask.do(env)
             env_up.setdefault('tasks', {}).setdefault(self.name, {
                 'script_filename': file_.name
                 })
             return env_up, status
+
+    def _make_kwargs(self, names):
+        return {var: getattr(self, var) for var in names}

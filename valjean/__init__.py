@@ -3,10 +3,14 @@
 import logging
 from pkg_resources import resource_filename
 
-_ALL_DICT = {'cosette': ['depgraph', 'env', 'task', 'code', 'scheduler',
-                         'backends', 'backends.queue']}
-_SUBMODS = (['{}.{}'.format(k, v) for k, vs in _ALL_DICT.items() for v in vs]
-            + list(_ALL_DICT.keys()))
+_SUBMODS = ['config',
+            'cosette.depgraph',
+            'cosette.env',
+            'cosette.task',
+            'cosette.code',
+            'cosette.scheduler',
+            'cosette.backends',
+            'cosette.backends.queue']
 
 VERSION_FILE = resource_filename(__name__, 'VERSION')
 with open(VERSION_FILE) as f:

@@ -4,19 +4,20 @@ and building arbitrary code.
 
 The :class:`CheckoutTask` task class checks out a version-controlled
 repository. For the moment, only ``git`` repositories are supported. The path
-to the ``git`` executable may be specified through the :data:`GIT` module
-variable.
+to the ``git`` executable may be specified through the :data:`CheckoutTask.GIT`
+class variable.
 
 .. todo::
 
-   Implement ``svn`` and ``cvs`` checkout.
+   Implement ``svn`` and ``cvs`` checkout; ``copy`` checkout (i.e. copy a
+   directory from somewhere) may also be useful.
 
 The :class:`BuildTask` task class builds code from a given source directory. A
 build directory must also be specified and will be created if necessary. For
 the moment, :class:`BuildTask` only supports ` ``cmake`` builds, but there are
 plans to add support for ``autoconf``/``configure``/``make`` builds. The path
-to the ``cmake`` executable may be specified through the :data:`CMAKE` module
-variable.
+to the ``cmake`` executable may be specified through the
+:data:`BuildTask.CMAKE` class variable.
 
 .. todo::
 
@@ -64,99 +65,165 @@ An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
 '/path/to/test_project/configure_project_build.log'}},
     'tasks': {'project_build': {'return_code': 0,
                                 'wallclock_time': 173.11953258514404}}}
+
+:class:`CheckoutTask` and :class:`BuildTask` can also be created from a
+name and a :class:`~.Config` object, using the
+:meth:`CheckoutTask.from_config()` and :meth:`BuildTask.from_config()` class
+methods, respectively. The class methods will look for configuration sections
+called ``[checkout <name>]`` (``[build <name>]``, respectively) and take their
+parameters from there. The expected parameters are documented in the method
+docstrings.
 '''
 
 import logging
 import os
+from ..config import Config
 from .task import ShellTask
-from .depgraph import DepGraph
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-def _q(string):
-    '''Quote a string so that it is correctly interpreted by shell scripts.'''
-    import shlex
-    if not string:
-        return string
-    return shlex.quote(string)
-
-
-def _sq(string):
-    '''Split a string, quote the pieces and put everything back together.'''
-    import shlex
-    if not string:
-        return string
-    return ' '.join(map(shlex.quote, shlex.split(string)))
-
-
-#: Path to the git executable.
-GIT = 'git'
-
-
 class CheckoutTask(ShellTask):
     '''Task to check out code from a version-control system.  The actual code
     checkout is performed when the task is executed.
-
-    :param str name: The name of this task.
-    :param str repository: The path to the code repository.
-    :param str checkout_dir: The path to the checkout directory.
-    :param str log_dir: The path to the directory containing log files.
-    :param ref: The name of the reference to check out. For instance, it may be
-                a branch name or a hash for ``git`` repositories. If ``None``
-                is given, the default will be used (``master`` for ``git``, the
-                trunk for ``svn`` or ``cvs``, etc.).
-    :type ref: None or str
-    :param str flags: Any additional flag (as a string) to be passed to the
-                      checkout/clone command.
-    :param str vcs: The version-control system to use. Must be one of:
-                    ``'git'``.
     '''
 
-    _git_template = r'''test -d {checkout_dir} || mkdir -p {checkout_dir}
-{{
-    {git} clone {flags} -- {repository} {checkout_dir}
-    {git} -C {checkout_dir} checkout {ref}
-}} >{checkout_log} 2>&1'''
+    @classmethod
+    def from_config(cls, name: str, config: Config):
+        '''Construct a :class:`CheckoutTask` from a :class:`~.Config` object.
 
-    # pylint: disable=too-many-arguments
-    def __init__(self,
-                 name: str,
-                 repository: str,
-                 checkout_dir: str,
-                 log_dir: str,
-                 ref=None,
-                 flags=None,
-                 vcs='git'):
-        self.checkout_log = os.path.join(
-            os.path.expanduser(log_dir),
-            self.sanitize_filename('checkout_' + name + '.log')
-            )
+        This method searches `config` for a section called ``[checkout
+        <name>]``, where ``<name>`` is the name of the task. If the section is
+        not found, :exc:`KeyError` is raised. Within this section, the optional
+        ``vcs`` option selects the version-control system (defaults to
+        ``git``). Depending on the value of ``vcs``, certain other options are
+        also required:
+
+        ``git``
+          For ``vcs = git``, the only mandatory option is:
+
+          ``git-repository``
+            The path to or the address of the repository to clone.
+
+          The following additional options are also available:
+
+          ``checkout-dir``
+            If present, it will be used as the path to the checkout directory.
+            Otherwise, the path will be constructed as
+            ``<core.checkout-dir>/<name>``.
+
+          ``git-flags``
+            Any flags that should be passed to ``git clone`` on checkout (for
+            instance, ``--depth 1`` for shallow clones).
+
+          ``git-ref``
+            The hash/tag/branch name that should be checked out. If omitted,
+            the ``master`` branch will be checked out.
+
+        ``svn``
+          Not implemented!
+
+        ``cvs``
+          Not implemented!
+
+        ``copy``
+          Not implemented!
+
+        :param str name: The name of this task.
+        :param Config config: The configuration object.
+        :raises KeyError: if a configuration section called ``[checkout
+                          <name>]`` is not found, or if any of the required
+                          options is not found.
+        '''
+
+        from shlex import split
+
+        sec_name = 'checkout {}'.format(name)
+        if not config.has_section(sec_name):
+            raise KeyError('Expecting section {} in configuration'
+                           .format(sec_name))
+        sec_conf = config[sec_name]
+
+        # take the log directory from the config
+        log_dir = config.get('core', 'log-dir')
+
+        # if the checkout dir is specified in the [checkout <name>] config
+        # section, use it; otherwise, default to <core.checkout-dir>/<name>
+        checkout_dir = sec_conf.get('checkout-dir', None)
+        if checkout_dir is None:
+            checkout_dir = os.path.join(config.get('core', 'checkout-dir'),
+                                        name)
+
+        vcs = sec_conf.get('vcs', 'git')
         if vcs == 'git':
-            _flags = flags if flags is not None else ''
-            _ref = ref if ref is not None else 'master'
-            script = self._git_template.format(
-                git=_q(GIT),
-                flags=_sq(_flags),
-                repository=_q(repository),
-                checkout_dir=_q(checkout_dir),
-                ref=_q(_ref),
-                checkout_log=_q(self.checkout_log)
-                )
+            repository = sec_conf.get('git-repository')
+            flags = split(sec_conf.get('git-flags', ''))
+            ref = sec_conf.get('git-ref', 'master')
         elif vcs == 'svn':
             raise NotImplementedError('SVN checkout not implemented yet')
         elif vcs == 'cvs':
             raise NotImplementedError('CVS checkout not implemented yet')
+        elif vcs == 'copy':
+            raise NotImplementedError('copy checkout not implemented yet')
         else:
             raise ValueError('unrecognized VCS: {}'.format(vcs))
-        super().__init__(name, script)
+
+        return cls(name=name,
+                   checkout_dir=checkout_dir,
+                   log_dir=log_dir,
+                   repository=repository,
+                   flags=flags,
+                   ref=ref,
+                   vcs=vcs)
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, name: str, checkout_dir: str, repository: str,
+                 log_dir: str, flags=None, ref=None, vcs='git'):
+        '''Construct a :class:`CheckoutTask`.
+
+        :param str name: The name of this task.
+        :param str checkout_dir: The directory where the code will be checked
+                                 out.
+        :param str repository: The repository for checkout.
+        :param str log_dir: The path to the log directory.
+        :param flags: The flags to be used at checkout time, as a list of
+                      strings.
+        :type flags: list or None
+        :param ref: The reference to check out.
+        :type ref: str or None
+        :param vcs: The version-control system to use. Must be one of:
+                    ``'git'`` (default), ``'svn'``, ``'cvs'``, ``'copy'``.
+        :type vcs: str or None
+        '''
+
         self.checkout_dir = checkout_dir
-        self.repository = repository
-        LOGGER.info('Created %s task %s', self.__class__.__name__, self.name)
-        LOGGER.info('  - repository = %s', self.repository)
-        LOGGER.info('  - checkout_log = %s', self.checkout_log)
-        LOGGER.info('  - checkout_dir = %s', self.checkout_dir)
+        self.checkout_log = os.path.join(
+            log_dir, 'checkout_{}.log'.format(self.sanitize_filename(name)))
+
+        keywords = ['checkout_dir', 'checkout_log', 'repository', 'flags',
+                    'ref', 'GIT']
+
+        if vcs == 'git':
+            self.repository = repository
+            self.flags = flags if flags is not None else []
+            self.ref = ref if ref is not None else 'master'
+            unformatted_script = self._GIT_TEMPLATE
+        elif vcs == 'svn':
+            raise NotImplementedError('SVN checkout not implemented yet')
+        elif vcs == 'cvs':
+            raise NotImplementedError('CVS checkout not implemented yet')
+        elif vcs == 'copy':
+            raise NotImplementedError('copy checkout not implemented yet')
+        else:
+            raise ValueError('unrecognized VCS: {}'.format(vcs))
+
+        kwargs = self._make_kwargs(keywords)
+        super().__init__(name, unformatted_script, **kwargs)
+
+        LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
+        for keyword in keywords:
+            LOGGER.debug('  - %s = %s', keyword, getattr(self, keyword))
 
     def do(self, env):
         '''Check out the code as specified. In addition to proposing updates to
@@ -179,101 +246,179 @@ class CheckoutTask(ShellTask):
         env_up['checkout'][self.name]['checkout_log'] = self.checkout_log
         return env_up, status
 
+    #: Path to the :file:`git` executable. May be overridden before class
+    #: instantiation.
+    GIT = 'git'
 
-#: Path to the cmake executable.
-CMAKE = 'cmake'
+    _GIT_TEMPLATE = r'''test -d {checkout_dir} || mkdir -p {checkout_dir}
+{GIT} clone {flags} -- {repository} {checkout_dir} >{checkout_log} 2>&1
+{GIT} -C {checkout_dir} checkout {ref} >>{checkout_log} 2>&1
+'''
 
 
 class BuildTask(ShellTask):
     '''Task to build an existing source tree. The build is actually performed
     when the task is executed.
-
-    :param str name: The name of this task.
-    :param str source_dir: The path to the source tree.
-    :param str build_dir: The path to the build directory. If it does not
-                          exist, it will be created.
-    :param str log_dir: The path to the directory containing log files.
-    :param configure_flags: Flags to be passed to the build tool at
-                            configuration time.
-    :type configure_flags: None or str
-    :param str build_flags: Flags to be passed to the build tool at build time.
-    :type build_flags: None or str
-    :param str build_target: Name of the target to build.
-    :type build_target: None or str
-    :param str build_system: Name of the build tool to use. Must be one of:
-                             ``'cmake'``.
     '''
 
-    _cmake_template = r'''test -d {build_dir} || mkdir -p {build_dir}
-cd {build_dir}
-{cmake} {cflags} {source_dir} >{configure_log} 2>&1
-{cmake_build_commands}'''
+    @classmethod
+    def from_config(cls, name: str, config: Config):
+        '''Construct a :class:`BuildTask` from a :class:`~.Config` object.
 
-    _cmake_build_template = (r'''{cmake} --build {build_dir} {target_flag} '''
-                             '''{bflags} >{build_log} 2>&1''')
+        This method searches `config` for a section called ``[build <name>]``,
+        where ``<name>`` is the name of the task. If the section is not found,
+        :exc:`KeyError` is raised.  Within this section, the optional
+        ``build-system`` option selects the version-control system (defaults to
+        ``cmake``). Depending on the value of ``build-system``, certain other
+        options are also required:
 
-    # pylint: disable=too-many-arguments
-    def __init__(self,
-                 name: str,
-                 source_dir: str,
-                 build_dir: str,
-                 log_dir: str,
-                 configure_flags=None,
-                 build_flags=None,
-                 build_targets=None,
-                 build_system='cmake'):
-        self.cflags = configure_flags if configure_flags is not None else ''
-        self.bflags = build_flags if build_flags is not None else ''
-        self.configure_log = os.path.join(
-            os.path.expanduser(log_dir),
-            self.sanitize_filename('configure_' + name + '.log'))
-        self.build_log = os.path.join(
-            os.path.expanduser(log_dir),
-            self.sanitize_filename('build_' + name + '.log')
-            )
-        self.source_dir = source_dir
+        ``cmake``
+          For ``build-system = cmake``, the only mandatory option is:
+
+          ``source-dir``
+            The path to the directory containing the sources.
+
+          The following additional options are also available:
+
+          ``build-dir``
+            If present, it will be used as the path to the build directory.
+            Otherwise, the path will be constructed as
+            ``<core.build-dir>/<name>``.
+
+          ``configure-flags``
+            Flags to be passed to CMake at configure time (e.g.
+            '-DCMAKE_BUILD_TYPE=Debug' for a debug build).
+
+          ``build-flags``
+            Flags to be passed to CMake at build time (e.g. '-- -j8' for
+            parallel builds).
+
+          ``build-targets``
+            The CMake targets to be built, separated by spaces.
+
+        ``svn``
+          Not implemented!
+
+        ``cvs``
+          Not implemented!
+
+        ``copy``
+          Not implemented!
+
+        :param str name: The name of this task.
+        :param Config config: The configuration object.
+        :raises KeyError: if a configuration section called ``[build <name>]``
+                          is not found, or if any of the required
+                          options is not found.
+        '''
+
+        from shlex import split
+
+        sec_name = 'build {}'.format(name)
+        if not config.has_section(sec_name):
+            raise KeyError('Expecting section {} in configuration'
+                           .format(sec_name))
+        sec_conf = config[sec_name]
+
+        # take the log directory from the config
+        log_dir = config.get('core', 'log-dir')
+
+        # if the build dir is specified in the [build <name>] config section,
+        # use it; otherwise, default to <core.build-dir>/<name>
+        build_dir = sec_conf.get('build-dir', None)
+        if build_dir is None:
+            build_dir = os.path.join(
+                config.get('core', 'build-dir'),
+                name
+                )
+
+        build_system = sec_conf.get('build-system', 'cmake')
+
+        configure_flags = split(sec_conf.get('configure-flags', ''))
+        build_flags = split(sec_conf.get('build-flags', ''))
+        source_dir = sec_conf.get('source-dir', None)
+        targets = sec_conf.get('build-targets', None)
+        if targets is not None:
+            targets = split(targets)
+
+        return cls(name=name, source_dir=source_dir, build_dir=build_dir,
+                   log_dir=log_dir, targets=targets, build_system=build_system,
+                   configure_flags=configure_flags, build_flags=build_flags)
+
+    # pylint: disable=too-many-arguments,too-many-locals
+    def __init__(self, name: str, source_dir: str, build_dir: str,
+                 log_dir: str, targets=None, build_system='cmake',
+                 configure_flags=None, build_flags=None):
+        '''Construct a :class:`BuildTask`.
+
+        :param str name: The name of this task.
+        :param str source_dir: The path to the directory containing the
+                               sources.
+        :param str build_dir: The path to the directory where the code will be
+                              build.
+        :param str log_dir: The path to the log directory.
+        :param targets: A list of targets to build, or `None` for the default
+                        target.
+        :type targets: list or None
+        :param str build_system: The name of the build system to use. Must be
+                                 one of: ``'cmake'`` (default),
+                                 ``'configure'``.
+        :param configure_flags: The flags that will be passed to the build tool
+                                at configuration time, as a list of strings.
+        :type configure_flags: list
+        :param build_flags: The flags that will be passed to the build tool at
+                            build time, as a list of strings.
+        :type build_flags: list
+        '''
+
+        if source_dir is not None:
+            self.source_dir = source_dir
+        else:
+            self.source_dir = ('{{env[checkout][{name}][checkout_dir]}}'
+                               .format(name=name))
         self.build_dir = build_dir
-        self.build_targets = [None] if build_targets is None else build_targets
+
+        keywords = ['configure_log', 'build_log', 'configure_flags',
+                    'build_flags', 'source_dir', 'build_dir', 'CMAKE']
+
         if build_system == 'cmake':
-            script = self._make_cmake_script()
+            if targets is None:
+                build_commands = self._CMAKE_BUILD_DEF_TEMPLATE
+            else:
+                build_commands = '\n'.join(
+                    self._CMAKE_BUILD_TEMPLATE.format(i=i)
+                    for i in range(len(targets))
+                    )
+                for i, target in enumerate(targets):
+                    attr_name = 'target{}'.format(i)
+                    setattr(self, attr_name, target)
+                    keywords.append(attr_name)
+            unformatted_script = '\n'.join([self._CMAKE_TEMPLATE,
+                                            build_commands])
         elif build_system == 'autoconf' or build_system == 'configure':
-            script = self._make_configure_script()
+            raise NotImplementedError('configure build not implemented yet')
         else:
             raise ValueError('unrecognized build system: {}'
                              .format(build_system))
-        super().__init__(name, script)
-        LOGGER.info('Created %s task %s', self.__class__.__name__, self.name)
-        LOGGER.info('  - source_dir = %s', source_dir)
-        LOGGER.info('  - build_dir = %s', build_dir)
-        LOGGER.info('  - configure_log = %s', self.configure_log)
-        LOGGER.info('  - build_log = %s', self.build_log)
 
-    def _make_cmake_script(self):
-        _format_env = {
-            'cmake': _q(CMAKE),
-            'source_dir': _q(self.source_dir),
-            'build_dir': _q(self.build_dir),
-            'bflags': _sq(self.bflags),
-            'cflags': _sq(self.cflags),
-            'configure_log': _q(self.configure_log),
-            'build_log': _q(self.build_log)
-            }
+        self.configure_flags = (configure_flags if configure_flags is not None
+                                else [])
+        self.build_flags = build_flags if build_flags is not None else []
+        self.configure_log = os.path.join(
+            log_dir,
+            'configure_{}.log'.format(self.sanitize_filename(name))
+            )
+        self.build_log = os.path.join(
+            log_dir,
+            'build_{}.log'.format(self.sanitize_filename(name))
+            )
 
-        cmake_build_list = []
-        for target in self.build_targets:
-            _target_flag = '' if target is None else '--target ' + target
-            cmake_build_command = self._cmake_build_template.format(
-                target_flag=_target_flag,
-                **_format_env)
-            cmake_build_list.append(cmake_build_command)
-        cmake_build_commands = '\n'.join(cmake_build_list)
-        _format_env['cmake_build_commands'] = cmake_build_commands
+        kwargs = self._make_kwargs(keywords)
+        super().__init__(name, unformatted_script, **kwargs)
 
-        script = self._cmake_template.format(**_format_env)
-        return script
-
-    def _make_configure_script(self):
-        raise NotImplementedError('configure build not implemented yet')
+        LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
+        for keyword in keywords:
+            LOGGER.debug('  - %s = %s', keyword, getattr(self, keyword))
 
     def do(self, env):
         '''Invoke the build tool as specified. In addition to proposing updates
@@ -293,3 +438,19 @@ cd {build_dir}
         env_up['build'][self.name]['configure_log'] = self.configure_log
         env_up['build'][self.name]['build_log'] = self.build_log
         return env_up, status
+
+    #: Path to the :file:`cmake` executable. May be overridden before class
+    #: instantiation.
+    CMAKE = 'cmake'
+
+    _CMAKE_TEMPLATE = r'''test -d {build_dir} || mkdir -p {build_dir}
+cd {build_dir}
+{CMAKE} {configure_flags} {source_dir} >{configure_log} 2>&1
+'''
+
+    _CMAKE_BUILD_TEMPLATE = (r'''{{CMAKE}} --build {{build_dir}} '''
+                             '''--target {{target{i}}} '''
+                             ''' {{build_flags}} >>{{build_log}} 2>&1''')
+
+    _CMAKE_BUILD_DEF_TEMPLATE = (r'''{CMAKE} --build {build_dir} '''
+                                 '''{build_flags} >>{build_log} 2>&1''')
