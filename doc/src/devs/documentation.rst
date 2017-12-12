@@ -1,10 +1,13 @@
-Building documentation
-======================
+Building the documentation
+==========================
 
 .. highlight:: bash
 
-:mod:`valjean` uses the standard Python :mod:`sphinx` package for its own
-documentation. The HTML documentation can be built with::
+:mod:`valjean` uses the :mod:`sphinx` package for its own documentation.
+Before building the documentation, you will need to install :mod:`valjean`, as
+explained in :ref:`the installation section <installation>`.
+
+The HTML documentation can be built with::
 
     $ ./setup.py build_sphinx
     $ cd doc/src && make html   # equivalently
@@ -22,6 +25,21 @@ them to PDF with :command:`make`.
 
 The :mod:`sphinx` system is deeply customizable; most of the options are set in
 :file:`doc/src/conf.py`, which is fairly well documented.
+
+Version numbering weirdness
+---------------------------
+
+By default, the version number in the :mod:`sphinx` documentation is extracted
+from the **installed** version of :mod:`valjean`, and **not** the version in
+the current directory. Yeah, I know. If you are building the package
+documentation locally, then it doesn't really matter, but if you are building
+the documentation because you want to distribute the code to your users,
+**remember to install the package first!** It is simple::
+
+    $ pip install -U -e .
+    $ ./setup.py build_sphinx
+
+You will find the full recipe in :ref:`release-recipe`.
 
 Extensions
 ----------

@@ -15,10 +15,6 @@ if parse_version(st_version) < st_version_required_parsed:
     raise ImportError(message)
 
 name = 'valjean'
-here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, name, 'VERSION')) as f:
-    version = f.read().strip()
-release = version
 author = u'Ève Le Ménédeu, Davide Mancusi'
 author_email = u'davide.mancusi@cea.fr'
 copyright = u'2017, ' + author
@@ -27,13 +23,12 @@ test_deps = ['hypothesis', 'pytest', 'pytest-cov']
 dev_deps = test_deps + ['flake8', 'pylint', 'sphinx', 'sphinx_rtd_theme']
 
 setup(name=name,
-      version=release,
       author=author,
       author_email=author_email,
       url=r'http://',
       packages=find_packages(exclude=['doc', 'tests', 'tests.*']),
       python_requires='>=3.4',
-      setup_requires=['pytest-runner'],
+      setup_requires=['pytest-runner', 'setuptools_scm'],
       tests_require=test_deps, extras_require={
           'dev': dev_deps
           },
@@ -43,8 +38,6 @@ setup(name=name,
               'build_dir': ('setup.py', 'doc/build'),
               }
           },
-      package_data={
-          'valjean': ['VERSION']
-          },
-      data_files=[('', ['README.rst'])]
+      data_files=[('', ['README.rst'])],
+      use_scm_version=True
       )

@@ -1,10 +1,15 @@
-Creating a source distribution
-==============================
+.. _release-recipe:
+
+Distributing the code
+=====================
 
 .. highlight:: bash
 
 You can produce a tarball with the sources and the documentation as follows::
 
+    $ git commit
+    $ git tag x.y.z     # for instance
+    $ pip install -U .  # required to get the right version number in the docs
     $ ./setup.py build_sphinx
     $ ./setup.py sdist
 

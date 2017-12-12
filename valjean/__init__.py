@@ -1,7 +1,7 @@
 '''Top-level module for the valjean package.'''
 
 import logging
-from pkg_resources import resource_filename
+from pkg_resources import get_distribution, DistributionNotFound
 
 _SUBMODS = ['config',
             'cosette.depgraph',
@@ -12,9 +12,10 @@ _SUBMODS = ['config',
             'cosette.backends',
             'cosette.backends.queue']
 
-VERSION_FILE = resource_filename(__name__, 'VERSION')
-with open(VERSION_FILE) as f:
-    __version__ = f.read().strip()
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+    __version__ = 'unknown'
 
 LOG_LEVEL = logging.INFO
 
