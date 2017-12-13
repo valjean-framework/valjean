@@ -162,12 +162,10 @@ class Config(ConfigParser):
         '''Write the configuration to the given file object.'''
 
         dlm = ' ' if space_around_delimiters else ''
-        for sec, opts in self.items():
-            if not opts:
-                continue
+        for sec in self.sections():
             f_obj.write('[{}]\n'.format(sec).encode('utf-8'))
             known_sec = self._KNOWN_OPTIONS.get(sec, dict())
-            for opt, value in opts.items():
+            for opt, value in self.items(sec, raw=True):
                 desc, _ = known_sec.get(opt, (None, ''))
                 if desc is not None:
                     f_obj.write('# {desc}\n'.format(desc=desc).encode('utf-8'))
@@ -178,11 +176,9 @@ class Config(ConfigParser):
     def as_dict(self):
         '''Convert the object to a dictionary.'''
         dct = OrderedDict()
-        for sec, opts in self.items():
-            if sec == DEFAULTSECT:
-                continue
+        for sec in self.sections():
             sec_dct = OrderedDict()
-            for opt, val in opts.items():
+            for opt, val in self.items(sec, raw=True):
                 sec_dct[opt] = val
             dct[sec] = sec_dct
         return dct
@@ -209,7 +205,7 @@ class Config(ConfigParser):
         '''
         if not self.has_section(section):
             self.add_section(section)
-        for opt, val in other[section].items():
+        for opt, val in other.items(section, raw=True):
             self.set(section, opt, val)
         return self
 
