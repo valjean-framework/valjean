@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from hypothesis import given, note, assume, event
+from hypothesis import given, note, assume, event, settings
 from hypothesis.strategies import (integers, sets, text, lists, composite,
                                    sampled_from, booleans)
 import pytest
@@ -10,23 +10,34 @@ import valjean.cosette.depgraph as depgraph
 
 
 @composite
-def depgraphs(draw, elements=integers(0, 10), average_size=10, average_deps=2,
-              **kwargs):
-    '''Composite Hypothesis strategy to generate acyclic DepGraph objects.'''
-    ks = draw(lists(elements, average_size=average_size,
-                    unique=True, **kwargs).map(sorted))
+def dep_dicts(draw, elements=integers(0, 10), average_size=10, min_deps=0,
+              max_deps=None, average_deps=2, **kwargs):
+    '''Composite Hypothesis strategy to generate acyclic dependency
+    dictionaries.'''
+    ks = draw(lists(elements, average_size=average_size, unique=True,
+                    **kwargs).map(sorted))
     dag = {}
     for i, k in enumerate(ks):
-        vs = draw(sets(sampled_from(ks[i+1:]), average_size=average_deps))
+        vs = draw(sets(sampled_from(ks[i+1:]), min_size=min_deps,
+                       average_size=average_deps, max_size=max_deps))
         dag[k] = vs
+    return dag
+
+
+@composite
+def depgraphs(draw, elements=integers(0, 10), average_size=10, min_deps=0,
+              max_deps=None, average_deps=2, **kwargs):
+    '''Composite Hypothesis strategy to generate acyclic DepGraph objects.'''
+    dag = draw(dep_dicts(elements, average_size=average_size,
+                         min_deps=min_deps, average_deps=average_deps,
+                         max_deps=max_deps, **kwargs))
     return depgraph.DepGraph.from_dependency_dictionary(dag)
 
 
 class TestDepGraph:
 
-    @given(g=depgraphs())
-    def test_complete(self, g):
-        '''Test that the generated edge dictionary is complete'''
+    @staticmethod
+    def _is_complete(g):
         keys = set()
         values = set()
         for k, vs in g:
@@ -34,7 +45,21 @@ class TestDepGraph:
             for v in vs:
                 values.add(v)
         note('keys: {}\nvalues: {}'.format(keys, values))
-        assert values <= keys
+        return values <= keys
+
+    @given(g=depgraphs())
+    def test_complete(self, g):
+        '''Test that the generated edge dictionary is complete'''
+        assert self._is_complete(g)
+
+    @given(dag=dep_dicts(min_size=2))
+    def test_incomplete_is_completed(self, dag):
+        '''Test that incomplete graph dictionaries are correctly completed.'''
+        new_key = max(dag.keys()) + 1
+        first_key = list(dag.keys())[0]
+        dag[first_key].add(new_key)
+        g = depgraph.DepGraph.from_dependency_dictionary(dag)
+        assert self._is_complete(g)
 
     @given(g=depgraphs())
     def test_topological_sort_int(self, g):
@@ -74,11 +99,6 @@ class TestDepGraph:
         new_g = g.invert().invert()
         assert new_g == g
 
-    def test_cyclic_raises(self):
-        g = depgraph.DepGraph.from_dependency_dictionary({0: [1], 1: [0]})
-        with pytest.raises(depgraph.DepGraphError):
-            g.topological_sort()
-
     @given(g=depgraphs())
     def test_equivalent_constructors(self, g):
         '''Test that incrementally and automatically generated graphs are
@@ -101,10 +121,63 @@ class TestDepGraph:
         assert g.isomorphic_to(g)
 
     @given(g=depgraphs())
+    def test_add_node_breaks_isomorphism(self, g):
+        '''Test that adding nodes breaks isomorphism.'''
+        g_copy = g.copy()
+        nodes = g_copy.nodes()
+        new_node = max(nodes) + 1 if nodes else 0
+        g_copy.add_node(new_node)
+        assert not g_copy.isomorphic_to(g)
+
+    @given(g=depgraphs(min_size=2))
+    def test_add_edge_breaks_isomorphism(self, g):
+        '''Test that adding edges breaks isomorphism.'''
+        nodes = g.nodes()
+        assume(not g.depends(nodes[0], nodes[1]))
+        g_copy = g.copy()
+        g_copy.add_dependency(nodes[0], nodes[1])
+        assert not g_copy.isomorphic_to(g)
+
+    @given(g=depgraphs())
+    def test_different_nodes_breaks_isomorphism(self, g):
+        '''Test that having different nodes breaks isomorphism.'''
+        g2 = g.copy()
+        nodes = g.nodes()
+        new_node = max(nodes) + 1 if nodes else 0
+        g.add_node(new_node)
+        g2.add_node(new_node + 1)
+        assert not g2.isomorphic_to(g)
+
+    @given(g=depgraphs(min_size=2))
+    def test_add_remove_edge(self, g):
+        '''Test that adding + removing an edge is idempotent.'''
+        g_copy = g.copy()
+        nodes = g.nodes()
+        if g.depends(nodes[0], nodes[1]):
+            # edge exists, remove it first and add it back
+            g.remove_dependency(nodes[0], on=nodes[1])
+            g.add_dependency(nodes[0], on=nodes[1])
+        else:
+            # edge does not exist, add it first and remove it later
+            g.add_dependency(nodes[0], on=nodes[1])
+            g.remove_dependency(nodes[0], on=nodes[1])
+        assert g_copy.isomorphic_to(g)
+
+    @given(g=depgraphs())
     def test_dict_roundtrip(self, g):
         '''Test that each graph is isomorphic to itself.'''
         g_roundtrip = depgraph.DepGraph.from_dependency_dictionary(dict(g))
         assert g == g_roundtrip
+
+    @settings(max_examples=10)
+    @given(g=depgraphs())
+    def test_comparison_wrong_type(self, g):
+        assert not g <= 42
+
+    @settings(max_examples=10)
+    @given(g=depgraphs())
+    def test_isomorphism_wrong_type(self, g):
+        assert not g.isomorphic_to(42)
 
     @given(g=depgraphs())
     def test_subgraph_self(self, g):
@@ -313,14 +386,35 @@ class TestDepGraph:
         assert expected_n_nodes == observed_n_nodes
 
     @given(g1=depgraphs(min_size=2), g2=depgraphs(min_size=2), g3=depgraphs())
-    def test_recursive_flatten_size(self, g1, g2, g3):
+    def test_flatten_size3(self, g1, g2, g3):
+        '''Test that grafting three nested graphs yields a graph with the
+        correct size.
+        '''
+        expected_nodes = set(g1.nodes()) | set(g2.nodes())
+        note('expected_nodes: {}'.format(expected_nodes))
+        expected_n_nodes = len(expected_nodes) + 1
+        # add g3 into g2; g2 has at least two nodes
+        g2.add_dependency(g2._nodes[0], on=g3)
+        g2.add_dependency(g3, on=g2._nodes[1])
+        # add g2 into g1; g1 has at least two nodes
+        g1.add_dependency(g1._nodes[0], on=g2)
+        g1.add_dependency(g2, on=g1._nodes[1])
+        note('g1: {!r}'.format(g1))
+        note('g2: {!r}'.format(g2))
+        note('g3: {!r}'.format(g3))
+        note('before flattening: {!r}'.format(g1))
+        g1.flatten(recurse=False)
+        note('after flattening: {!r}'.format(g1))
+        observed_n_nodes = len(g1)
+        event('min_graph_size={}'.format(min(len(g1), len(g2), len(g3))))
+        assert expected_n_nodes == observed_n_nodes
+
+    @given(g1=depgraphs(min_size=2), g2=depgraphs(min_size=2), g3=depgraphs())
+    def test_recursive_flatten_size3(self, g1, g2, g3):
         '''Test that grafting three nested graphs yields a graph with the
         correct size.
         '''
         expected_nodes = set(g1.nodes()) | set(g2.nodes()) | set(g3.nodes())
-        note('g1: {!r}'.format(g1))
-        note('g2: {!r}'.format(g2))
-        note('g3: {!r}'.format(g3))
         note('expected_nodes: {}'.format(expected_nodes))
         expected_n_nodes = len(expected_nodes)
         # add g3 into g2; g2 has at least two nodes
@@ -329,6 +423,9 @@ class TestDepGraph:
         # add g2 into g1; g1 has at least two nodes
         g1.add_dependency(g1._nodes[0], on=g2)
         g1.add_dependency(g2, on=g1._nodes[1])
+        note('g1: {!r}'.format(g1))
+        note('g2: {!r}'.format(g2))
+        note('g3: {!r}'.format(g3))
         note('before flattening: {!r}'.format(g1))
         g1.flatten()
         note('after flattening: {!r}'.format(g1))
@@ -343,3 +440,26 @@ class TestDepGraph:
         dependees = g.dependees(n0)
         for d in dependees:
             assert n0 in g[d]
+
+    @given(g=depgraphs(min_size=1))
+    def test_to_graphviz(self, g):
+        pydot = pytest.importorskip('pydot')
+        gv = g.to_graphviz()
+        pydot.graph_from_dot_data(gv)
+
+
+class TestDepGraphFailure:
+
+    def test_cyclic_raises(self):
+        g = depgraph.DepGraph.from_dependency_dictionary({0: [1], 1: [0]})
+        with pytest.raises(depgraph.DepGraphError):
+            g.topological_sort()
+
+    @settings(max_examples=10)
+    @given(g=depgraphs(max_deps=0, average_deps=0, min_size=2))
+    def test_remove_missing_edge_raises(self, g):
+        '''Test that removing a missing edge raises an exception.'''
+        nodes = g.nodes()
+        assert not g.depends(nodes[0], nodes[1])
+        with pytest.raises(KeyError):
+            g.remove_dependency(nodes[0], on=nodes[1])

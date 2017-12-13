@@ -103,7 +103,7 @@ class CheckoutTask(ShellTask):
         ``git``
           For ``vcs = git``, the only mandatory option is:
 
-          ``git-repository``
+          ``repository``
             The path to or the address of the repository to clone.
 
           The following additional options are also available:
@@ -113,11 +113,11 @@ class CheckoutTask(ShellTask):
             Otherwise, the path will be constructed as
             ``<core.checkout-dir>/<name>``.
 
-          ``git-flags``
+          ``flags``
             Any flags that should be passed to ``git clone`` on checkout (for
             instance, ``--depth 1`` for shallow clones).
 
-          ``git-ref``
+          ``ref``
             The hash/tag/branch name that should be checked out. If omitted,
             the ``master`` branch will be checked out.
 
@@ -156,18 +156,9 @@ class CheckoutTask(ShellTask):
                                         name)
 
         vcs = sec_conf.get('vcs', 'git')
-        if vcs == 'git':
-            repository = sec_conf.get('git-repository')
-            flags = split(sec_conf.get('git-flags', ''))
-            ref = sec_conf.get('git-ref', 'master')
-        elif vcs == 'svn':
-            raise NotImplementedError('SVN checkout not implemented yet')
-        elif vcs == 'cvs':
-            raise NotImplementedError('CVS checkout not implemented yet')
-        elif vcs == 'copy':
-            raise NotImplementedError('copy checkout not implemented yet')
-        else:
-            raise ValueError('unrecognized VCS: {}'.format(vcs))
+        repository = sec_conf.get('repository')
+        flags = split(sec_conf.get('flags', ''))
+        ref = sec_conf.get('ref', 'master')
 
         return cls(name=name,
                    checkout_dir=checkout_dir,
@@ -376,7 +367,9 @@ class BuildTask(ShellTask):
         else:
             self.source_dir = ('{{env[checkout][{name}][checkout_dir]}}'
                                .format(name=name))
+        LOGGER.debug('will look for source files in %s', self.source_dir)
         self.build_dir = build_dir
+        LOGGER.debug('will use build dir %s', self.build_dir)
 
         keywords = ['configure_log', 'build_log', 'configure_flags',
                     'build_flags', 'source_dir', 'build_dir', 'CMAKE']
@@ -445,8 +438,7 @@ class BuildTask(ShellTask):
 
     _CMAKE_TEMPLATE = r'''test -d {build_dir} || mkdir -p {build_dir}
 cd {build_dir}
-{CMAKE} {configure_flags} {source_dir} >{configure_log} 2>&1
-'''
+{CMAKE} {configure_flags} {source_dir} >{configure_log} 2>&1'''
 
     _CMAKE_BUILD_TEMPLATE = (r'''{{CMAKE}} --build {{build_dir}} '''
                              '''--target {{target{i}}} '''

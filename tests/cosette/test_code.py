@@ -62,6 +62,12 @@ def log_dir():
         yield log_dir
 
 
+@pytest.fixture(scope='function')
+def checkout_dir():
+    with tempfile.TemporaryDirectory(prefix='co_') as checkout_dir:
+        yield checkout_dir
+
+
 @pytest.fixture(scope='function', params=['master', None])
 def git_ref(request):
     return request.param
@@ -77,34 +83,44 @@ def git_vcs(request):
     return request.param
 
 
-def _make_git_config(task_name, project, log_dir, git_ref=None, git_flags=None,
-                     git_vcs=None):
+@pytest.fixture(scope='function', params=[True, False])
+def checkout_core(request):
+    return request.param
+
+
+def _make_git_config(task_name, project, log_dir, checkout_dir, checkout_core,
+                     git_ref=None, git_flags=None, git_vcs=None):
     '''Set up a Config object for git repository testing.'''
-    with tempfile.TemporaryDirectory(prefix='co_') as co_dir:
-        config = Config(paths=[])
-        config.set('core', 'log-dir', log_dir)
-        sec_name = 'checkout {}'.format(task_name)
-        config.add_section(sec_name)
-        config[sec_name]['git-repository'] = project
-        config[sec_name]['checkout-dir'] = co_dir
-        if git_vcs is not None:
-            config[sec_name]['vcs'] = git_vcs
-        if git_ref is not None:
-            config[sec_name]['git-ref'] = git_ref
-        if git_flags is not None:
-            config[sec_name]['git-flags'] = git_flags
-        yield config
+    config = Config(paths=[])
+    config.set('core', 'log-dir', log_dir)
+    sec_name = 'checkout {}'.format(task_name)
+    config.add_section(sec_name)
+    config[sec_name]['repository'] = project
+    if checkout_core:
+        config['core']['checkout-dir'] = checkout_dir
+    else:
+        config[sec_name]['checkout-dir'] = checkout_dir
+    if git_vcs is not None:
+        config[sec_name]['vcs'] = git_vcs
+    if git_ref is not None:
+        config[sec_name]['ref'] = git_ref
+    if git_flags is not None:
+        config[sec_name]['flags'] = git_flags
+    yield config
 
 
 @pytest.fixture(scope='function')
-def git_config(task_name, project, log_dir, git_ref, git_flags, git_vcs):
-    yield from _make_git_config(task_name, project, log_dir, git_ref,
-                                git_flags, git_vcs)
+def git_config(task_name, project, log_dir, checkout_dir, checkout_core,
+               git_ref, git_flags, git_vcs):
+    yield from _make_git_config(task_name, project, log_dir, checkout_dir,
+                                checkout_core, git_ref, git_flags, git_vcs)
 
 
 @pytest.fixture(scope='function')
-def simple_git_config(task_name, project, log_dir):
-    yield from _make_git_config(task_name, project, log_dir)
+def simple_git_config(task_name, project, log_dir, checkout_dir,
+                      checkout_core):
+    yield from _make_git_config(task_name, project, log_dir, checkout_dir,
+                                checkout_core)
 
 
 @pytest.fixture(scope='function', params=['-DCMAKE_BUILD_TYPE=Debug', None])
@@ -122,45 +138,86 @@ def cmake_targets(request):
     return request.param
 
 
-def _make_cmake_config(task_name, project, log_dir, cmake_conf_flags=None,
-                       cmake_build_flags=None, cmake_targets=None):
-    '''Set up a Config object for CMake build testing.'''
+@pytest.fixture(scope='function')
+def build_dir():
     with tempfile.TemporaryDirectory(prefix='build_') as build_dir:
-        config = Config(paths=[])
-        config.set('core', 'log-dir', log_dir)
-        sec_name = 'build {}'.format(task_name)
-        config.add_section(sec_name)
-        config[sec_name]['source-dir'] = project
-        config[sec_name]['build-dir'] = build_dir
-        if cmake_conf_flags is not None:
-            config[sec_name]['configure-flags'] = cmake_conf_flags
-        if cmake_build_flags is not None:
-            config[sec_name]['build-flags'] = cmake_build_flags
-        if cmake_targets is not None:
-            config[sec_name]['build-targets'] = cmake_targets
-        yield config
+        yield build_dir
 
 
-@pytest.fixture(scope='function')
-def cmake_config(task_name, project, log_dir, cmake_conf_flags,
-                 cmake_build_flags, cmake_targets):
+@pytest.fixture(scope='function', params=[True, False])
+def build_core(request):
+    return request.param
+
+
+def _make_cmake_config(task_name, project, log_dir, build_dir, build_core,
+                       cmake_conf_flags=None, cmake_build_flags=None,
+                       cmake_targets=None):
     '''Set up a Config object for CMake build testing.'''
-    yield from _make_cmake_config(task_name, project, log_dir,
-                                  cmake_conf_flags, cmake_build_flags,
-                                  cmake_targets)
+    config = Config(paths=[])
+    config.set('core', 'log-dir', log_dir)
+    sec_name = 'build {}'.format(task_name)
+    config.add_section(sec_name)
+    config.set(sec_name, 'source-dir', project)
+    if build_core:
+        config.set('core', 'build-dir', build_dir)
+    else:
+        config.set(sec_name, 'build-dir', build_dir)
+    if cmake_conf_flags is not None:
+        config.set(sec_name, 'configure-flags', cmake_conf_flags)
+    if cmake_build_flags is not None:
+        config.set(sec_name, 'build-flags', cmake_build_flags)
+    if cmake_targets is not None:
+        config.set(sec_name, 'build-targets', cmake_targets)
+    yield config
 
 
 @pytest.fixture(scope='function')
-def simple_cmake_config(task_name, project, log_dir):
-    yield from _make_cmake_config(task_name, project, log_dir)
+def cmake_config(task_name, project, log_dir, build_dir, build_core,
+                 cmake_conf_flags, cmake_build_flags, cmake_targets):
+    '''Set up a Config object for CMake build testing.'''
+    yield from _make_cmake_config(task_name, project, log_dir, build_dir,
+                                  build_core, cmake_conf_flags,
+                                  cmake_build_flags, cmake_targets)
+
+
+@pytest.fixture(scope='function')
+def simple_cmake_config(task_name, project, log_dir, build_dir, build_core):
+    yield from _make_cmake_config(task_name, project, log_dir, build_dir,
+                                  build_core)
 
 
 @pytest.fixture(scope='function')
 def git_cmake_config(task_name, project, log_dir,
                      simple_git_config, simple_cmake_config):
     '''Set up a Config object for combined git checkout/CMake build testing.'''
-    simple_git_config += simple_cmake_config
+    sec_name, name = _extract_names(simple_cmake_config, 'build ')
+    simple_git_config.merge_section(simple_cmake_config, sec_name)
+    simple_git_config['core']['build-dir'] = (
+        simple_cmake_config['core']['build-dir']
+        )
     yield simple_git_config
+
+
+@pytest.fixture(scope='function', params=['svn', 'cvs', 'copy'])
+def failing_vcs(request):
+    return request.param
+
+
+@pytest.fixture(scope='function', params=['autoconf', 'configure'])
+def failing_build(request):
+    return request.param
+
+
+# utility functions
+
+def _extract_names(config, start):
+    '''Extract the section name and the task name from a configuration.'''
+    sec_name = next(s for s in config.sections() if s.startswith(start))
+    assert sec_name is not None
+    match = re.match(start + '(.*)', sec_name)
+    assert match is not None
+    name = match.group(1)
+    return sec_name, name
 
 ##################
 #  test classes  #
@@ -174,18 +231,16 @@ class TestCodeTasks:
 
     def do_git_checkout(self, config, env=None):
         # extract the section name and the task name
-        sec_name = next(s for s in config.sections()
-                        if s.startswith('checkout '))
-        assert sec_name is not None
-        match = re.match('checkout (.*)', sec_name)
-        assert match is not None
-        name = match.group(1)
+        sec_name, name = _extract_names(config, 'checkout ')
 
         # extract the path to the git repository
-        git_repo = config.get(sec_name, 'git-repository')
+        git_repo = config.get(sec_name, 'repository')
 
         # extract the path to the checkout directory
-        checkout_dir = config.get(sec_name, 'checkout-dir')
+        checkout_dir = config.get(sec_name, 'checkout-dir', fallback=None)
+        if checkout_dir is None:
+            checkout_dir = os.path.join(config.get('core', 'checkout-dir'),
+                                        name)
 
         # create the task and run it
         task = code.CheckoutTask.from_config(name=name, config=config)
@@ -210,15 +265,13 @@ class TestCodeTasks:
 
     def do_cmake_build(self, config, env=None):
         # extract the section name and the task name
-        sec_name = next(s for s in config.sections()
-                        if s.startswith('build '))
-        assert sec_name is not None
-        match = re.match('build (.*)', sec_name)
-        assert match is not None
-        name = match.group(1)
+        sec_name, name = _extract_names(config, 'build ')
 
         # extract the path to the build directory
-        build_dir = config.get(sec_name, 'build-dir')
+        build_dir = config.get(sec_name, 'build-dir', fallback=None)
+        if build_dir is None:
+            build_dir = os.path.join(config.get('core', 'build-dir'),
+                                     name)
 
         # extract the path to the build directory
         log_dir = config.get('core', 'log-dir')
@@ -243,9 +296,9 @@ class TestCodeTasks:
             assert os.path.samefile(build_log_dir, log_dir)
         except AssertionError:
             with open(env_up['build'][name]['configure_log']) as configure_f:
-                print('DEBUG: configure_log:\n{}'.format(configure_f.read()))
+                code.LOGGER.debug('configure_log:\n%s', configure_f.read())
             with open(env_up['build'][name]['build_log']) as build_f:
-                print('DEBUG: build_log:\n{}'.format(build_f.read()))
+                code.LOGGER.debug('build_log:\n%s', build_f.read())
             raise
 
         exe_name = os.path.join(build_dir, 'test_exe')
@@ -255,5 +308,54 @@ class TestCodeTasks:
         return env
 
     def test_git_checkout_cmake_build(self, git_cmake_config):
+        # extract the section name and the task name
+        sec_name, name = _extract_names(git_cmake_config, 'build ')
+
+        git_cmake_config.remove_option(sec_name, 'source-dir')
         env = self.do_git_checkout(git_cmake_config)
         self.do_cmake_build(git_cmake_config, env)
+
+
+class TestFailingCodeTasks:
+
+    def test_missing_checkout_section_raises(self, simple_git_config):
+        # extract the section name and the task name
+        sec_name, name = _extract_names(simple_git_config, 'checkout ')
+        simple_git_config.remove_section(sec_name)
+        with pytest.raises(KeyError):
+            code.CheckoutTask.from_config(name, simple_git_config)
+
+    def test_notimpl_checkout_raises(self, simple_git_config, failing_vcs):
+        # extract the section name and the task name
+        sec_name, name = _extract_names(simple_git_config, 'checkout ')
+        simple_git_config.set(sec_name, 'vcs', failing_vcs)
+        with pytest.raises(NotImplementedError):
+            code.CheckoutTask.from_config(name, simple_git_config)
+
+    def test_unknown_checkout_raises(self, simple_git_config):
+        # extract the section name and the task name
+        sec_name, name = _extract_names(simple_git_config, 'checkout ')
+        simple_git_config.set(sec_name, 'vcs', 'antani')
+        with pytest.raises(ValueError):
+            code.CheckoutTask.from_config(name, simple_git_config)
+
+    def test_missing_build_section_raises(self, simple_cmake_config):
+        # extract the section name and the task name
+        sec_name, name = _extract_names(simple_cmake_config, 'build ')
+        simple_cmake_config.remove_section(sec_name)
+        with pytest.raises(KeyError):
+            code.BuildTask.from_config(name, simple_cmake_config)
+
+    def test_notimpl_build_raises(self, simple_cmake_config, failing_build):
+        # extract the section name and the task name
+        sec_name, name = _extract_names(simple_cmake_config, 'build ')
+        simple_cmake_config.set(sec_name, 'build-system', failing_build)
+        with pytest.raises(NotImplementedError):
+            code.BuildTask.from_config(name, simple_cmake_config)
+
+    def test_unknown_build_raises(self, simple_cmake_config):
+        # extract the section name and the task name
+        sec_name, name = _extract_names(simple_cmake_config, 'build ')
+        simple_cmake_config.set(sec_name, 'build-system', 'tarapio')
+        with pytest.raises(ValueError):
+            code.BuildTask.from_config(name, simple_cmake_config)

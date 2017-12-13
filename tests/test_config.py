@@ -75,3 +75,13 @@ class TestConfig:
     def test_merge_associative(self, conf1, conf2, conf3):
         '''Test that merging configurations is associative.'''
         assert (conf1 + conf2) + conf3 == conf1 + (conf2 + conf3)
+
+    @given(conf1=config(), conf2=config())
+    def test_merge_all_sections_same_as_merge(self, conf1, conf2):
+        '''Test that merging all configuration sections is the same as merging
+        the whole configuration.'''
+        conf_merge = conf1 + conf2
+        conf_copy = Config(paths=[]).merge(conf1)
+        for sec in conf2.sections():
+            conf_copy.merge_section(conf2, sec)
+        assert conf_merge == conf_copy

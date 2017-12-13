@@ -309,7 +309,8 @@ class ShellTask(Task):
         with tempfile.NamedTemporaryFile(prefix=sanitized,
                                          delete=self.delete,
                                          dir=self.dir) as file_:
-            # format the script according to the global configuration
+            # format the script according to the global configuration and the
+            # environment
             config = env.get('config', None)
             q_kwargs = {key: _q(val) for key, val in self.kwargs.items()}
             fmt_script = (self.script

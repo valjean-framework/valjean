@@ -194,16 +194,24 @@ class Config(ConfigParser):
         :param Config other: The configuration to merge into `self`.
         :returns: The modified configuration.
         '''
-        for sec, opts in other.items():
-            if sec == DEFAULTSECT:
-                continue
-            if not self.has_section(sec):
-                self.add_section(sec)
-            for opt, val in opts.items():
-                self.set(sec, opt, val)
+        self.read_dict(other)
         return self
 
     __iadd__ = merge
+
+    def merge_section(self, other, section):
+        '''In-place merge a section of another configuration. Options from the
+        `other` configuration supersede those from `self`.
+
+        :param Config other: The configuration to merge into `self`.
+        :param str section: The name of the section to merge.
+        :returns: The modified configuration.
+        '''
+        if not self.has_section(section):
+            self.add_section(section)
+        for opt, val in other[section].items():
+            self.set(section, opt, val)
+        return self
 
     def __add__(self, other):
         '''Merge two configurations, return the result as a new object.'''

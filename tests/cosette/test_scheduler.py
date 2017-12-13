@@ -2,27 +2,32 @@
 
 from hypothesis import given, settings, note, event
 from hypothesis.strategies import lists, floats, integers, composite
+import pytest
 
 from ..context import valjean  # noqa: F401
 from valjean import get_log_level, set_log_level
 from valjean.cosette.depgraph import DepGraph
-from valjean.cosette.scheduler import Scheduler, QueueScheduling
-from valjean.cosette.env import Env
+from valjean.cosette.scheduler import (Scheduler, QueueScheduling,
+                                       SchedulerError)
 from valjean.cosette.task import TaskStatus, DelayTask, Task
 
 
 @composite
 def graphs(draw, task_strategy, dep_frac=0.0):
-    '''Composite Hypothesis strategy to generate DepGraphs.
+    '''Composite Hypothesis strategy to generate a :class:`DepGraph`.
 
     :param task_strategy: A hypothesis strategy that generates tasks.
     '''
-
     tasks = draw(task_strategy)
     n_tasks = len(tasks)
     randoms = draw(lists(floats(min_value=0.0, max_value=1.0),
                          min_size=n_tasks, max_size=n_tasks))
+    return _make_graph(tasks, randoms, dep_frac)
 
+
+def _make_graph(tasks, randoms, dep_frac):
+    '''Create a :class:`DepGraph` from a list of tasks and a list of random
+    values.'''
     task_deps = {}
     all_tasks = []
     for task, random in zip(tasks, randoms):
@@ -68,9 +73,10 @@ def failing_tasks(draw, min_size=1, max_size=20):
 
 
 def run(graph, n_workers):
-    env = Env.from_graph(graph)
-    s = Scheduler(graph, QueueScheduling(n_workers=n_workers))
-    s.schedule(env)
+    # use n_workers == 0 to test the case of the default backend
+    backend = QueueScheduling(n_workers=n_workers) if n_workers > 0 else None
+    s = Scheduler(graph, backend)
+    env = s.schedule()
     return env
 
 
@@ -79,21 +85,21 @@ class TestScheduler:
     @given(graph=graphs(delay_tasks(min_duration=1e-15, max_duration=1e-5,
                                     average_size=100),
                         dep_frac=0.0),
-           n_workers=integers(min_value=1, max_value=100))
+           n_workers=integers(min_value=0, max_value=100))
     def test_indep_tasks(self, graph, n_workers):
         run(graph, n_workers)
 
     @given(graph=graphs(delay_tasks(min_duration=0.0, max_duration=0.0,
                                     average_size=50),
                         dep_frac=0.02),
-           n_workers=integers(min_value=1, max_value=100))
+           n_workers=integers(min_value=0, max_value=100))
     def test_dep_tasks(self, graph, n_workers):
         run(graph, n_workers)
 
     @given(graph=graphs(delay_tasks(min_duration=0.1, max_duration=1.0,
                                     average_size=6),
                         dep_frac=0.1),
-           n_workers=integers(min_value=2, max_value=6))
+           n_workers=integers(min_value=0, max_value=6))
     @settings(max_examples=5, deadline=10000)
     def test_few_smallish_dep_tasks_few_workers(self, graph, n_workers):
         run(graph, n_workers)
@@ -101,13 +107,13 @@ class TestScheduler:
     @given(graph=graphs(delay_tasks(min_duration=1.0, max_duration=1.0,
                                     average_size=None,
                                     min_size=1, max_size=1)),
-           n_workers=integers(min_value=100, max_value=1000))
+           n_workers=integers(min_value=0, max_value=1000))
     @settings(max_examples=1, deadline=2000)
     def test_one_task_many_workers(self, graph, n_workers):
         run(graph, n_workers)
 
 
-class TestSchedulerOnFailure:
+class TestSchedulerOnFailingTasks:
 
     @classmethod
     def setup_class(cls):
@@ -122,7 +128,7 @@ class TestSchedulerOnFailure:
         set_log_level(cls.log_level)
 
     @given(graph=graphs(failing_tasks()),
-           n_workers=integers(min_value=1, max_value=100))
+           n_workers=integers(min_value=0, max_value=100))
     @settings(max_examples=30)
     def test_failing_task(self, graph, n_workers):
         '''Check that a failing task is marked as failed in the environment.'''
@@ -133,7 +139,7 @@ class TestSchedulerOnFailure:
     @given(graph=graphs(delay_tasks(min_duration=0.0, max_duration=0.0,
                                     average_size=10, min_size=3),
                         dep_frac=0.3),
-           n_workers=integers(min_value=1, max_value=100))
+           n_workers=integers(min_value=0, max_value=100))
     @settings(max_examples=30)
     def test_failing_blocks_deps(self, graph, n_workers):
         '''Check that tasks depending on a failing task are not executed.'''
@@ -169,3 +175,18 @@ class TestSchedulerOnFailure:
 
         # record the number of blocked tasks
         event('blocked tasks = {}'.format(n_blocked))
+
+
+class TestSchedulerFailure:
+
+    def test_not_depgraph_raises(self):
+        with pytest.raises(ValueError):
+            Scheduler('spidiguda')
+
+    def test_not_do_method_raises(self):
+        n_tasks = 5
+        tasks = list(range(n_tasks))
+        randoms = [0.0] * n_tasks
+        graph = _make_graph(tasks, randoms, 0.0)
+        with pytest.raises(SchedulerError):
+            Scheduler(graph)

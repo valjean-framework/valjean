@@ -21,7 +21,7 @@ Example usage:
    ...         eggs: []
    ...     })
    >>> s = Scheduler(g)
-   >>> s.schedule()  # executes the tasks in the correct order
+   >>> env = s.schedule()  # executes the tasks in the correct order
 '''
 
 import logging
@@ -55,8 +55,8 @@ class Scheduler:
     :param backend: The scheduling backend.
     :type depgraph: DepGraph
     :type backend: None or QueueScheduling
-    :raises SchedulerError: if `depgraph` is not an instance of
-                            :class:`~.DepGraph`.
+    :raises ValueError: if `depgraph` is not an instance of
+                        :class:`~.DepGraph`.
     :raises SchedulerError: if the tasks do not have any ``do()`` method.
     '''
 
@@ -64,8 +64,8 @@ class Scheduler:
         '''Initialize the scheduler with a graph.'''
 
         if not isinstance(depgraph, DepGraph):
-            raise SchedulerError('Scheduler must be initialised with a '
-                                 'DepGraph')
+            raise ValueError('Scheduler must be initialised with a '
+                             'DepGraph')
 
         # check that all the nodes of the graph can be executed (i.e. they
         # should have a do() method)
@@ -105,3 +105,4 @@ class Scheduler:
         if env is None:
             env = Env.from_graph(self.depgraph)
         self.backend.execute_tasks(self.sorted_list, self.depgraph, env)
+        return env

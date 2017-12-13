@@ -3,7 +3,6 @@
 
 from setuptools import setup, find_packages, __version__ as st_version
 from pkg_resources import parse_version
-import os
 
 st_version_required = '12.0'
 st_version_required_parsed = parse_version(st_version_required)
