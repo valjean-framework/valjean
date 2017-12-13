@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from hypothesis import given, note, settings
+from hypothesis import given, note, settings, HealthCheck
 from hypothesis.strategies import text, dictionaries, composite, sampled_from
 from string import ascii_letters
 from configparser import ParsingError
@@ -61,6 +61,7 @@ class TestConfig:
         note('reconf={!r}'.format(reconf))
         assert conf == reconf
 
+    @settings(suppress_health_check=(HealthCheck.too_slow,))
     @given(conf=config())
     def test_merge_with_self_is_identity(self, conf):
         '''Test that merging with `self` results in the identity.'''
@@ -71,11 +72,13 @@ class TestConfig:
         '''Test that merging with the empty configuration is the identity.'''
         assert conf + Config(paths=[]) == conf
 
+    @settings(suppress_health_check=(HealthCheck.too_slow,))
     @given(conf1=config(), conf2=config(), conf3=config())
     def test_merge_associative(self, conf1, conf2, conf3):
         '''Test that merging configurations is associative.'''
         assert (conf1 + conf2) + conf3 == conf1 + (conf2 + conf3)
 
+    @settings(suppress_health_check=(HealthCheck.too_slow,))
     @given(conf1=config(), conf2=config())
     def test_merge_all_sections_same_as_merge(self, conf1, conf2):
         '''Test that merging all configuration sections is the same as merging

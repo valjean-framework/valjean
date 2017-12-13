@@ -82,6 +82,7 @@ def run(graph, n_workers):
 
 class TestScheduler:
 
+    @settings(deadline=None, max_examples=25)
     @given(graph=graphs(delay_tasks(min_duration=1e-15, max_duration=1e-5,
                                     average_size=100),
                         dep_frac=0.0),
@@ -89,6 +90,7 @@ class TestScheduler:
     def test_indep_tasks(self, graph, n_workers):
         run(graph, n_workers)
 
+    @settings(deadline=None, max_examples=25)
     @given(graph=graphs(delay_tasks(min_duration=0.0, max_duration=0.0,
                                     average_size=50),
                         dep_frac=0.02),

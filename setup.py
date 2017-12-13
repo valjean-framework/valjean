@@ -18,7 +18,7 @@ author = u'Ève Le Ménédeu, Davide Mancusi'
 author_email = u'davide.mancusi@cea.fr'
 copyright = u'2017, ' + author
 
-test_deps = ['hypothesis', 'pytest', 'pytest-cov']
+test_deps = ['hypothesis', 'pytest', 'pytest-cov', 'pytest-xdist']
 dev_deps = test_deps + ['flake8', 'pylint', 'sphinx', 'sphinx_rtd_theme']
 
 setup(name=name,
