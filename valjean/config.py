@@ -98,9 +98,10 @@ It also provides some additional convenience methods:
     definitely!
 '''
 
-from configparser import ConfigParser, ExtendedInterpolation, DEFAULTSECT
+from configparser import ConfigParser, ExtendedInterpolation
 from collections import OrderedDict
 import os
+import re
 
 
 class Config(ConfigParser):
@@ -214,6 +215,67 @@ class Config(ConfigParser):
         return Config.from_mapping(self).merge(other)
 
     __radd__ = __add__
+
+    def sections_by(self, func):
+        '''Yield sections matching a given criterion.
+
+        This generator filters sections according to an arbitrary criterion.
+        The `func` argument is a callable taking one argument (the section
+        name). If ``func(section_name)`` returns `None`, the section name will
+        be discarded; otherwise, the generator will yield a tuple made of the
+        section name and of whatever ``func(section_name)`` returned.
+
+        :param func: A callable accepting one argument (the section name).
+        '''
+        for sec in self.sections():
+            res = func(sec)
+            if res is not None:
+                yield (sec, res)
+
+    def sections_by_regex(self, regex):
+        '''Yield suffixes of sections matching a given regex.
+
+        This generator filters sections according to a given regex; if the
+        section name matches the regex, the generator yields a tuple made of
+        the section name and the regex match object.
+
+        :param prefix: A regex to match.
+        '''
+        yield from self.sections_by(lambda s: re.match(regex, s))
+
+    def sections_by_prefix(self, prefix, suffix=None):
+        '''Yield suffixes of sections matching a given prefix.
+
+        This generator filters sections according to a given prefix; if the
+        section name starts with the prefix, the generator yields a tuple made
+        of the full section name and the corresponding suffix (i.e. the section
+        name with the prefix and any subsequent spaces removed).
+
+        If the `suffix` parameter is not `None`, this generator yields sections
+        matching the prefix **and** the suffix. If there is only one such
+        section, consider using :meth:`first_section_by_suffix()`.
+
+        :param str prefix: A prefix to match.
+        :param str suffix: A suffix to match.
+        '''
+        if suffix is None:
+            regex = re.compile(r'^(' + prefix + r'\s+)(.*)$')
+        else:
+            regex = re.compile(r'^(' + prefix + r'\s+)({})$'.format(suffix))
+
+        def _matching(sec_name):
+            match = re.match(regex, sec_name)
+            if match is None:
+                return None
+            return match.group(2)
+        yield from self.sections_by(_matching)
+
+    def first_section_by_suffix(self, prefix, suffix=None):
+        '''Extract the first section by suffix.
+
+        :returns: The first section yielded by :meth:`sections_by_prefix()`.
+        '''
+        return next(self.sections_by_prefix(prefix, suffix))
 
     # Dictionary containing the known options, their descriptions and default
     # values.
