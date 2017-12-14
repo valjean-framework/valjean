@@ -197,7 +197,7 @@ class CheckoutTask(ShellTask):
                     'flags', 'ref', 'GIT']
 
         if vcs == 'git':
-            self.repository = repository
+            self.repository = os.path.expanduser(repository)
             self.flags = flags if flags is not None else []
             self.ref = ref if ref is not None else 'master'
             unformatted_script = self._GIT_TEMPLATE
