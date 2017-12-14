@@ -81,7 +81,7 @@ from ..config import Config
 from .task import ShellTask
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('valjean')
 
 
 class CheckoutTask(ShellTask):

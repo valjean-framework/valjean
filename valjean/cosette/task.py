@@ -71,7 +71,7 @@ TaskStatus = enum.Enum('TaskStatus',  # pylint: disable=invalid-name
                        'WAITING PENDING DONE FAILED SKIPPED')
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('valjean')
 
 
 def _q(arg):

@@ -289,7 +289,7 @@ Some things you should be aware of when using :class:`DepGraph`:
 import logging
 from .rlist import RList
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('valjean')
 
 
 class DepGraphError(Exception):

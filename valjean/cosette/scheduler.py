@@ -31,7 +31,7 @@ from .backends.queue import QueueScheduling
 from .env import Env
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('valjean')
 
 
 class SchedulerError(Exception):

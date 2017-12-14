@@ -5,7 +5,7 @@ from hypothesis.strategies import lists, floats, integers, composite
 import pytest
 
 from ..context import valjean  # noqa: F401
-from valjean import get_log_level, set_log_level
+from valjean import LOGGER
 from valjean.cosette.depgraph import DepGraph
 from valjean.cosette.scheduler import (Scheduler, QueueScheduling,
                                        SchedulerError)
@@ -121,13 +121,13 @@ class TestSchedulerOnFailingTasks:
     def setup_class(cls):
         # suppress error messages for these tests
         import logging
-        cls.log_level = get_log_level()
-        set_log_level(logging.CRITICAL)
+        cls.log_level = LOGGER.getEffectiveLevel()
+        LOGGER.setLevel(logging.CRITICAL)
 
     @classmethod
     def teardown_class(cls):
         # restore the logging level
-        set_log_level(cls.log_level)
+        LOGGER.setLevel(cls.log_level)
 
     @given(graph=graphs(failing_tasks()),
            n_workers=integers(min_value=0, max_value=100))

@@ -4,8 +4,9 @@ def pytest_addoption(parser):
 
 
 def pytest_generate_tests(metafunc):
+    import logging
+    LOGGER = logging.getLogger('valjean')
     if metafunc.config.getoption('valjean_verbose'):
-        from .context import valjean  # noqa: F401
-        from valjean import set_log_level
-        import logging
-        set_log_level(logging.DEBUG)
+        LOGGER.setLevel(logging.DEBUG)
+    else:
+        LOGGER.setLevel(logging.WARNING)

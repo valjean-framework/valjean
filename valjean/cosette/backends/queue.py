@@ -8,7 +8,7 @@ import threading
 import logging
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('valjean')
 
 
 class QueueScheduling:
