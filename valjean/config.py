@@ -15,10 +15,10 @@ The :class:`Config` constructor will look for the following configuration
 files, and read them in order if they exist:
 
     * :file:`$HOME/.valjeanrc`
-    * :file:`valjeanrc` (in the current directory)
+    * :file:`valjean.cfg` (in the current directory)
 
 The :file:`$HOME/.valjeanrc` file is useful for setting user defaults. The
-:file:`valjeanrc` file is where you should write the configuration for your
+:file:`valjean.cfg` file is where you should write the configuration for your
 current test run.
 
 If you want to read other files on object creation instead, you can pass them
@@ -119,7 +119,7 @@ class Config(ConfigParser):
                       and read in the files in order if they exist:
 
                         * :file:`$HOME/.valjeanrc`
-                        * :file:`valjeanrc` in the current directory
+                        * :file:`valjean.cfg` in the current directory
 
                       If you want to disable this behaviour, use an empty list.
                       If you want to read the default files **and** some
@@ -321,4 +321,4 @@ class Config(ConfigParser):
         )
 
     #: Default configuration file paths.
-    DEFAULT_CONFIG_FILES = ['~/.valjeanrc', 'valjeanrc']
+    DEFAULT_CONFIG_FILES = ['~/.valjeanrc', 'valjean.cfg']
