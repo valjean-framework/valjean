@@ -98,7 +98,8 @@ It also provides some additional convenience methods:
     definitely!
 '''
 
-from configparser import ConfigParser, ExtendedInterpolation
+from configparser import (ConfigParser, ExtendedInterpolation,
+                          DuplicateSectionError)
 from collections import OrderedDict
 import os
 import re
@@ -177,6 +178,17 @@ class Config(ConfigParser):
                 f_obj.write('{opt}{dlm}={dlm}{value}\n\n'
                             .format(opt=opt, value=value, dlm=dlm)
                             .encode('utf-8'))
+
+    @staticmethod
+    def _sectionxform(section):
+        '''Normalize a section name by removing repeated spaces.'''
+        return ' '.join(section.split())
+
+    def add_section(self, section):
+        xform_secs = map(self._sectionxform, self.sections())
+        if self._sectionxform(section) in xform_secs:
+            raise DuplicateSectionError(section)
+        super().add_section(section)
 
     def as_dict(self):
         '''Convert the object to a dictionary.'''
