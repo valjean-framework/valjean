@@ -133,6 +133,9 @@ class Config(ConfigParser):
         super().__init__(interpolation=ExtendedInterpolation(),
                          delimiters=('=',),
                          comment_prefixes=('#',))
+        # skip leading and trailing spaces in section names
+        # pylint: disable=invalid-name
+        self.SECTCRE = re.compile(r"\[ *(?P<header>[^]]+?) *\]")
 
         def_dict = OrderedDict(
             (sec, OrderedDict(
