@@ -188,12 +188,13 @@ class CheckoutTask(ShellTask):
         :type vcs: str or None
         '''
 
+        self.log_dir = log_dir
         self.checkout_dir = checkout_dir
         self.checkout_log = os.path.join(
             log_dir, 'checkout_{}.log'.format(self.sanitize_filename(name)))
 
-        keywords = ['checkout_dir', 'checkout_log', 'repository', 'flags',
-                    'ref', 'GIT']
+        keywords = ['log_dir', 'checkout_dir', 'checkout_log', 'repository',
+                    'flags', 'ref', 'GIT']
 
         if vcs == 'git':
             self.repository = repository
@@ -241,8 +242,9 @@ class CheckoutTask(ShellTask):
     #: instantiation.
     GIT = 'git'
 
-    _GIT_TEMPLATE = r'''test -d {checkout_dir} || mkdir -p {checkout_dir}
-{GIT} clone {flags} -- {repository} {checkout_dir} >{checkout_log} 2>&1
+    _GIT_TEMPLATE = r'''test -d {log_dir} || mkdir -p {log_dir}
+test -d {checkout_dir} || mkdir -p {checkout_dir}
+{GIT} clone {flags} -- {repository} {checkout_dir} >>{checkout_log} 2>&1
 {GIT} -C {checkout_dir} checkout {ref} >>{checkout_log} 2>&1
 '''
 
@@ -362,6 +364,8 @@ class BuildTask(ShellTask):
         :type build_flags: list
         '''
 
+        self.log_dir = log_dir
+
         if source_dir is not None:
             self.source_dir = source_dir
         else:
@@ -371,7 +375,7 @@ class BuildTask(ShellTask):
         self.build_dir = build_dir
         LOGGER.debug('will use build dir %s', self.build_dir)
 
-        keywords = ['configure_log', 'build_log', 'configure_flags',
+        keywords = ['log_dir', 'configure_log', 'build_log', 'configure_flags',
                     'build_flags', 'source_dir', 'build_dir', 'CMAKE']
 
         if build_system == 'cmake':
@@ -436,9 +440,10 @@ class BuildTask(ShellTask):
     #: instantiation.
     CMAKE = 'cmake'
 
-    _CMAKE_TEMPLATE = r'''test -d {build_dir} || mkdir -p {build_dir}
+    _CMAKE_TEMPLATE = r'''test -d {log_dir} || mkdir -p {log_dir}
+test -d {build_dir} || mkdir -p {build_dir}
 cd {build_dir}
-{CMAKE} {configure_flags} {source_dir} >{configure_log} 2>&1'''
+{CMAKE} {configure_flags} {source_dir} >>{configure_log} 2>&1'''
 
     _CMAKE_BUILD_TEMPLATE = (r'''{{CMAKE}} --build {{build_dir}} '''
                              '''--target {{target{i}}} '''
