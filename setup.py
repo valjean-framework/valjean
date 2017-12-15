@@ -38,5 +38,10 @@ setup(name=name,
               }
           },
       data_files=[('', ['README.rst'])],
-      use_scm_version=True
+      use_scm_version=True,
+      entry_points={
+          'console_scripts': [
+              'valjean = valjean.cmd.main:main'
+              ]
+          }
       )
