@@ -369,11 +369,14 @@ class BuildTask(ShellTask):
 
         if source_dir is not None:
             self.source_dir = source_dir
+            depends_on_checkout = False
         else:
             self.source_dir = (
                 '{{env[checkout][checkout {name}][checkout_dir]}}'
                 .format(name=name)
                 )
+            depends_on_checkout = True
+
         LOGGER.debug('will look for source files in %s', self.source_dir)
         self.build_dir = build_dir
         LOGGER.debug('will use build dir %s', self.build_dir)
@@ -416,6 +419,9 @@ class BuildTask(ShellTask):
         kwargs = self._make_kwargs(keywords)
         task_name = 'build {}'.format(name)
         super().__init__(task_name, unformatted_script, **kwargs)
+
+        if depends_on_checkout:
+            self.depends_on.append('checkout {name}'.format(name=name))
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
         for keyword in keywords:

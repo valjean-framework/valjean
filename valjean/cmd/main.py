@@ -53,19 +53,21 @@ def make_parser():
         help='path to the log file'
         )
     parser.add_argument(
-        '--just', action='store_true',
-        help='do not execute any dependencies of the specified command'
+        '--start-from', action='store', metavar='PHASE',
+        help='start execution from the given phase'
         )
 
     # here come the subcommands
+    # WARNING: some code downstream assumes that no aliases are used
     cmd_parsers = parser.add_subparsers(
-        title='Valid commands'
+        title='Valid commands',
+        dest='command_name'
         )
     cmd_parsers.add_parser(
         'config', help='inspect the configuration'
         )
     cmd_parsers.add_parser(
-        'checkout', aliases=['co'], help='checkout code'
+        'checkout', help='checkout code'
         )
     cmd_parsers.add_parser(
         'build', help='build code'
@@ -73,15 +75,12 @@ def make_parser():
 
     # inspect the added commands; for each command, import the corresponding
     # submodule and fill its parser
-    seen_commands = set()  # necessary to avoid actions for aliases
     for cmd, cmd_parser in cmd_parsers.choices.items():
-        if cmd_parser not in seen_commands:
-            module = importlib.import_module('..{}'.format(cmd), __name__)
-            action_name = '{}Action'.format(cmd.capitalize())
-            action_cls = getattr(module, action_name)
-            action = action_cls()
-            action.register(cmd_parser)
-        seen_commands.add(cmd_parser)
+        module = importlib.import_module('..{}'.format(cmd), __name__)
+        cmd_name = '{}Command'.format(cmd.capitalize())
+        cmd_cls = getattr(module, cmd_name)
+        cmd = cmd_cls()
+        cmd.register(cmd_parser)
 
     return parser
 

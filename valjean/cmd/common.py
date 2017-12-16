@@ -1,48 +1,79 @@
 '''Common utilities for :program:`valjean` commands.'''
 
+from itertools import dropwhile
 
-class Action:
+from ..cosette.code import CheckoutTask, BuildTask
+from ..cosette.depgraph import DepGraph
+from ..cosette.scheduler import Scheduler
+from .. import LOGGER
+
+
+class Command:
 
     def register(self, parser):
         '''Register options for this command in the parser.'''
-        raise NotImplementedError('Action must be subclassed.')
+        raise NotImplementedError('Command must be subclassed.')
 
-    def process(self, args, config):
-        '''Process the arguments to this command.'''
-        raise NotImplementedError('Action must be subclassed.')
+    def execute(self, args, config):
+        '''Execute this command.'''
+        raise NotImplementedError('Command must be subclassed.')
 
 
 class TaskFactory:
 
-    def __init__(self, config_prefix, task_cls):
-        self.config_prefix = config_prefix
-        self.task_cls = task_cls
+    PHASES = [('checkout', CheckoutTask),
+              ('build', BuildTask)]
 
-    def make_task(self, config, name):
-        return self.task_cls.from_config(name=name, config=config)
-
-    def make_tasks(self, config, targets=None):
-        return [self.make_task(config, name)
-                for _, name in self._config_sections(config, targets)]
-
-    def _config_sections(self, config, targets=None):
-        '''Extract configuration sections for this command.
-
-        This generator queries the configuration for relevant sectionsi, where
-        "relevant" means that the section name starts with the `config_prefix`
-        string used at construction. If the `targets` parameter is `None`, all
-        relevant configuration sections will be yielded; otherwise, only those
-        matching target will.
-
-        :param Config config: The configuration object.
-        :param targets: A collection of targets, or `None` for all of them.
-        :type targets: collection or None
-        :returns: An iterable over `(section_name, target_name)` pairs.
-        '''
-        if targets:
-            yield from (
-                x for target in targets
-                for x in config.sections_by_prefix(self.config_prefix, target)
-            )
+    def __init__(self, config, start_from, up_to):
+        self.config = config
+        if start_from is None:
+            phases = self.PHASES
         else:
-            yield from config.sections_by_prefix(self.config_prefix)
+            phases = dropwhile(lambda elem: elem[0] != start_from,
+                               self.PHASES)
+        if not phases:
+            raise ValueError('cannot find starting action {}'
+                             .format(start_from))
+        last = None
+        for i, phase in enumerate(phases):
+            if phase[0] == up_to:
+                last = i + 1
+                break
+        self.phases = phases[:last]
+        if not self.phases:
+            raise ValueError('nothing to do between {!r} and {!r}'
+                             .format(start_from, up_to))
+
+    def make_tasks(self, targets):
+        suffixes = [None] if targets is None else targets
+        return [cls.from_config(name, self.config)
+                for phase, cls in self.phases
+                for suffix in suffixes
+                for _, name in self.config.sections_by_prefix(phase, suffix)]
+
+
+def build_graph(args, config):
+
+    if args.targets:
+        targets = set(args.targets)
+    else:
+        targets = None
+
+    graph = DepGraph()
+
+    factory = TaskFactory(config, args.start_from, args.command_name)
+
+    tasks = factory.make_tasks(targets)
+    tasks_by_name = {}
+    for task in tasks:
+        tasks_by_name[task.name] = task
+        graph.add_node(task)
+
+    for task in tasks:
+        for dep in task.depends_on:
+            graph.add_dependency(task, on=tasks_by_name[dep])
+
+    scheduler = Scheduler(graph)
+    env = scheduler.schedule()
+    LOGGER.info(env)
+    return env

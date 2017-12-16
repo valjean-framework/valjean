@@ -1,39 +1,19 @@
 '''Module for the ``checkout`` subcommand.'''
 
 
-from .common import Action, TaskFactory
-from ..cosette.code import CheckoutTask
-from ..cosette.depgraph import DepGraph
-from ..cosette.scheduler import Scheduler
-from .. import LOGGER
+from .common import Command, build_graph
 
 
-class CheckoutAction(Action):
-
-    def __init__(self):
-        super().__init__()
-        self.factory = TaskFactory('checkout', CheckoutTask)
+class CheckoutCommand(Command):
 
     def register(self, parser):
         '''Register options for this command in the parser.'''
         parser.add_argument(
-            'target', metavar='TARGET', nargs='*',
+            'targets', metavar='TARGET', nargs='*',
             help='targets to checkout'
             )
-        parser.set_defaults(func=self.process)
+        parser.set_defaults(func=self.execute)
 
-
-    def process(self, args, config):
-        '''Process the arguments to the ``config`` command.
-
-        :param args: The arguments parsed by :mod:`argparse`.
-        :param Config config: The configuration object.
-        '''
-        tasks = self.factory.make_tasks(config, set(args.target))
-
-        graph = DepGraph()
-        for task in tasks:
-            graph.add_node(task)
-        scheduler = Scheduler(graph)
-        env = scheduler.schedule()
-        LOGGER.info(env)
+    def execute(self, args, config):
+        '''Execute the ``checkout`` command.'''
+        return build_graph(args, config)

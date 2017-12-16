@@ -106,6 +106,7 @@ class Task:
         :param str name: The name of the task.
         '''
         self.name = name
+        self.depends_on = []
 
     def do(self, env):
         '''Perform a task.

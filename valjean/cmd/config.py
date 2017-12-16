@@ -1,13 +1,10 @@
 '''Module for the ``config`` subcommand.'''
 
 
-from .common import Action
+from .common import Command
 
 
-class ConfigAction(Action):
-
-    def __init__(self):
-        super().__init__()
+class ConfigCommand(Command):
 
     def register(self, parser):
         '''Register options for this command in the parser.'''
@@ -22,11 +19,11 @@ class ConfigAction(Action):
             '--raw', action='store_true',
             help='do not interpolate option values'
             )
-        parser.set_defaults(func=self.process)
+        parser.set_defaults(func=self.execute)
 
     @staticmethod
-    def process(args, config):
-        '''Process arguments to the ``config`` command.'''
+    def execute(args, config):
+        '''Execute the ``config`` command.'''
         raw = args.raw
         if args.option is None:
             for opt, val in config.items(args.section, raw=raw):

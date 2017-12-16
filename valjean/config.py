@@ -80,12 +80,12 @@ It also provides some additional convenience methods:
     >>> # convert the configuration to an ordered dictionary
     >>> pprint(config.as_dict())
     {'core': {'work-dir': '.',
-              'log-dir': './log_dir',
-              'checkout-dir': './checkout',
-              'build-dir': './build',
-              'run-dir': './run',
-              'test-dir': './test',
-              'report-dir': './report'}}
+              'log-dir': '${work-dir}/log_dir',
+              'checkout-dir': '${work-dir}/checkout',
+              'build-dir': '${work-dir}/build',
+              'run-dir': '${work-dir}/run',
+              'test-dir': '${work-dir}/test',
+              'report-dir': '${work-dir}/report'}}
     >>> # merge two configuration objects
     >>> # options from the second configuration take precedence
     >>> other_config = Config(paths=[])
@@ -284,6 +284,7 @@ class Config(ConfigParser):
             if match is None:
                 return None
             return match.group(2)
+
         yield from self.sections_by(_matching)
 
     def first_section_by_suffix(self, prefix, suffix=None):
@@ -293,11 +294,37 @@ class Config(ConfigParser):
         '''
         return next(self.sections_by_prefix(prefix, suffix))
 
+    def sections_by_prefix_suffix(self, config, phase, targets=None):
+        '''Extract configuration sections for this command.
+
+        This generator queries the configuration for relevant sectionsi, where
+        "relevant" means that the section name starts with the `config_prefix`
+        string used at construction. If the `targets` parameter is `None`, all
+        relevant configuration sections will be yielded; otherwise, only those
+        matching target will.
+
+        :param Config config: The configuration object.
+        :param targets: A collection of targets, or `None` for all of them.
+        :type targets: collection or None
+        :returns: An iterable over `(section_name, target_name)` pairs.
+        '''
+        if targets is None:
+            yield from config.sections_by_prefix(phase, None)
+        else:
+            yield from (
+                x for target in targets
+                for x in config.sections_by_prefix(phase, target)
+            )
+
+
     # Dictionary containing the known options, their descriptions and default
     # values.
     _KNOWN_OPTIONS = OrderedDict()
     _KNOWN_OPTIONS['core'] = OrderedDict()
-    _KNOWN_OPTIONS['core']['work-dir'] = ('path to the working directory', '.')
+    _KNOWN_OPTIONS['core']['work-dir'] = (
+        'path to the working directory',
+        os.path.realpath(os.getcwd())
+        )
     _KNOWN_OPTIONS['core']['log-dir'] = ('path to the directory for log files',
                                          '${work-dir}/log')
     _KNOWN_OPTIONS['core']['checkout-dir'] = (

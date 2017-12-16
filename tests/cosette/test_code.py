@@ -11,6 +11,7 @@ import valjean.cosette.code as code
 from valjean.config import Config
 from valjean.cosette.task import TaskStatus
 from valjean.cosette.env import Env
+from valjean import LOGGER
 
 
 CMAKELISTS = r'''project(TestCodeTasks C)
@@ -235,12 +236,14 @@ class TestCodeTasks:
         if env is None:
             env = Env()
         env_up, status = task.do(env)
+        LOGGER.debug('env_up = %s', env_up)
 
         # run some checks
         assert status == TaskStatus.DONE
-        assert env_up['tasks'][name]['return_code'] == 0
-        assert env_up['checkout'][name]['repository'] == git_repo
-        assert env_up['checkout'][name]['checkout_dir'] == checkout_dir
+        full_name = 'checkout {}'.format(name)
+        assert env_up['tasks'][full_name]['return_code'] == 0
+        assert env_up['checkout'][full_name]['repository'] == git_repo
+        assert env_up['checkout'][full_name]['checkout_dir'] == checkout_dir
         filename = os.path.join(checkout_dir, 'CMakeLists.txt')
         with open(filename) as f:
             content = f.read()
@@ -269,23 +272,25 @@ class TestCodeTasks:
         if env is None:
             env = Env()
         env_up, status = task.do(env)
+        LOGGER.debug('env_up = %s', env_up)
 
         # run some checks
         try:
             assert status == TaskStatus.DONE
-            assert env_up['tasks'][name]['return_code'] == 0
+            full_name = 'build {}'.format(name)
+            assert env_up['tasks'][full_name]['return_code'] == 0
             configure_log_dir = os.path.dirname(
-                env_up['build'][name]['configure_log']
+                env_up['build'][full_name]['configure_log']
                 )
             assert os.path.samefile(configure_log_dir, log_dir)
             build_log_dir = os.path.dirname(
-                env_up['build'][name]['build_log']
+                env_up['build'][full_name]['build_log']
                 )
             assert os.path.samefile(build_log_dir, log_dir)
         except AssertionError:
-            with open(env_up['build'][name]['configure_log']) as configure_f:
-                code.LOGGER.debug('configure_log:\n%s', configure_f.read())
-            with open(env_up['build'][name]['build_log']) as build_f:
+            with open(env_up['build'][full_name]['configure_log']) as c_f:
+                code.LOGGER.debug('configure_log:\n%s', c_f.read())
+            with open(env_up['build'][full_name]['build_log']) as build_f:
                 code.LOGGER.debug('build_log:\n%s', build_f.read())
             raise
 
