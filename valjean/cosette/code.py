@@ -211,7 +211,8 @@ class CheckoutTask(ShellTask):
             raise ValueError('unrecognized VCS: {}'.format(vcs))
 
         kwargs = self._make_kwargs(keywords)
-        super().__init__(name, unformatted_script, **kwargs)
+        task_name = 'checkout {}'.format(name)
+        super().__init__(task_name, unformatted_script, **kwargs)
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
         for keyword in keywords:
@@ -223,9 +224,9 @@ class CheckoutTask(ShellTask):
         underlying checkout shell script (see :meth:`.ShellTask.do()`), this
         method proposes::
 
-            env['checkout'][task.name]['checkout_dir'] = checkout_dir
-            env['checkout'][task.name]['repository'] = repository
-            env['checkout'][task.name]['checkout_log'] = checkout_log
+            env['checkout']['checkout {name}']['checkout_dir'] = checkout_dir
+            env['checkout']['checkout {name}']['repository'] = repository
+            env['checkout']['checkout {name}']['checkout_log'] = checkout_log
 
         :param mapping env: The environment for the execution of this task.
         :returns: The proposed environment updates.
@@ -369,8 +370,10 @@ class BuildTask(ShellTask):
         if source_dir is not None:
             self.source_dir = source_dir
         else:
-            self.source_dir = ('{{env[checkout][{name}][checkout_dir]}}'
-                               .format(name=name))
+            self.source_dir = (
+                '{{env[checkout][checkout {name}][checkout_dir]}}'
+                .format(name=name)
+                )
         LOGGER.debug('will look for source files in %s', self.source_dir)
         self.build_dir = build_dir
         LOGGER.debug('will use build dir %s', self.build_dir)
@@ -411,7 +414,8 @@ class BuildTask(ShellTask):
             )
 
         kwargs = self._make_kwargs(keywords)
-        super().__init__(name, unformatted_script, **kwargs)
+        task_name = 'build {}'.format(name)
+        super().__init__(task_name, unformatted_script, **kwargs)
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
         for keyword in keywords:
@@ -423,8 +427,8 @@ class BuildTask(ShellTask):
         underlying checkout shell script (see :meth:`.ShellTask.do()`), this
         method proposes::
 
-            env['build'][task.name]['configure_log'] = configure_log
-            env['build'][task.name]['build_log'] = build_log
+            env['build']['build {name}']['configure_log'] = configure_log
+            env['build']['build {name}']['build_log'] = build_log
 
         :param mapping env: The environment for the execution of this task.
         :returns: The proposed environment updates.

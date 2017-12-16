@@ -67,6 +67,9 @@ def make_parser():
     cmd_parsers.add_parser(
         'checkout', aliases=['co'], help='checkout code'
         )
+    cmd_parsers.add_parser(
+        'build', help='build code'
+        )
 
     # inspect the added commands; for each command, import the corresponding
     # submodule and fill its parser

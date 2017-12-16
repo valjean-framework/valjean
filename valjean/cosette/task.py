@@ -210,8 +210,19 @@ class ExecuteTask(Task):
         # format the command line according to the global configuration
         config = env.get('config', None)
         q_kwargs = {key: _q(val) for key, val in self.kwargs.items()}
-        formatted_cli = [c.format(config=config, **q_kwargs).format(env=env)
-                         for c in self.cli]
+        try:
+            formatted_cli = [c.format(config=config, **q_kwargs)
+                             .format(env=env)
+                             for c in self.cli]
+        except KeyError as err:
+            key = err.args[0]
+            LOGGER.exception('missing key %r when formatting CLI:\n%s'
+                             '\nenv:\n%s'
+                             '\nconfig:\n%s'
+                             '\nq_kwargs:\n%s',
+                             key, self.cli, env, config, q_kwargs)
+            raise
+
         LOGGER.debug('  - formatted cli = %s', formatted_cli)
 
         result = call(formatted_cli, universal_newlines=True,
@@ -313,9 +324,19 @@ class ShellTask(Task):
             # environment
             config = env.get('config', None)
             q_kwargs = {key: _q(val) for key, val in self.kwargs.items()}
-            fmt_script = (self.script
-                          .format(config=config, **q_kwargs)
-                          .format(env=env))
+            try:
+                fmt_script = (self.script
+                              .format(config=config, **q_kwargs)
+                              .format(env=env))
+            except KeyError as err:
+                key = err.args[0]
+                LOGGER.exception('missing key %r when formatting script:\n%s'
+                                 '\nenv:\n%s'
+                                 '\nconfig:\n%s'
+                                 '\nq_kwargs:\n%s',
+                                 key, self.script, env, config, q_kwargs)
+                raise
+
             LOGGER.debug('  - script = \n###### SCRIPT/START #####\n'
                          '%s\n#####  SCRIPT/END  #####', fmt_script)
             file_.write(fmt_script.encode('utf-8'))
