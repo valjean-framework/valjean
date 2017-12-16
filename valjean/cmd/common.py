@@ -1,11 +1,18 @@
 '''Common utilities for :program:`valjean` commands.'''
 
+import argparse
 from itertools import dropwhile
 
 from ..cosette.code import CheckoutTask, BuildTask
 from ..cosette.depgraph import DepGraph
 from ..cosette.scheduler import Scheduler
 from .. import LOGGER
+
+
+class UniqueAppendAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        unique_values = set(values)
+        setattr(namespace, self.dest, unique_values)
 
 
 class Command:
@@ -54,16 +61,11 @@ class TaskFactory:
 
 def build_graph(args, config):
 
-    if args.targets:
-        targets = set(args.targets)
-    else:
-        targets = None
-
     graph = DepGraph()
 
     factory = TaskFactory(config, args.start_from, args.command_name)
 
-    tasks = factory.make_tasks(targets)
+    tasks = factory.make_tasks(args.targets)
     tasks_by_name = {}
     for task in tasks:
         tasks_by_name[task.name] = task
