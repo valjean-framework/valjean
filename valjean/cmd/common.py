@@ -17,6 +17,8 @@ class UniqueAppendAction(argparse.Action):
 
 class Command:
 
+    ALIASES = []
+
     def register(self, parser):
         '''Register options for this command in the parser.'''
         raise NotImplementedError('Command must be subclassed.')

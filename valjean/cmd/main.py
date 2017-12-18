@@ -2,10 +2,13 @@
 
 import sys
 import argparse
+import pkgutil
 import importlib
 import logging
 
 import valjean
+import valjean.cmd
+import valjean.cmd.commands
 from valjean import LOGGER
 from ..config import Config
 
@@ -63,23 +66,20 @@ def make_parser():
         title='Valid commands',
         dest='command_name'
         )
-    cmd_parsers.add_parser(
-        'config', help='inspect the configuration'
-        )
-    cmd_parsers.add_parser(
-        'checkout', help='checkout code'
-        )
-    cmd_parsers.add_parser(
-        'build', help='build code'
-        )
 
-    # inspect the added commands; for each command, import the corresponding
-    # submodule and fill its parser
-    for cmd, cmd_parser in cmd_parsers.choices.items():
-        module = importlib.import_module('..{}'.format(cmd), __name__)
-        cmd_name = '{}Command'.format(cmd.capitalize())
+    # import each submodule in commands.* and create a new subparser for it
+    prefix = valjean.cmd.commands.__name__ + '.'
+    submods_iter = pkgutil.iter_modules(valjean.cmd.commands.__path__)
+    for importer, modname, is_pkg in submods_iter:
+        cmd_name = '{}Command'.format(modname.capitalize())
+        module = importlib.import_module(prefix + modname)
         cmd_cls = getattr(module, cmd_name)
         cmd = cmd_cls()
+        cmd_parser = cmd_parsers.add_parser(
+            cmd_cls.NAME,
+            help=cmd_cls.HELP,
+            aliases=cmd_cls.ALIASES
+            )
         cmd.register(cmd_parser)
 
     return parser

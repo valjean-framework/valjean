@@ -1,10 +1,14 @@
 '''Module for the ``config`` subcommand.'''
 
 
-from .common import Command
+from ..common import Command
 
 
 class ConfigCommand(Command):
+
+    NAME = 'config'
+
+    HELP = 'inspect the configuration'
 
     def register(self, parser):
         '''Register options for this command in the parser.'''
