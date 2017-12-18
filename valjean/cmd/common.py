@@ -54,7 +54,7 @@ class TaskFactory:
                              .format(start_from, up_to))
 
     def make_tasks(self, targets):
-        suffixes = [None] if targets is None else targets
+        suffixes = targets if targets else [None]
         return [cls.from_config(name, self.config)
                 for phase, cls in self.phases
                 for suffix in suffixes
