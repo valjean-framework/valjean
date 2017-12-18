@@ -48,15 +48,15 @@ By default, :class:`Config` objects come with a few default options set:
 
 .. doctest:: config
 
-    >>> for opt, val in config['core'].items():
+    >>> for opt, val in config.items('core', raw=True):
     ...     print('{} = {}'.format(opt, val))
-    work-dir = .
-    log-dir = ./log
-    checkout-dir = ./checkout
-    build-dir = ./build
-    run-dir = ./run
-    test-dir = ./test
-    report-dir = ./report
+    work-dir = ...
+    log-dir = ${work-dir}/log
+    checkout-dir = ${work-dir}/checkout
+    build-dir = ${work-dir}/build
+    run-dir = ${work-dir}/run
+    test-dir = ${work-dir}/test
+    report-dir = ${work-dir}/report
 
 The :class:`Config` class inherits from :class:`configparser.ConfigParser`, and
 as such can be accessed and modified using all the methods of its parent class:
@@ -64,36 +64,39 @@ as such can be accessed and modified using all the methods of its parent class:
 .. doctest:: config
 
     >>> print(config['core']['build-dir'])
-    ./build
+    /.../build
     >>> list(config.sections())
     ['core']
-    >>> # value interpolation is possible
+
+    # value interpolation is possible
     >>> config['core']['log-dir'] = '${work-dir}/log_dir'
     >>> print(config['core']['log-dir'])
-    ./log_dir
+    /.../log_dir
 
 It also provides some additional convenience methods:
 
 .. doctest:: config
 
     >>> from pprint import pprint
-    >>> # convert the configuration to an ordered dictionary
+
+    # convert the configuration to an ordered dictionary
     >>> pprint(config.as_dict())
-    {'core': {'work-dir': '.',
+    {'core': {'work-dir': '...',
               'log-dir': '${work-dir}/log_dir',
               'checkout-dir': '${work-dir}/checkout',
               'build-dir': '${work-dir}/build',
               'run-dir': '${work-dir}/run',
               'test-dir': '${work-dir}/test',
               'report-dir': '${work-dir}/report'}}
-    >>> # merge two configuration objects
-    >>> # options from the second configuration take precedence
+
+    # merge two configuration objects; options from the second
+    # configuration override those from the first one
     >>> other_config = Config(paths=[])
     >>> other_config['core']['report-dir'] = '${work-dir}/html'
     >>> other_config['core']['extra-option'] = 'definitely!'
     >>> config += other_config
     >>> print(config['core']['report-dir'])
-    ./html
+    /.../html
     >>> print(config['core']['extra-option'])
     definitely!
 '''
@@ -152,7 +155,7 @@ class Config(ConfigParser):
     def from_mapping(cls, mapping):
         '''Construct a configuration object from an option mapping.
 
-        The keys of `mapping` must be strings; its values must be string ->
+        The keys of `mapping` must be strings; its values must be string →
         string mappings. Note that `mapping` may also be a :class:`Config`
         object (in which case this method acts as a copy).
 
@@ -202,7 +205,7 @@ class Config(ConfigParser):
 
     def merge(self, other):
         '''In-place merge two configurations. Options from the `other`
-        configuration supersede those from `self`.
+        configuration override those from `self`.
 
         :param Config other: The configuration to merge into `self`.
         :returns: The modified configuration.
@@ -214,7 +217,7 @@ class Config(ConfigParser):
 
     def merge_section(self, other, section):
         '''In-place merge a section of another configuration. Options from the
-        `other` configuration supersede those from `self`.
+        `other` configuration override those from `self`.
 
         :param Config other: The configuration to merge into `self`.
         :param str section: The name of the section to merge.
