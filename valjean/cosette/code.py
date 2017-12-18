@@ -159,18 +159,15 @@ class CheckoutTask(ShellTask):
         repository = sec_conf.get('repository')
         flags = split(sec_conf.get('flags', ''))
         ref = sec_conf.get('ref', 'master')
+        deps = sec_conf.get('depends-on', None)
 
-        return cls(name=name,
-                   checkout_dir=checkout_dir,
-                   log_dir=log_dir,
-                   repository=repository,
-                   flags=flags,
-                   ref=ref,
-                   vcs=vcs)
+        return cls(name=name, checkout_dir=checkout_dir, log_dir=log_dir,
+                   repository=repository, flags=flags, ref=ref, vcs=vcs,
+                   deps=deps)
 
     # pylint: disable=too-many-arguments
     def __init__(self, name: str, checkout_dir: str, repository: str,
-                 log_dir: str, flags=None, ref=None, vcs='git'):
+                 log_dir: str, *, flags=None, ref=None, vcs='git', deps=None):
         '''Construct a :class:`CheckoutTask`.
 
         :param str name: The name of this task.
@@ -186,6 +183,9 @@ class CheckoutTask(ShellTask):
         :param vcs: The version-control system to use. Must be one of:
                     ``'git'`` (default), ``'svn'``, ``'cvs'``, ``'copy'``.
         :type vcs: str or None
+        :param deps: The dependencies for this task (see
+                     :meth:`Task.__init__()` for the format), or `None`.
+        :type deps: str or None
         '''
 
         self.log_dir = log_dir
@@ -212,7 +212,7 @@ class CheckoutTask(ShellTask):
 
         kwargs = self._make_kwargs(keywords)
         task_name = 'checkout {}'.format(name)
-        super().__init__(task_name, unformatted_script, **kwargs)
+        super().__init__(task_name, unformatted_script, deps=deps, **kwargs)
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
         for keyword in keywords:
@@ -334,15 +334,17 @@ class BuildTask(ShellTask):
         targets = sec_conf.get('build-targets', None)
         if targets is not None:
             targets = split(targets)
+        deps = sec_conf.get('depends-on', None)
 
         return cls(name=name, source_dir=source_dir, build_dir=build_dir,
                    log_dir=log_dir, targets=targets, build_system=build_system,
-                   configure_flags=configure_flags, build_flags=build_flags)
+                   configure_flags=configure_flags, build_flags=build_flags,
+                   deps=deps)
 
     # pylint: disable=too-many-arguments,too-many-locals
     def __init__(self, name: str, source_dir: str, build_dir: str,
-                 log_dir: str, targets=None, build_system='cmake',
-                 configure_flags=None, build_flags=None):
+                 log_dir: str, *, targets=None, build_system='cmake',
+                 configure_flags=None, build_flags=None, deps=None):
         '''Construct a :class:`BuildTask`.
 
         :param str name: The name of this task.
@@ -363,19 +365,20 @@ class BuildTask(ShellTask):
         :param build_flags: The flags that will be passed to the build tool at
                             build time, as a list of strings.
         :type build_flags: list
+        :param deps: The dependencies for this task (see
+                     :meth:`Task.__init__()` for the format), or `None`.
+        :type deps: str or None
         '''
 
         self.log_dir = log_dir
 
         if source_dir is not None:
             self.source_dir = source_dir
-            depends_on_checkout = False
         else:
             self.source_dir = (
                 '{{env[checkout][checkout {name}][checkout_dir]}}'
                 .format(name=name)
                 )
-            depends_on_checkout = True
 
         LOGGER.debug('will look for source files in %s', self.source_dir)
         self.build_dir = build_dir
@@ -418,10 +421,10 @@ class BuildTask(ShellTask):
 
         kwargs = self._make_kwargs(keywords)
         task_name = 'build {}'.format(name)
-        super().__init__(task_name, unformatted_script, **kwargs)
+        super().__init__(task_name, unformatted_script, deps=deps, **kwargs)
 
-        if depends_on_checkout:
-            self.depends_on.append('checkout {name}'.format(name=name))
+        if source_dir is None:
+            self.add_dependency('checkout {name}'.format(name=name))
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
         for keyword in keywords:

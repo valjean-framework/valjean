@@ -100,13 +100,22 @@ class TaskError(Exception):
 class Task:
     '''Base class for other task classes.'''
 
-    def __init__(self, name):
+    def __init__(self, name, *, deps=None):
         '''Initialize the task.
 
         :param str name: The name of the task.
+        :param deps: The list of dependencies for this task. It must be either
+                     `None` (i.e. no dependencies) or a string of
+                     newline-separated task names. The :class:`~Task`
+                     constructor splits this string on newlines and stores the
+                     names of the task for later retrieval.
+        :type deps: str or None
         '''
         self.name = name
         self.depends_on = []
+        if deps is not None:
+            for dep in deps.splitlines():
+                self.add_dependency(dep.strip())
 
     def do(self, env):
         '''Perform a task.
@@ -120,6 +129,9 @@ class Task:
 
     def __repr__(self):
         return "Task('{}')".format(self.name)
+
+    def add_dependency(self, dep):
+        self.depends_on.append(dep)
 
 
 class DelayTask(Task):
@@ -162,7 +174,8 @@ class ExecuteTask(Task):
     the global current :class:`~.Config` object.
     '''
 
-    def __init__(self, name, cli, subprocess_args=None, **kwargs):
+    def __init__(self, name, cli, *, deps=None, subprocess_args=None,
+                 **kwargs):
         '''Initialize this task from a command line.
 
         :param str name: The name of this task.
@@ -173,8 +186,11 @@ class ExecuteTask(Task):
                                      :class:`.subprocess.Popen` constructor.
         :param dict kwargs: Any leftover keyword arguments will be used to
                             format the command line.
+        :param deps: The dependencies for this task (see
+                     :meth:`Task.__init__()` for the format), or `None`.
+        :type deps: str or None
         '''
-        super().__init__(name)
+        super().__init__(name, deps=deps)
         self.cli = cli
         if subprocess_args is None:
             self.subprocess_args = dict()
@@ -257,8 +273,8 @@ class ShellTask(Task):
     '''
 
     # pylint: disable=too-many-arguments
-    def __init__(self, name, script, shell='/bin/bash', delete=True,
-                 directory=None, subprocess_args=None, **kwargs):
+    def __init__(self, name, script, *, shell='/bin/bash', delete=True,
+                 directory=None, subprocess_args=None, deps=None, **kwargs):
         '''Initialize the task from the following arguments:
 
         :param str name: The name of this task.
@@ -274,9 +290,12 @@ class ShellTask(Task):
                                      :class:`.subprocess.Popen` constructor.
         :param dict kwargs: Any leftover keyword arguments will be used to
                             format the script.
+        :param deps: The dependencies for this task (see
+                     :meth:`Task.__init__()` for the format), or `None`.
+        :type deps: str or None
         '''
 
-        super().__init__(name)
+        super().__init__(name, deps=deps)
         self.script = script
         self.shell = shell
         self.delete = delete
