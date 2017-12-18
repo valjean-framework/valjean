@@ -21,7 +21,12 @@ class Command:
 
     def register(self, parser):
         '''Register options for this command in the parser.'''
-        raise NotImplementedError('Command must be subclassed.')
+        parser.add_argument(
+            'targets', metavar='TARGET', nargs='*',
+            action=UniqueAppendAction,
+            help='targets to process'
+            )
+        parser.set_defaults(func=self.execute)
 
     def execute(self, args, config):
         '''Execute this command.'''
@@ -77,6 +82,9 @@ def build_graph(args, config):
         for dep in task.depends_on:
             graph.add_dependency(task, on=tasks_by_name[dep])
 
+    return graph
+
+def schedule(graph):
     scheduler = Scheduler(graph)
     env = scheduler.schedule()
     LOGGER.info(env)
