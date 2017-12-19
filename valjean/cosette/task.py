@@ -198,7 +198,7 @@ class RunTask(Task):
         else:
             self.subprocess_args = subprocess_args
         self.kwargs = kwargs
-        LOGGER.debug('Created %s task %s', self.__class__.__name__, self.name)
+        LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
         LOGGER.debug('  - cli = %s', self.cli)
         if subprocess_args is not None:
             LOGGER.debug('  - subprocess_args = %s', self.subprocess_args)
@@ -303,7 +303,7 @@ class ShellTask(Task):
         self.dir = directory
         self.subprocess_args = subprocess_args
         self.kwargs = kwargs
-        LOGGER.debug('Created %s task %s', self.__class__.__name__, self.name)
+        LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
         LOGGER.debug('  - shell = %s', self.shell)
         LOGGER.debug('  - delete = %s', self.delete)
         if self.dir is not None:
@@ -344,6 +344,7 @@ class ShellTask(Task):
             # format the script according to the global configuration and the
             # environment
             config = env.get('config', None)
+            LOGGER.debug('kwargs = %s', self.kwargs)
             q_kwargs = {key: _q(val) for key, val in self.kwargs.items()}
             try:
                 fmt_script = (self.script

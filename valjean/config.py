@@ -44,33 +44,33 @@ list:
 
     >>> config = Config(paths=[])
 
-By default, :class:`Config` objects come with a few default options set:
+By default, :class:`Config` objects come with a ``'core'`` configuration
+section, which may be used to set default values for any configuration option.
+A few options are set from the beginning:
 
 .. doctest:: config
 
     >>> for opt, val in config.items('core', raw=True):
     ...     print('{} = {}'.format(opt, val))
     work-dir = ...
-    log-dir = ${work-dir}/log
-    checkout-dir = ${work-dir}/checkout
-    build-dir = ${work-dir}/build
-    run-dir = ${work-dir}/run
-    test-dir = ${work-dir}/test
-    report-dir = ${work-dir}/report
+    log-root = ${work-dir}/log
+    checkout-root = ${work-dir}/checkout
+    build-root = ${work-dir}/build
+    run-root = ${work-dir}/run
+    test-root = ${work-dir}/test
+    report-root = ${work-dir}/report
 
 The :class:`Config` class inherits from :class:`configparser.ConfigParser`, and
 as such can be accessed and modified using all the methods of its parent class:
 
 .. doctest:: config
 
-    >>> print(config['core']['build-dir'])
+    >>> print(config['core']['build-root'])
     /.../build
-    >>> list(config.sections())
-    ['core']
 
     # value interpolation is possible
-    >>> config['core']['log-dir'] = '${work-dir}/log_dir'
-    >>> print(config['core']['log-dir'])
+    >>> config['core']['log-root'] = '${work-dir}/log_dir'
+    >>> print(config['core']['log-root'])
     /.../log_dir
 
 It also provides some additional convenience methods:
@@ -82,30 +82,33 @@ It also provides some additional convenience methods:
     # convert the configuration to an ordered dictionary
     >>> pprint(config.as_dict())
     {'core': {'work-dir': '...',
-              'log-dir': '${work-dir}/log_dir',
-              'checkout-dir': '${work-dir}/checkout',
-              'build-dir': '${work-dir}/build',
-              'run-dir': '${work-dir}/run',
-              'test-dir': '${work-dir}/test',
-              'report-dir': '${work-dir}/report'}}
+              'log-root': '${work-dir}/log_dir',
+              'checkout-root': '${work-dir}/checkout',
+              'build-root': '${work-dir}/build',
+              'run-root': '${work-dir}/run',
+              'test-root': '${work-dir}/test',
+              'report-root': '${work-dir}/report'}}
 
     # merge two configuration objects; options from the second
     # configuration override those from the first one
     >>> other_config = Config(paths=[])
-    >>> other_config['core']['report-dir'] = '${work-dir}/html'
+    >>> other_config['core']['report-root'] = '${work-dir}/html'
     >>> other_config['core']['extra-option'] = 'definitely!'
     >>> config += other_config
-    >>> print(config['core']['report-dir'])
+    >>> print(config['core']['report-root'])
     /.../html
     >>> print(config['core']['extra-option'])
     definitely!
 '''
 
 from configparser import (ConfigParser, ExtendedInterpolation,
-                          DuplicateSectionError)
+                          DuplicateSectionError, NoOptionError)
 from collections import OrderedDict
+from functools import partial
 import os
 import re
+
+from . import LOGGER
 
 
 class Config(ConfigParser):
@@ -137,7 +140,8 @@ class Config(ConfigParser):
         super().__init__(interpolation=ExtendedInterpolation(),
                          delimiters=('=',),
                          comment_prefixes=('#',),
-                         empty_lines_in_values=False)
+                         empty_lines_in_values=False,
+                         default_section='core')
         # skip leading and trailing spaces in section names
         # pylint: disable=invalid-name
         self.SECTCRE = re.compile(r"\[ *(?P<header>[^]]+?) *\]")
@@ -185,7 +189,8 @@ class Config(ConfigParser):
     @staticmethod
     def _sectionxform(section):
         '''Normalize a section name by removing repeated spaces.'''
-        return ' '.join(section.split())
+        sec_split = section.split('/', maxsplit=1)
+        return '/'.join(' '.join(w.split()) for w in sec_split)
 
     def add_section(self, section):
         xform_secs = map(self._sectionxform, self.sections())
@@ -196,12 +201,34 @@ class Config(ConfigParser):
     def as_dict(self):
         '''Convert the object to a dictionary.'''
         dct = OrderedDict()
-        for sec in self.sections():
+        for sec_name, _ in self.items():
             sec_dct = OrderedDict()
-            for opt, val in self.items(sec, raw=True):
+            for opt, val in self.items(sec_name, raw=True):
                 sec_dct[opt] = val
-            dct[sec] = sec_dct
+            dct[sec_name] = sec_dct
         return dct
+
+    # pylint: disable=redefined-builtin
+    def get(self, section, option, **kwargs):
+        try:
+            LOGGER.debug('get kwargs = %s', kwargs)
+            val = super().get(section, option, **kwargs)
+            LOGGER.debug('get(%r, %r) succeeded with value %s',
+                         section, option, val)
+            return val
+        except NoOptionError as err:
+            special = self.SPECIAL_OPTS.get(option, None)
+            if special:
+                secs, lookup, assemble = special
+                split = self.split_section(section)
+                if len(split) == 1 or split[0] not in secs:
+                    raise err
+                LOGGER.debug('treating option %s in section %s as special',
+                             section, option)
+                vals = lookup(self, section, split, option)
+                val = assemble(*vals)
+                return val
+            raise err
 
     def merge(self, other):
         '''In-place merge two configurations. Options from the `other`
@@ -249,7 +276,7 @@ class Config(ConfigParser):
         for sec in self.sections():
             res = func(sec)
             if res is not None:
-                yield (sec, res)
+                yield (self[sec], res)
 
     def sections_by_regex(self, regex):
         '''Yield suffixes of sections matching a given regex.
@@ -262,25 +289,24 @@ class Config(ConfigParser):
         '''
         yield from self.sections_by(lambda s: re.match(regex, s))
 
-    def sections_by_prefix(self, prefix, suffix=None):
-        '''Yield suffixes of sections matching a given prefix.
+    def sections_by_family(self, sec_family, sec_id_regex='.*'):
+        '''Yield sections from a given family and matching a regex.
 
-        This generator filters sections according to a given prefix; if the
-        section name starts with the prefix, the generator yields a tuple made
-        of the full section name and the corresponding suffix (i.e. the section
-        name with the prefix and any subsequent spaces removed).
+        This generator filters sections according to a given family; for each
+        section of a given family, the generator yields a tuple made of the
+        full section name and the corresponding ID (i.e. the section name with
+        the family and any subsequent slashes/spaces removed).
 
-        If the `suffix` parameter is not `None`, this generator yields sections
-        matching the prefix **and** the suffix. If there is only one such
-        section, consider using :meth:`first_section_by_prefix()`.
+        The `sec_id_regex` parameter is a regex that can be used to match
+        section IDs. By default, it matches any section.  If there is only one
+        section matching `sec_id_regex`, consider using
+        :meth:`section_by_family()`.
 
-        :param str prefix: A prefix to match.
-        :param str suffix: An optional suffix to match.
+        :param str sec_family: A prefix to match.
+        :param str sec_id_regex: An optional regex for the section ID.
         '''
-        if suffix is None:
-            regex = re.compile(r'^(' + prefix + r'\s+)(.*)$')
-        else:
-            regex = re.compile(r'^(' + prefix + r'\s+)({})$'.format(suffix))
+        regex = re.compile(r'^\s*({})\s*/\s*({})\s*$'
+                           .format(sec_family, sec_id_regex))
 
         def _matching(sec_name):
             match = re.match(regex, sec_name)
@@ -290,14 +316,23 @@ class Config(ConfigParser):
 
         yield from self.sections_by(_matching)
 
-    def first_section_by_prefix(self, prefix, suffix=None):
-        '''Extract the first section by prefix.
+    def section_by_family(self, sec_family, sec_id_regex='.*'):
+        '''Extract a section by family and id.
 
-        :param str prefix: A prefix to match.
-        :param str suffix: An optional suffix to match.
-        :returns: The first section yielded by :meth:`sections_by_prefix()`.
+        Calling this method is very similar to calling ``config[sec_family +
+        '/' + sec_id]``, except that it also works for section names containing
+        whitespace, such as ``[   build /   something ]``.
+
+        :param str sec_family: A prefix to match.
+        :param str sec_id_regex: A regex for the section ID.
+        :returns: The requested configuration section.
         '''
-        return next(self.sections_by_prefix(prefix, suffix))
+        return next(self.sections_by_family(sec_family, sec_id_regex))
+
+    @staticmethod
+    def split_section(section):
+        '''Split section name into a ``(family, id)`` tuple.'''
+        return section.split('/', maxsplit=1)
 
     # Dictionary containing the known options, their descriptions and default
     # values.
@@ -307,27 +342,43 @@ class Config(ConfigParser):
         'path to the working directory',
         os.path.realpath(os.getcwd())
         )
-    _KNOWN_OPTIONS['core']['log-dir'] = ('path to the directory for log files',
-                                         '${work-dir}/log')
-    _KNOWN_OPTIONS['core']['checkout-dir'] = (
+    _KNOWN_OPTIONS['core']['log-root'] = (
+        'path to the directory for log files',
+        '${work-dir}/log'
+        )
+    _KNOWN_OPTIONS['core']['checkout-root'] = (
         'path to the directory for code sources',
         '${work-dir}/checkout'
         )
-    _KNOWN_OPTIONS['core']['build-dir'] = (
-        'path to the directory for code compilation', '${work-dir}/build'
+    _KNOWN_OPTIONS['core']['build-root'] = (
+        'path to the directory for code compilation',
+        '${work-dir}/build'
         )
-    _KNOWN_OPTIONS['core']['run-dir'] = (
+    _KNOWN_OPTIONS['core']['run-root'] = (
         'path to the directory for code execution',
         '${work-dir}/run'
         )
-    _KNOWN_OPTIONS['core']['test-dir'] = (
+    _KNOWN_OPTIONS['core']['test-root'] = (
         'path to the directory for test execution',
         '${work-dir}/test'
         )
-    _KNOWN_OPTIONS['core']['report-dir'] = (
+    _KNOWN_OPTIONS['core']['report-root'] = (
         'path to the directory for report generation',
         '${work-dir}/report'
         )
 
     #: Default configuration file paths.
     DEFAULT_CONFIG_FILES = ['~/.valjean.cfg', 'valjean.cfg']
+
+    def _lookup_other(self, sec, split, _, *, other_opt):
+        val = super().get(sec, other_opt)
+        return (val, split[1])
+
+    SPECIAL_OPTS = {'build-dir': (('build',),
+                                  partial(_lookup_other,
+                                          other_opt='build-root'),
+                                  os.path.join),
+                    'checkout-dir': (('checkout',),
+                                     partial(_lookup_other,
+                                             other_opt='checkout-root'),
+                                     os.path.join)}

@@ -92,12 +92,12 @@ def _make_git_config(task_name, project, log_dir, checkout_dir, checkout_core,
                      git_ref=None, git_flags=None, git_vcs=None):
     '''Set up a Config object for git repository testing.'''
     config = Config(paths=[])
-    config.set('core', 'log-dir', log_dir)
-    sec_name = 'checkout {}'.format(task_name)
+    config.set('core', 'log-root', log_dir)
+    sec_name = 'checkout/{}'.format(task_name)
     config.add_section(sec_name)
     config[sec_name]['repository'] = project
     if checkout_core:
-        config['core']['checkout-dir'] = checkout_dir
+        config['core']['checkout-root'] = checkout_dir
     else:
         config[sec_name]['checkout-dir'] = checkout_dir
     if git_vcs is not None:
@@ -154,12 +154,12 @@ def _make_cmake_config(task_name, project, log_dir, build_dir, build_core,
                        cmake_targets=None):
     '''Set up a Config object for CMake build testing.'''
     config = Config(paths=[])
-    config.set('core', 'log-dir', log_dir)
-    sec_name = 'build {}'.format(task_name)
+    config.set('core', 'log-root', log_dir)
+    sec_name = 'build/{}'.format(task_name)
     config.add_section(sec_name)
     config.set(sec_name, 'source-dir', project)
     if build_core:
-        config.set('core', 'build-dir', build_dir)
+        config.set('core', 'build-root', build_dir)
     else:
         config.set(sec_name, 'build-dir', build_dir)
     if cmake_conf_flags is not None:
@@ -190,10 +190,10 @@ def simple_cmake_config(task_name, project, log_dir, build_dir, build_core):
 def git_cmake_config(task_name, project, log_dir,
                      simple_git_config, simple_cmake_config):
     '''Set up a Config object for combined git checkout/CMake build testing.'''
-    sec_name, name = simple_cmake_config.first_section_by_prefix('build')
-    simple_git_config.merge_section(simple_cmake_config, sec_name)
-    simple_git_config['core']['build-dir'] = (
-        simple_cmake_config['core']['build-dir']
+    sec, name = simple_cmake_config.section_by_family('build')
+    simple_git_config.merge_section(simple_cmake_config, sec.name)
+    simple_git_config['core']['build-root'] = (
+        simple_cmake_config['core']['build-root']
         )
     yield simple_git_config
 
@@ -220,16 +220,13 @@ class TestCodeTasks:
 
     def do_git_checkout(self, config, env=None):
         # extract the section name and the task name
-        sec_name, name = config.first_section_by_prefix('checkout')
+        sec, name = config.section_by_family('checkout')
 
         # extract the path to the git repository
-        git_repo = config.get(sec_name, 'repository')
+        git_repo = config.get(sec.name, 'repository')
 
         # extract the path to the checkout directory
-        checkout_dir = config.get(sec_name, 'checkout-dir', fallback=None)
-        if checkout_dir is None:
-            checkout_dir = os.path.join(config.get('core', 'checkout-dir'),
-                                        name)
+        checkout_dir = config.get(sec.name, 'checkout-dir')
 
         # create the task and run it
         task = code.CheckoutTask.from_config(name=name, config=config)
@@ -240,7 +237,7 @@ class TestCodeTasks:
 
         # run some checks
         assert status == TaskStatus.DONE
-        full_name = 'checkout {}'.format(name)
+        full_name = 'checkout/{}'.format(name)
         assert env_up['tasks'][full_name]['return_code'] == 0
         assert env_up['checkout'][full_name]['repository'] == git_repo
         assert env_up['checkout'][full_name]['checkout_dir'] == checkout_dir
@@ -256,16 +253,13 @@ class TestCodeTasks:
 
     def do_cmake_build(self, config, env=None):
         # extract the section name and the task name
-        sec_name, name = config.first_section_by_prefix('build')
+        sec, name = config.section_by_family('build')
 
         # extract the path to the build directory
-        build_dir = config.get(sec_name, 'build-dir', fallback=None)
-        if build_dir is None:
-            build_dir = os.path.join(config.get('core', 'build-dir'),
-                                     name)
+        build_dir = config.get(sec.name, 'build-dir')
 
-        # extract the path to the build directory
-        log_dir = config.get('core', 'log-dir')
+        # extract the path to the log directory
+        log_dir = config.get('core', 'log-root')
 
         # create the task and run it
         task = code.BuildTask.from_config(name=name, config=config)
@@ -277,7 +271,7 @@ class TestCodeTasks:
         # run some checks
         try:
             assert status == TaskStatus.DONE
-            full_name = 'build {}'.format(name)
+            full_name = 'build/{}'.format(name)
             assert env_up['tasks'][full_name]['return_code'] == 0
             configure_log_dir = os.path.dirname(
                 env_up['build'][full_name]['configure_log']
@@ -302,9 +296,9 @@ class TestCodeTasks:
 
     def test_git_checkout_cmake_build(self, git_cmake_config):
         # extract the section name and the task name
-        sec_name, name = git_cmake_config.first_section_by_prefix('build')
+        sec, name = git_cmake_config.section_by_family('build')
 
-        git_cmake_config.remove_option(sec_name, 'source-dir')
+        git_cmake_config.remove_option(sec.name, 'source-dir')
         env = self.do_git_checkout(git_cmake_config)
         self.do_cmake_build(git_cmake_config, env)
 
@@ -313,42 +307,42 @@ class TestFailingCodeTasks:
 
     def test_missing_checkout_section_raises(self, simple_git_config):
         # extract the section name and the task name
-        sec_name, name = simple_git_config.first_section_by_prefix('checkout')
-        simple_git_config.remove_section(sec_name)
+        sec, name = simple_git_config.section_by_family('checkout')
+        simple_git_config.remove_section(sec.name)
         with pytest.raises(KeyError):
             code.CheckoutTask.from_config(name, simple_git_config)
 
     def test_notimpl_checkout_raises(self, simple_git_config, failing_vcs):
         # extract the section name and the task name
-        sec_name, name = simple_git_config.first_section_by_prefix('checkout')
-        simple_git_config.set(sec_name, 'vcs', failing_vcs)
+        sec, name = simple_git_config.section_by_family('checkout')
+        simple_git_config.set(sec.name, 'vcs', failing_vcs)
         with pytest.raises(NotImplementedError):
             code.CheckoutTask.from_config(name, simple_git_config)
 
     def test_unknown_checkout_raises(self, simple_git_config):
         # extract the section name and the task name
-        sec_name, name = simple_git_config.first_section_by_prefix('checkout')
-        simple_git_config.set(sec_name, 'vcs', 'antani')
+        sec, name = simple_git_config.section_by_family('checkout')
+        simple_git_config.set(sec.name, 'vcs', 'antani')
         with pytest.raises(ValueError):
             code.CheckoutTask.from_config(name, simple_git_config)
 
     def test_missing_build_section_raises(self, simple_cmake_config):
         # extract the section name and the task name
-        sec_name, name = simple_cmake_config.first_section_by_prefix('build')
-        simple_cmake_config.remove_section(sec_name)
+        sec, name = simple_cmake_config.section_by_family('build')
+        simple_cmake_config.remove_section(sec.name)
         with pytest.raises(KeyError):
             code.BuildTask.from_config(name, simple_cmake_config)
 
     def test_notimpl_build_raises(self, simple_cmake_config, failing_build):
         # extract the section name and the task name
-        sec_name, name = simple_cmake_config.first_section_by_prefix('build')
-        simple_cmake_config.set(sec_name, 'build-system', failing_build)
+        sec, name = simple_cmake_config.section_by_family('build')
+        simple_cmake_config.set(sec.name, 'build-system', failing_build)
         with pytest.raises(NotImplementedError):
             code.BuildTask.from_config(name, simple_cmake_config)
 
     def test_unknown_build_raises(self, simple_cmake_config):
         # extract the section name and the task name
-        sec_name, name = simple_cmake_config.first_section_by_prefix('build')
-        simple_cmake_config.set(sec_name, 'build-system', 'tarapio')
+        sec, name = simple_cmake_config.section_by_family('build')
+        simple_cmake_config.set(sec.name, 'build-system', 'tarapio')
         with pytest.raises(ValueError):
             code.BuildTask.from_config(name, simple_cmake_config)
