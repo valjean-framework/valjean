@@ -272,10 +272,10 @@ class Config(ConfigParser):
 
         If the `suffix` parameter is not `None`, this generator yields sections
         matching the prefix **and** the suffix. If there is only one such
-        section, consider using :meth:`first_section_by_suffix()`.
+        section, consider using :meth:`first_section_by_prefix()`.
 
         :param str prefix: A prefix to match.
-        :param str suffix: A suffix to match.
+        :param str suffix: An optional suffix to match.
         '''
         if suffix is None:
             regex = re.compile(r'^(' + prefix + r'\s+)(.*)$')
@@ -290,9 +290,11 @@ class Config(ConfigParser):
 
         yield from self.sections_by(_matching)
 
-    def first_section_by_suffix(self, prefix, suffix=None):
-        '''Extract the first section by suffix.
+    def first_section_by_prefix(self, prefix, suffix=None):
+        '''Extract the first section by prefix.
 
+        :param str prefix: A prefix to match.
+        :param str suffix: An optional suffix to match.
         :returns: The first section yielded by :meth:`sections_by_prefix()`.
         '''
         return next(self.sections_by_prefix(prefix, suffix))

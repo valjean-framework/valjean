@@ -190,7 +190,7 @@ def simple_cmake_config(task_name, project, log_dir, build_dir, build_core):
 def git_cmake_config(task_name, project, log_dir,
                      simple_git_config, simple_cmake_config):
     '''Set up a Config object for combined git checkout/CMake build testing.'''
-    sec_name, name = simple_cmake_config.first_section_by_suffix('build')
+    sec_name, name = simple_cmake_config.first_section_by_prefix('build')
     simple_git_config.merge_section(simple_cmake_config, sec_name)
     simple_git_config['core']['build-dir'] = (
         simple_cmake_config['core']['build-dir']
@@ -220,7 +220,7 @@ class TestCodeTasks:
 
     def do_git_checkout(self, config, env=None):
         # extract the section name and the task name
-        sec_name, name = config.first_section_by_suffix('checkout')
+        sec_name, name = config.first_section_by_prefix('checkout')
 
         # extract the path to the git repository
         git_repo = config.get(sec_name, 'repository')
@@ -256,7 +256,7 @@ class TestCodeTasks:
 
     def do_cmake_build(self, config, env=None):
         # extract the section name and the task name
-        sec_name, name = config.first_section_by_suffix('build')
+        sec_name, name = config.first_section_by_prefix('build')
 
         # extract the path to the build directory
         build_dir = config.get(sec_name, 'build-dir', fallback=None)
@@ -302,7 +302,7 @@ class TestCodeTasks:
 
     def test_git_checkout_cmake_build(self, git_cmake_config):
         # extract the section name and the task name
-        sec_name, name = git_cmake_config.first_section_by_suffix('build')
+        sec_name, name = git_cmake_config.first_section_by_prefix('build')
 
         git_cmake_config.remove_option(sec_name, 'source-dir')
         env = self.do_git_checkout(git_cmake_config)
@@ -313,42 +313,42 @@ class TestFailingCodeTasks:
 
     def test_missing_checkout_section_raises(self, simple_git_config):
         # extract the section name and the task name
-        sec_name, name = simple_git_config.first_section_by_suffix('checkout')
+        sec_name, name = simple_git_config.first_section_by_prefix('checkout')
         simple_git_config.remove_section(sec_name)
         with pytest.raises(KeyError):
             code.CheckoutTask.from_config(name, simple_git_config)
 
     def test_notimpl_checkout_raises(self, simple_git_config, failing_vcs):
         # extract the section name and the task name
-        sec_name, name = simple_git_config.first_section_by_suffix('checkout')
+        sec_name, name = simple_git_config.first_section_by_prefix('checkout')
         simple_git_config.set(sec_name, 'vcs', failing_vcs)
         with pytest.raises(NotImplementedError):
             code.CheckoutTask.from_config(name, simple_git_config)
 
     def test_unknown_checkout_raises(self, simple_git_config):
         # extract the section name and the task name
-        sec_name, name = simple_git_config.first_section_by_suffix('checkout')
+        sec_name, name = simple_git_config.first_section_by_prefix('checkout')
         simple_git_config.set(sec_name, 'vcs', 'antani')
         with pytest.raises(ValueError):
             code.CheckoutTask.from_config(name, simple_git_config)
 
     def test_missing_build_section_raises(self, simple_cmake_config):
         # extract the section name and the task name
-        sec_name, name = simple_cmake_config.first_section_by_suffix('build')
+        sec_name, name = simple_cmake_config.first_section_by_prefix('build')
         simple_cmake_config.remove_section(sec_name)
         with pytest.raises(KeyError):
             code.BuildTask.from_config(name, simple_cmake_config)
 
     def test_notimpl_build_raises(self, simple_cmake_config, failing_build):
         # extract the section name and the task name
-        sec_name, name = simple_cmake_config.first_section_by_suffix('build')
+        sec_name, name = simple_cmake_config.first_section_by_prefix('build')
         simple_cmake_config.set(sec_name, 'build-system', failing_build)
         with pytest.raises(NotImplementedError):
             code.BuildTask.from_config(name, simple_cmake_config)
 
     def test_unknown_build_raises(self, simple_cmake_config):
         # extract the section name and the task name
-        sec_name, name = simple_cmake_config.first_section_by_suffix('build')
+        sec_name, name = simple_cmake_config.first_section_by_prefix('build')
         simple_cmake_config.set(sec_name, 'build-system', 'tarapio')
         with pytest.raises(ValueError):
             code.BuildTask.from_config(name, simple_cmake_config)
