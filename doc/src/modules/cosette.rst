@@ -11,10 +11,8 @@ cosette — COnStruction et ExécuTion de TâchEs
 .. automodule:: valjean.cosette
    :undoc-members:
 
-Submodules
-----------
-
 .. toctree::
+   :caption: Submodules
 
    cosette/task
    cosette/rlist

@@ -11,9 +11,7 @@ valjean — VALidation, Journal d'Évolution et ANalyse
 .. automodule:: valjean
    :undoc-members:
 
-Submodules
-----------
-
 .. toctree::
+   :caption: Submodules
 
    valjean/config

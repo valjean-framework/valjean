@@ -40,12 +40,16 @@ class TaskFactory:
     '''Factory class to generate tasks from a list of targets.
 
     A :program:`valjean` run proceeds in a number of phases (i.e. checkout,
-    build, run, test...). The sequence of phases is stored in the :var:`~PHASES`
+    build, run, test...). The sequence of phases is stored in the `PHASES`
     class attribute as an association list of ``(phase_name, class)`` pairs. At
     construction, the factory can be configured to generate tasks from a given
-    range of phases using the :var:`start_from` and :var:`up_to` parameters.
+    range of phases using the `start_from` and `up_to` parameters.
     '''
 
+    #: Association list of execution phases. Each item is of the form
+    #: ``(phase_name, class)``, where ``phase_name`` is the name of the phase,
+    #: as a string, and ``class`` is the class of the tasks for the given
+    #: phase.
     PHASES = [('checkout', CheckoutTask),
               ('build', BuildTask)]
 

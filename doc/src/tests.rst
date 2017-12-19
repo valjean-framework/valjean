@@ -1,8 +1,8 @@
 Tests
 =====
 
-Tests for the :mod:`~.config` module
-------------------------------------
+Tests for the :mod:`~valjean.config` module
+-------------------------------------------
 
 .. automodule:: tests.test_config
    :undoc-members:
