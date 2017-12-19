@@ -17,12 +17,12 @@ def tempdir():
         yield tmpdir
 
 
-class TestExecuteTask:
+class TestRunTask:
 
     def test_echo(self, tempdir):
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
-            t = task.ExecuteTask('echo', ['echo', 'test'],
+            t = task.RunTask('echo', ['echo', 'test'],
                                  subprocess_args={'stdout': f_out})
             env_up, status = t.do(dict())
         assert status == TaskStatus.DONE

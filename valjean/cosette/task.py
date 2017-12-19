@@ -18,19 +18,19 @@ be an :class:`~.Env` object.
 Spawning external processes
 ---------------------------
 
-The :class:`ExecuteTask` class is the basic building block to execute tasks
-that consist in spawning external processes and waiting for their completion.
-It makes it possible to execute arbitrary commands. Consider:
+The :class:`RunTask` class is the basic building block to execute tasks that
+consist in spawning external processes and waiting for their completion.  It
+makes it possible to execute arbitrary commands. Consider:
 
 .. testsetup:: task
 
-   from valjean.cosette.task import ExecuteTask, ShellTask
+   from valjean.cosette.task import RunTask, ShellTask
 
 .. doctest:: task
 
    >>> from pprint import pprint
-   >>> task = ExecuteTask(name='say',
-   ...                    cli=['echo', 'ni!'])
+   >>> task = RunTask(name='say',
+   ...                cli=['echo', 'ni!'])
    >>> env_update, status = task.do(dict()) # 'ni!' printed to stdout
    >>> print(status)
    TaskStatus.DONE
@@ -42,9 +42,9 @@ what you expect:
 
 .. doctest:: task
 
-   >>> task = ExecuteTask(name='want',
-   ...                    cli=['echo', 'We want...', '&&',
-   ...                         'echo', '...a shrubbery!'])
+   >>> task = RunTask(name='want',
+   ...                cli=['echo', 'We want...', '&&',
+   ...                     'echo', '...a shrubbery!'])
    >>> env_update, status = task.do(dict())
    >>> # prints 'We want... && echo ...a shrubbery!'
 
@@ -162,7 +162,7 @@ class DelayTask(Task):
         return dict(), TaskStatus.DONE
 
 
-class ExecuteTask(Task):
+class RunTask(Task):
     '''Task that executes the specified shell command and waits for its
     completion.
 
@@ -325,7 +325,7 @@ class ShellTask(Task):
         '''Execute the script and wait for its completion.
 
         In addition to the environment updates proposed by
-        :meth:`ExecuteTask.do()`, this method also proposes::
+        :meth:`RunTask.do()`, this method also proposes::
 
             env['tasks'][task.name]['script_filename'] = script_filename
 
@@ -362,9 +362,9 @@ class ShellTask(Task):
             file_.write(fmt_script.encode('utf-8'))
             file_.seek(0)
             # store the script filename in the environment dict
-            subtask = ExecuteTask(self.name, [self.shell, file_.name],
-                                  subprocess_args=self.subprocess_args,
-                                  **self.kwargs)
+            subtask = RunTask(self.name, [self.shell, file_.name],
+                              subprocess_args=self.subprocess_args,
+                              **self.kwargs)
             env_up, status = subtask.do(env)
             env_up.setdefault('tasks', {}).setdefault(self.name, {
                 'script_filename': file_.name
