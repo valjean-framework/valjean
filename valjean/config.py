@@ -297,29 +297,6 @@ class Config(ConfigParser):
         '''
         return next(self.sections_by_prefix(prefix, suffix))
 
-    def sections_by_prefix_suffix(self, config, phase, targets=None):
-        '''Extract configuration sections for this command.
-
-        This generator queries the configuration for relevant sectionsi, where
-        "relevant" means that the section name starts with the `config_prefix`
-        string used at construction. If the `targets` parameter is `None`, all
-        relevant configuration sections will be yielded; otherwise, only those
-        matching target will.
-
-        :param Config config: The configuration object.
-        :param targets: A collection of targets, or `None` for all of them.
-        :type targets: collection or None
-        :returns: An iterable over `(section_name, target_name)` pairs.
-        '''
-        if targets is None:
-            yield from config.sections_by_prefix(phase, None)
-        else:
-            yield from (
-                x for target in targets
-                for x in config.sections_by_prefix(phase, target)
-            )
-
-
     # Dictionary containing the known options, their descriptions and default
     # values.
     _KNOWN_OPTIONS = OrderedDict()

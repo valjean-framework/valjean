@@ -131,6 +131,7 @@ class Task:
         return "Task('{}')".format(self.name)
 
     def add_dependency(self, dep):
+        '''Add an item to the list of dependencies of this task.'''
         self.depends_on.append(dep)
 
 

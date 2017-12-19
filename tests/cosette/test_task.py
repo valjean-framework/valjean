@@ -23,7 +23,7 @@ class TestRunTask:
         filename = os.path.join(tempdir, 'testfile')
         with open(filename, 'w') as f_out:
             t = task.RunTask('echo', ['echo', 'test'],
-                                 subprocess_args={'stdout': f_out})
+                             subprocess_args={'stdout': f_out})
             env_up, status = t.do(dict())
         assert status == TaskStatus.DONE
         assert env_up['tasks']['echo']['return_code'] == 0

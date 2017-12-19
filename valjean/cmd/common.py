@@ -10,12 +10,15 @@ from .. import LOGGER
 
 
 class UniqueAppendAction(argparse.Action):
+    ''':mod:`argparse` action that stores option arguments in a set instead of
+    a list (no duplicates).'''
     def __call__(self, parser, namespace, values, option_string=None):
         unique_values = set(values)
         setattr(namespace, self.dest, unique_values)
 
 
 class Command:
+    '''Base class for all :program:`valjean` subcommands.'''
 
     ALIASES = []
 
@@ -34,11 +37,29 @@ class Command:
 
 
 class TaskFactory:
+    '''Factory class to generate tasks from a list of targets.
+
+    A :program:`valjean` run proceeds in a number of phases (i.e. checkout,
+    build, run, test...). The sequence of phases is stored in the :var:`~PHASES`
+    class attribute as an association list of ``(phase_name, class)`` pairs. At
+    construction, the factory can be configured to generate tasks from a given
+    range of phases using the :var:`start_from` and :var:`up_to` parameters.
+    '''
 
     PHASES = [('checkout', CheckoutTask),
               ('build', BuildTask)]
 
     def __init__(self, config, start_from, up_to):
+        '''Initialize a factory.
+
+        :param Config config: The configuration object.
+        :param start_from: The start of the range of phases for which tasks
+                           will be generated.
+        :type start_from: str or None
+        :param up_to: The end of the range of phases for which tasks
+                      will be generated.
+        :type up_to: str or None
+        '''
         self.config = config
         if start_from is None:
             phases = self.PHASES
@@ -59,6 +80,22 @@ class TaskFactory:
                              .format(start_from, up_to))
 
     def make_tasks(self, targets):
+        '''Generate a list of tasks.
+
+        This method generates tasks based on a collection of task names
+        (`targets`) which will be looked up in the configuration. So, for
+        instance, if the factory has been configured to produce tasks in the
+        range from ``'configure'`` to ``'build'``, and if `targets` contains
+        ``'swallow'`` and ``'coconut'``, this method will search the
+        configuration file for sections
+
+            * ``[checkout swallow]``
+            * ``[checkout coconut]``
+            * ``[build swallow]``
+            * ``[build coconut]``
+
+        :param collection targets: A collection of strings.
+        '''
         suffixes = targets if targets else [None]
         return [cls.from_config(name, self.config)
                 for phase, cls in self.phases
@@ -83,6 +120,7 @@ def build_graph(args, config):
             graph.add_dependency(task, on=tasks_by_name[dep])
 
     return graph
+
 
 def schedule(graph):
     scheduler = Scheduler(graph)
