@@ -458,7 +458,7 @@ def convert_keff(res):
             'correlation_matrix': corrres}
 
 
-def convert_Green_bands(gbs):
+def convert_green_bands(gbs):
     '''Convert Green bands results in numpy structured array,
     close to time or angle spectra ones.
     :param gbs: Green bands as a list of dictionaries
@@ -513,7 +513,7 @@ def convert_Green_bands(gbs):
             'disc_batch': discbatchs}
 
 
-def convert_IFP(ifp):
+def convert_ifp(ifp):
     '''Convert IFP (statistics) result in numpy array.
     :param ifp: list of cycle and associated results
     :returns: numpy structured array of dimension 1

@@ -701,7 +701,7 @@ ifpblock = (Group(Suppress(_integratedres_kw)
                   + _numusedbatch
                   + Suppress(_ifp_kw)
                   + Optional(Group(OneOrMore(_ifpline))
-                             .setParseAction(trans.convert_IFP)('ifp_stat')))
+                             .setParseAction(trans.convert_ifp)('ifp_stat')))
             ('ifp_res'))
 
 

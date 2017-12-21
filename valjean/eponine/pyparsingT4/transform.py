@@ -90,7 +90,7 @@ def convert_score(toks):
         elif 'integrated_res' in key:
             res[key] = toks[key].asDict()
         elif key == 'greenband_res':
-            res['greenband_res'] = convert_Green_bands(toks['greenband_res'])
+            res['greenband_res'] = convert_green_bands(toks['greenband_res'])
         elif key == "scoring_zone":
             res['scoring_zone'] = toks[key].asDict()
         else:
@@ -98,12 +98,12 @@ def convert_score(toks):
     return res
 
 
-def convert_IFP(toks):
+def convert_ifp(toks):
     '''Convert IFP output in numpy object using common
     :param toks: pyparsing.ParseResults
     :returns: numpy structured array (dimension 1)
     '''
-    return common.convert_IFP(toks['ifp_stat'])
+    return common.convert_ifp(toks['ifp_stat'])
 
 
 def convert_keff(toks):
