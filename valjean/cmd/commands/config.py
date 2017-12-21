@@ -5,6 +5,7 @@ from ..common import Command
 
 
 class ConfigCommand(Command):
+    '''Command class for the ``config`` subcommand.'''
 
     NAME = 'config'
 

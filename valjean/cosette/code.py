@@ -139,26 +139,21 @@ class CheckoutTask(ShellTask):
 
         from shlex import split
 
-        sec_family = 'checkout'
-        try:
-            sec_conf, _ = config.section_by_family(sec_family, name)
-        except StopIteration:
-            raise KeyError('Expecting section [{}/{}] in configuration'
-                           .format(sec_family, name))
+        sec_fam = 'checkout'
 
         # take the log directory from the config
         log_root = config.get('core', 'log-root')
 
         # if the checkout dir is specified in the [checkout/<name>] config
         # section, use it; otherwise, default to <core.checkout-root>/<name>
-        checkout_dir = config.get(sec_conf.name, 'checkout-dir')
+        checkout_dir = config.get(sec_fam, name, 'checkout-dir')
         LOGGER.debug('checkout_dir = %s', checkout_dir)
 
-        vcs = sec_conf.get('vcs', 'git')
-        repository = sec_conf.get('repository')
-        flags = split(sec_conf.get('flags', ''))
-        ref = sec_conf.get('ref', 'master')
-        deps = sec_conf.get('depends-on', None)
+        vcs = config.get(sec_fam, name, 'vcs', fallback='git')
+        repository = config.get(sec_fam, name, 'repository')
+        flags = split(config.get(sec_fam, name, 'flags', fallback=''))
+        ref = config.get(sec_fam, name, 'ref', fallback='master')
+        deps = config.get(sec_fam, name, 'depends-on', fallback=None)
 
         return cls(name=name, checkout_dir=checkout_dir, log_root=log_root,
                    repository=repository, flags=flags, ref=ref, vcs=vcs,
@@ -307,29 +302,27 @@ class BuildTask(ShellTask):
 
         from shlex import split
 
-        sec_family = 'build'
-        try:
-            sec_conf, _ = config.section_by_family(sec_family, name)
-        except StopIteration:
-            raise KeyError('Expecting section [{}/{}] in configuration'
-                           .format(sec_family, name))
+        sec_fam = 'build'
 
         # take the log directory from the config
         log_root = config.get('core', 'log-root')
 
         # if the build dir is specified in the [build/<name>] config section,
         # use it; otherwise, default to <core.build-root>/<name>
-        build_dir = config.get(sec_conf.name, 'build-dir')
+        build_dir = config.get(sec_fam, name, 'build-dir')
 
-        build_system = sec_conf.get('build-system', 'cmake')
+        build_system = config.get(sec_fam, name, 'build-system',
+                                  fallback='cmake')
 
-        configure_flags = split(sec_conf.get('configure-flags', ''))
-        build_flags = split(sec_conf.get('build-flags', ''))
-        source_dir = sec_conf.get('source-dir', None)
-        targets = sec_conf.get('build-targets', None)
+        configure_flags = split(config.get(sec_fam, name, 'configure-flags',
+                                           fallback=''))
+        build_flags = split(config.get(sec_fam, name, 'build-flags',
+                                       fallback=''))
+        source_dir = config.get(sec_fam, name, 'source-dir', fallback=None)
+        targets = config.get(sec_fam, name, 'build-targets', fallback=None)
         if targets is not None:
             targets = split(targets)
-        deps = sec_conf.get('depends-on', None)
+        deps = config.get(sec_fam, name, 'depends-on', fallback=None)
 
         return cls(name=name, source_dir=source_dir, build_dir=build_dir,
                    log_root=log_root, targets=targets,

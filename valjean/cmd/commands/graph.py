@@ -7,6 +7,7 @@ from ... import LOGGER
 
 
 class GraphCommand(Command):
+    '''Command class for the ``build`` subcommand.'''
 
     NAME = 'graph'
 
@@ -26,7 +27,7 @@ class GraphCommand(Command):
         graph = build_graph(args, config)
         graph_str = graph.to_graphviz()
         if args.output:
-            root, ext = os.path.splitext(args.output)
+            _, ext = os.path.splitext(args.output)
             if ext:
                 try:
                     import pydot

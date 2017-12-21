@@ -5,6 +5,7 @@ from ..common import Command, build_graph, schedule
 
 
 class CheckoutCommand(Command):
+    '''Command class for the ``checkout`` subcommand.'''
 
     NAME = 'checkout'
 

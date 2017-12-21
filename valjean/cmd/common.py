@@ -108,6 +108,8 @@ class TaskFactory:
 
 
 def build_graph(args, config):
+    '''Build a dependency graph according to the CLI parameters and the
+    configuration.'''
 
     graph = DepGraph()
 
@@ -127,6 +129,7 @@ def build_graph(args, config):
 
 
 def schedule(graph):
+    '''Schedule a graph for execution.'''
     scheduler = Scheduler(graph)
     env = scheduler.schedule()
     LOGGER.info(env)

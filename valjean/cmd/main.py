@@ -70,7 +70,7 @@ def make_parser():
     # import each submodule in commands.* and create a new subparser for it
     prefix = valjean.cmd.commands.__name__ + '.'
     submods_iter = pkgutil.iter_modules(valjean.cmd.commands.__path__)
-    for importer, modname, is_pkg in submods_iter:
+    for _, modname, _ in submods_iter:
         cmd_name = '{}Command'.format(modname.capitalize())
         module = importlib.import_module(prefix + modname)
         cmd_cls = getattr(module, cmd_name)

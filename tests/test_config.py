@@ -4,12 +4,13 @@ from hypothesis import given, note, settings, HealthCheck, event, assume
 from hypothesis.strategies import (text, dictionaries, composite, sampled_from,
                                    lists)
 from string import ascii_letters
-from configparser import ParsingError
+from configparser import ParsingError, DuplicateSectionError
 import tempfile
 import pytest
+from collections import Counter
 
 from .context import valjean  # noqa: F401
-from valjean.config import Config, DuplicateSectionError
+from valjean.config import Config
 
 
 ID_CHARS = ascii_letters
@@ -29,7 +30,7 @@ def config(draw, keys=ids, vals=ids, sec_names=sec_names(ids)):
     '''Composite Hypothesis strategy to generate Config objects.'''
     secs = dictionaries(keys, vals, min_size=2)
     as_dict = draw(dictionaries(sec_names, secs, min_size=2))
-    conf = Config(paths=[])
+    conf = Config()
     for sec, opts in as_dict.items():
         ssec = sec.strip()
         conf.add_section(ssec)
@@ -51,28 +52,6 @@ def config_with_sections(draw, section_templates):
 
 
 class TestConfig:
-    @settings(max_examples=20)
-    @given(conf=config())
-    def test_write_read_roundtrip(self, conf):
-        with tempfile.NamedTemporaryFile() as conf_file:
-            conf.write(conf_file)
-            conf_file.seek(0)
-            try:
-                conf_reread = Config(paths=[conf_file.name])
-            except ParsingError:
-                conf_file.seek(0)
-                note(conf_file.read())
-                note(conf.as_dict())
-                raise
-            try:
-                assert conf_reread == conf
-            except AssertionError:
-                conf_file.seek(0)
-                note(conf_file.read())
-                note(conf.as_dict())
-                note(conf_reread.as_dict())
-                raise
-
     @given(conf=config())
     def test_as_dict_roundtrip(self, conf):
         '''Test roundtrip with the as_dict method.'''
@@ -91,7 +70,7 @@ class TestConfig:
     @given(conf=config())
     def test_merge_with_empty_is_identity(self, conf):
         '''Test that merging with the empty configuration is the identity.'''
-        assert conf + Config(paths=[]) == conf
+        assert conf + Config() == conf
 
     @settings(suppress_health_check=(HealthCheck.too_slow,))
     @given(conf1=config(), conf2=config(), conf3=config())
@@ -105,48 +84,48 @@ class TestConfig:
         '''Test that merging all configuration sections is the same as merging
         the whole configuration.'''
         conf_merge = conf1 + conf2
-        conf_copy = Config(paths=[]).merge(conf1)
+        conf_copy = Config().merge(conf1)
         for sec in conf2.sections():
             conf_copy.merge_section(conf2, sec)
         assert conf_merge == conf_copy
 
-    @given(conf=config_with_sections(['build/{}', 'checkout/{}', 'other/{}']))
-    def test_get_special_does_not_raise(self, conf):
-        '''Test that "special" options do not raise exceptions when queried.'''
-        for sec in conf.sections():
-            sec_family, sec_id = conf.split_section(sec)
-            for opt, val in conf.SPECIAL_OPTS.items():
-                if sec_family in val[0]:
-                    conf.get(sec, opt)
+#    @given(conf=config_with_sections(['build/{}', 'checkout/{}', 'other/{}']))
+#    def test_get_special_does_not_raise(self, conf):
+#        '''Test that "special" options do not raise exceptions when queried.'''
+#        for sec in conf.sections():
+#            sec_family, sec_id = conf.split_section(sec)
+#            for opt, val in conf.SPECIAL_OPTS.items():
+#                if sec_family in val[0]:
+#                    conf.get(sec, opt)
 
     @given(conf=config())
-    def test_split_section_by_family_and_id(self, conf):
+    def test_split_section_by_family(self, conf):
+        family_counter = Counter()
+        no_family = 0
         n_sections = 0
         for section in conf.sections():
-            note('section = {}'.format(section))
+            n_sections += 1
             split = conf.split_section(section)
             if len(split)==1:
+                no_family += 1
                 continue
+            note('section = {}'.format(section))
             note('split = {}'.format(split))
-            n_sections += 1
-            rec_section = conf.section_by_family(*split)
-            assert rec_section[0].name == section
-        if n_sections < 3:
-            event('tested {} sections'.format(n_sections))
-        else:
-            event('tested > 3 sections')
+            family_counter[split[0]] += 1
 
+        event('sections with a family: {}'.format(n_sections - no_family))
+
+        for family, count in family_counter.items():
+            assert (len(list(conf.sections_by_family(family)))
+                    == count)
+
+        assert (len(list(conf.sections()))
+                == sum(family_counter.values()) + no_family)
 
 
 class TestConfigFailure:
 
-    @given(conf=config())
-    def test_duplicate_sections_raises(self, conf):
-        '''Test that duplicate section names raise an exception.'''
-        for section in conf.sections():
-            with pytest.raises(DuplicateSectionError):
-                conf.add_section(section)
-
+    @settings(suppress_health_check=(HealthCheck.too_slow,))
     @given(conf=config(),
            spaces_before=text([' '], average_size=2),
            spaces_in1=text([' '], average_size=2),

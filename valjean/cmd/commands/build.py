@@ -5,6 +5,7 @@ from ..common import Command, build_graph, schedule
 
 
 class BuildCommand(Command):
+    '''Command class for the ``build`` subcommand.'''
 
     NAME = 'build'
 

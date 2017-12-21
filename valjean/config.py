@@ -60,17 +60,16 @@ A few options are set from the beginning:
     test-root = ${work-dir}/test
     report-root = ${work-dir}/report
 
-The :class:`Config` class inherits from :class:`configparser.ConfigParser`, and
-as such can be accessed and modified using all the methods of its parent class:
+The :class:`Config` class provides getters and setters:
 
 .. doctest:: config
 
-    >>> print(config['core']['build-root'])
+    >>> print(config.get('core', 'build-root'))
     /.../build
 
     # value interpolation is possible
-    >>> config['core']['log-root'] = '${work-dir}/log_dir'
-    >>> print(config['core']['log-root'])
+    >>> config.set('core', 'log-root', '${work-dir}/log_dir')
+    >>> print(config.get('core', 'log-root'))
     /.../log_dir
 
 It also provides some additional convenience methods:
@@ -92,18 +91,18 @@ It also provides some additional convenience methods:
     # merge two configuration objects; options from the second
     # configuration override those from the first one
     >>> other_config = Config(paths=[])
-    >>> other_config['core']['report-root'] = '${work-dir}/html'
-    >>> other_config['core']['extra-option'] = 'definitely!'
+    >>> other_config.set('core', 'report-root', '${work-dir}/html')
+    >>> other_config.set('core', 'extra-option', 'definitely!')
     >>> config += other_config
-    >>> print(config['core']['report-root'])
+    >>> print(config.get('core', 'report-root'))
     /.../html
-    >>> print(config['core']['extra-option'])
+    >>> print(config.get('core', 'extra-option'))
     definitely!
 '''
 
-from configparser import (ConfigParser, ExtendedInterpolation,
-                          DuplicateSectionError, NoOptionError)
-from collections import OrderedDict
+from configparser import (ConfigParser, ExtendedInterpolation, _UNSET,
+                          NoOptionError, NoSectionError)
+from collections import OrderedDict, namedtuple
 from functools import partial
 import os
 import re
@@ -111,11 +110,14 @@ import re
 from . import LOGGER
 
 
-class Config(ConfigParser):
+class Config:
     '''The configuration class for :mod:`valjean`. It derives from
     :class:`configparser.ConfigParser`, so all of the methods of the base class
     can also be used with this one.
     '''
+
+    #: Default configuration file paths.
+    DEFAULT_CONFIG_FILES = ['~/.valjean.cfg', 'valjean.cfg']
 
     def __init__(self, paths=None):
         '''Construct a configuration object.
@@ -134,26 +136,31 @@ class Config(ConfigParser):
         :type paths: list or None
         '''
 
+        self._conf = ConfigParser(interpolation=ExtendedInterpolation(),
+                                  delimiters=('=',),
+                                  comment_prefixes=('#',),
+                                  empty_lines_in_values=False,
+                                  default_section='core')
+        # skip leading and trailing spaces in section names
+        self._conf.SECTCRE = re.compile(r"\[ *(?P<header>[^]]+?) *\]")
+
+        # Set some default options
+        self.set('core', 'work-dir', os.path.realpath(os.getcwd()))
+        self.set('core', 'log-root', '${work-dir}/log')
+        self.set('core', 'checkout-root', '${work-dir}/checkout')
+        self.set('core', 'build-root', '${work-dir}/build')
+        self.set('core', 'run-root', '${work-dir}/run')
+        self.set('core', 'test-root', '${work-dir}/test')
+        self.set('core', 'report-root', '${work-dir}/report')
+
         if paths is None:
             paths = self.DEFAULT_CONFIG_FILES
 
-        super().__init__(interpolation=ExtendedInterpolation(),
-                         delimiters=('=',),
-                         comment_prefixes=('#',),
-                         empty_lines_in_values=False,
-                         default_section='core')
-        # skip leading and trailing spaces in section names
-        # pylint: disable=invalid-name
-        self.SECTCRE = re.compile(r"\[ *(?P<header>[^]]+?) *\]")
-
-        def_dict = OrderedDict(
-            (sec, OrderedDict(
-                (opt, default) for (opt, (_, default)) in opts.items()
-                ))
-            for sec, opts in self._KNOWN_OPTIONS.items()
-            )
-        self.read_dict(def_dict)
-        self.read([os.path.expanduser(p) for p in paths])
+        other_conf = ConfigParser(default_section='core')
+        other_conf.read([os.path.expanduser(p) for p in paths])
+        for sec_name, _ in other_conf.items():
+            for opt, val in other_conf.items(sec_name, raw=True):
+                self.set(sec_name, opt, val)
 
     @classmethod
     def from_mapping(cls, mapping):
@@ -170,22 +177,6 @@ class Config(ConfigParser):
         new.merge(mapping)
         return new
 
-    # pylint: disable=arguments-differ
-    def write(self, f_obj, space_around_delimiters=True):
-        '''Write the configuration to the given file object.'''
-
-        dlm = ' ' if space_around_delimiters else ''
-        for sec in self.sections():
-            f_obj.write('[{}]\n'.format(sec).encode('utf-8'))
-            known_sec = self._KNOWN_OPTIONS.get(sec, dict())
-            for opt, value in self.items(sec, raw=True):
-                desc, _ = known_sec.get(opt, (None, ''))
-                if desc is not None:
-                    f_obj.write('# {desc}\n'.format(desc=desc).encode('utf-8'))
-                f_obj.write('{opt}{dlm}={dlm}{value}\n\n'
-                            .format(opt=opt, value=value, dlm=dlm)
-                            .encode('utf-8'))
-
     @staticmethod
     def _sectionxform(section):
         '''Normalize a section name by removing repeated spaces.'''
@@ -193,42 +184,113 @@ class Config(ConfigParser):
         return '/'.join(' '.join(w.split()) for w in sec_split)
 
     def add_section(self, section):
-        xform_secs = map(self._sectionxform, self.sections())
-        if self._sectionxform(section) in xform_secs:
-            raise DuplicateSectionError(section)
-        super().add_section(section)
+        '''Add a configuration section.'''
+        xsection = self._sectionxform(section)
+        self._conf.add_section(xsection)
+        split = self.split_section(xsection)
+        if len(split) > 1:
+            self._conf.set(xsection, 'family', split[0])
+            self._conf.set(xsection, 'id', split[1])
 
-    def as_dict(self):
-        '''Convert the object to a dictionary.'''
-        dct = OrderedDict()
-        for sec_name, _ in self.items():
-            sec_dct = OrderedDict()
-            for opt, val in self.items(sec_name, raw=True):
-                sec_dct[opt] = val
-            dct[sec_name] = sec_dct
-        return dct
+    def remove_section(self, section):
+        '''Remove a configuration section.'''
+        xsection = self._sectionxform(section)
+        self._conf.remove_section(xsection)
 
-    # pylint: disable=redefined-builtin
-    def get(self, section, option, **kwargs):
+    def has_section(self, section):
+        '''Check if a configuration section exists.'''
+        xsection = self._sectionxform(section)
+        return self._conf.has_section(xsection)
+
+    def sections(self):
+        '''Yield the configuration sections, excluding ``'core'``.'''
+        yield from self._conf.sections()
+
+    def remove_option(self, section, option):
+        '''Remove an option from a section.'''
+        xsection = self._sectionxform(section)
+        self._conf.remove_option(xsection, option)
+
+    def _get(self, section, option, **kwargs):
+        xsection = self._sectionxform(section)
+        return self._conf.get(xsection, option, **kwargs)
+
+    def get(self, *args, raw=False, fallback=_UNSET):
+        '''get(section, option, raw=False, fallback)
+
+        Get the value of an option.
+
+        This function can be called with two signatures:
+
+          * :meth:`get(section, option)` returns the value of `option` in
+            `section`;
+          * :meth:`get(section_family, section_id, option)` returns the value
+            of `option` in section ``section_family/section_id``.
+
+        :param str section: The name of the section.
+        :param str option: The name of the option.
+        :param bool raw: If `True`, interpolate any ``${section:option}``
+                         strings in the value with the value of the
+                         corresponding option (see
+                         :class:`configparser.ExtendedInterpolation` for more
+                         information).
+        :param fallback: A value to return if the option cannot be found.
+        '''
+
+        if len(args) == 3:
+            return self.get('/'.join(args[0:2]), args[2], raw=raw,
+                            fallback=fallback)
+        elif len(args) > 3 or len(args) < 2:
+            raise ValueError('Wrong number of arguments to get(); expected 2 '
+                             'or 3')
+        section = args[0]
+        option = args[1]
+        xsection = self._sectionxform(section)
+
         try:
-            LOGGER.debug('get kwargs = %s', kwargs)
-            val = super().get(section, option, **kwargs)
+            val = self._get(xsection, option, raw=raw, fallback=fallback)
             LOGGER.debug('get(%r, %r) succeeded with value %s',
-                         section, option, val)
+                         xsection, option, val)
             return val
         except NoOptionError as err:
             special = self.SPECIAL_OPTS.get(option, None)
             if special:
                 secs, lookup, assemble = special
-                split = self.split_section(section)
+                split = self.split_section(xsection)
                 if len(split) == 1 or split[0] not in secs:
                     raise err
                 LOGGER.debug('treating option %s in section %s as special',
-                             section, option)
-                vals = lookup(self, section, split, option)
-                val = assemble(*vals)
+                             xsection, option)
+                vals = lookup(self, xsection, split, option)
+                if assemble is not None:
+                    val = assemble(*vals)
+                else:
+                    val = vals
                 return val
             raise err
+
+    def set(self, *args):
+        '''Set the value of an option.'''
+        if len(args) == 4:
+            self.set('/'.join(args[0:2]), args[2], args[3])
+        elif len(args) > 4 or len(args) < 3:
+            raise ValueError('Wrong number of arguments to get(); expected 2 '
+                             'or 3')
+        section = args[0]
+        option = args[1]
+        value = args[2]
+        xsection = self._sectionxform(section)
+        self._conf.set(xsection, option, value)
+
+    def as_dict(self, *, raw=True):
+        '''Convert the object to a dictionary.'''
+        dct = OrderedDict()
+        for sec_name, _ in self._conf.items():
+            sec_dct = OrderedDict()
+            for opt, val in self.items(sec_name, raw=raw):
+                sec_dct[opt] = val
+            dct[sec_name] = sec_dct
+        return dct
 
     def merge(self, other):
         '''In-place merge two configurations. Options from the `other`
@@ -237,10 +299,8 @@ class Config(ConfigParser):
         :param Config other: The configuration to merge into `self`.
         :returns: The modified configuration.
         '''
-        self.read_dict(other)
+        self._conf.read_dict(other)
         return self
-
-    __iadd__ = merge
 
     def merge_section(self, other, section):
         '''In-place merge a section of another configuration. Options from the
@@ -256,123 +316,111 @@ class Config(ConfigParser):
             self.set(section, opt, val)
         return self
 
-    def __add__(self, other):
-        '''Merge two configurations, return the result as a new object.'''
-        return Config.from_mapping(self).merge(other)
-
-    __radd__ = __add__
-
-    def sections_by(self, func):
-        '''Yield sections matching a given criterion.
-
-        This generator filters sections according to an arbitrary criterion.
-        The `func` argument is a callable taking one argument (the section
-        name). If ``func(section_name)`` returns `None`, the section name will
-        be discarded; otherwise, the generator will yield a tuple made of the
-        section name and of whatever ``func(section_name)`` returned.
-
-        :param func: A callable accepting one argument (the section name).
-        '''
-        for sec in self.sections():
-            res = func(sec)
-            if res is not None:
-                yield (self[sec], res)
-
-    def sections_by_regex(self, regex):
-        '''Yield suffixes of sections matching a given regex.
-
-        This generator filters sections according to a given regex; if the
-        section name matches the regex, the generator yields a tuple made of
-        the section name and the regex match object.
-
-        :param prefix: A regex to match.
-        '''
-        yield from self.sections_by(lambda s: re.match(regex, s))
-
-    def sections_by_family(self, sec_family, sec_id_regex='.*'):
-        '''Yield sections from a given family and matching a regex.
+    def sections_by_family(self, sec_family):
+        '''Yield all sections from a given family.
 
         This generator filters sections according to a given family; for each
         section of a given family, the generator yields a tuple made of the
         full section name and the corresponding ID (i.e. the section name with
         the family and any subsequent slashes/spaces removed).
 
-        The `sec_id_regex` parameter is a regex that can be used to match
-        section IDs. By default, it matches any section.  If there is only one
-        section matching `sec_id_regex`, consider using
-        :meth:`section_by_family()`.
+        If you know that there is only one section of the given family,
+        consider using :meth:`section_by_family()`.
+
+        :param str sec_family: A family to match.
+        '''
+        prefix = sec_family + '/'
+        for section in self.sections():
+            if section.startswith(prefix):
+                yield (section, section[len(prefix):])
+
+    def section_by_family(self, sec_family):
+        '''Return a section by family.
+
+        This method returns the full name of the first configuration section of
+        the given family.
 
         :param str sec_family: A prefix to match.
-        :param str sec_id_regex: An optional regex for the section ID.
+        :returns: A tuple containing the full name of the found configuration
+                  section and its ID.
+        :raises NoSectionError: if no section from this family can be found.
         '''
-        regex = re.compile(r'^\s*({})\s*/\s*({})\s*$'
-                           .format(sec_family, sec_id_regex))
-
-        def _matching(sec_name):
-            match = re.match(regex, sec_name)
-            if match is None:
-                return None
-            return match.group(2)
-
-        yield from self.sections_by(_matching)
-
-    def section_by_family(self, sec_family, sec_id_regex='.*'):
-        '''Extract a section by family and id.
-
-        Calling this method is very similar to calling ``config[sec_family +
-        '/' + sec_id]``, except that it also works for section names containing
-        whitespace, such as ``[   build /   something ]``.
-
-        :param str sec_family: A prefix to match.
-        :param str sec_id_regex: A regex for the section ID.
-        :returns: The requested configuration section.
-        '''
-        return next(self.sections_by_family(sec_family, sec_id_regex))
+        try:
+            return next(self.sections_by_family(sec_family))
+        except StopIteration:
+            raise NoSectionError('No section from family {}'
+                                 .format(sec_family))
 
     @staticmethod
     def split_section(section):
         '''Split section name into a ``(family, id)`` tuple.'''
         return section.split('/', maxsplit=1)
 
-    # Dictionary containing the known options, their descriptions and default
-    # values.
-    _KNOWN_OPTIONS = OrderedDict()
-    _KNOWN_OPTIONS['core'] = OrderedDict()
-    _KNOWN_OPTIONS['core']['work-dir'] = (
-        'path to the working directory',
-        os.path.realpath(os.getcwd())
-        )
-    _KNOWN_OPTIONS['core']['log-root'] = (
-        'path to the directory for log files',
-        '${work-dir}/log'
-        )
-    _KNOWN_OPTIONS['core']['checkout-root'] = (
-        'path to the directory for code sources',
-        '${work-dir}/checkout'
-        )
-    _KNOWN_OPTIONS['core']['build-root'] = (
-        'path to the directory for code compilation',
-        '${work-dir}/build'
-        )
-    _KNOWN_OPTIONS['core']['run-root'] = (
-        'path to the directory for code execution',
-        '${work-dir}/run'
-        )
-    _KNOWN_OPTIONS['core']['test-root'] = (
-        'path to the directory for test execution',
-        '${work-dir}/test'
-        )
-    _KNOWN_OPTIONS['core']['report-root'] = (
-        'path to the directory for report generation',
-        '${work-dir}/report'
-        )
+    def __add__(self, other):
+        '''Merge two configurations, return the result as a new object.'''
+        return Config.from_mapping(self).merge(other)
 
-    #: Default configuration file paths.
-    DEFAULT_CONFIG_FILES = ['~/.valjean.cfg', 'valjean.cfg']
+    def items(self, section=_UNSET, *, raw=False):
+        '''Yield the configuration items.
 
-    def _lookup_other(self, sec, split, _, *, other_opt):
-        val = super().get(sec, other_opt)
+        If `section` is not speficied, yield ``(section_name, section_proxy)``
+        pairs for each section. If `section` is given, yield all the ``(option,
+        value)`` pairs from the given section.
+        '''
+        if section is _UNSET:
+            yield from self._conf.items(raw=raw)
+        else:
+            yield from self._conf.items(section, raw=raw)
+
+    def __iter__(self):
+        yield from self._conf.__iter__()
+
+    __iadd__ = merge
+
+    __radd__ = __add__
+
+    def __eq__(self, other):
+        if not isinstance(other, Config):
+            return False
+        return self._conf == other._conf  # pylint: disable=protected-access
+
+    def executable(self, exe):
+        '''Return the configuration for an executable.'''
+        path_conf = self.get('executable', exe, 'path', fallback=None)
+        if path_conf is None:
+            raise KeyError('Expecting `path` option in `[executable/{}]` '
+                           'configuration section'.format(exe))
+
+        if os.path.isabs(path_conf):
+            path = path_conf
+        else:
+            from_build = self.get('executable', exe, 'from-build',
+                                  fallback=None)
+            if from_build is None:
+                raise KeyError('Expecting `from-build` option in `[executable/'
+                               '{}]` configuration section'.format(exe))
+
+            b_path = self.get('build', from_build, 'build-dir')
+            path = os.path.abspath(os.path.join(b_path, path_conf))
+            self.set('executable', exe, 'path', path)
+
+        args = self.get('executable', exe, 'args', fallback=None)
+
+        exe_conf = ExecutableConfig(path=path, args=args)
+        return exe_conf
+
+    def _lookup_other(self, sec, split, opt, *, other_sec=None,
+                      other_opt=None):
+        lookup_opt = opt if other_opt is None else other_opt
+        lookup_sec = sec if other_sec is None else other_sec
+        val = self.get(lookup_sec, lookup_opt)
         return (val, split[1])
+
+    def _lookup_from_exe(self, sec, _, opt, **kwargs):
+        exe = self.get(sec, 'exe')
+        val = self.get('executable', exe, opt, raw=True)
+        self.set(sec, opt, val)
+        return self.get(sec, opt, **kwargs)
 
     SPECIAL_OPTS = {'build-dir': (('build',),
                                   partial(_lookup_other,
@@ -381,4 +429,8 @@ class Config(ConfigParser):
                     'checkout-dir': (('checkout',),
                                      partial(_lookup_other,
                                              other_opt='checkout-root'),
-                                     os.path.join)}
+                                     os.path.join),
+                    'args': (('run',), _lookup_from_exe, None)}
+
+
+ExecutableConfig = namedtuple('ExecutableConfig', ['path', 'args'])

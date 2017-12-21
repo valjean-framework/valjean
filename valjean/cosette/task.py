@@ -66,6 +66,8 @@ class:
 import logging
 import enum
 
+from ..config import Config
+
 #: Enumeration for the task status.
 TaskStatus = enum.Enum('TaskStatus',  # pylint: disable=invalid-name
                        'WAITING PENDING DONE FAILED SKIPPED')
@@ -174,6 +176,38 @@ class RunTask(Task):
     parameter will also be passed to the :meth:`format()` call and will contain
     the global current :class:`~.Config` object.
     '''
+
+    @classmethod
+    def from_config(cls, name: str, config: Config):
+        '''Construct a :class:`RunTask` from the configuration.
+
+.. todo::
+   Extend the description of this method.
+        '''
+
+        from shlex import split
+
+        sec_fam = 'run'
+
+        exe = config.get(sec_fam, name, 'exe', fallback=None)
+        if exe is None:
+            exe_path = config.get(sec_fam, name, 'exe-path', fallback=None)
+            if exe_path is None:
+                raise KeyError('Expecting one of `exe` or `exe-path` options '
+                               'in configuration')
+            args = config.get(sec_fam, name, 'args', fallback=None)
+        else:
+            exe_obj = config.executable(exe)
+            exe_path = exe_obj.path
+            args = config.get(sec_fam, name, 'args', fallback=exe_obj.args)
+
+        cli = [exe_obj.path]
+        if args is not None:
+            cli += split(args)
+
+        deps = config.get(sec_fam, name, 'depends-on', fallback=None)
+
+        return cls(name, cli, deps=deps)
 
     def __init__(self, name, cli, *, deps=None, subprocess_args=None,
                  **kwargs):
