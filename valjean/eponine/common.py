@@ -132,7 +132,52 @@ def _add_last_bins(spectrum, ebins, tbins, mubins, phibins):
             phibins.append(spectrum[-1]['phi_angle_zone'][2])
 
 
-def convert_spectrum(spectrum, specols=['score', 'sigma', 'score/lethargy']):
+def _flip_bins(valspectrum, valsintres=None,
+               ebins=None, tbins=None, mubins=None, phibins=None):
+    '''Flip bins if given in decreasing order in the output listing.
+    Depending on the required grid (GRID or DECOUPAGE) energies, times, mu and
+    phi can be given from upper edge to lower edge. This is not convenient for
+    post-traitements, especially plots. They have to be flipped at a moment,
+    here or later, easiest is here, and all results will look the same :-).
+
+    :param valspectrum: 7-dim numpy structured array corresponding to spectrum
+                        or mesh
+    :param valsintres: 7-dim numpy structured array for integrated result (if
+                       available)
+    :param ebins: energy bins
+    :param tbins: time bins
+    :param mubins: mu angle bins
+    :param phibins: phi angle bins
+    :returns: all these objects are modified if necessary in the function
+
+    ..note: array and list modification is not possible directly in a function,
+            this is why the '[:]' appear.
+    '''
+    # arrays and lists are passed as arguments, to get them updated [:] needs
+    # to be added (else modification only happens in the function)
+    if ebins and ebins[0] > ebins[1]:
+        ebins[:] = ebins[::-1]
+        valspectrum[:] = np.flip(valspectrum, axis=3)
+        if valsintres is not None:
+            valsintres[:] = np.flip(valsintres, axis=3)
+    if tbins and tbins[0] > tbins[1]:
+        tbins[:] = tbins[::-1]
+        valspectrum[:] = np.flip(valspectrum, axis=4)
+        if valsintres is not None:
+            valsintres[:] = np.flip(valsintres, axis=4)
+    if mubins and mubins[0] > mubins[1]:
+        mubins[:] = mubins[::-1]
+        valspectrum[:] = np.flip(valspectrum, axis=5)
+        if valsintres is not None:
+            valsintres[:] = np.flip(valsintres, axis=5)
+    if phibins and phibins[0] > phibins[1]:
+        phibins[:] = phibins[::-1]
+        valspectrum[:] = np.flip(valspectrum, axis=6)
+        if valsintres is not None:
+            valsintres[:] = np.flip(valsintres, axis=6)
+
+
+def convert_spectrum(spectrum, specols=('score', 'sigma', 'score/lethargy')):
     '''Convert specrtum results in 7D numpy structured array.
     :param spectrum: list of spectra.
                      Accepts time and (direction) angular grids.
@@ -203,6 +248,12 @@ def convert_spectrum(spectrum, specols=['score', 'sigma', 'score/lethargy']):
 
     # Add max bin edge (binning dim = N+1, where N = number of bins)
     _add_last_bins(spectrum, ebins, tbins, mubins, phibins)
+
+    # Flip bins if needed (has to be done in bins arrays and in spectrum or
+    # integrated result)
+    _flip_bins(valspectrum, valsintres, ebins, tbins, mubins, phibins)
+    print("ebins after:", ebins)
+    print(np.squeeze(valspectrum))
 
     # Build dictionary to be returned
     convspec = {'disc_batch': spectrum[0]['disc_batch'],
@@ -302,6 +353,8 @@ def convert_mesh(mesh):
         ebins.append(emesh['mesh_energyrange'][1])
         _fill_mesh(vals, emesh['mesh_vals'], inde)
     ebins.append(mesh[-1]['mesh_energyrange'][2])
+    _flip_bins(vals, None, ebins, None, None, None)
+    print("[38;5;141m", ebins, "[0m")
     return {'unit': unit,
             'ebins': np.array(ebins),
             'vals': vals}
