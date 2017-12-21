@@ -21,6 +21,117 @@ ITYPE = np.int32
 FTYPE = np.float32
 
 
+def _get_number_of_bins(spectrum):
+    '''Get number of bins (time, mu and phi angles and energy).
+    :param spectrum: input spectrum (full as various levels of list or
+    dictionary may be needed.
+    :returns: 4 integers
+               - nphibins = number of bins in phi angle, default = 1
+               - nmubins = number of bins in mu angle, default = 1
+               - ntbins = number of bins in time, default = 1
+               - nebins = number of bins in energy, no default
+    Mu and phi angle are angles relative to the direction of the particle.
+    '''
+    # complication: time, mu and phi angles are always in that order
+    # and only appears when changing value -> complication for number of "bins"
+    # all the available coordinates are listed in element 0
+    # if more than one loop necessary to get size of each
+    nphibins = (spectrum[-1]["phi_angle_zone"][0]+1
+                if "phi_angle_zone" in spectrum[0]
+                else 1)
+    nmubins = (spectrum[-int(nphibins)]["mu_angle_zone"][0]+1
+               if "mu_angle_zone" in spectrum[0]
+               else 1)
+    ntbins = (spectrum[-int(nphibins)*int(nmubins)]["time_step"][0]+1
+              if "time_step" in spectrum[0]
+              else 1)
+    nebins = len(spectrum[0]["spectrum_vals"])
+    return nphibins, nmubins, ntbins, nebins
+
+
+def _fill_spectrum_and_bins(spectrum, valspectrum, valsintres,
+                            ebins, tbins, mubins, phibins):
+    '''Fill spectrum, bins and integrated result if exists
+    :param spectrum: input spectrum (loop over it so everything needed)
+    :param valspectrum: 7 dimensions numpy structured array
+        v[s0, s1, s2, E, t, mu, phi] = (score, sigma, score/lethargy)
+    :param valsintres: 7 dimensions numpy structured array
+        v[s0, s1, s2, E, t, mu, phi] = (score, sigma)
+    :param ebins: energy bins
+    :param tbins: time bins
+    :param mubins: mu angle (direction) bins
+    :param phibins: phi angle (direction) bins
+    '''
+    itime, imu, iphi = 0, 0, 0
+    for ispec in spectrum:
+        # Fill bins -> caution to not replicate them
+        if 'time_step' in ispec:
+            itime = ispec['time_step'][0]
+            tbins.append(ispec['time_step'][1])
+        if 'mu_angle_zone' in ispec:
+            imu = ispec['mu_angle_zone'][0]
+            if itime == 0:
+                mubins.append(ispec['mu_angle_zone'][1])
+        if 'phi_angle_zone' in ispec:
+            iphi = ispec['phi_angle_zone'][0]
+            if itime == 0 and imu == 0:
+                phibins.append(ispec['phi_angle_zone'][1])
+
+        # Fill spectrum values
+        for ienergy, ivals in enumerate(ispec['spectrum_vals']):
+            if itime == 0 and imu == 0 and iphi == 0:
+                ebins.append(ivals[0])
+            index = (0, 0, 0, ienergy, itime, imu, iphi)
+            valspectrum[index] = np.array(tuple(ivals[2:]),
+                                          dtype=valspectrum.dtype)
+
+        # Fill integrated result if exist
+        if 'integrated_res' in ispec:
+            iintres = ispec['integrated_res']
+            index = (0, 0, 0, 0, itime, imu, iphi)
+            valsintres[index] = np.array((iintres['score'], iintres['sigma']),
+                                         dtype=valsintres.dtype)
+
+
+def _add_last_bins(spectrum, ebins, tbins, mubins, phibins):
+    '''Add last bin to the bins array.
+    :param spectrum: full spectrum to be able to access all elements
+    :param ebins: numpy array of energy bins
+    :param tbins: numpy array of time bins
+    :param mubins: numpy array of mu angle bins
+    :param phibins: numpy array of phi angle bins
+    :returns: ebins, tbins, mubins and phi bins will be updated with the
+              missing edge
+    ..note: Few remarks:
+      * at that step len(ibins) = number of bins, except when no binning was
+        required (for time, mu and phi). The final length of ibins arrays
+        should be number of bins + 1 to have all bins edges.
+      * the last bin can be put as first or last bin of the array for time, mu
+        and phi, depending on required order (increasing or decreasing),
+        because first number is always min and second max
+      * in energy case, if increasing order: min - max, else max - min, so
+        adding last value in last position is always fine.
+    '''
+    nphibins = len(phibins) if phibins else 1
+    nmubins = len(mubins) if mubins else 1
+    ebins.append(spectrum[-1]['spectrum_vals'][-1][1])
+    if 'time_step' in spectrum[0]:
+        if len(tbins) > 1 and tbins[0] > tbins[1]:
+            tbins.insert(0, spectrum[0]['time_step'][2])
+        else:
+            tbins.append(spectrum[-int(nphibins)*int(nmubins)]['time_step'][2])
+    if 'mu_angle_zone' in spectrum[0]:
+        if len(mubins) > 1 and mubins[0] > mubins[1]:
+            mubins.insert(0, spectrum[0]['mu_angle_zone'][2])
+        else:
+            mubins.append(spectrum[-int(nphibins)]['mu_angle_zone'][2])
+    if 'phi_angle_zone' in spectrum[0]:
+        if len(phibins) > 1 and phibins[0] > phibins[1]:
+            phibins.insert(0, spectrum[0]['phi_angle_zone'][2])
+        else:
+            phibins.append(spectrum[-1]['phi_angle_zone'][2])
+
+
 def convert_spectrum(spectrum, specols=['score', 'sigma', 'score/lethargy']):
     '''Convert specrtum results in 7D numpy structured array.
     :param spectrum: list of spectra.
@@ -68,25 +179,10 @@ def convert_spectrum(spectrum, specols=['score', 'sigma', 'score/lethargy']):
                  when neither time nor mu nor phi are required
               - 'used_batch': number of used batchs (only if integrated result)
     '''
-    # complication: time, mu and phi angles are always in that order
-    # and only appears when changing value -> complication for number of "bins"
-    # all the available coordinates are listed in element 0
-    # if more than one loop necessary to get size of each
-    # print("[38;5;96mClefs:", list(spectrum[0].keys()), "[0m")
-    nphibins = (spectrum[-1]["phi_angle_zone"][0]+1
-                if "phi_angle_zone" in spectrum[0]
-                else 1)
-    nmubins = (spectrum[-int(nphibins)]["mu_angle_zone"][0]+1
-               if "mu_angle_zone" in spectrum[0]
-               else 1)
-    ntbins = (spectrum[-int(nphibins)*int(nmubins)]["time_step"][0]+1
-              if "time_step" in spectrum[0]
-              else 1)
-    nebins = len(spectrum[0]["spectrum_vals"])
+    nphibins, nmubins, ntbins, nebins = _get_number_of_bins(spectrum)
     # print("nebins =", nebins, "ntbins =", ntbins,
     #       "nmubins =", nmubins, "nphibins = ", nphibins)
     phibins, mubins, tbins, ebins = [], [], [], []
-    discbatchs = spectrum[0]['disc_batch']
     # spectrum
     indspectrum = (1, 1, 1, nebins, ntbins, nmubins, nphibins)
     dtspectrum = np.dtype({'names': specols,
@@ -101,53 +197,15 @@ def convert_spectrum(spectrum, specols=['score', 'sigma', 'score/lethargy']):
                               if 'integrated_res' in spectrum[0]
                               else (0, None))
 
-    itime, imu, iphi = 0, 0, 0
-    for ispec in spectrum:
-        # Fill bins -> caution to not replicate them
-        if 'time_step' in ispec:
-            itime = ispec['time_step'][0]
-            tbins.append(ispec['time_step'][1])
-        if 'mu_angle_zone' in ispec:
-            imu = ispec['mu_angle_zone'][0]
-            if itime == 0:
-                mubins.append(ispec['mu_angle_zone'][1])
-        if 'phi_angle_zone' in ispec:
-            iphi = ispec['phi_angle_zone'][0]
-            if itime == 0 and imu == 0:
-                phibins.append(ispec['phi_angle_zone'][1])
-        # Fill spectrum values
-        for ienergy, ivals in enumerate(ispec['spectrum_vals']):
-            if itime == 0 and imu == 0 and iphi == 0:
-                ebins.append(ivals[0])
-            index = (0, 0, 0, ienergy, itime, imu, iphi)
-            valspectrum[index] = np.array(tuple(ivals[2:]), dtype=dtspectrum)
-        # Fill integrated result if exist
-        if 'integrated_res' in ispec:
-            iintres = ispec['integrated_res']
-            index = (0, 0, 0, 0, itime, imu, iphi)
-            valsintres[index] = np.array((iintres['score'], iintres['sigma']),
-                                         dtype=dtintres)
+    # Fill spectrum, bins and integrated result if exists
+    _fill_spectrum_and_bins(spectrum, valspectrum, valsintres,
+                            ebins, tbins, mubins, phibins)
 
     # Add max bin edge (binning dim = N+1, where N = number of bins)
-    ebins.append(spectrum[-1]['spectrum_vals'][-1][1])
-    if 'time_step' in spectrum[0]:
-        if len(tbins) > 1 and tbins[0] > tbins[1]:
-            tbins.insert(0, spectrum[0]['time_step'][2])
-        else:
-            tbins.append(spectrum[-int(nphibins)*int(nmubins)]['time_step'][2])
-    if 'mu_angle_zone' in spectrum[0]:
-        if len(mubins) > 1 and mubins[0] > mubins[1]:
-            mubins.insert(0, spectrum[0]['mu_angle_zone'][2])
-        else:
-            mubins.append(spectrum[-int(nphibins)]['mu_angle_zone'][2])
-    if 'phi_angle_zone' in spectrum[0]:
-        if len(phibins) > 1 and phibins[0] > phibins[1]:
-            phibins.insert(0, spectrum[0]['phi_angle_zone'][2])
-        else:
-            phibins.append(spectrum[-1]['phi_angle_zone'][2])
+    _add_last_bins(spectrum, ebins, tbins, mubins, phibins)
 
     # Build dictionary to be returned
-    convspec = {'disc_batch': discbatchs,
+    convspec = {'disc_batch': spectrum[0]['disc_batch'],
                 'ebins': np.array(ebins),
                 'spectrum': valspectrum}
     if 'time_step' in spectrum[0]:
