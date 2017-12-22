@@ -8,5 +8,9 @@ def pytest_generate_tests(metafunc):
     LOGGER = logging.getLogger('valjean')
     if metafunc.config.getoption('valjean_verbose'):
         LOGGER.setLevel(logging.DEBUG)
+        for handler in LOGGER.handlers:
+            handler.setLevel(logging.DEBUG)
     else:
         LOGGER.setLevel(logging.WARNING)
+        for handler in LOGGER.handlers:
+            handler.setLevel(logging.WARNING)

@@ -76,6 +76,9 @@ todo_include_todos = True
 # warn about broken cross-references
 nitpicky = False
 
+# do not automatically add parenthesis to :meth: and :func: references
+add_function_parentheses = False
+
 
 # -- Options for HTML output ----------------------------------------------
 

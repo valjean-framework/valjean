@@ -21,7 +21,7 @@ Building
 
 You can create a :class:`DepGraph` in of two ways. Either you pass a dictionary
 representing the dependencies between items to the
-:meth:`~DepGraph.from_dependency_dictionary` class method:
+:meth:`~DepGraph.from_dependency_dictionary()` class method:
 
 .. testsetup:: depgraph
 
@@ -302,9 +302,9 @@ class DepGraph:
 
     There are two preferred ways to instantiate this class:
 
-    * using the :meth:`from_dependency_dictionary` class method;
-    * constructing an empty graph and repeatedly calling :meth:`add_dependency`
-      and/or :meth:`add_node`.
+    * using the :meth:`from_dependency_dictionary()` class method;
+    * constructing an empty graph and repeatedly calling
+      :meth:`add_dependency()` and/or :meth:`add_node()`.
 
     Alternatively, you may also use the full form of the constructor; in this
     case, the graph `edges` are represented as a dictionary between integers,

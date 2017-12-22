@@ -47,8 +47,8 @@ class Scheduler:
     describing the dependencies among the tasks to be executed, and `backend`
     should be an instance of a `*Scheduling` class such as
     :class:`.QueueScheduling`, or at any rate a class that exhibits an
-    :meth:`~.execute_tasks` method with the correct signature (see
-    :meth:`.QueueScheduling.execute_tasks`). If `backend` is `None`, the
+    :meth:`~.execute_tasks()` method with the correct signature (see
+    :meth:`.QueueScheduling.execute_tasks()`). If `backend` is `None`, the
     default backend will be used.
 
     :param depgraph: The task dependency graph.

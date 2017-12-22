@@ -100,11 +100,14 @@ class TaskFactory:
 
         :param collection targets: A collection of strings.
         '''
-        suffixes = targets if targets else [None]
-        return [cls.from_config(name, self.config)
-                for phase, cls in self.phases
-                for suffix in suffixes
-                for _, name in self.config.sections_by_prefix(phase, suffix)]
+        if targets:
+            return [cls.from_config(target, self.config)
+                    for _, cls in self.phases
+                    for target in targets]
+        else:
+            return [cls.from_config(target, self.config)
+                    for phase, cls in self.phases
+                    for _, target in self.config.sections_by_family(phase)]
 
 
 def build_graph(args, config):

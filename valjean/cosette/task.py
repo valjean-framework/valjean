@@ -6,7 +6,7 @@ This module defines a dummy :class:`Task` class that may be used as a base
 class and extended. However, the current implementation of :meth:`.Task.do()`
 is a no-op and any class with a :meth:`do()` method works just as well.
 
-The :meth:`.Task.do` method takes only one argument `env`, which is an
+The :meth:`.Task.do()` method takes only one argument `env`, which is an
 environment for task execution. The idea of the environment is that tasks may
 use it to store information about their execution. For instance, a task may
 create a file and store its location in the environment, so that later tasks
@@ -65,8 +65,9 @@ class:
 
 import logging
 import enum
+from collections import ChainMap
 
-from ..config import Config
+from ..config import Config, NoOptionError
 
 #: Enumeration for the task status.
 TaskStatus = enum.Enum('TaskStatus',  # pylint: disable=invalid-name
@@ -189,19 +190,10 @@ class RunTask(Task):
 
         sec_fam = 'run'
 
-        exe = config.get(sec_fam, name, 'exe', fallback=None)
-        if exe is None:
-            exe_path = config.get(sec_fam, name, 'exe-path', fallback=None)
-            if exe_path is None:
-                raise KeyError('Expecting one of `exe` or `exe-path` options '
-                               'in configuration')
-            args = config.get(sec_fam, name, 'args', fallback=None)
-        else:
-            exe_obj = config.executable(exe)
-            exe_path = exe_obj.path
-            args = config.get(sec_fam, name, 'args', fallback=exe_obj.args)
+        exe_path = config.get(sec_fam, name, 'path')
+        args = config.get(sec_fam, name, 'args', fallback=None)
 
-        cli = [exe_obj.path]
+        cli = [exe_path]
         if args is not None:
             cli += split(args)
 

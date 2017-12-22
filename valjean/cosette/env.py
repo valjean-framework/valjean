@@ -163,7 +163,7 @@ class Env(dict):
     @classmethod
     def from_graph(cls, graph: DepGraph):
         '''Initialize an :class:`Env` object from a dependency graph of tasks.
-        Works pretty much in the same way as :meth:`~.from_tasks`.
+        Works pretty much in the same way as :meth:`~.from_tasks()`.
 
         :raises EnvError: if the task names are not unique.
         '''

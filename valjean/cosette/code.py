@@ -77,6 +77,7 @@ docstrings.
 
 import logging
 import os
+
 from ..config import Config
 from .task import ShellTask
 
