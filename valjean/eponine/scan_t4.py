@@ -23,6 +23,7 @@ mprof plot
 
 import sys
 import time
+from collections.abc import Mapping
 from collections import OrderedDict
 from itertools import islice
 
@@ -33,7 +34,7 @@ if "mem" not in sys.argv:
         return f
 
 
-class Scan():
+class Scan(Mapping):
     '''Class to keep marks on the file
 
     Members needed at initialization:
@@ -66,10 +67,10 @@ class Scan():
         :param lastGeneratorState: keep the random generator state (not inculded
                                    in the the result)
         :type lastGeneratorState: string
-        :param collres: ordered dictionary containing
+        :param _collres: ordered dictionary containing
                         {batch_number : 'result block',}
                         batch_number is an int
-        :type collres: OrderedDict
+        :type _collres: OrderedDict
         '''
         start_time = time.time()
         self.fname = fname
@@ -81,7 +82,7 @@ class Scan():
         self.counterrors = 0
         self.initializationTime = -1
         self.lastGeneratorState = ""
-        self.collres = OrderedDict()
+        self._collres = OrderedDict()
         self._get_collres()
         print("End of initialization:", time.time()-start_time)
 
@@ -166,7 +167,7 @@ class Scan():
                         if greaterbatchnum > batch_number:
                             batch_number = greaterbatchnum
                     result.append(line)  # will change at end of the function
-                    self.collres[batch_number] = ''.join(result)
+                    self._collres[batch_number] = ''.join(result)
                     result = []
                     started_res = False
                 elif "NORMAL COMPLETION" in line:
@@ -219,33 +220,80 @@ class Scan():
             print("Number of mesh exceeding meshlim arg:",countMeshExceeding)
 
 
-    def getNumberOfEditedBatchs(self):
-        return len(self.collres)
+    def __getitem__(self, batch_number):
+        '''Get result corresponding to batch_number.
+        If batch_number == -1 return the last result. A warning is printed if
+        the last batch_number doesn't correspond to the number of batchs
+        required.
+
+        Use: Scan[X]
+        '''
+        print("[1;38;5;79m__getitem__, batch number =", batch_number, "[0m")
+        if batch_number == -1:
+            lastBatch = next(reversed(self._collres))
+            print("last batch number =", lastBatch)
+            if lastBatch != self.reqbatchs:
+                print("[1;33mWARNING: last batch number", lastBatch,
+                      "!= required number of batchs", self.reqbatchs, "[0m")
+            return self._collres[lastBatch]
+        else:
+            try:
+                return self._collres[batch_number]
+            except KeyError as err:
+                message = ("Wrong batch number required, {0} doesn't exist, "
+                           "please change it to an existing one"
+                           .format(batch_number))
+                print("[1;31m", message, "[0m")
+                raise
+                # raise type(err)(message).with_traceback(sys.exc_info()[2])
+
+
+    def __iter__(self):
+        '''Iteration over the collection of results, on the keys to match dict
+        and OrderedDict behaviour.
+        '''
+        # return iter(self._collres)
+        yield from self._collres.__iter__()
+
+
+    def __len__(self):
+        '''Return length of the collection of results, equivalent to get the
+        number of edited batchs.
+        '''
+        return len(self._collres)
+
+
+    def __reversed__(self):
+        '''Reversed the OrderedDict order (easier to get last element)
+        '''
+        # return reversed(self._collres)
+        yield from self._collres.__reversed__()
+
 
     @profile
     def getLastEditedBatchNumber(self):
-        # print(list(self.collres.keys()))
-        return list(self.collres.keys())[-1]
+        # print(list(self._collres.keys()))
+        return list(self._collres.keys())[-1]
 
     def getLastBatchResults(self):
         lastbn = self.getLastEditedBatchNumber()
         if lastbn != self.reqbatchs:
             print("[1;31mWARNING: last batch number", lastbn,
                   "!= required number of batchs", self.reqbatchs, "[0m")
-        result = self.collres[lastbn]
+        result = self._collres[lastbn]
         return result
 
     @profile
     def getAllBatchResults(self):
-        # print(list(self.collres.keys()))
-        return ''.join(self.collres.values())
+        # print(list(self._collres.keys()))
+        return ''.join(self._collres.values())
 
     def getResultForBatch(self, batchnum):
         result = ""
-        if batchnum not in self.collres.keys():
+        if batchnum not in self._collres.keys():
             print("Batch number", batchnum, "not found in edited btachs")
             return result
-        result = self.collres[batchnum]
+        result = self._collres[batchnum]
         return result
 
 
