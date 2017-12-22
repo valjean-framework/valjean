@@ -218,15 +218,6 @@ class Scan():
         if countMeshExceeding > 4 :
             print("Number of mesh exceeding meshlim arg:",countMeshExceeding)
 
-    def getResultsCollection(self):
-        return self.collres
-
-    @profile
-    def getRequiredBatchNumber(self):
-        return self.reqbatchs
-
-    def getNormalEnd(self):
-        return self.normalend
 
     def getNumberOfEditedBatchs(self):
         return len(self.collres)
@@ -257,11 +248,6 @@ class Scan():
         result = self.collres[batchnum]
         return result
 
-    def getLastGeneratorState(self):
-        return self.lastGeneratorState
-
-    def getInitializationTime(self):
-        return self.initializationTime
 
     def printStatistics(self):
         print("Normal end of the jdd:", self.normalend)
