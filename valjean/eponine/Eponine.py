@@ -44,25 +44,22 @@ class Eponine():
         self.normalend = lamres.normalend
         if not self.normalend and len(lamres.collres) == 0:
             return False
-        if self.batch == -1:
-            self.batch = lamres.getLastEditedBatchNumber()
-            print("[38;5;198mlast batch =", self.batch, "or",
-                  list(lamres.keys())[-1], "or", next(reversed(lamres)), "[0m")
-            self.strres = lamres.getLastBatchResults()
-        elif self.batch == 0:  # all batchs
-            self.strres = lamres.getAllBatchResults()
+        if self.batch == 0:
+            self.strres = lamres.get_all_batch_results()
         else:
-            self.strres = lamres.getResultForBatch(self.batch)
-        self.inittime = lamres.initializationTime
-        lamres.printStatistics()
+            self.strres = lamres[self.batch]
+        # if self.batch == -1:
+        #     self.batch = next(reversed(lamres))
+        self.inittime = lamres.initialization_time
+        lamres.print_statistics()
         # print("self.strres =", self.strres)
         print("type lamres =", type(lamres))
         # for k in lamres.keys():
         #     print("[38;5;167mClef:", k, "[0m")
         print("[38;5;167mClef:", list(lamres.keys()), "[0m")
         print("[38;5;105mFrom lamres.items()[0m")
-        for k, v in lamres.items():
-            print("[38;5;36mlamres[", k, "] =", v, "[0m")
+        # for k, v in lamres.items():
+        #     print("[38;5;36mlamres[", k, "] =", v, "[0m")
         # print("[38;5;105mFrom lamres, only key[0m")
         # for k in lamres:
         #     print(k, "(type =", type(k), ")")
@@ -73,7 +70,7 @@ class Eponine():
         print("[38;5;105mFrom lamres, key and value[0m")
         # for k, v in lamres:
         #     print(k, v)
-        print(lamres[-1])
+        # print(lamres[-1])
         # for k, v in lamres:  # not working !
         #     print("[38;5;178m", k, " = ", v, "[0m")
         # print("Generator:", lamres.lastGeneratorState)
