@@ -6,10 +6,12 @@ It calls the general code common.
 ..note:: not a standalone code, needs a pyparsing result in input.
 '''
 
+import logging
 import numpy as np
 from .. import common
 
 
+LOGGER = logging.getLogger(__name__)
 MAXDEPTH = 0
 
 
@@ -47,7 +49,6 @@ def convert_mesh(toks):
     nrgrangemeshes = []
     nrgmesh = {}
     for mesh in toks:
-        # print(mesh)
         if 'mesh_energyrange' in mesh:
             nrgrangemeshes.append(mesh)
         elif 'mesh_energyintegrated' in mesh:
@@ -55,7 +56,7 @@ def convert_mesh(toks):
                 'vals': common.convert_integrated_mesh(
                     mesh['mesh_vals'].asList())}
             if not nrgrangemeshes:
-                print("[31mStrange: no energy range meshes seen before[0m")
+                LOGGER.warning("Strange: no energy range meshes seen before")
     meshpnrg = common.convert_mesh(nrgrangemeshes)
     nrgmesh['mesh_per_energy_range'] = meshpnrg
     if 'mesh_integrated_energy' in nrgmesh:
@@ -64,13 +65,13 @@ def convert_mesh(toks):
     return nrgmesh
 
 
-def convert_Green_bands(toks):
+def convert_green_bands(toks):
     '''Convert Green bands to numpy object using common.
     :param toks: pyparsing.ParseResults
     :returns: dictionary containing Green bands as 6D numpy structured array,
               binnings, etc. depending on availability
     '''
-    cgb = common.convert_Green_bands(toks)
+    cgb = common.convert_green_bands(toks)
     return cgb
 
 
@@ -80,7 +81,7 @@ def convert_score(toks):
     :param toks: pyparsing.ParseResults (interpreted as dictionary)
     :returns: dictionary using the previous keys and numpy objects as values.
     '''
-    # print("[38;5;125mClefs de score:", list(t.keys()), "[0m")
+    LOGGER.debug("[38;5;125mClefs de score: %s[0m", str(list(toks.keys())))
     res = {}
     for key in toks.keys():
         if key == 'mesh_res':
@@ -140,7 +141,6 @@ def convert_kij_keff(toks):
     :returns: dictionary of numpy arrays and matrices.
     '''
     kijkeff = common.convert_kij_keff(toks[-1].asDict())
-    # printCustomRes(kijkeff)
     return kijkeff
 
 
@@ -246,26 +246,27 @@ def print_result(toks):
     :param toks: pyparsing.ParseResults
     '''
     depth = 0
-    print("Nbre de resultats:", len(toks))
-    for res in toks:
-        depth += 1
-        if depth > MAXDEPTH:
-            break
-        print("[1;3"+str(depth)+"mClefs:", list(res.keys()), "[0m")
-        for key in res:
+    LOGGER.info("Nbre de resultats: %d", len(toks))
+    if LOGGER.isEnabledFor(logging.DEBUG):
+        for res in toks:
             depth += 1
             if depth > MAXDEPTH:
                 break
-            print("[3"+str(depth)+"m", key, "[0m", end="")
-            if key == 'default_keffs':
-                print_list(res[key], depth)
-            elif key == 'list_responses':
-                print("Number of responses:", len(res[key]))
-                for resp in res[key]:
-                    depth += 1
-                    print_customised_response(resp, depth)
-                    depth -= 1
-            else:
-                print(res[key])
+            print("[1;3"+str(depth)+"mClefs:", list(res.keys()), "[0m")
+            for key in res:
+                depth += 1
+                if depth > MAXDEPTH:
+                    break
+                print("[3"+str(depth)+"m", key, "[0m", end="")
+                if key == 'default_keffs':
+                    print_list(res[key], depth)
+                elif key == 'list_responses':
+                    print("Number of responses:", len(res[key]))
+                    for resp in res[key]:
+                        depth += 1
+                        print_customised_response(resp, depth)
+                        depth -= 1
+                else:
+                    print(res[key])
+                depth -= 1
             depth -= 1
-        depth -= 1

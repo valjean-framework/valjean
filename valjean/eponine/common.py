@@ -9,6 +9,7 @@ dictionary keys should be the same in all parsers...
 '''
 
 import sys
+import logging
 import numpy as np
 
 
@@ -17,6 +18,7 @@ if "mem" not in sys.argv:
         return func
 
 
+LOGGER = logging.getLogger(__name__)
 ITYPE = np.int32
 FTYPE = np.float32
 
@@ -225,8 +227,8 @@ def convert_spectrum(spectrum, specols=('score', 'sigma', 'score/lethargy')):
               - 'used_batch': number of used batchs (only if integrated result)
     '''
     nphibins, nmubins, ntbins, nebins = _get_number_of_bins(spectrum)
-    # print("nebins =", nebins, "ntbins =", ntbins,
-    #       "nmubins =", nmubins, "nphibins = ", nphibins)
+    LOGGER.debug("nebins = %d, ntbins = %d, nmubins = %d, nphibins = %d",
+                 nebins, ntbins, nmubins, nphibins)
     phibins, mubins, tbins, ebins = [], [], [], []
     # spectrum
     indspectrum = (1, 1, 1, nebins, ntbins, nmubins, nphibins)
@@ -341,7 +343,8 @@ def convert_mesh(mesh):
     dtmesh = np.dtype([('tally', FTYPE), ('sigma', FTYPE)])
     # dimensions/number of bins of space coordinates are given by last bin
     ns0bins, ns1bins, ns2bins = _get_number_of_space_bins(mesh[0]['mesh_vals'])
-    print("ns0bins, =", ns0bins, "ns1bins =", ns1bins, "ns2bins =", ns2bins)
+    LOGGER.info("ns0bins = %d, ns1bins = %d, ns2bins = %d",
+                ns0bins, ns1bins, ns2bins)
 
     # up to now to mesh splitted in time, mu or phi angle seen
     # index = (lastspacebin[0]+1, lastspacebin[1]+1, lastspacebin[2]+1,
@@ -349,7 +352,7 @@ def convert_mesh(mesh):
     vals = np.empty(index, dtype=dtmesh)
     for inde, emesh in enumerate(mesh):
         if emesh['mesh_energyrange'][0] != unit:
-            print("[31mStrange: different units in energy bins[0m")
+            LOGGER.warning("[31mStrange: different units in energy bins[0m")
         ebins.append(emesh['mesh_energyrange'][1])
         _fill_mesh(vals, emesh['mesh_vals'], inde)
     ebins.append(mesh[-1]['mesh_energyrange'][2])
@@ -385,7 +388,7 @@ def convert_integrated_result(result):
     :type result: list
     :returns: numpy structured array with (score, sigma)
     '''
-    print("[38;5;37m", result, "[0m")
+    LOGGER.debug("[38;5;37m%s[0m", str(result))
     dtir = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
     return np.array(tuple(result), dtype=dtir)
 
@@ -420,7 +423,7 @@ def convert_keff_with_matrix(res):
     are needed but array is easier to initialized and more general.
     '''
     # not converged cases a tester...
-    print("[38;5;56mClefs:", list(res.keys()), "[0m")
+    LOGGER.info("[38;5;56mClefs: %s[0m", str(list(res.keys())))
     if 'not_converged' in res:
         return {'used_batch': res['used_batch'],
                 'not_converged': res['not_converged']}
@@ -482,7 +485,7 @@ def convert_keff(res):
     (string "Not converged" appearing in the listings).
     Full combined results keeps the string.
     '''
-    # print("[38;5;56mClefs:", list(res.keys()), "[0m")
+    LOGGER.debug("[38;5;56mClefs:%s[0m", str(list(res.keys())))
     usedbatchs = res['used_batch']
     if 'not_converged' in res:
         return {'used_batch': res['used_batch'],
@@ -547,8 +550,8 @@ def convert_green_bands(gbs):
         for ires, gbres in enumerate(gbstep['gb_step_res']):
             isource = gbres['gb_source']
             if len(gbres['spectrum_res']) > 1:
-                print("[31mMore than one spectrum_res "
-                      "while only one foreseen for the moment[0m")
+                LOGGER.warning("[31mMore than one spectrum_res "
+                               "while only one foreseen for the moment[0m")
             ispectrum = gbres['spectrum_res'][0]['spectrum_vals']
             for iebin, ivals in enumerate(ispectrum):
                 if ist == 0 and ires == 0:
@@ -653,12 +656,12 @@ def convert_kij_keff(res):
                                              estimation
                                              (numpy matrix N*N)
     '''
-    print("Clefs:", list(res.keys()))
+    LOGGER.info("Clefs: %s", str(list(res.keys())))
     egvec = np.array(list(zip(*res['eigenvector']))[1])
     nbins = res['nb_fissile_vols'] if 'nb_fissile_vols' in res else len(egvec)
     if nbins != len(egvec):
-        print("[31mIssue in number of fissile volumes "
-              "and size of eigenvector[0m")
+        LOGGER.warning("[31mIssue in number of fissile volumes "
+                       "and size of eigenvector[0m")
     # For the moment 2 possibilities seen for space splitting: mesh or volumes
     # in mesh case: meshes are listed in 1st row of matrix (3 elements)
     # in volume case: list of fissile volumes given, equivalent to 1st row of
@@ -671,8 +674,8 @@ def convert_kij_keff(res):
     else:
         spacebins = np.array(res['keff_KIJ_matrix'][0])
     if spacebins.size != len(res['keff_KIJ_matrix'][1:]):
-        print("[31mStrange: not the dimension in space mesh and matrix, "
-              "matrix expected to be squared[0m")
+        LOGGER.warning("[31mStrange: not the dimension in space mesh and "
+                       "matrix, matrix expected to be squared[0m")
     # Fill the 3 matrices
     kijmat = np.empty([spacebins.size, spacebins.size])
     for irow, row in enumerate(res['keff_KIJ_matrix'][1:]):

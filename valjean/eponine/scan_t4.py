@@ -25,9 +25,14 @@ import sys
 import time
 from collections.abc import Mapping
 from collections import OrderedDict
+import logging
 
 
-print("sys.argv:", sys.argv)
+LOGGER = logging.getLogger(__name__)
+
+
+LOGGER.info("sys.argv: %s", str(sys.argv))
+
 
 if "mem" not in sys.argv:
     def profile(fmem):
@@ -85,7 +90,8 @@ class Scan(Mapping):
         self.last_generator_state = ""
         self._collres = OrderedDict()
         self._get_collres()
-        print("End of initialization:", time.time()-self.start_time)
+        LOGGER.info("End of initialization: %f s",
+                    time.time()-self.start_time)
 
     @profile
     def _get_collres(self):
@@ -114,13 +120,13 @@ class Scan(Mapping):
                     self.reqbatchs = int(line.split()[indbatch+1])
                     count_batch += 1
                 elif "PACKET_LENGTH" in line:
-                    print("[1mBatchs grouped by packets -> "
-                          "number of batchs expected divided "
-                          "by PACKET_LENGTH in PARA[0m")
+                    LOGGER.info("[1mBatchs grouped by packets -> "
+                                "number of batchs expected divided "
+                                "by PACKET_LENGTH in PARA[0m")
                     indpacket = line.split().index('PACKET_LENGTH')
                     if "PARA" in sys.argv:
                         self.reqbatchs //= int(line.split()[indpacket+1])
-                    print("new number of batchs =", self.reqbatchs)
+                    LOGGER.debug("new number of batchs = %d", self.reqbatchs)
                 elif "RESULTS ARE GIVEN" in line:
                     started_res = True
                     got_batch_number = False
@@ -153,15 +159,16 @@ class Scan(Mapping):
                 elif self.endflag in line and started_res:
                     if "PARA" not in sys.argv:
                         if batch_number != current_batch:
-                            print("Edition batch,", batch_number,
-                                  "different from current batch,",
-                                  current_batch)
-                            print("If no Edition batch keep current batch, "
-                                  "else keep edition batch")
+                            LOGGER.info("Edition batch (%d) different from "
+                                        "current batch (%d)",
+                                        batch_number, current_batch)
+                            LOGGER.info("If no Edition batch keep current "
+                                        "batch, else keep edition batch")
                             if batch_number < current_batch:
                                 batch_number = current_batch
                         if current_batch == 0:
-                            print("Current batch = 0, something to check ?")
+                            LOGGER.warning("Current batch = 0, "
+                                           "something to check ?")
                     else:
                         if greater_batch_number > batch_number:
                             batch_number = greater_batch_number
@@ -198,9 +205,10 @@ class Scan(Mapping):
                             count_mesh_exceeding += 1
                             result.append("\n")
                             if count_mesh_exceeding < 5:
-                                print("[31mToo much mesh lines, keeping",
-                                      self.meshlim, "lines, "
-                                      "if needed change meshlim arg[0m")
+                                LOGGER.warning("[31mToo much mesh lines, "
+                                               "keeping %d lines, if needed "
+                                               "change meshlim arg[0m",
+                                               self.meshlim)
                         continue
                     result.append(line)
                 if started_gen:
@@ -212,10 +220,10 @@ class Scan(Mapping):
                     newbatchnum = int(line.split()[4])
                     if greater_batch_number < newbatchnum:
                         greater_batch_number = newbatchnum
-        print("Number of string 'BATCH' seen:", count_batch)
+        LOGGER.debug("Number of string 'BATCH' seen: %d", count_batch)
         if count_mesh_exceeding > 4:
-            print("Number of mesh exceeding meshlim arg:",
-                  count_mesh_exceeding)
+            LOGGER.warning("Number of mesh exceeding meshlim arg: %d",
+                           count_mesh_exceeding)
 
     def __getitem__(self, batch_number):
         '''Get result corresponding to batch_number.
@@ -225,22 +233,24 @@ class Scan(Mapping):
 
         Use: Scan[X]
         '''
-        print("[1;38;5;79m__getitem__, batch number =", batch_number, "[0m")
+        LOGGER.debug("[1;38;5;79m__getitem__, batch number = %d[0m",
+                     batch_number)
         if batch_number == -1:
             last_batch = next(reversed(self._collres))
-            print("last batch number =", last_batch)
+            LOGGER.info("last batch number = %d", last_batch)
             if last_batch != self.reqbatchs:
-                print("[1;33mWARNING: last batch number", last_batch,
-                      "!= required number of batchs", self.reqbatchs, "[0m")
+                LOGGER.warning("[1;33mWARNING: last batch number %d"
+                               "!= required number of batchs %d[0m",
+                               last_batch, self.reqbatchs)
             return self._collres[last_batch]
         else:
             try:
                 return self._collres[batch_number]
             except KeyError:  # as err:
-                message = ("Wrong batch number required, {0} doesn't exist, "
+                message = ("Wrong batch number required, {} doesn't exist, "
                            "please change it to an existing one"
                            .format(batch_number))
-                print("[1;31m", message, "[0m")
+                LOGGER.error("[1;31m%s[0m", message)
                 raise
                 # raise type(err)(message).with_traceback(sys.exc_info()[2])
 

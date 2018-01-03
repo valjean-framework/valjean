@@ -6,6 +6,7 @@ common.py.
 ..note:: test with "fake" outputs from Tripoli-4.
 '''
 
+import logging
 from pyparsing import (Word, Keyword, White, alphas, alphanums,
                        Suppress, Optional, LineEnd, LineStart,
                        Group, OneOrMore, ZeroOrMore, Forward,
@@ -13,6 +14,8 @@ from pyparsing import (Word, Keyword, White, alphas, alphanums,
 from pyparsing import pyparsing_common as pyparscom
 from . import transform as trans
 
+
+LOGGER = logging.getLogger(__name__)
 
 _fnums = pyparscom.fnumber.setParseAction(tokenMap(trans.common.FTYPE))
 _inums = pyparscom.number.setParseAction(tokenMap(trans.common.ITYPE))
@@ -280,7 +283,7 @@ def _nextCompos(t):
     elif t.getName() == 'reaction':
         detposs = _reactiononnucl | _temperature | _composition | _concentration
     else:
-        print("Not a foreseen result name, please check, keeping all")
+        LOGGER.warning("Not a foreseen result name, please check, keeping all")
         detposs = (_reactiononnucl | _temperature | _composition
                    | _concentration | _reaction)
     _otherdetails << OneOrMore(detposs)
@@ -558,7 +561,7 @@ kijsources = (Group(Suppress(_integratedres_kw)
 # KIJ estimator for keff
 
 def _defineKIJdim(toks):
-    # print(len(toks))
+    LOGGER.debug("KIJ dimension: %d", len(toks))
     _kijdim = len(toks)
     _identifier = (Group(Suppress('(')
                          + _inums + Suppress(',')
