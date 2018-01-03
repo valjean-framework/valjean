@@ -10,7 +10,12 @@ _SUBMODS = ['config',
             'cosette.code',
             'cosette.scheduler',
             'cosette.backends',
-            'cosette.backends.queue']
+            'cosette.backends.queue',
+            'eponine.scan_t4',
+            'eponine.common',
+            'eponine.pyparsing_t4',
+            'eponine.pyparsing_t4.grammar',
+            'eponine.pyparsing_t4.transform']
 
 try:
     __version__ = get_distribution(__name__).version
