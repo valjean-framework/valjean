@@ -140,20 +140,28 @@ class Scan(Mapping):
                     nbmeshlines = 0
                 elif "(" in line and ")" in line and "," in line and inmeshres:
                     nbmeshlines += 1
+                    # print("new nbmeshlines =", nbmeshlines)
                     prevmeshline = True
+                    # print("prevmeshline = True")
                 elif ("(" not in line and ")" not in line
                       and prevmeshline and inmeshres):
+                    # print("dans le if prev = False, prev2 = True")
                     prevmeshline = False
                     prev2meshline = True
                 elif (("Energy range" in line
                        or "ENERGY INTEGRATED RESULTS" in line
+                       or "number of batches used" in line
                        or line.isspace())
-                      and inmeshres):
+                      and inmeshres): #and prevmeshline
                     nbmeshlines = 0
                     prev2meshline = True
-                elif ("Energy range" not in line
-                      and "ENERGY INTEGRATED RESULTS" not in line
-                      and inmeshres and prev2meshline):
+                # elif ("Energy range" not in line
+                #       and "ENERGY INTEGRATED RESULTS" not in line
+                #       and inmeshres and prev2meshline):
+                #     print("dans le if ?, prev2meshline =", prev2meshline)
+                #     inmeshres = False
+                #     prev2meshline = False
+                elif "****" in line and inmeshres:
                     inmeshres = False
                     prev2meshline = False
                 elif self.endflag in line and started_res:
@@ -193,13 +201,14 @@ class Scan(Mapping):
                     result = []
                     started_gen = False
                 if started_res:
-                    # if nbmeshlines%1000 == 0:
-                    #     print("[34mIn start_res for nbmeshlines =",
-                    #           nbmeshlines,"[0m")
-                    # print("inmesh:", inmeshres, "nbmeshline:", nbmeshlines,
-                    #       "meshlim:", self.meshlim,
-                    #       "prevmeshline:", prevmeshline,
-                    #       line.replace('\n', ''))
+                    # if inmeshres:
+                    #     if nbmeshlines%1000 == 0:
+                    #         print("[34mIn start_res for nbmeshlines =",
+                    #               nbmeshlines,"[0m")
+                    #         print("inmesh:", inmeshres, "nbmeshline:", nbmeshlines,
+                    #               "meshlim:", self.meshlim,
+                    #               "prevmeshline:", prevmeshline,
+                    #               line.replace('\n', ''))
                     if inmeshres and nbmeshlines > self.meshlim:
                         if nbmeshlines == self.meshlim+1:
                             count_mesh_exceeding += 1
