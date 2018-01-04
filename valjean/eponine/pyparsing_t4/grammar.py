@@ -139,6 +139,13 @@ _medmeshid_kw = Keyword("MED mesh id")
 _boltzmannentropy_kw = Keyword("Boltzmann Entropy of sources =")
 _shannonentropy_kw = Keyword("Shannon Entropy of sources =")
 
+# Scores ordered by nuclei and precursor families
+_nucleiorder_kw = Keyword("Scores for nuclei contributions are ordered "
+                            "according to the user list:")
+_familiesorder_kw = Keyword("Scores are ordered from family i = 1 to i = MAX:")
+_nucleifamilyorder_kw = Keyword("Scores are ordered by nuclei and by families:")
+_nucleus_kw = Keyword("Nucleus :")
+
 # Variance of variance
 _vovstar_kw = Keyword("variance of variance* :")
 _sensibtomaxval_kw = Keyword("sensibility to maximum value:")
@@ -178,7 +185,8 @@ _ifp_kw = Keyword("Scores for IFP convergence statistics are ordered "
                   "from cycle length L = 1 to L = MAX:")
 
 # Perturbations
-_perturbation_kw = Keyword("================== Perturbation result edition ======================")
+_perturbation_kw = Keyword("================== Perturbation result edition "
+                           "======================")
 _perturank_kw = Keyword("Perturbation rank =")
 _pertumethod_kw = Keyword("Method :")
 _pertuorder_kw = Keyword("Order:")
@@ -238,7 +246,7 @@ runtime = _simutime | _elapsedtime | _exploitime
     reaction
 '''
 _respfunc = (Suppress(_respfunction_kw + ':')
-             + OneOrMore(Word(alphanums + '_() =+/'), stopOn=LineEnd())
+             + OneOrMore(Word(alphanums + '_() =+/:-'), stopOn=LineEnd())
              .setParseAction(''.join)('resp_function'))
 # warning: order matters hier, LineEnd has to be before Optional(Word)
 _respname = (Suppress(_respname_kw + ':')
@@ -429,10 +437,28 @@ scoredesc = scoremode + scorezone
 
 # RESPONSE RESULTS
 
+
+def _setNoUnitCase(toks):
+    '''Deal with the "not unit" case'''
+    if len(toks) == 1:
+        return {'uscore': '', 'usigma': toks[0]}
+    else:
+        LOGGER.warning("more than one unit, please check:", toks)
+
+
+def _rmBlanks(toks):
+    '''Remove leading and trailing spaces (not the ones inside the string)'''
+    return toks[0].strip()
+
+
 # Default integrated result
 _numdiscbatch = Suppress(_numbatchs1stdiscarded_kw + ':') + _inums('disc_batch')
 _numusedbatch = Suppress(_numbatchsused_kw + ':') + _inums('used_batch')
 _integratedres = _fnums('score') + _fnums('sigma')
+_unitsres = (Suppress(_units_kw)
+             + (Word('%').setParseAction(_setNoUnitCase)
+                | (Word(alphanums+'.^-+ ').setParseAction(_rmBlanks)('uscore')
+                   + Word('%')('usigma'))))
 # rejection in vov and sensibility cases
 _rejection = (Suppress('[')
               + OneOrMore(Word(alphanums+'<>.+-')).setParseAction(' '.join)
@@ -455,6 +481,7 @@ defintegratedres = (Group(Optional(Suppress(_integratedres_kw))
                           + Optional(_numdiscbatch)
                           + ((_numusedbatch
                               + _integratedres
+                              + Optional(_unitsres)
                               + Optional(_vov)
                               + Optional(_bestres))
                              | _notconverged_kw('not_converged')))
@@ -679,6 +706,29 @@ _shannonentropy = Suppress(_shannonentropy_kw) + _fnums('shannon_entropy')
 entropy = _boltzmannentropy + _shannonentropy
 
 
+# Scores ordered by nuclei and precursor families
+# Nuclei order alone
+_scorepernucleus = Group(Word(alphanums)('nucleus') + Suppress(':')
+                         + _integratedres)
+_nucleiorder = (Suppress(_nucleiorder_kw)
+                + OneOrMore(_scorepernucleus)('score_per_nucleus'))
+# Families order alone
+_scoreperfamily = Group(Suppress("i =")
+                        + _inums('family_number') + Suppress(':')
+                        + _integratedres)
+_familyorder = (Suppress(_familiesorder_kw)
+                + OneOrMore(_scoreperfamily)('score_per_family'))
+# Nuclei and families order
+_nucleusid = _nucleus_kw + Word(alphanums)('nucleus') + Suppress('.')
+_nucleusfam = Group(_nucleusid + _familyorder)
+_nuclfamoreder = (Suppress(_nucleifamilyorder_kw)
+                  + OneOrMore(_nucleusfam)('score_per_nucleus_and_family'))
+orderedres = Group(Suppress(_integratedres_kw)
+                   + _numusedbatch
+                   + (_nucleiorder | _familyorder | _nuclfamoreder)
+                   + Optional(_unitsres))('ordered_res')
+
+
 # Greenbands exploitation
 _gbspectrumstep = Suppress(_gbspectrumstep_kw) + _inums
 _gbenergymin = Suppress(_gbenergymin_kw) + _fnums
@@ -704,7 +754,8 @@ ifpblock = (Group(Suppress(_integratedres_kw)
                   + _numusedbatch
                   + Suppress(_ifp_kw)
                   + Optional(Group(OneOrMore(_ifpline))
-                             .setParseAction(trans.convert_ifp)('ifp_stat')))
+                             .setParseAction(trans.convert_ifp)('ifp_stat'))
+                  + Optional(_unitsres))
             ('ifp_res'))
 
 
@@ -778,6 +829,7 @@ scoreblock = (scoredesc
 responseblock = (keffblock
                  | kijres
                  | kijsources
+                 | orderedres
                  | defintegratedres
                  | ifpblock
                  | perturbation
