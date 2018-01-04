@@ -107,7 +107,7 @@ _bestresdiscbatchs_kw = Keyword("best results are obtained with discarding")
 _equivkeff_kw = Keyword("Equivalent Keff:")
 
 # Time steps
-_timestepnum_kw = Keyword("TIME STEP NUMBER :")
+_timestepnum_kw = Keyword("TIME STEP NUMBER")
 _timestepmin_kw = Keyword("time min. =")
 _timestepmax_kw = Keyword("time max. =")
 
@@ -496,7 +496,7 @@ defintegratedres = (Group(Optional(Suppress(_integratedres_kw))
 
 
 # Time steps
-_timestep = Group(Suppress(_timestepnum_kw) + _inums
+_timestep = Group(Suppress(_timestepnum_kw + ':') + _inums
                   + _minus_line
                   + Suppress(_timestepmin_kw) + _fnums
                   + Suppress(_timestepmax_kw) + _fnums)('time_step')
@@ -545,6 +545,30 @@ _vovspectrum = (Suppress(_spectrum_kw)
                 + OneOrMore(_vovspectrumvals, stopOn=_endtable)
                 ('spectrum_vals'))
 vovspectrumblock = Group(Group(_vovspectrum))('vov_spectrum_res')
+
+
+def _printtoks(toks):
+    print(toks)
+
+
+# Mesh
+_mesh_energyrange = (Group(Suppress(_energyrange_kw + "(in") + Word(alphas)
+                           + Suppress('):') + _fnums + Suppress('-') + _fnums)
+                     ('mesh_energyrange'))
+_mesh_energyintegrated = ((Suppress(_integratedres_kw) + Suppress(':'))
+                          ('mesh_energyintegrated'))
+_mesh_energyline = _mesh_energyrange | _mesh_energyintegrated
+_meshspacecoord = (Suppress('(') + _inums
+                   + (Suppress(',') + _inums) * 2
+                   + Suppress(')'))
+_meshvals = Group(Group(_meshspacecoord) + _fnums + _fnums)
+_meshres = Group(_mesh_energyline
+                 + Group(OneOrMore(_meshvals))
+                 ('mesh_vals'))
+meshblock = Group(OneOrMore(Group(_timestep
+                                  + Group(OneOrMore(_meshres))('meshes')
+                                  + Optional(defintegratedres)))
+                  | Group(Group(OneOrMore(_meshres))('meshes')))('mesh_res')
 
 
 # KIJ matrix
@@ -685,22 +709,6 @@ _bestresblock = OneOrMore(_bestreskeff, stopOn="KIJ")
 defkeffblock = Group(_bestresblock + Optional(_kijkeffblock))('default_keffs')
 
 
-# Mesh
-_mesh_energyrange = (Group(Suppress(_energyrange_kw + "(in") + Word(alphas)
-                           + Suppress('):') + _fnums + Suppress('-') + _fnums)
-                     ('mesh_energyrange'))
-_mesh_energyintegrated = ((Suppress(_integratedres_kw) + Suppress(':'))
-                          ('mesh_energyintegrated'))
-_mesh_energyline = _mesh_energyrange | _mesh_energyintegrated
-_meshdesc = Group(Suppress('(')
-                  + _inums + OneOrMore(Suppress(',') + _inums)
-                  + Suppress(')'))
-_meshvals = Group(_meshdesc + _fnums + _fnums)
-_meshres = Group(_mesh_energyline
-                 + Group(OneOrMore(_meshvals))
-                 ('mesh_vals'))
-meshblock = Group(OneOrMore(_meshres))('mesh_res')
-
 # MED files
 medfile = (Suppress(_creationmedfile_kw + ':')
            + Word(alphanums+'/_.')('med_file')
@@ -793,7 +801,8 @@ _ifpadfcrit_intro = (Group(_star_line
                      ('ifp_adjoint_criticality_intro'))
 _ifpadjbinval = Forward()
 _ifpadjcoordinate = Word(alphas) + Suppress(_ifpadjminmax_kw)
-_ifpadjcoordinates = OneOrMore(_ifpadjcoordinate).setParseAction(_defineIFPadjTableDim)
+_ifpadjcoordinates = (OneOrMore(_ifpadjcoordinate)
+                      .setParseAction(_defineIFPadjTableDim))
 _ifpadjcolumns = _ifpadjcoordinates + _ifpadjscore_kw + _spsigma_kw
 _ifpadjline = Group(_ifpadjbinval + _fnums + _fnums)
 _ifpadjvalues = OneOrMore(_ifpadjline)('values')

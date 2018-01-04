@@ -46,23 +46,8 @@ def convert_mesh(toks):
               7-dimensions numpy structured array, binnings, etc. depending on
               availability
     '''
-    nrgrangemeshes = []
-    nrgmesh = {}
-    for mesh in toks:
-        if 'mesh_energyrange' in mesh:
-            nrgrangemeshes.append(mesh)
-        elif 'mesh_energyintegrated' in mesh:
-            nrgmesh['mesh_integrated_energy'] = {
-                'vals': common.convert_integrated_mesh(
-                    mesh['mesh_vals'].asList())}
-            if not nrgrangemeshes:
-                LOGGER.warning("Strange: no energy range meshes seen before")
-    meshpnrg = common.convert_mesh(nrgrangemeshes)
-    nrgmesh['mesh_per_energy_range'] = meshpnrg
-    if 'mesh_integrated_energy' in nrgmesh:
-        nrgmesh['mesh_integrated_energy']['ebins'] = meshpnrg['ebins'][[0, -1]]
-        nrgmesh['mesh_integrated_energy']['unit'] = meshpnrg['unit']
-    return nrgmesh
+    mesh = common.convert_mesh_with_time(toks)
+    return mesh
 
 
 def convert_green_bands(toks):
@@ -261,11 +246,15 @@ def print_result(toks):
                     print_list(res[key], depth)
                 elif key == 'list_responses':
                     print("Number of responses:", len(res[key]))
-                    for resp in res[key]:
+                    for iresp, resp in enumerate(res[key]):
                         depth += 1
-                        print("RESPONSE", res[key].index(resp))
+                        print("RESPONSE", iresp)
                         print_customised_response(resp, depth)
                         depth -= 1
+                elif key == 'ifp_adjoint_crit_edition':
+                    depth += 1
+                    print_according_type(res[key], depth)
+                    depth -= 1
                 else:
                     print(res[key])
                 depth -= 1
