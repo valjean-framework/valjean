@@ -180,9 +180,16 @@ _kijkeffmat_kw = Keyword("K-IJ MATRIX :")
 _kijkeffstddevmat_kw = Keyword("STANDARD DEVIATION MATRIX :")
 _kijkeffsensibilitymat_kw = Keyword("SENSIBILITY MATRIX :")
 
-# IFP convergence statistics
-_ifp_kw = Keyword("Scores for IFP convergence statistics are ordered "
-                  "from cycle length L = 1 to L = MAX:")
+# IFP results
+# convergence statistics
+_ifpcvgstat_kw = Keyword("Scores for IFP convergence statistics are ordered "
+                         "from cycle length L = 1 to L = MAX:")
+# IFP adjoint criticality edition
+_ifpadjcriticality_kw = Keyword("IFP_ADJOINT_CRITICALITY EDITION")
+_ifpadjcyclelength_kw = Keyword("IFP CYCLE LENGTH =")
+_ifpadjnormalizedres_kw = Keyword("RESULTS ARE NORMALIZED")
+_ifpadjminmax_kw = Keyword("(min | max)")
+_ifpadjscore_kw = Keyword("score [a.u.]")
 
 # Perturbations
 _perturbation_kw = Keyword("================== Perturbation result edition "
@@ -281,30 +288,30 @@ _reaction = (Suppress(_reaction_kw)
 
 def _nextCompos(t):
     if t.getName() == 'reaction_on_nucleus':
-        detposs = _temperature | _composition | _concentration | _reaction
+        detail = _temperature | _composition | _concentration | _reaction
     elif t.getName() == 'temperature':
-        detposs = _reactiononnucl | _composition | _concentration | _reaction
+        detail = _reactiononnucl | _composition | _concentration | _reaction
     elif t.getName() == 'composition':
-        detposs = _reactiononnucl | _temperature | _concentration | _reaction
+        detail = _reactiononnucl | _temperature | _concentration | _reaction
     elif t.getName() == 'concentration':
-        detposs = _reactiononnucl | _temperature | _composition | _reaction
+        detail = _reactiononnucl | _temperature | _composition | _reaction
     elif t.getName() == 'reaction':
-        detposs = _reactiononnucl | _temperature | _composition | _concentration
+        detail = _reactiononnucl | _temperature | _composition | _concentration
     else:
         LOGGER.warning("Not a foreseen result name, please check, keeping all")
-        detposs = (_reactiononnucl | _temperature | _composition
-                   | _concentration | _reaction)
-    _otherdetails << OneOrMore(detposs)
+        detail = (_reactiononnucl | _temperature | _composition
+                  | _concentration | _reaction)
+    _otherdetails << OneOrMore(detail)
 
 
 _compodetails = Forward()
 _otherdetails = Forward()
-_compoposs = (_reactiononnucl
-              | _temperature
-              | _composition
-              | _concentration
-              | _reaction).setParseAction(_nextCompos)
-_compodetails << Group(_compoposs + _otherdetails)
+_compopossibilities = (_reactiononnucl
+                       | _temperature
+                       | _composition
+                       | _concentration
+                       | _reaction).setParseAction(_nextCompos)
+_compodetails << Group(_compopossibilities + _otherdetails)
 _nuclflags = Group(OneOrMore(_compodetails))('compo_details')
 
 
@@ -752,11 +759,49 @@ _ifpline = Group(Suppress("L =") + _inums + Suppress(':') + _fnums + _fnums)
 # lines exists only if converged...
 ifpblock = (Group(Suppress(_integratedres_kw)
                   + _numusedbatch
-                  + Suppress(_ifp_kw)
+                  + Suppress(_ifpcvgstat_kw)
                   + Optional(Group(OneOrMore(_ifpline))
                              .setParseAction(trans.convert_ifp)('ifp_stat'))
                   + Optional(_unitsres))
             ('ifp_res'))
+
+
+def _rename_norm_kw(toks):
+    return 1
+
+
+def _defineIFPadjTableDim(toks):
+    _tabdim = len(toks)
+    _ifpadjbinval << _fnums * 2 * _tabdim
+
+
+def printtoks(toks):
+    print(toks)
+
+# IFP adjoint criticality edition
+_ifpadfcrit_intro = (Group(_star_line
+                           + Suppress(_ifpadjcriticality_kw)
+                           + _star_line
+                           + Word(alphas+'_')('ifp_score')
+                           + _scorename
+                           + Suppress(_ifpadjcyclelength_kw)
+                           + _inums('ifp_cycle_length')
+                           + (Optional(_ifpadjnormalizedres_kw
+                                       .setParseAction(_rename_norm_kw))
+                              ('normalized'))
+                           + _star_line)
+                     ('ifp_adjoint_criticality_intro'))
+_ifpadjbinval = Forward()
+_ifpadjcoordinate = Word(alphas) + Suppress(_ifpadjminmax_kw)
+_ifpadjcoordinates = OneOrMore(_ifpadjcoordinate).setParseAction(_defineIFPadjTableDim)
+_ifpadjcolumns = _ifpadjcoordinates + _ifpadjscore_kw + _spsigma_kw
+_ifpadjline = Group(_ifpadjbinval + _fnums + _fnums)
+_ifpadjvalues = OneOrMore(_ifpadjline)('values')
+ifpadjointcriticality = (Group(_ifpadfcrit_intro
+                               + _ifpadjcolumns('columns')
+                               + _ifpadjvalues
+                               + _star_line)
+                         ('ifp_adjoint_crit_edition'))
 
 
 # Perturbations
@@ -842,7 +887,8 @@ response = Group(_star_line
 
 # replace group by real dict, need to check if fine or not (risk: list needed)
 mygram = (OneOrMore((intro
-                     + Group(OneOrMore(response))('list_responses')
+                     + (Group(OneOrMore(response))('list_responses')
+                        | ifpadjointcriticality)
                      + Optional(defkeffblock)
                      + Optional(contribpartblock)
                      + Optional(OneOrMore(runtime)))
