@@ -226,7 +226,6 @@ def print_customised_response(res, depth=0):
     '''
     if depth > MAXDEPTH:
         return
-    print("[1;35mKeys:", list(res.keys()), "[0m")
     for ires in res:
         print("[1;35m", ires, "[0;36m(", type(res[ires]), ")[0m")
         if not isinstance(res[ires], (list, dict)):
@@ -264,6 +263,7 @@ def print_result(toks):
                     print("Number of responses:", len(res[key]))
                     for resp in res[key]:
                         depth += 1
+                        print("RESPONSE", res[key].index(resp))
                         print_customised_response(resp, depth)
                         depth -= 1
                 else:
