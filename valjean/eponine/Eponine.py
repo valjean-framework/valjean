@@ -234,27 +234,28 @@ class Eponine():
                 # print("Nombre de resultats =",
                 #       len(self.result[-1]['list_response'][-1]['results']))
             if self.result.asDict() == {} :
-                for ind,resp in enumerate(self.result[-1]['list_responses']):
-                    if len(list(resp.keys())) != len(resp):  # or len(resp) > 4 :
-                        print("[1;31mNot the same number of responses and keys:"
-                              "#keys =",len(list(resp.keys())),
-                              "#elts =",len(resp))
-                        print("Clefs:",list(resp.keys()),"[0m")
-                    # print("[34mClefs:",list(resp.keys()),"[0m")
-                    # print("type =", type(resp))
-                    # print("[94mtype(list_response)=", type(self.result[-1]['list_response']), "[0m")
-                    # pprint(resp['results'], depth=3)
-                    # print("Response",ind,
-                    #       "  clefs:",list(resp.keys()))
-                    # prints to check response description
-                    # and response characteristics details
-                    # self.printResponseDescAndDetails(resp)
-                    # print to check response results
-                    if 'results' in resp:
-                        continue
+                if 'list_responses' in self.result[-1]:
+                    for ind,resp in enumerate(self.result[-1]['list_responses']):
+                        if len(list(resp.keys())) != len(resp):  # or len(resp) > 4 :
+                            print("[1;31mNot the same number of responses and keys:"
+                                  "#keys =",len(list(resp.keys())),
+                                  "#elts =",len(resp))
+                            print("Clefs:",list(resp.keys()),"[0m")
+                        # print("[34mClefs:",list(resp.keys()),"[0m")
+                        # print("type =", type(resp))
+                        # print("[94mtype(list_response)=", type(self.result[-1]['list_response']), "[0m")
+                        # pprint(resp['results'], depth=3)
+                        # print("Response",ind,
+                        #       "  clefs:",list(resp.keys()))
+                        # prints to check response description
+                        # and response characteristics details
+                        # self.printResponseDescAndDetails(resp)
+                        # print to check response results
+                        if 'results' in resp:
+                            continue
                         # self.printResponseResults(resp)
-                    else:
-                        print("[31mNo results in response -> strange[0m")
+                        else:
+                            print("[31mNo results in response -> strange[0m")
 
 
                 # print("Last response function:",
