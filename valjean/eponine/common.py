@@ -15,12 +15,226 @@ import numpy as np
 
 if "mem" not in sys.argv:
     def profile(func):
+        '''No memory profiling if "mem" not in arguments of the command line.
+        '''
         return func
 
 
 LOGGER = logging.getLogger('valjean')
 ITYPE = np.int32
 FTYPE = np.float32
+MASK_EINTRES = 1 << 1
+MASK_TINTRES = 1 << 2
+
+class _7dimArray():
+    '''Class to store and fill spectrum and mesh results as both are in
+    7-dimensions: space (3), energy, time, mu and phi (direction angles)
+    '''
+    VAR_FLAG = {'t': 'time_step',
+                'mu': 'mu_angle_zone',
+                'phi': 'phi_angle_zone'}
+    VARS = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
+    def __init__(self, colnames, nbins):
+        '''
+        :param colnames: names of the colums
+        '''
+        self.bins = {'e': [], 't': [], 'mu': [], 'phi': []}
+        dtype = np.dtype({'names': colnames,
+                          'formats': [FTYPE]*len(colnames)})
+        self.arrays = {'default': np.empty((nbins), dtype=dtype)}
+        self.itime, self.imu, self.iphi = 0, 0, 0
+        # self.current_index = [0]*7
+        LOGGER.debug("bins: %s", str(self.bins))
+        self.is_mesh = True if 'tally' in colnames else False
+        LOGGER.debug("Preparing array for mesh ? %r", self.is_mesh)
+
+    def add_array(self, name, colnames, nbins):
+        '''Add a new array to dictionary arrays with key name.
+        :param name: name of the new array (integrated_res, etc.)
+        :type name: string
+        :param colnames: list of the columns names (score, sigma, tally, etc.)
+        :type colnames: list/tuple of string
+        :param nbins: number of bins in each dimension
+        :type nbins: list of int
+        '''
+        dtype = np.dtype({'names': colnames,
+                          'formats': [FTYPE]*len(colnames)})
+        self.arrays[name] = np.empty((nbins), dtype=dtype)
+
+    def _add_last_energy_bin(self, data):
+        '''Add last bin in energy from spectrum or mesh.
+        :param data: mesh or spectrum
+        :type data: list of meshes or spectrum results
+        '''
+        if self.is_mesh:
+            lastmesh = data[-1]['meshes']
+            lastebin = self.arrays['default'].shape[3]-1
+            self.bins['e'].append(lastmesh[lastebin]['mesh_energyrange'][2])
+        else:
+            self.bins['e'].append(data[-1]['spectrum_vals'][-1][1])
+
+    def _add_last_bin_for_dim(self, data, dim, ilastbin):
+        '''Add last bin for the dimension dim. Depending on order of the bins
+        the last one will be inserted as first bin or added as last bin.
+        :param data: mesh or spectrum
+        :type data: list of meshes or spectrum results
+        :param dim: dimension where the bin will be added (t, mu, phi)
+        :type dim: string
+        :param ilastbin: index of the bin in mesh or spectrum containing the
+                         missing edge of the bins
+        :type ilastbin: int
+        '''
+        print("[38;5;137madding last bin for dim", dim,
+              "flag =", _7dimArray.VAR_FLAG[dim], "[0m")
+        if len(self.bins[dim]) > 1 and self.bins[dim][0] > self.bins[dim][1]:
+            self.bins[dim].insert(0, data[0][_7dimArray.VAR_FLAG[dim]][2])
+        else:
+            self.bins[dim].append(data[ilastbin][_7dimArray.VAR_FLAG[dim]][2])
+
+    def add_last_bins(self, data):
+        '''Add last bins in energy, time, mu and phi direction angles.
+        Based on keywords presence in data.
+        :param data: mesh or spectrum
+        :type data: list of meshes or spectrum results
+        '''
+        self._add_last_energy_bin(data)
+        nphibins = len(self.bins['phi']) if self.bins['phi'] else 1
+        nmubins = len(self.bins['mu']) if self.bins['mu'] else 1
+        if 'time_step' in data[0]:  # or if _7dimArray.VAR_FLAG['t'] in data[0]
+            self._add_last_bin_for_dim(data, 't', -int(nphibins)*int(nmubins))
+        if 'mu_angle_zone' in data[0]:
+            self._add_last_bin_for_dim(data, 'mu', -int(nphibins))
+        if 'phi_angle_zone' in data[0]:
+            self._add_last_bin_for_dim(data, 'phi', -1)
+
+    def _fill_arrays_and_bins_from_spectrum(self, data):
+        '''Fill arrays and bins for spectrum data.
+        Current arrays possibly filled are:
+        - default (mandatory)
+        - integrated_res (over energy, splitted in time for the moment)
+        :param data: mesh or spectrum
+        :type data: list of meshes or spectrum results
+        '''
+        for ispec in data:
+            # Fill bins -> caution to not replicate them
+            if 'time_step' in ispec:
+                self.itime = ispec['time_step'][0]
+                self.bins['t'].append(ispec['time_step'][1])
+            if 'mu_angle_zone' in ispec:
+                self.imu = ispec['mu_angle_zone'][0]
+                if self.itime == 0:
+                    self.bins['mu'].append(ispec['mu_angle_zone'][1])
+            if 'phi_angle_zone' in ispec:
+                self.iphi = ispec['phi_angle_zone'][0]
+                if self.itime == 0 and self.imu == 0:
+                    self.bins['phi'].append(ispec['phi_angle_zone'][1])
+
+            # Fill spectrum values
+            for ienergy, ivals in enumerate(ispec['spectrum_vals']):
+                if self.itime == 0 and self.imu == 0 and self.iphi == 0:
+                    self.bins['e'].append(ivals[0])
+                index = (0, 0, 0, ienergy, self.itime, self.imu, self.iphi)
+                self.arrays['default'][index] = np.array(
+                    tuple(ivals[2:]),
+                    dtype=self.arrays['default'].dtype)
+
+            # Fill integrated result if exist
+            if 'integrated_res' in ispec:
+                iintres = ispec['integrated_res']
+                index = (0, 0, 0, 0, self.itime, self.imu, self.iphi)
+                self.arrays['integrated_res'][index] = (np.array(
+                    (iintres['score'], iintres['sigma']),
+                    dtype=self.arrays['integrated_res'].dtype))
+
+    def _fill_mesh_array(self, meshvals, name, ebin):
+        '''Fill mesh array.
+        :param meshvals: mesh data for a given energy bin
+        :type meshvals: list of mesh results [[[s0, s1, s2], tally, sigma],...]
+        :param name: name of the array to be filled ('default',
+                     'eintegrated_mesh') for the moment
+        :type name: string
+        :param ebin: energy bin to fill in the array
+        :type ebin: int
+        '''
+        for smesh in meshvals:
+            index = (smesh[0][0], smesh[0][1], smesh[0][2],
+                     ebin, self.itime, self.imu, self.iphi)
+            self.arrays[name][index] = np.array(tuple(smesh[1:]),
+                                                dtype=self.arrays[name].dtype)
+
+    def _fill_arrays_and_bins_from_mesh(self, data):
+        '''Fill arrays and bins for mesh data.
+        Current arrays possibly filled are:
+        - default (mandatory)
+        - eintegrated_mesh (facultative, integrated over energy, still splitted
+                            in space)
+        - integrated_res (over energy and space, splitted in time)
+        :param data: mesh
+        :type data: list of meshes results
+        '''
+        for ires in data:
+            LOGGER.debug("keys: %s, number of elements: %d",
+                         list(ires.keys()), len(ires))
+            if 'time_step' in ires:
+                self.itime = ires['time_step'][0]
+                self.bins['t'].append(ires['time_step'][1])
+            for inde, emesh in enumerate(ires['meshes']):
+                if 'mesh_energyrange' in emesh:
+                    if self.itime == 0:
+                        self.bins['e'].append(emesh['mesh_energyrange'][1])
+                    self._fill_mesh_array(emesh['mesh_vals'], 'default', inde)
+                if 'mesh_energyintegrated' in emesh:
+                    LOGGER.debug("Will fill mesh integrated in energy")
+                    self._fill_mesh_array(emesh['mesh_vals'],
+                                          'eintegrated_mesh', 0)
+            if 'integrated_res' in ires:
+                iintres = ires['integrated_res']
+                index = (0, 0, 0, 0, self.itime, 0, 0)
+                self.arrays['integrated_res'][index] = np.array(
+                    (iintres['score'], iintres['sigma']),
+                    dtype=self.arrays['integrated_res'].dtype)
+
+    def fill_arrays_and_bins(self, data):
+        '''Fill array and bins for spectrum and mesh.
+        :param data: mesh or spectrum
+        :type data: list of meshes or spectrum results
+        '''
+        if self.is_mesh:
+            self._fill_arrays_and_bins_from_mesh(data)
+        else:
+            self._fill_arrays_and_bins_from_spectrum(data)
+
+    def _flip_bins_for_dim(self, dim, axis):
+        '''Flip bins for dimension dim.
+        :param dim: dimension ('e', 't', 'mu', 'phi')
+        :type dim: string
+        :param axis: axis of the dimension
+                     ('e' -> 3, 't' -> 4, 'mu' -> 5, 'phi' -> 6)
+        :type axis: int
+        '''
+        LOGGER.debug("Bins %s avant flip: %s", dim, str(self.bins[dim]))
+        self.bins[dim] = self.bins[dim][::-1]
+        for array in self.arrays:
+            self.arrays[array] = np.flip(self.arrays[array], axis=axis)
+        LOGGER.debug("et apres: %s", str(self.bins[dim]))
+
+    def flip_bins(self):
+        '''Flip bins if given in decreasing order in the output listing.
+        Depending on the required grid (GRID or DECOUPAGE) energies, times, mu
+        and phi can be given from upper edge to lower edge. This is not
+        convenient for post-traitements, especially plots. They have to be
+        flipped at a moment, here or later, easiest is here, and all results
+        will look the same :-).
+        '''
+        LOGGER.info("In _7dimArray.flip_bins")
+        if self.bins['e'] and self.bins['e'][0] > self.bins['e'][1]:
+            self._flip_bins_for_dim('e', 3)
+        if self.bins['t'] and self.bins['t'][0] > self.bins['t'][1]:
+            self._flip_bins_for_dim('t', 4)
+        if self.bins['mu'] and self.bins['mu'][0] > self.bins['mu'][1]:
+            self._flip_bins_for_dim('mu', 5)
+        if self.bins['phi'] and self.bins['phi'][0] > self.bins['phi'][1]:
+            self._flip_bins_for_dim('phi', 6)
 
 
 def _get_number_of_bins(spectrum):
@@ -51,137 +265,7 @@ def _get_number_of_bins(spectrum):
     return nphibins, nmubins, ntbins, nebins
 
 
-def _fill_spectrum_and_bins(spectrum, valspectrum, valsintres,
-                            ebins, tbins, mubins, phibins):
-    '''Fill spectrum, bins and integrated result if exists
-    :param spectrum: input spectrum (loop over it so everything needed)
-    :param valspectrum: 7 dimensions numpy structured array
-        v[s0, s1, s2, E, t, mu, phi] = (score, sigma, score/lethargy)
-    :param valsintres: 7 dimensions numpy structured array
-        v[s0, s1, s2, E, t, mu, phi] = (score, sigma)
-    :param ebins: energy bins
-    :param tbins: time bins
-    :param mubins: mu angle (direction) bins
-    :param phibins: phi angle (direction) bins
-    '''
-    itime, imu, iphi = 0, 0, 0
-    for ispec in spectrum:
-        # Fill bins -> caution to not replicate them
-        if 'time_step' in ispec:
-            itime = ispec['time_step'][0]
-            tbins.append(ispec['time_step'][1])
-        if 'mu_angle_zone' in ispec:
-            imu = ispec['mu_angle_zone'][0]
-            if itime == 0:
-                mubins.append(ispec['mu_angle_zone'][1])
-        if 'phi_angle_zone' in ispec:
-            iphi = ispec['phi_angle_zone'][0]
-            if itime == 0 and imu == 0:
-                phibins.append(ispec['phi_angle_zone'][1])
-
-        # Fill spectrum values
-        for ienergy, ivals in enumerate(ispec['spectrum_vals']):
-            if itime == 0 and imu == 0 and iphi == 0:
-                ebins.append(ivals[0])
-            index = (0, 0, 0, ienergy, itime, imu, iphi)
-            valspectrum[index] = np.array(tuple(ivals[2:]),
-                                          dtype=valspectrum.dtype)
-
-        # Fill integrated result if exist
-        if 'integrated_res' in ispec:
-            iintres = ispec['integrated_res']
-            index = (0, 0, 0, 0, itime, imu, iphi)
-            valsintres[index] = np.array((iintres['score'], iintres['sigma']),
-                                         dtype=valsintres.dtype)
-
-
-def _add_last_bins(spectrum, ebins, tbins, mubins, phibins):
-    '''Add last bin to the bins array.
-    :param spectrum: full spectrum to be able to access all elements
-    :param ebins: numpy array of energy bins
-    :param tbins: numpy array of time bins
-    :param mubins: numpy array of mu angle bins
-    :param phibins: numpy array of phi angle bins
-    :returns: ebins, tbins, mubins and phi bins will be updated with the
-              missing edge
-    ..note: Few remarks:
-      * at that step len(ibins) = number of bins, except when no binning was
-        required (for time, mu and phi). The final length of ibins arrays
-        should be number of bins + 1 to have all bins edges.
-      * the last bin can be put as first or last bin of the array for time, mu
-        and phi, depending on required order (increasing or decreasing),
-        because first number is always min and second max
-      * in energy case, if increasing order: min - max, else max - min, so
-        adding last value in last position is always fine.
-    '''
-    nphibins = len(phibins) if phibins else 1
-    nmubins = len(mubins) if mubins else 1
-    ebins.append(spectrum[-1]['spectrum_vals'][-1][1])
-    if 'time_step' in spectrum[0]:
-        if len(tbins) > 1 and tbins[0] > tbins[1]:
-            tbins.insert(0, spectrum[0]['time_step'][2])
-        else:
-            tbins.append(spectrum[-int(nphibins)*int(nmubins)]['time_step'][2])
-    if 'mu_angle_zone' in spectrum[0]:
-        if len(mubins) > 1 and mubins[0] > mubins[1]:
-            mubins.insert(0, spectrum[0]['mu_angle_zone'][2])
-        else:
-            mubins.append(spectrum[-int(nphibins)]['mu_angle_zone'][2])
-    if 'phi_angle_zone' in spectrum[0]:
-        if len(phibins) > 1 and phibins[0] > phibins[1]:
-            phibins.insert(0, spectrum[0]['phi_angle_zone'][2])
-        else:
-            phibins.append(spectrum[-1]['phi_angle_zone'][2])
-
-
-# def _flip_bins(valspectrum, valsintres=None,
-#                ebins=None, tbins=None, mubins=None, phibins=None):
-def _flip_bins(valslist, ebins=None, tbins=None, mubins=None, phibins=None):
-    '''Flip bins if given in decreasing order in the output listing.
-    Depending on the required grid (GRID or DECOUPAGE) energies, times, mu and
-    phi can be given from upper edge to lower edge. This is not convenient for
-    post-traitements, especially plots. They have to be flipped at a moment,
-    here or later, easiest is here, and all results will look the same :-).
-
-    :param valspectrum: 7-dim numpy structured array corresponding to spectrum
-                        or mesh
-    :param valsintres: 7-dim numpy structured array for integrated result (if
-                       available)
-    :param ebins: energy bins
-    :param tbins: time bins
-    :param mubins: mu angle bins
-    :param phibins: phi angle bins
-    :returns: all these objects are modified if necessary in the function
-
-    ..note: array and list modification is not possible directly in a function,
-            this is why the '[:]' appear.
-    '''
-    LOGGER.info("In _flip_bins")
-    # arrays and lists are passed as arguments, to get them updated [:] needs
-    # to be added (else modification only happens in the function)
-    if ebins and ebins[0] > ebins[1]:
-        ebins[:] = ebins[::-1]
-        for vals in valslist:
-            if vals is not None:
-                vals[:] = np.flip(vals, axis=3)
-    if tbins and tbins[0] > tbins[1]:
-        tbins[:] = tbins[::-1]
-        for vals in valslist:
-            if vals is not None:
-                vals[:] = np.flip(vals, axis=4)
-    if mubins and mubins[0] > mubins[1]:
-        mubins[:] = mubins[::-1]
-        for vals in valslist:
-            if vals is not None:
-                vals[:] = np.flip(vals, axis=5)
-    if phibins and phibins[0] > phibins[1]:
-        phibins[:] = phibins[::-1]
-        for vals in valslist:
-            if vals is not None:
-                vals[:] = np.flip(vals, axis=6)
-
-
-def convert_spectrum(spectrum, specols=('score', 'sigma', 'score/lethargy')):
+def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
     '''Convert specrtum results in 7D numpy structured array.
     :param spectrum: list of spectra.
                      Accepts time and (direction) angular grids.
@@ -199,9 +283,9 @@ def convert_spectrum(spectrum, specols=('score', 'sigma', 'score/lethargy')):
     decreasing).
     If no time, no mu and phi grids are required, 1 bin is considered for these
     dimensions (so 0e bin in the array) and no binning is given.
-    :param specols: list of the names of the columns.
+    :param colnames: list of the names of the columns.
                     Default = ['score', 'sigma', 'score/lethargy']
-    :type specols: list of strings
+    :type colnames: list of strings
     :returns: dictionary with keys and elements
               - 'spectrum': 7 dimensions numpy structured array with related
                  binnings as numpy arrays
@@ -231,49 +315,29 @@ def convert_spectrum(spectrum, specols=('score', 'sigma', 'score/lethargy')):
     nphibins, nmubins, ntbins, nebins = _get_number_of_bins(spectrum)
     LOGGER.debug("nebins = %d, ntbins = %d, nmubins = %d, nphibins = %d",
                  nebins, ntbins, nmubins, nphibins)
-    phibins, mubins, tbins, ebins = [], [], [], []
-    # spectrum
-    indspectrum = (1, 1, 1, nebins, ntbins, nmubins, nphibins)
-    dtspectrum = np.dtype({'names': specols,
-                           'formats': [FTYPE]*len(specols)})
-    valspectrum = np.empty((indspectrum), dtype=dtspectrum)
-
-    # integrated result (initialized in all cases)
-    indintres = (1, 1, 1, 1, ntbins, nmubins, nphibins)
-    dtintres = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
-    usedbatchs, valsintres = ((spectrum[0]['integrated_res']['used_batch'],
-                               np.empty(indintres, dtype=dtintres))
-                              if 'integrated_res' in spectrum[0]
-                              else (0, None))
-
+    vals = _7dimArray(colnames, [1, 1, 1, nebins, ntbins, nmubins, nphibins])
+    if 'integrated_res' in spectrum[0]:
+        vals.add_array('integrated_res', ['score', 'sigma'],
+                       [1, 1, 1, 1, ntbins, nmubins, nphibins])
     # Fill spectrum, bins and integrated result if exists
-    _fill_spectrum_and_bins(spectrum, valspectrum, valsintres,
-                            ebins, tbins, mubins, phibins)
-
-    # Add max bin edge (binning dim = N+1, where N = number of bins)
-    _add_last_bins(spectrum, ebins, tbins, mubins, phibins)
-
-    # Flip bins if needed (has to be done in bins arrays and in spectrum or
-    # integrated result)
-    _flip_bins(valspectrum, valsintres, ebins, tbins, mubins, phibins)
-    print("ebins after:", ebins)
-    print(np.squeeze(valspectrum))
-
+    vals.fill_arrays_and_bins(spectrum)
+    vals.add_last_bins(spectrum)
+    # Flip bins
+    vals.flip_bins()
     # Build dictionary to be returned
     convspec = {'disc_batch': spectrum[0]['disc_batch'],
-                'ebins': np.array(ebins),
-                'spectrum': valspectrum}
+                'ebins': np.array(vals.bins['e']),
+                'spectrum': vals.arrays['default']}
     if 'time_step' in spectrum[0]:
-        convspec['tbins'] = np.array(tbins)
+        convspec['tbins'] = np.array(vals.bins['t'])
     if 'mu_angle_zone' in spectrum[0]:
-        convspec['mubins'] = np.array(mubins)
+        convspec['mubins'] = np.array(vals.bins['mu'])
     if 'phi_angle_zone' in spectrum[0]:
-        convspec['phibins'] = np.array(phibins)
+        convspec['phibins'] = np.array(vals.bins['phi'])
     if 'integrated_res' in spectrum[0]:
-        convspec['integrated_res'] = valsintres
-        convspec['used_batch'] = usedbatchs
+        convspec['integrated_res'] = vals.arrays['integrated_res']
+        convspec['used_batch'] = spectrum[0]['integrated_res']['used_batch']
     return convspec
-
 
 def _get_number_of_space_bins(meshvals):
     '''Get number of space bins used in meshes.
@@ -301,74 +365,12 @@ def _get_number_of_space_bins(meshvals):
     return ns0bins, ns1bins, ns2bins
 
 
-def _fill_mesh(npvals, mesh, ebin=0, tbin=0, mubin=0, phibin=0):
-    '''Fill the mesh in the numpy array
-    :param npvals: numpy array previously initialized
-                   7-dimensions structured array
-                   v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)
-    :param mesh: list of mesh elements, one element being
-                 [[s0, s1, s2] tally sigma]
-    :param ebin: number of energy bin to fill, default = 0
-    :param tbin: number of time bin to fill, default = 0
-    :param mubin: number of mu angle bin to fill, default = 0
-    :param phibin: number of phi angle bin to fill, default = 0
-    :returns: updated npvals
-    '''
-    for smesh in mesh:
-        index = (smesh[0][0], smesh[0][1], smesh[0][2],
-                 ebin, tbin, mubin, phibin)
-        npvals[index] = np.array(tuple(smesh[1:]), dtype=npvals.dtype)
-    return npvals
-
-
-def convert_mesh(mesh):
-    '''Convert mesh in 7-dimensions numpy array.
-    :param mesh: Each element of the list is one energy range
-                 mesh[i]['mesh_energyrange'][j][[s0, s1, s2], tally, sigma]
-                 with i number of energy range and j number of space bin
-                 (s0, s1, s2)
-    :type mesh: list of dictionaries
-    :returns: python dictonary with keys
-                - eunit: the energy unit (might be modified of other additional
-                  variables are needed)
-                - ebins: energy bin limits (size = number of elts + 1)
-                - vals: numpy structured array of dimension 7
-                  v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)
-                  s0, s1, s2 = space coordinates,
-                               examples: (x, y, z), (r, phi, theta), etc.
-                  E = energy
-                  t = time
-                  mu, phi = direction angles (mu = cos(theta))
-    '''
-    print("Number of mesh:", len(mesh))
-    print("Mesh keys:", list(mesh[0].keys()))
-    print(mesh)
-    eunit = mesh[0]['mesh_energyrange'][0]
-    ebins = []
-    dtmesh = np.dtype([('tally', FTYPE), ('sigma', FTYPE)])
-    # dimensions/number of bins of space coordinates are given by last bin
-    ns0bins, ns1bins, ns2bins = _get_number_of_space_bins(mesh[0]['mesh_vals'])
-    LOGGER.info("ns0bins = %d, ns1bins = %d, ns2bins = %d",
-                ns0bins, ns1bins, ns2bins)
-
-    # up to now to mesh splitted in time, mu or phi angle seen
-    # index = (lastspacebin[0]+1, lastspacebin[1]+1, lastspacebin[2]+1,
-    index = (ns0bins, ns1bins, ns2bins, len(mesh), 1, 1, 1)
-    vals = np.empty(index, dtype=dtmesh)
-    for inde, emesh in enumerate(mesh):
-        if emesh['mesh_energyrange'][0] != eunit:
-            LOGGER.warning("[31mStrange: different units in energy bins[0m")
-        ebins.append(emesh['mesh_energyrange'][1])
-        _fill_mesh(vals, emesh['mesh_vals'], inde)
-    ebins.append(mesh[-1]['mesh_energyrange'][2])
-    _flip_bins(vals, None, ebins, None, None, None)
-    print("[38;5;141m", ebins, "[0m")
-    return {'eunit': eunit,
-            'ebins': np.array(ebins),
-            'vals': vals}
-
-
 def get_energy_bins(meshes):
+    '''Get the number of energy bins for mesh.
+    :param meshes: mesh, list of dictionaries, at least one should have the key
+                   'mesh_energyrange'
+    :type meshes: list of dictionaries
+    '''
     nbebins = 0
     for mesh in meshes:
         if 'mesh_energyrange' in mesh:
@@ -376,7 +378,7 @@ def get_energy_bins(meshes):
     return nbebins
 
 
-def convert_mesh_with_time(meshres):
+def convert_mesh(meshres):
     '''Convert mesh in 7-dimensions numpy array.
     :param meshres: Mesh result constructed as:
                  [{'time_step': [], 'meshes': [], 'integrated_res': {}}, {}].
@@ -400,7 +402,7 @@ def convert_mesh_with_time(meshres):
                   additional variables are needed)
                 - 'ebins': energy bin limits (size = number of elts + 1)
                 - 'tbins': time binning if time grid required
-                - 'energy_integrated_mesh': 7 dimensions numpy structured array
+                - 'eintegrated_mesh': 7 dimensions numpy structured array
                   v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)
                   corresponding to mesh integreted on energy (facultative)
                 - 'integrated_res': 7 dimensions numpy structured array
@@ -410,95 +412,47 @@ def convert_mesh_with_time(meshres):
                   corresponds to integreated results splitted in time)
                 - used_batch: number of used batchs (only if integrated result)
     '''
-    LOGGER.info("In convert_mesh_with_time")
+    LOGGER.info("In convert_mesh_class")
     LOGGER.debug("Number of mesh results: %d", len(meshres))
-    ebins, tbins = [], []
-    dtmesh = np.dtype([('tally', FTYPE), ('sigma', FTYPE)])
     LOGGER.debug("keys of meshes: %s", str(list(meshres[0]['meshes'].keys())))
     LOGGER.debug("elts in meshes: %d", len(meshres[0]['meshes']))
     # dimensions/number of bins of space coordinates are given by last bin
-    ns0bins, ns1bins, ns2bins = _get_number_of_space_bins(meshres[0]['meshes'][0]['mesh_vals'])
+    ns0bins, ns1bins, ns2bins = _get_number_of_space_bins(
+        meshres[0]['meshes'][0]['mesh_vals'])
+    # ntbins supposes for the moment no mu or phi bins
     ntbins = (meshres[-1]['time_step'][0]+1
               if "time_step" in meshres[0]
               else 1)
     nebins = get_energy_bins(meshres[0]['meshes'])
-    # get_energy_bins is much more efficient than combination of sum([])
-    # and [].count('bla'), by a factor > 5
     LOGGER.info("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
                 "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
     # up to now no mesh splitted in mu or phi angle seen, update easy now
-    index = (ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1)
-    vals = np.empty(index, dtype=dtmesh)
+    vals = _7dimArray(['tally', 'sigma'],
+                      [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
     # mesh integrated on energy (normally the last mesh)
-    intmeshindex = (ns0bins, ns1bins, ns2bins, 1, ntbins, 1, 1)
-    intmeshvals = (np.empty(intmeshindex, dtype=dtmesh)
-                   if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]
-                   else None)
-    # integrated result (space and energy)
-    intresindex = (1, 1, 1, 1, ntbins, 1, 1)
-    dtintres = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
-    usedbatchs, intresvals = ((meshres[0]['integrated_res']['used_batch'],
-                               np.empty(intresindex, dtype=dtintres))
-                              if 'integrated_res' in meshres[0]
-                              else (0, None))
-    itime = 0
-    for ires in meshres:
-        LOGGER.debug("keys: %s, number of elements: %d",
-                     list(ires.keys()), len(ires))
-        if 'time_step' in ires:
-            itime = ires['time_step'][0]
-            tbins.append(ires['time_step'][1])
-        for inde, emesh in enumerate(ires['meshes']):
-            if 'mesh_energyrange' in emesh:
-                if itime == 0:
-                    ebins.append(emesh['mesh_energyrange'][1])
-                    if inde == nebins-1:
-                        ebins.append(emesh['mesh_energyrange'][2])
-                _fill_mesh(vals, emesh['mesh_vals'], inde, itime)
-            if 'mesh_energyintegrated' in emesh:
-                LOGGER.debug("Will fill mesh integrated in energy")
-                _fill_mesh(intmeshvals, emesh['mesh_vals'], 0, itime)
-        if 'integrated_res' in ires:
-            iintres = ires['integrated_res']
-            index = (0, 0, 0, 0, itime, 0, 0)
-            intresvals[index] = np.array((iintres['score'], iintres['sigma']),
-                                         dtype=intresvals.dtype)
-    if 'time_step' in meshres[0]:
-        if len(tbins) > 1 and tbins[0] > tbins[1]:
-            tbins.insert(0, meshres[0]['time_step'][2])
-        else:
-            tbins.append(meshres[-1]['time_step'][2])
-    _flip_bins([vals, intmeshvals, intresvals], ebins, tbins, None, None)
-    convmesh = {'eunit': meshres[0]['meshes'][0]['mesh_energyrange'][0],
-                'ebins': np.array(ebins),
-                'mesh': vals}
-    if 'time_step' in meshres[0]:
-        convmesh['tbins'] = np.array(tbins)
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
-        convmesh['energy_integrated_mesh'] = intmeshvals
+        vals.add_array('eintegrated_mesh', ['tally', 'sigma'],
+                       [ns0bins, ns1bins, ns2bins, 1, ntbins, 1, 1])
+    # integrated result (space and energy)
     if 'integrated_res' in meshres[0]:
-        convmesh['integrated_res'] = intresvals
-        convmesh['used_batch'] = usedbatchs
+        vals.add_array('integrated_res', ['score', 'sigma'],
+                       [1, 1, 1, 1, ntbins, 1, 1])
+    # fill arrays, bins, put them in inceasing order
+    vals.fill_arrays_and_bins(meshres)
+    vals.add_last_bins(meshres)
+    vals.flip_bins()
+    # build dictionary to be returned
+    convmesh = {'eunit': meshres[0]['meshes'][0]['mesh_energyrange'][0],
+                'ebins': np.array(vals.bins['e']),
+                'mesh': vals.arrays['default']}
+    if 'time_step' in meshres[0]:
+        convmesh['tbins'] = np.array(vals.bins['t'])
+    if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
+        convmesh['eintegrated_mesh'] = vals.arrays['eintegrated_mesh']
+    if 'integrated_res' in meshres[0]:
+        convmesh['integrated_res'] = vals.arrays['integrated_res']
+        convmesh['used_batch'] = meshres[0]['integrated_res']['used_batch']
     return convmesh
-
-
-def convert_integrated_mesh(mesh):
-    '''Convert energy integrated mesh in numpy structured array.
-    :param mesh: values as a list
-    :returns: numpy structured array of dimension 7
-              v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)
-              s0, s1, s2 = space coordinates (x, y, z), (r, phi, theta), etc.
-              E = energy -> fixed at 0 (one bin)
-              t = time
-              mu, phi = direction angles (mu = cos(theta))
-    '''
-    dtmesh = np.dtype([('tally', FTYPE), ('sigma', FTYPE)])
-    ns0bins, ns1bins, ns2bins = _get_number_of_space_bins(mesh)
-    # up to now to mesh splitted in time, mu or phi angle seen
-    index = (ns0bins, ns1bins, ns2bins, 1, 1, 1, 1)
-    vals = np.empty(index, dtype=dtmesh)
-    _fill_mesh(vals, mesh)
-    return vals
 
 
 def convert_integrated_result(result):
@@ -542,7 +496,7 @@ def convert_keff_with_matrix(res):
     are needed but array is easier to initialized and more general.
     '''
     # not converged cases a tester...
-    LOGGER.info("[38;5;56mClefs: %s[0m", str(list(res.keys())))
+    LOGGER.info("In common.convert_keff_with_matrix")
     if 'not_converged' in res:
         return {'used_batch': res['used_batch'],
                 'not_converged': res['not_converged']}

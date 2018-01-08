@@ -46,7 +46,8 @@ def convert_mesh(toks):
               7-dimensions numpy structured array, binnings, etc. depending on
               availability
     '''
-    mesh = common.convert_mesh_with_time(toks)
+    # mesh = common.convert_mesh_with_time(toks)
+    mesh = common.convert_mesh(toks)
     return mesh
 
 
