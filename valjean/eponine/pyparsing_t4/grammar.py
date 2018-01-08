@@ -188,6 +188,7 @@ _ifpcvgstat_kw = Keyword("Scores for IFP convergence statistics are ordered "
 _ifpadjcriticality_kw = Keyword("IFP_ADJOINT_CRITICALITY EDITION")
 _ifpadjcyclelength_kw = Keyword("IFP CYCLE LENGTH =")
 _ifpadjnormalizedres_kw = Keyword("RESULTS ARE NORMALIZED")
+_ifpadjvol_kw = Keyword("Vol")
 _ifpadjminmax_kw = Keyword("(min | max)")
 _ifpadjscore_kw = Keyword("score [a.u.]")
 
@@ -775,16 +776,21 @@ ifpblock = (Group(Suppress(_integratedres_kw)
 
 
 def _rename_norm_kw(toks):
+    '''Transform RESULTS ARE NORMALIZED keword in int (lighter)'''
     return 1
 
 
 def _defineIFPadjTableDim(toks):
+    '''Define the format of the IFP adjoint criticality table result:
+    coordinates (Vol or space coordinates) are followed by energy.
+    '''
     _tabdim = len(toks)
-    _ifpadjbinval << _fnums * 2 * _tabdim
+    if "Vol" not in toks[0]:
+        _ifpadjbinval << _fnums * 2 * _tabdim
+    else:
+        # in Vol case: int to identify volume, then E (min | max)
+        _ifpadjbinval << _inums + _fnums * 2
 
-
-def printtoks(toks):
-    print(toks)
 
 # IFP adjoint criticality edition
 _ifpadfcrit_intro = (Group(_star_line
@@ -801,7 +807,7 @@ _ifpadfcrit_intro = (Group(_star_line
                      ('ifp_adjoint_criticality_intro'))
 _ifpadjbinval = Forward()
 _ifpadjcoordinate = Word(alphas) + Suppress(_ifpadjminmax_kw)
-_ifpadjcoordinates = (OneOrMore(_ifpadjcoordinate)
+_ifpadjcoordinates = ((Optional(_ifpadjvol_kw) + OneOrMore(_ifpadjcoordinate))
                       .setParseAction(_defineIFPadjTableDim))
 _ifpadjcolumns = _ifpadjcoordinates + _ifpadjscore_kw + _spsigma_kw
 _ifpadjline = Group(_ifpadjbinval + _fnums + _fnums)
