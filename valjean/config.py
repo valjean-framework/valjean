@@ -516,35 +516,43 @@ class Config:
                 Config.LookupSectionFromOptHandler('executable')
                 )
 
-        Now let us look up `args` in the different sections::
+        This means that the handler will fire only in sections of the `run`
+        family.  Now let us look up `args` in the different sections::
 
             >>> config.get('executable', 'dog_kennel', 'args', raw=True)
             ${arg1} ${arg2}
 
-        The handler is not activated here. Since ``raw=True`` was specified,
-        the lookup result is not interpolated.
+        The handler does not fire here because we are asking for the `args`
+        option of the ``executable/dog_kennel`` section, which does not belong
+        to the `run` family. Additionally, since ``raw=True`` was specified,
+        the lookup result is not interpolated and we obtain ``${arg1}
+        ${arg2}``. Suppressing ``raw=True`` results in an exception:
 
             >>> config.get('executable', 'dog_kennel', 'args')
             # throws InterpolationMissingOptionError
 
-        Without ``raw=True``, the interpolation fails because `arg2` is not
-        defined in the ``executable/dog_kennel`` section.
+        Without ``raw=True``, the configuration tries to interpolate `arg2` and
+        fails, because this option is not defined in ``executable/dog_kennel``.
+        Now consider the following:
 
             >>> config.get('run', 'paper_bag', 'args', raw=True)
             ${arg1} ${arg2}
 
-        Here the handler is activated because the `args` option is not present
-        in the ``run/paper_bag`` section. The handler looks up the `executable`
-        option (which yields ``dog_kennel``) and queries
-        ``executable/dog_kennel`` for the `args` parameter.
+        Here the handler fires because the `args` option is not explicitly
+        present in the ``run/paper_bag`` section. The handler looks up the
+        `executable` option (which yields ``dog_kennel``) and queries
+        ``executable/dog_kennel`` for the `args` parameter. Thus, we get the
+        same (uninterpolated) result as before.
+
+        If we activate interpolation (``raw=False``)
 
             >>> config.get('run', 'paper_bag', 'args')
             mattress paper_bag
 
-        If we activate interpolation (``raw=False``), we see that it succeeds
-        (compare to the lookup of `args` from ``executable/dog_kennel`` above).
-        The ``${arg2}`` option is interpolated from the ``run/paper_bag``
-        section.
+        we see that the query now succeeds (compare to the lookup of `args`
+        from ``executable/dog_kennel`` above).  The ``${arg1}`` option is
+        interpolated from the ``executable/dog_kennel`` section, but
+        ``${arg2}`` is interpolated from ``run/paper_bag``.
 
             >>> config.get('run', 'chest', 'args')
             sing chest
