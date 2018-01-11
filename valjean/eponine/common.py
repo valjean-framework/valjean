@@ -22,7 +22,7 @@ if "mem" not in sys.argv:
 
 LOGGER = logging.getLogger('valjean')
 ITYPE = np.int32
-FTYPE = np.float32
+FTYPE = np.float32  # pylint: disable=E1101
 MASK_EINTRES = 1 << 1
 MASK_TINTRES = 1 << 2
 
@@ -587,7 +587,8 @@ def convert_keff(res):
             'correlation_matrix': corrres}
 
 
-def convert_green_bands(gbs):
+# 17 locals in convert_green_bands instead 15, but helps reading of the method
+def convert_green_bands(gbs):  # pylint: disable=R0914
     '''Convert Green bands results in numpy structured array,
     close to time or angle spectra ones.
     :param gbs: Green bands as a list of dictionaries
@@ -596,30 +597,29 @@ def convert_green_bands(gbs):
               - 'ebins': energy bins (size = number of elements +1)
               - 'vals': 6-dimensions numpy structured array
                 v[step, sourceNum, u, v, w, E] = (score, sigma, score/lethargy)
+                step: bin of energy of source
                 u, v, w: coordinates of the source (0, 0, 0 if not given)
               - 'sebins': energy bins for the source
               - 'disc_batch': number of discarded batchs
     '''
-    sebins = []
-    nsteps = len(gbs)
     lastsource = gbs[-1]['gb_step_res'][-1]['gb_source']
     hassourcetab = True if len(lastsource) > 1 else False
-    nsources = lastsource[0]+1
-    nudim = lastsource[1][0]+1 if hassourcetab else 1
-    nvdim = lastsource[1][1]+1 if hassourcetab else 1
-    nwdim = lastsource[1][2]+1 if hassourcetab else 1
     spectrum = gbs[0]['gb_step_res'][0]['spectrum_res'][0]
-    nebins = len(spectrum['spectrum_vals'])
-    ebins = []
-    discbatchs = spectrum['disc_batch']
-    index = (nsteps, nsources, nudim, nvdim, nwdim, nebins)
-    dtgb = np.dtype([('score', FTYPE),
-                     ('sigma', FTYPE),
-                     ('score/lethargy', FTYPE)])
-    vals = np.empty(index, dtype=dtgb)
+    bins = {'e': [], 'se': []}
+    index = (len(gbs),  # number of steps (= number of bins of source energy)
+             lastsource[0]+1,  # number of sources
+             lastsource[1][0]+1 if hassourcetab else 1,  # number of u bins
+             lastsource[1][1]+1 if hassourcetab else 1,  # number of v bins
+             lastsource[1][2]+1 if hassourcetab else 1,  # number of w bins
+             len(spectrum['spectrum_vals']))  # number of energy bins
+    vals = np.empty(index,
+                    dtype=np.dtype([('score', FTYPE),
+                                    ('sigma', FTYPE),
+                                    ('score/lethargy', FTYPE)]))
+    # Loop over results to fill them in numpy array
     for ist, gbstep in enumerate(gbs):
         istep = gbstep['gb_step_desc'][0]
-        sebins.append(gbstep['gb_step_desc'][2])
+        bins['se'].append(gbstep['gb_step_desc'][2])
         for ires, gbres in enumerate(gbstep['gb_step_res']):
             isource = gbres['gb_source']
             if len(gbres['spectrum_res']) > 1:
@@ -628,18 +628,21 @@ def convert_green_bands(gbs):
             ispectrum = gbres['spectrum_res'][0]['spectrum_vals']
             for iebin, ivals in enumerate(ispectrum):
                 if ist == 0 and ires == 0:
-                    ebins.append(ivals[0])
+                    bins['e'].append(ivals[0])
                 locind = ((istep, isource[0],
                            isource[1][0], isource[1][1], isource[1][2],
                            iebin) if hassourcetab
                           else (istep, isource[0], 0, 0, 0, iebin))
-                vals[locind] = np.array(tuple(ivals[2:]), dtype=dtgb)
-    sebins.append(gbs[-1]['gb_step_desc'][1])
-    ebins.append(spectrum['spectrum_vals'][-1][1])
-    return {'ebins': np.array(ebins),
+                vals[locind] = np.array(tuple(ivals[2:]), dtype=vals.dtype)
+    # Add last bins
+    bins['se'].append(gbs[-1]['gb_step_desc'][1])
+    bins['e'].append(spectrum['spectrum_vals'][-1][1])
+    # No flip bins for the moment, question about order of steps (so energy
+    # bins of sources)
+    return {'ebins': np.array(bins['e']),
             'vals': vals,
-            'sebins': np.array(sebins),
-            'disc_batch': discbatchs}
+            'sebins': np.array(bins['se']),
+            'disc_batch': spectrum['disc_batch']}
 
 
 def convert_ifp(ifp):
