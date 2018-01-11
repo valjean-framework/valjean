@@ -199,6 +199,20 @@ class RunTask(Task):
 
         deps = config.get(sec_fam, name, 'depends-on', fallback=None)
 
+        # if the path to the executable was taken from an `executable` section,
+        # add a dependency on the relevant build
+        sec = '{}/{}'.format(sec_fam, name)
+        if config.has_option(sec, 'executable'):
+            exe = config.get(sec, 'executable')
+            exe_sec = 'executable/{}'.format(exe)
+            if config.has_option(exe_sec, 'from-build'):
+                build = config.get(exe_sec, 'from-build')
+                build_sec = 'build/{}'.format(build)
+                if deps is None:
+                    deps = build_sec
+                else:
+                    deps = '\n'.join((deps, build_sec))
+
         return cls(name, cli, deps=deps)
 
     def __init__(self, name, cli, *, deps=None, subprocess_args=None,

@@ -3,6 +3,7 @@
 import argparse
 from itertools import dropwhile
 
+from ..cosette.task import RunTask
 from ..cosette.code import CheckoutTask, BuildTask
 from ..cosette.depgraph import DepGraph
 from ..cosette.scheduler import Scheduler
@@ -51,7 +52,8 @@ class TaskFactory:
     #: as a string, and ``class`` is the class of the tasks for the given
     #: phase.
     PHASES = [('checkout', CheckoutTask),
-              ('build', BuildTask)]
+              ('build', BuildTask),
+              ('run', RunTask)]
 
     def __init__(self, config, start_from, up_to):
         '''Initialize a factory.
