@@ -595,7 +595,15 @@ class Config:
             return val
 
     class PathHandler:
-        '''Handle the 'path' option for executable/run sections.'''
+        '''Handle the 'path' option for executable/run sections.
+
+        This handler specifies the logic to extract the path of an executable
+        for a section of the `executable` family.  If the `path` option is not
+        explicitly specified, we first look for `from-build` (which must be the
+        name of a section of the `build` family) and `relative-path` (which
+        must be a relative path). The path to the executable is constructed by
+        concatenating the build directory of `from-build` with `relative-path`.
+        '''
 
         # pylint: disable=too-many-arguments
         @staticmethod
@@ -603,7 +611,9 @@ class Config:
             try:
                 path = config.get(sec, 'relative-path', raw=raw, vars=vars_)
                 if os.path.isabs(path):
-                    return path
+                    raise ValueError("'relative-path' in section {} "
+                                     "cannot be an absolute path"
+                                     .format(sec))
                 from_build = config.get(sec, 'from-build', raw=raw, vars=vars_)
                 build_dir = config.get('build', from_build, 'build-dir',
                                        raw=raw, vars=vars_)
