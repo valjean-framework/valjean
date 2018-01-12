@@ -49,12 +49,14 @@ class Scan(Mapping):
     :param endflag: end flag of the results block in Tripoli-4 listing
     :type endflag: string
     :param meshlim: limit on number of lines to read in meshes outputs
-                    (can be really long), default = 100
+                    (can be really long), default = -1, all cells will be read
+                    Minimum value is 1, use it to skip the mesh.
+                    If 0 is used, parsing will fail as no mesh will be found.
     :type meshlim: int
     '''
 
     @profile
-    def __init__(self, fname, endflag="simulation time", meshlim=100):
+    def __init__(self, fname, endflag="simulation time", meshlim=-1):
         '''Initialize the instance from the file "fname", meaning reads the
         file and store the relevant parts of it, i.e. result block for each
         batch edition.
@@ -137,6 +139,7 @@ class Scan(Mapping):
                 elif "Results on a mesh" in line:
                     inmeshres = True
                     nbmeshlines = 0
+                    assert self.meshlim != 0
                 elif "(" in line and ")" in line and "," in line and inmeshres:
                     nbmeshlines += 1
                     prevmeshline = True
@@ -188,7 +191,8 @@ class Scan(Mapping):
                     result = []
                     started_gen = False
                 if started_res:
-                    if inmeshres and nbmeshlines > self.meshlim:
+                    if ((inmeshres and self.meshlim != -1
+                         and nbmeshlines > self.meshlim)):
                         if nbmeshlines == self.meshlim+1:
                             count_mesh_exceeding += 1
                             result.append("\n")
