@@ -423,6 +423,9 @@ class Config(BaseConfig):
         for handler in the_handlers:
             self.add_option_handler(*handler)
 
+        # initialize the list of cumulated dependencies with an empty set
+        self._deps = set()
+
     # pylint: disable=redefined-builtin
     def get(self, *args, raw=False, vars=None, fallback=_UNSET):
         '''get(section, option, raw=False, fallback)
@@ -470,15 +473,23 @@ class Config(BaseConfig):
                 if handler is not None:
                     LOGGER.debug('treating option %s in section %s as special',
                                  xsection, option)
-                    val = handler(self, xsection, split, option, raw, vars,
-                                  fallback)
+                    val, deps = handler(self, xsection, split, option, raw,
+                                        vars, fallback)
+                    self._deps.update(deps)
                     LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
+                    LOGGER.debug('deps = %r', deps)
                     return val
             if fallback is not _UNSET:
                 LOGGER.debug('get(%r, %r) falls back to %r', xsection, option,
                              fallback)
                 return fallback
             raise
+
+    def get_deps(self):
+        return self._deps
+
+    def clear_deps(self):
+        self._deps.clear()
 
     def add_option_handler(self, sec_families, option, handler):
         '''Add an option handler.
@@ -544,12 +555,17 @@ class Config(BaseConfig):
             to `sec`), and apply `finalizer` to the result.
             '''
             lookup_opt = opt if self.other_opt is None else self.other_opt
-            lookup_sec = sec if self.other_sec is None else self.other_sec
+            if self.other_sec:
+                lookup_sec = self.other_sec
+                deps = [self.other_sec]
+            else:
+                lookup_sec = sec
+                deps = []
             val = config.get(lookup_sec, lookup_opt, raw=raw, vars=vars_,
                              fallback=fallback)
             if self.finalizer is not None:
-                return self.finalizer(val, split, opt)
-            return val
+                return self.finalizer(val, split, opt), deps
+            return val, deps
 
     class LookupSectionFromOptHandler:
         '''Handle missing options by looking up options in sections defined by
@@ -651,7 +667,8 @@ class Config(BaseConfig):
             try:
                 sec_id = config.get(sec, self.opt, raw=False)
             except NoOptionError:
-                return fallback
+                deps = []
+                return fallback, deps
 
             # pylint: disable=protected-access
             chain = ChainMap(config._conf[sec])
@@ -659,8 +676,9 @@ class Config(BaseConfig):
                 chain.maps.append(vars_)
             val = config.get(self.opt, sec_id, opt, vars=chain, raw=raw)
             if self.finalizer is not None:
-                return self.finalizer(val, split, opt)
-            return val
+                return self.finalizer(val, split, opt), deps
+            deps = ['{}/{}'.format(self.opt, sec_id)]
+            return val, deps
 
     class PathHandler:
         '''Handle the 'path' option for executable/run sections.
@@ -685,9 +703,11 @@ class Config(BaseConfig):
                 from_build = config.get(sec, 'from-build', raw=raw, vars=vars_)
                 build_dir = config.get('build', from_build, 'build-dir',
                                        raw=raw, vars=vars_)
-                return os.path.join(build_dir, path)
+                deps = ['build/{}'.format(from_build)]
+                return os.path.join(build_dir, path), deps
             except NoOptionError:
-                return fallback
+                deps = []
+                return fallback, deps
 
     #: Default option handlers
     DEFAULT_HANDLERS = (

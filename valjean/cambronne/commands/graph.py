@@ -15,16 +15,17 @@ class GraphCommand(Command):
 
     def register(self, parser):
         '''Register options for this command in the parser.'''
-        super().register(parser)
         parser.add_argument(
             '-o', '--output',
             action='store',
             help='path to the output file'
             )
+        parser.set_defaults(func=self.execute)
 
     def execute(self, args, config):
         '''Execute the ``graph`` command.'''
-        graph = build_graph(args, config)
+        family_targets = [(None, None)]
+        graph = build_graph(family_targets, config)
         graph_str = graph.to_graphviz()
         if args.output:
             _, ext = os.path.splitext(args.output)

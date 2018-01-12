@@ -15,5 +15,9 @@ class CheckoutCommand(Command):
 
     def execute(self, args, config):
         '''Execute the ``checkout`` command.'''
-        graph = build_graph(args, config)
+        if args.targets:
+            family_targets = [('checkout', target) for target in args.targets]
+        else:
+            family_targets = [('checkout', None)]
+        graph = build_graph(family_targets, config)
         return schedule(graph)

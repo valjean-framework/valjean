@@ -13,5 +13,9 @@ class BuildCommand(Command):
 
     def execute(self, args, config):
         '''Execute the ``build`` command.'''
-        graph = build_graph(args, config)
+        if args.targets:
+            family_targets = [('build', target) for target in args.targets]
+        else:
+            family_targets = [('build', None)]
+        graph = build_graph(family_targets, config)
         return schedule(graph)

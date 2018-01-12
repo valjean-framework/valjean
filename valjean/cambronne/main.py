@@ -55,10 +55,6 @@ def make_parser():
         '-l', '--log',
         help='path to the log file'
         )
-    parser.add_argument(
-        '--start-from', action='store', metavar='PHASE',
-        help='start execution from the given phase'
-        )
 
     # here come the subcommands
     # WARNING: some code downstream assumes that no aliases are used

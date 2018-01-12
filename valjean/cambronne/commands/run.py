@@ -13,5 +13,9 @@ class RunCommand(Command):
 
     def execute(self, args, config):
         '''Execute the ``run`` command.'''
-        graph = build_graph(args, config)
+        if args.targets:
+            family_targets = [(None, target) for target in args.targets]
+        else:
+            family_targets = [(None, None)]
+        graph = build_graph(family_targets, config)
         return schedule(graph)

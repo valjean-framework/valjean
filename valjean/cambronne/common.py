@@ -51,84 +51,114 @@ class TaskFactory:
     #: ``(phase_name, class)``, where ``phase_name`` is the name of the phase,
     #: as a string, and ``class`` is the class of the tasks for the given
     #: phase.
-    PHASES = [('checkout', CheckoutTask),
-              ('build', BuildTask),
-              ('run', RunTask)]
+    PHASES = {'checkout': CheckoutTask,
+              'build': BuildTask,
+              'run': RunTask}
 
-    def __init__(self, config, start_from, up_to):
+    def __init__(self, config):
         '''Initialize a factory.
 
         :param Config config: The configuration object.
-        :param start_from: The start of the range of phases for which tasks
-                           will be generated.
-        :type start_from: str or None
-        :param up_to: The end of the range of phases for which tasks
-                      will be generated.
-        :type up_to: str or None
         '''
         self.config = config
-        if start_from is None:
-            phases = self.PHASES
-        else:
-            phases = dropwhile(lambda elem: elem[0] != start_from,
-                               self.PHASES)
-        if not phases:
-            raise ValueError('cannot find starting action {}'
-                             .format(start_from))
-        last = None
-        for i, phase in enumerate(phases):
-            if phase[0] == up_to:
-                last = i + 1
-                break
-        self.phases = phases[:last]
-        if not self.phases:
-            raise ValueError('nothing to do between {!r} and {!r}'
-                             .format(start_from, up_to))
 
-    def make_tasks(self, targets):
-        '''Generate a list of tasks.
+    # def make_tasks(self, targets):
+    #     '''Generate a list of tasks.
 
-        This method generates tasks based on a collection of task names
-        (`targets`) which will be looked up in the configuration. So, for
-        instance, if the factory has been configured to produce tasks in the
-        range from ``'configure'`` to ``'build'``, and if `targets` contains
-        ``'swallow'`` and ``'coconut'``, this method will search the
-        configuration file for sections
+    #     This method generates tasks based on a collection of task names
+    #     (`targets`) which will be looked up in the configuration. So, for
+    #     instance, if the factory has been configured to produce tasks in the
+    #     range from ``'configure'`` to ``'build'``, and if `targets` contains
+    #     ``'swallow'`` and ``'coconut'``, this method will search the
+    #     configuration file for sections
 
-            * ``[checkout swallow]``
-            * ``[checkout coconut]``
-            * ``[build swallow]``
-            * ``[build coconut]``
+    #         * ``[checkout swallow]``
+    #         * ``[checkout coconut]``
+    #         * ``[build swallow]``
+    #         * ``[build coconut]``
 
-        :param collection targets: A collection of strings.
-        '''
-        if targets:
-            return [cls.from_config(target, self.config)
-                    for _, cls in self.phases
-                    for target in targets]
-        else:
-            return [cls.from_config(target, self.config)
-                    for phase, cls in self.phases
-                    for _, target in self.config.sections_by_family(phase)]
+    #     :param collection targets: A collection of strings.
+    #     '''
+    #     if targets:
+    #         return [cls.from_config(target, self.config)
+    #                 for _, cls in self.phases
+    #                 for target in targets]
+    #     else:
+    #         return [cls.from_config(target, self.config)
+    #                 for phase, cls in self.phases
+    #                 for _, target in self.config.sections_by_family(phase)]
+
+    def make_task(self, command, name):
+        LOGGER.debug('making task for command %s, name %s', command, name)
+        cls = self.PHASES.get(command, None)
+        LOGGER.debug('task class is %s', cls)
+        if cls is None:
+            return None
+        task = cls.from_config(name, self.config)
+        return task
+
+    def make_tasks(self, family_targets):
+        tasks_by_name = {}
+        for family, target in family_targets:
+            LOGGER.debug('making tasks for family/targets %s', family_targets)
+            task_name = '{}/{}'.format(family, target)
+            if task_name in tasks_by_name:
+                continue
+            task = self.make_task(family, target)
+            if task is None:
+                continue
+            try:
+                assert task_name == task.name
+            except AssertionError:
+                LOGGER.fatal('%s != %s', task_name, task.name)
+                raise
+            tasks_by_name[task_name] = task
+            for dep in task.depends_on:
+                dep_family, dep_name = self.config.split_section(dep)
+                dep_tasks = self.make_tasks([(dep_family, dep_name)])
+                tasks_by_name.update(dep_tasks)
+
+        return tasks_by_name
 
 
-def build_graph(args, config):
+def build_graph(family_targets, config):
     '''Build a dependency graph according to the CLI parameters and the
     configuration.'''
 
     graph = DepGraph()
 
-    factory = TaskFactory(config, args.start_from, args.command_name)
+    factory = TaskFactory(config)
 
-    tasks = factory.make_tasks(args.targets)
-    tasks_by_name = {}
-    for task in tasks:
-        tasks_by_name[task.name] = task
+    expanded_family_targets = []
+    for fam, tar in family_targets:
+        if fam is None and tar is None:
+            LOGGER.debug('building graph for all family/targets')
+            expanded_family_targets.extend(
+                config.split_section(sec_name)
+                for sec_name in config.sections()
+                )
+        elif tar is None:
+            LOGGER.debug('implicit targets for family: %s', fam)
+            expanded_family_targets.extend(
+                (fam, t) for _, t in config.sections_by_family(fam)
+                )
+        elif fam is None:
+            LOGGER.debug('implicit families for target: %s', tar)
+            for sec_name in config.sections():
+                sec_split = config.split_section(sec_name)
+                if tar == sec_split[1]:
+                    expanded_family_targets.append(sec_split)
+        else:
+            LOGGER.debug('explicit family/target pair: %s, %s',
+                         fam, tar)
+            expanded_family_targets.append(fam, tar)
+
+    tasks_by_name = factory.make_tasks(expanded_family_targets)
+    for task in tasks_by_name.values():
         graph.add_node(task)
-
-    for task in tasks:
         for dep in task.depends_on:
-            graph.add_dependency(task, on=tasks_by_name[dep])
+            if dep in tasks_by_name:
+                graph.add_dependency(task, on=tasks_by_name[dep])
 
     return graph
 

@@ -65,9 +65,8 @@ class:
 
 import logging
 import enum
-from collections import ChainMap
 
-from ..config import Config, NoOptionError
+from ..config import Config
 
 #: Enumeration for the task status.
 TaskStatus = enum.Enum('TaskStatus',  # pylint: disable=invalid-name
@@ -115,10 +114,9 @@ class Task:
         :type deps: str or None
         '''
         self.name = name
-        self.depends_on = []
+        self.depends_on = set()
         if deps is not None:
-            for dep in deps.splitlines():
-                self.add_dependency(dep.strip())
+            self.depends_on.update(deps)
 
     def do(self, env):
         '''Perform a task.
@@ -135,7 +133,7 @@ class Task:
 
     def add_dependency(self, dep):
         '''Add an item to the list of dependencies of this task.'''
-        self.depends_on.append(dep)
+        self.depends_on.add(dep)
 
 
 class DelayTask(Task):
@@ -197,23 +195,15 @@ class RunTask(Task):
         if args is not None:
             cli += split(args)
 
-        deps = config.get(sec_fam, name, 'depends-on', fallback=None)
+        deps = config.get(sec_fam, name, 'depends-on', fallback=set())
 
         # if the path to the executable was taken from an `executable` section,
         # add a dependency on the relevant build
-        sec = '{}/{}'.format(sec_fam, name)
-        if config.has_option(sec, 'executable'):
-            exe = config.get(sec, 'executable')
-            exe_sec = 'executable/{}'.format(exe)
-            if config.has_option(exe_sec, 'from-build'):
-                build = config.get(exe_sec, 'from-build')
-                build_sec = 'build/{}'.format(build)
-                if deps is None:
-                    deps = build_sec
-                else:
-                    deps = '\n'.join((deps, build_sec))
+        deps.update(config.get_deps())
+        config.clear_deps()
 
-        return cls(name, cli, deps=deps)
+        task_name = 'run/{}'.format(name)
+        return cls(task_name, cli, deps=deps)
 
     def __init__(self, name, cli, *, deps=None, subprocess_args=None,
                  **kwargs):
