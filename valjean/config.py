@@ -1,4 +1,4 @@
-'''Module containing the configuration class for the :mod:`valjean` package.
+'''Module containing the configuration classes for the :mod:`valjean` package.
 
 :class:`Config` objects encapsulate a set of configuration options for a
 :mod:`valjean` run. Here is how you create one:
@@ -116,7 +116,7 @@ import re
 from . import LOGGER
 
 
-class Config:
+class BaseConfig:
     '''The configuration class for :mod:`valjean`. It derives from
     :class:`configparser.ConfigParser`, so all of the methods of the base class
     can also be used with this one.
@@ -125,7 +125,7 @@ class Config:
     #: Default configuration file paths.
     DEFAULT_CONFIG_FILES = ('~/.valjean.cfg', 'valjean.cfg')
 
-    def __init__(self, paths=None, handlers=None):
+    def __init__(self, paths=None):
         '''Construct a configuration object.
 
         :param paths: An iterable of paths for configuration files. If this is
@@ -140,14 +140,6 @@ class Config:
                       additional ones, the default files are available as
                       ``Config.DEFAULT_CONFIG_FILES``.
         :type paths: iterable or None
-        :param handlers: An iterable of handlers for specific options. If this
-                         is `None`, the default handlers from
-                         ``Config.DEFAULT_HANDLERS`` will be installed. The
-                         elements of the iterables must be triples of the form
-                         ``(fams, opt, handler)``, where ``fams`` is a list of
-                         section families, ``opt`` is the name of the option to
-                         handle and ``handler`` is the handler callable proper.
-        :type handlers: iterable or None
         '''
 
         self._conf = ConfigParser(interpolation=ExtendedInterpolation(),
@@ -178,25 +170,16 @@ class Config:
             for opt, val in other_conf.items(sec_name, raw=True):
                 self.set(sec_name, opt, val)
 
-        #: dictionary
-        self._handlers = dict()
-        if handlers is None:
-            the_handlers = self.DEFAULT_HANDLERS
-        else:
-            the_handlers = handlers
-        for handler in the_handlers:
-            self.add_option_handler(*handler)
-
     @classmethod
     def from_mapping(cls, mapping):
         '''Construct a configuration object from an option mapping.
 
         The keys of `mapping` must be strings; its values must be string →
-        string mappings. Note that `mapping` may also be a :class:`Config`
-        object (in which case this method acts as a copy).
+        string mappings. Note that `mapping` may also be a :class:`BaseConfig`
+        or :class:`Config` object (in which case this method acts as a copy).
 
         :param mapping mapping: The mapping for initialization.
-        :returns: The constructed Config object.
+        :returns: The constructed BaseConfig object.
         '''
         new = cls()
         new.merge(mapping)
@@ -278,16 +261,6 @@ class Config:
             LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
             return val
         except NoOptionError:
-            split = self.split_section(xsection)
-            if len(split) > 1:
-                handler = self._handlers.get((option, split[0]), None)
-                if handler is not None:
-                    LOGGER.debug('treating option %s in section %s as special',
-                                 xsection, option)
-                    val = handler(self, xsection, split, option, raw, vars,
-                                  fallback)
-                    LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
-                    return val
             if fallback is not _UNSET:
                 LOGGER.debug('get(%r, %r) falls back to %r', xsection, option,
                              fallback)
@@ -327,7 +300,7 @@ class Config:
         '''In-place merge two configurations. Options from the `other`
         configuration override those from `self`.
 
-        :param Config other: The configuration to merge into `self`.
+        :param BaseConfig other: The configuration to merge into `self`.
         :returns: The modified configuration.
         '''
         self._conf.read_dict(other)
@@ -337,7 +310,7 @@ class Config:
         '''In-place merge a section of another configuration. Options from the
         `other` configuration override those from `self`.
 
-        :param Config other: The configuration to merge into `self`.
+        :param BaseConfig other: The configuration to merge into `self`.
         :param str section: The name of the section to merge.
         :returns: The modified configuration.
         '''
@@ -389,7 +362,7 @@ class Config:
 
     def __add__(self, other):
         '''Merge two configurations, return the result as a new object.'''
-        return Config.from_mapping(self).merge(other)
+        return self.from_mapping(self).merge(other)
 
     def items(self, section=_UNSET, *, raw=False):
         '''Yield the configuration items.
@@ -408,9 +381,104 @@ class Config:
     __radd__ = __add__
 
     def __eq__(self, other):
-        if not isinstance(other, Config):
+        if not isinstance(other, BaseConfig):
             return False
         return self._conf == other._conf  # pylint: disable=protected-access
+
+
+class Config(BaseConfig):
+
+    def __init__(self, paths=None, handlers=None):
+        '''Construct a configuration object.
+
+        :param paths: An iterable of paths for configuration files. If this is
+                      `None`, :class:`Config` will search the following paths,
+                      and read in the files in order if they exist:
+
+                        * :file:`$HOME/.valjean.cfg`
+                        * :file:`valjean.cfg` in the current directory
+
+                      If you want to disable this behaviour, use an empty list.
+                      If you want to read the default files **and** some
+                      additional ones, the default files are available as
+                      ``Config.DEFAULT_CONFIG_FILES``.
+        :type paths: iterable or None
+        :param handlers: An iterable of handlers for specific options. If this
+                         is `None`, the default handlers from
+                         ``Config.DEFAULT_HANDLERS`` will be installed. The
+                         elements of the iterables must be triples of the form
+                         ``(fams, opt, handler)``, where ``fams`` is a list of
+                         section families, ``opt`` is the name of the option to
+                         handle and ``handler`` is the handler callable proper.
+        :type handlers: iterable or None
+        '''
+        super().__init__(paths)
+
+        #: dictionary
+        self._handlers = dict()
+        if handlers is None:
+            the_handlers = self.DEFAULT_HANDLERS
+        else:
+            the_handlers = handlers
+        for handler in the_handlers:
+            self.add_option_handler(*handler)
+
+    # pylint: disable=redefined-builtin
+    def get(self, *args, raw=False, vars=None, fallback=_UNSET):
+        '''get(section, option, raw=False, fallback)
+
+        Get the value of an option.
+
+        This function can be called with two signatures:
+
+          * :meth:`get(section, option)` returns the value of `option` in
+            `section`;
+          * :meth:`get(section_family, section_id, option)` returns the value
+            of `option` in section ``section_family/section_id``.
+
+        :param str section: The name of the section.
+        :param str option: The name of the option.
+        :param bool raw: If `True`, interpolate any ``${section:option}``
+                         strings in the value with the value of the
+                         corresponding option (see
+                         :class:`configparser.ExtendedInterpolation` for more
+                         information).
+        :param vars: An option/value dictionary that will be looked up before
+                     the configuration itself, or `None` if not needed.
+        :type vars: mapping or None
+        :param fallback: A value to return if the option cannot be found.
+        '''
+
+        if len(args) == 3:
+            return self.get('/'.join(args[0:2]), args[2], raw=raw, vars=vars,
+                            fallback=fallback)
+        elif len(args) > 3 or len(args) < 2:
+            raise ValueError('Wrong number of arguments to get(); expected 2 '
+                             'or 3')
+        section = args[0]
+        option = args[1]
+        xsection = self._sectionxform(section)
+
+        try:
+            val = self._conf.get(xsection, option, raw=raw, vars=vars)
+            LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
+            return val
+        except NoOptionError:
+            split = self.split_section(xsection)
+            if len(split) > 1:
+                handler = self._handlers.get((option, split[0]), None)
+                if handler is not None:
+                    LOGGER.debug('treating option %s in section %s as special',
+                                 xsection, option)
+                    val = handler(self, xsection, split, option, raw, vars,
+                                  fallback)
+                    LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
+                    return val
+            if fallback is not _UNSET:
+                LOGGER.debug('get(%r, %r) falls back to %r', xsection, option,
+                             fallback)
+                return fallback
+            raise
 
     def add_option_handler(self, sec_families, option, handler):
         '''Add an option handler.
@@ -637,3 +705,4 @@ class Config:
                             finalizer=lambda val, split, _:
                             os.path.join(val, split[1])))
     )
+

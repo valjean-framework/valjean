@@ -14,7 +14,7 @@ import os
 
 from .context import valjean  # noqa: F401
 from valjean import LOGGER
-from valjean.config import Config
+from valjean.config import BaseConfig, Config
 
 
 ID_CHARS = ascii_letters
@@ -32,16 +32,24 @@ def sec_names(draw, sec_ids):
 
 
 @composite
-def config(draw, keys=ids, vals=ids, sec_names=sec_names(ids)):
-    '''Composite Hypothesis strategy to generate Config objects.'''
+def baseconfig(draw, keys=ids, vals=ids, sec_names=sec_names(ids)):
+    '''Composite Hypothesis strategy to generate BaseConfig objects.'''
     secs = dictionaries(keys, vals, min_size=2)
     as_dict = draw(dictionaries(sec_names, secs, min_size=2))
-    conf = Config()
+    conf = BaseConfig()
     for sec, opts in as_dict.items():
         ssec = sec.strip()
         conf.add_section(ssec)
         for opt, val in opts.items():
             conf.set(ssec, opt.strip(), val.strip())
+    return conf
+
+
+@composite
+def config(draw, keys=ids, vals=ids, sec_names=sec_names(ids)):
+    '''Composite Hypothesis strategy to generate Config objects.'''
+    baseconf = draw(baseconfig(keys, vals, sec_names))
+    conf = Config.from_mapping(baseconf)
     return conf
 
 
@@ -62,49 +70,50 @@ def empty_config():
     return Config([])
 
 
-class TestConfig:
-    @given(conf=config())
+class TestBaseConfig:
+    @given(conf=baseconfig())
     def test_as_dict_roundtrip(self, conf):
         '''Test roundtrip with the as_dict method.'''
         dct = conf.as_dict(raw=True)
-        reconf = Config.from_mapping(dct)
+        reconf = BaseConfig.from_mapping(dct)
         note('conf={!r}'.format(conf))
         note('reconf={!r}'.format(reconf))
         assert conf == reconf
 
-    @given(conf=config())
+    @given(conf=baseconfig())
     def test_equality_reflective(self, conf):
+        note(conf.as_dict())
         assert conf == conf
 
     @settings(suppress_health_check=(HealthCheck.too_slow,))
-    @given(conf=config())
+    @given(conf=baseconfig())
     def test_merge_with_self_is_identity(self, conf):
         '''Test that merging with `self` results in the identity.'''
         assert conf + conf == conf
 
-    @given(conf=config())
+    @given(conf=baseconfig())
     def test_merge_with_empty_is_identity(self, conf):
         '''Test that merging with the empty configuration is the identity.'''
-        assert conf + Config() == conf
+        assert conf + BaseConfig() == conf
 
     @settings(suppress_health_check=(HealthCheck.too_slow,))
-    @given(conf1=config(), conf2=config(), conf3=config())
+    @given(conf1=baseconfig(), conf2=baseconfig(), conf3=baseconfig())
     def test_merge_associative(self, conf1, conf2, conf3):
         '''Test that merging configurations is associative.'''
         assert (conf1 + conf2) + conf3 == conf1 + (conf2 + conf3)
 
     @settings(suppress_health_check=(HealthCheck.too_slow,))
-    @given(conf1=config(), conf2=config())
+    @given(conf1=baseconfig(), conf2=baseconfig())
     def test_merge_all_sections_same_as_merge(self, conf1, conf2):
         '''Test that merging all configuration sections is the same as merging
         the whole configuration.'''
         conf_merge = conf1 + conf2
-        conf_copy = Config().merge(conf1)
+        conf_copy = BaseConfig().merge(conf1)
         for sec in conf2.sections():
             conf_copy.merge_section(conf2, sec)
         assert conf_merge == conf_copy
 
-    @given(conf=config())
+    @given(conf=baseconfig())
     def test_split_section_by_family(self, conf):
         family_counter = Counter()
         no_family = 0
@@ -130,7 +139,7 @@ class TestConfig:
     @given(sec=ids, opt=ids, val=ids)
     def test_set_in_section_without_slash(self, sec, opt, val):
         '''Test that the set method correctly sets values.'''
-        conf = Config(paths=[])
+        conf = BaseConfig(paths=[])
         conf.add_section(sec)
         conf.set(sec, opt, val)
         assert val == conf.get(sec, opt, raw=True)
@@ -138,18 +147,17 @@ class TestConfig:
     @given(sec_fam=ids, sec_id=ids, opt=ids, val=ids)
     def test_set_in_section_with_slash(self, sec_fam, sec_id, opt, val):
         '''Test that the set method correctly sets values.'''
-        conf = Config(paths=[])
+        conf = BaseConfig(paths=[])
         sec = '{}/{}'.format(sec_fam, sec_id)
         conf.add_section(sec)
         conf.set(sec_fam, sec_id, opt, val)
         assert val == conf.get(sec_fam, sec_id, opt, raw=True)
 
-    @given(conf=config(), opt=ids)
-    def test_get_fallback_works(self, conf, opt):
+    @given(conf=baseconfig(), opt=ids)
+    def test_get_with_fallback(self, conf, opt):
         '''Test that fallback values work for normal options.'''
         for sec in conf.sections():
             sec_family = conf.split_section(sec)
-            assume(not conf.has_option_handler(sec_family[0], opt))
             assume(not conf.has_option(sec, opt))
             val = conf.get(sec, opt, fallback=None)
             assert val is None
@@ -161,7 +169,7 @@ class TestConfig:
                         '[swallow/european]\nspeed = 55\n')
             conf_file.write(conf_str.encode('utf-8'))
             conf_file.flush()
-            conf = Config([conf_file.name])
+            conf = BaseConfig([conf_file.name])
             assert conf.get('swallow', 'african', 'speed') == '40'
             assert conf.get('swallow', 'european', 'speed') == '55'
 
@@ -226,14 +234,14 @@ class TestConfigHandlers:
         assert conf.get('run', 'spam the eggs', 'args') == 'foo'
 
 
-class TestConfigFailure:
+class TestBaseConfigFailure:
 
     def test_compare_wrong_type_raises(self, empty_config):
         '''Test that comparing a config with another object type raises.'''
         assert not empty_config == 'Romani ite domum'
 
     @settings(suppress_health_check=(HealthCheck.too_slow,))
-    @given(conf=config(),
+    @given(conf=baseconfig(),
            spaces_before=text([' '], average_size=2),
            spaces_in1=text([' '], average_size=2),
            spaces_in2=text([' '], average_size=2),
@@ -271,17 +279,16 @@ class TestConfigFailure:
         with pytest.raises(ValueError):
             empty_config.set('first', 'second', 'third', 'fourth', 'fifth')
 
-    @given(conf=config(), opt=ids)
+    @given(conf=baseconfig(), opt=ids)
     def test_get_missing_without_fallback_raises(self, conf, opt):
         '''Test that get raises on missing options without fallback.'''
         for sec in conf.sections():
             sec_family = conf.split_section(sec)
-            assume(not conf.has_option_handler(sec_family[0], opt))
             assume(not conf.has_option(sec, opt))
             with pytest.raises(NoOptionError):
                 val = conf.get(sec, opt)
 
-    @given(conf=config(), missing=ids)
+    @given(conf=baseconfig(), missing=ids)
     def test_missing_section_by_family_raises(self, conf, missing):
         '''Test that get raises on missing options without fallback.'''
         assume(all(conf.split_section(sec)[0] != missing
