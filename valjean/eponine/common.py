@@ -84,8 +84,8 @@ class _7dimArray():
                          missing edge of the bins
         :type ilastbin: int
         '''
-        print("[38;5;137madding last bin for dim", dim,
-              "flag =", _7dimArray.VAR_FLAG[dim], "[0m")
+        LOGGER.debug("Adding last bin for dim %s, flag = %s",
+                     dim, _7dimArray.VAR_FLAG[dim])
         if len(self.bins[dim]) > 1 and self.bins[dim][0] > self.bins[dim][1]:
             self.bins[dim].insert(0, data[0][_7dimArray.VAR_FLAG[dim]][2])
         else:
@@ -226,7 +226,7 @@ class _7dimArray():
         flipped at a moment, here or later, easiest is here, and all results
         will look the same :-).
         '''
-        LOGGER.info("In _7dimArray.flip_bins")
+        LOGGER.debug("In _7dimArray.flip_bins")
         if self.bins['e'] and self.bins['e'][0] > self.bins['e'][1]:
             self._flip_bins_for_dim('e', 3)
         if self.bins['t'] and self.bins['t'][0] > self.bins['t'][1]:
@@ -358,9 +358,25 @@ def _get_number_of_space_bins(meshvals):
     ns2bins = (meshvals[-int(lastspacebin[2]+2)][0][2]+1
                if lastspacebin[2]+1 < len(meshvals)
                else lastspacebin[2]+1)
-    ns1bins = (meshvals[-int(ns2bins+1)][0][1]+1
-               if (len(meshvals) % (ns0bins*ns2bins) != 0
-                   and lastspacebin[1] < meshvals[-int(ns2bins+1)][0][1])
+    maxbins1 = (lastspacebin[1]*ns2bins+lastspacebin[2]+2
+                if lastspacebin[0] != 0
+                else lastspacebin[2]+2)
+    if LOGGER.isEnabledFor(logging.DEBUG):
+        if len(meshvals) > maxbins1:
+            if meshvals[-int(maxbins1)][0][1] > lastspacebin[1]:
+                LOGGER.debug("will use meshvals[-int(maxbins1)] = %s instead "
+                             "of lastspacebin = %s",
+                             str(meshvals[-int(maxbins1)]), str(lastspacebin))
+            else:
+                LOGGER.debug("will use lastspacebin = %s instead of "
+                             "meshvals[-int(maxbins1)] = %s",
+                             lastspacebin, meshvals[-int(maxbins1)])
+        else:
+            LOGGER.debug("will use lastspacebin = %s as "
+                         "len(meshvals) > maxbins1", lastspacebin)
+    ns1bins = (meshvals[-int(maxbins1)][0][1]+1
+               if (len(meshvals) > maxbins1
+                   and meshvals[-int(maxbins1)][0][1] > lastspacebin[1])
                else lastspacebin[1]+1)
     return ns0bins, ns1bins, ns2bins
 
@@ -412,7 +428,7 @@ def convert_mesh(meshres):
                   corresponds to integreated results splitted in time)
                 - used_batch: number of used batchs (only if integrated result)
     '''
-    LOGGER.info("In convert_mesh_class")
+    LOGGER.debug("In convert_mesh_class")
     LOGGER.debug("Number of mesh results: %d", len(meshres))
     LOGGER.debug("keys of meshes: %s", str(list(meshres[0]['meshes'].keys())))
     LOGGER.debug("elts in meshes: %d", len(meshres[0]['meshes']))
@@ -424,8 +440,8 @@ def convert_mesh(meshres):
               if "time_step" in meshres[0]
               else 1)
     nebins = get_energy_bins(meshres[0]['meshes'])
-    LOGGER.info("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
-                "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
+    LOGGER.debug("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
+                 "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
     # up to now no mesh splitted in mu or phi angle seen, update easy now
     vals = _7dimArray(['tally', 'sigma'],
                       [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
@@ -496,7 +512,7 @@ def convert_keff_with_matrix(res):
     are needed but array is easier to initialized and more general.
     '''
     # not converged cases a tester...
-    LOGGER.info("In common.convert_keff_with_matrix")
+    LOGGER.debug("In common.convert_keff_with_matrix")
     if 'not_converged' in res:
         return {'used_batch': res['used_batch'],
                 'not_converged': res['not_converged']}
@@ -732,7 +748,7 @@ def convert_kij_keff(res):
                                              estimation
                                              (numpy matrix N*N)
     '''
-    LOGGER.info("Clefs: %s", str(list(res.keys())))
+    LOGGER.debug("Clefs: %s", str(list(res.keys())))
     egvec = np.array(list(zip(*res['eigenvector']))[1])
     nbins = res['nb_fissile_vols'] if 'nb_fissile_vols' in res else len(egvec)
     if nbins != len(egvec):
