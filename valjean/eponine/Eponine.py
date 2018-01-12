@@ -42,7 +42,7 @@ class Eponine():
     def getStrRes(self):
         lamres = scan_t4.Scan(self.jdd, self.endflag, self.meshlim)
         self.normalend = lamres.normalend
-        if not self.normalend and len(lamres.collres) == 0:
+        if not self.normalend and len(lamres) == 0:
             return False
         if self.batch == 0:
             self.strres = lamres.get_all_batch_results()

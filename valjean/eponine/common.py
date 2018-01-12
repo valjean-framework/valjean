@@ -23,8 +23,7 @@ if "mem" not in sys.argv:
 LOGGER = logging.getLogger('valjean')
 ITYPE = np.int32
 FTYPE = np.float32  # pylint: disable=E1101
-MASK_EINTRES = 1 << 1
-MASK_TINTRES = 1 << 2
+
 
 class _7dimArray():
     '''Class to store and fill spectrum and mesh results as both are in
@@ -338,6 +337,7 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
         convspec['integrated_res'] = vals.arrays['integrated_res']
         convspec['used_batch'] = spectrum[0]['integrated_res']['used_batch']
     return convspec
+
 
 def _get_number_of_space_bins(meshvals):
     '''Get number of space bins used in meshes.
