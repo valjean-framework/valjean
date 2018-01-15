@@ -1,5 +1,5 @@
 :mod:`~.graph` — The ``graph`` subcommand
 =========================================
 
-.. automodule:: valjean.cmd.commands.graph
+.. automodule:: valjean.cambronne.commands.graph
    :synopsis: The ``graph`` subcommand

@@ -44,7 +44,7 @@ setup(name=name,
       use_scm_version=True,
       entry_points={
           'console_scripts': [
-              'valjean = valjean.cmd.main:main'
+              'valjean = valjean.cambronne.main:main'
               ]
           }
       )

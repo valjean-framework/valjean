@@ -1,5 +1,5 @@
 :mod:`~.common` — Common tools for the :program:`valjean` executable
 ====================================================================
 
-.. automodule:: valjean.cmd.common
+.. automodule:: valjean.cambronne.common
    :synopsis: Common tools for the :program:`valjean` executable

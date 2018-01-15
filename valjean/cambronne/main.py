@@ -7,8 +7,8 @@ import importlib
 import logging
 
 import valjean
-import valjean.cmd
-import valjean.cmd.commands
+import valjean.cambronne
+import valjean.cambronne.commands
 from valjean import LOGGER
 from ..config import Config
 
@@ -68,8 +68,8 @@ def make_parser():
         )
 
     # import each submodule in commands.* and create a new subparser for it
-    prefix = valjean.cmd.commands.__name__ + '.'
-    submods_iter = pkgutil.iter_modules(valjean.cmd.commands.__path__)
+    prefix = valjean.cambronne.commands.__name__ + '.'
+    submods_iter = pkgutil.iter_modules(valjean.cambronne.commands.__path__)
     for _, modname, _ in submods_iter:
         cmd_name = '{}Command'.format(modname.capitalize())
         module = importlib.import_module(prefix + modname)

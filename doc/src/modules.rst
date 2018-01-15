@@ -4,5 +4,5 @@ Package API
 .. toctree::
 
    modules/valjean
-   modules/cmd
+   modules/cambronne
    modules/cosette
