@@ -10,6 +10,7 @@ dictionary keys should be the same in all parsers...
 
 import sys
 import logging
+from abc import abstractmethod
 import numpy as np
 
 
@@ -25,27 +26,22 @@ ITYPE = np.int32
 FTYPE = np.float32  # pylint: disable=E1101
 
 
-class _7dimArray():
-    '''Class to store and fill spectrum and mesh results as both are in
-    7-dimensions: space (3), energy, time, mu and phi (direction angles)
+class _DictBuilder:
+    '''Class to build the dictionary for spectrum and mesh results as
+    7-dimensions structured arrays.
+    7-dimensions are: space (3), energy, time, mu and phi (direction angles)
     '''
     VAR_FLAG = {'t': 'time_step',
                 'mu': 'mu_angle_zone',
                 'phi': 'phi_angle_zone'}
     VARS = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
+
     def __init__(self, colnames, nbins):
-        '''
-        :param colnames: names of the colums
-        '''
         self.bins = {'e': [], 't': [], 'mu': [], 'phi': []}
         dtype = np.dtype({'names': colnames,
                           'formats': [FTYPE]*len(colnames)})
         self.arrays = {'default': np.empty((nbins), dtype=dtype)}
-        self.itime, self.imu, self.iphi = 0, 0, 0
-        # self.current_index = [0]*7
         LOGGER.debug("bins: %s", str(self.bins))
-        self.is_mesh = True if 'tally' in colnames else False
-        LOGGER.debug("Preparing array for mesh ? %r", self.is_mesh)
 
     def add_array(self, name, colnames, nbins):
         '''Add a new array to dictionary arrays with key name.
@@ -60,19 +56,15 @@ class _7dimArray():
                           'formats': [FTYPE]*len(colnames)})
         self.arrays[name] = np.empty((nbins), dtype=dtype)
 
+    @abstractmethod
     def _add_last_energy_bin(self, data):
         '''Add last bin in energy from spectrum or mesh.
         :param data: mesh or spectrum
         :type data: list of meshes or spectrum results
         '''
-        if self.is_mesh:
-            lastmesh = data[-1]['meshes']
-            lastebin = self.arrays['default'].shape[3]-1
-            self.bins['e'].append(lastmesh[lastebin]['mesh_energyrange'][2])
-        else:
-            self.bins['e'].append(data[-1]['spectrum_vals'][-1][1])
+        pass
 
-    def _add_last_bin_for_dim(self, data, dim, ilastbin):
+    def _add_last_bin_for_dim(self, data, dim, lastbin):
         '''Add last bin for the dimension dim. Depending on order of the bins
         the last one will be inserted as first bin or added as last bin.
         :param data: mesh or spectrum
@@ -84,11 +76,11 @@ class _7dimArray():
         :type ilastbin: int
         '''
         LOGGER.debug("Adding last bin for dim %s, flag = %s",
-                     dim, _7dimArray.VAR_FLAG[dim])
+                     dim, _DictBuilder.VAR_FLAG[dim])
         if len(self.bins[dim]) > 1 and self.bins[dim][0] > self.bins[dim][1]:
-            self.bins[dim].insert(0, data[0][_7dimArray.VAR_FLAG[dim]][2])
+            self.bins[dim].insert(0, data[0][_DictBuilder.VAR_FLAG[dim]][2])
         else:
-            self.bins[dim].append(data[ilastbin][_7dimArray.VAR_FLAG[dim]][2])
+            self.bins[dim].append(data[lastbin][_DictBuilder.VAR_FLAG[dim]][2])
 
     def add_last_bins(self, data):
         '''Add last bins in energy, time, mu and phi direction angles.
@@ -99,14 +91,126 @@ class _7dimArray():
         self._add_last_energy_bin(data)
         nphibins = len(self.bins['phi']) if self.bins['phi'] else 1
         nmubins = len(self.bins['mu']) if self.bins['mu'] else 1
-        if 'time_step' in data[0]:  # or if _7dimArray.VAR_FLAG['t'] in data[0]
+        # other possibility: if _DictBuilder.VAR_FLAG['t'] in data[0]
+        if 'time_step' in data[0]:
             self._add_last_bin_for_dim(data, 't', -int(nphibins)*int(nmubins))
         if 'mu_angle_zone' in data[0]:
             self._add_last_bin_for_dim(data, 'mu', -int(nphibins))
         if 'phi_angle_zone' in data[0]:
             self._add_last_bin_for_dim(data, 'phi', -1)
 
-    def _fill_arrays_and_bins_from_spectrum(self, data):
+    def _flip_bins_for_dim(self, dim, axis):
+        '''Flip bins for dimension dim.
+        :param dim: dimension ('e', 't', 'mu', 'phi')
+        :type dim: string
+        :param axis: axis of the dimension
+                     ('e' -> 3, 't' -> 4, 'mu' -> 5, 'phi' -> 6)
+        :type axis: int
+        '''
+        LOGGER.debug("Bins %s avant flip: %s", dim, str(self.bins[dim]))
+        self.bins[dim] = self.bins[dim][::-1]
+        for key, array in self.arrays.items():
+            self.arrays[key] = np.flip(array, axis=axis)
+        LOGGER.debug("et apres: %s", str(self.bins[dim]))
+
+    def flip_bins(self):
+        '''Flip bins if given in decreasing order in the output listing.
+        Depending on the required grid (GRID or DECOUPAGE) energies, times, mu
+        and phi can be given from upper edge to lower edge. This is not
+        convenient for post-traitements, especially plots. They have to be
+        flipped at a moment, here or later, easiest is here, and all results
+        will look the same :-).
+        '''
+        LOGGER.debug("In _DictBuilder.flip_bins")
+        if self.bins['e'] and self.bins['e'][0] > self.bins['e'][1]:
+            self._flip_bins_for_dim('e', 3)
+        if self.bins['t'] and self.bins['t'][0] > self.bins['t'][1]:
+            self._flip_bins_for_dim('t', 4)
+        if self.bins['mu'] and self.bins['mu'][0] > self.bins['mu'][1]:
+            self._flip_bins_for_dim('mu', 5)
+        if self.bins['phi'] and self.bins['phi'][0] > self.bins['phi'][1]:
+            self._flip_bins_for_dim('phi', 6)
+
+    @abstractmethod
+    def fill_arrays_and_bins(self, data):
+        '''Fill arrays and bins for spectrum or mesh data.
+        :param data: mesh or spectrum
+        :type data: list of meshes or spectrum results
+        '''
+        pass
+
+
+class _MeshDictBuilder(_DictBuilder):
+    '''Class specific to mesh dictionary -> mainly filling of bins and arrays.
+    '''
+    itime, imu, iphi = 0, 0, 0
+
+    def _fill_mesh_array(self, meshvals, name, ebin):
+        '''Fill mesh array.
+        :param meshvals: mesh data for a given energy bin
+        :type meshvals: list of mesh results [[[s0, s1, s2], tally, sigma],...]
+        :param name: name of the array to be filled ('default',
+                     'eintegrated_mesh') for the moment
+        :type name: string
+        :param ebin: energy bin to fill in the array
+        :type ebin: int
+        '''
+        for smesh in meshvals:
+            index = (smesh[0][0], smesh[0][1], smesh[0][2],
+                     ebin, self.itime, self.imu, self.iphi)
+            self.arrays[name][index] = np.array(tuple(smesh[1:]),
+                                                dtype=self.arrays[name].dtype)
+
+    def fill_arrays_and_bins(self, data):
+        '''Fill arrays and bins for mesh data.
+        Current arrays possibly filled are:
+        - default (mandatory)
+        - eintegrated_mesh (facultative, integrated over energy, still splitted
+                            in space)
+        - integrated_res (over energy and space, splitted in time)
+        :param data: mesh
+        :type data: list of meshes results
+        '''
+        for ires in data:
+            LOGGER.debug("_MeshDictBuilder.fill_arrays_bins, "
+                         "keys: %s, number of elements: %d",
+                         list(ires.keys()), len(ires))
+            if 'time_step' in ires:
+                self.itime = ires['time_step'][0]
+                self.bins['t'].append(ires['time_step'][1])
+            for inde, emesh in enumerate(ires['meshes']):
+                if 'mesh_energyrange' in emesh:
+                    if self.itime == 0:
+                        self.bins['e'].append(emesh['mesh_energyrange'][1])
+                    self._fill_mesh_array(emesh['mesh_vals'], 'default', inde)
+                if 'mesh_energyintegrated' in emesh:
+                    LOGGER.debug("Will fill mesh integrated in energy")
+                    self._fill_mesh_array(emesh['mesh_vals'],
+                                          'eintegrated_mesh', 0)
+            if 'integrated_res' in ires:
+                iintres = ires['integrated_res']
+                index = (0, 0, 0, 0, self.itime, 0, 0)
+                self.arrays['integrated_res'][index] = np.array(
+                    (iintres['score'], iintres['sigma']),
+                    dtype=self.arrays['integrated_res'].dtype)
+
+    def _add_last_energy_bin(self, data):
+        '''Add last bin in energy from mesh data.
+        :param data: mesh data
+        :type data: list of meshes results
+        '''
+        lastmesh = data[-1]['meshes']
+        lastebin = self.arrays['default'].shape[3]-1
+        self.bins['e'].append(lastmesh[lastebin]['mesh_energyrange'][2])
+
+
+class _SpectrumDictBuilder(_DictBuilder):
+    '''Class specific to spectrum dictionary
+    -> mainly filling of bins and arrays.
+    '''
+    itime, imu, iphi = 0, 0, 0
+
+    def fill_arrays_and_bins(self, data):
         '''Fill arrays and bins for spectrum data.
         Current arrays possibly filled are:
         - default (mandatory)
@@ -114,6 +218,7 @@ class _7dimArray():
         :param data: mesh or spectrum
         :type data: list of meshes or spectrum results
         '''
+        LOGGER.debug("In _SpectrumDictBuilder.fill_arrays_and_bins")
         for ispec in data:
             # Fill bins -> caution to not replicate them
             if 'time_step' in ispec:
@@ -145,95 +250,12 @@ class _7dimArray():
                     (iintres['score'], iintres['sigma']),
                     dtype=self.arrays['integrated_res'].dtype))
 
-    def _fill_mesh_array(self, meshvals, name, ebin):
-        '''Fill mesh array.
-        :param meshvals: mesh data for a given energy bin
-        :type meshvals: list of mesh results [[[s0, s1, s2], tally, sigma],...]
-        :param name: name of the array to be filled ('default',
-                     'eintegrated_mesh') for the moment
-        :type name: string
-        :param ebin: energy bin to fill in the array
-        :type ebin: int
+    def _add_last_energy_bin(self, data):
+        '''Add last bin in energy from spectrum.
+        :param data: spectrum data
+        :type data: list of spectrum results
         '''
-        for smesh in meshvals:
-            index = (smesh[0][0], smesh[0][1], smesh[0][2],
-                     ebin, self.itime, self.imu, self.iphi)
-            self.arrays[name][index] = np.array(tuple(smesh[1:]),
-                                                dtype=self.arrays[name].dtype)
-
-    def _fill_arrays_and_bins_from_mesh(self, data):
-        '''Fill arrays and bins for mesh data.
-        Current arrays possibly filled are:
-        - default (mandatory)
-        - eintegrated_mesh (facultative, integrated over energy, still splitted
-                            in space)
-        - integrated_res (over energy and space, splitted in time)
-        :param data: mesh
-        :type data: list of meshes results
-        '''
-        for ires in data:
-            LOGGER.debug("keys: %s, number of elements: %d",
-                         list(ires.keys()), len(ires))
-            if 'time_step' in ires:
-                self.itime = ires['time_step'][0]
-                self.bins['t'].append(ires['time_step'][1])
-            for inde, emesh in enumerate(ires['meshes']):
-                if 'mesh_energyrange' in emesh:
-                    if self.itime == 0:
-                        self.bins['e'].append(emesh['mesh_energyrange'][1])
-                    self._fill_mesh_array(emesh['mesh_vals'], 'default', inde)
-                if 'mesh_energyintegrated' in emesh:
-                    LOGGER.debug("Will fill mesh integrated in energy")
-                    self._fill_mesh_array(emesh['mesh_vals'],
-                                          'eintegrated_mesh', 0)
-            if 'integrated_res' in ires:
-                iintres = ires['integrated_res']
-                index = (0, 0, 0, 0, self.itime, 0, 0)
-                self.arrays['integrated_res'][index] = np.array(
-                    (iintres['score'], iintres['sigma']),
-                    dtype=self.arrays['integrated_res'].dtype)
-
-    def fill_arrays_and_bins(self, data):
-        '''Fill array and bins for spectrum and mesh.
-        :param data: mesh or spectrum
-        :type data: list of meshes or spectrum results
-        '''
-        if self.is_mesh:
-            self._fill_arrays_and_bins_from_mesh(data)
-        else:
-            self._fill_arrays_and_bins_from_spectrum(data)
-
-    def _flip_bins_for_dim(self, dim, axis):
-        '''Flip bins for dimension dim.
-        :param dim: dimension ('e', 't', 'mu', 'phi')
-        :type dim: string
-        :param axis: axis of the dimension
-                     ('e' -> 3, 't' -> 4, 'mu' -> 5, 'phi' -> 6)
-        :type axis: int
-        '''
-        LOGGER.debug("Bins %s avant flip: %s", dim, str(self.bins[dim]))
-        self.bins[dim] = self.bins[dim][::-1]
-        for array in self.arrays:
-            self.arrays[array] = np.flip(self.arrays[array], axis=axis)
-        LOGGER.debug("et apres: %s", str(self.bins[dim]))
-
-    def flip_bins(self):
-        '''Flip bins if given in decreasing order in the output listing.
-        Depending on the required grid (GRID or DECOUPAGE) energies, times, mu
-        and phi can be given from upper edge to lower edge. This is not
-        convenient for post-traitements, especially plots. They have to be
-        flipped at a moment, here or later, easiest is here, and all results
-        will look the same :-).
-        '''
-        LOGGER.debug("In _7dimArray.flip_bins")
-        if self.bins['e'] and self.bins['e'][0] > self.bins['e'][1]:
-            self._flip_bins_for_dim('e', 3)
-        if self.bins['t'] and self.bins['t'][0] > self.bins['t'][1]:
-            self._flip_bins_for_dim('t', 4)
-        if self.bins['mu'] and self.bins['mu'][0] > self.bins['mu'][1]:
-            self._flip_bins_for_dim('mu', 5)
-        if self.bins['phi'] and self.bins['phi'][0] > self.bins['phi'][1]:
-            self._flip_bins_for_dim('phi', 6)
+        self.bins['e'].append(data[-1]['spectrum_vals'][-1][1])
 
 
 def _get_number_of_bins(spectrum):
@@ -314,7 +336,8 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
     nphibins, nmubins, ntbins, nebins = _get_number_of_bins(spectrum)
     LOGGER.debug("nebins = %d, ntbins = %d, nmubins = %d, nphibins = %d",
                  nebins, ntbins, nmubins, nphibins)
-    vals = _7dimArray(colnames, [1, 1, 1, nebins, ntbins, nmubins, nphibins])
+    vals = _SpectrumDictBuilder(colnames,
+                                [1, 1, 1, nebins, ntbins, nmubins, nphibins])
     if 'integrated_res' in spectrum[0]:
         vals.add_array('integrated_res', ['score', 'sigma'],
                        [1, 1, 1, 1, ntbins, nmubins, nphibins])
@@ -443,8 +466,8 @@ def convert_mesh(meshres):
     LOGGER.debug("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
                  "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
     # up to now no mesh splitted in mu or phi angle seen, update easy now
-    vals = _7dimArray(['tally', 'sigma'],
-                      [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
+    vals = _MeshDictBuilder(['tally', 'sigma'],
+                            [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
     # mesh integrated on energy (normally the last mesh)
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
         vals.add_array('eintegrated_mesh', ['tally', 'sigma'],
