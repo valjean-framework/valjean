@@ -33,6 +33,8 @@ LOGGER = logging.getLogger('valjean')
 
 LOGGER.info("sys.argv: %s", str(sys.argv))
 
+# count_mesh_exceeding = 0
+
 
 if "mem" not in sys.argv:
     def profile(fmem):
@@ -40,12 +42,76 @@ if "mem" not in sys.argv:
         return fmem
 
 
-class _MeshReader:
-    def __init__(self, meshlim):
+# class MeshScanner:
+#     '''Class to scan mesh, find end of mesh block (for one energy range for
+#     example) and implement limit in number of lines of mesh kept in the batch
+#     result (minimum is 1).
+#     '''
+#     def __init__(self, meshlim):
+#         self.meshlim = meshlim
+#         self.nbmeshlines = 0
+#         self.prevmeshline = False
+#         # self.inmeshres = False
+#         self.stopmesh = False
+
+#     def scan_mesh(self, line):
+#         '''Scan mesh: look for end of mesh taking into account multiple energy
+#         bins and energy integrated mesh.
+#         :param line: line to be scanned
+#         :type line: string
+#         '''
+#         # print("stopmesh =", self.stopmesh)
+#         if "(" in line and ")" in line and "," in line:
+#             self.nbmeshlines += 1
+#             self.prevmeshline = True
+#         elif "(" not in line and ")" not in line and self.prevmeshline:
+#             self.prevmeshline = False
+#         elif ("Energy range" in line
+#               or "ENERGY INTEGRATED RESULTS" in line
+#               or "number of batches used" in line
+#               or line.isspace()):
+#             self.nbmeshlines = 0
+#             self.stopmesh = False
+
+#     def add_meshline(self, count_excess, result, line):
+#         '''Add mesh line to result if stop mesh is not reached.
+#         :param count_excess: counter for mesh lines excess
+#         :type count_excess: int
+#         :param result: batch result
+#         :type result: list of strings
+#         :param line: mesh line
+#         :type line: string
+#         '''
+#         if not self.stopmesh:
+#             if self.nbmeshlines == self.meshlim+1:
+#                 count_excess += 1
+#                 result.append("\n")
+#                 self.stopmesh = True
+#                 if count_excess < 5:
+#                     LOGGER.warning("[31mToo much mesh lines, keeping %d "
+#                                    "lines, if needed change meshlim arg[0m",
+#                                    self.meshlim)
+#             else:
+#                 result.append(line)
+#         return count_excess
+
+
+class BatchResultScanner():
+    '''Class to build batchs collection.
+    '''
+    def __init__(self, count_excess, current_batch, meshlim):
+        self.count_batch = 0
+        self.inmeshres = False
+        self.count_mesh_exceeding = count_excess
+        self.batch_counts = {'number': -1,
+                             'current': current_batch,
+                             'greater': 0}
+        self.result = []
+        # self.meshscanner = None
+        self.inmesh = False
         self.meshlim = meshlim
         self.nbmeshlines = 0
         self.prevmeshline = False
-        self.inmeshres = False
         self.stopmesh = False
 
     def scan_mesh(self, line):
@@ -54,6 +120,7 @@ class _MeshReader:
         :param line: line to be scanned
         :type line: string
         '''
+        # print("stopmesh =", self.stopmesh)
         if "(" in line and ")" in line and "," in line:
             self.nbmeshlines += 1
             self.prevmeshline = True
@@ -66,18 +133,7 @@ class _MeshReader:
             self.nbmeshlines = 0
             self.stopmesh = False
 
-    def print_warning(self, count_excess, result):
-        '''Activate stop mesh and print warning accordingly.'''
-        count_excess += 1
-        result.append("\n")
-        self.stopmesh = True
-        if count_excess < 5:
-            LOGGER.warning("[31mToo much mesh lines, keeping %d lines, "
-                           "if needed change meshlim arg[0m",
-                           self.meshlim)
-        return count_excess
-
-    def add_meshline(self, count_excess, result, line):
+    def add_meshline(self, line):
         '''Add mesh line to result if stop mesh is not reached.
         :param count_excess: counter for mesh lines excess
         :type count_excess: int
@@ -88,11 +144,77 @@ class _MeshReader:
         '''
         if not self.stopmesh:
             if self.nbmeshlines == self.meshlim+1:
-                count_excess = self.print_warning(count_excess, result)
+                self.count_mesh_exceeding += 1
+                self.result.append("\n")
+                self.stopmesh = True
+                if self.count_mesh_exceeding < 5:
+                    LOGGER.warning("[31mToo much mesh lines, keeping %d "
+                                   "lines, if needed change meshlim arg[0m",
+                                   self.meshlim)
             else:
-                result.append(line)
-        return count_excess
+                self.result.append(line)
 
+    def build_result(self, line):
+        '''Scan line to build batch result: mainly deals with mesh
+        specificities and store line.
+        :param line: last line to be taken into account
+        :type line: string
+        '''
+        if "Edition after batch number" in line:
+            self.batch_counts['number'] = int(line.split()[-1])
+        elif "Results on a mesh" in line:
+            self.inmesh = True
+        if self.inmesh and ("****" in line):
+            self.inmesh = False
+        if "PARA" in sys.argv and "number of batches used" in line:
+            self._set_greater_batch_number(line)
+        self._store_line(line)
+
+    def _store_line(self, line):
+        if self.inmesh:
+            self.scan_mesh(line)
+            self.add_meshline(line)
+        else:
+            self.result.append(line)
+
+    def _set_greater_batch_number(self, line):
+        newbatch = int(line.split()[4])
+        if self.batch_counts['greater'] < newbatch:
+            self.batch_counts['greater'] = newbatch
+
+    def _check_batch_number(self):
+        if "PARA" not in sys.argv:
+            if self.batch_counts['number'] != self.batch_counts['current']:
+                LOGGER.info("Edition batch (%d) different from "
+                            "current batch (%d)",
+                            self.batch_counts['number'],
+                            self.batch_counts['current'])
+                LOGGER.info("If no Edition batch keep current batch, "
+                            "else keep edition batch")
+                if self.batch_counts['number'] < self.batch_counts['current']:
+                    self.batch_counts['number'] = self.batch_counts['current']
+            if self.batch_counts['current'] == 0:
+                LOGGER.warning("Current batch = 0, something to check ?")
+        else:
+            if self.batch_counts['greater'] > self.batch_counts['number']:
+                self.batch_counts['number'] = self.batch_counts['greater']
+
+    def get_result(self, line):
+        '''Send result.
+        Called if end flag has been found, add last line and concatenates
+        result.
+        :param line: last line to be taken into account
+        :type line: string
+        :return: string build from lsit of strings junction
+        '''
+        self._check_batch_number()
+        LOGGER.debug("[1;31mEND FLAG found, batch number = %d, "
+                     "current batch = %d, greater batch = %d[0m",
+                     self.batch_counts['number'],
+                     self.batch_counts['current'],
+                     self.batch_counts['greater'])
+        self.result.append(line)
+        return ''.join(self.result)
 
 class Scan(Mapping):
     '''Class to keep marks on the file
@@ -149,41 +271,16 @@ class Scan(Mapping):
         LOGGER.info("End of initialization: %f s",
                     time.time()-self.start_time)
 
-
-    def _check_batch_number(self, batch_counts):
-        if "PARA" not in sys.argv:
-            if batch_counts['batch_number'] != batch_counts['current_batch']:
-                LOGGER.info("Edition batch (%d) different from "
-                            "current batch (%d)",
-                            batch_counts['batch_number'],
-                            batch_counts['current_batch'])
-                LOGGER.info("If no Edition batch keep current batch, "
-                            "else keep edition batch")
-                if batch_counts['batch_number'] < batch_counts['current_batch']:
-                    batch_counts['batch_number'] = batch_counts['current_batch']
-            if batch_counts['current_batch'] == 0:
-                LOGGER.warning("Current batch = 0, something to check ?")
-        else:
-            if batch_counts['greater_batch'] > batch_counts['batch_number']:
-                batch_counts['batch_number'] = batch_counts['greater_batch']
-
-    def _set_greater_batch(self, newbatch, batch_counts):
-        if batch_counts['greater_batch'] < newbatch:
-            batch_counts['greater_batch'] = newbatch
-
     @profile
     def _get_collres(self):
         '''Read the file and store all relevant information.
         '''
         count_batch = 0
-        started_res = False
         started_gen = False
-        inmeshres = False
         count_mesh_exceeding = 0
-        batch_counts = {'batch_number': -1, 'current_batch': 0,
-                        'greater_batch': 0}
         result = []
-        meshreader = None
+        current_batch = 0
+        _batch_scan = None
         with open(self.fname, errors='ignore') as fil:
             for line in fil:
                 if line.lstrip().startswith("//"):  # comment in the jdd
@@ -202,22 +299,12 @@ class Scan(Mapping):
                         self.reqbatchs //= int(line.split()[indpacket+1])
                     LOGGER.debug("new number of batchs = %d", self.reqbatchs)
                 elif "RESULTS ARE GIVEN" in line:
-                    started_res = True
-                    batch_counts['batch_number'] = -1
+                    _batch_scan = BatchResultScanner(count_mesh_exceeding,
+                                                     current_batch,
+                                                     self.meshlim)
                 elif line.startswith(' batch number :'):
-                    batch_counts['current_batch'] = int(line.split()[-1])
-                elif "Edition after batch number" in line and started_res:
-                    batch_counts['batch_number'] = int(line.split()[-1])
-                elif "Results on a mesh" in line:
-                    inmeshres = True
-                    assert self.meshlim != 0
-                    meshreader = _MeshReader(self.meshlim)
-                elif inmeshres and ("****" in line or self.endflag in line):
-                    inmeshres = False
-                elif inmeshres:
-                    meshreader.scan_mesh(line)
+                    current_batch = int(line.split()[-1])
                 elif "NORMAL COMPLETION" in line:
-                    print("[31mFOUND NORMAL COMPLETION !![0m")
                     self.normalend = True
                 elif "WARNING" in line:
                     self.countwarnings += 1
@@ -227,42 +314,24 @@ class Scan(Mapping):
                     self.initialization_time = int(line.split()[3])
                 elif ("Type and parameters of random generator "
                       "at the end of simulation:" in line):
-                    print("[32mFound generator[0m")
                     started_gen = True
                 elif started_gen and "COUNTER" in line:
                     result.append(line)
                     self.last_generator_state = ''.join(result)
                     result = []
                     started_gen = False
-                if self.endflag in line and started_res:
-                    print("[1;31mEND FLAG found, "
-                          "batch number =", batch_counts['batch_number'],
-                          "current batch =", batch_counts['current_batch'],
-                          "greater batch =", batch_counts['greater_batch'],
-                          "[0m")
-                    self._check_batch_number(batch_counts)
-                    print("batch number from dict =",
-                          batch_counts['batch_number'])
-                    result.append(line)  # will change at end of the function
-                    self._collres[batch_counts['batch_number']] = ''.join(result)
-                    result = []
-                    started_res = False
-                if started_res:
-                    if inmeshres:
-                        count_mesh_exceeding = meshreader.add_meshline(
-                            count_mesh_exceeding, result, line)
-                    else:
-                        result.append(line)
-
+                if _batch_scan:
+                    _batch_scan.build_result(line)
+                if self.endflag in line and _batch_scan:
+                    batch_number = _batch_scan.batch_counts['number']
+                    self._collres[batch_number] = _batch_scan.get_result(line)
+                    count_mesh_exceeding = _batch_scan.count_mesh_exceeding
+                    _batch_scan = None
                 if started_gen:
                     if "Type and parameters" not in line:
                         result.append(line)
-                if (("PARA" in sys.argv and started_res
-                     and batch_counts['batch_number'] == -1
-                     and "number of batches used" in line)):
-                    self._setGreaterBatch(int(line.split()[4]))
         LOGGER.debug("Number of string 'BATCH' seen: %d", count_batch)
-        if meshreader and count_mesh_exceeding > 4:
+        if count_mesh_exceeding > 4:
             LOGGER.warning("Number of mesh exceeding meshlim arg: %d",
                            count_mesh_exceeding)
 
