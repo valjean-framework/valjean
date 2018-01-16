@@ -202,7 +202,7 @@ class RunTask(Task):
         deps.update(config.get_deps())
         config.clear_deps()
 
-        task_name = 'run/{}'.format(name)
+        task_name = 'run/'+ name
         return cls(task_name, cli, deps=deps)
 
     def __init__(self, name, cli, *, deps=None, subprocess_args=None,

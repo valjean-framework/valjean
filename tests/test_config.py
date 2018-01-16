@@ -150,7 +150,7 @@ class TestBaseConfig:
     def test_set_in_section_with_slash(self, sec_fam, sec_id, opt, val):
         '''Test that the set method correctly sets values.'''
         conf = BaseConfig(paths=[])
-        sec = '{}/{}'.format(sec_fam, sec_id)
+        sec = '/'.join((sec_fam, sec_id))
         conf.add_section(sec)
         conf.set(sec_fam, sec_id, opt, val)
         assert val == conf.get(sec_fam, sec_id, opt, raw=True)

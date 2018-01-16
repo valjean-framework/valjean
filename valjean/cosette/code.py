@@ -206,7 +206,7 @@ class CheckoutTask(ShellTask):
             raise ValueError('unrecognized VCS: {}'.format(vcs))
 
         kwargs = self._make_kwargs(keywords)
-        task_name = 'checkout/{}'.format(name)
+        task_name = 'checkout/' + name
         super().__init__(task_name, unformatted_script, deps=deps, **kwargs)
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
@@ -410,11 +410,11 @@ class BuildTask(ShellTask):
             )
 
         kwargs = self._make_kwargs(keywords)
-        task_name = 'build/{}'.format(name)
+        task_name = 'build/' + name
         super().__init__(task_name, unformatted_script, deps=deps, **kwargs)
 
         if source_dir is None:
-            self.add_dependency('checkout/{name}'.format(name=name))
+            self.add_dependency('checkout/' + name)
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
         for keyword in keywords:

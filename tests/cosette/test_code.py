@@ -94,7 +94,7 @@ def _make_git_config(task_name, project, log_dir, checkout_dir, checkout_core,
     '''Set up a Config object for git repository testing.'''
     config = Config()
     config.set('core', 'log-root', log_dir)
-    sec_name = 'checkout/{}'.format(task_name)
+    sec_name = 'checkout/' + task_name
     config.add_section(sec_name)
     config.set(sec_name, 'repository', project)
     if checkout_core:
@@ -156,7 +156,7 @@ def _make_cmake_config(task_name, project, log_dir, build_dir, build_core,
     '''Set up a Config object for CMake build testing.'''
     config = Config()
     config.set('core', 'log-root', log_dir)
-    sec_name = 'build/{}'.format(task_name)
+    sec_name = 'build/' + task_name
     config.add_section(sec_name)
     config.set(sec_name, 'source-dir', project)
     if build_core:
@@ -237,7 +237,7 @@ class TestCodeTasks:
 
         # run some checks
         assert status == TaskStatus.DONE
-        full_name = 'checkout/{}'.format(name)
+        full_name = 'checkout/' + name
         assert env_up['tasks'][full_name]['return_code'] == 0
         assert env_up['checkout'][full_name]['repository'] == git_repo
         assert env_up['checkout'][full_name]['checkout_dir'] == checkout_dir
@@ -271,7 +271,7 @@ class TestCodeTasks:
         # run some checks
         try:
             assert status == TaskStatus.DONE
-            full_name = 'build/{}'.format(name)
+            full_name = 'build/' + name
             assert env_up['tasks'][full_name]['return_code'] == 0
             configure_log_dir = os.path.dirname(
                 env_up['build'][full_name]['configure_log']

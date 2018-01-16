@@ -39,8 +39,7 @@ class GraphCommand(Command):
                 graph_pydot = pydot.graph_from_dot_data(graph_str)[0]
                 low_ext = ext[1:].lower()
                 try:
-                    writer = getattr(graph_pydot,
-                                     'write_{}'.format(low_ext))
+                    writer = getattr(graph_pydot, 'write_' + low_ext)
                 except AttributeError:
                     raise ValueError('graph output format {} is not supported'
                                      .format(ext))

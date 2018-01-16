@@ -67,7 +67,7 @@ def make_parser():
     prefix = valjean.cambronne.commands.__name__ + '.'
     submods_iter = pkgutil.iter_modules(valjean.cambronne.commands.__path__)
     for _, modname, _ in submods_iter:
-        cmd_name = '{}Command'.format(modname.capitalize())
+        cmd_name = modname.capitalize() + 'Command'
         module = importlib.import_module(prefix + modname)
         cmd_cls = getattr(module, cmd_name)
         cmd = cmd_cls()
