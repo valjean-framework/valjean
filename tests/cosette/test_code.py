@@ -194,7 +194,7 @@ def git_cmake_config(task_name, project, log_dir,
     sec_name, name = simple_cmake_config.section_by_family('build')
     simple_git_config.merge_section(simple_cmake_config, sec_name)
     simple_git_config.set('core', 'build-root',
-        simple_cmake_config.get('core', 'build-root'))
+                          simple_cmake_config.get('core', 'build-root'))
     yield simple_git_config
 
 

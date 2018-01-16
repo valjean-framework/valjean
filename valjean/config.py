@@ -117,10 +117,7 @@ from . import LOGGER
 
 
 class BaseConfig:
-    '''The configuration class for :mod:`valjean`. It derives from
-    :class:`configparser.ConfigParser`, so all of the methods of the base class
-    can also be used with this one.
-    '''
+    '''The base configuration class for :mod:`valjean`.'''
 
     #: Default configuration file paths.
     DEFAULT_CONFIG_FILES = ('~/.valjean.cfg', 'valjean.cfg')
@@ -387,6 +384,10 @@ class BaseConfig:
 
 
 class Config(BaseConfig):
+    '''The real configuration class for :mod:`valjean`. It derives from
+    :class:`BaseConfig` and extends it by providing the possibility to define
+    handlers for special options that are invoked on lookup failure.
+    '''
 
     def __init__(self, paths=None, handlers=None):
         '''Construct a configuration object.
@@ -725,4 +726,3 @@ class Config(BaseConfig):
                             finalizer=lambda val, split, _:
                             os.path.join(val, split[1])))
     )
-

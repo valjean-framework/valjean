@@ -4,8 +4,8 @@ from hypothesis import given, note, settings, HealthCheck, event, assume
 from hypothesis.strategies import (text, dictionaries, composite, sampled_from,
                                    lists)
 from string import ascii_letters
-from configparser import (ParsingError, DuplicateSectionError, NoOptionError,
-                          NoSectionError, InterpolationMissingOptionError)
+from configparser import (DuplicateSectionError, NoOptionError, NoSectionError,
+                          InterpolationMissingOptionError)
 from collections import Counter, defaultdict
 from itertools import chain
 import tempfile
@@ -20,7 +20,9 @@ from valjean.config import BaseConfig, Config
 ID_CHARS = ascii_letters
 ids = text(ID_CHARS, min_size=1)
 
-STANDARD_SECS = ['build/{}', 'checkout/{}', 'executable/{}', 'run/{}', 'other/{}']
+STANDARD_SECS = ['build/{}', 'checkout/{}', 'executable/{}', 'run/{}',
+                 'other/{}']
+
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @composite
@@ -121,7 +123,7 @@ class TestBaseConfig:
         for section in conf.sections():
             n_sections += 1
             split = conf.split_section(section)
-            if len(split)==1:
+            if len(split) == 1:
                 no_family += 1
                 continue
             note('section = {}'.format(section))
@@ -157,7 +159,6 @@ class TestBaseConfig:
     def test_get_with_fallback(self, conf, opt):
         '''Test that fallback values work for normal options.'''
         for sec in conf.sections():
-            sec_family = conf.split_section(sec)
             assume(not conf.has_option(sec, opt))
             val = conf.get(sec, opt, fallback=None)
             assert val is None
@@ -254,7 +255,7 @@ class TestBaseConfigFailure:
         whitespace raise an exception.'''
         for section in conf.sections():
             split = conf.split_section(section)
-            if len(split)>1:
+            if len(split) > 1:
                 event("'/' in section name")
                 mod_section = ''.join([spaces_before, split[0], spaces_in1,
                                        '/', spaces_in2, split[1],
@@ -283,10 +284,9 @@ class TestBaseConfigFailure:
     def test_get_missing_without_fallback_raises(self, conf, opt):
         '''Test that get raises on missing options without fallback.'''
         for sec in conf.sections():
-            sec_family = conf.split_section(sec)
             assume(not conf.has_option(sec, opt))
             with pytest.raises(NoOptionError):
-                val = conf.get(sec, opt)
+                conf.get(sec, opt)
 
     @given(conf=baseconfig(), missing=ids)
     def test_missing_section_by_family_raises(self, conf, missing):

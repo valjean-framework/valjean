@@ -1,7 +1,6 @@
 '''Common utilities for :program:`valjean` commands.'''
 
 import argparse
-from itertools import dropwhile
 
 from ..cosette.task import RunTask
 from ..cosette.code import CheckoutTask, BuildTask
@@ -62,33 +61,15 @@ class TaskFactory:
         '''
         self.config = config
 
-    # def make_tasks(self, targets):
-    #     '''Generate a list of tasks.
-
-    #     This method generates tasks based on a collection of task names
-    #     (`targets`) which will be looked up in the configuration. So, for
-    #     instance, if the factory has been configured to produce tasks in the
-    #     range from ``'configure'`` to ``'build'``, and if `targets` contains
-    #     ``'swallow'`` and ``'coconut'``, this method will search the
-    #     configuration file for sections
-
-    #         * ``[checkout swallow]``
-    #         * ``[checkout coconut]``
-    #         * ``[build swallow]``
-    #         * ``[build coconut]``
-
-    #     :param collection targets: A collection of strings.
-    #     '''
-    #     if targets:
-    #         return [cls.from_config(target, self.config)
-    #                 for _, cls in self.phases
-    #                 for target in targets]
-    #     else:
-    #         return [cls.from_config(target, self.config)
-    #                 for phase, cls in self.phases
-    #                 for _, target in self.config.sections_by_family(phase)]
-
     def make_task(self, command, name):
+        '''Create a task given a command and a task name.
+
+        :param str command: The name of the command for which the task should
+                            be created. If the command is known to the factory
+                            (i.e. if it appears as a key in the `PHASES`
+                            dictionary), a suitable task will be created.
+        :param str name: The name of the task.
+        '''
         LOGGER.debug('making task for command %s, name %s', command, name)
         cls = self.PHASES.get(command, None)
         LOGGER.debug('task class is %s', cls)
@@ -97,14 +78,19 @@ class TaskFactory:
         task = cls.from_config(name, self.config)
         return task
 
-    def make_tasks(self, family_targets):
+    def make_tasks(self, command_targets):
+        '''Create tasks given a list of command/target pairs
+
+        :param str command_targets: A list of pairs of the form ``(command,
+                                    name)``.
+        '''
         tasks_by_name = {}
-        for family, target in family_targets:
-            LOGGER.debug('making tasks for family/targets %s', family_targets)
-            task_name = '{}/{}'.format(family, target)
+        LOGGER.debug('making tasks for command/targets %s', command_targets)
+        for command, target in command_targets:
+            task_name = '/'.join((command, target))
             if task_name in tasks_by_name:
                 continue
-            task = self.make_task(family, target)
+            task = self.make_task(command, target)
             if task is None:
                 continue
             try:
@@ -114,8 +100,8 @@ class TaskFactory:
                 raise
             tasks_by_name[task_name] = task
             for dep in task.depends_on:
-                dep_family, dep_name = self.config.split_section(dep)
-                dep_tasks = self.make_tasks([(dep_family, dep_name)])
+                dep_command, dep_name = self.config.split_section(dep)
+                dep_tasks = self.make_tasks([(dep_command, dep_name)])
                 tasks_by_name.update(dep_tasks)
 
         return tasks_by_name
