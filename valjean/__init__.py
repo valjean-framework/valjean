@@ -11,11 +11,13 @@ except DistributionNotFound:
 
 
 def _configure_logger(logger):
+    default_level = logging.WARNING
     _formatter = logging.Formatter(LOG_CONSOLE_FORMAT)
     _handler = logging.StreamHandler(sys.stdout)
     _handler.setFormatter(_formatter)
-    _handler.setLevel(logging.WARNING)
+    _handler.setLevel(default_level)
     logger.addHandler(_handler)
+    logger.setLevel(default_level)
 
 
 LOGGER = logging.getLogger('valjean')
