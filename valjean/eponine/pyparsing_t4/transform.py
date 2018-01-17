@@ -11,7 +11,7 @@ import numpy as np
 from .. import common
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('valjean')
 MAXDEPTH = 0
 
 

@@ -28,7 +28,7 @@ from collections import OrderedDict
 import logging
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('valjean')
 
 
 LOGGER.info("sys.argv: %s", str(sys.argv))

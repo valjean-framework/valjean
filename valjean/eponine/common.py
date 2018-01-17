@@ -18,7 +18,7 @@ if "mem" not in sys.argv:
         return func
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('valjean')
 ITYPE = np.int32
 FTYPE = np.float32
 

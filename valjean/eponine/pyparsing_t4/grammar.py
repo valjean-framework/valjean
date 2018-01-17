@@ -15,7 +15,7 @@ from pyparsing import pyparsing_common as pyparscom
 from . import transform as trans
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('valjean')
 
 _fnums = pyparscom.fnumber.setParseAction(tokenMap(trans.common.FTYPE))
 _inums = pyparscom.number.setParseAction(tokenMap(trans.common.ITYPE))
