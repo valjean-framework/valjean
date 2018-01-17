@@ -117,7 +117,10 @@ class BatchResultScanner():
         if self.batch_counts['greater'] < newbatch:
             self.batch_counts['greater'] = newbatch
 
-    def _check_batch_number(self):
+    def check_batch_number(self):
+        '''Check batch number value and replace it by current value or by the
+        greater value if needed.
+        '''
         if "PARA" not in sys.argv:
             if self.batch_counts['number'] != self.batch_counts['current']:
                 LOGGER.info("Edition batch (%d) different from "
@@ -142,7 +145,6 @@ class BatchResultScanner():
         :type line: string
         :return: string build from lsit of strings junction
         '''
-        self._check_batch_number()
         LOGGER.debug("[1;31mEND FLAG found, batch number = %d, "
                      "current batch = %d, greater batch = %d[0m",
                      self.batch_counts['number'],
@@ -238,6 +240,9 @@ class Scan(Mapping):
                 elif _batch_scan:
                     _batch_scan.build_result(line)
                     if self.endflag in line:
+                        # check batch number has to be before get result to
+                        # modify batch number before storage if necessary...
+                        _batch_scan.check_batch_number()
                         batch_number = _batch_scan.batch_counts['number']
                         self._collres[batch_number] = _batch_scan.get_result()
                         count_mesh_exceeding = _batch_scan.count_mesh_exceeding
