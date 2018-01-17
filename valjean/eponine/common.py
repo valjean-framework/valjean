@@ -26,7 +26,7 @@ ITYPE = np.int32
 FTYPE = np.float32  # pylint: disable=E1101
 
 
-class _DictBuilder:
+class DictBuilder:
     '''Class to build the dictionary for spectrum and mesh results as
     7-dimensions structured arrays.
     7-dimensions are: space (3), energy, time, mu and phi (direction angles)
@@ -76,11 +76,11 @@ class _DictBuilder:
         :type ilastbin: int
         '''
         LOGGER.debug("Adding last bin for dim %s, flag = %s",
-                     dim, _DictBuilder.VAR_FLAG[dim])
+                     dim, DictBuilder.VAR_FLAG[dim])
         if len(self.bins[dim]) > 1 and self.bins[dim][0] > self.bins[dim][1]:
-            self.bins[dim].insert(0, data[0][_DictBuilder.VAR_FLAG[dim]][2])
+            self.bins[dim].insert(0, data[0][DictBuilder.VAR_FLAG[dim]][2])
         else:
-            self.bins[dim].append(data[lastbin][_DictBuilder.VAR_FLAG[dim]][2])
+            self.bins[dim].append(data[lastbin][DictBuilder.VAR_FLAG[dim]][2])
 
     def add_last_bins(self, data):
         '''Add last bins in energy, time, mu and phi direction angles.
@@ -91,7 +91,7 @@ class _DictBuilder:
         self._add_last_energy_bin(data)
         nphibins = len(self.bins['phi']) if self.bins['phi'] else 1
         nmubins = len(self.bins['mu']) if self.bins['mu'] else 1
-        # other possibility: if _DictBuilder.VAR_FLAG['t'] in data[0]
+        # other possibility: if DictBuilder.VAR_FLAG['t'] in data[0]
         if 'time_step' in data[0]:
             self._add_last_bin_for_dim(data, 't', -int(nphibins)*int(nmubins))
         if 'mu_angle_zone' in data[0]:
@@ -121,7 +121,7 @@ class _DictBuilder:
         flipped at a moment, here or later, easiest is here, and all results
         will look the same :-).
         '''
-        LOGGER.debug("In _DictBuilder.flip_bins")
+        LOGGER.debug("In DictBuilder.flip_bins")
         if self.bins['e'] and self.bins['e'][0] > self.bins['e'][1]:
             self._flip_bins_for_dim('e', 3)
         if self.bins['t'] and self.bins['t'][0] > self.bins['t'][1]:
@@ -140,7 +140,7 @@ class _DictBuilder:
         pass
 
 
-class _MeshDictBuilder(_DictBuilder):
+class MeshDictBuilder(DictBuilder):
     '''Class specific to mesh dictionary -> mainly filling of bins and arrays.
     '''
     itime, imu, iphi = 0, 0, 0
@@ -172,7 +172,7 @@ class _MeshDictBuilder(_DictBuilder):
         :type data: list of meshes results
         '''
         for ires in data:
-            LOGGER.debug("_MeshDictBuilder.fill_arrays_bins, "
+            LOGGER.debug("MeshDictBuilder.fill_arrays_bins, "
                          "keys: %s, number of elements: %d",
                          list(ires.keys()), len(ires))
             if 'time_step' in ires:
@@ -204,7 +204,7 @@ class _MeshDictBuilder(_DictBuilder):
         self.bins['e'].append(lastmesh[lastebin]['mesh_energyrange'][2])
 
 
-class _SpectrumDictBuilder(_DictBuilder):
+class SpectrumDictBuilder(DictBuilder):
     '''Class specific to spectrum dictionary
     -> mainly filling of bins and arrays.
     '''
@@ -218,7 +218,7 @@ class _SpectrumDictBuilder(_DictBuilder):
         :param data: mesh or spectrum
         :type data: list of meshes or spectrum results
         '''
-        LOGGER.debug("In _SpectrumDictBuilder.fill_arrays_and_bins")
+        LOGGER.debug("In SpectrumDictBuilder.fill_arrays_and_bins")
         for ispec in data:
             # Fill bins -> caution to not replicate them
             if 'time_step' in ispec:
@@ -336,8 +336,8 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
     nphibins, nmubins, ntbins, nebins = _get_number_of_bins(spectrum)
     LOGGER.debug("nebins = %d, ntbins = %d, nmubins = %d, nphibins = %d",
                  nebins, ntbins, nmubins, nphibins)
-    vals = _SpectrumDictBuilder(colnames,
-                                [1, 1, 1, nebins, ntbins, nmubins, nphibins])
+    vals = SpectrumDictBuilder(colnames,
+                               [1, 1, 1, nebins, ntbins, nmubins, nphibins])
     if 'integrated_res' in spectrum[0]:
         vals.add_array('integrated_res', ['score', 'sigma'],
                        [1, 1, 1, 1, ntbins, nmubins, nphibins])
@@ -466,8 +466,8 @@ def convert_mesh(meshres):
     LOGGER.debug("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
                  "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
     # up to now no mesh splitted in mu or phi angle seen, update easy now
-    vals = _MeshDictBuilder(['tally', 'sigma'],
-                            [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
+    vals = MeshDictBuilder(['tally', 'sigma'],
+                           [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
     # mesh integrated on energy (normally the last mesh)
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
         vals.add_array('eintegrated_mesh', ['tally', 'sigma'],
