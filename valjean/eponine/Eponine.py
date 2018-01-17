@@ -53,7 +53,7 @@ class Eponine():
         self.inittime = lamres.initialization_time
         lamres.print_statistics()
         # print("self.strres =", self.strres)
-        print("type lamres =", type(lamres))
+        # print("type lamres =", type(lamres))
         # for k in lamres.keys():
         #     print("[38;5;167mClef:", k, "[0m")
         print("[38;5;167mClef:", list(lamres.keys()), "[0m")
@@ -73,9 +73,9 @@ class Eponine():
         # print(lamres[-1])
         # for k, v in lamres:  # not working !
         #     print("[38;5;178m", k, " = ", v, "[0m")
-        # print("Generator:", lamres.lastGeneratorState)
-        print(lamres)
-        print("len(lamres) =", len(lamres))
+        # print("Generator:", lamres.last_generator_state)
+        # print(lamres)
+        # print("len(lamres) =", len(lamres))
         # print("avec __getitem__:", lamres[9950])
         return True
 
@@ -266,8 +266,7 @@ class Eponine():
                 # pprint(self.result[-1].asDict(), depth=4)
                 if 'simulation_time' in self.result[-1]:
                     print("[94mSimulation time =",
-                          self.result[-1]['simulation_time'], "[0m",
-                          "type",type(self.result[-1]['simulation_time']))
+                          self.result[-1]['simulation_time'], "[0m")
                 elif 'exploitation_time' in self.result[-1]:
                     print("[94mExploitation time =",
                           self.result[-1]['exploitation_time'], "[0m")
