@@ -6,3 +6,4 @@ Package API
    modules/valjean
    modules/cambronne
    modules/cosette
+   modules/eponine
