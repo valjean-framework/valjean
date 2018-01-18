@@ -3,52 +3,43 @@
 '''Test classes for the :mod:`~.task` module.'''
 
 import pytest
-import tempfile
-import os
 
 from ..context import valjean  # noqa: F401
 import valjean.cosette.task as task
 from valjean.cosette.task import TaskStatus
 
 
-@pytest.fixture(scope='function')
-def tempdir():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        yield tmpdir
-
-
 class TestRunTask:
 
-    def test_echo(self, tempdir):
-        filename = os.path.join(tempdir, 'testfile')
-        with open(filename, 'w') as f_out:
-            t = task.RunTask('echo', ['echo', 'test'],
-                             subprocess_args={'stdout': f_out})
-            env_up, status = t.do(dict())
+    def test_echo(self, tmpdir):
+        testfile = tmpdir.join('testfile')
+        testfile.ensure()
+        f_out = testfile.open(mode='w')
+        t = task.RunTask('echo', ['echo', 'test'],
+                         subprocess_args={'stdout': f_out})
+        env_up, status = t.do(dict())
         assert status == TaskStatus.DONE
         assert env_up['tasks']['echo']['return_code'] == 0
 
-        with open(filename) as f_in:
-            result = f_in.readline()
-            assert result == 'test\n'
+        result = testfile.read()
+        assert result == 'test\n'
 
 
 class TestShellTask:
 
-    def test_shell(self, tempdir):
+    def test_shell(self, tmpdir):
         script = r'''echo here
 echo there
 echo and everywhere
 '''
-
-        filename = os.path.join(tempdir, 'testfile')
-        with open(filename, 'w') as f_out:
-            t = task.ShellTask('script', script,
-                               subprocess_args={'stdout': f_out})
-            env_up, status = t.do(dict())
+        testfile = tmpdir.join('testfile')
+        testfile.ensure()
+        f_out = testfile.open(mode='w')
+        t = task.ShellTask('script', script,
+                            subprocess_args={'stdout': f_out})
+        env_up, status = t.do(dict())
         assert status == TaskStatus.DONE
         assert env_up['tasks']['script']['return_code'] == 0
 
-        with open(filename) as f_in:
-            result = f_in.read()
-            assert result == 'here\nthere\nand everywhere\n'
+        result = testfile.read()
+        assert result == 'here\nthere\nand everywhere\n'

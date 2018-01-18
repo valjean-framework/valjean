@@ -8,7 +8,6 @@ from configparser import (DuplicateSectionError, NoOptionError, NoSectionError,
                           InterpolationMissingOptionError)
 from collections import Counter, defaultdict
 from itertools import chain
-import tempfile
 import pytest
 import os
 
@@ -163,16 +162,15 @@ class TestBaseConfig:
             val = conf.get(sec, opt, fallback=None)
             assert val is None
 
-    def test_read_config_file(self):
+    def test_read_config_file(self, tmpdir):
         '''Test reading from a config file.'''
-        with tempfile.NamedTemporaryFile() as conf_file:
-            conf_str = ('[swallow/african]\nspeed = 40\n\n'
-                        '[swallow/european]\nspeed = 55\n')
-            conf_file.write(conf_str.encode('utf-8'))
-            conf_file.flush()
-            conf = BaseConfig([conf_file.name])
-            assert conf.get('swallow', 'african', 'speed') == '40'
-            assert conf.get('swallow', 'european', 'speed') == '55'
+        conf_str = ('[swallow/african]\nspeed = 40\n\n'
+                    '[swallow/european]\nspeed = 55\n')
+        conf_file = tmpdir.join('test.cfg')
+        conf_file.write(conf_str)
+        conf = BaseConfig([str(conf_file)])
+        assert conf.get('swallow', 'african', 'speed') == '40'
+        assert conf.get('swallow', 'european', 'speed') == '55'
 
 
 class TestConfigHandlers:

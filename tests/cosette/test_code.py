@@ -3,7 +3,6 @@
 '''Test classes for the :mod:`~.code` module.'''
 
 import pytest
-import tempfile
 import os
 from configparser import NoSectionError
 
@@ -31,42 +30,27 @@ def task_name(request):
 #####################################
 
 
-@pytest.fixture(scope='session')
-def project():
-    '''Set up a minimalist project for testing.'''
+def setup_project(project_dir):
+    '''Set up a minimalist project for testing in the given directory.'''
     from subprocess import check_call, DEVNULL
 
-    with tempfile.TemporaryDirectory(prefix='project_') as proj_dir:
-        check_call([code.CheckoutTask.GIT, 'init', proj_dir],
-                   stdout=DEVNULL, stderr=DEVNULL)
-        filename = os.path.join(proj_dir, 'CMakeLists.txt')
-        with open(filename, 'wb') as f:
-            f.write(CMAKELISTS.encode('utf-8'))
-        git_dir = os.path.join(proj_dir, '.git')
-        check_call([code.CheckoutTask.GIT, '--git-dir', git_dir,
-                    '--work-tree', proj_dir, 'add', filename],
-                   stdout=DEVNULL, stderr=DEVNULL)
-        check_call([code.CheckoutTask.GIT, '--git-dir', git_dir,
-                    '--work-tree', proj_dir, 'commit', '-m', 'Test commit'],
-                   stdout=DEVNULL, stderr=DEVNULL)
-        yield proj_dir
+    check_call([code.CheckoutTask.GIT, 'init', project_dir],
+                stdout=DEVNULL, stderr=DEVNULL)
+    filename = os.path.join(project_dir, 'CMakeLists.txt')
+    with open(filename, 'wb') as f:
+        f.write(CMAKELISTS.encode('utf-8'))
+    git_dir = os.path.join(project_dir, '.git')
+    check_call([code.CheckoutTask.GIT, '--git-dir', git_dir,
+                '--work-tree', project_dir, 'add', filename],
+                stdout=DEVNULL, stderr=DEVNULL)
+    check_call([code.CheckoutTask.GIT, '--git-dir', git_dir,
+                '--work-tree', project_dir, 'commit', '-m', 'Test commit'],
+                stdout=DEVNULL, stderr=DEVNULL)
 
 
 #################################
 #  fixtures for Config objects  #
 #################################
-
-
-@pytest.fixture(scope='function')
-def log_dir():
-    with tempfile.TemporaryDirectory(prefix='log_') as log_dir:
-        yield log_dir
-
-
-@pytest.fixture(scope='function')
-def checkout_dir():
-    with tempfile.TemporaryDirectory(prefix='co_') as checkout_dir:
-        yield checkout_dir
 
 
 @pytest.fixture(scope='function', params=['master', None])
@@ -89,14 +73,14 @@ def checkout_core(request):
     return request.param
 
 
-def _make_git_config(task_name, project, log_dir, checkout_dir, checkout_core,
-                     git_ref=None, git_flags=None, git_vcs=None):
+def make_git_config(task_name, project_dir, log_dir, checkout_dir,
+                     checkout_core, git_ref=None, git_flags=None, git_vcs=None):
     '''Set up a Config object for git repository testing.'''
     config = Config()
     config.set('core', 'log-root', log_dir)
     sec_name = 'checkout/' + task_name
     config.add_section(sec_name)
-    config.set(sec_name, 'repository', project)
+    config.set(sec_name, 'repository', project_dir)
     if checkout_core:
         config.set('core', 'checkout-root', checkout_dir)
     else:
@@ -107,21 +91,28 @@ def _make_git_config(task_name, project, log_dir, checkout_dir, checkout_core,
         config.set(sec_name, 'ref', git_ref)
     if git_flags is not None:
         config.set(sec_name, 'flags', git_flags)
-    yield config
+    return config
 
 
 @pytest.fixture(scope='function')
-def git_config(task_name, project, log_dir, checkout_dir, checkout_core,
-               git_ref, git_flags, git_vcs):
-    yield from _make_git_config(task_name, project, log_dir, checkout_dir,
-                                checkout_core, git_ref, git_flags, git_vcs)
+def git_config(task_name, tmpdir_factory, checkout_core, git_ref, git_flags,
+               git_vcs):
+    project_dir = str(tmpdir_factory.mktemp('project'))
+    log_dir = str(tmpdir_factory.mktemp('log'))
+    checkout_dir = str(tmpdir_factory.mktemp('checkout'))
+    setup_project(project_dir)
+    return make_git_config(task_name, project_dir, log_dir, checkout_dir,
+                           checkout_core, git_ref, git_flags, git_vcs)
 
 
 @pytest.fixture(scope='function')
-def simple_git_config(task_name, project, log_dir, checkout_dir,
-                      checkout_core):
-    yield from _make_git_config(task_name, project, log_dir, checkout_dir,
-                                checkout_core)
+def simple_git_config(task_name, tmpdir_factory, checkout_core):
+    project_dir = str(tmpdir_factory.mktemp('project'))
+    log_dir = str(tmpdir_factory.mktemp('log'))
+    checkout_dir = str(tmpdir_factory.mktemp('checkout'))
+    setup_project(project_dir)
+    return make_git_config(task_name, project_dir, log_dir, checkout_dir,
+                           checkout_core)
 
 
 @pytest.fixture(scope='function', params=['-DCMAKE_BUILD_TYPE=Debug', None])
@@ -139,18 +130,12 @@ def cmake_targets(request):
     return request.param
 
 
-@pytest.fixture(scope='function')
-def build_dir():
-    with tempfile.TemporaryDirectory(prefix='build_') as build_dir:
-        yield build_dir
-
-
 @pytest.fixture(scope='function', params=[True, False])
 def build_core(request):
     return request.param
 
 
-def _make_cmake_config(task_name, project, log_dir, build_dir, build_core,
+def make_cmake_config(task_name, project_dir, log_dir, build_dir, build_core,
                        cmake_conf_flags=None, cmake_build_flags=None,
                        cmake_targets=None):
     '''Set up a Config object for CMake build testing.'''
@@ -158,7 +143,7 @@ def _make_cmake_config(task_name, project, log_dir, build_dir, build_core,
     config.set('core', 'log-root', log_dir)
     sec_name = 'build/' + task_name
     config.add_section(sec_name)
-    config.set(sec_name, 'source-dir', project)
+    config.set(sec_name, 'source-dir', project_dir)
     if build_core:
         config.set('core', 'build-root', build_dir)
     else:
@@ -169,27 +154,34 @@ def _make_cmake_config(task_name, project, log_dir, build_dir, build_core,
         config.set(sec_name, 'build-flags', cmake_build_flags)
     if cmake_targets is not None:
         config.set(sec_name, 'build-targets', cmake_targets)
-    yield config
+    return config
 
 
 @pytest.fixture(scope='function')
-def cmake_config(task_name, project, log_dir, build_dir, build_core,
-                 cmake_conf_flags, cmake_build_flags, cmake_targets):
+def cmake_config(task_name, tmpdir_factory, build_core, cmake_conf_flags,
+                 cmake_build_flags, cmake_targets):
     '''Set up a Config object for CMake build testing.'''
-    yield from _make_cmake_config(task_name, project, log_dir, build_dir,
-                                  build_core, cmake_conf_flags,
-                                  cmake_build_flags, cmake_targets)
+    project_dir = str(tmpdir_factory.mktemp('project'))
+    log_dir = str(tmpdir_factory.mktemp('log'))
+    build_dir = str(tmpdir_factory.mktemp('build'))
+    setup_project(project_dir)
+    return make_cmake_config(task_name, project_dir, log_dir, build_dir,
+                             build_core, cmake_conf_flags, cmake_build_flags,
+                             cmake_targets)
 
 
 @pytest.fixture(scope='function')
-def simple_cmake_config(task_name, project, log_dir, build_dir, build_core):
-    yield from _make_cmake_config(task_name, project, log_dir, build_dir,
-                                  build_core)
+def simple_cmake_config(task_name, tmpdir_factory, build_core):
+    project_dir = str(tmpdir_factory.mktemp('project'))
+    log_dir = str(tmpdir_factory.mktemp('log'))
+    build_dir = str(tmpdir_factory.mktemp('build'))
+    setup_project(project_dir)
+    return make_cmake_config(task_name, project_dir, log_dir, build_dir,
+                             build_core)
 
 
 @pytest.fixture(scope='function')
-def git_cmake_config(task_name, project, log_dir,
-                     simple_git_config, simple_cmake_config):
+def git_cmake_config(task_name, simple_git_config, simple_cmake_config):
     '''Set up a Config object for combined git checkout/CMake build testing.'''
     sec_name, name = simple_cmake_config.section_by_family('build')
     simple_git_config.merge_section(simple_cmake_config, sec_name)
@@ -236,15 +228,21 @@ class TestCodeTasks:
         LOGGER.debug('env_up = %s', env_up)
 
         # run some checks
-        assert status == TaskStatus.DONE
         full_name = 'checkout/' + name
-        assert env_up['tasks'][full_name]['return_code'] == 0
-        assert env_up['checkout'][full_name]['repository'] == git_repo
-        assert env_up['checkout'][full_name]['checkout_dir'] == checkout_dir
-        filename = os.path.join(checkout_dir, 'CMakeLists.txt')
-        with open(filename) as f:
-            content = f.read()
-        assert content == CMAKELISTS
+        try:
+            assert status == TaskStatus.DONE
+            assert env_up['tasks'][full_name]['return_code'] == 0
+            assert env_up['checkout'][full_name]['repository'] == git_repo
+            assert env_up['checkout'][full_name]['checkout_dir'] == checkout_dir
+            filename = os.path.join(checkout_dir, 'CMakeLists.txt')
+            with open(filename) as f:
+                content = f.read()
+            assert content == CMAKELISTS
+        except AssertionError:
+            with open(env_up['checkout'][full_name]['checkout_log']) as c_f:
+                code.LOGGER.debug('checkout_log:\n%s', c_f.read())
+            raise
+
         env.apply(env_up)
         return env
 
@@ -269,9 +267,9 @@ class TestCodeTasks:
         LOGGER.debug('env_up = %s', env_up)
 
         # run some checks
+        full_name = 'build/' + name
         try:
             assert status == TaskStatus.DONE
-            full_name = 'build/' + name
             assert env_up['tasks'][full_name]['return_code'] == 0
             configure_log_dir = os.path.dirname(
                 env_up['build'][full_name]['configure_log']
