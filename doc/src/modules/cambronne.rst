@@ -1,5 +1,5 @@
-:mod:`~.cambronne` — Commandes, Actions et MoBilisation Rapide des OpératioNs Exécutables
-=========================================================================================
+cambronne — Commandes, Actions et MoBilisation Rapide des OpératioNs Exécutables
+================================================================================
 
 .. figure:: ../images/cambronne.jpg
    :align: center
