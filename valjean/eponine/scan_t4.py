@@ -2,23 +2,81 @@
 Module performing a scan of Tripoli-4 output listing in order to only keep
 relevant parts of it = results to be used for VV or analysis or the run.
 
-Code :
-- quickly reads the results file
-- recognize beginning and end of results sections
-- get the required number of batchs
-- get the edition batch numbers (if exists)
+Summary
+-------
 
+* Quickly reads the results file
+* Recognize beginning and end of results sections
+* Get the required number of batchs
+* Get the edition batch numbers (if exists)
+
+
+Use of ``scan_t4``
+------------------
+
+To use ``scan_t4`` you need to create a :class:`Scan` object giving at least
+the path to the file you want to read. This file should be a Tripoli-4 output
+containing at least the flags precised in :ref:`eponine-caveats-label`.
+
+.. testsetup:: scan_t4
+
+   from valjean.eponine.scan_t4 import Scan
+
+.. doctest:: scan_t4
+
+   >>> tmpfile = open("spam.res", 'w')
+   >>> tmpfile.write(" RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00")
+   >>> tmpfile.write("simulation time (s) : 1")
+   >>> tmpfile.write("NORMAL COMPLETION")
+   >>> tmpfile.close()
+   >>> results = Scan(tmpfile, "simulation time")
+   >>> results.normalend
+   >>> len(results)
+
+.. note::
+
+   It will probably be better to directly load a test file...
+
+
+.. _eponine-caveats-label:
+
+Caveats
+-------
+
+Beginning and end of results sections
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Important for the scan: results will be kept
-- from 'RESULTS ARE GIVEN'
-- to an end flag given by user
-Default end flag is "simulation time",
-for exploitation jobs "exploitation time"will be used (example: Green bands),
-for jobs running in parallel end flagshould be "elapsed time".
+
+* **from** "RESULTS ARE GIVEN"
+* **to** an end flag given by user
+
+  * Default end flag is "simulation time",
+  * For exploitation jobs use "exploitation time" (example: Green bands),
+  * for jobs running in parallel, use "elapsed time".
+
 In any case, it is always possible to set a different end flag.
 
-Memory profinling is available using memory_profiler:
-mprof run --python python3 scan.py FILE
-mprof plot
+Mesh results
+^^^^^^^^^^^^
+Mesh results can be really long, so they can be long to read and mainly,
+afterwards to parse. If meshes are not used in the rest of the job
+(for example: you are only interested in integrated results), a limit can be
+set on the number of lines read using the argument ``mesh_limit``:
+
+* ``mesh_limit`` can take all values except 0.
+* Default is -1: all the lines of mesh result will be read
+* Else **Minimum is 1**: to avoid crash in parsing as it needs to parse at
+  least one line of mesh result
+
+
+Others
+------
+
+Memory profiling is available using memory_profiler::
+
+  mprof run --python python3 scan.py FILE
+  mprof plot
+
 '''
 
 import sys
@@ -42,6 +100,24 @@ if "mem" not in sys.argv:
 
 class BatchResultScanner:
     '''Class to build batchs collection.
+
+    :param count_excess: current count of meshes
+    :type count_excess: int
+    :param current_batch: current batch number
+    :type current_batch: int
+    :param mesh_limit: limit of number of lines of mesh
+    :type mesh_limit: int
+    :param line: current line in file
+    :type line: str
+
+    .. note::
+
+      * **current_batch** normally refers to lines before flag
+        "RESULTS ARE GIVEN". They can be used if "Edition after batch number"
+        does not appear in the file.
+      * **line** should contain "RESULTS ARE GIVEN" here. It is used to
+        initialize the list of strings corresponding to the result block.
+
     '''
     def __init__(self, count_excess, current_batch, mesh_limit, line):
         self.count_mesh_exceeding = count_excess
@@ -56,6 +132,7 @@ class BatchResultScanner:
 
     def add_meshline(self, line):
         '''Add mesh line to result if stop mesh is not reached.
+
         :param count_excess: counter for mesh lines excess
         :type count_excess: int
         :param result: batch result
@@ -76,6 +153,7 @@ class BatchResultScanner:
     def build_result(self, line):
         '''Scan line to build batch result: mainly deals with mesh
         specificities and store line.
+
         :param line: last line to be taken into account
         :type line: string
         '''
@@ -135,8 +213,7 @@ class BatchResultScanner:
         '''Send result.
         Called if end flag has been found, add last line and concatenates
         result.
-        :param line: last line to be taken into account
-        :type line: string
+
         :return: string build from lsit of strings junction
         '''
         LOGGER.debug("[1;31mEND FLAG found, batch number = %d, "
@@ -151,41 +228,50 @@ class Scan(Mapping):
     '''Class to keep marks on the file
 
     Members needed at initialization:
+
     :param fname: name of the input file
     :type fname: string
     :param endflag: end flag of the results block in Tripoli-4 listing
     :type endflag: string
     :param mesh_limit: limit on number of lines to read in meshes outputs
-                    (can be really long), default = -1, all cells will be read
-                    Minimum value is 1, use it to skip the mesh.
-                    If 0 is used, parsing will fail as no mesh will be found.
+                      (can be really long).
+
+                      * default = -1, all cells will be read
+                      * Minimum value is 1, use it to skip the mesh.
+                      * If 0 is used, AssertException will be raised (else
+                        parsing would fail)
+
     :type mesh_limit: int
     '''
 
     @profile
     def __init__(self, fname, endflag="simulation time", mesh_limit=-1):
-        '''Initialize the instance from the file "fname", meaning reads the
+        '''Initialize the instance from the file `fname`, meaning reads the
         file and store the relevant parts of it, i.e. result block for each
         batch edition.
 
-        :param reqbatchs: number of batchs required (read from file fname)
+        Results are stored in an internal `OrderedDict`:
+        ``{batch_number_1: 'result_1', batch_number_2: 'result_2', ...}``
+
+        * `batch_number` is `int`
+        * `result` is `str`
+        * Order follows the listing order, so increasing `batch_number`
+
+        :ivar reqbatchs: number of batchs required (read from file fname)
         :type reqbatchs: int
-        :param normalend: bool for presence of "NORMAL COMPLETION"
+        :ivar normalend: presence of "NORMAL COMPLETION"
         :type normalend: bool
-        :param countwarnings: count number of warnings (for statistics)
+        :ivar countwarnings: count number of warnings (for statistics)
         :type countwarnings: int
-        :param counterrors: count number of errors (for statistics)
+        :var counterrors: count number of errors (for statistics)
         :type counterrors: int
-        :param initialization_time: save initialization time (no saved in the
-                                   result)
+        :ivar initialization_time: save initialization time (not saved in the
+                                    result as given before in the listing)
         :type initialization_time: int
-        :param last_generator_state: keep the random generator state (not
-                                   included in the the result)
+        :var last_generator_state: keep the random generator state (not
+                                     included in the result as given after
+                                     `endflag`)
         :type last_generator_state: string
-        :param _collres: ordered dictionary containing
-                        {batch_number : 'result block',}
-                        batch_number is an int
-        :type _collres: OrderedDict
         '''
         self.start_time = time.time()
         self.fname = fname
@@ -273,14 +359,14 @@ class Scan(Mapping):
 
     def __getitem__(self, batch_number):
         '''Get result corresponding to batch_number.
-        If batch_number == -1 return the last result. A warning is printed if
-        the last batch_number doesn't correspond to the number of batchs
-        required.
 
-        Use: Scan[X]
+        If `batch_number` == -1 return the last result.
+        A warning is printed if the last batch_number doesn't correspond to
+        the number of batchs required.
+
+        Use: ``Scan[X]``
         '''
-        LOGGER.debug("[1;38;5;79m__getitem__, batch number = %d[0m",
-                     batch_number)
+        LOGGER.debug("__getitem__, batch number = %d", batch_number)
         if batch_number == -1:
             last_batch = next(reversed(self._collres))
             LOGGER.info("last batch number = %d", last_batch)
@@ -301,8 +387,8 @@ class Scan(Mapping):
                 # raise type(err)(message).with_traceback(sys.exc_info()[2])
 
     def __iter__(self):
-        '''Iteration over the collection of results, on the keys to match dict
-        and OrderedDict behaviour.
+        '''Iteration over the collection of results, on the keys to match
+        `dict` and `OrderedDict` behaviour.
         '''
         yield from self._collres.__iter__()
 
@@ -313,8 +399,7 @@ class Scan(Mapping):
         return len(self._collres)
 
     def __reversed__(self):
-        '''Reversed the OrderedDict order (easier to get last element)
-        '''
+        '''Reversed the `OrderedDict` order (easier to get last element).'''
         yield from self._collres.__reversed__()
 
     @profile
@@ -324,8 +409,7 @@ class Scan(Mapping):
 
     @profile
     def get_all_batch_results(self):
-        '''Return all batchs results in one string, to be parsed in once.
-        '''
+        '''Return all batchs results in one string, to be parsed in once.'''
         return ''.join(self._collres.values())
 
     def print_statistics(self):
