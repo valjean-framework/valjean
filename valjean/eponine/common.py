@@ -4,8 +4,509 @@ objects.
 Inputs (outputs from parsers) should be python lists or dictionary,
 dictionary keys should be the same in all parsers...
 
-..note:: not a standalone code, needs inputs
-         To be tested in a more general context.
+.. warning::
+
+   | Not a standalone code, needs inputs.
+   | To be tested in a more general context.
+
+
+Goal
+----
+
+Parsing results are normally stored as lists and dictionaries but it could be
+easier to use other objects, as `Numpy` arrays. In our context these objects
+are used to represent
+
+* spectrum results, i.e. tables splitted at least in energy, sometimes with
+  additional splittings in time, µ and φ direction angles
+* mesh results, i.e. tables splitted in space (cartesian, cylindrical,
+  spherical depending on case), sometimes with additional splittings in energy
+  and/or time
+* keff results, especially the matrical ones
+* Green bands results
+* IFP results
+* k\ :sub:`ij` results (matrices, eigen vectors and values)
+
+Numpy objects are usefull for future calculations or plotting for example.
+
+
+Spectrum and meshes
+-------------------
+
+
+.. _eponine-spectrummesh-intro:
+
+Generalities
+````````````
+
+Spectrum and meshes results use a common representation build using
+:class:`DictBuilder`. This common representation is a **7-dimension structured
+array** from Numpy.
+
+Dimensions are given in :py:data:`DictBuilder.VARS`:
+
+* **s0**, **s1**, **s2**: space coordinates (typically (x, y, z), (r, θ, z) or
+  (r, θ, ϕ), depending on frame reference)
+* **e**: energy
+* **t**: time
+* **mu, phi**: direction angles µ and φ whose definitions can vary depending on
+  the reference frame of direction [#dir_angles]_
+
+Order should always be that one.
+
+
+The result for each bin (s0, s1, s2, e, t, mu, phi) is filled in a **structured
+array** whose `numpy.dtype` can be:
+
+* meshes: normally ``'tally'`` and ``'sigma'`` where *sigma* is in % and
+  *tally* in its unit (not necessarly precised in the listing)
+* default spectrum: ``'score'``, ``'sigma'``, ``'score/lethargy'`` where
+  *sigma* is in %, *score* and *score/lethargy* in the unit of the score (not
+  necessarly precised in the listing)
+* spectrum with variance of variance (vov): as default spectrum case + a
+  fourth element named ``'vov'`` (no unit)
+* uncertainties spectrum: in case of *covariance perturbations*, elements are
+  ``'sigma2(means)'``, ``'mean(sigma_n2)'``, ``'sigma(sigma_n2)'`` and
+  ``'fisher test'`` [#uncertainties]_
+
+
+Spectrum and mesh results don't only consist in arrays: binning (except in
+space) and number of dicarded batchs are also available for example. Other
+optional can also be added, like integrated result on one or more dimensions.
+The final result of spectrum and mesh is returned as a dictionary detailed in
+:ref:`result_spectrum <eponine-spectrum-res>` and
+:ref:`result_mesh <eponine-mesh-res>`.
+
+
+Initialization
+``````````````
+
+:class:`DictBuilder` cannot be called directly as it has abstract methods (or
+virtual): :meth:`~DictBuilder.fill_arrays_and_bins` and
+:meth:`~DictBuilder.add_last_energy_bins`. It is mother class of
+:class:`MeshDictBuilder` for mesh and :class:`SpectrumDictBuilder` for
+spectrum.
+
+Initialization is done giving names of the columns (``'tally'`` and ``'sigma'``
+for mesh for example) and the list of number of bins. The length of this list
+should be 7 as we have 7 dimensison.
+
+.. testsetup:: common
+
+   import valjean.eponine.common as epcm
+
+.. doctest:: common
+
+   >>> db = epcm.DictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
+   TypeError: Can't instantiate abstract class DictBuilder with abstract
+   methods _add_last_energy_bin, fill_arrays_and_bins
+   >>> mdb = epcm.MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
+   >>> sdb = epcm.SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'],
+                                      [1,2,3,4,5,6,7])
+
+Errors are raised if the dimension is not correct.
+
+.. doctest:: common
+
+   >>> mdb = epcm.MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6])
+   Number of bins should be 7 (3 space dimensions, 1 energy, 1 time, 2
+   direction angles)
+
+These methods initializes both the 7-dimensions structured arrays and the
+arrays of bins, first stored as list for simplicity. Arrays of bins are in
+reality array of the edges of bins, starting by the lower one to the higher one
+after flipping if needed.
+
+.. _eponine-spectrummesh-fill:
+
+Filling arrays and bins
+```````````````````````
+
+Mesh and spectrum are read from the output listing and first stored as list and
+dictionary following listing structure. Building `Numpy` arrays and bins
+allows various post-treatment. It calls
+:meth:`~DictBuilder.fill_arrays_and_bins`.
+
+To fill arrays and bins needed objects are outputs from the chosen parser. Some
+dictionary keys may be needed:
+
+* mesh: data is a list of all meshes available. Each mesh is a dictionary that
+  can have the following keys:
+
+  * ``'meshes'``: list of dictionary containing the mesh results (mandatory),
+    dictionaries with keys:
+
+    * ``{'mesh_energyrange': [], 'mesh_vals': [[], ]}`` to get mesh per energy
+      range (mandatory)
+    * ``{'mesh_energyintegrated':, 'mesh_vals': [[], ]}`` if result is also
+      available on the full range of energy but still splitted in space
+      (facultative)
+
+    A mesh line in the list under ``'mesh_vals'`` key is constructed as a list
+    of ``[[s0, s1, s2], tally, sigma]``. In ``'mesh_energyrange'``, energy
+    range is given as ``['unit', e1, e2]``.
+
+  * ``'time_step'``: if a time splitting is available
+    Remark: for the moment, no splitting in µ or φ are available.
+  * ``'integrated result'``: if ``'time_step'`` exists, integrated result can
+    be available, meaning integrated over space and energy (not time)
+
+* spectrum: data is a list of dictionaries containing spectrum results.
+  Possible keys are:
+
+  * ``'spectrum_vals'``: spectrum values, given in a list
+    ``[e1, e2, score, sigma, score/lethargy]`` (mandatory)
+  * ``'time_step'``: if result splitted in time
+  * ``'mu_angle_zone'``: if result splitted in µ angle
+  * ``'phi_angle_zone'``: if result splitted in φ angle
+  * ``'integrated_res'``: if ``'time_step'`` exits, integrated result can also
+    be given in time steps, so integrated over energy.
+
+When arrays are filled, bins are also filled on their first appearance. At the
+end of the filling special care needs to be taken to bins. Indeed, as usual
+there are Nbins+1 edges. The last edge may be the lowest one or the highest
+one, depending on the order required in the job. So it will inserted in first
+position or appended to the end.
+
+If bins are in decreasing order in one dimension (energy, time, µ or φ), arrays
+will be flipped in that direction. This step as to be done on all arrays stored
+and on the bins array to stay consistant.
+
+If time, µ or φ grids are given, they will always appear in the same order:
+t -> µ -> φ. µ and φ can exist without time; time can exist alone, like µ; φ
+cannot exist without µ [#dir_angles]_. If more than one is present, the first
+one is not repeated at each step, so needs to be propagated to the next steps
+(instance variables ``itime``, ``imu`` and ``iphi``).
+
+
+
+Result and use in global code
+`````````````````````````````
+
+In the framework, :class:`MeshDictBuilder` and :class:`SpectrumDictBuilder` are
+called in :meth:`convert_mesh` and :meth:`convert_spectrum`, themselves from
+transformation modules (transforming parsing result in `Numpy`/`python`
+containers. Theses methods then returns dictionaries containing the `Numpy`
+arrays and other results.
+
+.. _eponine-mesh-res:
+
+mesh
+....
+
+   Default keys are:
+
+   * ``'mesh'``: `Numpy` 7-dimension structured array with dtype
+     ``('tally', 'sigma')``
+   * ``'ebins'``: `Numpy` array of edges of energy bins
+   * ``'eunit'``: energy unit
+
+   Other keys can be available:
+
+   * ``'tbins'``: `Numpy` array of edges of time bins (if ``'time_step'``
+     available)
+   * ``'mesh_energyintegrated'``: `Numpy` 7-dimension structured array with
+     dtype ``('tally', 'sigma')`` and list of number of bins (``lnbins``) is
+     ``[n_s0, n_s1, n_s2, 1, n_t, 1, 1]``
+   * ``'integrated_res'``: `Numpy` 7-dimension structured array with
+     dtype ``('tally', 'sigma')`` and list of number of bins (``lnbins``) is
+     ``[1, 1, 1, 1, n_t, 1, 1]``
+   * ``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
+     also given
+
+.. _eponine-spectrum-res:
+
+spectrum
+........
+
+   Default keys are:
+
+   * ``'spectrum'``: `Numpy` 7-dimension structured array with dtype
+     ``('score', 'sigma', 'score/lethargy')`` if this is a default spectrum,
+     dtype will change in some cases (vov, uncertainties), see
+     :ref:`eponine-spectrummesh-intro`
+   * ``'ebins'``: `Numpy` array of edges of energy bins
+   * ``'disc_batch'``: number of discarded batchs
+
+   Optional keys are:
+
+   * ``'tbins'``: `Numpy` array of edges of time bins (if ``'time_step'``
+     available)
+   * ``'mubins'``: `Numpy` array of edges of µ angle bins (if
+     ``'mu_angle_zone'`` available)
+   * ``'phibins'``: `Numpy` array of edges of φ angle bins (if
+     ``'phi_angle_zone'`` available)
+   * ``'integrated_res'``: `Numpy` 7-dimension structured array with same dtype
+     as ``'spectrum'`` and list of number of bins (``lnbins``) is
+     ``[1, 1, 1, 1, n_t, 1, 1]`` (integrated over energy)
+   * ``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
+     also given
+
+
+.. note::
+
+   If time, µ or φ are not required, their binnings are not available in the
+   final dictionary.
+
+
+Keff results
+------------
+
+Only k\ :sub:`eff` as generic response are converted in *Numpy* objects,
+historical k\ :sub:`eff` bloc is stored in a dictionary (see
+:mod:`eponine.pyparsing_t4.grammar`).
+
+In the generic response case, results (value, σ) are available for 3
+estimators: KSTEP, KCOLL and KTRACK. Their correlation coefficients, combined
+values, combined σ (in %) and the full combination result are also given. This
+means that results given are in reality a matrix. One choice in order to store
+k\ :sub:`eff` results in then *Numpy* array
+(:meth:`convert_keff_with_matrix`, the other one is more standard arrays
+(:meth:`convert_keff`).
+
+.. _eponine-keff-matrix:
+
+Conversion in matrices
+``````````````````````
+The 3 estimators are always considered in the listing order KSTEP, KCOLL,
+KTRACK, so KSTEP = 0, KCOLL = 1 and KTRACK = 2.
+
+Three arrays are filled:
+
+* ``'keff_matrix'``: symmetric matrix 3×3, with k\ :sub:`eff` result for each
+  estimator on diagonal and combined values off-diagonal (for 2 estimators)
+* ``'correlation_matrix'``: symmetric matrix 3×3, with 1 on diagonal and
+  correlation cofficient off-diagonal (for 2 estimators)
+* ``'sigma_matrix'``: symmetric matrix 3×3 with σ in % for each estimator on
+  diagonal and combined σ in % off-diagonal (for 2 estimators)
+
+.. |keff| replace:: k\ :sub:`eff`
+.. |ck| replace:: cb k\ :sub:`eff`
+.. |KS| replace:: KSTEP
+.. |KC| replace:: KCOLL
+.. |KT| replace:: KTRACK
+
+In summary:
+
+* for k\ :sub:`eff` and σ matrices (replace |keff| by σ in 2\ :sup:`d`
+  case):
+
+  +--------+-------------------+-------------------+-------------------+
+  |        | KSTEP             | KCOLL             | KTRACK            |
+  +--------+-------------------+-------------------+-------------------+
+  | KSTEP  | |keff| (KSTEP)    | |ck| (|KS|, |KC|) | |ck| (|KS|, |KT|) |
+  +--------+-------------------+-------------------+-------------------+
+  | KCOLL  | |ck| (|KS|, |KC|) | |keff| (KCOLL)    | |ck| (|KC|, |KT|) |
+  +--------+-------------------+-------------------+-------------------+
+  | KTRACK | |ck| (|KS|, |KT|) | |ck| (|KC|, |KT|) | |keff| (KTRACK)   |
+  +--------+-------------------+-------------------+-------------------+
+
+
+* for correlation matrix:
+
+  +--------+------------------+------------------+------------------+
+  |        | KSTEP            | KCOLL            | KTRACK           |
+  +--------+------------------+------------------+------------------+
+  | KSTEP  | 1                | corr(|KS|, |KC|) | corr(|KS|, |KT|) |
+  +--------+------------------+------------------+------------------+
+  | KCOLL  | corr(|KS|, |KC|) | 1                | corr(|KC|, |KT|) |
+  +--------+------------------+------------------+------------------+
+  | KTRACK | corr(|KS|, |KT|) | corr(|KC|, |KT|) | 1                |
+  +--------+------------------+------------------+------------------+
+
+Values are set to -100.0 if not converged (string ``"Not converged"`` appearing
+in the listing).
+
+These arrays can be easily converted to matrices if matrix methods are needed
+but array is easier to initialized and more general.
+
+The method :meth:`convert_keff_with_matrix` takes as input the generic |keff|
+response as a dictionary and returns a dictinary containing different keys:
+
+* the 3 matrices mentioned above (``'keff_matrix'``, ``'correlation_matrix'``
+  and ``'sigma_matrix'``)
+* the list of estimators names ``['KSTEP', 'KCOLL',' 'KTRACK']`` under
+  ``'estimators'`` key
+* the full combination result (|keff| and σ in %) under
+  ``'full_comb_estimation'`` key
+* the number of batchs used under ``'used_batch'``
+
+Not converged cases are taken into account and return a key
+``'not_converged'``.
+
+
+.. _eponine-keff-stdarrays:
+
+Conversion in standard arrays
+`````````````````````````````
+The conversion closer to the output listing is done in :meth:`convert_keff`. A
+dictionary is built with the following elements:
+
+* ``'used_batch'``: number of batchs used
+* ``'full_comb_estimation'``: full combination result (|keff| and σ in %), like
+  in :ref:`eponine-keff-matrix`
+* ``'res_per_estimator'``: dictionary with estimator as keyand *numpy*
+  structured array with ``dtype = ('keff', 'sigma')`` as value
+* ``'correlation_matrix'``: dictionary with tuple as key and *numpy* structured
+  array as value, ``('estimator1', 'estimator2'):
+  numpy.array('correlations', 'combined values', 'combined sigma%')``
+
+In correlation matrix diagoanl is set to 1 and not converged values (str) are
+set to -100.0. If the full combination did not converged hte string is kept.
+
+
+Green bands
+-----------
+
+Green bands are stored in *numpy* arrays that look like the spectrum or mesh
+ones but with different bins and dtypes, these are 6-dimensions arrays.
+
+The 6 dimensions are given, in order, by:
+
+* **step**: bin of the energy of source (source are treated in energy steps)
+* **source**: number of the source
+* **u**, **v**, **w**: coordinates of the source, ``(0, 0, 0)`` if not given
+
+The result for each bin (step, source, u, v, w) is filled in a **structured
+array** whose `numpy.dtype` is the default spectrum one,
+``('score', 'sigma', 'score/lethargy')``.
+
+Bins are also stored for the source and for the followed particles. Like in
+spectrum, last bins of energy (source and followed particle) are added after
+the main loop.
+
+.. warning::
+
+   No flip in (source) energy bins is performed for the moment, due to some
+   uncertainty in order of the energy steps for source (so how they are
+   defined).
+
+
+The returned dictionary contains:
+
+* ``'disc_batch'``: number of discarded batchs
+* ``'vals'``: 6-dimension *numpy* structured array
+* ``'ebins'``: edges of energy bins (particles)
+* ``'sebins'``: edges of source energy bins
+
+
+IFP statistics results
+----------------------
+
+When using Itereted Fission Probability (IFP) method, it is possible to get
+results for each cycle. These results are converted in a *numpy* structured
+array with ``dtype = ('length', 'score', 'sigma')``. Dimension of the array
+corresponds to number of cycles used.
+
+
+.. |kij| replace:: k\ :sub:`ij`
+
+
+|kij| results
+-------------
+
+|kij| matrix gives the number of neutrons produced by fission in the volume i
+from a neutron emited in the volume j. Its highest eigenvalue is equal to the
+|keff| of the system. The corresponding eigenvector represents the neutrons
+sources in the volumes (necessarly containing fissile metrial). For more
+details, see user guide.
+
+Different |kij| results can be available:
+
+* list of |kij| sources in :meth:`convert_kij_sources`
+* |kij| matrix and associated results in :meth:`convert_kij_result`
+* |kij| estimation in historical |keff| block (|kij| is an additional estimator
+  in that case) in :meth:`convert_kij_keff`
+
+
+|kij| sources
+`````````````
+In that case the input dictionary is returned with a conversion of the
+``'kij_sources_vals'`` as a numpy array. Its length corresponds to the number
+of volumes.
+
+
+.. _eponine-kij-result:
+
+|kij| matrix (result)
+`````````````````````
+The |kij| matrix results block contains various results including |kij|
+eigenvalues, |kij| eigenvectors and |kij| matrix that will be converted in
+numpy.array or numpy.matrix. The size of the arrays depends on the number of
+volumes containing fissle material, N.
+
+The returned object is a dictionary containing the following keys and objects:
+
+* ``'used_batch'``: number of batchs used (`int`)
+* ``'kijmkeff_res'``: result of |kij|-|keff| (`float`), where |kij| is the
+  hightest eigenvalue of |kij|
+* ``'kijdomratio'``: dominant ratio (`float`), ratio between the hightest |kij|
+  eigenvalue and the next one
+* ``'kij_eigenval'``: numpy.array of N **complex** numbers (real and imaginary
+  parts given in the listings) corresponding to the eigenvalues.
+* ``'kij_eigenvec'``: `numpy.array` of N vectors of N elements corresponding to
+  eigenvectors.
+* ``'kij_matrix'``: numpy.matrix of N×N being the |kij| matrix.
+
+
+.. _eponine-kij-in-keff:
+
+|kij| in |keff| block
+`````````````````````
+|kij| results are also present in the "historical" |keff| block, as an
+additional estimator. Results are presented in a different way and are
+different... Typical results are |kij| - |keff|, the eigenvector corresponding
+to the best estimation, |kij| matrxix, standard deviation matrix and
+sensibility matrix.
+
+The returned object is a dictionary with the following keys (faculative can be
+specified):
+
+* ``'estimator'``: name of the estimator (`str`), ``'KIJ'`` here
+* ``'batchs_kept'``: number of batchs used to calculate the |keff| from |kij|
+  (`int`)
+* ``'kij-keff'``: result of |kij|-|keff| (`float`), using the best estimation
+  of |kij|
+* ``'nbins'``: **facultative**, number of volumes/mesh elements considered, or
+  N, (`int`)
+* ``'spacebins'``: **facultative**, list of N volumes/mesh elements considered
+  (`numpy.array` of
+
+    * `int` for volumes,
+    * `tuple` (s0, s1, s2) for mesh elements with (`int`, `int`, `int`)),
+
+* ``'eigenvector'``: eigenvector corresponding ti best estimation
+  (`numpy.array` of N elements)
+* ``'keff_KIJ_matrix'``: |kij| matrix for best estimation of |keff|
+  (N×N `numpy.matrix`)
+* ``'keff_StdDev_matrix'``: standard deviation matrix for best estimation of
+  |keff| (N×N `numpy.matrix`)
+* ``'keff_sensibility_matrix'``: sensibility matrix for best estimation of
+  |keff| (N×N `numpy.matrix`)
+
+.. rubric:: Footnotes
+
+.. [#dir_angles] Definition of µ and φ, direction angles (see also user guide)
+
+                - µ = cos(θ)
+                - if ANGULAR keyword used: result only splitted in µ, with θ is
+                  defined with respect to the normal of the surface used in
+                  SURF
+                - if 2D_ANGULAR keyword used: result splitted in µ and φ,
+                  defined in the global frame
+
+.. [#uncertainties] The structured array elements in uncertainty spectrum case
+   are:
+
+        - ``'sigma2(means)'``: variance of means or σ\ :sup:`2` of means
+        - ``'mean(sigma_n2)'``: mean of variances, with variance = v\ :sub:`n`
+        - ``'sigma(sigma_n2)'``: σ(variances) = :math:`\\sqrt{v(v_n)}`
+        - ``'fisher test'``: this is an estimator more than a test
+        - Variance, or sigma_n2 is given by:
+          :math:`v_n = \\frac{\\sum^n_i{(x_i -m)^2}}{n(n-1)}`
+
+
+
 '''
 
 import sys
@@ -30,6 +531,17 @@ class DictBuilder(ABC):
     '''Class to build the dictionary for spectrum and mesh results as
     7-dimensions structured arrays.
     7-dimensions are: space (3), energy, time, mu and phi (direction angles)
+
+    This class has 2 abstract methods, :meth:`_add_last_energy_bin` and
+    :meth:`fill_arrays_and_bins`, so it cannot be initialized directly.
+
+    2 constant objects are available:
+
+    * ``VAR_FLAG = {'t': 'time_step', 'mu': 'mu_angle_zone',
+      'phi': 'phi_angle_zone'}`` : correspondance dictionary between internal
+      name of dimensions and names in listings
+    * ``VARS = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']``: names of the 7
+      dimensions as used internally
     '''
     VAR_FLAG = {'t': 'time_step',
                 'mu': 'mu_angle_zone',
@@ -37,6 +549,15 @@ class DictBuilder(ABC):
     VARS = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
 
     def __init__(self, colnames, lnbins):
+        '''Initialization of DictBuilder.
+
+        :param colnames: name of the columns/results (e.g. ``'mesh'`` and
+                         ``'sigma'`` for mesh, or ``'score'``, ``'sigma'``,
+                         ``'score/lethargy'`` for spectrum)
+        :type colnames: list of str
+        :param lnbins: number of bins for each dimension
+        :type lnbins: list of int
+        '''
         try:
             assert len(lnbins) == 7
         except TypeError:
@@ -52,22 +573,24 @@ class DictBuilder(ABC):
         self.arrays = {'default': np.empty((lnbins), dtype=dtype)}
         LOGGER.debug("bins: %s", str(self.bins))
 
-    def add_array(self, name, colnames, nbins):
+    def add_array(self, name, colnames, lnbins):
         '''Add a new array to dictionary arrays with key name.
+
         :param name: name of the new array (integrated_res, etc.)
-        :type name: string
+        :type name: str
         :param colnames: list of the columns names (score, sigma, tally, etc.)
         :type colnames: list/tuple of string
-        :param nbins: number of bins in each dimension
-        :type nbins: list of int
+        :param lnbins: number of bins in each dimension
+        :type lnbins: list of int
         '''
         dtype = np.dtype({'names': colnames,
                           'formats': [FTYPE]*len(colnames)})
-        self.arrays[name] = np.empty((nbins), dtype=dtype)
+        self.arrays[name] = np.empty((lnbins), dtype=dtype)
 
     @abstractmethod
     def _add_last_energy_bin(self, data):
         '''Add last bin in energy from spectrum or mesh.
+
         :param data: mesh or spectrum
         :type data: list of meshes or spectrum results
         '''
@@ -76,13 +599,14 @@ class DictBuilder(ABC):
     def _add_last_bin_for_dim(self, data, dim, lastbin):
         '''Add last bin for the dimension dim. Depending on order of the bins
         the last one will be inserted as first bin or added as last bin.
+
         :param data: mesh or spectrum
         :type data: list of meshes or spectrum results
         :param dim: dimension where the bin will be added (t, mu, phi)
         :type dim: string
-        :param ilastbin: index of the bin in mesh or spectrum containing the
+        :param lastbin: index of the bin in mesh or spectrum containing the
                          missing edge of the bins
-        :type ilastbin: int
+        :type lastbin: int
         '''
         LOGGER.debug("Adding last bin for dim %s, flag = %s",
                      dim, DictBuilder.VAR_FLAG[dim])
@@ -94,6 +618,7 @@ class DictBuilder(ABC):
     def add_last_bins(self, data):
         '''Add last bins in energy, time, mu and phi direction angles.
         Based on keywords presence in data.
+
         :param data: mesh or spectrum
         :type data: list of meshes or spectrum results
         '''
@@ -110,6 +635,7 @@ class DictBuilder(ABC):
 
     def _flip_bins_for_dim(self, dim, axis):
         '''Flip bins for dimension dim.
+
         :param dim: dimension ('e', 't', 'mu', 'phi')
         :type dim: string
         :param axis: axis of the dimension
@@ -124,11 +650,16 @@ class DictBuilder(ABC):
 
     def flip_bins(self):
         '''Flip bins if given in decreasing order in the output listing.
+
         Depending on the required grid (GRID or DECOUPAGE) energies, times, mu
         and phi can be given from upper edge to lower edge. This is not
         convenient for post-traitements, especially plots. They have to be
         flipped at a moment, here or later, easiest is here, and all results
         will look the same :-).
+
+        This function calls an internal function and needs to match the
+        dimension with the number of the axis:
+        ('e' → 3, 't' → 4, 'mu' → 5, 'phi' → 6)
         '''
         LOGGER.debug("In DictBuilder.flip_bins")
         if self.bins['e'] and self.bins['e'][0] > self.bins['e'][1]:
@@ -144,6 +675,7 @@ class DictBuilder(ABC):
     def fill_arrays_and_bins(self, data):
         '''Fill arrays and bins for spectrum or mesh data.
         :param data: mesh or spectrum
+
         :type data: list of meshes or spectrum results
         '''
         pass
@@ -151,11 +683,15 @@ class DictBuilder(ABC):
 
 class MeshDictBuilder(DictBuilder):
     '''Class specific to mesh dictionary -> mainly filling of bins and arrays.
+
+    This class inherites from DictBuilder, see :class:`DictBuilder` for
+    initialization and common methods.
     '''
     itime, imu, iphi = 0, 0, 0
 
     def _fill_mesh_array(self, meshvals, name, ebin):
         '''Fill mesh array.
+
         :param meshvals: mesh data for a given energy bin
         :type meshvals: list of mesh results [[[s0, s1, s2], tally, sigma],...]
         :param name: name of the array to be filled ('default',
@@ -172,13 +708,15 @@ class MeshDictBuilder(DictBuilder):
 
     def fill_arrays_and_bins(self, data):
         '''Fill arrays and bins for mesh data.
-        Current arrays possibly filled are:
-        - default (mandatory)
-        - eintegrated_mesh (facultative, integrated over energy, still splitted
-                            in space)
-        - integrated_res (over energy and space, splitted in time)
         :param data: mesh
         :type data: list of meshes results
+
+        Different arrays can be filled. Current possibilities are:
+
+        * ``'default'`` (mandatory)
+        * ``'eintegrated_mesh'``
+          (facultative, integrated over energy, still splitted in space)
+        * ``'integrated_res'`` (over energy and space, splitted in time)
         '''
         for ires in data:
             LOGGER.debug("MeshDictBuilder.fill_arrays_bins, "
@@ -205,6 +743,7 @@ class MeshDictBuilder(DictBuilder):
 
     def _add_last_energy_bin(self, data):
         '''Add last bin in energy from mesh data.
+
         :param data: mesh data
         :type data: list of meshes results
         '''
@@ -216,16 +755,22 @@ class MeshDictBuilder(DictBuilder):
 class SpectrumDictBuilder(DictBuilder):
     '''Class specific to spectrum dictionary
     -> mainly filling of bins and arrays.
+
+    This class inherites from DictBuilder, see :class:`DictBuilder` for
+    initialization and common methods.
     '''
     itime, imu, iphi = 0, 0, 0
 
     def fill_arrays_and_bins(self, data):
         '''Fill arrays and bins for spectrum data.
-        Current arrays possibly filled are:
-        - default (mandatory)
-        - integrated_res (over energy, splitted in time for the moment)
+
         :param data: mesh or spectrum
         :type data: list of meshes or spectrum results
+
+        Current arrays possibly filled are:
+
+        * ``'default'`` (mandatory)
+        * ``'integrated_res'`` (over energy, splitted in time for the moment)
         '''
         LOGGER.debug("In SpectrumDictBuilder.fill_arrays_and_bins")
         for ispec in data:
@@ -261,6 +806,7 @@ class SpectrumDictBuilder(DictBuilder):
 
     def _add_last_energy_bin(self, data):
         '''Add last bin in energy from spectrum.
+
         :param data: spectrum data
         :type data: list of spectrum results
         '''
@@ -269,13 +815,16 @@ class SpectrumDictBuilder(DictBuilder):
 
 def _get_number_of_bins(spectrum):
     '''Get number of bins (time, mu and phi angles and energy).
+
     :param spectrum: input spectrum (full as various levels of list or
-    dictionary may be needed.
-    :returns: 4 integers
-               - nphibins = number of bins in phi angle, default = 1
-               - nmubins = number of bins in mu angle, default = 1
-               - ntbins = number of bins in time, default = 1
-               - nebins = number of bins in energy, no default
+      dictionary may be needed.
+    :returns: 4 integers in following order
+
+          - *nphibins* = number of bins in phi angle, default = 1
+          - *nmubins* = number of bins in mu angle, default = 1
+          - *ntbins* = number of bins in time, default = 1
+          - *nebins* = number of bins in energy, no default
+
     Mu and phi angle are angles relative to the direction of the particle.
     '''
     # complication: time, mu and phi angles are always in that order
@@ -296,51 +845,29 @@ def _get_number_of_bins(spectrum):
 
 
 def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
-    '''Convert specrtum results in 7D numpy structured array.
+    '''Convert spectrum results in 7D numpy structured array.
+
     :param spectrum: list of spectra.
-                     Accepts time and (direction) angular grids.
+     Accepts time and (direction) angular grids.
     :type spectrum: list
-    If more than one grid (time and mu, mu and phi or the three) order is
-    always kept in TRIPOLI listings: time -> mu -> phi.
-    Phi cannot be used alone. Mu angle is not the same if ANGULAR or 2D_ANGULAR
-    grid used (see user guide).
-    In the listing, first is not repeated at each step and needs to be
-    propagated to the second, third... An other consequence is the repetition
-    of the binning for the second (and third) coordinates, so needs additional
-    care. The binning is presented as min then max value for each bin, what is
-    a different behaviour from energy bins (in spectrum) and conditional
-    treatment based on the order of the required grid (increasing or
-    decreasing).
-    If no time, no mu and phi grids are required, 1 bin is considered for these
-    dimensions (so 0e bin in the array) and no binning is given.
     :param colnames: list of the names of the columns.
-                    Default = ['score', 'sigma', 'score/lethargy']
+      Default = ``['score', 'sigma', 'score/lethargy']``
     :type colnames: list of strings
     :returns: dictionary with keys and elements
-              - 'spectrum': 7 dimensions numpy structured array with related
-                 binnings as numpy arrays
-                 v[s0, s1, s2, E, t, mu, phi] = (score, sigma, score/lethargy)
-                 s0, s1, s2 = space coordinates (not specified in spectra, so
-                 one bin each)
-                 E = energy, given in spectrum
-                 t = time
-                 mu = cos(theta), with theta defined as
-                        * normal to surface used in SURF if ANGULAR used
-                        * theta in the global frame if 2D_ANGULAR used
-                 phi = direction angle in global frame
-                        (only used in 2D_ANGULAR grid)
-                 sigma is in %
-              - 'disc_batchs': number of discarded batchs for the score
-              - 'ebins': energy binning
-              - 'tbins': time binning if time grid required
-              - 'mubins': mu binning if mu grid required
-              - 'phibins': phi binning if phi grid required
-              - 'integrated_res': 7 dimensions numpy structured array
-                 v[s0, s1, s2, E, t, mu, phi] = (score, sigma)
-                 same meaning as for spectrum
-                 facultative, seen when time required alone and sometimes
-                 when neither time nor mu nor phi are required
-              - 'used_batch': number of used batchs (only if integrated result)
+
+      * ``'spectrum'``: 7 dimensions numpy structured array with related
+        binnings as numpy arrays
+        ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma', 'score/lethargy')``
+      * ``'disc_batchs'``: number of discarded batchs for the score
+      * ``'ebins'``: energy binning
+      * ``'tbins'``: time binning if time grid required
+      * ``'mubins'``: mu binning if mu grid required
+      * ``'phibins'``: phi binning if phi grid required
+      * ``'integrated_res'``: 7 dimensions numpy structured array
+        ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma')``;
+        facultative, seen when time required alone and sometimes
+        when neither time nor mu nor phi are required
+      * ``'used_batch'``: number of used batchs (only if integrated result)
     '''
     nphibins, nmubins, ntbins, nebins = _get_number_of_bins(spectrum)
     LOGGER.debug("nebins = %d, ntbins = %d, nmubins = %d, nphibins = %d",
@@ -379,11 +906,12 @@ def _get_number_of_space_bins(meshvals):
     in the listing does not necessarly match a completed mesh dimension.
 
     :param meshvals: list of meshes, with mesh [[s0, s1, s2] tally sigma]
-                     s0, s1 and s2 being the space coordinates
-    :returns: 3 integers
-                - ns0bins: number of bins in the s0 dimension
-                - ns1bins: number of bins in the s1 dimension
-                - ns2bins: number of bins in the s2 dimension
+      s0, s1 and s2 being the space coordinates
+    :returns: 3 integers in following order
+
+        - *ns0bins*: number of bins in the s0 dimension
+        - *ns1bins*: number of bins in the s1 dimension
+        - *ns2bins*: number of bins in the s2 dimension
     '''
     lastspacebin = meshvals[-1][0]
     ns0bins = lastspacebin[0]+1
@@ -415,8 +943,9 @@ def _get_number_of_space_bins(meshvals):
 
 def get_energy_bins(meshes):
     '''Get the number of energy bins for mesh.
+
     :param meshes: mesh, list of dictionaries, at least one should have the key
-                   'mesh_energyrange'
+       ``'mesh_energyrange'``
     :type meshes: list of dictionaries
     '''
     nbebins = 0
@@ -428,37 +957,28 @@ def get_energy_bins(meshes):
 
 def convert_mesh(meshres):
     '''Convert mesh in 7-dimensions numpy array.
+
     :param meshres: Mesh result constructed as:
-                 [{'time_step': [], 'meshes': [], 'integrated_res': {}}, {}].
-                 The list 'meshes' corresponds to mesh results:
-                 [{'mesh_energyrange': [], 'mesh_vals': []},
-                  {'mesh_energyintegrated':, 'mesh_vals': []}]
-                 Each element of the list corresponding to the key 'mesh_vals'
-                 is constructed as: [[s0, s1, s2], tally, sigma].
-                 Keys 'meshes' and 'mesh_energyrange' should always be there
-                 (of course also 'mesh_vals').
+      ``[{'time_step': [], 'meshes': [], 'integrated_res': {}}, {}]``, see
+      :ref:`eponine-spectrummesh-fill` for more details.
     :type meshres: list of dictionaries
+
     :returns: python dictonary with keys
-                - 'mesh': numpy structured array of dimension 7
-                  v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)
-                  s0, s1, s2 = space coordinates,
-                               examples: (x, y, z), (r, phi, theta), etc.
-                  E = energy
-                  t = time
-                  mu, phi = direction angles (mu = cos(theta))
-                - 'eunit': the energy unit (might be modified of other
-                  additional variables are needed)
-                - 'ebins': energy bin limits (size = number of elts + 1)
-                - 'tbins': time binning if time grid required
-                - 'eintegrated_mesh': 7 dimensions numpy structured array
-                  v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)
-                  corresponding to mesh integreted on energy (facultative)
-                - 'integrated_res': 7 dimensions numpy structured array
-                  v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)
-                  corresponding to mesh integrated over energy and space
-                  facultative, available when time grid is required (so
-                  corresponds to integreated results splitted in time)
-                - used_batch: number of used batchs (only if integrated result)
+
+        * ``'mesh'``: numpy structured array of dimension 7
+          ``v[s0, s1 ,s2, E, t, mu, phi] = ('tally', 'sigma')``
+        * ``'eunit'``: energy unit
+        * ``'ebins'``: energy bin edges (size = number of bins + 1)
+        * ``'tbins'``: time binning if time grid required
+        * ``'eintegrated_mesh'``: 7-dimensions numpy structured array
+          ``v[s0,s1,s2,E,t,mu,phi] = ('tally', 'sigma')``
+          corresponding to mesh integreted on energy (facultative)
+        * ``'integrated_res'``: 7 dimensions numpy structured array
+          ``v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)``
+          corresponding to mesh integrated over energy and space;
+          *facultative*, available when time grid is required (so
+          corresponds to integreated results splitted in time)
+        * ``'used_batch'``: number of used batchs (only if integrated result)
     '''
     LOGGER.debug("In convert_mesh_class")
     LOGGER.debug("Number of mesh results: %d", len(meshres))
@@ -505,6 +1025,7 @@ def convert_mesh(meshres):
 
 def convert_integrated_result(result):
     '''Convert the energy integrated result in numpy structured array
+
     :param result: resultat
     :type result: list
     :returns: numpy structured array with (score, sigma)
@@ -515,33 +1036,18 @@ def convert_integrated_result(result):
 
 
 def convert_keff_with_matrix(res):
-    '''Convert Keff results in numpy matrices.
-    :param res: keff results
-    :type res: dictionary
-    :returns: dictionary containing
-                - 'used_batch': number of batchs used to calculate keff values
-                - 'estimators': tuple of estimators names
-                                (KSTEP, KCOLL, KTRACK)
-                - 'full_comb_estimation': numpy structured array (keff, sigma)
-                  of the combined value of all estimators
-                - 'keff_matrix': numpy (3,3) array containing keff results per
-                  estimator in diagonal and combined values (2 estimators) out
-                  of diagonal
-                - 'correlation_matrix': numpy (3,3) array, symmetric matrix
-                   with 1 on diagonal
-                - 'sigma_matrix': numpy (3,3) array,
-                  containing sigma values in %, values per estimator on
-                  diagonal and for combined sigma out of diagonal
-    Values in matrices are set to -100.0 if not converged (string
-    "Not converged" appearing in the listings). Full combined results keeps the
-    string.
-    Matrices are ordered following estimators order, so normally
-            KSTEP KCOLL KTRACK
-    KSTEP
-    KCOLL
-    KTRACK
-    It is possible to convert the numpy array in numpy matrix if matrix methods
-    are needed but array is easier to initialized and more general.
+    '''Convert |keff| results in numpy matrices.
+
+    :param res: |keff| results
+    :type res: dict
+    :returns: dict filled as:
+
+    ::
+
+        {'used_batch': int, 'estimators': [str],
+         'full_comb_estimation': numpy.array, 'keff_matrix': numpy.array,
+         'correlation_matrix': numpy.array, 'sigma_matrix': numpy.array}
+
     '''
     # not converged cases a tester...
     LOGGER.debug("In common.convert_keff_with_matrix")
@@ -587,24 +1093,20 @@ def convert_keff_with_matrix(res):
 
 
 def convert_keff(res):
-    '''Convert Keff results in dictionary containing numpy objects.
-    :param res: keff results (as pyparsing result ? or dictionary)
-    :returns: dictionary containing
-                - 'used_batch': number of batchs used to calculate keff values
-                - 'estimators': tuple of estimators names
-                                (KSTEP, KCOLL, KTRACK)
-                - 'res_per_estimator': dictionary with estimator as key and
-                  numpy structured array as value with dtype (keff, sigma)
-                - 'full_comb_estimation': numpy structured array (keff, sigma)
-                  of the combined value of all estimators
-                - 'correlation_matrix': dictionary with tuple of estimators as
-                  key (couple) and numpy structured array as value with dtype
-                  (correlations, combined values, combined sigma%).
-                  Theses values correspond to all values out of diagonal in
-                  matrix representation.
-    Values in matrices are set to -100. if not converged
-    (string "Not converged" appearing in the listings).
-    Full combined results keeps the string.
+    '''Convert |keff| results in dictionary containing numpy objects.
+
+    :param res: keff results
+    :type res: dict
+    :returns: dict containing
+
+    ::
+
+     {'used_batch': int, 'estimators': [str, ],
+      'full_comb_estimation': numpy.array,
+      'res_per_estimator': {'estimator': numpy.array, },
+      'correlation_matrix': {('estimator1', 'estimator2'): numpy.array, }}
+
+    See :ref:`eponine-keff-stdarrays` for more details.
     '''
     LOGGER.debug("[38;5;56mClefs:%s[0m", str(list(res.keys())))
     usedbatchs = res['used_batch']
@@ -637,18 +1139,13 @@ def convert_keff(res):
 
 # 17 locals in convert_green_bands instead 15, but helps reading of the method
 def convert_green_bands(gbs):  # pylint: disable=R0914
-    '''Convert Green bands results in numpy structured array,
-    close to time or angle spectra ones.
-    :param gbs: Green bands as a list of dictionaries
-    :returns: dictionary similar to spectum one
-              CAUTION indexes are changed compared to default spectrum results
-              - 'ebins': energy bins (size = number of elements +1)
-              - 'vals': 6-dimensions numpy structured array
-                v[step, sourceNum, u, v, w, E] = (score, sigma, score/lethargy)
-                step: bin of energy of source
-                u, v, w: coordinates of the source (0, 0, 0 if not given)
-              - 'sebins': energy bins for the source
-              - 'disc_batch': number of discarded batchs
+    '''Convert Green bands results in numpy structured array.
+
+    :param gbs: Green bands
+    :type gbs: list of dict
+    :returns: dict similar to spectum one
+      :code:`{'used_batch': int, 'vals': numpy.array, 'ebins': numpy.array,
+      'sebins': numpy.array}`
     '''
     lastsource = gbs[-1]['gb_step_res'][-1]['gb_source']
     hassourcetab = True if len(lastsource) > 1 else False
@@ -695,11 +1192,10 @@ def convert_green_bands(gbs):  # pylint: disable=R0914
 
 def convert_ifp(ifp):
     '''Convert IFP (statistics) result in numpy array.
-    :param ifp: list of cycle and associated results
+
+    :param ifp: cycle and associated results
+    :type ifp: list
     :returns: numpy structured array of dimension 1
-              v[i] = (length, score, sigma)
-              with i = index of the cycle length
-              length = cycle length
     '''
     dtifp = np.dtype([('length', ITYPE), ('score', FTYPE), ('sigma', FTYPE)])
     vals = np.empty((len(ifp)), dtype=dtifp)
@@ -709,11 +1205,12 @@ def convert_ifp(ifp):
 
 
 def convert_kij_sources(res):
-    '''Convert Kij sources result in python dictionary.
-    Kij sources values are converted in a numpy array
-    :param res: kij sources as a dictionary
+    '''Convert |kij| sources result in python dictionary in which |kij| sources
+    values are converted in a numpy array.
+
+    :param res: |kij| sources
     :type res: dict
-    :returns: same dictionary with numpy array for kij sources values
+    :returns: same dictionary with numpy.array for |kij| sources values
     '''
     kijs = {}
     for key in res:
@@ -725,20 +1222,19 @@ def convert_kij_sources(res):
 
 
 def convert_kij_result(res):
-    '''Convert Kij result in numpy objects and return a dictionary.
-    :param res: kij result as a dictionary (keys: used_batch, kij_eigenval,
-                kij_eigenvec, kij_matrix)
-    :type res: dict
-    :returns: dictionary containing the same keys but with different types
-                 - 'used_batch': number of used batchs (int)
-                 - 'kijmkeff_res': kij-keff result (float)
-                 - 'kijdomratio': dominant ratio (float)
-                 - 'kij_eigenval': eigen values,
-                                   numpy array of N complex numbers
-                 - 'kij_eigenvec': eigen vectors,
-                                   numpy array (N vectors of N elements)
-                 - 'kij_matrix': kij matrix,
-                                 numpy matrix of N*N
+    '''Convert |kij| result in numpy objects and return a dictionary.
+
+    :param dict res: |kij| result with keys ``'used_batch'``,
+      ``'kij_eigenval'``, ``'kij_eigenvec'``, ``'kij_matrix'``
+    :returns: dictionary containing the same keys but with different types:
+
+    ::
+
+      {'used_batch': int, 'kijmkeff_res': float, 'kijdomratio': float,
+      'kij_eigenval': numpy.array, 'kij_eigenvec': numpy.array,
+      'kij_matrix': numpy.matrix}
+
+    For more details see :ref:`eponine-kij-result`.
     '''
     # eigen values (re, im) -> store as array of complex
     reegval = np.array(list(zip(*res['kij_eigenval']))[0])
@@ -757,28 +1253,24 @@ def convert_kij_result(res):
 
 
 def convert_kij_keff(res):
-    '''Convert matrices in numpy array or matrix when estimating Keff from Kij
-    :param res: dictionary with key 'estimator' = 'KIJ'
-    :returns: dictionary containing
-                - 'estimator': name of the estimator -> 'KIJ' (string)
-                - 'batchs_kept': number of batchs used t calculate Keff
-                                 from KIJ (int)
-                - 'kij-keff': kij-keff result (float)
-                - 'nbins': number of volumes/mesh elements considered (int)
-                - 'spacebins': list of volumes/mesh elements considered
-                               (numpy array of
-                                  - int for volumes
-                                  - (s0, s1, s2) for mesh elements, being ints)
-                - 'eigenvector': eigenvector corresponding to best estimation
-                                 (numpy array of N elts with N = nbins)
-                - 'keff_KIJ_matrix': KIJ matrix for keff best estimation
-                                     (numpy matrix N*N)
-                - 'keff_StdDev_matrix': standard deviation matrix for keff best
-                                        estimation
-                                        (numpy matrix N*N)
-                - 'keff_sensibility_matrix': sensibility matrix for keff best
-                                             estimation
-                                             (numpy matrix N*N)
+    '''Convert matrices in numpy array or matrix when estimating |keff| from
+    |kij|
+
+    :param dict res: |kij| result from |keff| result block
+    :returns: dictionary containing `numpy` arrays:
+
+    ::
+
+       {'estimator': str, 'batchs_kept': int, 'kij-keff': float,
+        'nbins': int, 'spacebins': numpy.array of int or tuple(s0, s1, s2),
+        'eigenvector': numpy.array,
+        'keff_KIJ_matrix': numpy.matrix,
+        'keff_StdDev_matrix': numpy matrix,
+        'keff_sensibility_matrix': numpy.matrix}
+
+    Keys ``'nbins'`` and ``'spacebins'`` are facultative.
+
+    For more details see :ref:`eponine-kij-in-keff`.
     '''
     LOGGER.debug("Clefs: %s", str(list(res.keys())))
     egvec = np.array(list(zip(*res['eigenvector']))[1])

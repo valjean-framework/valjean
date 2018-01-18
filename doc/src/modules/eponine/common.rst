@@ -1,4 +1,4 @@
-:mod:`~.common` – Common methods to build numpy arrays from dictionaries and lists
+:mod:`common <valjean.eponine.common>` – Common methods to build numpy arrays from dictionaries and lists
 ==================================================================================
 
 .. automodule:: valjean.eponine.common

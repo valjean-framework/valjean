@@ -16,7 +16,7 @@ Use of ``scan_t4``
 
 To use ``scan_t4`` you need to create a :class:`Scan` object giving at least
 the path to the file you want to read. This file should be a Tripoli-4 output
-containing at least the flags precised in :ref:`eponine-caveats-label`.
+containing at least the flags precised in :ref:`eponine-scan_t4-caveats`.
 
 .. testsetup:: scan_t4
 
@@ -38,7 +38,7 @@ containing at least the flags precised in :ref:`eponine-caveats-label`.
    It will probably be better to directly load a test file...
 
 
-.. _eponine-caveats-label:
+.. _eponine-scan_t4-caveats:
 
 Caveats
 -------
