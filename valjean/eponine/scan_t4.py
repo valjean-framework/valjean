@@ -40,7 +40,7 @@ if "mem" not in sys.argv:
         return fmem
 
 
-class BatchResultScanner():
+class BatchResultScanner:
     '''Class to build batchs collection.
     '''
     def __init__(self, count_excess, current_batch, mesh_limit, line):

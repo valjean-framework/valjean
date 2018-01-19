@@ -10,7 +10,7 @@ dictionary keys should be the same in all parsers...
 
 import sys
 import logging
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import numpy as np
 
 
@@ -26,7 +26,7 @@ ITYPE = np.int32
 FTYPE = np.float32  # pylint: disable=E1101
 
 
-class DictBuilder:
+class DictBuilder(ABC):
     '''Class to build the dictionary for spectrum and mesh results as
     7-dimensions structured arrays.
     7-dimensions are: space (3), energy, time, mu and phi (direction angles)
@@ -36,11 +36,20 @@ class DictBuilder:
                 'phi': 'phi_angle_zone'}
     VARS = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
 
-    def __init__(self, colnames, nbins):
+    def __init__(self, colnames, lnbins):
+        try:
+            assert len(lnbins) == 7
+        except TypeError:
+            LOGGER.error("lnbins should the list of number of bins")
+            raise TypeError
+        except AssertionError:
+            LOGGER.error("Number of bins should be 7 (3 space dimensions, "
+                         "1 energy, 1 time, 2 direction angles)")
+            raise AssertionError
         self.bins = {'e': [], 't': [], 'mu': [], 'phi': []}
         dtype = np.dtype({'names': colnames,
                           'formats': [FTYPE]*len(colnames)})
-        self.arrays = {'default': np.empty((nbins), dtype=dtype)}
+        self.arrays = {'default': np.empty((lnbins), dtype=dtype)}
         LOGGER.debug("bins: %s", str(self.bins))
 
     def add_array(self, name, colnames, nbins):
