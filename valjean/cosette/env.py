@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''This module defines :class:`Env`, a class that makes it simpler to add
+"""This module defines :class:`Env`, a class that makes it simpler to add
 information about running tasks. An :class:`Env` object can be created from an
 existing dictionary as follows:
 
@@ -22,7 +22,11 @@ tasks handy, you can generate an :class:`Env` object from them using the
 .. doctest:: env
 
     >>> from valjean.cosette.task import Task
-    >>> tasks = [Task(str(i)) for i in range(10)]
+    >>> class DoNothing(Task):
+    ...     '''We need a subclass because Task is abstract.'''
+    ...     def do(env):
+    ...         pass
+    >>> tasks = [DoNothing(str(i)) for i in range(10)]
     >>> env = Env.from_tasks(tasks)
 
 This initializes all tasks with a status of `WAITING`. You can check that as
@@ -71,13 +75,13 @@ read-and-modify trip above is implemented as follows:
 
 .. doctest:: env
 
-    >>> def modify_task1(self):
-    ...     if self.is_done(tasks[0]):
-    ...         self.set_skipped(tasks[1])
+    >>> def modify_task1(env):
+    ...     if env.is_done(tasks[0]):
+    ...         env.set_skipped(tasks[1])
     >>> env.atomically(modify_task1)
     >>> env.is_skipped(tasks[1])
     True
-'''
+"""
 
 import threading
 from collections.abc import MutableMapping

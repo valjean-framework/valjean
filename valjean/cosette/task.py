@@ -65,6 +65,7 @@ class:
 
 import logging
 import enum
+from abc import ABC, abstractmethod
 
 from ..config import Config
 
@@ -99,7 +100,7 @@ class TaskError(Exception):
     pass
 
 
-class Task:
+class Task(ABC):
     '''Base class for other task classes.'''
 
     def __init__(self, name, *, deps=None):
@@ -118,6 +119,7 @@ class Task:
         if deps is not None:
             self.depends_on.update(deps)
 
+    @abstractmethod
     def do(self, env):
         '''Perform a task.
 
