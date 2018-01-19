@@ -1,5 +1,5 @@
-import logging
-import valjean  # noqa: F401
+'''Helper module that makes it possible import :mod:`valjean` from the test
+suite, even if it is not installed.
+'''
 
-LOGGER = logging.getLogger('valjean')
-LOGGER.setLevel(logging.WARNING)
+import valjean  # noqa: F401, pylint: disable=unused-import

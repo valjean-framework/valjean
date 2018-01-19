@@ -170,11 +170,24 @@ class RList(MutableSequence):
 
         :param value: The object to search for.
         :raises KeyError: if the element is not present in the container.
+        :returns: The index of (the first occurrence of) `value` in the list.
         '''
         i = self._index.get(id(value), None)
         if i is None:
             raise KeyError(id(value))
         return i[0]
+
+    def indices(self, value):
+        '''Return all the indices of the given value, if present.
+
+        :param value: The object to search for.
+        :raises KeyError: if the element is not present in the container.
+        :returns: All the list indices where `value` occurs.
+        '''
+        i = self._index.get(id(value), None)
+        if i is None:
+            raise KeyError(id(value))
+        return i
 
     def get_index(self, value, default):
         '''Return the index of the given value, or a default if the value is

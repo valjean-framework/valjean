@@ -105,6 +105,14 @@ Option handlers
 ---------------
 
 .. todo:: Write documentation about option handlers.
+
+.. todo:: Document the :class:`BaseConfig`/:class:`Config` split.
+
+
+Automatic dependency discovery
+------------------------------
+
+.. todo:: Document it.
 '''
 
 from configparser import (ConfigParser, ExtendedInterpolation, _UNSET,
@@ -487,9 +495,12 @@ class Config(BaseConfig):
             raise
 
     def get_deps(self):
+        '''Return the dependencies induced by all the queries since the last
+        call to :meth:`~.clear_deps()`.'''
         return self._deps
 
     def clear_deps(self):
+        '''Clear the cached dependencies.'''
         self._deps.clear()
 
     def add_option_handler(self, sec_families, option, handler):
