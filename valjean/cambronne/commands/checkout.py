@@ -1,7 +1,7 @@
 '''Module for the ``checkout`` subcommand.'''
 
 
-from ..common import Command, build_graph, schedule
+from ..common import Command
 
 
 class CheckoutCommand(Command):
@@ -9,15 +9,8 @@ class CheckoutCommand(Command):
 
     NAME = 'checkout'
 
+    FAMILY = 'checkout'
+
     HELP = 'checkout code'
 
     ALIASES = ('co',)
-
-    def execute(self, args, config):
-        '''Execute the ``checkout`` command.'''
-        if args.targets:
-            family_targets = [('checkout', target) for target in args.targets]
-        else:
-            family_targets = [('checkout', None)]
-        graph = build_graph(family_targets, config)
-        return schedule(graph)

@@ -55,9 +55,29 @@ def make_parser():
         '-l', '--log',
         help='path to the log file'
         )
+    parser.add_argument(
+        '--env-path', action='store', default='valjean.env',
+        help='path to the file containing the persistent environment '
+             '(default: valjean.env)'
+        )
+    parser.add_argument(
+        '--env-skip-read', action='store_true',
+        help='do not read the environment from the path specified by '
+             '--env_path at the beginning of the run'
+        )
+    parser.add_argument(
+        '--env-skip-write', action='store_true',
+        help='do not write the environment to the path specified by '
+             '--env_path at the end of the run'
+        )
+    parser.add_argument(
+        '--env-format', action='store',
+        choices=('json', 'pickle'),
+        default='json',
+        help='environment persistency format'
+        )
 
     # here come the subcommands
-    # WARNING: some code downstream assumes that no aliases are used
     cmd_parsers = parser.add_subparsers(
         title='Valid commands',
         dest='command_name'

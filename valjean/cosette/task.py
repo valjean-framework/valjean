@@ -77,8 +77,8 @@ from .. import LOGGER
 
 
 #: Enumeration for the task status.
-TaskStatus = enum.Enum('TaskStatus',  # pylint: disable=invalid-name
-                       'WAITING PENDING DONE FAILED SKIPPED')
+TaskStatus = enum.IntEnum('TaskStatus',  # pylint: disable=invalid-name
+                          'WAITING PENDING DONE FAILED SKIPPED')
 
 
 def _q(arg):

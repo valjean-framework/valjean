@@ -1,7 +1,7 @@
 '''Module for the ``build`` subcommand.'''
 
 
-from ..common import Command, build_graph, schedule
+from ..common import Command
 
 
 class BuildCommand(Command):
@@ -9,13 +9,6 @@ class BuildCommand(Command):
 
     NAME = 'build'
 
-    HELP = 'build code'
+    FAMILY = 'build'
 
-    def execute(self, args, config):
-        '''Execute the ``build`` command.'''
-        if args.targets:
-            family_targets = [('build', target) for target in args.targets]
-        else:
-            family_targets = [('build', None)]
-        graph = build_graph(family_targets, config)
-        return schedule(graph)
+    HELP = 'build code'

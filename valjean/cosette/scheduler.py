@@ -82,18 +82,9 @@ class Scheduler:
     def schedule(self, env=None):
         '''Schedule the tasks!
 
-        :param env: An initial environment for the scheduled tasks. This allows
-                    completed tasks to inform other, dependent tasks of e.g.
-                    the location of interesting files.
-
-                    The type of this object is arbitrary and its use is
-                    entirely defined by the tasks themselves, which are also
-                    responsible for the updates. The scheduler is only
-                    responsible for threading the environment down to the
-                    executed tasks. A reasonable choice for the type of this
-                    object is probably some kind of key-value mapping. Hence,
-                    the default value is an empty dictionary.
-
+        :param Env env: An initial environment for the scheduled tasks. This
+                        allows completed tasks to inform other, dependent tasks
+                        of e.g.  the location of interesting files.
         :returns: The modified environment.
         '''
 

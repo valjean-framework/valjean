@@ -81,11 +81,17 @@ read-and-modify trip above is implemented as follows:
     >>> env.atomically(modify_task1)
     >>> env.is_skipped(tasks[1])
     True
+
+.. todo::
+
+    Document :meth:`~.Env.from_graph`, :meth:`~.Env.from_file` and
+    :meth:`~.Env.to_file`.
 """
 
 import threading
 from collections.abc import MutableMapping
 
+from .. import LOGGER
 from .task import TaskStatus
 from .depgraph import DepGraph
 
@@ -178,6 +184,54 @@ class Env(dict):
         return '{}({})'.format(self.__class__.__name__,
                                super(Env, self).__repr__())
 
+    @classmethod
+    def from_file(cls, path, fmt):
+        '''Deserialize an :class:`Env` object from a file.
+
+        :param str path: Path to the file.
+        :param str fmt: Serialization format (``'json'``, ``'pickle'``).
+        :returns: The deserialized object.
+        '''
+        import pickle
+        import json
+        if fmt == 'json':
+            serializer = json
+            mode = 'r'
+        else:
+            serializer = pickle
+            mode = 'rb'
+        try:
+            with open(path, mode) as input_file:
+                deser = serializer.load(input_file)
+        except IOError as error:
+            LOGGER.warning("cannot load %s environment from file '%s'. "
+                           "Error message: %s", fmt, path, error.strerror)
+            return None
+        if fmt == 'json':
+            return cls(deser)
+        return deser
+
+    def to_file(self, path, fmt):
+        '''Serialize an :class:`Env` object to a file.
+
+        :param str path: Path to the file.
+        :param str fmt: Serialization format (``'json'``, ``'pickle'``).
+        '''
+        import pickle
+        import json
+        if fmt == 'json':
+            serializer = json
+            mode = 'w'
+        else:
+            serializer = pickle
+            mode = 'wb'
+        try:
+            with open(path, mode) as output_file:
+                serializer.dump(self, output_file)
+        except IOError as error:
+            LOGGER.error("cannot write %s environment to file '%s'.\n"
+                         "Error message: %s", fmt, path, error.strerror)
+
     @staticmethod
     def _check_unique_task_names(tasks):
         names = set()
@@ -191,6 +245,30 @@ class Env(dict):
                     )
             names.add(name)
 
+    def merge_done_tasks(self, other):
+        '''Merge task status from another environment.
+
+        This method takes an additional environment `other` as an argument. If
+        the same key appears in `self` and `other` and ``other[key]['status']
+        == TaskStatus.DONE``, then it sets ``self[key] = other[key]``.
+
+        The idea is that `self` might contain a pristine environment, while
+        `other` might provide the results of a previous run. We want to mark
+        completed tasks as `DONE`, but we also want to re-run those that
+        failed.
+
+        :param Env other: The environment providing the updates.
+        '''
+
+        # initialize the environment
+        for task_name, status in other.items():
+            if status['status'] != TaskStatus.DONE:
+                continue
+            if task_name not in self:
+                continue
+            LOGGER.debug('merging status for task %s', task_name)
+            self[task_name] = status
+
     def set_status(self, task, status):
         '''Set `task`'s status to `status`.'''
         with self.lock:
@@ -199,7 +277,8 @@ class Env(dict):
     def get_status(self, task):
         '''Return `task`'s status.'''
         with self.lock:
-            return self[task.name]['status']
+            # pylint: disable=not-callable
+            return TaskStatus(self[task.name]['status'])
 
     def atomically(self, action):
         '''Perform an action atomically on the environment dictionary. The

@@ -5,6 +5,7 @@ import argparse
 from ..cosette.task import RunTask
 from ..cosette.code import CheckoutTask, BuildTask
 from ..cosette.depgraph import DepGraph
+from ..cosette.env import Env
 from ..cosette.scheduler import Scheduler
 from .. import LOGGER
 
@@ -22,6 +23,8 @@ class Command:
 
     ALIASES = []
 
+    FAMILY = None
+
     def register(self, parser):
         '''Register options for this command in the parser.'''
         parser.add_argument(
@@ -32,8 +35,17 @@ class Command:
         parser.set_defaults(func=self.execute)
 
     def execute(self, args, config):
-        '''Execute this command.'''
-        raise NotImplementedError('Command must be subclassed.')
+        '''Execute a generic command.'''
+        if args.targets:
+            family_targets = [(self.FAMILY, target) for target in args.targets]
+        else:
+            family_targets = [(self.FAMILY, None)]
+        graph = build_graph(family_targets, config)
+
+        env_mode = '' if args.env_skip_read else 'r'
+        env_mode += '' if args.env_skip_write else 'w'
+        return schedule(graph, env_path=args.env_path,
+                        env_format=args.env_format, env_mode=env_mode)
 
 
 class TaskFactory:
@@ -149,9 +161,48 @@ def build_graph(family_targets, config):
     return graph
 
 
-def schedule(graph):
-    '''Schedule a graph for execution.'''
+def schedule(graph, env_path=None, env_format='json', env_mode='rw'):
+    '''Schedule a graph for execution.
+
+    The additional parameters control the behaviour of the scheduler with
+    respect to persistent execution environments. If `env_mode` contains
+    ``'w'``, the environment will be written to the file specified by
+    `env_path` at the end of the run, in the format specified by `env_format`
+    (either ``'json'`` or ``'pickle'``).
+
+    Also, if `env_mode` contains ``'r'``, the environment will be read from
+    `env_path` at the beginning of the run.
+
+    If `env_path` is `None`, no serialization/de-serialization will take place.
+
+    :param env_path: Path to the serialized environment. If `None`, no
+                     serialization/de-serialzation will take place.
+    :type env_path: str or None
+    :param str env_format: Environment serialization format (``'json'``,
+                            ``'pickle'``).
+    :param str env_mode: Possible values: ``'r'`` (read-only), ``'w'``
+                         (write-only), ``'rw'`` (read and write).
+    '''
     scheduler = Scheduler(graph)
-    env = scheduler.schedule()
-    LOGGER.info(env)
-    return env
+    env = Env.from_graph(graph)
+
+    if env_path is not None and 'r' in env_mode:
+        LOGGER.info('deserializing %s environment from file %s',
+                    env_format, env_path)
+        persistent_env = Env.from_file(env_path, env_format)
+        if persistent_env is not None:
+            env.merge_done_tasks(persistent_env)
+    else:
+        LOGGER.debug('starting with an empty environment')
+
+    new_env = scheduler.schedule(env)
+
+    if new_env is not None and env_path is not None and 'w' in env_mode:
+        LOGGER.info('serializing %s environment to file %s',
+                    env_format, env_path)
+        new_env.to_file(env_path, env_format)
+    else:
+        LOGGER.debug('skipping environment serialization')
+
+    LOGGER.info(new_env)
+    return new_env
