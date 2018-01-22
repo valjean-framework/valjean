@@ -48,12 +48,12 @@ enumeration. Additionally, you can change the status of a task with
     >>> env.set_status(tasks[0], TaskStatus.DONE)
     >>> env.set_done(tasks[0])  # equivalent, shorter version
 
-Information about the tasks, incuding their status, is stored in the
-``'tasks'`` key:
+Information about the tasks, incuding their status, is stored with the task
+name as the key:
 
 .. doctest:: env
 
-    >>> print(env['tasks'][tasks[0].name]['status'])
+    >>> print(env[tasks[0].name]['status'])
     TaskStatus.DONE
 
 The :class:`Env` class tries hard to be thread-safe; that is, all its methods
@@ -159,9 +159,9 @@ class Env(dict):
         cls._check_unique_task_names(tasks)
 
         # initialize the environment
-        dictionary = {'tasks': {}}
+        dictionary = {}
         for task in tasks:
-            dictionary['tasks'][task.name] = {'status': TaskStatus.WAITING}
+            dictionary[task.name] = {'status': TaskStatus.WAITING}
         return cls(dictionary)
 
     @classmethod
@@ -194,12 +194,12 @@ class Env(dict):
     def set_status(self, task, status):
         '''Set `task`'s status to `status`.'''
         with self.lock:
-            self['tasks'][task.name]['status'] = status
+            self[task.name]['status'] = status
 
     def get_status(self, task):
         '''Return `task`'s status.'''
         with self.lock:
-            return self['tasks'][task.name]['status']
+            return self[task.name]['status']
 
     def atomically(self, action):
         '''Perform an action atomically on the environment dictionary. The

@@ -18,7 +18,7 @@ def test_echo(tmpdir):
                            subprocess_args={'stdout': f_out})
     env_up, status = runtask.do(dict())
     assert status == TaskStatus.DONE
-    assert env_up['tasks']['echo']['return_code'] == 0
+    assert env_up['echo']['return_code'] == 0
 
     result = testfile.read()
     assert result == 'test\n'
@@ -37,7 +37,7 @@ echo and everywhere
                                subprocess_args={'stdout': f_out})
     env_up, status = shelltask.do(dict())
     assert status == TaskStatus.DONE
-    assert env_up['tasks']['script']['return_code'] == 0
+    assert env_up['script']['return_code'] == 0
 
     result = testfile.read()
     assert result == 'here\nthere\nand everywhere\n'

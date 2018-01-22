@@ -196,17 +196,14 @@ class TestSchedulerOnFailingTasks:
             if node in deps or node == task:
                 # check that the failing task blocked `task` and all the other
                 # tasks that depended on it
-                assert (env['tasks'][node.name]['status']
-                        == TaskStatus.SKIPPED)
+                assert env[node.name]['status'] == TaskStatus.SKIPPED
                 n_blocked += 1
             elif node == failing_task:
                 # check that the failing task failed (duh)
-                assert (env['tasks'][node.name]['status']
-                        == TaskStatus.FAILED)
+                assert env[node.name]['status'] == TaskStatus.FAILED
             else:
                 # check that all the other tasks ran normally
-                assert (env['tasks'][node.name]['status']
-                        == TaskStatus.DONE)
+                assert env[node.name]['status'] == TaskStatus.DONE
 
         # record the number of blocked tasks
         event('blocked tasks = {}'.format(n_blocked))

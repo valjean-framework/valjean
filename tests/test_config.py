@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # pylint: disable=redefined-outer-name,no-value-for-parameter
 
-'''Tests for the :mod:`~.config` module.'''
+'''Tests for the :mod:`~.valjean.config` module.'''
 
 from string import ascii_letters
 from configparser import (DuplicateSectionError, NoOptionError, NoSectionError,

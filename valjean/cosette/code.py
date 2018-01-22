@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u'''This submodule contains a few useful tasks for checking out, configuring,
+"""This submodule contains a few useful tasks for checking out, configuring,
 and building arbitrary code.
 
 The :class:`CheckoutTask` task class checks out a version-controlled
@@ -23,48 +23,81 @@ to the ``cmake`` executable may be specified through the
 
    Implement ``autoconf``/``configure``/``make`` builds.
 
-An example of the usage of :class:`CheckoutTask` and :class:`BuildTask`:
-
 .. testsetup:: code
 
    from valjean.cosette.code import CheckoutTask, BuildTask
+   import os
+   work_dir = os.path.join(doctest_tmpdir, 'code')
+   os.mkdir(work_dir)
+   repo_dir = os.path.join(work_dir, 'repo')
+   os.mkdir(repo_dir)
+   os.system(CheckoutTask.GIT + ' init ' + repo_dir)
+   cmakelists_path = os.path.join(repo_dir, 'CMakeLists.txt')
+   with open(cmakelists_path, 'w') as cmake_file:
+       cmake_file.write('project(TestCodeTasks C)\\n'
+           'set(SOURCE_FILENAME "${PROJECT_BINARY_DIR}/test.c")\\n'
+           'file(WRITE "${SOURCE_FILENAME}" "int main() { return 0; }")\\n'
+           'add_executable(test_exe "${SOURCE_FILENAME}")\\n'
+           )
+   git_dir = os.path.join(repo_dir, '.git')
+   os.system(CheckoutTask.GIT + ' --git-dir ' + git_dir + ' --work-tree ' +
+             repo_dir + ' add CMakeLists.txt')
+   os.system(CheckoutTask.GIT + ' --git-dir ' + git_dir + ' --work-tree ' +
+             repo_dir + ' commit -a -m "Test commit"')
+
+To describe the usage of :class:`CheckoutTask` and :class:`BuildTask`, let us
+assume that ``repo_dir`` contains a ``git`` repository with a CMake project.
+We use a temporary directory for our test:
 
 .. doctest:: code
 
    >>> import os
-   >>> test_dir = '/path/to/test_project'
-   >>> source_dir = os.path.join(test_dir, 'src')
-   >>> build_dir = os.path.join(test_dir, 'build')
+   >>> checkout_dir = os.path.join(work_dir, 'checkout')
+   >>> build_dir = os.path.join(work_dir, 'build')
+   >>> log_dir = os.path.join(work_dir, 'log')
+
+Now we can build checkout and build tasks for this repository:
+
+.. doctest:: code
+
+   >>> from valjean.cosette.env import Env
+   >>> from pprint import pprint
    >>> ct = CheckoutTask(name='project_checkout',
-   ...                   repository='/path/to/project.git',
-   ...                   checkout_dir=source_dir,
-   ...                   log_root=test_dir)
+   ...                   repository=repo_dir,
+   ...                   checkout_dir=checkout_dir,
+   ...                   log_root=log_dir)
    >>> bt = BuildTask(name='project_build',
-   ...                source_dir=source_dir,
+   ...                source_dir=checkout_dir,
    ...                build_dir=build_dir,
-   ...                build_flags='-- -j4',
-   ...                log_root=test_dir)
-   >>> ct_up, ct_status = ct.do(dict())  # doctest: +SKIP
-   >>> print(ct_status)             # doctest: +SKIP
+   ...                build_flags=['--' ,'-j4'],
+   ...                log_root=log_dir)
+   >>> env = Env()
+   >>> ct_up, ct_status = ct.do(env)
+   >>> print(ct_status)
    TaskStatus.DONE
-   >>> pprint(ct_up)                 # doctest: +SKIP
-   {'checkout': {'project_checkout': {'checkout_dir': \
-'/path/to/test_project/src',
-                                      'checkout_log': \
-'/path/to/test_project/checkout_project_checkout.log',
-                                      'repository': '/path/to/project.git'}},
-    'tasks': {'project_checkout': {'return_code': 0,
-                                   'wallclock_time': 0.34877443313598633}}}
-   >>> bt_up, bt_status = bt.do(dict())  # doctest: +SKIP
-   >>> print(bt_status)             # doctest: +SKIP
+   >>> pprint(ct_up)
+   {'checkout/project_checkout': {'checkout_dir': '/.../checkout',
+                                  'checkout_log': \
+'/.../log/checkout_project_checkout.log',
+                                  'repository': '/.../repo',
+                                  'return_code': 0,
+                                  'script_filename': \
+'/.../checkout_project_checkout...',
+                                  'wallclock_time': ...}}
+   >>> env.apply(ct_up)  # apply CheckoutTask's environment update
+   ...                   # for this example, this is actually optional
+   >>> bt_up, bt_status = bt.do(env)
+   >>> print(bt_status)
    TaskStatus.DONE
-   >>> pprint(bt_up)                 # doctest: +SKIP
-   {'build': {'project_build': {'build_log': \
-'/path/to/test_project/build_project_build.log',
-                                'configure_log': \
-'/path/to/test_project/configure_project_build.log'}},
-    'tasks': {'project_build': {'return_code': 0,
-                                'wallclock_time': 173.11953258514404}}}
+   >>> pprint(bt_up)
+   {'build/project_build': {'build_log': '/.../log/build_project_build.log',
+                            'configure_log': \
+'/.../log/configure_project_build.log',
+                            'return_code': 0,
+                            'script_filename': \
+'/.../build_project_build...',
+                            'wallclock_time': ...}}
+
 
 :class:`CheckoutTask` and :class:`BuildTask` can also be created from a
 name and a :class:`~.Config` object, using the
@@ -73,7 +106,7 @@ methods, respectively. The class methods will look for configuration sections
 called ``[checkout/<name>]`` (``[build/<name>]``, respectively) and take their
 parameters from there. The expected parameters are documented in the method
 docstrings.
-'''
+"""
 
 import logging
 import os
@@ -94,12 +127,12 @@ class CheckoutTask(ShellTask):
     def from_config(cls, name: str, config: Config):
         '''Construct a :class:`CheckoutTask` from a :class:`~.Config` object.
 
-        This method searches `config` for a section called ``[checkout
-        <name>]``, where ``<name>`` is the name of the task. If the section is
-        not found, :exc:`KeyError` is raised. Within this section, the optional
-        ``vcs`` option selects the version-control system (defaults to
-        ``git``). Depending on the value of ``vcs``, certain other options are
-        also required:
+        This method searches `config` for a section called
+        ``[checkout/<name>]``, where ``<name>`` is the name of the task. If the
+        section is not found, :exc:`KeyError` is raised. Within this section,
+        the optional ``vcs`` option selects the version-control system
+        (defaults to ``git``). Depending on the value of ``vcs``, certain other
+        options are also required:
 
         ``git``
           For ``vcs = git``, the only mandatory option is:
@@ -133,9 +166,9 @@ class CheckoutTask(ShellTask):
 
         :param str name: The name of this task.
         :param Config config: The configuration object.
-        :raises KeyError: if a configuration section called ``[checkout
-                          <name>]`` is not found, or if any of the required
-                          options is not found.
+        :raises KeyError: if a configuration section called
+                          ``[checkout/<name>]`` is not found, or if any of the
+                          required options is not found.
         '''
 
         from shlex import split
@@ -215,23 +248,23 @@ class CheckoutTask(ShellTask):
 
     def do(self, env):
         '''Check out the code as specified. In addition to proposing updates to
-        the ``env['tasks']`` dictionary with the execution result/time of the
-        underlying checkout shell script (see :meth:`.ShellTask.do()`), this
-        method proposes::
+        the ``env`` dictionary with the execution result/time of the underlying
+        checkout shell script (see :meth:`.ShellTask.do()`), this method
+        proposes::
 
-            env['checkout']['checkout/{name}']['checkout_dir'] = checkout_dir
-            env['checkout']['checkout/{name}']['repository'] = repository
-            env['checkout']['checkout/{name}']['checkout_log'] = checkout_log
+            env[task.name]['checkout_dir'] = checkout_dir
+            env[task.name]['repository'] = repository
+            env[task.name]['checkout_log'] = checkout_log
 
         :param mapping env: The environment for the execution of this task.
         :returns: The proposed environment updates.
         '''
 
         env_up, status = super().do(env)
-        env_up.setdefault('checkout', {}).setdefault(self.name, {})
-        env_up['checkout'][self.name]['checkout_dir'] = self.checkout_dir
-        env_up['checkout'][self.name]['repository'] = self.repository
-        env_up['checkout'][self.name]['checkout_log'] = self.checkout_log
+        env_up.setdefault(self.name, {})
+        env_up[self.name]['checkout_dir'] = self.checkout_dir
+        env_up[self.name]['repository'] = self.repository
+        env_up[self.name]['checkout_log'] = self.checkout_log
         return env_up, status
 
     #: Path to the :file:`git` executable. May be overridden before class
@@ -365,7 +398,7 @@ class BuildTask(ShellTask):
             self.source_dir = source_dir
         else:
             self.source_dir = (
-                '{{env[checkout][checkout/{name}][checkout_dir]}}'
+                '{{env[checkout/{name}][checkout_dir]}}'
                 .format(name=name)
                 )
 
@@ -422,21 +455,21 @@ class BuildTask(ShellTask):
 
     def do(self, env):
         '''Invoke the build tool as specified. In addition to proposing updates
-        to the ``env['tasks']`` argument with the execution result/time of the
+        to the ``env`` argument with the execution result/time of the
         underlying checkout shell script (see :meth:`.ShellTask.do()`), this
         method proposes::
 
-            env['build']['build/{name}']['configure_log'] = configure_log
-            env['build']['build/{name}']['build_log'] = build_log
+            env[task.name]['configure_log'] = configure_log
+            env[task.name]['build_log'] = build_log
 
         :param mapping env: The environment for the execution of this task.
         :returns: The proposed environment updates.
         '''
 
         env_up, status = super().do(env)
-        env_up.setdefault('build', {}).setdefault(self.name, {})
-        env_up['build'][self.name]['configure_log'] = self.configure_log
-        env_up['build'][self.name]['build_log'] = self.build_log
+        env_up.setdefault(self.name, {})
+        env_up[self.name]['configure_log'] = self.configure_log
+        env_up[self.name]['build_log'] = self.build_log
         return env_up, status
 
     #: Path to the :file:`cmake` executable. May be overridden before class

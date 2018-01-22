@@ -273,16 +273,15 @@ def do_git_checkout(config, env=None):
     full_name = 'checkout/' + name
     try:
         assert status == TaskStatus.DONE
-        assert env_up['tasks'][full_name]['return_code'] == 0
-        assert env_up['checkout'][full_name]['repository'] == git_repo
-        assert (env_up['checkout'][full_name]['checkout_dir'] ==
-                checkout_dir)
+        assert env_up[full_name]['return_code'] == 0
+        assert env_up[full_name]['repository'] == git_repo
+        assert env_up[full_name]['checkout_dir'] == checkout_dir
         filename = os.path.join(checkout_dir, 'CMakeLists.txt')
         with open(filename) as cmake_file:
             content = cmake_file.read()
         assert content == CMAKELISTS
     except AssertionError:
-        with open(env_up['checkout'][full_name]['checkout_log']) as c_f:
+        with open(env_up[full_name]['checkout_log']) as c_f:
             code.LOGGER.debug('checkout_log:\n%s', c_f.read())
         raise
 
@@ -314,19 +313,15 @@ def do_cmake_build(config, env=None):
     full_name = 'build/' + name
     try:
         assert status == TaskStatus.DONE
-        assert env_up['tasks'][full_name]['return_code'] == 0
-        configure_log_dir = os.path.dirname(
-            env_up['build'][full_name]['configure_log']
-            )
+        assert env_up[full_name]['return_code'] == 0
+        configure_log_dir = os.path.dirname(env_up[full_name]['configure_log'])
         assert os.path.samefile(configure_log_dir, log_dir)
-        build_log_dir = os.path.dirname(
-            env_up['build'][full_name]['build_log']
-            )
+        build_log_dir = os.path.dirname(env_up[full_name]['build_log'])
         assert os.path.samefile(build_log_dir, log_dir)
     except AssertionError:
-        with open(env_up['build'][full_name]['configure_log']) as c_f:
+        with open(env_up[full_name]['configure_log']) as c_f:
             code.LOGGER.debug('configure_log:\n%s', c_f.read())
-        with open(env_up['build'][full_name]['build_log']) as build_f:
+        with open(env_up[full_name]['build_log']) as build_f:
             code.LOGGER.debug('build_log:\n%s', build_f.read())
         raise
 

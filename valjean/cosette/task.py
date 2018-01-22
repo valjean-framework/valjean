@@ -35,7 +35,7 @@ makes it possible to execute arbitrary commands. Consider:
    >>> print(status)
    TaskStatus.DONE
    >>> pprint(env_update)  # doctest: +NORMALIZE_WHITESPACE
-   {'tasks': {'say': {'return_code': 0, 'wallclock_time': ...}}}
+   {'say': {'return_code': 0, 'wallclock_time': ...}}
 
 Note that the `command` is not parsed by a shell. So the following may not do
 what you expect:
@@ -61,6 +61,11 @@ class:
    ... echo '...a shrubbery!'
    ... """)
    >>> env_update, status = task.do(dict())  # executes the shell script
+
+.. todo::
+
+    Redirect stdout and stderr from :class:`RunTask` and :class:`ShellTask` to
+    output files.
 '''
 
 import logging
@@ -204,7 +209,7 @@ class RunTask(Task):
         deps.update(config.get_deps())
         config.clear_deps()
 
-        task_name = 'run/'+ name
+        task_name = 'run/' + name
         return cls(task_name, cli, deps=deps)
 
     def __init__(self, name, cli, *, deps=None, subprocess_args=None,
@@ -243,8 +248,8 @@ class RunTask(Task):
         On completion, this method proposes the following updates to the
         environment::
 
-            env['tasks'][task.name]['return_code'] = return_code
-            env['tasks'][task.name]['wallclock_time'] = wallclock_time
+            env[task.name]['return_code'] = return_code
+            env[task.name]['wallclock_time'] = wallclock_time
 
         Here ``return_code`` is the return code of the executed command, and
         ``wallclock_time`` is the time it took.
@@ -278,11 +283,9 @@ class RunTask(Task):
         result = call(formatted_cli, universal_newlines=True,
                       **self.subprocess_args)
         end_time = time()
-        # Here we assume that env is a mapping
-        env_up = {'tasks': {self.name: {
-            'return_code': result,
-            'wallclock_time': end_time-start_time
-            }}}
+
+        env_up = {self.name: {'return_code': result,
+                              'wallclock_time': end_time-start_time}}
         if result == 0:
             status = TaskStatus.DONE
         else:
@@ -295,7 +298,7 @@ class ShellTask(Task):
     created in a temporary directory (or the directory specified by ``dir``)
     and can be kept for inspection by passing ``delete=False`` to the
     constructor. The script filename can be read from the task environment as
-    ``env['tasks'][task.name]['dir']``.
+    ``env[task.name]['script_filename']``.
 
     The script is passed in as a string, but it may contain Python format
     strings of the form ``'{spam}'``. When the :meth:`do()` method is called,
@@ -360,7 +363,7 @@ class ShellTask(Task):
         In addition to the environment updates proposed by
         :meth:`RunTask.do()`, this method also proposes::
 
-            env['tasks'][task.name]['script_filename'] = script_filename
+            env[task.name]['script_filename'] = script_filename
 
         :param Env env: The task environment.
         :returns: The proposed environment update.
@@ -400,9 +403,8 @@ class ShellTask(Task):
                               subprocess_args=self.subprocess_args,
                               **self.kwargs)
             env_up, status = subtask.do(env)
-            env_up.setdefault('tasks', {}).setdefault(self.name, {
-                'script_filename': file_.name
-                })
+            env_up.setdefault(self.name, {})
+            env_up[self.name]['script_filename'] = file_.name
             return env_up, status
 
     def _make_kwargs(self, names):
