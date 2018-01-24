@@ -708,6 +708,7 @@ class MeshDictBuilder(DictBuilder):
 
     def fill_arrays_and_bins(self, data):
         '''Fill arrays and bins for mesh data.
+
         :param data: mesh
         :type data: list of meshes results
 
