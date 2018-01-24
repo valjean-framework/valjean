@@ -1,10 +1,147 @@
-'''This module provides pyparsing grammar for Tripoli-4 output listings.
+'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
-Transformation from pyparsing.ParseResults is done with transform.py, calling
-common.py.
+.. _pyparsing_wiki: http://pyparsing.wikispaces.com/
+.. |keff| replace:: k\ :sub:`eff`
+.. |kij| replace:: k\ :sub:`ij`
 
-..note:: test with "fake" outputs from Tripoli-4.
+Documentation on `pyparsing` package can be found in `pyparsing`_ documentation
+linked to *pip* and on `pyparsing_wiki`_ with examples.
+
+Transformation from `pyparsing.ParseResults` is done with :mod:`~.transform`,
+calling :mod:`common <valjean.eponine.common>`.
+
+
+Generalitites
+-------------
+
+* This parser only parses the result part of the listing (selection done in
+  :mod:`scan_t4 <valjean.eponine.scan_t4>`).
+* It takes into account all responses in ``qualtrip`` database up to Tripoli-4,
+  version 10.2.
+* If a response is not taken into account parsing will fail:
+
+  * with a big, ugly message ending by location of the end of successful
+    parsing in the result string (possible to print it) → normally where starts
+    your new response
+  * it seems to end normally, but did not in reality. One of the best checks in
+    that case is to test if the ``endflag`` in :mod:`scan_t4
+    <valjean.eponine.scan_t4>` was read in the parser, usually not. Then the
+    new response probably have to be added.
+
+* A general parser is proposed for use in the file, but other parsers can be
+  built from the partial parsers written here
+* Numbers are automatically converted in `numpy` numbers (possibility to choose
+  number of bytes used)
+* Keywords and most of the variables used to build parsers are private
+
+
+Organisation
+------------
+
+This module is divided in 3 parts:
+
+keywords:
+  list of all keywords used to parse the listings, this part is
+  important as these keywords trigger the parsing
+parsers:
+  parsers for each part of the listing (introduction, mesh,
+  spectra, general responses, |keff|, etc.)
+general parser:
+  parser to parse the full listing, taking into accout all
+  current response (present in V&V)
+
+Keywords are in most of the cases used as flags and suppressed when data are
+stored.
+
+A first structure is designed when building the parsers results as lists and
+dictionaries in the ``pyparsing.ParseResults``. Then *parse actions* are used
+to standard python or *numpy* objects. These *parse actions*, called with
+:meth:`pyparsing.ParserElement.setParseAction`, can be found in
+:mod:`~.transform`.
+
+
+Main parsers blocks
+```````````````````
+The main parsers blocks are defined at the end of the file, see
+:py:obj:`mygram` and :py:obj:`response`.
+
+Typically, each result block in the
+listing should start by the :py:obj:`intro` block and end with at least one
+:py:obj:`runtime` block. This parts follows the :mod:`scan_t4
+<valjean.eponine.scan_t4>`: *string* starting by ``RESULTS ARE GIVEN`` and
+ending with ``simulation time``, ``exploitation time`` or ``elapsed time``.
+
+Between these blocks can be found the data blocks. The major ones are:
+
+* one or more responses, driven by the keyword ``RESPONSE FUNCTION``,
+* the editions of IFP adjoint criticality,
+* the "default" |keff| block, in most of the cases at the end of the listing,
+* the *contributing particles block*, mainly in first pass listings,
+* an optional additional :py:obj:`runtime` block.
+
+Main data blocks are described below (results taken into account, main
+features).
+
+Response blocks
+```````````````
+The core of the listings is the list of responses, including all the required
+scores. This big block is constructed as a **list** of **dictionaries**, each
+one representing a response (flag ``list_responses`` in the final result).
+
+Response are constructed as:
+
+* response introduction containing its definition:
+
+  * a description of the response, :py:obj:`respdesc` including:
+
+    * ``RESPONSE FUNCTION`` keyword as mandatory (afak)
+    * ``RESPONSE NAME``, ``SCORE NAME`` and ``ENERGY DECOUPAGE NAME`` that are
+      present in most of the cases
+
+  * more characteristics of the response, stored under :py:obj:`respcarac`,
+    like:
+
+    * considered particle (``PARTICULE`` in the listing)
+    * nucleus on which the reaction happens (if ``RESPONSE FUNCTION`` is a
+      ``REACTION``)
+    * temperature
+    * compostion of the volumes considered
+    * concentration
+    * reaction considered (usually given as codes)
+    * others like DPA type, required arguments, mode, filters, etc.
+
+* responses themselves, various:
+
+  * responses including *score* description, all included in the
+    :py:obj:`scoreblock` parser (more than one can be present):
+
+    * score description (:py:obj:`scoredesc`) contains the score mode
+      (``TRACK``, ``SURF`` or ``COLL``) and the score zone (currently taken
+      into account: mesh, results cumulated on all geometry or on all sources,
+      Volume, Volume Sum, Frontier, Frontier Sum, Point, Cells and Maille)
+
+    * results block, where at least one of these results can be found:
+      spectrum (:py:obj:`spectrumblock`), mesh (:py:obj:`meshblock`),
+      spectrum with variance of variance (:py:obj:`vovspectrumblock`),
+      entropy results (:py:obj:`entropy`), location of optional MED file
+      (:py:obj:`medfle`), default result integrated over energy
+      (:py:obj:`defintegratedres`), uncertainties results
+      (:py:obj:`uncertblock`), uncertainties on integrated results over energy
+      (:py:obj:`uncertintegblock`) and Green bands results (:py:obj:`gbblock`).
+
+  * |keff| presented as a generic response, possibly transformed in
+    `numpy.matrix` (:py:obj:`keffblock`)
+  * |kij| results: matrix, eigenvalues, eigenvectors (:py:obj:`kijres`)
+  * |kij| sources (:py:obj:`kijsources`)
+  * ordered results (in nucleus and/or family (:py:obj:`orderedres`)
+  * default result integrated over energy where no scoring mode and zone are
+    precised (:py:obj:`defintegratedres`)
+  * IFP results (:py:obj:`ifpblock`)
+  * perturbation results (:py:obj:`perturbation`)
+
+.. note:: need to test with "fake" outputs from Tripoli-4 (to be thought)
 '''
+# pylint: disable=invalid-name
 
 import logging
 from pyparsing import (Word, Keyword, White, alphas, alphanums,
@@ -19,6 +156,10 @@ LOGGER = logging.getLogger('valjean')
 
 _fnums = pyparscom.fnumber.setParseAction(tokenMap(trans.common.FTYPE))
 _inums = pyparscom.number.setParseAction(tokenMap(trans.common.ITYPE))
+
+###################################
+#            KEYWORDS             #
+###################################
 
 # General keywords
 _integratedres_kw = Keyword("ENERGY INTEGRATED RESULTS")
@@ -141,9 +282,10 @@ _shannonentropy_kw = Keyword("Shannon Entropy of sources =")
 
 # Scores ordered by nuclei and precursor families
 _nucleiorder_kw = Keyword("Scores for nuclei contributions are ordered "
-                            "according to the user list:")
+                          "according to the user list:")
 _familiesorder_kw = Keyword("Scores are ordered from family i = 1 to i = MAX:")
-_nucleifamilyorder_kw = Keyword("Scores are ordered by nuclei and by families:")
+_nucleifamilyorder_kw = Keyword("Scores are ordered "
+                                "by nuclei and by families:")
 _nucleus_kw = Keyword("Nucleus :")
 
 # Variance of variance
@@ -220,6 +362,10 @@ _equal_line = Suppress(LineStart() + Word('='))
 _minus_line = Suppress(White() + Word('-'))
 
 
+################################
+#           PARSERS            #
+################################
+
 # Introduction parser
 _sourceintensity = (Suppress(_sourceintensity_kw + ':')
                     + (_fnums | _unavailable_kw)
@@ -241,18 +387,13 @@ intro = _sourceintensity + _star_line + OneOrMore(_introelts)
 
 # Conclusion parser
 _simutime = Suppress(_simulationtime_kw + ':') + _inums('simulation_time')
-_exploitime = Suppress(_exploitationtime_kw + ':') + _inums('exploitation_time')
+_exploitime = (Suppress(_exploitationtime_kw + ':')
+               + _inums('exploitation_time'))
 _elapsedtime = Suppress(_elapsedtime_kw + ':') + _inums('elapsed_time')
 runtime = _simutime | _elapsedtime | _exploitime
 
 # Response parser
 # Description of the response
-'''All flags between the two star lines :
-- RESPONSE FUNCTION = mandatory (afak)
-- RESPONSE NAME, SCORE NAME, ENERGY DECOUPAGE NAME
-- PARTICULE, reaction on nucleus, temperature, composition, concentration,
-    reaction
-'''
 _respfunc = (Suppress(_respfunction_kw + ':')
              + OneOrMore(Word(alphanums + '_() =+/:-'), stopOn=LineEnd())
              .setParseAction(''.join)('resp_function'))
@@ -287,32 +428,32 @@ _reaction = (Suppress(_reaction_kw)
              .setParseAction('_'.join)('reaction'))
 
 
-def _nextCompos(t):
-    if t.getName() == 'reaction_on_nucleus':
+def _next_compos(toks):
+    if toks.getName() == 'reaction_on_nucleus':
         detail = _temperature | _composition | _concentration | _reaction
-    elif t.getName() == 'temperature':
+    elif toks.getName() == 'temperature':
         detail = _reactiononnucl | _composition | _concentration | _reaction
-    elif t.getName() == 'composition':
+    elif toks.getName() == 'composition':
         detail = _reactiononnucl | _temperature | _concentration | _reaction
-    elif t.getName() == 'concentration':
+    elif toks.getName() == 'concentration':
         detail = _reactiononnucl | _temperature | _composition | _reaction
-    elif t.getName() == 'reaction':
+    elif toks.getName() == 'reaction':
         detail = _reactiononnucl | _temperature | _composition | _concentration
     else:
         LOGGER.warning("Not a foreseen result name, please check, keeping all")
         detail = (_reactiononnucl | _temperature | _composition
                   | _concentration | _reaction)
-    _otherdetails << OneOrMore(detail)
+    _otherdetails << OneOrMore(detail)  # pylint: disable=W0106
 
 
 _compodetails = Forward()
 _otherdetails = Forward()
-_compopossibilities = (_reactiononnucl
-                       | _temperature
-                       | _composition
-                       | _concentration
-                       | _reaction).setParseAction(_nextCompos)
-_compodetails << Group(_compopossibilities + _otherdetails)
+_compoptions = (_reactiononnucl
+                | _temperature
+                | _composition
+                | _concentration
+                | _reaction).setParseAction(_next_compos)
+_compodetails << Group(_compoptions + _otherdetails) # pylint: disable=W0106
 _nuclflags = Group(OneOrMore(_compodetails))('compo_details')
 
 
@@ -353,14 +494,6 @@ respintro = Group(respdesc + ZeroOrMore(respcarac))('response_description')
 
 # Responses themselves
 # Score description (not needed for KEFF)
-'''Score description with :
-- scoring mode
-- scoring zone (more important as more specific)
-   - mesh
-   - volume
-   - surface
-- flags in PyParsingResult: score_*
-'''
 scoremode = Suppress(_scoremode_kw + ':') + Word(alphas+'_')('scoring_mode')
 # scoring zones
 _score_mesh = (_scoremesh_kw('zone_type')
@@ -446,26 +579,27 @@ scoredesc = scoremode + scorezone
 # RESPONSE RESULTS
 
 
-def _setNoUnitCase(toks):
+def _set_no_unit_case(toks):
     '''Deal with the "not unit" case'''
     if len(toks) == 1:
         return {'uscore': '', 'usigma': toks[0]}
     else:
-        LOGGER.warning("more than one unit, please check:", toks)
+        LOGGER.warning("more than one unit, please check: %s", str(toks))
 
 
-def _rmBlanks(toks):
+def _rm_blanks(toks):
     '''Remove leading and trailing spaces (not the ones inside the string)'''
     return toks[0].strip()
 
 
 # Default integrated result
-_numdiscbatch = Suppress(_numbatchs1stdiscarded_kw + ':') + _inums('disc_batch')
+_numdiscbatch = (Suppress(_numbatchs1stdiscarded_kw + ':')
+                 + _inums('disc_batch'))
 _numusedbatch = Suppress(_numbatchsused_kw + ':') + _inums('used_batch')
 _integratedres = _fnums('score') + _fnums('sigma')
 _unitsres = (Suppress(_units_kw)
-             + (Word('%').setParseAction(_setNoUnitCase)
-                | (Word(alphanums+'.^-+ ').setParseAction(_rmBlanks)('uscore')
+             + (Word('%').setParseAction(_set_no_unit_case)
+                | (Word(alphanums+'.^-+ ').setParseAction(_rm_blanks)('uscore')
                    + Word('%')('usigma'))))
 # rejection in vov and sensibility cases
 _rejection = (Suppress('[')
@@ -578,10 +712,10 @@ meshblock = Group(OneOrMore(Group(_timestep
 # solution : utiliser forward pour le redefinir !
 
 
-def _setKijDim(toks):
+def _set_kijdim(toks):
     _kijdim = len(toks)
-    _kijeigenvec << Group(_fnums * _kijdim)
-    _kijmatrix << Group(_fnums * _kijdim)
+    _kijeigenvec << Group(_fnums * _kijdim)  # pylint: disable=W0106
+    _kijmatrix << Group(_fnums * _kijdim)  # pylint: disable=W0106
 
 
 _kijsum = Group(Suppress(_kijmkeff_kw) + _fnums
@@ -590,7 +724,7 @@ _kijeigenval = Group(_fnums + _fnums)
 _kijeigenvec = Forward()
 _kijmatrix = Forward()
 _kijeigenvaltab = (Suppress(_kijeigenval_kw)
-                   + Group(OneOrMore(_kijeigenval).setParseAction(_setKijDim))
+                   + Group(OneOrMore(_kijeigenval).setParseAction(_set_kijdim))
                    ('kij_eigenval'))
 _kijeigenvectab = (Suppress(_kijeigenvec_kw) + Group(OneOrMore(_kijeigenvec))
                    ('kij_eigenvec'))
@@ -619,7 +753,7 @@ kijsources = (Group(Suppress(_integratedres_kw)
 
 # KIJ estimator for keff
 
-def _defineKIJdim(toks):
+def _define_kij_dim(toks):
     LOGGER.debug("KIJ dimension: %d", len(toks))
     _kijdim = len(toks)
     _identifier = (Group(Suppress('(')
@@ -627,21 +761,21 @@ def _defineKIJdim(toks):
                          + _inums + Suppress(',')
                          + _inums + Suppress(')'))
                    | _inums)
-    _idline << Group(_identifier * _kijdim)
-    _matline << Group(_identifier
+    _idline << Group(_identifier * _kijdim)  # pylint: disable=W0106
+    _matline << Group(_identifier            # pylint: disable=W0106
                       + Suppress('|')
                       + (_fnums + Suppress('|')) * _kijdim)
 
 
-def _setKIJvols(toks):
+def _set_kij_vols(toks):
     _nbvols = int(toks[0])
-    _kijlistvol << Group(_inums * _nbvols)
+    _kijlistvol << Group(_inums * _nbvols)  # pylint: disable=W0106
 
 
 _kijkeffbeg = Word(alphas)('estimator') + Suppress(_estimator_kw) + _minus_line
 _kijlistvol = Forward()
 _kijfissilevol = ((Suppress(_kijfissilevol_kw) + _inums('nb_fissile_vols'))
-                  .setParseAction(_setKIJvols)
+                  .setParseAction(_set_kij_vols)
                   + Suppress(_kijlistfissilevol_kw)
                   + _kijlistvol('list_fissile_vols'))
 _kijkeffintro = (Optional(_kijfissilevol)
@@ -650,10 +784,11 @@ _kijkeffintro = (Optional(_kijfissilevol)
 
 _idline = Forward()
 _matline = Forward()
-_kijkeffev = OneOrMore(Group(_inums + _fnums)).setParseAction(_defineKIJdim)
+_kijkeffev = OneOrMore(Group(_inums + _fnums)).setParseAction(_define_kij_dim)
 _kijkeffevtab = Group(Suppress(_kijkeffevid_kw) + _kijkeffev)('eigenvector')
 _defmatrix = _idline + _minus_line + OneOrMore(_matline + _minus_line)
-_kijkeffmatrix = Group(Suppress(_kijkeffmat_kw) + _defmatrix)('keff_KIJ_matrix')
+_kijkeffmatrix = (Group(Suppress(_kijkeffmat_kw) + _defmatrix)
+                  ('keff_KIJ_matrix'))
 _kijkeffstdmatrix = (Group(Suppress(_kijkeffstddevmat_kw) + _defmatrix)
                      ('keff_StdDev_matrix'))
 _kijkeffsensibmatrix = (Group(Suppress(_kijkeffsensibilitymat_kw) + _defmatrix)
@@ -717,7 +852,8 @@ medfile = (Suppress(_creationmedfile_kw + ':')
 
 
 # Entropy
-_boltzmannentropy = Suppress(_boltzmannentropy_kw) + _fnums('boltzmann_entropy')
+_boltzmannentropy = (Suppress(_boltzmannentropy_kw)
+                     + _fnums('boltzmann_entropy'))
 _shannonentropy = Suppress(_shannonentropy_kw) + _fnums('shannon_entropy')
 entropy = _boltzmannentropy + _shannonentropy
 
@@ -775,21 +911,21 @@ ifpblock = (Group(Suppress(_integratedres_kw)
             ('ifp_res'))
 
 
-def _rename_norm_kw(toks):
-    '''Transform RESULTS ARE NORMALIZED keword in int (lighter)'''
+def _rename_norm_kw():
+    '''Transform RESULTS ARE NORMALIZED keyword in int (lighter)'''
     return 1
 
 
-def _defineIFPadjTableDim(toks):
+def _define_ifp_adj_table_dim(toks):
     '''Define the format of the IFP adjoint criticality table result:
     coordinates (Vol or space coordinates) are followed by energy.
     '''
     _tabdim = len(toks)
     if "Vol" not in toks[0]:
-        _ifpadjbinval << _fnums * 2 * _tabdim
+        _ifpadjbinval << _fnums * 2 * _tabdim  # pylint: disable=W0104
     else:
         # in Vol case: int to identify volume, then E (min | max)
-        _ifpadjbinval << _inums + _fnums * 2
+        _ifpadjbinval << _inums + _fnums * 2  # pylint: disable=W0104
 
 
 # IFP adjoint criticality edition
@@ -808,7 +944,7 @@ _ifpadfcrit_intro = (Group(_star_line
 _ifpadjbinval = Forward()
 _ifpadjcoordinate = Word(alphas) + Suppress(_ifpadjminmax_kw)
 _ifpadjcoordinates = ((Optional(_ifpadjvol_kw) + OneOrMore(_ifpadjcoordinate))
-                      .setParseAction(_defineIFPadjTableDim))
+                      .setParseAction(_define_ifp_adj_table_dim))
 _ifpadjcolumns = _ifpadjcoordinates + _ifpadjscore_kw + _spsigma_kw
 _ifpadjline = Group(_ifpadjbinval + _fnums + _fnums)
 _ifpadjvalues = OneOrMore(_ifpadjline)('values')
@@ -899,6 +1035,10 @@ response = Group(_star_line
                  + respintro
                  + _star_line
                  + Group(OneOrMore(responseblock))('results'))
+
+################################
+#        GENERAL PARSER        #
+################################
 
 # replace group by real dict, need to check if fine or not (risk: list needed)
 mygram = (OneOrMore((intro

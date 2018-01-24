@@ -1,6 +1,6 @@
-'''This module converts pyparsing objects in python or `numpy` objects.
+'''This module converts `pyparsing` objects in python or `numpy` objects.
 
-It is called in the `pyparsing` :mod:`~.grammar` via
+It is called in the module :mod:`~.grammar` via
 :func:`pyparsing.ParserElement.setParseAction` functions. It calls the general
 module :mod:`common <valjean.eponine.common>`.
 
