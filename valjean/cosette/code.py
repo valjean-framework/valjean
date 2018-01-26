@@ -47,7 +47,7 @@ to the ``cmake`` executable may be specified through the
 
 To describe the usage of :class:`CheckoutTask` and :class:`BuildTask`, let us
 assume that ``repo_dir`` contains a ``git`` repository with a CMake project.
-We use a temporary directory for our test:
+We use a temporary directory ``work_dir`` for our test:
 
 .. doctest:: code
 
