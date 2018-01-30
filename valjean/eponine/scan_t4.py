@@ -107,7 +107,8 @@ LOGGER = logging.getLogger('valjean')
 LOGGER.info("sys.argv: %s", str(sys.argv))
 
 
-if "mem" not in sys.argv:
+# get profile from globals (cleaner)
+if 'profile' not in globals()['__builtins__']:
     def profile(fmem):
         '''Deactivate profiling if not required in command line.'''
         return fmem

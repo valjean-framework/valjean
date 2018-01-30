@@ -14,7 +14,8 @@ from pprint import pprint
 import Enjolras
 from pyparsing import ParseResults
 
-if "mem" not in sys.argv:
+# in Eponine, profile is a key of globals
+if 'profile' not in globals().keys():
     def profile(f):
         return f
 

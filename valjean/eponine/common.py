@@ -518,7 +518,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-if "mem" not in sys.argv:
+# get profile from globals (cleaner)
+if 'profile' not in globals()['__builtins__']:
     def profile(func):
         '''No memory profiling if "mem" not in arguments of the command line.
         '''
@@ -848,6 +849,7 @@ def _get_number_of_bins(spectrum):
     return nphibins, nmubins, ntbins, nebins
 
 
+@profile
 def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
     '''Convert spectrum results in 7D numpy structured array.
 
@@ -959,6 +961,7 @@ def get_energy_bins(meshes):
     return nbebins
 
 
+@profile
 def convert_mesh(meshres):
     '''Convert mesh in 7-dimensions numpy array.
 
@@ -1039,6 +1042,7 @@ def convert_integrated_result(result):
     return np.array(tuple(result), dtype=dtir)
 
 
+@profile
 def convert_keff_with_matrix(res):
     '''Convert |keff| results in numpy matrices.
 
