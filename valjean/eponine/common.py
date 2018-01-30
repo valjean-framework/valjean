@@ -1,20 +1,26 @@
-'''This module provides generic functions to convert parsing outputs in numpy
+'''This module provides generic functions to convert parsing outputs to `numpy`
 objects.
 
 Inputs (outputs from parsers) should be python lists or dictionary,
 dictionary keys should be the same in all parsers...
 
-.. warning::
+.. todo::
 
    | Not a standalone code, needs inputs.
    | To be tested in a more general context.
 
 
+.. |keff| replace:: k\ :sub:`eff`
+.. |ck| replace:: cb k\ :sub:`eff`
+.. |KS| replace:: KSTEP
+.. |KC| replace:: KCOLL
+.. |KT| replace:: KTRACK
+
 Goal
 ----
 
 Parsing results are normally stored as lists and dictionaries but it could be
-easier to use other objects, as `Numpy` arrays. In our context these objects
+easier to use other objects, as `numpy` arrays. In our context these objects
 are used to represent
 
 * spectrum results, i.e. tables splitted at least in energy, sometimes with
@@ -25,9 +31,9 @@ are used to represent
 * keff results, especially the matrical ones
 * Green bands results
 * IFP results
-* k\ :sub:`ij` results (matrices, eigen vectors and values)
+* k\ :sub:`ij` results (matrices, eigenvectors and eigenvalues)
 
-Numpy objects are usefull for future calculations or plotting for example.
+`Numpy` objects are useful for future calculations or plotting for example.
 
 
 Spectrum and meshes
@@ -39,9 +45,11 @@ Spectrum and meshes
 Generalities
 ````````````
 
+.. _doc: https://docs.scipy.org/doc/numpy/user/basics.rec.html
+
 Spectrum and meshes results use a common representation build using
 :class:`DictBuilder`. This common representation is a **7-dimension structured
-array** from Numpy.
+array** from `numpy`, see `doc`_.
 
 Dimensions are given in :py:data:`DictBuilder.VARS`:
 
@@ -50,13 +58,13 @@ Dimensions are given in :py:data:`DictBuilder.VARS`:
 * **e**: energy
 * **t**: time
 * **mu, phi**: direction angles µ and φ whose definitions can vary depending on
-  the reference frame of direction [#dir_angles]_
+  the reference frame of direction [#dir_angles]_.
 
 Order should always be that one.
 
 
-The result for each bin (s0, s1, s2, e, t, mu, phi) is filled in a **structured
-array** whose `numpy.dtype` can be:
+The result for each bin ``(s0, s1, s2, e, t, mu, phi)`` is filled in a
+**structured array** whose `numpy.dtype` can be:
 
 * meshes: normally ``'tally'`` and ``'sigma'`` where *sigma* is in % and
   *tally* in its unit (not necessarly precised in the listing)
@@ -81,7 +89,7 @@ The final result of spectrum and mesh is returned as a dictionary detailed in
 Initialization
 ``````````````
 
-:class:`DictBuilder` cannot be called directly as it has abstract methods (or
+:class:`DictBuilder` cannot be instantiated as it has abstract methods (pure
 virtual): :meth:`~DictBuilder.fill_arrays_and_bins` and
 :meth:`~DictBuilder.add_last_energy_bins`. It is mother class of
 :class:`MeshDictBuilder` for mesh and :class:`SpectrumDictBuilder` for
@@ -123,9 +131,8 @@ Filling arrays and bins
 ```````````````````````
 
 Mesh and spectrum are read from the output listing and first stored as list and
-dictionary following listing structure. Building `Numpy` arrays and bins
-allows various post-treatment. It calls
-:meth:`~DictBuilder.fill_arrays_and_bins`.
+dictionary following listing structure. Building `numpy` arrays and bins
+simplifies post-processing. It calls :meth:`~DictBuilder.fill_arrays_and_bins`.
 
 To fill arrays and bins needed objects are outputs from the chosen parser. Some
 dictionary keys may be needed:
@@ -185,8 +192,8 @@ Result and use in global code
 
 In the framework, :class:`MeshDictBuilder` and :class:`SpectrumDictBuilder` are
 called in :meth:`convert_mesh` and :meth:`convert_spectrum`, themselves from
-transformation modules (transforming parsing result in `Numpy`/`python`
-containers. Theses methods then returns dictionaries containing the `Numpy`
+transformation modules (transforming parsing result in `numpy`/`python`
+containers. Theses methods then returns dictionaries containing the `numpy`
 arrays and other results.
 
 .. _eponine-mesh-res:
@@ -196,19 +203,19 @@ mesh
 
    Default keys are:
 
-   * ``'mesh'``: `Numpy` 7-dimension structured array with dtype
+   * ``'mesh'``: `numpy` 7-dimension structured array with dtype
      ``('tally', 'sigma')``
-   * ``'ebins'``: `Numpy` array of edges of energy bins
+   * ``'ebins'``: `numpy` array of edges of energy bins
    * ``'eunit'``: energy unit
 
    Other keys can be available:
 
-   * ``'tbins'``: `Numpy` array of edges of time bins (if ``'time_step'``
+   * ``'tbins'``: `numpy` array of edges of time bins (if ``'time_step'``
      available)
-   * ``'mesh_energyintegrated'``: `Numpy` 7-dimension structured array with
+   * ``'mesh_energyintegrated'``: `numpy` 7-dimension structured array with
      dtype ``('tally', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[n_s0, n_s1, n_s2, 1, n_t, 1, 1]``
-   * ``'integrated_res'``: `Numpy` 7-dimension structured array with
+   * ``'integrated_res'``: `numpy` 7-dimension structured array with
      dtype ``('tally', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[1, 1, 1, 1, n_t, 1, 1]``
    * ``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
@@ -221,22 +228,22 @@ spectrum
 
    Default keys are:
 
-   * ``'spectrum'``: `Numpy` 7-dimension structured array with dtype
+   * ``'spectrum'``: `numpy` 7-dimension structured array with dtype
      ``('score', 'sigma', 'score/lethargy')`` if this is a default spectrum,
      dtype will change in some cases (vov, uncertainties), see
      :ref:`eponine-spectrummesh-intro`
-   * ``'ebins'``: `Numpy` array of edges of energy bins
+   * ``'ebins'``: `numpy` array of edges of energy bins
    * ``'disc_batch'``: number of discarded batchs
 
    Optional keys are:
 
-   * ``'tbins'``: `Numpy` array of edges of time bins (if ``'time_step'``
+   * ``'tbins'``: `numpy` array of edges of time bins (if ``'time_step'``
      available)
-   * ``'mubins'``: `Numpy` array of edges of µ angle bins (if
+   * ``'mubins'``: `numpy` array of edges of µ angle bins (if
      ``'mu_angle_zone'`` available)
-   * ``'phibins'``: `Numpy` array of edges of φ angle bins (if
+   * ``'phibins'``: `numpy` array of edges of φ angle bins (if
      ``'phi_angle_zone'`` available)
-   * ``'integrated_res'``: `Numpy` 7-dimension structured array with same dtype
+   * ``'integrated_res'``: `numpy` 7-dimension structured array with same dtype
      as ``'spectrum'`` and list of number of bins (``lnbins``) is
      ``[1, 1, 1, 1, n_t, 1, 1]`` (integrated over energy)
    * ``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
@@ -249,24 +256,24 @@ spectrum
    final dictionary.
 
 
-Keff results
-------------
+|keff| results
+--------------
 
-Only k\ :sub:`eff` as generic response are converted in *Numpy* objects,
-historical k\ :sub:`eff` bloc is stored in a dictionary (see
+Only |keff| as generic response are converted in *numpy* objects; historical
+|keff| block is stored in a dictionary (see
 :mod:`eponine.pyparsing_t4.grammar`).
 
 In the generic response case, results (value, σ) are available for 3
 estimators: KSTEP, KCOLL and KTRACK. Their correlation coefficients, combined
 values, combined σ (in %) and the full combination result are also given. This
 means that results given are in reality a matrix. One choice in order to store
-k\ :sub:`eff` results in then *Numpy* array
-(:meth:`convert_keff_with_matrix`, the other one is more standard arrays
+|keff| results is to use *numpy* arrays seen as matrix
+(:meth:`convert_keff_with_matrix`), the other one uses more standard arrays
 (:meth:`convert_keff`).
 
 .. _eponine-keff-matrix:
 
-Conversion in matrices
+Conversion to matrices
 ``````````````````````
 The 3 estimators are always considered in the listing order KSTEP, KCOLL,
 KTRACK, so KSTEP = 0, KCOLL = 1 and KTRACK = 2.
@@ -280,16 +287,11 @@ Three arrays are filled:
 * ``'sigma_matrix'``: symmetric matrix 3×3 with σ in % for each estimator on
   diagonal and combined σ in % off-diagonal (for 2 estimators)
 
-.. |keff| replace:: k\ :sub:`eff`
-.. |ck| replace:: cb k\ :sub:`eff`
-.. |KS| replace:: KSTEP
-.. |KC| replace:: KCOLL
-.. |KT| replace:: KTRACK
 
 In summary:
 
 * for k\ :sub:`eff` and σ matrices (replace |keff| by σ in 2\ :sup:`d`
-  case):
+  case, cb stands for combined):
 
   +--------+-------------------+-------------------+-------------------+
   |        | KSTEP             | KCOLL             | KTRACK            |
@@ -302,7 +304,7 @@ In summary:
   +--------+-------------------+-------------------+-------------------+
 
 
-* for correlation matrix:
+* the correlation matrix:
 
   +--------+------------------+------------------+------------------+
   |        | KSTEP            | KCOLL            | KTRACK           |
@@ -314,8 +316,8 @@ In summary:
   | KTRACK | corr(|KS|, |KT|) | corr(|KC|, |KT|) | 1                |
   +--------+------------------+------------------+------------------+
 
-Values are set to -100.0 if not converged (string ``"Not converged"`` appearing
-in the listing).
+Values are set to `numpy.NaN` if not converged (string ``"Not converged"``
+appearing in the listing).
 
 These arrays can be easily converted to matrices if matrix methods are needed
 but array is easier to initialized and more general.
@@ -337,7 +339,7 @@ Not converged cases are taken into account and return a key
 
 .. _eponine-keff-stdarrays:
 
-Conversion in standard arrays
+Conversion to standard arrays
 `````````````````````````````
 The conversion closer to the output listing is done in :meth:`convert_keff`. A
 dictionary is built with the following elements:
@@ -352,7 +354,8 @@ dictionary is built with the following elements:
   numpy.array('correlations', 'combined values', 'combined sigma%')``
 
 In correlation matrix diagoanl is set to 1 and not converged values (str) are
-set to -100.0. If the full combination did not converged hte string is kept.
+set to `numpy` NaN. If the full combination did not converged hte string is
+kept.
 
 
 Green bands
@@ -375,7 +378,7 @@ Bins are also stored for the source and for the followed particles. Like in
 spectrum, last bins of energy (source and followed particle) are added after
 the main loop.
 
-.. warning::
+.. todo::
 
    No flip in (source) energy bins is performed for the moment, due to some
    uncertainty in order of the energy steps for source (so how they are
@@ -1076,13 +1079,13 @@ def convert_keff_with_matrix(res):
                     [okeff for okeff in lkeff[0] if okeff != keffname][0])
                 keffmat[ikeff, iokeff] = (lkeff[2]
                                           if not isinstance(lkeff[2], str)
-                                          else -100.)
+                                          else np.nan)
                 corrmat[ikeff, iokeff] = (lkeff[1]
                                           if not isinstance(lkeff[1], str)
-                                          else -100.)
+                                          else np.nan)
                 sigmat[ikeff, iokeff] = (lkeff[3]
                                          if not isinstance(lkeff[3], str)
-                                         else -100.)
+                                         else np.nan)
             else:
                 continue
     return {'used_batch': res['used_batch'],
@@ -1129,7 +1132,7 @@ def convert_keff(res):
     for elt in res['correlation_mat']:
         corrval = (elt[1:]
                    if all(isinstance(ielt, FTYPE) for ielt in elt[1:])
-                   else [-100. if isinstance(x, str) else x for x in elt[1:]])
+                   else [np.nan if isinstance(x, str) else x for x in elt[1:]])
         corrres[tuple(elt[0])] = np.array(tuple(corrval), dtype=dtcorr)
     return {'used_batch': usedbatchs,
             'estimators': keffnames,

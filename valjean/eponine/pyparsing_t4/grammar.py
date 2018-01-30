@@ -7,8 +7,9 @@
 Documentation on `pyparsing` package can be found in `pyparsing`_ documentation
 linked to *pip* and on `pyparsing_wiki`_ with examples.
 
-Transformation from `pyparsing.ParseResults` is done with :mod:`~.transform`,
-calling :mod:`common <valjean.eponine.common>`.
+Transformation from `pyparsing.ParseResults` to more standard python objects,
+including `numpy` ones,is done with :mod:`~.transform`, calling
+:mod:`common <valjean.eponine.common>`.
 
 
 Generalitites
@@ -30,8 +31,8 @@ Generalitites
 
 * A general parser is proposed for use in the file, but other parsers can be
   built from the partial parsers written here
-* Numbers are automatically converted in `numpy` numbers (possibility to choose
-  number of bytes used)
+* Numbers are automatically converted to `numpy` numbers (possibility to choose
+  the dtype used for numbers)
 * Keywords and most of the variables used to build parsers are private
 
 
@@ -139,7 +140,7 @@ Response are constructed as:
   * IFP results (:py:obj:`ifpblock`)
   * perturbation results (:py:obj:`perturbation`)
 
-.. note:: need to test with "fake" outputs from Tripoli-4 (to be thought)
+.. todo:: need to test with "fake" outputs from Tripoli-4 (to be thought)
 '''
 # pylint: disable=invalid-name
 

@@ -1,6 +1,6 @@
 '''
 Module performing a scan of Tripoli-4 output listing in order to only keep
-relevant parts of it = results to be used for VV or analysis or the run.
+relevant parts of it = results to be used for V&V or analysis or the run.
 
 Summary
 -------
@@ -21,17 +21,32 @@ containing at least the flags precised in :ref:`eponine-scan_t4-caveats`.
 .. testsetup:: scan_t4
 
    from valjean.eponine.scan_t4 import Scan
+   import os
+   work_dir = os.path.join(doctest_tmpdir, 'scan_t4')
+   os.mkdir(work_dir)
+   tmpfile = open(os.path.join(work_dir, 'spam.res'), 'w')
+   tmpfile.write("BATCH 10\\n")
+   tmpfile.write("initialization time (s): 7\\n")
+   tmpfile.write(" batch number : 10\\n")
+   tmpfile.write("RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00\\n")
+   tmpfile.write("Edition after batch number : 10\\n")
+   tmpfile.write("simulation time (s) : 1\\n")
+   tmpfile.write("NORMAL COMPLETION")
+   tmpfile.close()
+
 
 .. doctest:: scan_t4
 
-   >>> tmpfile = open("spam.res", 'w')
-   >>> tmpfile.write(" RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00")
-   >>> tmpfile.write("simulation time (s) : 1")
-   >>> tmpfile.write("NORMAL COMPLETION")
-   >>> tmpfile.close()
-   >>> results = Scan(tmpfile, "simulation time")
+   >>> import os
+   >>> results = Scan(os.path.join(work_dir, 'spam.res'), "simulation time")
    >>> results.normalend
+   True
    >>> len(results)
+   1
+   >>> results.initialization_time
+   7
+   >>> 'simulation time' in results[-1]
+   True
 
 .. note::
 
@@ -50,8 +65,8 @@ Important for the scan: results will be kept
 * **from** "RESULTS ARE GIVEN"
 * **to** an end flag given by user
 
-  * Default end flag is "simulation time",
-  * For exploitation jobs use "exploitation time" (example: Green bands),
+  * Default end flag is "simulation time";
+  * For exploitation jobs use "exploitation time" (example: Green bands);
   * for jobs running in parallel, use "elapsed time".
 
 In any case, it is always possible to set a different end flag.
@@ -94,7 +109,7 @@ LOGGER.info("sys.argv: %s", str(sys.argv))
 
 if "mem" not in sys.argv:
     def profile(fmem):
-        '''Desactivate profiling if not required in command line.'''
+        '''Deactivate profiling if not required in command line.'''
         return fmem
 
 
@@ -317,6 +332,7 @@ class Scan(Mapping):
         with open(self.fname, errors='ignore') as fil:
             for line in fil:
                 if line.lstrip().startswith("//"):  # comment in the jdd
+                    print("IN COMMENT")
                     continue
                 elif _batch_scan:
                     _batch_scan.build_result(line)
