@@ -24,14 +24,11 @@ Example usage:
    >>> env = s.schedule()  # executes the tasks in the correct order
 '''
 
-import logging
 
 from .depgraph import DepGraph
 from .backends.queue import QueueScheduling
 from .env import Env
-
-
-LOGGER = logging.getLogger('valjean')
+from .. import LOGGER
 
 
 class SchedulerError(Exception):

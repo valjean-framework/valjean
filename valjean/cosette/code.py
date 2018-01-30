@@ -108,14 +108,11 @@ parameters from there. The expected parameters are documented in the method
 docstrings.
 """
 
-import logging
 import os
 
 from ..config import Config
 from .task import ShellTask
-
-
-LOGGER = logging.getLogger('valjean')
+from .. import LOGGER
 
 
 class CheckoutTask(ShellTask):

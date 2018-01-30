@@ -68,18 +68,17 @@ class:
     output files.
 '''
 
-import logging
 import enum
 from abc import ABC, abstractmethod
 
 from ..config import Config
 
+from .. import LOGGER
+
+
 #: Enumeration for the task status.
 TaskStatus = enum.Enum('TaskStatus',  # pylint: disable=invalid-name
                        'WAITING PENDING DONE FAILED SKIPPED')
-
-
-LOGGER = logging.getLogger('valjean')
 
 
 def _q(arg):
