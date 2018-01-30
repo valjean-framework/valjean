@@ -106,19 +106,25 @@ should be 7 as we have 7 dimensison.
 .. doctest:: common
 
    >>> db = epcm.DictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
-   TypeError: Can't instantiate abstract class DictBuilder with abstract
-   methods _add_last_energy_bin, fill_arrays_and_bins
+   Traceback (most recent call last):
+         ...
+   TypeError: Can't instantiate abstract class DictBuilder with abstract \
+methods _add_last_energy_bin, fill_arrays_and_bins
    >>> mdb = epcm.MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
    >>> sdb = epcm.SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'],
-                                      [1,2,3,4,5,6,7])
+   ...                                [1,2,3,4,5,6,7])
 
 Errors are raised if the dimension is not correct.
 
 .. doctest:: common
 
    >>> mdb = epcm.MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6])
-   Number of bins should be 7 (3 space dimensions, 1 energy, 1 time, 2
-   direction angles)
+   Traceback (most recent call last):
+       ...
+   AssertionError
+
+Number of bins should be 7 (3 space dimensions, 1 energy, 1 time, 2 direction
+angles).
 
 These methods initializes both the 7-dimensions structured arrays and the
 arrays of bins, first stored as list for simplicity. Arrays of bins are in
@@ -512,7 +518,6 @@ specified):
 
 '''
 
-import sys
 import logging
 from abc import ABC, abstractmethod
 import numpy as np
