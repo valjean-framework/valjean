@@ -71,3 +71,6 @@ We use a few :mod:`sphinx` extensions:
 
 :mod:`~sphinx.ext.viewcode`
   Add links to the source code.
+
+:mod:`~sphinx.ext.imgmath`
+  Allows to write in math mode.
