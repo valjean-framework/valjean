@@ -333,13 +333,13 @@ class Scan(Mapping):
         with open(self.fname, errors='ignore') as fil:
             for line in fil:
                 if line.lstrip().startswith("//"):  # comment in the jdd
-                    print("IN COMMENT")
                     continue
                 elif _batch_scan:
                     _batch_scan.build_result(line)
                     if self.endflag in line:
                         # check batch number has to be before get result to
                         # modify batch number before storage if necessary...
+                        LOGGER.debug("end flag %s found", self.endflag)
                         _batch_scan.check_batch_number()
                         batch_number = _batch_scan.batch_counts['number']
                         self._collres[batch_number] = _batch_scan.get_result()
