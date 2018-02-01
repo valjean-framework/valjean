@@ -45,6 +45,22 @@ class T4Parser():
         self.result = None
         self.para = para
 
+    @classmethod
+    def parse_jdd(cls, jdd, meshlim=-1):
+        parser = cls(jdd, meshlim=meshlim)
+        try:
+            parser.scan_t4_listing()
+        except T4ParserException as t4pe:
+            print(t4pe)
+            return
+        print("Successful scan")
+        try:
+            parser.parse_t4_listing()
+        except T4ParserException as t4pe:
+            print(t4pe)
+            return
+        print("successful parsing")
+        return parser
 
     @profile
     def scan_t4_listing(self):
@@ -132,7 +148,7 @@ class T4Parser():
                     print("Exploitation time:",
                           self.result[-1]['exploitation_time'])
                 else:
-                    print("Simulation time",
+                    print("Simulation time:",
                           self.result[-1]['simulation_time'])
             else:
                 if self.para:
@@ -159,21 +175,11 @@ def main(myjdd="", mode="MONO"):
         myendflag = "elapsed time"
     print("endflag =", myendflag)
 
-    t4_res = T4Parser(myjdd, endflag=myendflag, meshlim=2) #, para=True)
-    try:
-        t4_res.scan_t4_listing()
-    except T4ParserException:
-        print("scan failed")
-    else:
-        t4_res.print_t4_stats()
-        print("result of the function =", t4_res.check_t4_times())
-        t4_res.print_t4_times()
-        try:
-            t4_res.parse_t4_listing()
-        except T4ParserException as t4pe:
-            print(t4pe)
-        else:
-            print("successful parsing")
+    # need to think about endflag (?), meshlim and para arguments
+    t4_res = T4Parser.parse_jdd(myjdd, meshlim=2)
+    t4_res.print_t4_stats()
+    print("result of the function =", t4_res.check_t4_times())
+    t4_res.print_t4_times()
 
 if __name__ == "__main__":
     main()
