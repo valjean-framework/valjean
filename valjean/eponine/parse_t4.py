@@ -1,20 +1,20 @@
-'''Class calling Lamarque, the parser and transformer,
-JDD normally direclty usable in tests.
+'''Module performing scanning and parsing of Tripoli-4 outputs.
+
+This module also allows quick checks on outputs:
+
+* presence of ``"NORMAL COMPLETION"``
+* presence and values of times (simulation, exploitation)
+
+Some options for debugging are available (end flag).
 '''
 
 import sys
 import time
-# from Larmarque import Lamarque
-import scan_t4
-from valjean.eponine.lark_t4.larkOnTripoli import OtherTransformer
-from lark import Lark
-# import pyparsing_org
-import valjean.eponine.pyparsing_t4.grammar as pygram
-from pprint import pprint
-import Enjolras
-from pyparsing import ParseResults
-from pyparsing import ParseException
 import logging
+import valjean.eponine.pyparsing_t4.grammar as pygram
+from pyparsing import ParseException
+# from pyparsing import ParseResults
+from . import scan_t4
 
 
 LOGGER = logging.getLogger('valjean')
@@ -31,18 +31,31 @@ class T4ParserException(Exception):
     pass
 
 class T4Parser():
-    '''Parse Tripoli-4 listings.
+    '''Scan Tripoli-4 listings, then parse the required batchs.
     '''
 
     @profile
-    def __init__(self, jddname, batch=-1, mesh_lim=-1, para=False): #config, *,
+    def __init__(self, jddname, batch=-1, mesh_lim=-1): #config, *,
+        '''
+        Initialize the :class:`T4Parser` object.
+
+        :param str jddname: path to the Tripoli-4 output
+        :param int batch: batch to read (-1 = last, 0 = all, then X)
+        :param int mesh_lim: limit of meshes to read (-1 per default)
+
+        It also initalize the result of :class:`.scan_t4.Scan` to ``None`` and
+        the parsing result, from *pyparsing*, to ``None``.
+
+        If ``"PARA"`` is contains in the path, the checks will be done for
+        parallel mode.
+        '''
         self.jdd = jddname
         self.batch_number = batch
         self.mesh_limit = mesh_lim
         self.end_flag = ""
         self.scan_res = None
         self.result = None
-        self.para = para
+        self.para = True if "PARA" in jddname else False
 
     @classmethod
     def parse_jdd(cls, jdd, batch):
@@ -74,7 +87,21 @@ class T4Parser():
         return parser
 
     @classmethod
-    def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim, end_flag=""):
+    def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim=-1, end_flag=""):
+        '''
+        Constructor for T4Parser for cases where a limit on meshes can be set.
+        It is also possible, for debug cases, to put a user's end flag.
+        Scanning and parsing are automatically done.
+
+        :param str jdd: path to the output from Tripoli-4
+        :param int batch: number of the batch to parse (-1 = last one
+                          (*default*), 0 = all of them, X > 0 = batch X to be
+                          parsed)
+        :param int mesh_lim: limit on lines of meshes (-1 = all of them,
+                             X > 0 = lines kept for each mesh, X = 0 will fail)
+        :param str end_flag: optional end flag to stop scanning (and parsing)
+        :returns: T4Parser object
+        '''
         start_time = time.time()
         parser = cls(jdd, batch, mesh_lim)
         parser.end_flag = end_flag
@@ -96,7 +123,11 @@ class T4Parser():
 
     @profile
     def scan_t4_listing(self):
-        '''Scan Tripoli-4 listing, calling :mod:`.scan_t4`'''
+        '''Scan Tripoli-4 listing, calling :mod:`.scan_t4`
+
+        If end_flag was set, calls :meth:`.scan_t4.Scan.debug_scan` instead of
+        the usual constructor.
+        '''
         if self.end_flag:
             print("will use debug_scan")
             self.scan_res = scan_t4.Scan.debug_scan(self.jdd, self.mesh_limit,
@@ -160,14 +191,11 @@ class T4Parser():
           ``"exploitation time"`` is checked
         * else ``"simulation time"`` is checked
         '''
-        if self.result:
-            if isinstance(self.result[-1], dict):
-                return ((self.para and "elapsed time" in self.result[-1])
-                        or (not self.para
-                            and ('simulation time' in self.result[-1]
-                                 or 'exploitation time' in self.result[-1])))
-            return ((self.para and "elapsed time" in self.result)
-                    or (not self.para and 'simulation time' in self.result))
+        return ((self.para and 'elapsed time' in self.scan_res.times
+                 and 'simulation time' in self.scan_res.times)
+                or (not self.para
+                    and ('simulation time' in self.scan_res.times
+                         or 'exploitation time' in self.scan_res.times)))
 
     def print_t4_times(self):
         '''Print time characteristics of the Tripoli-4 result considered.
@@ -198,7 +226,7 @@ def main(myjdd="", mode="MONO"):
 
     # need to think about endflag (?), meshlim and para arguments
     # t4_res = T4Parser.parse_jdd(myjdd, -1)  #, meshlim=2)
-    t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, -1, 2, end_flag="number of batch")
+    t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, -1, 2)
     if t4_res:
         t4_res.print_t4_stats()
         print("result of the function =", t4_res.check_t4_times())

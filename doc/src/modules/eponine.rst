@@ -15,6 +15,7 @@ eponine — ExPloratiON et INtErfaçage
 .. toctree::
    :caption: Submodules
 
+   eponine/parse_t4
    eponine/scan_t4
    eponine/common
    eponine/pyparsing_t4

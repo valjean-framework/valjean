@@ -63,7 +63,7 @@ Beginning and end of results sections
 Important for the scan: results will be kept
 
 * **from** "RESULTS ARE GIVEN"
-* **to** an end flag available in the list :py:const:`Scan.END_FLAGS`.
+* **to** an end flag available in the list :py:attr:`Scan.END_FLAGS`.
   Possibilities are:
 
   * Default end flag is ``"simulation time"``;
@@ -307,6 +307,13 @@ class Scan(Mapping):
 
     @classmethod
     def debug_scan(cls, fname, mesh_lim=-1, end_flag=""):
+        '''Debug constructor, adding possibilty to use a custom end flag.
+
+        :param str fname: path to the file to scan
+        :param int mesh_lim: limit on number of lines of mesh to read
+        :param str end_flag: end flag on which ending scanning
+        :returns: instance of :class:`Scan`.
+        '''
         if end_flag:
             cls.END_FLAGS.insert(0, end_flag)
         print(cls.END_FLAGS)
