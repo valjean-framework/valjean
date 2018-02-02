@@ -338,6 +338,11 @@ class Scan(Mapping):
             if end_flag in line:
                 return end_flag
 
+    def _add_time(self, end_flag, line):
+        self.times[end_flag] = (int(line.split()[-1])
+                                if line.split()[-1].isdigit()
+                                else "Not a time")
+
     @profile
     def _get_collres(self):
         '''Read the file and store all relevant information.
@@ -363,9 +368,7 @@ class Scan(Mapping):
                         count_mesh_exceeding = _batch_scan.count_mesh_exceeding
                         _batch_scan = None
                         # ordered dictionary -> unique keys, so only last kept
-                        self.times[end_flag] = (int(line.split()[-1])
-                                                if line.split()[-1].isdigit()
-                                                else "Not a time")
+                        self._add_time(end_flag, line)
                     continue
                 elif not self.times:
                     self._check_input_data(line)
@@ -383,10 +386,7 @@ class Scan(Mapping):
                 elif self._is_end_flag(line):
                     # still needed to be sure "elapsed time" appears in
                     # parallel jobs
-                    end_flag = self._is_end_flag(line)
-                    self.times[end_flag] = (int(line.split()[-1])
-                                            if line.split()[-1].isdigit()
-                                            else "Not a time")
+                    self._add_time(self._is_end_flag(line), line)
                 elif ("Type and parameters of random generator "
                       "at the end of simulation:" in line):
                     generator_state.append('')
