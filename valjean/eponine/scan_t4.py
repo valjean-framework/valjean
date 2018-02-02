@@ -95,7 +95,6 @@ Memory profiling is available using memory_profiler::
 '''
 
 import sys
-import time
 from collections.abc import Mapping
 from collections import OrderedDict
 import logging
@@ -259,11 +258,10 @@ class Scan(Mapping):
 
     :type mesh_limit: int
     '''
-    mesh_limit = -1
     END_FLAGS = ["simulation time", "exploitation time", "elapsed time"]
 
     @profile
-    def __init__(self, fname):
+    def __init__(self, fname, mesh_lim=-1):
         '''Initialize the instance from the file `fname`, meaning reads the
         file and store the relevant parts of it, i.e. result block for each
         batch edition.
@@ -296,6 +294,9 @@ class Scan(Mapping):
         self.fname = fname
         self.reqbatchs = -1
         self.normalend = False
+        # keep mesh_lim as instance variable and not class variable to prevent
+        # risk of changing its value for all instances of the class
+        self.mesh_limit = mesh_lim
         self.countwarnings = 0
         self.counterrors = 0
         self.times = OrderedDict()

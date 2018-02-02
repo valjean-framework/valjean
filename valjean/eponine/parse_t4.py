@@ -35,9 +35,10 @@ class T4Parser():
     '''
 
     @profile
-    def __init__(self, jddname, batch=-1, para=False): #config, *,
+    def __init__(self, jddname, batch=-1, mesh_lim= -1, para=False): #config, *,
         self.jdd = jddname
         self.batch_number = batch
+        self.mesh_limit = mesh_lim
         self.scan_res = None
         self.result = None
         self.para = para
@@ -65,8 +66,7 @@ class T4Parser():
     @classmethod
     def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim):
         start_time = time.time()
-        parser = cls(jdd, batch)
-        scan_t4.Scan.mesh_limit = mesh_lim
+        parser = cls(jdd, batch, mesh_lim)
         try:
             parser.scan_t4_listing()
         except T4ParserException as t4pe:
@@ -86,7 +86,7 @@ class T4Parser():
     @profile
     def scan_t4_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan_t4`'''
-        self.scan_res = scan_t4.Scan(self.jdd)
+        self.scan_res = scan_t4.Scan(self.jdd, self.mesh_limit)
         print("is scan_res ?", self.scan_res)
         print("len(scan_res) =", len(self.scan_res))
         print("normal end:", self.scan_res.normalend)
