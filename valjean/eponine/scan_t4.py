@@ -259,6 +259,8 @@ class Scan(Mapping):
 
     :type mesh_limit: int
     '''
+    mesh_limit = -1
+    END_FLAGS = ["simulation time", "exploitation time", "elapsed time"]
 
     @profile
     def __init__(self, fname, endflag="simulation time", mesh_limit=-1):
@@ -292,13 +294,13 @@ class Scan(Mapping):
         self.start_time = time.time()
         self.fname = fname
         self.endflag = endflag
-        self.mesh_limit = mesh_limit
         self.reqbatchs = -1
         self.normalend = False
         self.countwarnings = 0
         self.counterrors = 0
-        self.initialization_time = -1
+        self.times = OrderedDict()
         self.last_generator_state = ""
+        self.mesh_limit = mesh_limit
         self._collres = OrderedDict()
         self._get_collres()
         LOGGER.info("End of initialization: %f s",
@@ -320,7 +322,14 @@ class Scan(Mapping):
                 self.reqbatchs //= int(line.split()[indpacket+1])
             LOGGER.debug("new number of batchs = %d", self.reqbatchs)
         elif "initialization time" in line:  # correspond to end of data file
-            self.initialization_time = int(line.split()[3])
+            self.times['initialization time'] = int(line.split()[3])
+
+    def _is_end_flag(self, line):
+        if "time" not in line:
+            return
+        for end_flag in Scan.END_FLAGS:
+            if end_flag in line:
+                return end_flag
 
     @profile
     def _get_collres(self):
@@ -336,7 +345,8 @@ class Scan(Mapping):
                     continue
                 elif _batch_scan:
                     _batch_scan.build_result(line)
-                    if self.endflag in line:
+                    end_flag = self._is_end_flag(line)
+                    if end_flag:
                         # check batch number has to be before get result to
                         # modify batch number before storage if necessary...
                         LOGGER.debug("end flag %s found", self.endflag)
@@ -345,8 +355,10 @@ class Scan(Mapping):
                         self._collres[batch_number] = _batch_scan.get_result()
                         count_mesh_exceeding = _batch_scan.count_mesh_exceeding
                         _batch_scan = None
+                        # ordered dictionary -> unique keys, so only last kept
+                        self.times[end_flag] = int(line.split()[-1])
                     continue
-                elif self.initialization_time == -1:
+                elif not self.times:
                     self._check_input_data(line)
                     continue
                 elif "RESULTS ARE GIVEN" in line:
@@ -359,6 +371,10 @@ class Scan(Mapping):
                     self.countwarnings += 1
                 elif "ERROR" in line:
                     self.counterrors += 1
+                elif self._is_end_flag(line):
+                    # still needed to be sure "elapsed time" appears in
+                    # parallel jobs
+                    self.times[self._is_end_flag(line)] = int(line.split()[-1])
                 elif ("Type and parameters of random generator "
                       "at the end of simulation:" in line):
                     generator_state.append('')

@@ -139,22 +139,8 @@ class T4Parser():
         This print includes initialization time, simulation time, exploitation
         time and elapsed time.
         '''
-        print("Initialization time:", self.scan_res.initialization_time)
-        if self.check_t4_times():
-            if isinstance(self.result[-1], dict):
-                if self.para:
-                    print("Elapsed time:", self.result[-1]['elapsed_time'])
-                if "exploitation_time" in self.result[-1]:
-                    print("Exploitation time:",
-                          self.result[-1]['exploitation_time'])
-                else:
-                    print("Simulation time:",
-                          self.result[-1]['simulation_time'])
-            else:
-                if self.para:
-                    print("Elapsed time:", self.result['elapsed_time'])
-                if 'simulation_time' in self.result:
-                    print("Simulation time:", self.result['simulation_time'])
+        for stime, vtime in self.scan_res.times.items():
+            print(stime.capitalize(), "=", vtime)
 
 def main(myjdd="", mode="MONO"):
     if myjdd == "":
@@ -177,9 +163,10 @@ def main(myjdd="", mode="MONO"):
 
     # need to think about endflag (?), meshlim and para arguments
     t4_res = T4Parser.parse_jdd(myjdd, meshlim=2)
-    t4_res.print_t4_stats()
-    print("result of the function =", t4_res.check_t4_times())
-    t4_res.print_t4_times()
+    if t4_res:
+        t4_res.print_t4_stats()
+        print("result of the function =", t4_res.check_t4_times())
+        t4_res.print_t4_times()
 
 if __name__ == "__main__":
     main()
