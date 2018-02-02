@@ -35,16 +35,26 @@ class T4Parser():
     '''
 
     @profile
-    def __init__(self, jddname, batch=-1, mesh_lim= -1, para=False): #config, *,
+    def __init__(self, jddname, batch=-1, mesh_lim=-1, para=False): #config, *,
         self.jdd = jddname
         self.batch_number = batch
         self.mesh_limit = mesh_lim
+        self.end_flag = ""
         self.scan_res = None
         self.result = None
         self.para = para
 
     @classmethod
     def parse_jdd(cls, jdd, batch):
+        '''
+        Constructor for T4Parser for "default" cases: no mesh limit. Scanning
+        and parsing are automatically done.
+
+        :param str jdd: path to the output from Tripoli-4
+        :param int batch: number of the batch to parse (-1 = last one
+                          (*default*), 0 = all of them, X > 0 = batch X to be
+                          parsed)
+        '''
         start_time = time.time()
         parser = cls(jdd, batch)
         try:
@@ -64,9 +74,10 @@ class T4Parser():
         return parser
 
     @classmethod
-    def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim):
+    def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim, end_flag=""):
         start_time = time.time()
         parser = cls(jdd, batch, mesh_lim)
+        parser.end_flag = end_flag
         try:
             parser.scan_t4_listing()
         except T4ParserException as t4pe:
@@ -86,7 +97,12 @@ class T4Parser():
     @profile
     def scan_t4_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan_t4`'''
-        self.scan_res = scan_t4.Scan(self.jdd, self.mesh_limit)
+        if self.end_flag:
+            print("will use debug_scan")
+            self.scan_res = scan_t4.Scan.debug_scan(self.jdd, self.mesh_limit,
+                                                    self.end_flag)
+        else:
+            self.scan_res = scan_t4.Scan(self.jdd, self.mesh_limit)
         print("is scan_res ?", self.scan_res)
         print("len(scan_res) =", len(self.scan_res))
         print("normal end:", self.scan_res.normalend)
@@ -146,12 +162,12 @@ class T4Parser():
         '''
         if self.result:
             if isinstance(self.result[-1], dict):
-                return ((self.para and "elapsed_time" in self.result[-1])
+                return ((self.para and "elapsed time" in self.result[-1])
                         or (not self.para
-                            and ('simulation_time' in self.result[-1]
-                                 or 'exploitation_time' in self.result[-1])))
-            return ((self.para and "elapsed_time" in self.result)
-                    or (not self.para and 'simulation_time' in self.result))
+                            and ('simulation time' in self.result[-1]
+                                 or 'exploitation time' in self.result[-1])))
+            return ((self.para and "elapsed time" in self.result)
+                    or (not self.para and 'simulation time' in self.result))
 
     def print_t4_times(self):
         '''Print time characteristics of the Tripoli-4 result considered.
@@ -182,7 +198,7 @@ def main(myjdd="", mode="MONO"):
 
     # need to think about endflag (?), meshlim and para arguments
     # t4_res = T4Parser.parse_jdd(myjdd, -1)  #, meshlim=2)
-    t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, -1, 2)
+    t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, -1, 2, end_flag="number of batch")
     if t4_res:
         t4_res.print_t4_stats()
         print("result of the function =", t4_res.check_t4_times())

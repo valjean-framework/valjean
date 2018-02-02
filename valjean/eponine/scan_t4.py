@@ -38,7 +38,7 @@ containing at least the flags precised in :ref:`eponine-scan_t4-caveats`.
 .. doctest:: scan_t4
 
    >>> import os
-   >>> results = Scan(os.path.join(work_dir, 'spam.res'), "simulation time")
+   >>> results = Scan(os.path.join(work_dir, 'spam.res'))
    >>> results.normalend
    True
    >>> len(results)
@@ -63,13 +63,14 @@ Beginning and end of results sections
 Important for the scan: results will be kept
 
 * **from** "RESULTS ARE GIVEN"
-* **to** an end flag given by user
+* **to** an end flag available in the list :py:const:`Scan.END_FLAGS`.
+  Possibilities are:
 
-  * Default end flag is "simulation time";
-  * For exploitation jobs use "exploitation time" (example: Green bands);
-  * for jobs running in parallel, use "elapsed time".
+  * Default end flag is ``"simulation time"``;
+  * For exploitation jobs use ``"exploitation time"`` (example: Green bands);
+  * for jobs running in parallel, ``"elapsed time"`` will also appear, after
+    ``"simulation time"`` normal.
 
-In any case, it is always possible to set a different end flag.
 
 Mesh results
 ^^^^^^^^^^^^
@@ -304,6 +305,13 @@ class Scan(Mapping):
         self._collres = OrderedDict()
         self._get_collres()
 
+    @classmethod
+    def debug_scan(cls, fname, mesh_lim=-1, end_flag=""):
+        if end_flag:
+            cls.END_FLAGS.insert(0, end_flag)
+        print(cls.END_FLAGS)
+        return cls(fname, mesh_lim)
+
     def _check_input_data(self, line):
         '''Get some parameters from introdcution of the results file, i.e.
         from the data file. Typilcally the number of batchs required.
@@ -323,7 +331,8 @@ class Scan(Mapping):
             self.times['initialization time'] = int(line.split()[3])
 
     def _is_end_flag(self, line):
-        if "time" not in line:
+        # len(END_FLAGS) = 3: default list, no user's end flag added
+        if "time" not in line and len(self.END_FLAGS) == 3:
             return
         for end_flag in self.END_FLAGS:
             if end_flag in line:
@@ -345,16 +354,18 @@ class Scan(Mapping):
                     _batch_scan.build_result(line)
                     end_flag = self._is_end_flag(line)
                     if end_flag:
+                        LOGGER.debug('end flag "%s" found', end_flag)
                         # check batch number has to be before get result to
                         # modify batch number before storage if necessary...
-                        LOGGER.debug("end flag %s found", end_flag)
                         _batch_scan.check_batch_number()
                         batch_number = _batch_scan.batch_counts['number']
                         self._collres[batch_number] = _batch_scan.get_result()
                         count_mesh_exceeding = _batch_scan.count_mesh_exceeding
                         _batch_scan = None
                         # ordered dictionary -> unique keys, so only last kept
-                        self.times[end_flag] = int(line.split()[-1])
+                        self.times[end_flag] = (int(line.split()[-1])
+                                                if line.split()[-1].isdigit()
+                                                else "Not a time")
                     continue
                 elif not self.times:
                     self._check_input_data(line)
@@ -372,7 +383,10 @@ class Scan(Mapping):
                 elif self._is_end_flag(line):
                     # still needed to be sure "elapsed time" appears in
                     # parallel jobs
-                    self.times[self._is_end_flag(line)] = int(line.split()[-1])
+                    end_flag = self._is_end_flag(line)
+                    self.times[end_flag] = (int(line.split()[-1])
+                                            if line.split()[-1].isdigit()
+                                            else "Not a time")
                 elif ("Type and parameters of random generator "
                       "at the end of simulation:" in line):
                     generator_state.append('')
