@@ -35,37 +35,58 @@ class T4Parser():
     '''
 
     @profile
-    def __init__(self, jddname, batch=-1, endflag="simulation time",
-                 meshlim=-1, para=False): #config, *, 
+    def __init__(self, jddname, batch=-1, para=False): #config, *,
         self.jdd = jddname
         self.batch_number = batch
-        self.end_flag = endflag
-        self.mesh_lim = meshlim
         self.scan_res = None
         self.result = None
         self.para = para
 
     @classmethod
-    def parse_jdd(cls, jdd, meshlim=-1):
-        parser = cls(jdd, meshlim=meshlim)
+    def parse_jdd(cls, jdd, batch):
+        start_time = time.time()
+        parser = cls(jdd, batch)
         try:
             parser.scan_t4_listing()
         except T4ParserException as t4pe:
             print(t4pe)
             return
-        print("Successful scan")
+        LOGGER.info("Successful scan in %f s", time.time()-start_time)
+        start_parse = time.time()
         try:
             parser.parse_t4_listing()
         except T4ParserException as t4pe:
             print(t4pe)
             return
-        print("successful parsing")
+        LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
+        LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
+        return parser
+
+    @classmethod
+    def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim):
+        start_time = time.time()
+        parser = cls(jdd, batch)
+        scan_t4.Scan.mesh_limit = mesh_lim
+        try:
+            parser.scan_t4_listing()
+        except T4ParserException as t4pe:
+            print(t4pe)
+            return
+        LOGGER.info("Successful scan in %f s", time.time()-start_time)
+        start_parse = time.time()
+        try:
+            parser.parse_t4_listing()
+        except T4ParserException as t4pe:
+            print(t4pe)
+            return
+        LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
+        LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
         return parser
 
     @profile
     def scan_t4_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan_t4`'''
-        self.scan_res = scan_t4.Scan(self.jdd, self.end_flag, self.mesh_lim)
+        self.scan_res = scan_t4.Scan(self.jdd)
         print("is scan_res ?", self.scan_res)
         print("len(scan_res) =", len(self.scan_res))
         print("normal end:", self.scan_res.normalend)
@@ -88,7 +109,6 @@ class T4Parser():
             with open("jddres.txt", 'w') as fout:
                 fout.write(str_to_parse)
         # now parse the results string
-        start_time = time.time()
         try:
             self.result = pygram.mygram.parseString(str_to_parse)
         except ParseException:
@@ -103,7 +123,6 @@ class T4Parser():
             # from None allows to raise a new exception without traceback and
             # message of the previous one here.
             raise T4ParserException("Error in parsing, see above.") from None
-        print("[31mTemps:", time.time()-start_time, "[0m")
 
     def print_t4_stats(self):
         '''Print Tripoli-4 statistics (warnings and errors).'''
@@ -162,7 +181,8 @@ def main(myjdd="", mode="MONO"):
     print("endflag =", myendflag)
 
     # need to think about endflag (?), meshlim and para arguments
-    t4_res = T4Parser.parse_jdd(myjdd, meshlim=2)
+    # t4_res = T4Parser.parse_jdd(myjdd, -1)  #, meshlim=2)
+    t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, -1, 2)
     if t4_res:
         t4_res.print_t4_stats()
         print("result of the function =", t4_res.check_t4_times())

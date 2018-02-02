@@ -263,7 +263,7 @@ class Scan(Mapping):
     END_FLAGS = ["simulation time", "exploitation time", "elapsed time"]
 
     @profile
-    def __init__(self, fname, endflag="simulation time", mesh_limit=-1):
+    def __init__(self, fname):
         '''Initialize the instance from the file `fname`, meaning reads the
         file and store the relevant parts of it, i.e. result block for each
         batch edition.
@@ -283,28 +283,25 @@ class Scan(Mapping):
         :type countwarnings: int
         :var counterrors: count number of errors (for statistics)
         :type counterrors: int
-        :ivar initialization_time: save initialization time (not saved in the
-                                    result as given before in the listing)
-        :type initialization_time: int
+        :ivar dict times: save times (initialization, simulation, exploitation
+                          and elapsed if exists). Mandatory ones are
+                          ``'initialization time'`` and ``'simulation time'``
+                          or ``'exploitation time'``. ``'elapsed time'`` only
+                          appears in listings from parallel jobs.
         :var last_generator_state: keep the random generator state (not
                                      included in the result as given after
                                      `endflag`)
         :type last_generator_state: string
         '''
-        self.start_time = time.time()
         self.fname = fname
-        self.endflag = endflag
         self.reqbatchs = -1
         self.normalend = False
         self.countwarnings = 0
         self.counterrors = 0
         self.times = OrderedDict()
         self.last_generator_state = ""
-        self.mesh_limit = mesh_limit
         self._collres = OrderedDict()
         self._get_collres()
-        LOGGER.info("End of initialization: %f s",
-                    time.time()-self.start_time)
 
     def _check_input_data(self, line):
         '''Get some parameters from introdcution of the results file, i.e.
@@ -327,7 +324,7 @@ class Scan(Mapping):
     def _is_end_flag(self, line):
         if "time" not in line:
             return
-        for end_flag in Scan.END_FLAGS:
+        for end_flag in self.END_FLAGS:
             if end_flag in line:
                 return end_flag
 
@@ -349,7 +346,7 @@ class Scan(Mapping):
                     if end_flag:
                         # check batch number has to be before get result to
                         # modify batch number before storage if necessary...
-                        LOGGER.debug("end flag %s found", self.endflag)
+                        LOGGER.debug("end flag %s found", end_flag)
                         _batch_scan.check_batch_number()
                         batch_number = _batch_scan.batch_counts['number']
                         self._collres[batch_number] = _batch_scan.get_result()
