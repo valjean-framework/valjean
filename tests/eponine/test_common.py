@@ -12,7 +12,8 @@ from hypothesis.extra.numpy import array_dtypes
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
-from valjean.eponine.common import MeshDictBuilder
+# pylint: disable=no-value-for-parameter
+from valjean.eponine.common import (MeshDictBuilder, SpectrumDictBuilder)
 
 # , ydim=integers(0, 5), zdim=integers(0,3),
 @composite
@@ -213,44 +214,109 @@ def array_and_bins(shape, sampler):
     assert np.array_equal(af_flip[::-1], bf_flip)
 
 
+@composite
+def get_bins(draw, elements=floats(0, 10), nbins=1, revers=booleans()):
+    '''Choose the (energy, time, mu or phi) bins and their order (reversed or
+    not) thanks to hypothesis.
+
+    Edges for the bins can be chosen to get more realistic cases.
+    '''
+    mybins = sorted(draw(lists(elements, min_size=nbins+1,
+                               max_size=nbins+1, unique=True)),
+                    reverse=draw(revers))
+    return mybins
+
+def compare_bin_order(ibins, fbins, irdm, rev_rdm):
+    '''Compare bins orders between flipped bins using
+    :mod:`valjean.eponine.common` and bins array read in reversed order.
+    Modify value of the reversed random index to match the correct element.
+    '''
+    if ibins[0] > ibins[1]:
+        rev_rdm[irdm] = - rev_rdm[irdm] - 1
+        assert np.array_equal(fbins, ibins[::-1])
+
 @settings(max_examples=10)
-# @given(shape=meshshape(), sampler=data())
-@given(shape=get_shape(max_dims=[1, 1, 1, 5, 5, 1, 1]), sampler=data())
-def test_reversed_energy_and_time_bins(shape, sampler):
+@given(shape=get_shape(max_dims=[3, 3, 3, 5, 5, 1, 1]), sampler=data())
+def test_flip_mesh(shape, sampler):
+    '''Test flipping mesh.
+
+    Generate with hypothesis a mesh with max dimensions
+    [s0, s1, s2, E, t, mu, phi] = [3, 3, 3, 5, 5, 1, 1]
+    as no mu or phi bins available for the moment for meshes.
+
+    Generate energy and time binnings. They can be increasing or decreasing
+    depending on the value of the boolean chosen by hypothesis in order to
+    test all combinations.
+
+    Flip bins if necessary and check if they were correctly flipped.
+    '''
     array = sampler.draw(arrays(dtype=np.dtype([('tally', np.float),
                                                 ('sigma', np.float)]),
                                 shape=shape,
                                 elements=tuples(floats(0, 1), floats(5, 20)),
                                 fill=nothing()))
-    reversed_ebins = sampler.draw(booleans())
-    ebins = sorted(sampler.draw(lists(floats(0, 10),
-                                      min_size=shape[3]+1, max_size=shape[3]+1,
-                                      unique=True)),
-                   reverse=reversed_ebins)
-    reversed_tbins = sampler.draw(booleans())
-    tbins = sorted(sampler.draw(lists(floats(0, 10),
-                                      min_size=shape[4]+1, max_size=shape[4]+1,
-                                      unique=True)),
-                   reverse=reversed_tbins)
+    ebins = sampler.draw(get_bins(elements=floats(0, 20), nbins=shape[3]))
+    tbins = sampler.draw(get_bins(elements=floats(0, 10), nbins=shape[4]))
     mesh = MeshDictBuilder(['tally', 'sigma'], shape)
     mesh.bins['e'] = ebins
     mesh.bins['t'] = tbins
     mesh.arrays['default'] = array
     mesh.flip_bins()
-    rdme = sampler.draw(integers(0, shape[3]-1))
-    rdmt = sampler.draw(integers(0, shape[4]-1))
-    if reversed_ebins:
-        rdme_r = - rdme - 1
-        assert np.array_equal(mesh.bins['e'], np.array(ebins)[::-1])
-    else:
-        rdme_r = rdme
-    if reversed_tbins:
-        rdmt_r = - rdmt -1
-        assert np.array_equal(mesh.bins['t'], np.array(tbins)[::-1])
-    else:
-        rdmt_r = rdmt
-    assert (array[0, 0, 0, rdme, rdmt, 0, 0]['tally']
-            == mesh.arrays['default'][0, 0, 0, rdme_r, rdmt_r, 0, 0]['tally'])
+    rdm = sampler.draw(tuples(integers(0, shape[0]-1),
+                              integers(0, shape[1]-1),
+                              integers(0, shape[2]-1),
+                              integers(0, shape[3]-1),
+                              integers(0, shape[4]-1)))
+    rdm_r = list(rdm)
+    compare_bin_order(np.array(ebins), mesh.bins['e'], 3, rdm_r)
+    compare_bin_order(np.array(tbins), mesh.bins['t'], 4, rdm_r)
+    index = rdm + (0, 0)
+    findex = tuple(rdm_r) + (0, 0)
+    assert array[index]['tally'] == mesh.arrays['default'][findex]['tally']
+
+@settings(max_examples=5)
+@given(shape=get_shape(max_dims=[1, 1, 1, 5, 5, 3, 3]),
+       sampler=data())
+def test_flip_spectrum(shape, sampler):
+    '''Test flipping spectrum.
+
+    Generate with hypothesis a mesh with max dimensions
+    [s0, s1, s2, E, t, mu, phi] = [1, 1, 1, 5, 5, 3, 3].
+
+    Generate energy, time, mu and phi angle binnings. They can be increasing or
+    decreasing depending on the value of the boolean chosen by hypothesis in
+    order to test all combinations.
+
+    Flip bins if necessary and check if they were correctly flipped.
+    '''
+    array = sampler.draw(
+        arrays(dtype=np.dtype([('score', np.float),
+                               ('sigma', np.float),
+                               ('score/lethargy', np.float)]),
+               shape=shape,
+               elements=tuples(floats(0, 1), floats(5, 20), floats(0, 1)),
+               fill=nothing()))
+    ebins = sampler.draw(get_bins(elements=floats(0, 20), nbins=shape[3]))
+    tbins = sampler.draw(get_bins(elements=floats(0, 10), nbins=shape[4]))
+    mubins = sampler.draw(get_bins(elements=floats(-1., 1.), nbins=shape[5]))
+    phibins = sampler.draw(get_bins(elements=floats(0, 2*np.pi),
+                                    nbins=shape[6]))
+    spectrum = SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'], shape)
+    spectrum.bins = {'e': ebins, 't': tbins, 'mu': mubins, 'phi': phibins}
+    spectrum.arrays['default'] = array
+    spectrum.flip_bins()
+    rdm = sampler.draw(tuples(integers(0, shape[3]-1),
+                              integers(0, shape[4]-1),
+                              integers(0, shape[5]-1),
+                              integers(0, shape[6]-1)))
+    rdm_r = list(rdm)
+    compare_bin_order(np.array(ebins), spectrum.bins['e'], 0, rdm_r)
+    compare_bin_order(np.array(tbins), spectrum.bins['t'], 1, rdm_r)
+    compare_bin_order(np.array(mubins), spectrum.bins['mu'], 2, rdm_r)
+    compare_bin_order(np.array(phibins), spectrum.bins['phi'], 3, rdm_r)
+    index = (0, 0, 0) + rdm
+    findex = (0, 0, 0) + tuple(rdm_r)
+    assert array[index]['score'] == spectrum.arrays['default'][findex]['score']
 
 @composite
 def simplearray(draw,
