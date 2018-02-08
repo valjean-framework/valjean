@@ -13,7 +13,9 @@ from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 # pylint: disable=no-value-for-parameter
-from valjean.eponine.common import (MeshDictBuilder, SpectrumDictBuilder)
+from valjean.eponine.common import (MeshDictBuilder, SpectrumDictBuilder, FTYPE)
+import valjean.eponine.pyparsing_t4.grammar as pygram
+import valjean.eponine.pyparsing_t4.transform as pytrans
 
 # , ydim=integers(0, 5), zdim=integers(0,3),
 @composite
@@ -317,6 +319,118 @@ def test_flip_spectrum(shape, sampler):
     index = (0, 0, 0) + rdm
     findex = (0, 0, 0) + tuple(rdm_r)
     assert array[index]['score'] == spectrum.arrays['default'][findex]['score']
+
+def mesh_score_str():
+    '''String to a mesh block in parsing, describing the score.'''
+    msc_str = '''
+         scoring mode : SCORE_TRACK
+         scoring zone :          Results on a mesh:
+         Cell             tally           sigma (percent)
+    '''
+    return msc_str
+
+def build_mesh_T4_output(mesh, ebins, tbin):
+    '''Build the Tripoli-4 output for meshes, looping on energy bins and
+    printing all mesh results.
+
+    :param numpy.ndarray mesh: mesh from Hypothesis
+    :param list ebins: energy bins
+    :param int tbin: time bin
+    :returns: T4 output as a string
+    '''
+    t4out = []
+    shape = mesh.shape
+    for iebin in range(len(ebins)-1):
+        t4out.append("Energy range (in MeV): {0:.6e} - {1:.6e}\n"
+                     .format(ebins[iebin], ebins[iebin+1]))
+        for is0 in range(shape[0]):
+            for is1 in range(shape[1]):
+                for is2 in range(shape[2]):
+                    index = (is0, is1, is2, iebin, tbin, 0, 0)
+                    t4out.append("\t({0},{1},{2})\t\t{3:.6e}\t{4:.6e}\n"
+                                 .format(is0, is1, is2,
+                                         mesh[index]['tally'],
+                                         mesh[index]['sigma']))
+        t4out.append("\n")
+    return ''.join(t4out)
+
+def make_mesh_T4_output(mesh, ebins, tbins):
+    '''Build the Tripoli-4 output for meshes from time binning.
+    If only one time bin, build the T4 mesh output string directly, else loop
+    on tbins and fill the output.
+
+    :param numpy.ndarray mesh: mesh from Hypothesis
+    :param list ebins: energy bins
+    :param int tbin: time bin
+    :returns: T4 output as a string
+    '''
+    t4out = []
+    t4out.append(mesh_score_str())
+    t4out.append("\n")
+    if len(tbins) < 3:
+        t4out.append("\n")
+        t4out.append(build_mesh_T4_output(mesh, ebins, 0))
+    else:
+        for itbin in range(len(tbins)-1):
+            mintime = (tbins[itbin] if tbins[itbin] < tbins[itbin+1]
+                       else tbins[itbin+1])
+            maxtime = (tbins[itbin+1] if tbins[itbin] < tbins[itbin+1]
+                       else tbins[itbin])
+            time_str = '''
+         TIME STEP NUMBER: {0}
+         ------------------------------------
+                 time min. = {1:.6e}
+                 time max. = {2:.6e}
+            '''.format(itbin, mintime, maxtime)
+            t4out.append(time_str)
+            t4out.append("\n")
+            t4out.append(build_mesh_T4_output(mesh, ebins, itbin))
+    return ''.join(t4out)
+
+@settings(max_examples=10)
+@given(shape=get_shape(max_dims=[3, 3, 3, 3, 3, 1, 1]), sampler=data())
+def test_print_parse_mesh(shape, sampler):
+    '''Test printing mesh as Tripoli-4 output from random arrays got from
+    Hypothesis. Also get energy and time bins.
+
+    Check bins equality taking into account rounding using `numpy.allclose`
+    instead of `numpy.array_equal`, limit is per default 1e-8. For time bins
+    this is only check if more than 1 bin.
+
+    Check array equality on if none of the binnigs are reversed (else a
+    MeshDictBuilder object should be build to flip the arrays):
+
+    * Equality of dtypes
+    * Equality of ``'tally'`` and ``'sigma'`` arrays considered roundings.
+
+    .. note::
+
+    This test can be quite long depending on number of bins in space, energy
+    and time. To avoid warning about that with pytest it is easier to limit
+    these dimensions to 3 (from few runs).
+    '''
+    array = sampler.draw(arrays(dtype=np.dtype([('tally', FTYPE),
+                                                ('sigma', FTYPE)]),
+                                shape=shape,
+                                elements=tuples(floats(0, 1), floats(0, 100)),
+                                fill=nothing()))
+    print("shape:", shape)
+    ebins = sampler.draw(get_bins(elements=floats(0, 20), nbins=shape[3]))
+    tbins = sampler.draw(get_bins(elements=floats(0, 10), nbins=shape[4]))
+    mesh_str = make_mesh_T4_output(array, ebins, tbins)
+    pres = pygram.scoreblock.parseString(mesh_str)
+    if pres:
+        oebins = ebins if ebins[0] < ebins[1] else ebins[::-1]
+        otbins = tbins if tbins[0] < tbins[1] else tbins[::-1]
+        assert np.allclose(pres[0]['mesh_res']['ebins'], np.array(oebins))
+        if len(otbins) > 2:
+            assert np.allclose(pres[0]['mesh_res']['tbins'], np.array(otbins))
+        if np.array_equal(oebins, ebins) and np.array_equal(otbins, tbins):
+            assert array.dtype == pres[0]['mesh_res']['mesh'].dtype
+            assert np.allclose(array[:]['tally'],
+                               pres[0]['mesh_res']['mesh'][:]['tally'])
+            assert np.allclose(array[:]['sigma'],
+                               pres[0]['mesh_res']['mesh'][:]['sigma'])
 
 @composite
 def simplearray(draw,
