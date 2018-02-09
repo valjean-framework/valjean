@@ -4,7 +4,7 @@ import numpy as np
 from hypothesis import given, note, settings, assume
 from hypothesis.strategies import (integers, lists, composite, sampled_from,
                                    data, one_of, tuples, shared, floats,
-                                   nothing, booleans)
+                                   nothing, booleans, just)
 from hypothesis.extra.numpy import array_shapes
 from hypothesis.extra.numpy import arrays
 from hypothesis.extra.numpy import array_dtypes
@@ -170,10 +170,36 @@ def gen_bins(array, sampler):
     assert s2bins[0] > s2bins[1]
     # return s0bins
 
+@composite
+def array_and_bins(draw, dtype,
+                   max_dim=(3, 3, 3, 5, 5, 1, 1),
+                   elements=tuples(floats(0, 1.), floats(0., 100.)),
+                   reverse=booleans()):
+    shape = draw(get_shape(max_dim))
+    print("shape:", shape)
+    array = draw(arrays(dtype=dtype, shape=shape, elements=elements,
+                        fill=nothing()))
+    print("array:", array.squeeze())
+    bins = {}
+    bins['e'] = draw(get_bins(elements=floats(0, 20), nbins=shape[3],
+                              revers=reverse))
+    # if shape[4] > 1:
+    #     print("shape[4] =", shape[4], " > 1 ?")
+    bins['t'] = draw(get_bins(elements=floats(0, 10), nbins=shape[4],
+                              revers=reverse))
+    # if shape[5] > 1:
+    bins['mu'] = draw(get_bins(elements=floats(-1., 1.), nbins=shape[5],
+                               revers=reverse))
+    # if shape[6] > 1:
+    bins['phi'] = draw(get_bins(elements=floats(0, 2*np.pi),
+                                nbins=shape[6], revers=reverse))
+    print(bins)
+    return array, bins
+
 @settings(max_examples=5)
 # @given(shape=npshape(), sampler=data())
 @given(shape=meshshape(), sampler=data())
-def array_and_bins(shape, sampler):
+def check_array_and_bins(shape, sampler):
     array = sampler.draw(arrays(dtype=np.dtype([('tally', np.float),
                                                 ('sigma', np.float)]),
                                 shape=shape,
@@ -329,7 +355,7 @@ def mesh_score_str():
     '''
     return msc_str
 
-def build_mesh_T4_output(mesh, ebins, tbin):
+def build_mesh_t4_output(mesh, ebins, tbin):
     '''Build the Tripoli-4 output for meshes, looping on energy bins and
     printing all mesh results.
 
@@ -354,7 +380,7 @@ def build_mesh_T4_output(mesh, ebins, tbin):
         t4out.append("\n")
     return ''.join(t4out)
 
-def make_mesh_T4_output(mesh, ebins, tbins):
+def make_mesh_t4_output(mesh, ebins, tbins):
     '''Build the Tripoli-4 output for meshes from time binning.
     If only one time bin, build the T4 mesh output string directly, else loop
     on tbins and fill the output.
@@ -369,7 +395,7 @@ def make_mesh_T4_output(mesh, ebins, tbins):
     t4out.append("\n")
     if len(tbins) < 3:
         t4out.append("\n")
-        t4out.append(build_mesh_T4_output(mesh, ebins, 0))
+        t4out.append(build_mesh_t4_output(mesh, ebins, 0))
     else:
         for itbin in range(len(tbins)-1):
             mintime = (tbins[itbin] if tbins[itbin] < tbins[itbin+1]
@@ -384,7 +410,7 @@ def make_mesh_T4_output(mesh, ebins, tbins):
             '''.format(itbin, mintime, maxtime)
             t4out.append(time_str)
             t4out.append("\n")
-            t4out.append(build_mesh_T4_output(mesh, ebins, itbin))
+            t4out.append(build_mesh_t4_output(mesh, ebins, itbin))
     return ''.join(t4out)
 
 @settings(max_examples=10)
@@ -400,7 +426,7 @@ def test_print_parse_mesh(shape, sampler):
     Check array equality on if none of the binnigs are reversed (else a
     MeshDictBuilder object should be build to flip the arrays):
 
-    * Equality of dtypes
+    * Equality of dtypes and shapes in all cases
     * Equality of ``'tally'`` and ``'sigma'`` arrays considered roundings.
 
     .. note::
@@ -417,7 +443,7 @@ def test_print_parse_mesh(shape, sampler):
     print("shape:", shape)
     ebins = sampler.draw(get_bins(elements=floats(0, 20), nbins=shape[3]))
     tbins = sampler.draw(get_bins(elements=floats(0, 10), nbins=shape[4]))
-    mesh_str = make_mesh_T4_output(array, ebins, tbins)
+    mesh_str = make_mesh_t4_output(array, ebins, tbins)
     pres = pygram.scoreblock.parseString(mesh_str)
     if pres:
         oebins = ebins if ebins[0] < ebins[1] else ebins[::-1]
@@ -425,13 +451,174 @@ def test_print_parse_mesh(shape, sampler):
         assert np.allclose(pres[0]['mesh_res']['ebins'], np.array(oebins))
         if len(otbins) > 2:
             assert np.allclose(pres[0]['mesh_res']['tbins'], np.array(otbins))
+        assert array.dtype == pres[0]['mesh_res']['mesh'].dtype
+        assert array.shape == pres[0]['mesh_res']['mesh'].shape
         if np.array_equal(oebins, ebins) and np.array_equal(otbins, tbins):
-            assert array.dtype == pres[0]['mesh_res']['mesh'].dtype
             assert np.allclose(array[:]['tally'],
                                pres[0]['mesh_res']['mesh'][:]['tally'])
             assert np.allclose(array[:]['sigma'],
                                pres[0]['mesh_res']['mesh'][:]['sigma'])
 
+
+def spectrum_score_str():
+    '''Example of score preceeding spectrum results, including units.'''
+    specscore_str = ('''
+         scoring mode : SCORE_SURF
+         scoring zone :          Frontier        volumes : 2,1
+
+''')
+    return specscore_str
+
+
+#     '''
+#          SPECTRUM RESULTS
+#          number of first discarded batches : 0
+
+#          group                   score           sigma_%         score/lethargy
+# ''')
+#     if units:
+#         specscore_str += ('''\
+# Units:   MeV                     neut.s^-1       %               neut.s^-1
+# ''')
+#     print(specscore_str)
+
+def build_spectrum_str(spectrum, ebins, tbin, mubin, phibin, units=False):
+    t4out = []
+    spec_str =('''\
+         SPECTRUM RESULTS
+         number of first discarded batches : 0
+
+         group                   score           sigma_%         score/lethargy
+''')
+    if units:
+        spec_str += ('''\
+Units:   MeV                     neut.s^-1       %               neut.s^-1
+''')
+    t4out.append(spec_str)
+    for iebin in range(len(ebins)-1):
+        index = (0, 0, 0, iebin, tbin, mubin, phibin)
+        t4out.append("{0:.6e} - {1:.6e} \t {2:.6e} \t {3:.6e} \t {4:.6e}\n"
+                     .format(ebins[iebin], ebins[iebin+1],
+                             spectrum[index]['score'],
+                             spectrum[index]['sigma'],
+                             spectrum[index]['score/lethargy']))
+    t4out.append("\n")
+    return ''.join(t4out)
+
+def time_step_str(itbin, tbins):
+    t4out = []
+    if tbins[itbin] < tbins[itbin+1]:
+        mintime = tbins[itbin]
+        maxtime = tbins[itbin+1]
+    else:
+        mintime = tbins[itbin+1]
+        maxtime = tbins[itbin]
+    t4out.append("          TIME STEP NUMBER : {0}\n".format(itbin))
+    t4out.append("          ------------------------------------\n")
+    t4out.append("                  time min. = {0:.6e}\n".format(mintime))
+    t4out.append("                  time max. = {0:.6e}\n\n".format(maxtime))
+    return ''.join(t4out)
+
+def mu_angle_str(imubin, mubins):
+    t4out = []
+    if mubins[imubin] < mubins[imubin+1]:
+        minmu = mubins[imubin]
+        maxmu = mubins[imubin+1]
+    else:
+        minmu = mubins[imubin+1]
+        maxmu = mubins[imubin]
+    t4out.append("          MU ANGULAR ZONE : {0}\n".format(imubin))
+    t4out.append("          ------------------------------------\n")
+    t4out.append("                  mu min. = {0:.6e}\n".format(minmu))
+    t4out.append("                  mu max. = {0:.6e}\n\n".format(maxmu))
+    return ''.join(t4out)
+
+def phi_angle_str(iphibin, phibins):
+    t4out = []
+    if phibins[iphibin] < phibins[iphibin+1]:
+        minphi = phibins[iphibin]
+        maxphi = phibins[iphibin+1]
+    else:
+        minphi = phibins[iphibin+1]
+        maxphi = phibins[iphibin]
+    t4out.append("                  PHI ANGULAR ZONE : {0}\n"
+                 "                  ------------------------------------\n"
+                 "                          phi min. = {1:.6e}\n"
+                 "                          phi max. = {2:.6e}\n\n"
+                 .format(iphibin, minphi, maxphi))
+    return ''.join(t4out)
+
+def make_spectrum_t4_output(spectrum, bins, units):
+    t4out = []
+    t4out.append(spectrum_score_str())
+    t4out.append("\n")
+    print("spectrum shape =", spectrum.shape)
+    # if 't' in bins:
+    for itbin in range(len(bins['t'])-1):
+        if len(bins['t']) > 2:
+            t4out.append(time_step_str(itbin, bins['t']))
+        for imubin in range(len(bins['mu'])-1):
+            if len(bins['mu']) > 2 or len(bins['phi']) > 2:
+                t4out.append(mu_angle_str(imubin, bins['mu']))
+            for iphibin in range(len(bins['phi'])-1):
+                if len(bins['phi']) > 2:
+                    t4out.append(phi_angle_str(iphibin, bins['phi']))
+                t4out.append(build_spectrum_str(spectrum, bins['e'], itbin, imubin, iphibin, units))
+    # else:
+    #     t4out.append(build_spectrum_str(spectrum, bins['e'], 0, 0, 0, units))
+    return ''.join(t4out)
+
+def reverse_bins(bins):
+    rbins = bins
+    for key in bins:
+        if bins[key][0] > bins[key][1]:
+            rbins[key] = bins[key][::-1]
+    return rbins
+
+def compare_bins(bins, spectrum_res):
+    print("bins:", bins)
+    print("spectrum keys =", list(spectrum_res.keys()))
+    for key in bins:
+        # if len(gen_bins[key]) > 2 or key == 'e':
+        # if key == 'e' or key == 't':
+        if key+'bins' in spectrum_res:
+            assert np.allclose(spectrum_res[key+'bins'],
+                               np.array(bins[key]))
+        else:
+            print("other key:", key)
+
+@settings(max_examples=10)
+@given(sampler=data())
+def test_print_parse_spectrum(sampler):
+    array, bins = sampler.draw(array_and_bins(
+        dtype=np.dtype([('score', FTYPE), ('sigma', FTYPE),
+                        ('score/lethargy', FTYPE)]),
+        max_dim=(1, 1, 1, 3, 3, 2, 2),
+        elements=tuples(floats(0, 1), floats(0, 100), floats(0, 1)),
+        reverse=just(False)))
+    print("array:", array.squeeze(), "bins:", bins)
+    units = sampler.draw(booleans())
+    spectrum_str = make_spectrum_t4_output(array, bins, units)
+    print(spectrum_str)
+    pres = pygram.scoreblock.parseString(spectrum_str)
+    if pres:
+        print("Test bins")
+        # obins = reverse_bins(bins)
+        # assert np.allclose(pres[0]['spectrum_res']['ebins'],
+        #                    np.array(obins['e']))
+        # compare_bins(obins, pres[0]['spectrum_res'])
+        compare_bins(bins, pres[0]['spectrum_res'])
+        # if len(otbins) > 2:
+    #         assert np.allclose(pres[0]['mesh_res']['tbins'], np.array(otbins))
+        assert array.dtype == pres[0]['spectrum_res']['spectrum'].dtype
+        assert array.shape == pres[0]['spectrum_res']['spectrum'].shape
+        #     if np.array_equal(oebins, ebins) and np.array_equal(otbins, tbins):
+        assert np.allclose(array[:]['score'],
+                           pres[0]['spectrum_res']['spectrum'][:]['score'])
+        assert np.allclose(array[:]['sigma'],
+                           pres[0]['spectrum_res']['spectrum'][:]['sigma'])
+        assert np.allclose(array[:]['score/lethargy'],
+                           pres[0]['spectrum_res']['spectrum'][:]['score/lethargy'])
 @composite
 def simplearray(draw,
                 arr=arrays(dtype=np.float, shape=3, elements=floats(0,1))):
