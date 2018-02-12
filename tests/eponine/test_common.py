@@ -1,128 +1,27 @@
 '''Tests for the :mod:`common <valjean.eponine.common>` module.'''
 
 import numpy as np
-from hypothesis import given, note, settings, assume
-from hypothesis.strategies import (integers, lists, composite, sampled_from,
-                                   data, one_of, tuples, shared, floats,
-                                   nothing, booleans, just)
+from hypothesis import given, settings, assume
+from hypothesis.strategies import (integers, lists, composite, data, tuples,
+                                   shared, floats, nothing, booleans, just)
 from hypothesis.extra.numpy import array_shapes
 from hypothesis.extra.numpy import arrays
-from hypothesis.extra.numpy import array_dtypes
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 # pylint: disable=no-value-for-parameter
-from valjean.eponine.common import (MeshDictBuilder, SpectrumDictBuilder, FTYPE)
+from valjean.eponine.common import (MeshDictBuilder, SpectrumDictBuilder,
+                                    FTYPE)
 import valjean.eponine.pyparsing_t4.grammar as pygram
-import valjean.eponine.pyparsing_t4.transform as pytrans
-
-# , ydim=integers(0, 5), zdim=integers(0,3),
-@composite
-# def mesh(draw, xdim=one_of(integers(0, 5)), **kwargs):
-def tmesh(draw, dim=tuples(integers(1, 5), integers(1, 5), integers(1, 3)), **kwargs):
-    '''Composite Hypothesis strategy to generate Meshes.'''
-    # print("xdim:", xdim)  #, "ydim:", ydim, "zdim:", zdim)
-    # lst = draw(lists(xdim, **kwargs))
-    shape = draw(dim) #, ydim, zdim)
-    print("shape =", shape, "dim =", dim)
-    nbins = int(np.prod(shape))
-    print(nbins)
-    spacebins = []
-    for x in range(shape[0]):
-        for y in range(shape[1]):
-            for z in range(shape[2]):
-                spacebins.append([x, y, z])
-    corrfloats = draw(lists(floats(min_value=0), min_size=nbins, max_size=nbins))
-    print(corrfloats)
-    return spacebins
-
-
+from valjean import LOGGER
 
 @composite
-def testm(draw, mint=integers()):
-    theints = draw(mint)
-    print("the ints =", theints)
-    s = integers()
-    print("s = ", s)
-    oint = shared(s)
-    print("other int =", oint)
-    return (theints, oint)
-
-
-@composite
-def npmesh(draw,
-           arr=arrays(dtype=np.dtype([('val', np.float32), ('sig', np.float32)]),
-                      shape=array_shapes(min_dims=3, max_dims=3, min_side=1, max_side=3),
-                      elements=floats(0, 1))):
-    myarray = draw(arr)
-    print(myarray.shape)
-    return myarray
-
-@composite
-def simplenpmesh(draw,
-                 arr=arrays(dtype=np.float,
-                            shape=array_shapes(min_dims=3, max_dims=3,
-                                               min_side=1, max_side=3),
-                            elements=floats(0,1))):
-    myarray = draw(arr)
-    print(myarray.shape)
-    return myarray
-
-@composite
-def simplenpmeshWdtype(draw,
-                       arr=arrays(dtype=np.dtype([('f1', np.float)]),
-                                  shape=array_shapes(min_dims=3, max_dims=3,
-                                                     min_side=1, max_side=3))):
-    myarray = draw(arr)
-    print(myarray.shape)
-    return myarray
-
-@composite
-def npmeshWdtype(draw,
-                 arr=arrays(dtype=np.dtype([('val', np.float), ('sig', np.float)]),
-                            shape=array_shapes(min_dims=3, max_dims=3,
-                                               min_side=1, max_side=3),
-                            elements=tuples(floats(0,1), floats(5,20)),
-                            fill=nothing())):
-    myarray = draw(arr)
-    print(myarray.shape)
-    return myarray
-
-@composite
-def npmeshWdtypenotwork(draw,
-                        arr=arrays(dtype=np.dtype([('f1', np.float)]),
-                                   shape=array_shapes(min_dims=3, max_dims=3,
-                                                      min_side=1, max_side=3),
-                                   elements=floats(0,1))):
-    myarray = draw(arr)
-    print(myarray.shape)
-    return myarray
-
-@composite
-def npshape(draw,
-            shap=array_shapes(min_dims=3, max_dims=3, min_side=1, max_side=3)):
-    myshape = draw(shap)
-    return myshape
-
-@composite
-def meshshape(draw, elts=tuples(integers(1, 2), integers(1, 2), integers(1, 2),
-                                integers(1, 5), integers(1, 5),
-                                integers(1, 1), integers(1,1))):
-    myshape = draw(elts)
-    return myshape
-
-@composite
-def meshfshape(draw,
-               arr=arrays(dtype=np.dtype([('val', np.float), ('sig', np.float)]),
-                          shape=npshape(),
-                          elements=tuples(floats(0, 1), floats(5, 20)),
-                          fill=nothing())):
-    myarray = draw(arr)
-    return myarray
-
-@composite
-def get_shape(draw, max_dims=[3, 3, 3, 5, 5, 1, 1]):
+def get_shape(draw, max_dims=(3, 3, 3, 5, 5, 1, 1)):
+    '''Composite Hypothesis strategy to generate *numpy.ndarray* shapes
+    taking into account maximum dimensions in space, energy, time, µ and φ
+    coordinates.
+    '''
     mytuple = draw(tuples(integers(1, max_dims[0]),   # s0
                           integers(1, max_dims[1]),   # s1
                           integers(1, max_dims[2]),   # s2
@@ -132,120 +31,40 @@ def get_shape(draw, max_dims=[3, 3, 3, 5, 5, 1, 1]):
                           integers(1, max_dims[6])))  # phi
     return mytuple
 
-# # not working...
-# @composite
-# @given(shap=npshape())
-# def array_and_bins(draw, shap,
-#                    arr=arrays(dtype=np.dtype([('val', np.float), ('sig', np.float)]),
-#                               shape=shap,
-#                               elements=tuples(floats(0,1), floats(5,20)),
-#                               fill=nothing())):
-#     myarray = draw(arr)
-#     return myarray
-
-@settings(max_examples=5)
-@given(array=meshfshape(), sampler=data())
-def gen_bins(array, sampler):
-    print(array)
-    ns0bins = array.shape[0]
-    ns1bins = array.shape[1]
-    ns2bins = array.shape[2]
-    print("shape =", array.shape,
-          "ns0 =", ns0bins, "ns1 =", ns1bins, "ns2 =", ns2bins)
-    s0bins = sampler.draw(lists(floats(0, 10),
-                                min_size=ns0bins+1, max_size=ns0bins+1)
-                          .map(sorted))
-    s1bins = sampler.draw(lists(floats(0, 10),
-                                min_size=ns1bins+1, max_size=ns1bins+1)
-                          .map(sorted))
-    s2bins = sorted(sampler.draw(lists(floats(0, 10),
-                                       min_size=ns2bins+1,
-                                       max_size=ns2bins+1)),
-                    reverse=True)
-    assume(s0bins[0] != s0bins[1])
-    assume(s1bins[0] != s1bins[1])
-    assume(s2bins[0] != s2bins[1])
-    assert len(s0bins) == ns0bins+1
-    assert len(s1bins) == array.shape[1]+1
-    assert s2bins[0] > s2bins[1]
-    # return s0bins
-
 @composite
 def array_and_bins(draw, dtype,
                    max_dim=(3, 3, 3, 5, 5, 1, 1),
                    elements=tuples(floats(0, 1.), floats(0., 100.)),
                    reverse=booleans()):
+    '''Composite Hypothesis strategy to generate shapes, then array and bins
+    corresponding.
+
+    :param numpy.dtype dtype: dtype of the future array
+    :param tuple max_dim: maximum shape of the future array
+    :param strategy elements: tuples of float with edges corresponding to dtype
+    :param strategy reverse: boolean strategy to get order of bins
+    :returns: numpy.ndarray and dictionary of bins with keys ``['e', 't',
+              'mu', 'phi']``
+    '''
     shape = draw(get_shape(max_dim))
-    print("shape:", shape)
     array = draw(arrays(dtype=dtype, shape=shape, elements=elements,
                         fill=nothing()))
-    print("array:", array.squeeze())
     bins = {}
     bins['e'] = draw(get_bins(elements=floats(0, 20), nbins=shape[3],
                               revers=reverse))
-    # if shape[4] > 1:
-    #     print("shape[4] =", shape[4], " > 1 ?")
     bins['t'] = draw(get_bins(elements=floats(0, 10), nbins=shape[4],
                               revers=reverse))
-    # if shape[5] > 1:
     bins['mu'] = draw(get_bins(elements=floats(-1., 1.), nbins=shape[5],
                                revers=reverse))
-    # if shape[6] > 1:
     bins['phi'] = draw(get_bins(elements=floats(0, 2*np.pi),
                                 nbins=shape[6], revers=reverse))
-    print(bins)
     return array, bins
-
-@settings(max_examples=5)
-# @given(shape=npshape(), sampler=data())
-@given(shape=meshshape(), sampler=data())
-def check_array_and_bins(shape, sampler):
-    array = sampler.draw(arrays(dtype=np.dtype([('tally', np.float),
-                                                ('sigma', np.float)]),
-                                shape=shape,
-                                elements=tuples(floats(0, 1), floats(5, 20)),
-                                fill=nothing()))
-    ebins = sorted(sampler.draw(lists(floats(0, 10),
-                                      min_size=shape[3]+1, max_size=shape[3]+1,
-                                      unique=True)),
-                   reverse=True)
-    tbins = sorted(sampler.draw(lists(floats(0, 10),
-                                      min_size=shape[4]+1, max_size=shape[4]+1,
-                                      unique=True)))
-    # if array.shape == (1, 1, 1, 2, 1, 1, 1):
-    #     assume(array[0,0,0,0,0,0,0]['tally'] != array[0,0,0,1,0,0,0]['tally'])
-    print("shape:", shape)
-    print("array:", array.squeeze())
-    print("bins:", ebins, tbins)
-    assert len(ebins) == array.shape[3]+1
-    mesh = MeshDictBuilder(['tally', 'sigma'], shape)
-    mesh.bins['e'] = ebins
-    mesh.bins['t'] = tbins
-    mesh.arrays['default'] = array
-    print("mesh arrays['default'] =", mesh.arrays['default'].squeeze())
-    print("values:", mesh.arrays['default'][:,:,:,:,0,:]['tally'].squeeze())
-    print("values:", mesh.arrays['default'][...,0,:,:]['tally'].squeeze())
-    print("avec squeeze:", mesh.arrays['default'][0,0,0,:,0,0]['tally'].squeeze())
-    print("avec ravel:", mesh.arrays['default'][0,0,0,:,0,0]['tally'].ravel())
-    bf_flip = mesh.arrays['default'][0,0,0,:,0,0]['tally'].ravel()
-    print("values:", bf_flip)
-    mesh.flip_bins()
-    print("bins after flip:")
-    print(mesh.bins)
-    print("mesh arrays['default'] =", mesh.arrays['default'].squeeze())
-    af_flip = mesh.arrays['default'][0,0,0,:,0,0]['tally'].ravel()
-    print("values:", af_flip)
-    print("type af_flip =", type(af_flip))
-    print(shape)
-    # if shape[3] > 1:
-    #     print("autre sens:", af_flip[::-1])
-    assert np.array_equal(af_flip[::-1], bf_flip)
 
 
 @composite
 def get_bins(draw, elements=floats(0, 10), nbins=1, revers=booleans()):
-    '''Choose the (energy, time, mu or phi) bins and their order (reversed or
-    not) thanks to hypothesis.
+    '''Choose the (energy, time, µ or φ) bins and their order (reversed or not)
+    thanks to hypothesis.
 
     Edges for the bins can be chosen to get more realistic cases.
     '''
@@ -269,7 +88,7 @@ def test_flip_mesh(shape, sampler):
     '''Test flipping mesh.
 
     Generate with hypothesis a mesh with max dimensions
-    [s0, s1, s2, E, t, mu, phi] = [3, 3, 3, 5, 5, 1, 1]
+    ``[s0, s1, s2, E, t, mu, phi] = [3, 3, 3, 5, 5, 1, 1]``
     as no mu or phi bins available for the moment for meshes.
 
     Generate energy and time binnings. They can be increasing or decreasing
@@ -309,7 +128,7 @@ def test_flip_spectrum(shape, sampler):
     '''Test flipping spectrum.
 
     Generate with hypothesis a mesh with max dimensions
-    [s0, s1, s2, E, t, mu, phi] = [1, 1, 1, 5, 5, 3, 3].
+    ``[s0, s1, s2, E, t, mu, phi] = [1, 1, 1, 5, 5, 3, 3]``.
 
     Generate energy, time, mu and phi angle binnings. They can be increasing or
     decreasing depending on the value of the boolean chosen by hypothesis in
@@ -431,16 +250,16 @@ def test_print_parse_mesh(shape, sampler):
 
     .. note::
 
-    This test can be quite long depending on number of bins in space, energy
-    and time. To avoid warning about that with pytest it is easier to limit
-    these dimensions to 3 (from few runs).
+       This test can be quite long depending on number of bins in space, energy
+       and time. To avoid warning about that with pytest it is easier to limit
+       these dimensions to 3 (from few runs).
     '''
     array = sampler.draw(arrays(dtype=np.dtype([('tally', FTYPE),
                                                 ('sigma', FTYPE)]),
                                 shape=shape,
                                 elements=tuples(floats(0, 1), floats(0, 100)),
                                 fill=nothing()))
-    print("shape:", shape)
+    LOGGER.debug("shape: %s", str(shape))
     ebins = sampler.draw(get_bins(elements=floats(0, 20), nbins=shape[3]))
     tbins = sampler.draw(get_bins(elements=floats(0, 10), nbins=shape[4]))
     mesh_str = make_mesh_t4_output(array, ebins, tbins)
@@ -460,7 +279,7 @@ def test_print_parse_mesh(shape, sampler):
                                pres[0]['mesh_res']['mesh'][:]['sigma'])
 
 
-def spectrum_score_str():
+def score_str():
     '''Example of score preceeding spectrum results, including units.'''
     specscore_str = ('''
          scoring mode : SCORE_SURF
@@ -469,22 +288,11 @@ def spectrum_score_str():
 ''')
     return specscore_str
 
-
-#     '''
-#          SPECTRUM RESULTS
-#          number of first discarded batches : 0
-
-#          group                   score           sigma_%         score/lethargy
-# ''')
-#     if units:
-#         specscore_str += ('''\
-# Units:   MeV                     neut.s^-1       %               neut.s^-1
-# ''')
-#     print(specscore_str)
-
-def build_spectrum_str(spectrum, ebins, tbin, mubin, phibin, units=False):
-    t4out = []
-    spec_str =('''\
+def spectrum_beginning_str(units=False):
+    '''Beginning of spectrum block in Tripoli-4 output.
+    Possibility to add units.
+    '''
+    spec_str = ('''\
          SPECTRUM RESULTS
          number of first discarded batches : 0
 
@@ -494,9 +302,22 @@ def build_spectrum_str(spectrum, ebins, tbin, mubin, phibin, units=False):
         spec_str += ('''\
 Units:   MeV                     neut.s^-1       %               neut.s^-1
 ''')
-    t4out.append(spec_str)
+    return spec_str
+
+def spectrum_str(spectrum, ebins, tmuphi_index, units=False):
+    '''Print Tripoli-4 output for spectrum in a string to be parsed afterwards.
+    Energy, time, µ and φ are available.
+
+    :param numpy.ndarray spectrum: spectrum array from Hypothesis
+    :param list ebins: energy bins
+    :param tuple(ints) tmuphi_index: time, µ and φ bin
+    :param bool units: activate or not printing of units
+    :returns: T4 output as a string
+    '''
+    t4out = []
+    t4out.append(spectrum_beginning_str(units))
     for iebin in range(len(ebins)-1):
-        index = (0, 0, 0, iebin, tbin, mubin, phibin)
+        index = (0, 0, 0, iebin) + tmuphi_index
         t4out.append("{0:.6e} - {1:.6e} \t {2:.6e} \t {3:.6e} \t {4:.6e}\n"
                      .format(ebins[iebin], ebins[iebin+1],
                              spectrum[index]['score'],
@@ -506,6 +327,12 @@ Units:   MeV                     neut.s^-1       %               neut.s^-1
     return ''.join(t4out)
 
 def time_step_str(itbin, tbins):
+    '''Print the Tripoli-4 output for time step.
+
+    :param int itbin: time bin number
+    :param list tbins: edges of time bins
+    :returns: T4output as a string
+    '''
     t4out = []
     if tbins[itbin] < tbins[itbin+1]:
         mintime = tbins[itbin]
@@ -520,6 +347,12 @@ def time_step_str(itbin, tbins):
     return ''.join(t4out)
 
 def mu_angle_str(imubin, mubins):
+    '''Print the Tripoli-4 output for µ angular zone.
+
+    :param int imubin: µ bin number
+    :param list mubins: edges of µ bins
+    :returns: T4output as a string
+    '''
     t4out = []
     if mubins[imubin] < mubins[imubin+1]:
         minmu = mubins[imubin]
@@ -534,6 +367,12 @@ def mu_angle_str(imubin, mubins):
     return ''.join(t4out)
 
 def phi_angle_str(iphibin, phibins):
+    '''Print the Tripoli-4 output for φ angular zone.
+
+    :param int iphibin: φ bin number
+    :param list phibins: edges of φ bins
+    :returns: T4output as a string
+    '''
     t4out = []
     if phibins[iphibin] < phibins[iphibin+1]:
         minphi = phibins[iphibin]
@@ -548,12 +387,22 @@ def phi_angle_str(iphibin, phibins):
                  .format(iphibin, minphi, maxphi))
     return ''.join(t4out)
 
-def make_spectrum_t4_output(spectrum, bins, units):
+def spectrum_t4_output(spectrum, bins, units):
+    '''Build the Trupoli-4 output for spectra.
+    Loops are done successively on time, µ and φ as it is done in the "real" T4
+    outputs. Then the loop on energy bins is called.
+
+    Time, µ and φ bins are always generated. They are only printed in the T4
+    output if there are at least 2 bins, except for µ bins when there are more
+    than 2 bins in φ (as it is done in "real" outputs).
+
+    :param numpy.ndarray spectrum: spectrum array from Hypothesis
+    :param dict bins: dictionary of lists representing binnings. Keys are
+                      ``['e', 't', 'mu', 'phi']``.
+    '''
     t4out = []
-    t4out.append(spectrum_score_str())
+    t4out.append(score_str())
     t4out.append("\n")
-    print("spectrum shape =", spectrum.shape)
-    # if 't' in bins:
     for itbin in range(len(bins['t'])-1):
         if len(bins['t']) > 2:
             t4out.append(time_step_str(itbin, bins['t']))
@@ -563,12 +412,17 @@ def make_spectrum_t4_output(spectrum, bins, units):
             for iphibin in range(len(bins['phi'])-1):
                 if len(bins['phi']) > 2:
                     t4out.append(phi_angle_str(iphibin, bins['phi']))
-                t4out.append(build_spectrum_str(spectrum, bins['e'], itbin, imubin, iphibin, units))
-    # else:
-    #     t4out.append(build_spectrum_str(spectrum, bins['e'], 0, 0, 0, units))
+                tmuphi_index = (itbin, imubin, iphibin)
+                t4out.append(spectrum_str(spectrum, bins['e'],
+                                          tmuphi_index, units))
     return ''.join(t4out)
 
 def reverse_bins(bins):
+    '''Reverse bins if they are in decreasing order.
+
+    :param dict bins: dictionary of bins
+    :returns: dict of bins all in increasing order
+    '''
     rbins = bins
     for key in bins:
         if bins[key][0] > bins[key][1]:
@@ -576,60 +430,66 @@ def reverse_bins(bins):
     return rbins
 
 def compare_bins(bins, spectrum_res):
-    print("bins:", bins)
-    print("spectrum keys =", list(spectrum_res.keys()))
+    '''Compare bins: generated ones versus bins retrieved from spectrum after
+    parsing.
+
+    :param dict bins: dictionary of lists representing binnings. Keys are
+                      ``['e', 't', 'mu', 'phi']``.
+    :param dict spectrum_res: dictionary for spectrum result. Relevant keys for
+                              current method: ``['ebins', 'tbins', 'mubins',
+                              'phibins']``.
+
+    .. note::
+
+       The loop is done on keys of *bins* and not of *spectrum_res* as there
+       are fewer. The 4 binnings always exist in spectrum case, but are only
+       used if at least 2 bins are present in time, µ and φ dimensions. They
+       always exist for energy.
+    '''
     for key in bins:
-        # if len(gen_bins[key]) > 2 or key == 'e':
-        # if key == 'e' or key == 't':
         if key+'bins' in spectrum_res:
             assert np.allclose(spectrum_res[key+'bins'],
                                np.array(bins[key]))
-        else:
-            print("other key:", key)
 
-@settings(max_examples=10)
+@settings(max_examples=20)
 @given(sampler=data())
 def test_print_parse_spectrum(sampler):
+    '''Test printing spectrum as Tripoli-4 output from random arrays got from
+    Hypothesis. Also get energy, time, µ and φ angular bins (alwats in
+    increasing order for easiness of checks and as the flip is checked in
+    another test.
+
+    Check bins equality taking into account rounding using `numpy.allclose`
+    instead of `numpy.array_equal`, limit is per default 1e-8. For time, µ and
+    φ bins this is only check if more than 1 bin.
+
+    Check array equality:
+
+    * Equality of dtypes and shapes in all cases
+    * Equality of ``'score'``, ``'sigma'`` and ``'score/lethargy'`` arrays
+      considering roundings.
+
+    .. note::
+
+       This test can be quite long depending on number of bins in energy, time,
+       µ or φ. To avoid warning about that with pytest it is easier to limit
+       these dimensions to 3 (from few runs).
+    '''
     array, bins = sampler.draw(array_and_bins(
         dtype=np.dtype([('score', FTYPE), ('sigma', FTYPE),
                         ('score/lethargy', FTYPE)]),
-        max_dim=(1, 1, 1, 3, 3, 2, 2),
+        max_dim=(1, 1, 1, 5, 5, 2, 2),
         elements=tuples(floats(0, 1), floats(0, 100), floats(0, 1)),
         reverse=just(False)))
-    print("array:", array.squeeze(), "bins:", bins)
+    LOGGER.debug("shape: %s", str(array.shape))
     units = sampler.draw(booleans())
-    spectrum_str = make_spectrum_t4_output(array, bins, units)
-    print(spectrum_str)
-    pres = pygram.scoreblock.parseString(spectrum_str)
-    if pres:
-        print("Test bins")
-        # obins = reverse_bins(bins)
-        # assert np.allclose(pres[0]['spectrum_res']['ebins'],
-        #                    np.array(obins['e']))
-        # compare_bins(obins, pres[0]['spectrum_res'])
-        compare_bins(bins, pres[0]['spectrum_res'])
-        # if len(otbins) > 2:
-    #         assert np.allclose(pres[0]['mesh_res']['tbins'], np.array(otbins))
-        assert array.dtype == pres[0]['spectrum_res']['spectrum'].dtype
-        assert array.shape == pres[0]['spectrum_res']['spectrum'].shape
-        #     if np.array_equal(oebins, ebins) and np.array_equal(otbins, tbins):
-        assert np.allclose(array[:]['score'],
-                           pres[0]['spectrum_res']['spectrum'][:]['score'])
-        assert np.allclose(array[:]['sigma'],
-                           pres[0]['spectrum_res']['spectrum'][:]['sigma'])
-        assert np.allclose(array[:]['score/lethargy'],
-                           pres[0]['spectrum_res']['spectrum'][:]['score/lethargy'])
-@composite
-def simplearray(draw,
-                arr=arrays(dtype=np.float, shape=3, elements=floats(0,1))):
-    thearray = draw(arr)
-    return thearray
-
-@composite
-def handmadearray(draw,
-                  shap=array_shapes(min_dims=3, max_dims=3, min_side=1, max_side=3)):
-    myshape = draw(shap)
-    mydtype = np.dtype([('val', np.float), ('sig', np.float)])
-    myarray = np.empty(myshape, mydtype)
-    print(myarray.shape)
-    return myarray
+    spectrum_t4out = spectrum_t4_output(array, bins, units)
+    pres = pygram.scoreblock.parseString(spectrum_t4out)
+    compare_bins(bins, pres[0]['spectrum_res'])
+    spectrum = pres[0]['spectrum_res']['spectrum']
+    assert array.dtype == spectrum.dtype
+    assert array.shape == spectrum.shape
+    assert np.allclose(array[:]['score'], spectrum[:]['score'])
+    assert np.allclose(array[:]['sigma'], spectrum[:]['sigma'])
+    assert np.allclose(array[:]['score/lethargy'],
+                       spectrum[:]['score/lethargy'])

@@ -39,3 +39,11 @@ Tests for the :mod:`~.code` module
 
 .. automodule:: tests.cosette.test_code
    :undoc-members:
+
+Tests for the :mod:`~.eponine` package
+--------------------------------------
+
+Tests for the :mod:`common <valjean.eponine.common` module
+``````````````````````````````````````````````````````````
+
+.. automodule:: tests.eponine.test_common
