@@ -560,7 +560,7 @@ class DictBuilder(ABC):
     def __init__(self, colnames, lnbins):
         '''Initialization of DictBuilder.
 
-        :param colnames: name of the columns/results (e.g. ``'mesh'`` and
+        :param colnames: name of the columns/results (e.g. ``'tally'`` and
                          ``'sigma'`` for mesh, or ``'score'``, ``'sigma'``,
                          ``'score/lethargy'`` for spectrum)
         :type colnames: list of str
