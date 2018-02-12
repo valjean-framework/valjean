@@ -41,7 +41,7 @@ class Eponine():
 
     @profile
     def getStrRes(self):
-        lamres = scan_t4.Scan(self.jdd, self.endflag, self.meshlim)
+        lamres = scan_t4.Scan(self.jdd, self.meshlim)  # self.endflag
         self.normalend = lamres.normalend
         if not self.normalend and len(lamres) == 0:
             return False
@@ -51,7 +51,7 @@ class Eponine():
             self.strres = lamres[self.batch]
         # if self.batch == -1:
         #     self.batch = next(reversed(lamres))
-        self.inittime = lamres.initialization_time
+        self.inittime = lamres.times['initialization time']
         lamres.print_statistics()
         # print("self.strres =", self.strres)
         # print("type lamres =", type(lamres))
@@ -320,7 +320,8 @@ class Eponine():
             # enjol.getLastSpectrumResults()
             # enjol.getLastMeshResults()
             # enjol.getLastMeshResEnergyDep()
-            enjol.getLastMeshResEnergyDep7coord()
+            # enjol.getLastMeshResEnergyDep7coord()
+            enjol.checkTotSigma()
 
 
 def main(myjdd="", mode="MONO"):
@@ -368,7 +369,7 @@ def main(myjdd="", mode="MONO"):
     # print("Total time:", time.time() - rstart_time)
     start_time = time.time()
     epon.getTransResWithPyParsing()
-    # epon.tryPlot()
+    epon.tryPlot()
     print("PyParsing: use parser to get the result, duration =",
           time.time() - start_time)
     print("Total time:", time.time() - rstart_time)
