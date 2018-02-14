@@ -135,14 +135,15 @@ class BatchResultScanner:
         initialize the list of strings corresponding to the result block.
 
     '''
-    def __init__(self, count_excess, current_batch, mesh_limit, line):
+    def __init__(self, count_excess, current_batch, mesh_limit, para, line):
         self.count_mesh_exceeding = count_excess
         self.batch_counts = {'number': -1,
                              'current': current_batch,
                              'greater': 0}
         self.result = [line]
-        self.in_mesh = False
+        self.para = para
         self.mesh_limit = mesh_limit
+        self.in_mesh = False
         self.nb_mesh_lines = 0
         self.prev_line_mesh = False
 
@@ -190,7 +191,7 @@ class BatchResultScanner:
         elif "Results on a mesh" in line:
             self.in_mesh = True
             assert self.mesh_limit != 0
-        if "PARA" in sys.argv and "number of batches used" in line:
+        if self.para and "number of batches used" in line:
             self._set_greater_batch_number(line)
         self._store_line(line)
 
@@ -209,7 +210,7 @@ class BatchResultScanner:
         '''Check batch number value and replace it by current value or by the
         greater value if needed.
         '''
-        if "PARA" not in sys.argv:
+        if not self.para:
             if self.batch_counts['number'] != self.batch_counts['current']:
                 LOGGER.info("Edition batch (%d) different from "
                             "current batch (%d)",
@@ -258,11 +259,12 @@ class Scan(Mapping):
                         parsing would fail)
 
     :type mesh_limit: int
+    :param bool para: run in mono-processor or parallel mode
     '''
     END_FLAGS = ["simulation time", "exploitation time", "elapsed time"]
 
     @profile
-    def __init__(self, fname, mesh_lim=-1):
+    def __init__(self, fname, mesh_lim=-1, para=False):
         '''Initialize the instance from the file `fname`, meaning reads the
         file and store the relevant parts of it, i.e. result block for each
         batch edition.
@@ -298,6 +300,7 @@ class Scan(Mapping):
         # keep mesh_lim as instance variable and not class variable to prevent
         # risk of changing its value for all instances of the class
         self.mesh_limit = mesh_lim
+        self.para = para
         self.countwarnings = 0
         self.counterrors = 0
         self.times = OrderedDict()
@@ -306,7 +309,7 @@ class Scan(Mapping):
         self._get_collres()
 
     @classmethod
-    def debug_scan(cls, fname, mesh_lim=-1, end_flag=""):
+    def debug_scan(cls, fname, mesh_lim=-1, para=False, end_flag=""):
         '''Debug constructor, adding possibilty to use a custom end flag.
 
         :param str fname: path to the file to scan
@@ -316,8 +319,7 @@ class Scan(Mapping):
         '''
         if end_flag:
             cls.END_FLAGS.insert(0, end_flag)
-        print(cls.END_FLAGS)
-        return cls(fname, mesh_lim)
+        return cls(fname, mesh_lim, para)
 
     def _check_input_data(self, line):
         '''Get some parameters from introdcution of the results file, i.e.
@@ -331,7 +333,7 @@ class Scan(Mapping):
                         "number of batchs expected divided "
                         "by PACKET_LENGTH in PARA[0m")
             indpacket = line.split().index('PACKET_LENGTH')
-            if "PARA" in sys.argv:
+            if self.para:
                 self.reqbatchs //= int(line.split()[indpacket+1])
             LOGGER.debug("new number of batchs = %d", self.reqbatchs)
         elif "initialization time" in line:  # correspond to end of data file
@@ -376,14 +378,14 @@ class Scan(Mapping):
                         _batch_scan = None
                         # ordered dictionary -> unique keys, so only last kept
                         self._add_time(end_flag, line)
-                    continue
+                        continue
                 elif not self.times:
                     self._check_input_data(line)
                     continue
                 elif "RESULTS ARE GIVEN" in line:
                     _batch_scan = BatchResultScanner(
                         count_mesh_exceeding, current_batch,
-                        self.mesh_limit, line)
+                        self.mesh_limit, self.para, line)
                 elif line.startswith(' batch number :'):
                     current_batch = int(line.split()[-1])
                 elif "WARNING" in line:
