@@ -128,16 +128,14 @@ class T4Parser():
         If end_flag was set, calls :meth:`.scan_t4.Scan.debug_scan` instead of
         the usual constructor.
         '''
-        print("[94mend_flag =", self.end_flag, "[0m")
         if self.end_flag:
-            print("will use debug_scan")
             self.scan_res = scan_t4.Scan.debug_scan(self.jdd, self.mesh_limit,
                                                     self.para, self.end_flag)
         else:
             self.scan_res = scan_t4.Scan(self.jdd, self.mesh_limit, self.para)
-        print("is scan_res ?", self.scan_res)
-        print("len(scan_res) =", len(self.scan_res))
-        print("normal end:", self.scan_res.normalend)
+        # print("is scan_res ?", self.scan_res)
+        # print("len(scan_res) =", len(self.scan_res))
+        # print("normal end:", self.scan_res.normalend)
         # need to look if we keep or not the excpetion, catch it,
         # let it crash... -> how to count unsuccessful jobs...
         if not self.scan_res:

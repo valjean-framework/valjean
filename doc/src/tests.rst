@@ -47,3 +47,8 @@ Tests for the :mod:`common <valjean.eponine.common>` module
 ```````````````````````````````````````````````````````````
 
 .. automodule:: tests.eponine.test_common
+
+Tests for the :mod:`~.scan_t4` module
+`````````````````````````````````````
+
+.. automodule:: tests.eponine.test_scan_t4

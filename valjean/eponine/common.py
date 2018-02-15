@@ -15,6 +15,7 @@ dictionary keys should be the same in all parsers...
 .. |KS| replace:: KSTEP
 .. |KC| replace:: KCOLL
 .. |KT| replace:: KTRACK
+.. |kij| replace:: k\ :sub:`ij`
 
 Goal
 ----
@@ -408,8 +409,6 @@ results for each cycle. These results are converted in a *numpy* structured
 array with ``dtype = ('length', 'score', 'sigma')``. Dimension of the array
 corresponds to number of cycles used.
 
-
-.. |kij| replace:: k\ :sub:`ij`
 
 
 |kij| results
