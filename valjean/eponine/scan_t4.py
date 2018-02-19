@@ -261,10 +261,9 @@ class Scan(Mapping):
     :type mesh_limit: int
     :param bool para: run in mono-processor or parallel mode
     '''
-    END_FLAGS = ["simulation time", "exploitation time", "elapsed time"]
 
     @profile
-    def __init__(self, fname, mesh_lim=-1, para=False):
+    def __init__(self, fname, mesh_lim=-1, para=False, end_flag=""):
         '''Initialize the instance from the file `fname`, meaning reads the
         file and store the relevant parts of it, i.e. result block for each
         batch edition.
@@ -297,16 +296,23 @@ class Scan(Mapping):
         self.fname = fname
         self.reqbatchs = -1
         self.normalend = False
+        self.end_flags = ["simulation time", "exploitation time",
+                          "elapsed time"]
+        if end_flag:
+            self.end_flags.insert(0, end_flag)
         # keep mesh_lim as instance variable and not class variable to prevent
         # risk of changing its value for all instances of the class
         self.mesh_limit = mesh_lim
         self.para = para
+        self.counts = {'warning': 0, 'error': 0}
         self.countwarnings = 0
         self.counterrors = 0
         self.times = OrderedDict()
         self.last_generator_state = ""
         self._collres = OrderedDict()
         self._get_collres()
+        # if len(Scan.END_FLAGS) > 3:
+        #     Scan.END_FLAGS.pop(0)
 
     @classmethod
     def debug_scan(cls, fname, mesh_lim=-1, para=False, end_flag=""):
@@ -317,9 +323,9 @@ class Scan(Mapping):
         :param str end_flag: end flag on which ending scanning
         :returns: instance of :class:`Scan`.
         '''
-        if end_flag:
-            cls.END_FLAGS.insert(0, end_flag)
-        return cls(fname, mesh_lim, para)
+        # if end_flag:
+        #     cls.END_FLAGS.insert(0, end_flag)
+        return cls(fname, mesh_lim, para, end_flag)
 
     def _check_input_data(self, line):
         '''Get some parameters from introdcution of the results file, i.e.
@@ -340,10 +346,10 @@ class Scan(Mapping):
             self.times['initialization time'] = int(line.split()[3])
 
     def _is_end_flag(self, line):
-        # len(END_FLAGS) = 3: default list, no user's end flag added
-        if "time" not in line and len(self.END_FLAGS) == 3:
+        # len(END_FLAGSnd_flags_FLAGS) = 3: default list, no user's end flag added
+        if "time" not in line and len(self.end_flags) == 3:
             return
-        for end_flag in self.END_FLAGS:
+        for end_flag in self.end_flags:
             if end_flag in line:
                 return end_flag
 
@@ -464,6 +470,7 @@ class Scan(Mapping):
     @profile
     def get_all_batch_results(self):
         '''Return all batchs results in one string, to be parsed in once.'''
+        print("joining all res")
         return ''.join(self._collres.values())
 
     def print_statistics(self):
