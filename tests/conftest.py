@@ -47,3 +47,12 @@ def workdir(tmpdir):
     '''Fixture that cd's to a temporary working directory.'''
     with tmpdir.as_cwd():
         yield tmpdir
+
+
+@pytest.fixture
+def verbose():
+    '''Fixture to use debug mode with pytest.'''
+    import logging
+    logger = logging.getLogger('valjean')
+    logger.setLevel(logging.DEBUG)
+    return True
