@@ -1,0 +1,2065 @@
+
+=====================================================================
+$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+ hostname: is232540
+ pid: 16618
+
+=====================================================================
+$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+
+ HOSTNAME : is232540
+
+ PROCESS ID is : 16618
+
+ DATE : Mon Feb 19 08:52:17 2018
+
+ Version is $Name: tripoli4_10_2 $.
+
+=====================================================================
+
+ data filename = input/ttsSimplePacket20.d
+ catalogname = /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512
+ execution call = tripoli4 -s NJOY -a -c /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512 -d input/ttsSimplePacket20.d -o output/ttsSimplePacket20.d.res.ceav5 
+
+
+ dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
+ mass file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
+ Q fission directory : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/Qfission
+ electron cross section  directory : /data/tmpuranus2/GALILEE-V0-3.0/PEID/Electron_Photon
+ abondance file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/abundance
+ own evaluations directory : 
+
+
+ WARNING
+ method name : T4_path
+ error message : No such directory for own evaluations
+
+
+
+
+ 	 reading geometry : 
+
+ 	 checking association of compositions and volumes :  ok 
+
+
+GEOMETRIE
+TITRE
+
+TYPE 1 BOITE 20 100 100
+TYPE 2 BOITE 20 100 100
+TYPE 3 BOITE 20 100 100
+
+VOLU 1 COMBI 1 10 0 0 FINV
+VOLU 2 COMBI 2 20 0 0 V_ORIGIN 1 FINV
+VOLU 3 COMBI 3 40 0 0 V_ORIGIN 1 FINV
+
+// GRAF -10 -50 -50 1 0 0 0 1 0 100 100 1
+FINGEOM
+
+
+
+COMPOSITION
+	2
+	PONCTUAL  300 COMBUSTIBLE
+		5
+		H1	5.9347E-2
+		N14	2.1220E-3
+		O16	3.7258E-2
+		U235	7.6864E-5
+		U238	6.8303E-4	
+	PONCTUAL 300 EAU
+		2
+		O16	6.6658E-2
+		H1_H2O	3.3329E-2
+FIN_COMPOSITION
+
+GEOMCOMP
+
+	COMBUSTIBLE  2 1 3
+	EAU          1 2
+	
+FIN_GEOMCOMP
+
+LIMIT 
+	12
+	1 REFLECTION 3
+	1 REFLECTION 4
+	1 REFLECTION 5
+	1 REFLECTION 6
+	2 REFLECTION 3
+	2 REFLECTION 4
+	2 REFLECTION 5
+	2 REFLECTION 6
+	3 REFLECTION 3
+	3 REFLECTION 4
+	3 REFLECTION 5
+	3 REFLECTION 6
+FIN_LIMIT
+
+LIST_DECOUPAGE 1 DEC_INTEG4     2
+                 20. 1.E-11
+FIN_LIST_DECOUPAGE
+
+
+
+REPONSES 2
+	FLUX		NEUTRON
+        REACTION	NEUTRON  NUCLEUS U235 COMPO  COMBUSTIBLE  INTERACTION 1 33
+FIN_REPONSE
+
+
+SCORE  3
+        1 COLL DECOUPAGE DEC_INTEG4 VOLU LIST 2 1 3
+        1 TRACK DECOUPAGE DEC_INTEG4 VOLU LIST 2 1 3
+        2 COLL DECOUPAGE DEC_INTEG4 VOLU LIST 2 1 3
+FIN_SCORE
+
+
+
+LIST_SOURCE     1  NORME 1
+        SOURCE
+        NEUTRON 
+	FACTORIZED
+		FRAME
+			CARTESIAN
+			0 0 0
+			1 0 0
+			0 1 0
+			0 0 1
+		VOLU 2 1 3
+		GEOMETRIC_DISTRIBUTION
+			SOBOL_POINTS 2000
+			TABULATED TYPE F_UVW
+			  VAR_U X 2 0 60
+			  VAR_V Y 2 0 100
+			  VAR_W Z 2 0 100
+			  F_UVW 1
+        ANGULAR_DISTRIBUTION    ISOTROPIC
+        ENERGETIC_DISTRIBUTION  SPECTRE WATT_SPECTRE
+        TIME_DISTRIBUTION       DIRAC 0.
+        FIN_SOURCE
+FIN_LIST_SOURCE
+
+SIMULATION
+	CRITICITY
+	  DISCARD 100
+        BATCH 200
+        PARTICULES 1 NEUTRON
+        SIZE 5000
+	PACKET_LENGTH 20
+	EDITION 100
+FIN_SIMULATION
+
+
+
+
+Total concentration of material COMBUSTIBLE (1.E24at/cm3) is: 9.948689e-02
+Total concentration of material EAU (1.E24at/cm3) is: 9.998700e-02
+
+
+ Loading response functions ...
+ Loading response function ...1, 0
+ Constructing score  ...0
+ Constructing score  ...1
+ Constructing score  ...2
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 9.999997e-01
+
+		 Energetic density simulation intensity = 9.999997e-01
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 9.870000e+04
+
+		 Calculated source simulation intensity = 1.240300e+06
+
+		 Calculated source definition intensity = 1.240300e+06
+
+	         SIMULATION INTENSITY = 1.240300e+06   BIASED SIMULATION INTENSITY = 1.240300e+06
+
+   SUM OF SIMULATION INTENSITIES = 1.240300e+06
+
+   GLOBAL NORM = 1.000000e+00   GLOBAL SIMULATION INTENSITY = 1.000000e+00
+
+   BIASED TOTAL SOURCE INTENSITY = 1.000000e+00
+
+
+ initialization time (s): 3
+
+
+ Type and parameters of random generator before batch 1 : 
+	 DRAND48_RANDOM 123 13 37  COUNTER	0
+
+
+ batch number : 1
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.504680e+01	 sigma_n : 1.014229e+00
+	 number of secondary particules: 4996
+	 number of fission neutrons: 4996
+
+ batch number : 2
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.096597e+01	 sigma_n : 1.103887e+00
+	 number of secondary particules: 5306
+	 number of fission neutrons: 5306
+
+ batch number : 3
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.892518e+01	 sigma_n : 1.012971e+00
+	 number of secondary particules: 5352
+	 number of fission neutrons: 5352
+
+ batch number : 4
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.892321e+01	 sigma_n : 9.842802e-01
+	 number of secondary particules: 5305
+	 number of fission neutrons: 5305
+
+ batch number : 5
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.743695e+01	 sigma_n : 9.346170e-01
+	 number of secondary particules: 5345
+	 number of fission neutrons: 5345
+
+ batch number : 6
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.803555e+01	 sigma_n : 9.839711e-01
+	 number of secondary particules: 5400
+	 number of fission neutrons: 5400
+
+ batch number : 7
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.937685e+01	 sigma_n : 1.025319e+00
+	 number of secondary particules: 5274
+	 number of fission neutrons: 5274
+
+ batch number : 8
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.799014e+01	 sigma_n : 9.740136e-01
+	 number of secondary particules: 5573
+	 number of fission neutrons: 5573
+
+ batch number : 9
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.811466e+01	 sigma_n : 9.887099e-01
+	 number of secondary particules: 5247
+	 number of fission neutrons: 5247
+
+ batch number : 10
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.894321e+01	 sigma_n : 9.557896e-01
+	 number of secondary particules: 5508
+	 number of fission neutrons: 5508
+
+ batch number : 11
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.055428e+01	 sigma_n : 1.024962e+00
+	 number of secondary particules: 5371
+	 number of fission neutrons: 5371
+
+ batch number : 12
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.954645e+01	 sigma_n : 1.016793e+00
+	 number of secondary particules: 5472
+	 number of fission neutrons: 5472
+
+ batch number : 13
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.801096e+01	 sigma_n : 9.585571e-01
+	 number of secondary particules: 5352
+	 number of fission neutrons: 5352
+
+ batch number : 14
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.934006e+01	 sigma_n : 1.031554e+00
+	 number of secondary particules: 5414
+	 number of fission neutrons: 5414
+
+ batch number : 15
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.675120e+01	 sigma_n : 9.266735e-01
+	 number of secondary particules: 5333
+	 number of fission neutrons: 5333
+
+ batch number : 16
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.949334e+01	 sigma_n : 1.008642e+00
+	 number of secondary particules: 5226
+	 number of fission neutrons: 5226
+
+ batch number : 17
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.977937e+01	 sigma_n : 9.981254e-01
+	 number of secondary particules: 5218
+	 number of fission neutrons: 5218
+
+ batch number : 18
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.981353e+01	 sigma_n : 1.019137e+00
+	 number of secondary particules: 5255
+	 number of fission neutrons: 5255
+
+ batch number : 19
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.863844e+01	 sigma_n : 9.611725e-01
+	 number of secondary particules: 5319
+	 number of fission neutrons: 5319
+
+ batch number : 20
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.809964e+01	 sigma_n : 9.780290e-01
+	 number of secondary particules: 5450
+	 number of fission neutrons: 5450
+
+ batch number : 21
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.754624e+01	 sigma_n : 9.600336e-01
+	 number of secondary particules: 5433
+	 number of fission neutrons: 5433
+
+ batch number : 22
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.887024e+01	 sigma_n : 1.011806e+00
+	 number of secondary particules: 5419
+	 number of fission neutrons: 5419
+
+ batch number : 23
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.736852e+01	 sigma_n : 1.003056e+00
+	 number of secondary particules: 5282
+	 number of fission neutrons: 5282
+
+ batch number : 24
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.877830e+01	 sigma_n : 9.854167e-01
+	 number of secondary particules: 5389
+	 number of fission neutrons: 5389
+
+ batch number : 25
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.995045e+01	 sigma_n : 1.056220e+00
+	 number of secondary particules: 5465
+	 number of fission neutrons: 5465
+
+ batch number : 26
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.518902e+01	 sigma_n : 9.315343e-01
+	 number of secondary particules: 5483
+	 number of fission neutrons: 5483
+
+ batch number : 27
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.743389e+01	 sigma_n : 9.946589e-01
+	 number of secondary particules: 5442
+	 number of fission neutrons: 5442
+
+ batch number : 28
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.915436e+01	 sigma_n : 1.047947e+00
+	 number of secondary particules: 5383
+	 number of fission neutrons: 5383
+
+ batch number : 29
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.129073e+01	 sigma_n : 1.084543e+00
+	 number of secondary particules: 5407
+	 number of fission neutrons: 5407
+
+ batch number : 30
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.859238e+01	 sigma_n : 9.887117e-01
+	 number of secondary particules: 5479
+	 number of fission neutrons: 5479
+
+ batch number : 31
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.935663e+01	 sigma_n : 9.982249e-01
+	 number of secondary particules: 5494
+	 number of fission neutrons: 5494
+
+ batch number : 32
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.896087e+01	 sigma_n : 9.953828e-01
+	 number of secondary particules: 5396
+	 number of fission neutrons: 5396
+
+ batch number : 33
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.937009e+01	 sigma_n : 1.011600e+00
+	 number of secondary particules: 5364
+	 number of fission neutrons: 5364
+
+ batch number : 34
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.073490e+01	 sigma_n : 1.086437e+00
+	 number of secondary particules: 5540
+	 number of fission neutrons: 5540
+
+ batch number : 35
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.007708e+01	 sigma_n : 1.034943e+00
+	 number of secondary particules: 5521
+	 number of fission neutrons: 5521
+
+ batch number : 36
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.883898e+01	 sigma_n : 1.000512e+00
+	 number of secondary particules: 5509
+	 number of fission neutrons: 5509
+
+ batch number : 37
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.673026e+01	 sigma_n : 9.479714e-01
+	 number of secondary particules: 5337
+	 number of fission neutrons: 5337
+
+ batch number : 38
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.896496e+01	 sigma_n : 1.005680e+00
+	 number of secondary particules: 5430
+	 number of fission neutrons: 5430
+
+ batch number : 39
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.713076e+01	 sigma_n : 9.815076e-01
+	 number of secondary particules: 5436
+	 number of fission neutrons: 5436
+
+ batch number : 40
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.930040e+01	 sigma_n : 1.019161e+00
+	 number of secondary particules: 5310
+	 number of fission neutrons: 5310
+
+ batch number : 41
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.057533e+01	 sigma_n : 1.050688e+00
+	 number of secondary particules: 5363
+	 number of fission neutrons: 5363
+
+ batch number : 42
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.908074e+01	 sigma_n : 1.037382e+00
+	 number of secondary particules: 5385
+	 number of fission neutrons: 5385
+
+ batch number : 43
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.890102e+01	 sigma_n : 1.000172e+00
+	 number of secondary particules: 5416
+	 number of fission neutrons: 5416
+
+ batch number : 44
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.991599e+01	 sigma_n : 1.057355e+00
+	 number of secondary particules: 5448
+	 number of fission neutrons: 5448
+
+ batch number : 45
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.868686e+01	 sigma_n : 1.031689e+00
+	 number of secondary particules: 5321
+	 number of fission neutrons: 5321
+
+ batch number : 46
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.776471e+01	 sigma_n : 9.780798e-01
+	 number of secondary particules: 5310
+	 number of fission neutrons: 5310
+
+ batch number : 47
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.182731e+01	 sigma_n : 1.062506e+00
+	 number of secondary particules: 5353
+	 number of fission neutrons: 5353
+
+ batch number : 48
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.919933e+01	 sigma_n : 9.869256e-01
+	 number of secondary particules: 5426
+	 number of fission neutrons: 5426
+
+ batch number : 49
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.071139e+01	 sigma_n : 1.074716e+00
+	 number of secondary particules: 5163
+	 number of fission neutrons: 5163
+
+ batch number : 50
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.180496e+01	 sigma_n : 1.072371e+00
+	 number of secondary particules: 5333
+	 number of fission neutrons: 5333
+
+ batch number : 51
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.017101e+01	 sigma_n : 1.070846e+00
+	 number of secondary particules: 5477
+	 number of fission neutrons: 5477
+
+ batch number : 52
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.778729e+01	 sigma_n : 1.004042e+00
+	 number of secondary particules: 5435
+	 number of fission neutrons: 5435
+
+ batch number : 53
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.740221e+01	 sigma_n : 9.866783e-01
+	 number of secondary particules: 5390
+	 number of fission neutrons: 5390
+
+ batch number : 54
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.785826e+01	 sigma_n : 9.707182e-01
+	 number of secondary particules: 5367
+	 number of fission neutrons: 5367
+
+ batch number : 55
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.702385e+01	 sigma_n : 9.949566e-01
+	 number of secondary particules: 5514
+	 number of fission neutrons: 5514
+
+ batch number : 56
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.750254e+01	 sigma_n : 9.614021e-01
+	 number of secondary particules: 5464
+	 number of fission neutrons: 5464
+
+ batch number : 57
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.824122e+01	 sigma_n : 9.821955e-01
+	 number of secondary particules: 5339
+	 number of fission neutrons: 5339
+
+ batch number : 58
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.059225e+01	 sigma_n : 1.070644e+00
+	 number of secondary particules: 5476
+	 number of fission neutrons: 5476
+
+ batch number : 59
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.851954e+01	 sigma_n : 9.858654e-01
+	 number of secondary particules: 5447
+	 number of fission neutrons: 5447
+
+ batch number : 60
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.058564e+01	 sigma_n : 1.076070e+00
+	 number of secondary particules: 5310
+	 number of fission neutrons: 5310
+
+ batch number : 61
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.042505e+01	 sigma_n : 1.067030e+00
+	 number of secondary particules: 5355
+	 number of fission neutrons: 5355
+
+ batch number : 62
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.039421e+01	 sigma_n : 1.057601e+00
+	 number of secondary particules: 5420
+	 number of fission neutrons: 5420
+
+ batch number : 63
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.914207e+01	 sigma_n : 1.010511e+00
+	 number of secondary particules: 5500
+	 number of fission neutrons: 5500
+
+ batch number : 64
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.803818e+01	 sigma_n : 9.785263e-01
+	 number of secondary particules: 5376
+	 number of fission neutrons: 5376
+
+ batch number : 65
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.864118e+01	 sigma_n : 9.994536e-01
+	 number of secondary particules: 5488
+	 number of fission neutrons: 5488
+
+ batch number : 66
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.632052e+01	 sigma_n : 9.698113e-01
+	 number of secondary particules: 5429
+	 number of fission neutrons: 5429
+
+ batch number : 67
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.813299e+01	 sigma_n : 9.629240e-01
+	 number of secondary particules: 5324
+	 number of fission neutrons: 5324
+
+ batch number : 68
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.964669e+01	 sigma_n : 9.991984e-01
+	 number of secondary particules: 5533
+	 number of fission neutrons: 5533
+
+ batch number : 69
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.903145e+01	 sigma_n : 1.023605e+00
+	 number of secondary particules: 5442
+	 number of fission neutrons: 5442
+
+ batch number : 70
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.897538e+01	 sigma_n : 1.007946e+00
+	 number of secondary particules: 5379
+	 number of fission neutrons: 5379
+
+ batch number : 71
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.781855e+01	 sigma_n : 9.818140e-01
+	 number of secondary particules: 5278
+	 number of fission neutrons: 5278
+
+ batch number : 72
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.075426e+01	 sigma_n : 1.069097e+00
+	 number of secondary particules: 5517
+	 number of fission neutrons: 5517
+
+ batch number : 73
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.712144e+01	 sigma_n : 9.304988e-01
+	 number of secondary particules: 5460
+	 number of fission neutrons: 5460
+
+ batch number : 74
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.883278e+01	 sigma_n : 1.024491e+00
+	 number of secondary particules: 5315
+	 number of fission neutrons: 5315
+
+ batch number : 75
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.853358e+01	 sigma_n : 1.005504e+00
+	 number of secondary particules: 5399
+	 number of fission neutrons: 5399
+
+ batch number : 76
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.958789e+01	 sigma_n : 1.075300e+00
+	 number of secondary particules: 5330
+	 number of fission neutrons: 5330
+
+ batch number : 77
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.173171e+01	 sigma_n : 1.064790e+00
+	 number of secondary particules: 5415
+	 number of fission neutrons: 5415
+
+ batch number : 78
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.008994e+01	 sigma_n : 1.056832e+00
+	 number of secondary particules: 5371
+	 number of fission neutrons: 5371
+
+ batch number : 79
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.777751e+01	 sigma_n : 9.903771e-01
+	 number of secondary particules: 5348
+	 number of fission neutrons: 5348
+
+ batch number : 80
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.813556e+01	 sigma_n : 1.028558e+00
+	 number of secondary particules: 5252
+	 number of fission neutrons: 5252
+
+ batch number : 81
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.004398e+01	 sigma_n : 1.068590e+00
+	 number of secondary particules: 5420
+	 number of fission neutrons: 5420
+
+ batch number : 82
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.021125e+01	 sigma_n : 1.058427e+00
+	 number of secondary particules: 5376
+	 number of fission neutrons: 5376
+
+ batch number : 83
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.822005e+01	 sigma_n : 1.085685e+00
+	 number of secondary particules: 5448
+	 number of fission neutrons: 5448
+
+ batch number : 84
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.879001e+01	 sigma_n : 9.881183e-01
+	 number of secondary particules: 5362
+	 number of fission neutrons: 5362
+
+ batch number : 85
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.889220e+01	 sigma_n : 1.009626e+00
+	 number of secondary particules: 5479
+	 number of fission neutrons: 5479
+
+ batch number : 86
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.677021e+01	 sigma_n : 9.759639e-01
+	 number of secondary particules: 5378
+	 number of fission neutrons: 5378
+
+ batch number : 87
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.955355e+01	 sigma_n : 1.033483e+00
+	 number of secondary particules: 5314
+	 number of fission neutrons: 5314
+
+ batch number : 88
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.885830e+01	 sigma_n : 1.003282e+00
+	 number of secondary particules: 5226
+	 number of fission neutrons: 5226
+
+ batch number : 89
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.918905e+01	 sigma_n : 9.889709e-01
+	 number of secondary particules: 5470
+	 number of fission neutrons: 5470
+
+ batch number : 90
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.901426e+01	 sigma_n : 1.033980e+00
+	 number of secondary particules: 5414
+	 number of fission neutrons: 5414
+
+ batch number : 91
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.773162e+01	 sigma_n : 9.704006e-01
+	 number of secondary particules: 5408
+	 number of fission neutrons: 5408
+
+ batch number : 92
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.839719e+01	 sigma_n : 1.036036e+00
+	 number of secondary particules: 5514
+	 number of fission neutrons: 5514
+
+ batch number : 93
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.728147e+01	 sigma_n : 9.421550e-01
+	 number of secondary particules: 5502
+	 number of fission neutrons: 5502
+
+ batch number : 94
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.705998e+01	 sigma_n : 9.813955e-01
+	 number of secondary particules: 5428
+	 number of fission neutrons: 5428
+
+ batch number : 95
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.781835e+01	 sigma_n : 1.050890e+00
+	 number of secondary particules: 5341
+	 number of fission neutrons: 5341
+
+ batch number : 96
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.708800e+01	 sigma_n : 9.901395e-01
+	 number of secondary particules: 5362
+	 number of fission neutrons: 5362
+
+ batch number : 97
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.808821e+01	 sigma_n : 1.007700e+00
+	 number of secondary particules: 5486
+	 number of fission neutrons: 5486
+
+ batch number : 98
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.897922e+01	 sigma_n : 1.023447e+00
+	 number of secondary particules: 5495
+	 number of fission neutrons: 5495
+
+ batch number : 99
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.620291e+01	 sigma_n : 9.195368e-01
+	 number of secondary particules: 5516
+	 number of fission neutrons: 5516
+
+ Type and parameters of random generator before batch 100 : 
+	 DRAND48_RANDOM 58246 55393 21082  COUNTER	399547517
+
+
+ batch number : 100
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.773350e+01	 sigma_n : 9.700280e-01
+	 number of secondary particules: 5404
+	 number of fission neutrons: 5404
+
+ KEFF at step  : 100
+ keff = 0.000000e+00 sigma : 0.000000e+00
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 7.111140e+02	 sigma = 4.388024e+00	 sigma% = 6.170634e-01
+
+
+ Edition after batch number : 100
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : FLUX
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+	 NOT YET CONVERGED 
+
+
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+	 NOT YET CONVERGED 
+
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : FLUX
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+******************************************************************************
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+	 NOT YET CONVERGED 
+
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+	 NOT YET CONVERGED 
+
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : COMBUSTIBLE
+
+ concentration : 7.686400e-05
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+	 NOT YET CONVERGED 
+
+
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+	 NOT YET CONVERGED 
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	0
+
+
+	 NOT YET CONVERGED 
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+ simulation time (s) : 112
+
+
+ batch number : 101
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.764175e+01	 sigma_n : 1.021715e+00
+	 number of secondary particules: 5567
+	 number of fission neutrons: 5567
+
+ batch number : 102
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.796264e+01	 sigma_n : 9.748279e-01
+	 number of secondary particules: 5447
+	 number of fission neutrons: 5447
+
+ batch number : 103
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.945530e+01	 sigma_n : 1.039263e+00
+	 number of secondary particules: 5573
+	 number of fission neutrons: 5573
+
+ batch number : 104
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.812614e+01	 sigma_n : 1.000191e+00
+	 number of secondary particules: 5214
+	 number of fission neutrons: 5214
+
+ batch number : 105
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.873111e+01	 sigma_n : 1.004994e+00
+	 number of secondary particules: 5262
+	 number of fission neutrons: 5262
+
+ batch number : 106
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.868662e+01	 sigma_n : 9.904776e-01
+	 number of secondary particules: 5427
+	 number of fission neutrons: 5427
+
+ batch number : 107
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.756090e+01	 sigma_n : 9.925962e-01
+	 number of secondary particules: 5529
+	 number of fission neutrons: 5529
+
+ batch number : 108
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.790541e+01	 sigma_n : 9.896527e-01
+	 number of secondary particules: 5377
+	 number of fission neutrons: 5377
+
+ batch number : 109
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.052873e+01	 sigma_n : 1.075764e+00
+	 number of secondary particules: 5433
+	 number of fission neutrons: 5433
+
+ batch number : 110
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.903313e+01	 sigma_n : 1.021917e+00
+	 number of secondary particules: 5402
+	 number of fission neutrons: 5402
+
+ batch number : 111
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.860515e+01	 sigma_n : 1.024061e+00
+	 number of secondary particules: 5312
+	 number of fission neutrons: 5312
+
+ batch number : 112
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.692809e+01	 sigma_n : 9.695756e-01
+	 number of secondary particules: 5415
+	 number of fission neutrons: 5415
+
+ batch number : 113
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.877452e+01	 sigma_n : 1.006470e+00
+	 number of secondary particules: 5455
+	 number of fission neutrons: 5455
+
+ batch number : 114
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.750486e+01	 sigma_n : 9.376036e-01
+	 number of secondary particules: 5355
+	 number of fission neutrons: 5355
+
+ batch number : 115
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.048796e+01	 sigma_n : 1.037785e+00
+	 number of secondary particules: 5426
+	 number of fission neutrons: 5426
+
+ batch number : 116
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.901235e+01	 sigma_n : 1.024057e+00
+	 number of secondary particules: 5400
+	 number of fission neutrons: 5400
+
+ batch number : 117
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.931296e+01	 sigma_n : 1.013104e+00
+	 number of secondary particules: 5392
+	 number of fission neutrons: 5392
+
+ batch number : 118
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.909792e+01	 sigma_n : 9.928647e-01
+	 number of secondary particules: 5424
+	 number of fission neutrons: 5424
+
+ batch number : 119
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.816888e+01	 sigma_n : 9.769726e-01
+	 number of secondary particules: 5536
+	 number of fission neutrons: 5536
+
+ batch number : 120
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.663638e+01	 sigma_n : 9.303120e-01
+	 number of secondary particules: 5269
+	 number of fission neutrons: 5269
+
+ batch number : 121
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.129531e+01	 sigma_n : 1.054421e+00
+	 number of secondary particules: 5369
+	 number of fission neutrons: 5369
+
+ batch number : 122
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.802459e+01	 sigma_n : 1.002131e+00
+	 number of secondary particules: 5316
+	 number of fission neutrons: 5316
+
+ batch number : 123
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.678950e+01	 sigma_n : 9.567951e-01
+	 number of secondary particules: 5418
+	 number of fission neutrons: 5418
+
+ batch number : 124
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.755361e+01	 sigma_n : 9.616380e-01
+	 number of secondary particules: 5389
+	 number of fission neutrons: 5389
+
+ batch number : 125
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.067502e+01	 sigma_n : 1.056122e+00
+	 number of secondary particules: 5508
+	 number of fission neutrons: 5508
+
+ batch number : 126
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.917012e+01	 sigma_n : 9.833931e-01
+	 number of secondary particules: 5411
+	 number of fission neutrons: 5411
+
+ batch number : 127
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.854796e+01	 sigma_n : 9.856447e-01
+	 number of secondary particules: 5501
+	 number of fission neutrons: 5501
+
+ batch number : 128
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.765824e+01	 sigma_n : 9.830337e-01
+	 number of secondary particules: 5296
+	 number of fission neutrons: 5296
+
+ batch number : 129
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.876586e+01	 sigma_n : 9.862477e-01
+	 number of secondary particules: 5432
+	 number of fission neutrons: 5432
+
+ batch number : 130
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.847128e+01	 sigma_n : 1.019168e+00
+	 number of secondary particules: 5456
+	 number of fission neutrons: 5456
+
+ batch number : 131
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.743750e+01	 sigma_n : 9.780206e-01
+	 number of secondary particules: 5425
+	 number of fission neutrons: 5425
+
+ batch number : 132
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.844424e+01	 sigma_n : 1.060913e+00
+	 number of secondary particules: 5351
+	 number of fission neutrons: 5351
+
+ batch number : 133
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.156120e+01	 sigma_n : 1.080879e+00
+	 number of secondary particules: 5295
+	 number of fission neutrons: 5295
+
+ batch number : 134
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.884230e+01	 sigma_n : 9.844332e-01
+	 number of secondary particules: 5610
+	 number of fission neutrons: 5610
+
+ batch number : 135
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.624456e+01	 sigma_n : 9.664773e-01
+	 number of secondary particules: 5499
+	 number of fission neutrons: 5499
+
+ batch number : 136
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.743426e+01	 sigma_n : 9.390508e-01
+	 number of secondary particules: 5310
+	 number of fission neutrons: 5310
+
+ batch number : 137
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.017834e+01	 sigma_n : 1.033159e+00
+	 number of secondary particules: 5481
+	 number of fission neutrons: 5481
+
+ batch number : 138
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.610965e+01	 sigma_n : 9.503757e-01
+	 number of secondary particules: 5490
+	 number of fission neutrons: 5490
+
+ batch number : 139
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.763552e+01	 sigma_n : 9.667921e-01
+	 number of secondary particules: 5432
+	 number of fission neutrons: 5432
+
+ batch number : 140
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.970140e+01	 sigma_n : 1.104571e+00
+	 number of secondary particules: 5338
+	 number of fission neutrons: 5338
+
+ batch number : 141
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.840858e+01	 sigma_n : 1.001144e+00
+	 number of secondary particules: 5316
+	 number of fission neutrons: 5316
+
+ batch number : 142
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.101373e+01	 sigma_n : 1.082400e+00
+	 number of secondary particules: 5537
+	 number of fission neutrons: 5537
+
+ batch number : 143
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.835001e+01	 sigma_n : 9.660881e-01
+	 number of secondary particules: 5341
+	 number of fission neutrons: 5341
+
+ batch number : 144
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.883130e+01	 sigma_n : 1.006985e+00
+	 number of secondary particules: 5348
+	 number of fission neutrons: 5348
+
+ batch number : 145
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.154020e+01	 sigma_n : 1.057359e+00
+	 number of secondary particules: 5467
+	 number of fission neutrons: 5467
+
+ batch number : 146
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.842674e+01	 sigma_n : 9.920003e-01
+	 number of secondary particules: 5447
+	 number of fission neutrons: 5447
+
+ batch number : 147
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.963723e+01	 sigma_n : 1.087620e+00
+	 number of secondary particules: 5357
+	 number of fission neutrons: 5357
+
+ batch number : 148
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.835524e+01	 sigma_n : 9.850980e-01
+	 number of secondary particules: 5225
+	 number of fission neutrons: 5225
+
+ batch number : 149
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.067120e+01	 sigma_n : 1.049581e+00
+	 number of secondary particules: 5340
+	 number of fission neutrons: 5340
+
+ batch number : 150
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.913483e+01	 sigma_n : 1.012893e+00
+	 number of secondary particules: 5448
+	 number of fission neutrons: 5448
+
+ batch number : 151
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.899101e+01	 sigma_n : 1.074260e+00
+	 number of secondary particules: 5277
+	 number of fission neutrons: 5277
+
+ batch number : 152
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.890165e+01	 sigma_n : 1.025690e+00
+	 number of secondary particules: 5495
+	 number of fission neutrons: 5495
+
+ batch number : 153
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.722803e+01	 sigma_n : 9.976599e-01
+	 number of secondary particules: 5246
+	 number of fission neutrons: 5246
+
+ batch number : 154
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.864926e+01	 sigma_n : 9.779943e-01
+	 number of secondary particules: 5327
+	 number of fission neutrons: 5327
+
+ batch number : 155
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.884269e+01	 sigma_n : 9.904164e-01
+	 number of secondary particules: 5419
+	 number of fission neutrons: 5419
+
+ batch number : 156
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.803063e+01	 sigma_n : 1.018846e+00
+	 number of secondary particules: 5449
+	 number of fission neutrons: 5449
+
+ batch number : 157
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.669848e+01	 sigma_n : 9.441661e-01
+	 number of secondary particules: 5380
+	 number of fission neutrons: 5380
+
+ batch number : 158
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.766617e+01	 sigma_n : 9.735259e-01
+	 number of secondary particules: 5322
+	 number of fission neutrons: 5322
+
+ batch number : 159
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.875329e+01	 sigma_n : 9.986824e-01
+	 number of secondary particules: 5480
+	 number of fission neutrons: 5480
+
+ batch number : 160
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.838102e+01	 sigma_n : 1.071748e+00
+	 number of secondary particules: 5450
+	 number of fission neutrons: 5450
+
+ batch number : 161
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.858128e+01	 sigma_n : 1.000870e+00
+	 number of secondary particules: 5378
+	 number of fission neutrons: 5378
+
+ batch number : 162
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.104351e+01	 sigma_n : 1.048714e+00
+	 number of secondary particules: 5345
+	 number of fission neutrons: 5345
+
+ batch number : 163
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.879963e+01	 sigma_n : 9.644315e-01
+	 number of secondary particules: 5372
+	 number of fission neutrons: 5372
+
+ batch number : 164
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.758172e+01	 sigma_n : 9.671890e-01
+	 number of secondary particules: 5351
+	 number of fission neutrons: 5351
+
+ batch number : 165
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.955392e+01	 sigma_n : 1.044815e+00
+	 number of secondary particules: 5553
+	 number of fission neutrons: 5553
+
+ batch number : 166
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.006123e+01	 sigma_n : 1.072222e+00
+	 number of secondary particules: 5426
+	 number of fission neutrons: 5426
+
+ batch number : 167
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.909510e+01	 sigma_n : 1.013043e+00
+	 number of secondary particules: 5430
+	 number of fission neutrons: 5430
+
+ batch number : 168
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.949687e+01	 sigma_n : 1.067616e+00
+	 number of secondary particules: 5418
+	 number of fission neutrons: 5418
+
+ batch number : 169
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.786766e+01	 sigma_n : 9.886087e-01
+	 number of secondary particules: 5322
+	 number of fission neutrons: 5322
+
+ batch number : 170
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.920387e+01	 sigma_n : 1.059000e+00
+	 number of secondary particules: 5403
+	 number of fission neutrons: 5403
+
+ batch number : 171
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.871553e+01	 sigma_n : 1.013273e+00
+	 number of secondary particules: 5320
+	 number of fission neutrons: 5320
+
+ batch number : 172
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.765789e+01	 sigma_n : 9.531037e-01
+	 number of secondary particules: 5523
+	 number of fission neutrons: 5523
+
+ batch number : 173
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.766413e+01	 sigma_n : 9.723387e-01
+	 number of secondary particules: 5413
+	 number of fission neutrons: 5413
+
+ batch number : 174
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.911713e+01	 sigma_n : 1.029400e+00
+	 number of secondary particules: 5522
+	 number of fission neutrons: 5522
+
+ batch number : 175
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.791289e+01	 sigma_n : 1.027515e+00
+	 number of secondary particules: 5387
+	 number of fission neutrons: 5387
+
+ batch number : 176
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.690329e+01	 sigma_n : 9.759148e-01
+	 number of secondary particules: 5465
+	 number of fission neutrons: 5465
+
+ batch number : 177
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.894273e+01	 sigma_n : 1.015741e+00
+	 number of secondary particules: 5334
+	 number of fission neutrons: 5334
+
+ batch number : 178
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.854874e+01	 sigma_n : 1.039287e+00
+	 number of secondary particules: 5329
+	 number of fission neutrons: 5329
+
+ batch number : 179
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.925089e+01	 sigma_n : 1.044219e+00
+	 number of secondary particules: 5319
+	 number of fission neutrons: 5319
+
+ batch number : 180
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.231171e+01	 sigma_n : 1.070171e+00
+	 number of secondary particules: 5380
+	 number of fission neutrons: 5380
+
+ batch number : 181
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.026171e+01	 sigma_n : 1.014784e+00
+	 number of secondary particules: 5418
+	 number of fission neutrons: 5418
+
+ batch number : 182
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.765135e+01	 sigma_n : 9.844215e-01
+	 number of secondary particules: 5361
+	 number of fission neutrons: 5361
+
+ batch number : 183
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.862003e+01	 sigma_n : 1.011395e+00
+	 number of secondary particules: 5442
+	 number of fission neutrons: 5442
+
+ batch number : 184
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.903932e+01	 sigma_n : 1.007765e+00
+	 number of secondary particules: 5410
+	 number of fission neutrons: 5410
+
+ batch number : 185
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.975582e+01	 sigma_n : 1.041968e+00
+	 number of secondary particules: 5471
+	 number of fission neutrons: 5471
+
+ batch number : 186
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.720344e+01	 sigma_n : 9.762223e-01
+	 number of secondary particules: 5443
+	 number of fission neutrons: 5443
+
+ batch number : 187
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.874835e+01	 sigma_n : 1.064370e+00
+	 number of secondary particules: 5346
+	 number of fission neutrons: 5346
+
+ batch number : 188
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.002245e+01	 sigma_n : 1.040412e+00
+	 number of secondary particules: 5371
+	 number of fission neutrons: 5371
+
+ batch number : 189
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.881214e+01	 sigma_n : 1.033983e+00
+	 number of secondary particules: 5430
+	 number of fission neutrons: 5430
+
+ batch number : 190
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.903738e+01	 sigma_n : 9.938338e-01
+	 number of secondary particules: 5464
+	 number of fission neutrons: 5464
+
+ batch number : 191
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.665227e+01	 sigma_n : 9.311454e-01
+	 number of secondary particules: 5395
+	 number of fission neutrons: 5395
+
+ batch number : 192
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.926858e+01	 sigma_n : 1.043536e+00
+	 number of secondary particules: 5371
+	 number of fission neutrons: 5371
+
+ batch number : 193
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.760212e+01	 sigma_n : 9.529747e-01
+	 number of secondary particules: 5387
+	 number of fission neutrons: 5387
+
+ batch number : 194
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.787191e+01	 sigma_n : 9.882022e-01
+	 number of secondary particules: 5355
+	 number of fission neutrons: 5355
+
+ batch number : 195
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.949953e+01	 sigma_n : 1.096899e+00
+	 number of secondary particules: 5338
+	 number of fission neutrons: 5338
+
+ batch number : 196
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.064743e+01	 sigma_n : 1.075715e+00
+	 number of secondary particules: 5428
+	 number of fission neutrons: 5428
+
+ batch number : 197
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.798397e+01	 sigma_n : 9.706710e-01
+	 number of secondary particules: 5249
+	 number of fission neutrons: 5249
+
+ batch number : 198
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.928767e+01	 sigma_n : 1.047871e+00
+	 number of secondary particules: 5318
+	 number of fission neutrons: 5318
+
+ batch number : 199
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.938304e+01	 sigma_n : 1.046031e+00
+	 number of secondary particules: 5357
+	 number of fission neutrons: 5357
+
+ Type and parameters of random generator before batch 200 : 
+	 DRAND48_RANDOM 64924 60802 31887  COUNTER	803368875
+
+
+ batch number : 200
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.804461e+01	 sigma_n : 9.967541e-01
+	 number of secondary particules: 5398
+	 number of fission neutrons: 5398
+
+ KEFF at step  : 200
+ keff = 9.736165e-01 sigma : 1.015657e-03
+ number of batch used: 5
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 7.101571e+02	 sigma = 2.520514e+00	 sigma% = 3.549234e-01
+
+
+ Edition after batch number : 200
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : FLUX
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.435909e+01	1.797866e+00	5.069553e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+number of batches used: 5	1.435909e+01	1.797866e+00
+
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.413074e+01	1.812469e+00	4.988933e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+number of batches used: 5	1.413074e+01	1.812469e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : FLUX
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+******************************************************************************
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.437117e+01	1.791106e+00	5.073819e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+number of batches used: 5	1.437117e+01	1.791106e+00
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.413607e+01	1.808921e+00	4.990814e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+number of batches used: 5	1.413607e+01	1.808921e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : COMBUSTIBLE
+
+ concentration : 7.686400e-05
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.998174e-01	1.778371e+00	7.054661e-03
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+number of batches used: 5	1.998174e-01	1.778371e+00
+
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 100
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.967649e-01	1.760871e+00	6.946892e-03
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 100
+
+number of batches used: 5	1.967649e-01	1.760871e+00
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	5
+
+ KSTEP  9.736165e-01	1.043180e-01
+ KCOLL  9.738223e-01	9.526031e-02
+ KTRACK 9.713013e-01	1.138689e-01
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.803436e-01  	  9.741125e-01  	  9.017740e-02
+  	  KSTEP <-> KTRACK  	    	  8.914687e-01  	  9.733395e-01  	  1.041651e-01
+  	  KCOLL <-> KTRACK  	    	  8.991719e-01  	  9.744771e-01  	  9.430162e-02
+
+  	  full combined estimator  9.744133e-01	8.990046e-02
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 5	 keff = 9.736165e-01	 sigma = 1.015657e-03	 sigma% = 1.043180e-01
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 5	 keff = 9.738223e-01	 sigma = 9.276662e-04	 sigma% = 9.526031e-02
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 5	 keff = 9.713013e-01	 sigma = 1.106010e-03	 sigma% = 1.138689e-01
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 5	 keff = 9.710669e-01	 sigma = 9.949896e-04	 sigma% = 1.024636e-01
+
+
+ simulation time (s) : 217
+
+
+ Type and parameters of random generator at the end of simulation: 
+	 DRAND48_RANDOM 13236 22148 49521  COUNTER	807336835
+
+
+=====================================================================
+	NORMAL COMPLETION
+=====================================================================

@@ -1,0 +1,404 @@
+
+=====================================================================
+$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+
+ HOSTNAME : pluton01
+
+ PROCESS ID is : 30943
+
+ DATE : Mon Feb 19 09:25:43 2018
+
+ number of tasks is : 8
+
+ Version is $Name: tripoli4_10_2 $.
+
+=====================================================================
+
+ data filename = /data/tmplepp/el220326/RunTripoli/jddTestsValjean/input/ttsSimplePacket20.d
+ catalogname = /data/tmplepp/el220326/RunTripoli/spheresLivermore/Env/t4path.ceav5
+ execution call = tripoli4 -s NJOY -a -c /data/tmplepp/el220326/RunTripoli/spheresLivermore/Env/t4path.ceav5 -d /data/tmplepp/el220326/RunTripoli/jddTestsValjean/input/ttsSimplePacket20.d -t bsd -p graphe -o ttsSimplePacket20.d.res 
+
+
+ dictionary file : /panfs/ixion/home/tripoli4/Galilee/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
+ mass file : /panfs/ixion/home/tripoli4/Galilee/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
+ Q fission directory : /panfs/ixion/home/tripoli4/Galilee/GALILEE-V0-3.0/CEAV512/Qfission
+ electron cross section  directory : /panfs/ixion/home/tripoli4/Galilee/GALILEE-V0-3.0/PEID/Electron_Photon
+ abondance file : /panfs/ixion/home/tripoli4/Galilee/GALILEE-V0-3.0/Standard_data/abundance
+ own evaluations directory : 
+
+
+ WARNING
+ method name : T4_path
+ error message : No such directory for own evaluations
+
+
+
+
+ 	 reading geometry : 
+
+ 	 checking association of compositions and volumes :  ok 
+
+
+GEOMETRIE
+TITRE
+
+TYPE 1 BOITE 20 100 100
+TYPE 2 BOITE 20 100 100
+TYPE 3 BOITE 20 100 100
+
+VOLU 1 COMBI 1 10 0 0 FINV
+VOLU 2 COMBI 2 20 0 0 V_ORIGIN 1 FINV
+VOLU 3 COMBI 3 40 0 0 V_ORIGIN 1 FINV
+
+// GRAF -10 -50 -50 1 0 0 0 1 0 100 100 1
+FINGEOM
+
+
+
+COMPOSITION
+	2
+	PONCTUAL  300 COMBUSTIBLE
+		5
+		H1	5.9347E-2
+		N14	2.1220E-3
+		O16	3.7258E-2
+		U235	7.6864E-5
+		U238	6.8303E-4	
+	PONCTUAL 300 EAU
+		2
+		O16	6.6658E-2
+		H1_H2O	3.3329E-2
+FIN_COMPOSITION
+
+GEOMCOMP
+
+	COMBUSTIBLE  2 1 3
+	EAU          1 2
+	
+FIN_GEOMCOMP
+
+LIMIT 
+	12
+	1 REFLECTION 3
+	1 REFLECTION 4
+	1 REFLECTION 5
+	1 REFLECTION 6
+	2 REFLECTION 3
+	2 REFLECTION 4
+	2 REFLECTION 5
+	2 REFLECTION 6
+	3 REFLECTION 3
+	3 REFLECTION 4
+	3 REFLECTION 5
+	3 REFLECTION 6
+FIN_LIMIT
+
+LIST_DECOUPAGE 1 DEC_INTEG4     2
+                 20. 1.E-11
+FIN_LIST_DECOUPAGE
+
+
+
+REPONSES 2
+	FLUX		NEUTRON
+        REACTION	NEUTRON  NUCLEUS U235 COMPO  COMBUSTIBLE  INTERACTION 1 33
+FIN_REPONSE
+
+
+SCORE  3
+        1 COLL DECOUPAGE DEC_INTEG4 VOLU LIST 2 1 3
+        1 TRACK DECOUPAGE DEC_INTEG4 VOLU LIST 2 1 3
+        2 COLL DECOUPAGE DEC_INTEG4 VOLU LIST 2 1 3
+FIN_SCORE
+
+
+
+LIST_SOURCE     1  NORME 1
+        SOURCE
+        NEUTRON 
+	FACTORIZED
+		FRAME
+			CARTESIAN
+			0 0 0
+			1 0 0
+			0 1 0
+			0 0 1
+		VOLU 2 1 3
+		GEOMETRIC_DISTRIBUTION
+			SOBOL_POINTS 2000
+			TABULATED TYPE F_UVW
+			  VAR_U X 2 0 60
+			  VAR_V Y 2 0 100
+			  VAR_W Z 2 0 100
+			  F_UVW 1
+        ANGULAR_DISTRIBUTION    ISOTROPIC
+        ENERGETIC_DISTRIBUTION  SPECTRE WATT_SPECTRE
+        TIME_DISTRIBUTION       DIRAC 0.
+        FIN_SOURCE
+FIN_LIST_SOURCE
+
+SIMULATION
+	CRITICITY
+	  DISCARD 100
+        BATCH 200
+        PARTICULES 1 NEUTRON
+        SIZE 5000
+	PACKET_LENGTH 20
+	EDITION 100
+FIN_SIMULATION
+
+
+
+
+Total concentration of material COMBUSTIBLE (1.E24at/cm3) is: 9.948689e-02
+Total concentration of material EAU (1.E24at/cm3) is: 9.998700e-02
+
+
+ Loading response functions ...
+ Loading response function ...1, 0
+ Constructing score  ...0
+ Constructing score  ...1
+ Constructing score  ...2
+
+ initialization time (s): 4
+
+
+Scorer time info
+ elapsed time (s): 6
+
+ KEFF at step : 11
+ keff = 0.000000e+00 sigma : 0.000000e+00
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : unavailable
+*********************************************************
+
+
+ Mean weight leakage = 7.130508e+02	 sigma = 1.003534e+01	 sigma% = 1.407380e+00
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : FLUX
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.414729e+01	1.419579e+00	4.994776e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	1.414729e+01	1.419579e+00
+
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.438956e+01	1.453005e+00	5.080311e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	1.438956e+01	1.453005e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : FLUX
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+******************************************************************************
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.415161e+01	1.411677e+00	4.996302e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	1.415161e+01	1.411677e+00
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.438339e+01	1.457388e+00	5.078133e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	1.438339e+01	1.457388e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : COMBUSTIBLE
+
+ concentration : 7.686400e-05
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.977019e-01	1.347056e+00	6.979972e-03
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	1.977019e-01	1.347057e+00
+
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	2.005955e-01	1.458420e+00	7.082131e-03
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	2.005955e-01	1.458419e+00
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	10
+
+ KSTEP  9.745219e-01	9.339929e-02
+ KCOLL  9.743175e-01	9.681589e-02
+ KTRACK 9.753796e-01	9.958177e-02
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.954603e-01  	  9.751247e-01  	  8.887607e-02
+  	  KSTEP <-> KTRACK  	    	  3.462727e-01  	  9.749082e-01  	  7.900086e-02
+  	  KCOLL <-> KTRACK  	    	  3.383008e-01  	  9.748251e-01  	  8.029622e-02
+
+  	  full combined estimator  9.752300e-01	7.691698e-02
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 8	 keff = 9.755346e-01	 sigma = 6.984615e-04	 sigma% = 7.159783e-02
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 8	 keff = 9.754051e-01	 sigma = 6.861990e-04	 sigma% = 7.035016e-02
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 10	 keff = 9.753796e-01	 sigma = 9.713003e-04	 sigma% = 9.958177e-02
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 10	 keff = 9.752513e-01	 sigma = 9.154295e-04	 sigma% = 9.386601e-02
+
+
+ simulation time (s): 0
+
+ elapsed time (s): 250
+
+ total message length received: 2440
+
+
+=====================================================================
+	NORMAL COMPLETION
+=====================================================================

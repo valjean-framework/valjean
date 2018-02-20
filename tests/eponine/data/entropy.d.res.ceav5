@@ -1,0 +1,2239 @@
+
+=====================================================================
+$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+ hostname: is232540
+ pid: 16998
+
+=====================================================================
+$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+
+ HOSTNAME : is232540
+
+ PROCESS ID is : 16998
+
+ DATE : Mon Feb 19 09:01:21 2018
+
+ Version is $Name: tripoli4_10_2 $.
+
+=====================================================================
+
+ data filename = input/entropy.d
+ catalogname = /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512
+ execution call = tripoli4 -s NJOY -a -c /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512 -d input/entropy.d -o output/entropy.d.res.ceav5 
+
+
+ dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
+ mass file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
+ Q fission directory : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/Qfission
+ electron cross section  directory : /data/tmpuranus2/GALILEE-V0-3.0/PEID/Electron_Photon
+ abondance file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/abundance
+ own evaluations directory : 
+
+
+ WARNING
+ method name : T4_path
+ error message : No such directory for own evaluations
+
+
+
+
+ 	 reading geometry : 
+
+ 	 checking association of compositions and volumes :  ok 
+
+
+GEOMETRIE
+TITRE
+
+
+//Beton
+TYPE 1001 BOITE  728 151 420
+VOLU 1001 COMBI 1001 0 0 0 FINV
+
+//Eau
+TYPE 1002 BOITE 648 111 420
+VOLU 1002 COMBI 1002 0 -20 0 ECRASE 1 1001 FINV
+
+//reseau 2*3 eau
+TYPE 101 BOITE 27 27 360
+TYPE 102 BOITE 26 26 359
+
+VOLU 101 COMBI 101 -283.5 -32 0 ECRASE 1 1002 FINV
+VOLU 102 COMBI 102 0 0 0  V_ORIGIN 101 ECRASE 1 101 FINV
+
+
+VOLU 100 RESC VOLU 101 2 3 1 BASE 2 1 1 
+ECRASE 1 1002 FINV 
+
+
+//reseau 2*3 assemblage combustible
+
+VOLU 201 COMBI 101 0 0 0 M_ORIGIN 1 1 1 RESEAU 100 FICTIF FINV
+VOLU 202 COMBI 102 0 0 0 V_ORIGIN 201 ECRASE 2 201 100 FINV 
+
+
+	//Reseau 15*15 pastille combustible
+	TYPE 1 BOITE 1.4 1.4 359
+	VOLU 1 COMBI 1 0 0 0 V_ORIGIN 201  ECRASE 1 202 FINV
+	TYPE 2 CYLZ 0.49 179.5 
+	TYPE 3 CYLZ 0.44 179.5
+	VOLU 2 COMBI 2 0 0 0 V_ORIGIN 201 ECRASE 1 1 FINV
+	VOLU 3 COMBI 2 0 0 0 V_ORIGIN 201 ECRASE 1 2 FINV
+	VOLU 10 RESC VOLU 1 15 15 1 BASE 8 8 1 ECRASE 1 100 FINV
+	
+VOLU 200 RESC VOLU 201 2 3 1 
+GARDE 3 1 1 1 2 2 1 1 3 1  
+ECRASE 1 1002  FINV
+
+//Reseau complet d'assembage
+VOLU 1000 RESC VOLU 100 12 1 1 FINV
+
+
+//vue assemblege combustible
+//GRAF -325 -46.5 0 1 0 0 0 1 0 29 29 1
+//Vue de dessus
+//GRAF  -370 -80 0 1 0 0 0 1 0 740 740 1
+//coupe verticale
+//GRAF  -370 -32  -215 1 0 0 0 0 1 740 740 1  
+FING 
+
+
+COMPOSITION	5
+	PONCTUAL  300 FUEL 3
+		O16 4.6054E-2
+		U235 8.2213E-4
+		U238  2.2380E-2	
+	PONCTUAL  300 WATER 2
+		H_H2O	6.6706E-2
+		O16	3.3353E-2
+	PONCTUAL  300 ZIRCONIUM 1
+		ZR	4.2910E-2
+	PONCTUAL  300 CONCRETE 5
+		H_H2O	5.5437E-3
+		C	6.9793E-3
+		SI	7.7106E-3
+		CA	8.9591E-3
+		O16	4.3383E-2
+	PONCTUAL  300 IRON 4
+		FE54	4.85866E-3
+		FE56	7.68397079E-2
+		FE57	1.84294E-3
+		FE58	2.34556E-4
+			
+		
+FIN_COMPO
+
+GEOMCOMP
+	FUEL	1 3			
+	WATER	4 1002 102 202 1
+	ZIRCONIUM 1 2
+	CONCRETE 1 1001
+	IRON 1 101
+FIN_GEOMCOMP
+
+LIST_SOURCE 1  NORME 1.  
+        SOURCE 
+	NEUTRON  PONCTUAL  -13.5 -5 0
+	ANGULAR_DISTRIBUTION   ISOTROPIC 
+	ENERGETIC_DISTRIBUTION SPECTRE   WATT_SPECTRE
+        TIME_DISTRIBUTION  DIRAC 0
+	FIN_SOURCE
+FIN_LIST_SOURCE
+
+LIST_DECOUPAGE 1 DEC_INTEG4     2
+                 20. 1.E-11
+FIN_LIST_DECOUPAGE
+
+
+
+REPONSES 1
+        REACTION NEUTRON  NUCLEI 1 U235 COMPO  FUEL  INTERACTION 1 33
+FIN_REPONSE
+
+
+SCORE  1
+        1 COLL DECOUPAGE DEC_INTEG4 MAILLAGE ENTROPY
+                                        24 3 1 
+                                        27 27 360
+                                        REPERE
+                                        -310.5 -32 0
+FIN_SCORE
+
+
+SIMULATION
+  	CRITICITE
+	  DISCARD 1
+        BATCH 10
+	PARTICULES   1 NEUTRON
+	SIZE 5000
+	EDITION 1
+FIN_SIMULATION
+
+Total concentration of material FUEL (1.E24at/cm3) is: 6.925613e-02
+Total concentration of material WATER (1.E24at/cm3) is: 1.000590e-01
+Total concentration of material ZIRCONIUM (1.E24at/cm3) is: 4.291000e-02
+Total concentration of material CONCRETE (1.E24at/cm3) is: 7.257571e-02
+Total concentration of material IRON (1.E24at/cm3) is: 8.377586e-02
+
+
+ Loading response functions ...
+ Loading response function ...0, 0
+ Constructing score  ...0
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 9.999997e-01
+
+		 Energetic density simulation intensity = 9.999997e-01
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         SIMULATION INTENSITY = 1.256637e+01   BIASED SIMULATION INTENSITY = 1.256637e+01
+
+   SUM OF SIMULATION INTENSITIES = 1.256637e+01
+
+   GLOBAL NORM = 1.000000e+00   GLOBAL SIMULATION INTENSITY = 1.000000e+00
+
+   BIASED TOTAL SOURCE INTENSITY = 1.000000e+00
+
+
+ initialization time (s): 6
+
+
+ Type and parameters of random generator before batch 1 : 
+	 DRAND48_RANDOM 123 13 37  COUNTER	0
+
+
+ batch number : 1
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.322660e+01	 sigma_n : 9.238790e-01
+	 number of secondary particules: 6215
+	 number of fission neutrons: 6215
+
+ KEFF at step  : 1
+ keff = 0.000000e+00 sigma : 0.000000e+00
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 0.000000e+00	 sigma = 0.000000e+00	 sigma% = 0
+
+
+ Edition after batch number : 1
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 0.000000e+00	0.000000e+00
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 0.000000e+00	0.000000e+00
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 0.000000e+00	0.000000e+00
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 0.000000e+00	0.000000e+00
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 0.000000e+00	0.000000e+00
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 0.000000e+00	0.000000e+00
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 0.000000e+00	0.000000e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 0.000000e+00	0.000000e+00
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 0.000000e+00	0.000000e+00
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 0.000000e+00	0.000000e+00
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 0.000000e+00	0.000000e+00
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 3.424437e-02
+	 Shannon Entropy of sources = 1.039739e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+	 NOT YET CONVERGED 
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	0
+
+
+	 NOT YET CONVERGED 
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+ simulation time (s) : 2
+
+
+ Type and parameters of random generator before batch 2 : 
+	 DRAND48_RANDOM 50160 13761 45679  COUNTER	3061183
+
+
+ batch number : 2
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 5.620756e+01	 sigma_n : 1.027107e+00
+	 number of secondary particules: 5245
+	 number of fission neutrons: 5245
+
+ KEFF at step  : 2
+ keff = 9.540607e-01 sigma : 0.000000e+00
+ number of batch used: 1
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 9.928063e-01	 sigma = 9.928063e-01	 sigma% = 1.000000e+02
+
+
+ Edition after batch number : 2
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 0.000000e+00	0.000000e+00
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 7.882173e-06	0.000000e+00
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 0.000000e+00	0.000000e+00
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 8.087514e-05	0.000000e+00
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 2.560512e-03	0.000000e+00
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 2.816086e-03	0.000000e+00
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 3.557992e-01	0.000000e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 2.901667e-03	0.000000e+00
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 4.123290e-03	0.000000e+00
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 3.179456e-04	0.000000e+00
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 0.000000e+00	0.000000e+00
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 1.321753e-01
+	 Shannon Entropy of sources = 2.022266e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+number of batches used: 1	3.686075e-01	0.000000e+00
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	1
+
+
+	 NOT YET CONVERGED 
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+
+		  NOT YET CONVERGED
+
+
+ simulation time (s) : 5
+
+
+ Type and parameters of random generator before batch 3 : 
+	 DRAND48_RANDOM 34331 26567 63254  COUNTER	7072032
+
+
+ batch number : 3
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.737331e+01	 sigma_n : 1.166579e+00
+	 number of secondary particules: 5036
+	 number of fission neutrons: 5036
+
+ KEFF at step  : 3
+ keff = 9.397918e-01 sigma : 1.426885e-02
+ number of batch used: 2
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 1.344394e+00	 sigma = 6.724352e-01	 sigma% = 5.001770e+01
+
+
+ Edition after batch number : 3
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 0.000000e+00	0.000000e+00
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 3.941087e-06	1.000000e+02
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 9.559624e-05	1.000000e+02
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 3.820070e-04	7.882888e+01
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 3.951811e-03	3.520661e+01
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 4.472223e-03	3.703162e+01
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 3.469506e-01	2.550384e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 3.912720e-03	2.584016e+01
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 5.176767e-03	2.035010e+01
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 3.899500e-04	1.846504e+01
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 0.000000e+00	0.000000e+00
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 2.780714e-01
+	 Shannon Entropy of sources = 3.478717e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+number of batches used: 2	3.653357e-01	8.955646e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	2
+
+ KSTEP  9.397918e-01	1.518300e+00
+ KCOLL  9.411443e-01	1.586926e+00
+ KTRACK 9.523311e-01	2.533032e+00
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  1.000000e+00  	  9.108330e-01  	   Not converged
+  	  KSTEP <-> KTRACK  	    	  1.000000e+00  	  9.216346e-01  	   Not converged
+  	  KCOLL <-> KTRACK  	    	  1.000000e+00  	  9.229592e-01  	   Not converged
+
+  	  full combined estimator not converged
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 3	 keff = 1.009063e+00	 sigma = 6.975938e-02	 sigma% = 6.913283e+00
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 3	 keff = 1.009958e+00	 sigma = 6.935171e-02	 sigma% = 6.866793e+00
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 3	 keff = 1.014629e+00	 sigma = 6.383568e-02	 sigma% = 6.291530e+00
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 3	 keff = 1.011165e+00	 sigma = 6.364600e-02	 sigma% = 6.294323e+00
+
+
+ simulation time (s) : 7
+
+
+ Type and parameters of random generator before batch 4 : 
+	 DRAND48_RANDOM 59314 60642 61693  COUNTER	11139017
+
+
+ batch number : 4
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 7.063125e+01	 sigma_n : 1.213687e+00
+	 number of secondary particules: 4939
+	 number of fission neutrons: 4939
+
+ KEFF at step  : 4
+ keff = 9.315849e-01 sigma : 1.162843e-02
+ number of batch used: 3
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 1.243413e+00	 sigma = 4.860883e-01	 sigma% = 3.909309e+01
+
+
+ Edition after batch number : 4
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 0.000000e+00	0.000000e+00
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 2.627391e-06	1.000000e+02
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 9.850492e-05	5.610797e+01
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 6.898823e-04	5.125124e+01
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 4.972495e-03	2.612086e+01
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 5.714765e-03	2.743518e+01
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 3.379319e-01	3.067231e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 5.104541e-03	2.599830e+01
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 6.049518e-03	1.758458e+01
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 4.942399e-04	2.271572e+01
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 2.918667e-05	1.000000e+02
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 3.882076e-01
+	 Shannon Entropy of sources = 4.573604e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+number of batches used: 3	3.610877e-01	1.287510e+00
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	3
+
+ KSTEP  9.315849e-01	1.248242e+00
+ KCOLL  9.338261e-01	1.211119e+00
+ KTRACK 9.389632e-01	2.055958e+00
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.968206e-01  	  9.414401e-01  	  1.149372e+00
+  	  KSTEP <-> KTRACK  	    	  9.998271e-01  	  9.204273e-01  	   Not converged
+  	  KCOLL <-> KTRACK  	    	  9.981299e-01  	  9.266831e-01  	   Not converged
+
+  	  full combined estimator not converged
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 4	 keff = 9.855901e-01	 sigma = 5.462754e-02	 sigma% = 5.542623e+00
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 4	 keff = 9.872658e-01	 sigma = 5.403480e-02	 sigma% = 5.473176e+00
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 4	 keff = 9.890286e-01	 sigma = 5.189293e-02	 sigma% = 5.246859e+00
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 4	 keff = 9.866617e-01	 sigma = 5.124280e-02	 sigma% = 5.193553e+00
+
+
+ simulation time (s) : 9
+
+
+ Type and parameters of random generator before batch 5 : 
+	 DRAND48_RANDOM 19584 40388 48977  COUNTER	15240399
+
+
+ batch number : 5
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 7.035129e+01	 sigma_n : 1.199651e+00
+	 number of secondary particules: 5070
+	 number of fission neutrons: 5070
+
+ KEFF at step  : 5
+ keff = 9.345396e-01 sigma : 8.737313e-03
+ number of batch used: 4
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 1.182159e+00	 sigma = 3.814722e-01	 sigma% = 3.226910e+01
+
+
+ Edition after batch number : 5
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 0.000000e+00	0.000000e+00
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 1.970543e-06	1.000000e+02
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 9.341715e-05	4.218812e+01
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 7.130964e-04	3.521115e+01
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 6.657642e-03	2.882667e+01
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 6.659051e-03	2.186924e+01
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 3.315002e-01	2.941529e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 6.264675e-03	2.381842e+01
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 7.277328e-03	1.978620e+01
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 6.291185e-04	2.487724e+01
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 3.379830e-05	6.256841e+01
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 4.941215e-01
+	 Shannon Entropy of sources = 5.632869e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+number of batches used: 4	3.598303e-01	9.781376e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	4
+
+ KSTEP  9.345396e-01	9.349324e-01
+ KCOLL  9.353404e-01	8.701966e-01
+ KTRACK 9.326754e-01	1.611391e+00
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.846290e-01  	  9.365284e-01  	  8.315502e-01
+  	  KSTEP <-> KTRACK  	    	  7.131290e-01  	  9.348203e-01  	   Not converged
+  	  KCOLL <-> KTRACK  	    	  8.129105e-01  	  9.362890e-01  	   Not converged
+
+  	  full combined estimator not converged
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 5	 keff = 9.771528e-01	 sigma = 4.314728e-02	 sigma% = 4.415613e+00
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 5	 keff = 9.777893e-01	 sigma = 4.291457e-02	 sigma% = 4.388938e+00
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 5	 keff = 9.739853e-01	 sigma = 4.291885e-02	 sigma% = 4.406519e+00
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 5	 keff = 9.749620e-01	 sigma = 4.138087e-02	 sigma% = 4.244357e+00
+
+
+ simulation time (s) : 12
+
+
+ Type and parameters of random generator before batch 6 : 
+	 DRAND48_RANDOM 52676 9853 29340  COUNTER	19248915
+
+
+ batch number : 6
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 6.900947e+01	 sigma_n : 1.165281e+00
+	 number of secondary particules: 4855
+	 number of fission neutrons: 4855
+
+ KEFF at step  : 6
+ keff = 9.272795e-01 sigma : 9.925413e-03
+ number of batch used: 5
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 1.138655e+00	 sigma = 3.144943e-01	 sigma% = 2.761981e+01
+
+
+ Edition after batch number : 6
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 0.000000e+00	0.000000e+00
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 1.576435e-06	1.000000e+02
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 2.148770e-04	5.828335e+01
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 6.855812e-04	2.865156e+01
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 8.416082e-03	2.735975e+01
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 7.851214e-03	2.090444e+01
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 3.238385e-01	3.322278e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 7.055891e-03	1.985131e+01
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 8.266601e-03	1.803473e+01
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 6.496674e-04	1.892650e+01
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 2.703864e-05	6.553724e+01
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 5.877166e-01
+	 Shannon Entropy of sources = 6.580172e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+number of batches used: 5	3.570071e-01	1.099334e+00
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	5
+
+ KSTEP  9.272795e-01	1.070380e+00
+ KCOLL  9.275768e-01	1.078193e+00
+ KTRACK 9.218997e-01	1.720703e+00
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.910643e-01  	  9.273022e-01  	  1.070297e+00
+  	  KSTEP <-> KTRACK  	    	  8.537353e-01  	  9.296550e-01  	   Not converged
+  	  KCOLL <-> KTRACK  	    	  9.033918e-01  	  9.313577e-01  	   Not converged
+
+  	  full combined estimator not converged
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 5	 keff = 9.272795e-01	 sigma = 9.925413e-03	 sigma% = 1.070380e+00
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 5	 keff = 9.275768e-01	 sigma = 1.000107e-02	 sigma% = 1.078193e+00
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 5	 keff = 9.218997e-01	 sigma = 1.586316e-02	 sigma% = 1.720703e+00
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 5	 keff = 9.266791e-01	 sigma = 1.034610e-02	 sigma% = 1.116471e+00
+
+
+ simulation time (s) : 14
+
+
+ Type and parameters of random generator before batch 7 : 
+	 DRAND48_RANDOM 37246 14913 56401  COUNTER	23282293
+
+
+ batch number : 7
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 7.304099e+01	 sigma_n : 1.268386e+00
+	 number of secondary particules: 4917
+	 number of fission neutrons: 4917
+
+ KEFF at step  : 7
+ keff = 9.264005e-01 sigma : 8.151595e-03
+ number of batch used: 6
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 1.129908e+00	 sigma = 2.659401e-01	 sigma% = 2.353644e+01
+
+
+ Edition after batch number : 7
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 1.365550e-05	1.000000e+02
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 1.313696e-06	1.000000e+02
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 2.278558e-04	4.523755e+01
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 7.834627e-04	2.398242e+01
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 9.561133e-03	2.302372e+01
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 8.893588e-03	1.908958e+01
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 3.188588e-01	3.166858e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 7.836839e-03	1.767112e+01
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 9.539788e-03	1.846446e+01
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 8.319997e-04	2.501745e+01
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 2.253220e-05	6.725567e+01
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 6.557631e-01
+	 Shannon Entropy of sources = 7.253362e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+number of batches used: 6	3.565710e-01	9.069831e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	6
+
+ KSTEP  9.264005e-01	8.799213e-01
+ KCOLL  9.265437e-01	8.883478e-01
+ KTRACK 9.229671e-01	1.408081e+00
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.910281e-01  	  9.263952e-01  	  8.799154e-01
+  	  KSTEP <-> KTRACK  	    	  8.370334e-01  	  9.277163e-01  	   Not converged
+  	  KCOLL <-> KTRACK  	    	  8.829101e-01  	  9.285431e-01  	   Not converged
+
+  	  full combined estimator not converged
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 6	 keff = 9.264005e-01	 sigma = 8.151595e-03	 sigma% = 8.799213e-01
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 6	 keff = 9.265437e-01	 sigma = 8.230931e-03	 sigma% = 8.883478e-01
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 6	 keff = 9.229671e-01	 sigma = 1.299612e-02	 sigma% = 1.408081e+00
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 6	 keff = 9.255405e-01	 sigma = 8.523946e-03	 sigma% = 9.209695e-01
+
+
+ simulation time (s) : 17
+
+
+ Type and parameters of random generator before batch 8 : 
+	 DRAND48_RANDOM 34108 43355 22783  COUNTER	27383371
+
+
+ batch number : 8
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 7.347224e+01	 sigma_n : 1.233838e+00
+	 number of secondary particules: 4811
+	 number of fission neutrons: 4811
+
+ KEFF at step  : 8
+ keff = 9.227264e-01 sigma : 7.807825e-03
+ number of batch used: 7
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 1.488724e+00	 sigma = 4.263711e-01	 sigma% = 2.864003e+01
+
+
+ Edition after batch number : 8
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 5.674357e-05	7.861140e+01
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 1.246137e-06	8.926218e+01
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 2.161871e-04	4.065621e+01
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 7.670560e-04	2.081257e+01
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 1.042986e-02	1.968666e+01
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 9.930686e-03	1.782779e+01
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 3.127727e-01	3.351341e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 9.043906e-03	1.859081e+01
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 1.098877e-02	1.890524e+01
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 9.855974e-04	2.369469e+01
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 1.931331e-05	6.837730e+01
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 7.510026e-01
+	 Shannon Entropy of sources = 8.206680e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+number of batches used: 7	3.552120e-01	8.593345e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	7
+
+ KSTEP  9.227264e-01	8.461690e-01
+ KCOLL  9.227718e-01	8.575462e-01
+ KTRACK 9.210841e-01	1.209876e+00
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.930167e-01  	  9.227061e-01  	  8.449712e-01
+  	  KSTEP <-> KTRACK  	    	  8.074622e-01  	  9.230685e-01  	  8.323178e-01
+  	  KCOLL <-> KTRACK  	    	  8.455388e-01  	  9.233069e-01  	  8.307327e-01
+
+  	  full combined estimator  9.229593e-01	8.365170e-01
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 7	 keff = 9.227264e-01	 sigma = 7.807825e-03	 sigma% = 8.461690e-01
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 7	 keff = 9.227718e-01	 sigma = 7.913195e-03	 sigma% = 8.575462e-01
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 7	 keff = 9.210841e-01	 sigma = 1.114397e-02	 sigma% = 1.209876e+00
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 1 batches
+
+	 number of batch used: 7	 keff = 9.219551e-01	 sigma = 8.046967e-03	 sigma% = 8.728156e-01
+
+
+ simulation time (s) : 19
+
+
+ Type and parameters of random generator before batch 9 : 
+	 DRAND48_RANDOM 40168 53013 13913  COUNTER	31562743
+
+
+ batch number : 9
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 7.371550e+01	 sigma_n : 1.230394e+00
+	 number of secondary particules: 4780
+	 number of fission neutrons: 4780
+
+ KEFF at step  : 9
+ keff = 9.199703e-01 sigma : 7.301898e-03
+ number of batch used: 8
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 1.728494e+00	 sigma = 4.459637e-01	 sigma% = 2.580071e+01
+
+
+ Edition after batch number : 9
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 6.674686e-05	5.978539e+01
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 1.090370e-06	8.949420e+01
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 2.368097e-04	3.330191e+01
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 8.573608e-04	1.926088e+01
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 1.117928e-02	1.726115e+01
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 1.083664e-02	1.643391e+01
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 3.078299e-01	3.357759e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 9.691264e-03	1.644263e+01
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 1.283570e-02	2.008755e+01
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 1.195126e-03	2.436685e+01
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 1.689915e-05	6.916733e+01
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 8.085828e-01
+	 Shannon Entropy of sources = 8.783858e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+number of batches used: 8	3.547468e-01	7.566340e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	8
+
+ KSTEP  9.199703e-01	7.937102e-01
+ KCOLL  9.203531e-01	7.896267e-01
+ KTRACK 9.216576e-01	1.048978e+00
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.927625e-01  	  9.202869e-01  	  7.895115e-01
+  	  KSTEP <-> KTRACK  	    	  7.240252e-01  	  9.200538e-01  	  7.928255e-01
+  	  KCOLL <-> KTRACK  	    	  7.761841e-01  	  9.202928e-01  	  7.890834e-01
+
+  	  full combined estimator  9.202458e-01	7.892882e-01
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 7	 keff = 9.151003e-01	 sigma = 6.282283e-03	 sigma% = 6.865131e-01
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 7	 keff = 9.152493e-01	 sigma = 5.973918e-03	 sigma% = 6.527094e-01
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 7	 keff = 9.138296e-01	 sigma = 6.551498e-03	 sigma% = 7.169278e-01
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 7	 keff = 9.153800e-01	 sigma = 5.620432e-03	 sigma% = 6.139999e-01
+
+
+ simulation time (s) : 21
+
+
+ Type and parameters of random generator before batch 10 : 
+	 DRAND48_RANDOM 15797 32292 60707  COUNTER	35664426
+
+
+ batch number : 10
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 7.401758e+01	 sigma_n : 1.237101e+00
+	 number of secondary particules: 4712
+	 number of fission neutrons: 4712
+
+ KEFF at step  : 10
+ keff = 9.169150e-01 sigma : 7.127725e-03
+ number of batch used: 9
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 1.990297e+00	 sigma = 4.771245e-01	 sigma% = 2.397252e+01
+
+
+ Edition after batch number : 10
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_INTEG4
+
+
+ PARTICULE : NEUTRON 
+
+
+ reaction on nucleus : U235 temperature :300
+
+ composition : FUEL
+
+ concentration : 8.221300e-04
+
+ reaction consists in codes : 
+		33
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Results on a mesh: 
+	 Cell   	  tally   	  sigma (percent)
+
+
+Energy range (in MeV): 2.000000e+01 - 1.000000e-11
+	 (0,0,0)	 0.000000e+00	0.000000e+00
+	 (0,1,0)	 0.000000e+00	0.000000e+00
+	 (0,2,0)	 0.000000e+00	0.000000e+00
+	 (1,0,0)	 0.000000e+00	0.000000e+00
+	 (1,1,0)	 0.000000e+00	0.000000e+00
+	 (1,2,0)	 0.000000e+00	0.000000e+00
+	 (2,0,0)	 0.000000e+00	0.000000e+00
+	 (2,1,0)	 0.000000e+00	0.000000e+00
+	 (2,2,0)	 0.000000e+00	0.000000e+00
+	 (3,0,0)	 0.000000e+00	0.000000e+00
+	 (3,1,0)	 0.000000e+00	0.000000e+00
+	 (3,2,0)	 0.000000e+00	0.000000e+00
+	 (4,0,0)	 0.000000e+00	0.000000e+00
+	 (4,1,0)	 0.000000e+00	0.000000e+00
+	 (4,2,0)	 0.000000e+00	0.000000e+00
+	 (5,0,0)	 0.000000e+00	0.000000e+00
+	 (5,1,0)	 0.000000e+00	0.000000e+00
+	 (5,2,0)	 0.000000e+00	0.000000e+00
+	 (6,0,0)	 0.000000e+00	0.000000e+00
+	 (6,1,0)	 0.000000e+00	0.000000e+00
+	 (6,2,0)	 0.000000e+00	0.000000e+00
+	 (7,0,0)	 0.000000e+00	0.000000e+00
+	 (7,1,0)	 5.933054e-05	6.061926e+01
+	 (7,2,0)	 0.000000e+00	0.000000e+00
+	 (8,0,0)	 1.129516e-06	7.626987e+01
+	 (8,1,0)	 0.000000e+00	0.000000e+00
+	 (8,2,0)	 2.107105e-04	3.525483e+01
+	 (9,0,0)	 0.000000e+00	0.000000e+00
+	 (9,1,0)	 8.206032e-04	1.830393e+01
+	 (9,2,0)	 0.000000e+00	0.000000e+00
+	 (10,0,0)	 1.170189e-02	1.521334e+01
+	 (10,1,0)	 0.000000e+00	0.000000e+00
+	 (10,2,0)	 1.210920e-02	1.669334e+01
+	 (11,0,0)	 0.000000e+00	0.000000e+00
+	 (11,1,0)	 3.029619e-01	3.411001e+00
+	 (11,2,0)	 0.000000e+00	0.000000e+00
+	 (12,0,0)	 1.054960e-02	1.560936e+01
+	 (12,1,0)	 0.000000e+00	0.000000e+00
+	 (12,2,0)	 1.377888e-02	1.786620e+01
+	 (13,0,0)	 0.000000e+00	0.000000e+00
+	 (13,1,0)	 1.420508e-03	2.405461e+01
+	 (13,2,0)	 0.000000e+00	0.000000e+00
+	 (14,0,0)	 4.117801e-05	6.405517e+01
+	 (14,1,0)	 0.000000e+00	0.000000e+00
+	 (14,2,0)	 0.000000e+00	0.000000e+00
+	 (15,0,0)	 0.000000e+00	0.000000e+00
+	 (15,1,0)	 0.000000e+00	0.000000e+00
+	 (15,2,0)	 0.000000e+00	0.000000e+00
+	 (16,0,0)	 0.000000e+00	0.000000e+00
+	 (16,1,0)	 0.000000e+00	0.000000e+00
+	 (16,2,0)	 0.000000e+00	0.000000e+00
+	 (17,0,0)	 0.000000e+00	0.000000e+00
+	 (17,1,0)	 0.000000e+00	0.000000e+00
+	 (17,2,0)	 0.000000e+00	0.000000e+00
+	 (18,0,0)	 0.000000e+00	0.000000e+00
+	 (18,1,0)	 0.000000e+00	0.000000e+00
+	 (18,2,0)	 0.000000e+00	0.000000e+00
+	 (19,0,0)	 0.000000e+00	0.000000e+00
+	 (19,1,0)	 0.000000e+00	0.000000e+00
+	 (19,2,0)	 0.000000e+00	0.000000e+00
+	 (20,0,0)	 0.000000e+00	0.000000e+00
+	 (20,1,0)	 0.000000e+00	0.000000e+00
+	 (20,2,0)	 0.000000e+00	0.000000e+00
+	 (21,0,0)	 0.000000e+00	0.000000e+00
+	 (21,1,0)	 0.000000e+00	0.000000e+00
+	 (21,2,0)	 0.000000e+00	0.000000e+00
+	 (22,0,0)	 0.000000e+00	0.000000e+00
+	 (22,1,0)	 0.000000e+00	0.000000e+00
+	 (22,2,0)	 0.000000e+00	0.000000e+00
+	 (23,0,0)	 0.000000e+00	0.000000e+00
+	 (23,1,0)	 0.000000e+00	0.000000e+00
+	 (23,2,0)	 0.000000e+00	0.000000e+00
+
+ 	 Boltzmann Entropy of sources = 8.342621e-01
+	 Shannon Entropy of sources = 9.047529e-01
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 1
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 1
+
+number of batches used: 9	3.536549e-01	7.371170e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	9
+
+ KSTEP  9.169150e-01	7.773594e-01
+ KCOLL  9.170253e-01	7.875050e-01
+ KTRACK 9.158044e-01	1.129290e+00
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.935526e-01  	  9.168596e-01  	  7.761104e-01
+  	  KSTEP <-> KTRACK  	    	  7.818913e-01  	  9.170936e-01  	  7.687564e-01
+  	  KCOLL <-> KTRACK  	    	  8.287193e-01  	  9.173621e-01  	  7.666668e-01
+
+  	  full combined estimator  9.169699e-01	7.721112e-01
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 8	 keff = 9.122718e-01	 sigma = 6.131945e-03	 sigma% = 6.721621e-01
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 8	 keff = 9.121435e-01	 sigma = 6.034187e-03	 sigma% = 6.615392e-01
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 8	 keff = 9.082232e-01	 sigma = 7.976384e-03	 sigma% = 8.782405e-01
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 2 batches
+
+	 number of batch used: 8	 keff = 9.130250e-01	 sigma = 5.407199e-03	 sigma% = 5.922290e-01
+
+
+ simulation time (s) : 24
+
+
+ Type and parameters of random generator at the end of simulation: 
+	 DRAND48_RANDOM 11835 50533 54246  COUNTER	39756480
+
+
+=====================================================================
+	NORMAL COMPLETION
+=====================================================================

@@ -1,0 +1,3770 @@
+
+=====================================================================
+$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+ hostname: is232540
+ pid: 19929
+
+=====================================================================
+$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+
+ HOSTNAME : is232540
+
+ PROCESS ID is : 19929
+
+ DATE : Mon Feb 19 10:56:58 2018
+
+ Version is $Name: tripoli4_10_2 $.
+
+=====================================================================
+
+ data filename = input/vov.d
+ catalogname = /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512
+ execution call = tripoli4 -s NJOY -a -c /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512 -d input/vov.d -o output/vov.d.res.ceav5 
+
+
+ dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
+ mass file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
+ Q fission directory : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/Qfission
+ electron cross section  directory : /data/tmpuranus2/GALILEE-V0-3.0/PEID/Electron_Photon
+ abondance file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/abundance
+ own evaluations directory : 
+
+
+ WARNING
+ method name : T4_path
+ error message : No such directory for own evaluations
+
+
+
+
+ 	 reading geometry : 
+
+ 	 checking association of compositions and volumes :  ok 
+
+
+
+	 WARNING :  running photon without electron and positron
+	 possible lack of bremsstrahlung photons
+
+
+GEOMETRY
+TITRE Photon back scattering experiment(Japan),8th int. conf. arlington 1994.
+
+COMMENT 
+air : densite=0.00128 g/cm3 
+COMMENT
+TYPE   1  BOITE 110 110 80    
+VOLU   1  COMBI 1   0 0 35.   FINV
+
+COMMENT 
+beton : densite=2.3 g/cm3
+COMMENT
+TYPE   2  BOITE 100 100 20    
+VOLU   2  COMBI 2   0 0 60. ECRASE 1   1 FINV
+
+COMMENT
+plomb : densite=11.35 g/cm3 
+COMMENT
+TYPE   3  BOITE 40 10 5       
+VOLU   3  COMBI 3   0 0 0.  ECRASE 1   1 FINV
+
+COMMENT
+GRAF
+-55. 0. -5.
+1 0 0 
+0 0 1
+110. 80.
+1
+COMMENT
+
+FING
+
+COMPOSITION 3
+	PONCTUEL 300 AIR 2
+		O16	1.119E-5	
+		N14	4.281E-5	
+
+	PONCTUEL 300 BETON 7
+                    SI        1.6842E-02
+                    FE56      3.5431E-04
+                    H1        1.3925E-02
+                    O16       4.7289E-02
+                    AL27      1.7716E-03
+                    CA        1.3266E-03
+                    NA23      9.8055E-04
+
+	PONCTUEL 300 PLOMB 1
+                    PB208     3.29912E-02
+FIN_COMPOSITION
+
+GEOMCOMP
+	AIR      1 1 
+	BETON    1 2
+	PLOMB    1 3
+FIN_GEOMCOMP
+
+LIST_SOURCE
+	2
+	SOURCE
+		NORME 7.95E9
+		PHOTON
+		PONCTUEL 30. 0. 0.
+		ANGULAR_DISTRIBUTION ISOTROPIC
+		ENERGETIC_DISTRIBUTION SPECTRE MONOCINETIQUE 1.33
+		TIME_DISTRIBUTION DIRAC 0.
+	FIN_SOURCE
+	
+	SOURCE
+		NORME 7.95E9
+		PHOTON
+		PONCTUEL 30. 0. 0.
+		ANGULAR_DISTRIBUTION ISOTROPIC
+		ENERGETIC_DISTRIBUTION SPECTRE MONOCINETIQUE 1.17
+		TIME_DISTRIBUTION DIRAC 0.
+	FIN_SOURCE	
+FIN_LIST_SOURCE
+
+REPONSES
+	1
+	REACTION        
+		PHOTON  
+		NUCLEUS  KERMA_AIR_079N_021Oatoms_J2_mR_par_h DATA 
+		77  1 
+		IN_NO_INTERPOLATION 76
+  1E-11       0.0
+  1.0000E-02  1.2565E-03  2.0000E-02  3.7793E-04  3.0000E-02  1.7225E-04
+  4.5000E-02  1.2374E-04  4.8150E-02  1.1147E-04  6.0000E-02  1.0879E-04
+  7.1270E-02  1.1340E-04  7.5000E-02  1.3107E-04  1.0000E-01  1.9678E-04
+  1.5000E-01  2.9996E-04  2.0000E-01  3.8715E-04  2.3120E-01  4.9726E-04
+  3.0000E-01  6.1648E-04  3.4230E-01  7.2316E-04  4.0000E-01  8.3525E-04
+  4.5000E-01  9.4923E-04  5.1000E-01  1.0094E-03  5.1200E-01  1.0491E-03
+  5.5000E-01  1.1313E-03  6.0000E-01  1.2287E-03  6.5000E-01  1.3210E-03
+  7.0000E-01  1.4067E-03  7.5000E-01  1.4925E-03  8.0000E-01  1.5818E-03
+  8.5000E-01  1.6661E-03  9.0000E-01  1.7452E-03  9.5000E-01  1.8188E-03
+  1.0000E+00  1.9189E-03  1.0830E+00  2.0469E-03  1.1670E+00  2.1640E-03
+  1.2500E+00  2.2687E-03  1.3330E+00  2.3805E-03  1.4170E+00  2.4965E-03
+  1.5000E+00  2.6039E-03  1.5830E+00  2.7039E-03  1.6670E+00  2.7970E-03
+  1.7500E+00  2.8964E-03  1.8330E+00  2.9938E-03  1.9170E+00  3.0850E-03
+  2.0000E+00  3.1947E-03  2.1250E+00  3.3333E-03  2.2500E+00  3.4620E-03
+  2.3750E+00  3.5792E-03  2.5000E+00  3.7038E-03  2.6250E+00  3.8346E-03
+  2.7500E+00  3.9571E-03  2.8750E+00  4.0711E-03  3.0000E+00  4.1811E-03
+  3.1250E+00  4.2979E-03  3.2500E+00  4.4089E-03  3.3750E+00  4.5126E-03
+  3.5000E+00  4.6181E-03  3.6250E+00  4.7381E-03  3.7500E+00  4.8538E-03
+  3.8750E+00  4.9649E-03  4.0000E+00  5.1209E-03  4.2500E+00  5.3140E-03
+  4.5000E+00  5.5381E-03  4.7500E+00  5.7623E-03  5.0000E+00  5.9710E-03
+  5.2500E+00  6.1649E-03  5.5000E+00  6.3634E-03  5.7500E+00  6.5726E-03
+  6.0000E+00  6.7693E-03  6.2500E+00  6.9567E-03  6.5000E+00  7.1724E-03
+  6.7500E+00  7.3899E-03  7.0000E+00  7.5982E-03  7.2500E+00  7.7970E-03
+  7.5000E+00  7.9889E-03  7.7500E+00  8.1736E-03  8.0000E+00  8.5565E-03
+  8.6540E+00  9.3993E-03  1.0000E+01  1.0758E-02  1.2000E+01  1.2459E-02
+        20.0         0.0
+FIN_REPONSES
+COMMENT
+La reponse KERMA AIR a ete pre-calculee en prenant 79% d'atome de N14(77% en masse) et 
+21% d'atome de O16 (23% en masse). en suite de transformer l'unite de barn.eV/atome en
+J/gramme(AIR).s, en suite en mRontgen/heures car les resultats de mesure 
+sont donnes a cette unite.
+COMMENT
+
+LIST_DECOUPAGE 
+	1
+	DEC_FLUX 2
+	20. 1.000000E-11
+FIN_LIST_DECOUPAGE
+
+SCORE	
+	2 
+	1 FLUX_PT  DECOUPAGE DEC_FLUX VOV POINT LIST 5  
+		-30. 0. 0.
+		-35. 0. 0.
+		-40. 0. 0.
+		-45. 0. 0.
+		-50. 0. 0.
+	1 TRACK DECOUPAGE DEC_FLUX VOV VOLU LIST 3 1 2 3
+FIN_SCORE
+
+SIMULATION
+	BATCH 400
+	SIZE 2000
+	EDITION 200
+	PARTICULES 1 PHOTON
+	ENERGY_INF PHOTON 1E-2
+FIN_SIMULATION
+
+PONDERATION
+	PHOTON
+	DECOUPAGE 
+		4
+		20.  1.  0.01 1.E-11
+	DETECT
+		1
+		-50. 0.  0.
+		0.0
+	MAILLAGE
+		15    15     10
+		 7.4   7.4   8.1
+		3
+		REPERE CARTESIAN
+			-55.25 -55.25  -5.1
+			1. 0. 0.
+			0. 1. 0.
+			0. 0. 1.
+	FIN_MAILLAGE
+	INIPOND AUTO
+	FIN_INIPOND
+FIN_PONDERATION
+
+COMMENT
+	GRAF 
+		-55 0 -5
+		110 80
+		Y
+COMMENT
+
+Total concentration of material AIR (1.E24at/cm3) is: 5.400000e-05
+Total concentration of material BETON (1.E24at/cm3) is: 8.248908e-02
+Total concentration of material PLOMB (1.E24at/cm3) is: 3.299120e-02
+
+
+ Loading response functions ...
+ Loading response function ...0, 0
+ Constructing score  ...0
+ Constructing score  ...1
+
+  PONDERATION INITIALIZATION ...
+
+ particle : PHOTON 
+
+
+
+ -------------------------------------------------------------------------- 
+
+ condensing nucleus : O16
+
+ condensing nucleus : N14
+
+
+ DUMP CONDENSED MATRIX FOR MATERIAL : AIR
+
+  PARTICLE : PHOTON
+
+  0.000000e+00   2.479309e-05   0.000000e+00 
+  0.000000e+00   1.681445e-04   7.990939e-07 
+  0.000000e+00   0.000000e+00   3.666822e-03 
+
+
+
+ transport corrected cross sections : 
+	2.538255e-05 5.227603e-04 1.186847e+02 
+
+ total cross sections : 
+	4.244216e-05 5.603969e-04 1.186848e+02 
+
+ placzeck k values , beta = 0.000000e+00
+6.624846e-06 5.043572e-04 5.052067e-02 
+	 number of ponderation groups fixed : 1
+
+ placzeck k values , beta = 1.000000e-01
+2.061063e-05 5.043572e-04 5.052067e-02 
+	 number of ponderation groups fixed : 1
+
+ placzeck k values , beta = 2.000000e-01
+2.401190e-05 5.043572e-04 5.052067e-02 
+	 number of ponderation groups fixed : 1
+
+ placzeck k values , beta = 5.000000e-01
+2.535717e-05 5.043572e-04 5.052067e-02 
+	 number of ponderation groups fixed : 1
+
+ placzeck k values , beta = 1.000000e+00
+2.535717e-05 5.043572e-04 5.052067e-02 
+	 number of ponderation groups fixed : 1
+
+ placzeck k values , beta = 0.000000e+00
+6.624846e-06 5.043572e-04 5.052067e-02 
+	 number of ponderation groups fixed : 1
+
+
+ -------------------------------------------------------------------------- 
+
+ condensing nucleus : SI28
+
+ condensing nucleus : SI29
+
+ condensing nucleus : SI30
+
+ condensing nucleus : FE56
+
+ condensing nucleus : H1
+
+ condensing nucleus : O16
+
+ condensing nucleus : AL27
+
+ condensing nucleus : CA40
+
+ condensing nucleus : CA42
+
+ condensing nucleus : CA43
+
+ condensing nucleus : CA44
+
+ condensing nucleus : CA46
+
+ condensing nucleus : CA48
+
+ condensing nucleus : NA23
+
+
+ DUMP CONDENSED MATRIX FOR MATERIAL : BETON
+
+  PARTICLE : PHOTON
+
+  0.000000e+00   4.734973e-02   0.000000e+00 
+  0.000000e+00   3.279306e-01   1.334699e-03 
+  0.000000e+00   0.000000e+00   1.007065e+01 
+
+
+
+ transport corrected cross sections : 
+	4.843683e-02 3.921847e+00 1.638637e+05 
+
+ total cross sections : 
+	7.901445e-02 4.029058e+00 1.638639e+05 
+
+ placzeck k values , beta = 0.000000e+00
+1.244827e-02 6.244827e-02 1.124483e-01 
+
+ placzeck k values , beta = 1.000000e-01
+3.928227e-02 8.928227e-02 1.392823e-01 
+
+ placzeck k values , beta = 2.000000e-01
+4.582124e-02 9.582124e-02 1.458212e-01 
+
+ placzeck k values , beta = 5.000000e-01
+4.838840e-02 9.838840e-02 1.483884e-01 
+
+ placzeck k values , beta = 1.000000e+00
+4.838840e-02 9.838840e-02 1.483884e-01 
+
+ placzeck k values , beta = 0.000000e+00
+1.244827e-02 6.244827e-02 1.124483e-01 
+
+
+ -------------------------------------------------------------------------- 
+
+ condensing nucleus : PB208
+
+
+ DUMP CONDENSED MATRIX FOR MATERIAL : PLOMB
+
+  PARTICLE : PHOTON
+
+  1.189878e-02   3.976665e-01   0.000000e+00 
+  0.000000e+00   4.916664e+00   2.623824e-03 
+  0.000000e+00   0.000000e+00   2.306675e+02 
+
+
+
+ transport corrected cross sections : 
+	4.418882e-01 2.768290e+02 2.858252e+05 
+
+ total cross sections : 
+	5.591673e-01 2.808389e+02 2.858281e+05 
+
+ placzeck k values , beta = 0.000000e+00
+2.010591e-01 2.510591e-01 3.010591e-01 
+
+ placzeck k values , beta = 1.000000e-01
+3.711860e-01 4.211861e-01 4.711861e-01 
+
+ placzeck k values , beta = 2.000000e-01
+4.206775e-01 4.706775e-01 5.206775e-01 
+
+ placzeck k values , beta = 5.000000e-01
+4.414463e-01 4.914463e-01 5.414463e-01 
+
+ placzeck k values , beta = 1.000000e+00
+4.414463e-01 4.914463e-01 5.414463e-01 
+
+ placzeck k values , beta = 0.000000e+00
+2.010591e-01 2.510591e-01 3.010591e-01 
+ omega_mode : GRAD_I 
+
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+	 initializing source number : 1
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+   SUM OF SIMULATION INTENSITIES = 1.590000e+10
+
+   GLOBAL SIMULATION INTENSITY = 1.590000e+10
+
+   BIASED TOTAL SOURCE INTENSITY = 1.589078e+10
+
+
+ initialization time (s): 6
+
+
+ Type and parameters of random generator before batch 1 : 
+	 DRAND48_RANDOM 123 13 37  COUNTER	0
+
+
+ batch number : 1
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 7.860000e-01	 sigma_n : 1.023198e-01
+ monitoring for particle type : PHOTON
+
+
+ edition statisque de ponderation
+
+ ponderation group : 0
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ ponderation group : 1
+			total population : 8.000000e+01
+			weight discrepancy : 7.338318e-01
+	 		sigma : 2.093782e-02
+
+ ponderation group : 2
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ Total number of collision = 393
+
+ number of collision in cell of detector  0 : 0
+
+ group : 0 normalisation factor = 1.000000e+00
+ group : 1 normalisation factor = 7.338318e-01
+ group : 2 normalisation factor = 7.338318e-01
+ PHOTON GROUP IMPORTANCE HAVE BEEN ADJUSTED 
+
+
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+	 initializing source number : 1
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+   SUM OF SIMULATION INTENSITIES = 1.590000e+10
+
+   GLOBAL SIMULATION INTENSITY = 1.590000e+10
+
+   BIASED TOTAL SOURCE INTENSITY = 1.589078e+10
+
+
+ batch number : 2
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.753739e-01	 sigma_n : 5.782556e-02
+ monitoring for particle type : PHOTON
+
+
+ edition statisque de ponderation
+
+ ponderation group : 0
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ ponderation group : 1
+			total population : 3.110000e+02
+			weight discrepancy : 9.930138e-01
+	 		sigma : 3.109744e-02
+
+ ponderation group : 2
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ Total number of collision = 2122
+
+ number of collision in cell of detector  0 : 0
+
+ group : 0 normalisation factor = 1.000000e+00
+ group : 1 normalisation factor = 7.287050e-01
+ group : 2 normalisation factor = 7.287050e-01
+ PHOTON GROUP IMPORTANCE HAVE BEEN ADJUSTED 
+
+
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+	 initializing source number : 1
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+   SUM OF SIMULATION INTENSITIES = 1.590000e+10
+
+   GLOBAL SIMULATION INTENSITY = 1.590000e+10
+
+   BIASED TOTAL SOURCE INTENSITY = 1.589078e+10
+
+
+ batch number : 3
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.250000e-02	 sigma_n = 5.018413e-03
+	 mean number of collision per photon history: 9.376855e-01	 sigma_n : 6.035964e-02
+ monitoring for particle type : PHOTON
+
+
+ edition statisque de ponderation
+
+ ponderation group : 0
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ ponderation group : 1
+			total population : 2.870000e+02
+			weight discrepancy : 9.696918e-01
+	 		sigma : 1.616064e-02
+
+ ponderation group : 2
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ Total number of collision = 3945
+
+ number of collision in cell of detector  0 : 0
+
+ group : 0 normalisation factor = 1.000000e+00
+ group : 1 normalisation factor = 7.066193e-01
+ group : 2 normalisation factor = 7.066193e-01
+ PHOTON GROUP IMPORTANCE HAVE BEEN ADJUSTED 
+
+
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+	 initializing source number : 1
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+   SUM OF SIMULATION INTENSITIES = 1.590000e+10
+
+   GLOBAL SIMULATION INTENSITY = 1.590000e+10
+
+   BIASED TOTAL SOURCE INTENSITY = 1.589078e+10
+
+
+ batch number : 4
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.750000e-02	 sigma_n = 5.883382e-03
+	 mean number of collision per photon history: 9.615005e-01	 sigma_n : 6.055290e-02
+ monitoring for particle type : PHOTON
+
+
+ edition statisque de ponderation
+
+ ponderation group : 0
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ ponderation group : 1
+			total population : 3.230000e+02
+			weight discrepancy : 1.046151e+00
+	 		sigma : 3.087100e-02
+
+ ponderation group : 2
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ Total number of collision = 5816
+
+ number of collision in cell of detector  0 : 0
+
+ group : 0 normalisation factor = 1.000000e+00
+ group : 1 normalisation factor = 7.392309e-01
+ group : 2 normalisation factor = 7.392309e-01
+ PHOTON GROUP IMPORTANCE HAVE BEEN ADJUSTED 
+
+
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+	 initializing source number : 1
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+   SUM OF SIMULATION INTENSITIES = 1.590000e+10
+
+   GLOBAL SIMULATION INTENSITY = 1.590000e+10
+
+   BIASED TOTAL SOURCE INTENSITY = 1.589078e+10
+
+
+ batch number : 5
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.700000e-02	 sigma_n = 5.689612e-03
+	 mean number of collision per photon history: 9.792899e-01	 sigma_n : 6.311099e-02
+ monitoring for particle type : PHOTON
+
+
+ edition statisque de ponderation
+
+ ponderation group : 0
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ ponderation group : 1
+			total population : 2.990000e+02
+			weight discrepancy : 1.045528e+00
+	 		sigma : 3.405525e-02
+
+ ponderation group : 2
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ Total number of collision = 7714
+
+ number of collision in cell of detector  0 : 0
+
+ group : 0 normalisation factor = 1.000000e+00
+ group : 1 normalisation factor = 7.728869e-01
+ group : 2 normalisation factor = 7.728869e-01
+ PHOTON GROUP IMPORTANCE HAVE BEEN ADJUSTED 
+
+
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+	 initializing source number : 1
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         NORM = 7.950000e+09   SIMULATION INTENSITY = 7.950000e+09   BIASED SIMULATION INTENSITY = 7.945391e+09
+
+   SUM OF SIMULATION INTENSITIES = 1.590000e+10
+
+   GLOBAL SIMULATION INTENSITY = 1.590000e+10
+
+   BIASED TOTAL SOURCE INTENSITY = 1.589078e+10
+
+
+ batch number : 6
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.292829e-01	 sigma_n : 6.070257e-02
+ monitoring for particle type : PHOTON
+
+
+ edition statisque de ponderation
+
+ ponderation group : 0
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ ponderation group : 1
+			total population : 3.080000e+02
+			weight discrepancy : 9.338716e-01
+	 		sigma : 2.464542e-02
+
+ ponderation group : 2
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ Total number of collision = 9544
+
+ number of collision in cell of detector  0 : 0
+
+
+ batch number : 7
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 8.208955e-01	 sigma_n : 5.610178e-02
+
+ batch number : 8
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 9.417910e-01	 sigma_n : 6.234608e-02
+
+ batch number : 9
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 8.791045e-01	 sigma_n : 5.996800e-02
+
+ batch number : 10
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 9.069652e-01	 sigma_n : 6.082492e-02
+
+ batch number : 11
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.500000e-03	 sigma_n = 2.060582e-03
+	 mean number of collision per photon history: 9.002494e-01	 sigma_n : 6.072807e-02
+
+ batch number : 12
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 3.772133e-03
+	 mean number of collision per photon history: 9.145978e-01	 sigma_n : 5.953832e-02
+
+ batch number : 13
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.303393e-01	 sigma_n : 5.758440e-02
+
+ batch number : 14
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 2.344088e-03
+	 mean number of collision per photon history: 9.431705e-01	 sigma_n : 6.221785e-02
+
+ batch number : 15
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.603491e-01	 sigma_n : 5.783731e-02
+
+ batch number : 16
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 2.823471e-03
+	 mean number of collision per photon history: 9.293532e-01	 sigma_n : 5.984056e-02
+
+ batch number : 17
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.237668e-01	 sigma_n : 6.021815e-02
+
+ batch number : 18
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.442336e-01	 sigma_n : 5.667288e-02
+
+ batch number : 19
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 3.531889e-03
+	 mean number of collision per photon history: 8.627548e-01	 sigma_n : 5.913306e-02
+
+ batch number : 20
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.486796e-01	 sigma_n : 6.209529e-02
+
+ batch number : 21
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 2.823471e-03
+	 mean number of collision per photon history: 9.716418e-01	 sigma_n : 6.411475e-02
+
+ batch number : 22
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 4.268839e-03
+	 mean number of collision per photon history: 8.660050e-01	 sigma_n : 5.787667e-02
+
+ batch number : 23
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 9.167082e-01	 sigma_n : 6.350280e-02
+
+ batch number : 24
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 8.835582e-01	 sigma_n : 5.924704e-02
+
+ batch number : 25
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 3.903395e-03
+	 mean number of collision per photon history: 9.696668e-01	 sigma_n : 6.191471e-02
+
+ batch number : 26
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 4.469674e-03
+	 mean number of collision per photon history: 9.066534e-01	 sigma_n : 5.980935e-02
+
+ batch number : 27
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.500000e-03	 sigma_n = 1.802359e-03
+	 mean number of collision per photon history: 9.376248e-01	 sigma_n : 6.011772e-02
+
+ batch number : 28
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 9.600599e-01	 sigma_n : 6.250941e-02
+
+ batch number : 29
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.641778e-03
+	 mean number of collision per photon history: 9.113987e-01	 sigma_n : 6.059522e-02
+
+ batch number : 30
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 3.638062e-03
+	 mean number of collision per photon history: 8.707111e-01	 sigma_n : 5.918379e-02
+
+ batch number : 31
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 3.933921e-03
+	 mean number of collision per photon history: 8.242304e-01	 sigma_n : 5.707296e-02
+
+ batch number : 32
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 3.903395e-03
+	 mean number of collision per photon history: 8.527363e-01	 sigma_n : 5.774384e-02
+
+ batch number : 33
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.530684e-03
+	 mean number of collision per photon history: 8.479125e-01	 sigma_n : 5.671219e-02
+
+ batch number : 34
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 3.199061e-03
+	 mean number of collision per photon history: 8.706468e-01	 sigma_n : 5.717052e-02
+
+ batch number : 35
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.611360e-01	 sigma_n : 6.280970e-02
+
+ batch number : 36
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.641778e-03
+	 mean number of collision per photon history: 1.011952e+00	 sigma_n : 6.480641e-02
+
+ batch number : 37
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.060818e-01	 sigma_n : 5.610309e-02
+
+ batch number : 38
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 8.344107e-01	 sigma_n : 5.481183e-02
+
+ batch number : 39
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 2.344088e-03
+	 mean number of collision per photon history: 1.004980e+00	 sigma_n : 6.313113e-02
+
+ batch number : 40
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 7.842551e-01	 sigma_n : 5.585770e-02
+
+ batch number : 41
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.868719e-03
+	 mean number of collision per photon history: 8.146123e-01	 sigma_n : 5.408536e-02
+
+ batch number : 42
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 3.315569e-03
+	 mean number of collision per photon history: 8.102590e-01	 sigma_n : 5.723688e-02
+
+ batch number : 43
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.547694e-03
+	 mean number of collision per photon history: 8.670319e-01	 sigma_n : 5.714314e-02
+
+ batch number : 44
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 3.238401e-03
+	 mean number of collision per photon history: 8.785465e-01	 sigma_n : 5.968042e-02
+
+ batch number : 45
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 4.149998e-03
+	 mean number of collision per photon history: 8.796619e-01	 sigma_n : 5.957645e-02
+
+ batch number : 46
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.500000e-03	 sigma_n = 2.060582e-03
+	 mean number of collision per photon history: 9.905284e-01	 sigma_n : 6.440003e-02
+
+ batch number : 47
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 8.284436e-01	 sigma_n : 5.711923e-02
+
+ batch number : 48
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.150000e-02	 sigma_n = 4.085611e-03
+	 mean number of collision per photon history: 1.096582e+00	 sigma_n : 6.533533e-02
+
+ batch number : 49
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.500000e-03	 sigma_n = 2.060582e-03
+	 mean number of collision per photon history: 9.012469e-01	 sigma_n : 5.986208e-02
+
+ batch number : 50
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.198207e-01	 sigma_n : 6.249540e-02
+
+ batch number : 51
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.746880e-01	 sigma_n : 5.867941e-02
+
+ batch number : 52
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.438903e-01	 sigma_n : 5.750770e-02
+
+ batch number : 53
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.998006e-01	 sigma_n : 6.041204e-02
+
+ batch number : 54
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.886670e-01	 sigma_n : 6.102645e-02
+
+ batch number : 55
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 3.036196e-03
+	 mean number of collision per photon history: 8.407168e-01	 sigma_n : 5.713537e-02
+
+ batch number : 56
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.824701e-01	 sigma_n : 6.082570e-02
+
+ batch number : 57
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 4.297527e-03
+	 mean number of collision per photon history: 9.235353e-01	 sigma_n : 6.153668e-02
+
+ batch number : 58
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.911999e-03
+	 mean number of collision per photon history: 8.319244e-01	 sigma_n : 5.584324e-02
+
+ batch number : 59
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 9.108122e-01	 sigma_n : 6.034938e-02
+
+ batch number : 60
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.428144e-01	 sigma_n : 5.623871e-02
+
+ batch number : 61
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.573566e-01	 sigma_n : 5.767854e-02
+
+ batch number : 62
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.300000e-02	 sigma_n = 4.735685e-03
+	 mean number of collision per photon history: 8.832839e-01	 sigma_n : 5.861609e-02
+
+ batch number : 63
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.987026e-01	 sigma_n : 5.864352e-02
+
+ batch number : 64
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 4.028646e-03
+	 mean number of collision per photon history: 8.217478e-01	 sigma_n : 5.609922e-02
+
+ batch number : 65
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.050000e-02	 sigma_n = 5.263908e-03
+	 mean number of collision per photon history: 9.430129e-01	 sigma_n : 6.095334e-02
+
+ batch number : 66
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.868719e-03
+	 mean number of collision per photon history: 9.374379e-01	 sigma_n : 6.134778e-02
+
+ batch number : 67
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.234924e-03
+	 mean number of collision per photon history: 9.647468e-01	 sigma_n : 6.288920e-02
+
+ batch number : 68
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 7.500000e-01	 sigma_n : 5.473675e-02
+
+ batch number : 69
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.713217e-01	 sigma_n : 5.618256e-02
+
+ batch number : 70
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.250000e-02	 sigma_n = 5.402450e-03
+	 mean number of collision per photon history: 8.704253e-01	 sigma_n : 5.909755e-02
+
+ batch number : 71
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 3.077781e-03
+	 mean number of collision per photon history: 9.190263e-01	 sigma_n : 6.233956e-02
+
+ batch number : 72
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 9.008964e-01	 sigma_n : 5.987389e-02
+
+ batch number : 73
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 8.914343e-01	 sigma_n : 5.828003e-02
+
+ batch number : 74
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.237397e-03
+	 mean number of collision per photon history: 8.816509e-01	 sigma_n : 6.029663e-02
+
+ batch number : 75
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.300000e-02	 sigma_n = 7.763094e-03
+	 mean number of collision per photon history: 9.378061e-01	 sigma_n : 6.001860e-02
+
+ batch number : 76
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 9.186221e-01	 sigma_n : 6.148153e-02
+
+ batch number : 77
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.234924e-03
+	 mean number of collision per photon history: 9.090457e-01	 sigma_n : 6.004999e-02
+
+ batch number : 78
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.050000e-02	 sigma_n = 4.382291e-03
+	 mean number of collision per photon history: 8.690476e-01	 sigma_n : 5.560350e-02
+
+ batch number : 79
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 9.031936e-01	 sigma_n : 6.157130e-02
+
+ batch number : 80
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.550000e-02	 sigma_n = 5.305087e-03
+	 mean number of collision per photon history: 9.081935e-01	 sigma_n : 6.023796e-02
+
+ batch number : 81
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 9.035964e-01	 sigma_n : 6.006401e-02
+
+ batch number : 82
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.772455e-01	 sigma_n : 5.856565e-02
+
+ batch number : 83
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.245264e-01	 sigma_n : 5.706682e-02
+
+ batch number : 84
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.234924e-03
+	 mean number of collision per photon history: 9.582090e-01	 sigma_n : 6.198017e-02
+
+ batch number : 85
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 3.460345e-03
+	 mean number of collision per photon history: 9.166253e-01	 sigma_n : 5.881461e-02
+
+ batch number : 86
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 4.026535e-03
+	 mean number of collision per photon history: 9.751738e-01	 sigma_n : 6.204073e-02
+
+ batch number : 87
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.150000e-02	 sigma_n = 3.700097e-03
+	 mean number of collision per photon history: 1.042638e+00	 sigma_n : 6.425097e-02
+
+ batch number : 88
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 8.822068e-01	 sigma_n : 6.007206e-02
+
+ batch number : 89
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 3.161803e-03
+	 mean number of collision per photon history: 8.968610e-01	 sigma_n : 5.897263e-02
+
+ batch number : 90
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 4.948509e-03
+	 mean number of collision per photon history: 8.247269e-01	 sigma_n : 5.673344e-02
+
+ batch number : 91
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 4.026535e-03
+	 mean number of collision per photon history: 9.300595e-01	 sigma_n : 6.400424e-02
+
+ batch number : 92
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 3.835653e-03
+	 mean number of collision per photon history: 8.625310e-01	 sigma_n : 5.447970e-02
+
+ batch number : 93
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 9.401198e-01	 sigma_n : 6.131504e-02
+
+ batch number : 94
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.048331e-01	 sigma_n : 5.939477e-02
+
+ batch number : 95
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.850000e-02	 sigma_n = 7.975630e-03
+	 mean number of collision per photon history: 8.509592e-01	 sigma_n : 5.644101e-02
+
+ batch number : 96
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 9.033383e-01	 sigma_n : 6.108615e-02
+
+ batch number : 97
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 8.423940e-01	 sigma_n : 5.921363e-02
+
+ batch number : 98
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.870518e-01	 sigma_n : 6.507378e-02
+
+ batch number : 99
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.038922e-01	 sigma_n : 5.855741e-02
+
+ batch number : 100
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.607089e-01	 sigma_n : 5.747843e-02
+
+ batch number : 101
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 8.150925e-01	 sigma_n : 5.618556e-02
+
+ batch number : 102
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 2.993991e-03
+	 mean number of collision per photon history: 9.557874e-01	 sigma_n : 6.210398e-02
+
+ batch number : 103
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 4.149998e-03
+	 mean number of collision per photon history: 8.868486e-01	 sigma_n : 6.086169e-02
+
+ batch number : 104
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 3.638062e-03
+	 mean number of collision per photon history: 8.671642e-01	 sigma_n : 5.921983e-02
+
+ batch number : 105
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.050000e-02	 sigma_n = 5.263908e-03
+	 mean number of collision per photon history: 8.561508e-01	 sigma_n : 5.935282e-02
+
+ batch number : 106
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.428144e-01	 sigma_n : 5.795778e-02
+
+ batch number : 107
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.966034e-01	 sigma_n : 6.039806e-02
+
+ batch number : 108
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.017946e-01	 sigma_n : 5.937589e-02
+
+ batch number : 109
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.836745e-01	 sigma_n : 5.936462e-02
+
+ batch number : 110
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 3.077781e-03
+	 mean number of collision per photon history: 7.766169e-01	 sigma_n : 5.354321e-02
+
+ batch number : 111
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-02	 sigma_n = 3.994744e-03
+	 mean number of collision per photon history: 9.915633e-01	 sigma_n : 6.162747e-02
+
+ batch number : 112
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 8.401394e-01	 sigma_n : 5.669015e-02
+
+ batch number : 113
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 3.494421e-03
+	 mean number of collision per photon history: 9.036743e-01	 sigma_n : 5.994706e-02
+
+ batch number : 114
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.868719e-03
+	 mean number of collision per photon history: 8.867925e-01	 sigma_n : 5.763293e-02
+
+ batch number : 115
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.981528e-01	 sigma_n : 6.028859e-02
+
+ batch number : 116
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 9.436409e-01	 sigma_n : 6.284794e-02
+
+ batch number : 117
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 3.161803e-03
+	 mean number of collision per photon history: 8.549352e-01	 sigma_n : 5.749340e-02
+
+ batch number : 118
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.888335e-01	 sigma_n : 5.945656e-02
+
+ batch number : 119
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 2.868098e-03
+	 mean number of collision per photon history: 1.025871e+00	 sigma_n : 6.579093e-02
+
+ batch number : 120
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.122816e-01	 sigma_n : 5.535062e-02
+
+ batch number : 121
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.234924e-03
+	 mean number of collision per photon history: 8.907104e-01	 sigma_n : 5.791316e-02
+
+ batch number : 122
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.364905e-01	 sigma_n : 5.639659e-02
+
+ batch number : 123
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.137793e-01	 sigma_n : 5.678748e-02
+
+ batch number : 124
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.532202e-01	 sigma_n : 5.795954e-02
+
+ batch number : 125
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 8.540730e-01	 sigma_n : 5.911092e-02
+
+ batch number : 126
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 4.060017e-03
+	 mean number of collision per photon history: 9.060169e-01	 sigma_n : 5.956474e-02
+
+ batch number : 127
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.591226e-01	 sigma_n : 6.292341e-02
+
+ batch number : 128
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 8.934263e-01	 sigma_n : 6.026614e-02
+
+ batch number : 129
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.868719e-03
+	 mean number of collision per photon history: 9.314456e-01	 sigma_n : 6.038553e-02
+
+ batch number : 130
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.785465e-01	 sigma_n : 5.828511e-02
+
+ batch number : 131
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 4.297527e-03
+	 mean number of collision per photon history: 8.799007e-01	 sigma_n : 6.013410e-02
+
+ batch number : 132
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.461538e-01	 sigma_n : 5.776804e-02
+
+ batch number : 133
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 3.966074e-03
+	 mean number of collision per photon history: 9.056604e-01	 sigma_n : 6.031780e-02
+
+ batch number : 134
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.500000e-03	 sigma_n = 1.500000e-03
+	 mean number of collision per photon history: 9.020979e-01	 sigma_n : 6.042949e-02
+
+ batch number : 135
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 4.383433e-03
+	 mean number of collision per photon history: 8.987090e-01	 sigma_n : 5.823569e-02
+
+ batch number : 136
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 3.077781e-03
+	 mean number of collision per photon history: 9.263682e-01	 sigma_n : 6.280300e-02
+
+ batch number : 137
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 2.868098e-03
+	 mean number of collision per photon history: 8.794821e-01	 sigma_n : 5.690673e-02
+
+ batch number : 138
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 1.005979e+00	 sigma_n : 6.500363e-02
+
+ batch number : 139
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.868719e-03
+	 mean number of collision per photon history: 8.479881e-01	 sigma_n : 5.735954e-02
+
+ batch number : 140
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.100000e-02	 sigma_n = 5.696993e-03
+	 mean number of collision per photon history: 8.418443e-01	 sigma_n : 5.553414e-02
+
+ batch number : 141
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.050000e-02	 sigma_n = 4.147707e-03
+	 mean number of collision per photon history: 7.882995e-01	 sigma_n : 5.504499e-02
+
+ batch number : 142
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 8.181818e-01	 sigma_n : 5.731079e-02
+
+ batch number : 143
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.402093e-01	 sigma_n : 6.048872e-02
+
+ batch number : 144
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.200000e-02	 sigma_n = 4.789517e-03
+	 mean number of collision per photon history: 8.717822e-01	 sigma_n : 5.710558e-02
+
+ batch number : 145
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.736009e-03
+	 mean number of collision per photon history: 9.169567e-01	 sigma_n : 6.013084e-02
+
+ batch number : 146
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 4.440128e-03
+	 mean number of collision per photon history: 9.116625e-01	 sigma_n : 5.998916e-02
+
+ batch number : 147
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.262606e-01	 sigma_n : 5.550835e-02
+
+ batch number : 148
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 3.738313e-03
+	 mean number of collision per photon history: 8.841372e-01	 sigma_n : 5.934997e-02
+
+ batch number : 149
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.911999e-03
+	 mean number of collision per photon history: 8.521653e-01	 sigma_n : 5.744273e-02
+
+ batch number : 150
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.977046e-01	 sigma_n : 6.017742e-02
+
+ batch number : 151
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.178643e-01	 sigma_n : 5.732468e-02
+
+ batch number : 152
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 9.071856e-01	 sigma_n : 6.103797e-02
+
+ batch number : 153
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 4.028646e-03
+	 mean number of collision per photon history: 7.973174e-01	 sigma_n : 5.507533e-02
+
+ batch number : 154
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 5.047845e-03
+	 mean number of collision per photon history: 8.655087e-01	 sigma_n : 5.585020e-02
+
+ batch number : 155
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 3.036196e-03
+	 mean number of collision per photon history: 9.254473e-01	 sigma_n : 5.996857e-02
+
+ batch number : 156
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.082876e-01	 sigma_n : 5.589972e-02
+
+ batch number : 157
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 5.406338e-03
+	 mean number of collision per photon history: 8.738828e-01	 sigma_n : 5.717699e-02
+
+ batch number : 158
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.497254e-01	 sigma_n : 5.791848e-02
+
+ batch number : 159
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 1.024950e+00	 sigma_n : 6.459930e-02
+
+ batch number : 160
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.868719e-03
+	 mean number of collision per photon history: 8.574975e-01	 sigma_n : 5.740117e-02
+
+ batch number : 161
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.500000e-03	 sigma_n = 1.802359e-03
+	 mean number of collision per photon history: 9.016475e-01	 sigma_n : 6.043401e-02
+
+ batch number : 162
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 8.495752e-01	 sigma_n : 5.858510e-02
+
+ batch number : 163
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.356574e-01	 sigma_n : 5.571461e-02
+
+ batch number : 164
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.554337e-01	 sigma_n : 5.714920e-02
+
+ batch number : 165
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.612082e-01	 sigma_n : 5.871737e-02
+
+ batch number : 166
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 3.903395e-03
+	 mean number of collision per photon history: 8.019900e-01	 sigma_n : 5.752208e-02
+
+ batch number : 167
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 9.566517e-01	 sigma_n : 5.991192e-02
+
+ batch number : 168
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 4.060017e-03
+	 mean number of collision per photon history: 9.468455e-01	 sigma_n : 6.075398e-02
+
+ batch number : 169
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.911999e-03
+	 mean number of collision per photon history: 9.263315e-01	 sigma_n : 6.024416e-02
+
+ batch number : 170
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 8.568579e-01	 sigma_n : 5.898564e-02
+
+ batch number : 171
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.100000e-02	 sigma_n = 4.790718e-03
+	 mean number of collision per photon history: 9.350521e-01	 sigma_n : 5.973281e-02
+
+ batch number : 172
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 9.342957e-01	 sigma_n : 6.072415e-02
+
+ batch number : 173
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.641778e-03
+	 mean number of collision per photon history: 8.536585e-01	 sigma_n : 5.881984e-02
+
+ batch number : 174
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 9.205397e-01	 sigma_n : 6.004822e-02
+
+ batch number : 175
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.530684e-03
+	 mean number of collision per photon history: 9.189458e-01	 sigma_n : 6.052996e-02
+
+ batch number : 176
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 3.772133e-03
+	 mean number of collision per photon history: 7.342275e-01	 sigma_n : 5.528006e-02
+
+ batch number : 177
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 2.868098e-03
+	 mean number of collision per photon history: 8.199901e-01	 sigma_n : 5.650309e-02
+
+ batch number : 178
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 2.868098e-03
+	 mean number of collision per photon history: 8.133400e-01	 sigma_n : 5.766650e-02
+
+ batch number : 179
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 4.026535e-03
+	 mean number of collision per photon history: 9.131082e-01	 sigma_n : 5.850289e-02
+
+ batch number : 180
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.500000e-03	 sigma_n = 1.802359e-03
+	 mean number of collision per photon history: 7.824351e-01	 sigma_n : 5.416648e-02
+
+ batch number : 181
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.794821e-01	 sigma_n : 5.714604e-02
+
+ batch number : 182
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.023952e-01	 sigma_n : 5.414027e-02
+
+ batch number : 183
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 9.415584e-01	 sigma_n : 6.177632e-02
+
+ batch number : 184
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.044888e-01	 sigma_n : 5.702796e-02
+
+ batch number : 185
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.112831e-01	 sigma_n : 5.744486e-02
+
+ batch number : 186
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 3.077781e-03
+	 mean number of collision per photon history: 9.622079e-01	 sigma_n : 5.926889e-02
+
+ batch number : 187
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 9.351621e-01	 sigma_n : 6.266738e-02
+
+ batch number : 188
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.228088e-01	 sigma_n : 5.957008e-02
+
+ batch number : 189
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 8.300947e-01	 sigma_n : 5.727919e-02
+
+ batch number : 190
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.867830e-01	 sigma_n : 5.760966e-02
+
+ batch number : 191
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.968096e-01	 sigma_n : 5.940935e-02
+
+ batch number : 192
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 8.604883e-01	 sigma_n : 5.756009e-02
+
+ batch number : 193
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.541604e-01	 sigma_n : 6.227916e-02
+
+ batch number : 194
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.511952e-01	 sigma_n : 6.010127e-02
+
+ batch number : 195
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 2.868098e-03
+	 mean number of collision per photon history: 9.069189e-01	 sigma_n : 5.809603e-02
+
+ batch number : 196
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.350000e-02	 sigma_n = 5.115854e-03
+	 mean number of collision per photon history: 9.094508e-01	 sigma_n : 5.992180e-02
+
+ batch number : 197
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 3.738313e-03
+	 mean number of collision per photon history: 8.006958e-01	 sigma_n : 5.731392e-02
+
+ batch number : 198
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 8.530144e-01	 sigma_n : 5.931278e-02
+
+ batch number : 199
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.500000e-03	 sigma_n = 1.802359e-03
+	 mean number of collision per photon history: 1.022943e+00	 sigma_n : 6.474451e-02
+
+ Type and parameters of random generator before batch 200 : 
+	 DRAND48_RANDOM 51375 65243 15333  COUNTER	7885956
+
+
+ batch number : 200
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 9.341974e-01	 sigma_n : 6.217346e-02
+ monitoring for particle type : PHOTON
+
+
+ edition statisque de ponderation
+
+ ponderation group : 0
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ ponderation group : 1
+			total population : 3.080000e+02
+			weight discrepancy : 9.338716e-01
+	 		sigma : 2.464542e-02
+
+ ponderation group : 2
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ Total number of collision = 349901
+
+ number of collision in cell of detector  0 : 0
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.590000e+10
+*********************************************************
+
+
+ Mean weight leakage = 1.829920e+03	 sigma = 6.953964e+00	 sigma% = 3.800147e-01
+
+
+ Edition after batch number : 200
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_FLUX
+
+
+ PARTICULE : PHOTON 
+
+
+ reaction on nucleus : KERMA_AIR_079N_021Oatoms_J2_mR_par_h
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+ TOTAL FXPT CONTRIBUTION 
+******************************************************************************
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -3.000000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	8.968887e+00	1.591598e+00	3.166514e-01		1.327537e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 200	8.968887e+00	1.591598e+00
+
+	 variance of variance* : 2.204925e+00  [1.327537e-01]	 [ rejected to vov criterium < 0.1 ]
+
+	 sensibility to maximum value: 6.038666e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 9.400000e+01 ]
+
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -3.500000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	8.561861e+00	1.685670e+00	3.022811e-01		7.526685e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 200	8.561861e+00	1.685670e+00
+
+	 variance of variance* : 1.306250e+00  [7.526685e-02]
+
+	 sensibility to maximum value: 5.078545e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 4.300000e+01 ]
+
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -4.000000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	7.960463e+00	1.375553e+00	2.810484e-01		3.558853e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 200	7.960463e+00	1.375553e+00
+
+	 variance of variance* : 2.046601e-01  [3.558853e-02]
+
+	 sensibility to maximum value: 4.009107e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 4.900000e+01 ]
+
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -4.500000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	7.982458e+00	1.773259e+00	2.818250e-01		5.032954e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 200	7.982458e+00	1.773259e+00
+
+	 variance of variance* : 8.081994e-01  [5.032954e-02]
+
+	 sensibility to maximum value: 3.720775e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 3.500000e+01 ]
+
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -5.000000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	7.282500e+00	1.817486e+00	2.571126e-01		1.412099e-01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 200	7.282500e+00	1.817486e+00
+
+	 variance of variance* : 1.733530e+00  [1.412099e-01]	 [ rejected to vov criterium < 0.1 ]
+
+	 sensibility to maximum value: 6.148344e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 9.600000e+01 ]
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_FLUX
+
+
+ PARTICULE : PHOTON 
+
+
+ reaction on nucleus : KERMA_AIR_079N_021Oatoms_J2_mR_par_h
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	1.324312e+09	1.152068e-01	4.675554e+07		1.003509e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 200	1.324312e+09	1.152068e-01
+
+	 variance of variance* : 2.174979e+27  [1.003509e-02]
+
+	 sensibility to maximum value: 2.209679e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 0.000000e+00 ]
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 2
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	5.776632e+07	4.668781e-01	2.039471e+06		8.016668e-03
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 200	5.776632e+07	4.668781e-01
+
+	 variance of variance* : 1.696550e+24  [8.016668e-03]
+
+	 sensibility to maximum value: 1.810308e-01
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	1.968247e+06	1.442644e+00	6.949004e+04		1.553835e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 200	1.968247e+06	1.442644e+00
+
+	 variance of variance* : 4.040365e+20  [1.553835e-02]
+
+	 sensibility to maximum value: 2.436502e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 1.950000e+02 ]
+
+
+
+ simulation time (s) : 16
+
+
+ batch number : 201
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 8.655672e-01	 sigma_n : 5.866846e-02
+
+ batch number : 202
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 4.028646e-03
+	 mean number of collision per photon history: 7.911487e-01	 sigma_n : 5.516371e-02
+
+ batch number : 203
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.500000e-03	 sigma_n = 1.802359e-03
+	 mean number of collision per photon history: 8.711932e-01	 sigma_n : 6.033726e-02
+
+ batch number : 204
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.668329e-01	 sigma_n : 5.927086e-02
+
+ batch number : 205
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 4.921075e-03
+	 mean number of collision per photon history: 9.394841e-01	 sigma_n : 6.087684e-02
+
+ batch number : 206
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 9.146281e-01	 sigma_n : 6.110042e-02
+
+ batch number : 207
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.500000e-03	 sigma_n = 2.060582e-03
+	 mean number of collision per photon history: 8.707585e-01	 sigma_n : 5.971508e-02
+
+ batch number : 208
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 7.983068e-01	 sigma_n : 5.831191e-02
+
+ batch number : 209
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 9.323383e-01	 sigma_n : 6.128567e-02
+
+ batch number : 210
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.911999e-03
+	 mean number of collision per photon history: 9.706468e-01	 sigma_n : 6.264540e-02
+
+ batch number : 211
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 2.823471e-03
+	 mean number of collision per photon history: 8.889442e-01	 sigma_n : 5.911682e-02
+
+ batch number : 212
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 7.919162e-01	 sigma_n : 5.556296e-02
+
+ batch number : 213
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 4.180519e-03
+	 mean number of collision per photon history: 8.385494e-01	 sigma_n : 5.610844e-02
+
+ batch number : 214
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.782435e-01	 sigma_n : 5.964989e-02
+
+ batch number : 215
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.100000e-02	 sigma_n = 3.527850e-03
+	 mean number of collision per photon history: 8.754342e-01	 sigma_n : 5.769312e-02
+
+ batch number : 216
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 8.750000e-01	 sigma_n : 5.951714e-02
+
+ batch number : 217
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.082752e-01	 sigma_n : 6.185233e-02
+
+ batch number : 218
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.974104e-01	 sigma_n : 5.962802e-02
+
+ batch number : 219
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 9.960100e-01	 sigma_n : 6.333971e-02
+
+ batch number : 220
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.530684e-03
+	 mean number of collision per photon history: 9.067460e-01	 sigma_n : 6.011150e-02
+
+ batch number : 221
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 3.903395e-03
+	 mean number of collision per photon history: 1.016899e+00	 sigma_n : 6.562159e-02
+
+ batch number : 222
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 2.868098e-03
+	 mean number of collision per photon history: 8.537313e-01	 sigma_n : 5.773223e-02
+
+ batch number : 223
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.870787e-03
+	 mean number of collision per photon history: 8.291108e-01	 sigma_n : 5.609235e-02
+
+ batch number : 224
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.250000e-02	 sigma_n = 4.602441e-03
+	 mean number of collision per photon history: 7.839445e-01	 sigma_n : 5.342548e-02
+
+ batch number : 225
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 3.462368e-03
+	 mean number of collision per photon history: 8.765555e-01	 sigma_n : 5.887125e-02
+
+ batch number : 226
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 9.064677e-01	 sigma_n : 6.089575e-02
+
+ batch number : 227
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 9.112662e-01	 sigma_n : 5.971942e-02
+
+ batch number : 228
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 3.638062e-03
+	 mean number of collision per photon history: 9.373134e-01	 sigma_n : 6.065061e-02
+
+ batch number : 229
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 2.868098e-03
+	 mean number of collision per photon history: 8.871208e-01	 sigma_n : 5.823353e-02
+
+ batch number : 230
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.641778e-03
+	 mean number of collision per photon history: 9.053785e-01	 sigma_n : 6.012357e-02
+
+ batch number : 231
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.686970e-01	 sigma_n : 5.803182e-02
+
+ batch number : 232
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.650000e-02	 sigma_n = 6.374495e-03
+	 mean number of collision per photon history: 9.428008e-01	 sigma_n : 6.229674e-02
+
+ batch number : 233
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 9.003488e-01	 sigma_n : 6.018666e-02
+
+ batch number : 234
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.227659e-01	 sigma_n : 5.634340e-02
+
+ batch number : 235
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.736009e-03
+	 mean number of collision per photon history: 8.530876e-01	 sigma_n : 5.873241e-02
+
+ batch number : 236
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 3.773857e-03
+	 mean number of collision per photon history: 8.363184e-01	 sigma_n : 5.696826e-02
+
+ batch number : 237
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 9.096355e-01	 sigma_n : 5.849446e-02
+
+ batch number : 238
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 8.041958e-01	 sigma_n : 5.579104e-02
+
+ batch number : 239
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.100000e-02	 sigma_n = 4.116792e-03
+	 mean number of collision per photon history: 8.455809e-01	 sigma_n : 5.647601e-02
+
+ batch number : 240
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.996663e-03
+	 mean number of collision per photon history: 7.949228e-01	 sigma_n : 5.551688e-02
+
+ batch number : 241
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 3.161803e-03
+	 mean number of collision per photon history: 8.051819e-01	 sigma_n : 5.448741e-02
+
+ batch number : 242
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.683292e-01	 sigma_n : 5.916957e-02
+
+ batch number : 243
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.662675e-01	 sigma_n : 5.878295e-02
+
+ batch number : 244
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.609172e-01	 sigma_n : 5.782846e-02
+
+ batch number : 245
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 8.622576e-01	 sigma_n : 5.862195e-02
+
+ batch number : 246
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 7.785536e-01	 sigma_n : 5.559224e-02
+
+ batch number : 247
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 8.844046e-01	 sigma_n : 5.822136e-02
+
+ batch number : 248
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 9.255744e-01	 sigma_n : 6.108093e-02
+
+ batch number : 249
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.250000e-02	 sigma_n = 4.762690e-03
+	 mean number of collision per photon history: 9.579208e-01	 sigma_n : 5.861763e-02
+
+ batch number : 250
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.500000e-03	 sigma_n = 2.060582e-03
+	 mean number of collision per photon history: 7.610973e-01	 sigma_n : 5.434461e-02
+
+ batch number : 251
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.350000e-02	 sigma_n = 5.628029e-03
+	 mean number of collision per photon history: 9.283243e-01	 sigma_n : 5.925543e-02
+
+ batch number : 252
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.911999e-03
+	 mean number of collision per photon history: 8.551518e-01	 sigma_n : 5.897110e-02
+
+ batch number : 253
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.641778e-03
+	 mean number of collision per photon history: 9.103586e-01	 sigma_n : 6.057553e-02
+
+ batch number : 254
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 3.638062e-03
+	 mean number of collision per photon history: 9.031297e-01	 sigma_n : 5.827051e-02
+
+ batch number : 255
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.883906e-01	 sigma_n : 5.790012e-02
+
+ batch number : 256
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.744395e-01	 sigma_n : 5.772689e-02
+
+ batch number : 257
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 3.807197e-03
+	 mean number of collision per photon history: 8.766169e-01	 sigma_n : 5.941160e-02
+
+ batch number : 258
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.676985e-01	 sigma_n : 5.745631e-02
+
+ batch number : 259
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.234924e-03
+	 mean number of collision per photon history: 8.961233e-01	 sigma_n : 5.985816e-02
+
+ batch number : 260
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.855721e-01	 sigma_n : 5.953710e-02
+
+ batch number : 261
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 8.779273e-01	 sigma_n : 5.733993e-02
+
+ batch number : 262
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 7.497502e-01	 sigma_n : 5.512120e-02
+
+ batch number : 263
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 8.434696e-01	 sigma_n : 5.752813e-02
+
+ batch number : 264
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.497012e-01	 sigma_n : 6.416807e-02
+
+ batch number : 265
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.500000e-02	 sigma_n = 5.282182e-03
+	 mean number of collision per photon history: 9.599802e-01	 sigma_n : 6.070688e-02
+
+ batch number : 266
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.641778e-03
+	 mean number of collision per photon history: 8.711443e-01	 sigma_n : 5.863166e-02
+
+ batch number : 267
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.100000e-02	 sigma_n = 3.800885e-03
+	 mean number of collision per photon history: 9.247152e-01	 sigma_n : 6.062856e-02
+
+ batch number : 268
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 8.810353e-01	 sigma_n : 5.735954e-02
+
+ batch number : 269
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 3.772133e-03
+	 mean number of collision per photon history: 9.379345e-01	 sigma_n : 6.127763e-02
+
+ batch number : 270
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.825950e-03
+	 mean number of collision per photon history: 8.032869e-01	 sigma_n : 5.577588e-02
+
+ batch number : 271
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.996663e-03
+	 mean number of collision per photon history: 9.761431e-01	 sigma_n : 6.278732e-02
+
+ batch number : 272
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-03	 sigma_n = 1.000000e-03
+	 mean number of collision per photon history: 8.895552e-01	 sigma_n : 5.765402e-02
+
+ batch number : 273
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.250000e-02	 sigma_n = 5.213969e-03
+	 mean number of collision per photon history: 9.238001e-01	 sigma_n : 6.059626e-02
+
+ batch number : 274
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 8.176383e-01	 sigma_n : 5.610544e-02
+
+ batch number : 275
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.572139e-01	 sigma_n : 6.119979e-02
+
+ batch number : 276
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 8.949203e-01	 sigma_n : 5.897519e-02
+
+ batch number : 277
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.150000e-02	 sigma_n = 3.700097e-03
+	 mean number of collision per photon history: 9.534653e-01	 sigma_n : 6.140458e-02
+
+ batch number : 278
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.971029e-01	 sigma_n : 5.922784e-02
+
+ batch number : 279
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.100000e-02	 sigma_n = 4.295198e-03
+	 mean number of collision per photon history: 9.172038e-01	 sigma_n : 6.071020e-02
+
+ batch number : 280
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 9.322034e-01	 sigma_n : 6.200420e-02
+
+ batch number : 281
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.809168e-01	 sigma_n : 6.093408e-02
+
+ batch number : 282
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 3.195306e-03
+	 mean number of collision per photon history: 9.423746e-01	 sigma_n : 6.043616e-02
+
+ batch number : 283
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 8.625000e-01	 sigma_n : 5.783139e-02
+
+ batch number : 284
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 3.039654e-03
+	 mean number of collision per photon history: 9.218517e-01	 sigma_n : 6.208342e-02
+
+ batch number : 285
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 2.868098e-03
+	 mean number of collision per photon history: 8.527363e-01	 sigma_n : 5.768806e-02
+
+ batch number : 286
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 8.756837e-01	 sigma_n : 5.855877e-02
+
+ batch number : 287
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 4.058046e-03
+	 mean number of collision per photon history: 9.593254e-01	 sigma_n : 6.185175e-02
+
+ batch number : 288
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.641778e-03
+	 mean number of collision per photon history: 8.446989e-01	 sigma_n : 5.921586e-02
+
+ batch number : 289
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-02	 sigma_n = 3.384631e-03
+	 mean number of collision per photon history: 9.384310e-01	 sigma_n : 6.100557e-02
+
+ batch number : 290
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.771842e-01	 sigma_n : 5.942318e-02
+
+ batch number : 291
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.150000e-02	 sigma_n = 5.262863e-03
+	 mean number of collision per photon history: 8.881188e-01	 sigma_n : 5.797684e-02
+
+ batch number : 292
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 3.769878e-03
+	 mean number of collision per photon history: 8.297767e-01	 sigma_n : 5.616272e-02
+
+ batch number : 293
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.547694e-03
+	 mean number of collision per photon history: 8.659691e-01	 sigma_n : 5.938248e-02
+
+ batch number : 294
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 2.120790e-03
+	 mean number of collision per photon history: 8.509472e-01	 sigma_n : 5.837670e-02
+
+ batch number : 295
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.128486e-01	 sigma_n : 6.166333e-02
+
+ batch number : 296
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.052921e-01	 sigma_n : 5.708646e-02
+
+ batch number : 297
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.400000e-02	 sigma_n = 6.034916e-03
+	 mean number of collision per photon history: 9.763080e-01	 sigma_n : 6.355362e-02
+
+ batch number : 298
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.603053e-03
+	 mean number of collision per photon history: 7.890547e-01	 sigma_n : 5.398965e-02
+
+ batch number : 299
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.252243e-01	 sigma_n : 6.051058e-02
+
+ batch number : 300
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 9.115884e-01	 sigma_n : 6.148711e-02
+
+ batch number : 301
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.752495e-01	 sigma_n : 5.886480e-02
+
+ batch number : 302
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 8.823529e-01	 sigma_n : 5.892737e-02
+
+ batch number : 303
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.234924e-03
+	 mean number of collision per photon history: 8.846918e-01	 sigma_n : 5.858522e-02
+
+ batch number : 304
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 2.823471e-03
+	 mean number of collision per photon history: 8.931412e-01	 sigma_n : 5.952016e-02
+
+ batch number : 305
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.012961e-01	 sigma_n : 5.950724e-02
+
+ batch number : 306
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 8.654709e-01	 sigma_n : 5.761344e-02
+
+ batch number : 307
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-02	 sigma_n = 5.240585e-03
+	 mean number of collision per photon history: 7.983152e-01	 sigma_n : 5.502286e-02
+
+ batch number : 308
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 9.292829e-01	 sigma_n : 6.069848e-02
+
+ batch number : 309
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 8.520916e-01	 sigma_n : 5.806406e-02
+
+ batch number : 310
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 7.909182e-01	 sigma_n : 5.512444e-02
+
+ batch number : 311
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.649726e-01	 sigma_n : 5.725174e-02
+
+ batch number : 312
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 7.512463e-01	 sigma_n : 5.183551e-02
+
+ batch number : 313
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 1.002494e+00	 sigma_n : 6.656415e-02
+
+ batch number : 314
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 8.725734e-01	 sigma_n : 5.952032e-02
+
+ batch number : 315
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 4.151806e-03
+	 mean number of collision per photon history: 8.290258e-01	 sigma_n : 5.589954e-02
+
+ batch number : 316
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.736009e-03
+	 mean number of collision per photon history: 8.075584e-01	 sigma_n : 5.541929e-02
+
+ batch number : 317
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.641778e-03
+	 mean number of collision per photon history: 8.631841e-01	 sigma_n : 5.667239e-02
+
+ batch number : 318
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.748130e-01	 sigma_n : 5.773110e-02
+
+ batch number : 319
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 2.448468e-03
+	 mean number of collision per photon history: 8.774290e-01	 sigma_n : 5.805189e-02
+
+ batch number : 320
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 4.607004e-03
+	 mean number of collision per photon history: 9.751615e-01	 sigma_n : 6.382871e-02
+
+ batch number : 321
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-02	 sigma_n = 3.994744e-03
+	 mean number of collision per photon history: 8.977160e-01	 sigma_n : 5.922183e-02
+
+ batch number : 322
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-02	 sigma_n = 4.411318e-03
+	 mean number of collision per photon history: 7.807540e-01	 sigma_n : 5.341699e-02
+
+ batch number : 323
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.050000e-02	 sigma_n = 4.147707e-03
+	 mean number of collision per photon history: 8.684864e-01	 sigma_n : 5.839025e-02
+
+ batch number : 324
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.602097e-01	 sigma_n : 5.829848e-02
+
+ batch number : 325
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.300000e-02	 sigma_n = 4.735685e-03
+	 mean number of collision per photon history: 8.843302e-01	 sigma_n : 5.843770e-02
+
+ batch number : 326
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 9.810757e-01	 sigma_n : 6.403909e-02
+
+ batch number : 327
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-02	 sigma_n = 4.178364e-03
+	 mean number of collision per photon history: 7.936508e-01	 sigma_n : 5.695667e-02
+
+ batch number : 328
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.500000e-03	 sigma_n = 2.060582e-03
+	 mean number of collision per photon history: 8.923230e-01	 sigma_n : 5.823237e-02
+
+ batch number : 329
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.100000e-02	 sigma_n = 5.143221e-03
+	 mean number of collision per photon history: 8.657751e-01	 sigma_n : 5.885806e-02
+
+ batch number : 330
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 9.033383e-01	 sigma_n : 6.029629e-02
+
+ batch number : 331
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.500000e-03	 sigma_n = 2.289650e-03
+	 mean number of collision per photon history: 9.357570e-01	 sigma_n : 6.201036e-02
+
+ batch number : 332
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 4.180519e-03
+	 mean number of collision per photon history: 7.605564e-01	 sigma_n : 5.414232e-02
+
+ batch number : 333
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 3.498713e-03
+	 mean number of collision per photon history: 8.642466e-01	 sigma_n : 5.726657e-02
+
+ batch number : 334
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.100000e-02	 sigma_n = 3.930296e-03
+	 mean number of collision per photon history: 9.643034e-01	 sigma_n : 6.107823e-02
+
+ batch number : 335
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.641778e-03
+	 mean number of collision per photon history: 8.711443e-01	 sigma_n : 5.884667e-02
+
+ batch number : 336
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 3.835653e-03
+	 mean number of collision per photon history: 8.381331e-01	 sigma_n : 5.539621e-02
+
+ batch number : 337
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 9.557214e-01	 sigma_n : 6.234383e-02
+
+ batch number : 338
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.636364e-01	 sigma_n : 5.788709e-02
+
+ batch number : 339
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.952618e-01	 sigma_n : 6.144099e-02
+
+ batch number : 340
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.067898e-01	 sigma_n : 5.613976e-02
+
+ batch number : 341
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.854011e-01	 sigma_n : 5.864317e-02
+
+ batch number : 342
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 9.666335e-01	 sigma_n : 6.424699e-02
+
+ batch number : 343
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.500000e-03	 sigma_n = 1.802359e-03
+	 mean number of collision per photon history: 8.942116e-01	 sigma_n : 5.865867e-02
+
+ batch number : 344
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.911999e-03
+	 mean number of collision per photon history: 9.164595e-01	 sigma_n : 6.106339e-02
+
+ batch number : 345
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.825950e-03
+	 mean number of collision per photon history: 8.053758e-01	 sigma_n : 5.564486e-02
+
+ batch number : 346
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.500000e-03	 sigma_n = 4.383433e-03
+	 mean number of collision per photon history: 9.175770e-01	 sigma_n : 6.061201e-02
+
+ batch number : 347
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 4.149998e-03
+	 mean number of collision per photon history: 9.200993e-01	 sigma_n : 5.917829e-02
+
+ batch number : 348
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 3.901472e-03
+	 mean number of collision per photon history: 9.488326e-01	 sigma_n : 6.177845e-02
+
+ batch number : 349
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 3.870787e-03
+	 mean number of collision per photon history: 7.020854e-01	 sigma_n : 4.995014e-02
+
+ batch number : 350
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.050000e-02	 sigma_n = 3.633384e-03
+	 mean number of collision per photon history: 8.619662e-01	 sigma_n : 5.654727e-02
+
+ batch number : 351
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 3.462368e-03
+	 mean number of collision per photon history: 9.955224e-01	 sigma_n : 6.343049e-02
+
+ batch number : 352
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.954704e-01	 sigma_n : 5.883896e-02
+
+ batch number : 353
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.000000e-02	 sigma_n = 4.523299e-03
+	 mean number of collision per photon history: 8.567889e-01	 sigma_n : 5.808276e-02
+
+ batch number : 354
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 9.286783e-01	 sigma_n : 6.117061e-02
+
+ batch number : 355
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.870365e-03
+	 mean number of collision per photon history: 9.442786e-01	 sigma_n : 6.162609e-02
+
+ batch number : 356
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 8.397404e-01	 sigma_n : 5.694101e-02
+
+ batch number : 357
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.150000e-02	 sigma_n = 5.118298e-03
+	 mean number of collision per photon history: 8.751857e-01	 sigma_n : 5.837637e-02
+
+ batch number : 358
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 3.772133e-03
+	 mean number of collision per photon history: 9.066534e-01	 sigma_n : 5.900803e-02
+
+ batch number : 359
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 4.149998e-03
+	 mean number of collision per photon history: 8.981619e-01	 sigma_n : 5.799446e-02
+
+ batch number : 360
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.437344e-01	 sigma_n : 5.864656e-02
+
+ batch number : 361
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 8.277750e-01	 sigma_n : 5.619346e-02
+
+ batch number : 362
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.868719e-03
+	 mean number of collision per photon history: 9.533267e-01	 sigma_n : 6.308718e-02
+
+ batch number : 363
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 4.180519e-03
+	 mean number of collision per photon history: 8.907646e-01	 sigma_n : 6.034211e-02
+
+ batch number : 364
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.500000e-03	 sigma_n = 2.060582e-03
+	 mean number of collision per photon history: 8.039900e-01	 sigma_n : 5.450786e-02
+
+ batch number : 365
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.050000e-02	 sigma_n = 6.419929e-03
+	 mean number of collision per photon history: 9.876115e-01	 sigma_n : 6.113494e-02
+
+ batch number : 366
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.000000e-03	 sigma_n = 2.911999e-03
+	 mean number of collision per photon history: 8.070612e-01	 sigma_n : 5.677021e-02
+
+ batch number : 367
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 3.315569e-03
+	 mean number of collision per photon history: 9.288203e-01	 sigma_n : 6.177138e-02
+
+ batch number : 368
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 3.349550e-03
+	 mean number of collision per photon history: 8.454274e-01	 sigma_n : 5.637884e-02
+
+ batch number : 369
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.105683e-01	 sigma_n : 5.532761e-02
+
+ batch number : 370
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 8.929283e-01	 sigma_n : 5.918760e-02
+
+ batch number : 371
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.500000e-03	 sigma_n = 3.036196e-03
+	 mean number of collision per photon history: 8.856859e-01	 sigma_n : 5.816705e-02
+
+ batch number : 372
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 8.715779e-01	 sigma_n : 6.007475e-02
+
+ batch number : 373
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 3.935701e-03
+	 mean number of collision per photon history: 9.113987e-01	 sigma_n : 6.008581e-02
+
+ batch number : 374
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 3.462368e-03
+	 mean number of collision per photon history: 8.965174e-01	 sigma_n : 6.022113e-02
+
+ batch number : 375
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.500000e-03	 sigma_n = 2.497598e-03
+	 mean number of collision per photon history: 9.002991e-01	 sigma_n : 6.128888e-02
+
+ batch number : 376
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 3.807197e-03
+	 mean number of collision per photon history: 8.078646e-01	 sigma_n : 5.573152e-02
+
+ batch number : 377
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 2.000000e-03	 sigma_n = 1.413860e-03
+	 mean number of collision per photon history: 8.652022e-01	 sigma_n : 5.762460e-02
+
+ batch number : 378
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 4.000000e-03	 sigma_n = 1.998499e-03
+	 mean number of collision per photon history: 8.958126e-01	 sigma_n : 6.051559e-02
+
+ batch number : 379
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.350000e-02	 sigma_n = 4.708499e-03
+	 mean number of collision per photon history: 8.283028e-01	 sigma_n : 5.729498e-02
+
+ batch number : 380
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 3.462368e-03
+	 mean number of collision per photon history: 8.889995e-01	 sigma_n : 6.075867e-02
+
+ batch number : 381
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.556773e-01	 sigma_n : 6.100654e-02
+
+ batch number : 382
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 5.047003e-03
+	 mean number of collision per photon history: 9.334988e-01	 sigma_n : 6.070133e-02
+
+ batch number : 383
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.250000e-02	 sigma_n = 5.760943e-03
+	 mean number of collision per photon history: 9.446914e-01	 sigma_n : 5.922820e-02
+
+ batch number : 384
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.250000e-02	 sigma_n = 5.068009e-03
+	 mean number of collision per photon history: 8.940594e-01	 sigma_n : 5.929948e-02
+
+ batch number : 385
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 3.772133e-03
+	 mean number of collision per photon history: 8.112270e-01	 sigma_n : 5.605063e-02
+
+ batch number : 386
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.000000e-03	 sigma_n = 1.731184e-03
+	 mean number of collision per photon history: 7.370259e-01	 sigma_n : 5.499553e-02
+
+ batch number : 387
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.300000e-02	 sigma_n = 5.867940e-03
+	 mean number of collision per photon history: 7.964427e-01	 sigma_n : 5.313470e-02
+
+ batch number : 388
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 3.500000e-03	 sigma_n = 2.060582e-03
+	 mean number of collision per photon history: 9.292124e-01	 sigma_n : 6.099995e-02
+
+ batch number : 389
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 9.257598e-01	 sigma_n : 6.335497e-02
+
+ batch number : 390
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.450424e-01	 sigma_n : 5.834415e-02
+
+ batch number : 391
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 3.315569e-03
+	 mean number of collision per photon history: 8.820896e-01	 sigma_n : 5.968535e-02
+
+ batch number : 392
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.547694e-03
+	 mean number of collision per photon history: 8.432056e-01	 sigma_n : 5.850849e-02
+
+ batch number : 393
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 7.500000e-03	 sigma_n = 2.868098e-03
+	 mean number of collision per photon history: 8.334162e-01	 sigma_n : 5.869860e-02
+
+ batch number : 394
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.500000e-03	 sigma_n = 2.689329e-03
+	 mean number of collision per photon history: 9.297809e-01	 sigma_n : 6.174245e-02
+
+ batch number : 395
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 8.000000e-03	 sigma_n = 4.298516e-03
+	 mean number of collision per photon history: 8.952334e-01	 sigma_n : 5.871143e-02
+
+ batch number : 396
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.446424e-03
+	 mean number of collision per photon history: 8.571429e-01	 sigma_n : 5.796020e-02
+
+ batch number : 397
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 9.000000e-03	 sigma_n = 3.311341e-03
+	 mean number of collision per photon history: 9.129786e-01	 sigma_n : 6.027598e-02
+
+ batch number : 398
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 1.150000e-02	 sigma_n = 4.657759e-03
+	 mean number of collision per photon history: 9.554014e-01	 sigma_n : 6.171349e-02
+
+ batch number : 399
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 6.000000e-03	 sigma_n = 2.825950e-03
+	 mean number of collision per photon history: 8.332504e-01	 sigma_n : 5.693133e-02
+
+ Type and parameters of random generator before batch 400 : 
+	 DRAND48_RANDOM 17892 43395 52318  COUNTER	15803955
+
+
+ batch number : 400
+
+  quota sampling and descendant statistics: 
+	 mean number of deposited: 5.000000e-03	 sigma_n = 2.233830e-03
+	 mean number of collision per photon history: 8.478803e-01	 sigma_n : 5.743509e-02
+ monitoring for particle type : PHOTON
+
+
+ edition statisque de ponderation
+
+ ponderation group : 0
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ ponderation group : 1
+			total population : 3.080000e+02
+			weight discrepancy : 9.338716e-01
+	 		sigma : 2.464542e-02
+
+ ponderation group : 2
+			total population : 0.000000e+00
+			weight discrepancy : 0.000000e+00
+	 		sigma : 0.000000e+00
+
+ Total number of collision = 697334
+
+ number of collision in cell of detector  0 : 0
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.590000e+10
+*********************************************************
+
+
+ Mean weight leakage = 1.833510e+03	 sigma = 3.504555e+00	 sigma% = 1.911392e-01
+
+
+ Edition after batch number : 400
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_FLUX
+
+
+ PARTICULE : PHOTON 
+
+
+ reaction on nucleus : KERMA_AIR_079N_021Oatoms_J2_mR_par_h
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+ TOTAL FXPT CONTRIBUTION 
+******************************************************************************
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -3.000000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	8.809161e+00	1.015152e+00	3.110122e-01		5.786337e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 400	8.809161e+00	1.015152e+00
+
+	 variance of variance* : 5.920887e-01  [5.786337e-02]
+
+	 sensibility to maximum value: 4.852353e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 9.400000e+01 ]
+
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -3.500000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	8.516697e+00	1.093382e+00	3.006866e-01		3.391574e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 400	8.516697e+00	1.093382e+00
+
+	 variance of variance* : 4.080312e-01  [3.391574e-02]
+
+	 sensibility to maximum value: 3.937856e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 4.300000e+01 ]
+
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -4.000000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	7.960069e+00	1.067448e+00	2.810345e-01		2.113683e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 400	7.960069e+00	1.067448e+00
+
+	 variance of variance* : 1.762845e-01  [2.113683e-02]
+
+	 sensibility to maximum value: 3.000921e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 3.430000e+02 ]
+
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -4.500000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	7.707935e+00	1.180123e+00	2.721328e-01		2.553116e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 400	7.707935e+00	1.180123e+00
+
+	 variance of variance* : 2.796735e-01  [2.553116e-02]
+
+	 sensibility to maximum value: 2.963373e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 3.500000e+01 ]
+
+
+	 scoring mode : SCORE_FXPT
+	 scoring zone : 	 Point : -5.000000e+01,0.000000e+00 , 0.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	7.126624e+00	1.240399e+00	2.516093e-01		5.427073e-02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 400	7.126624e+00	1.240399e+00
+
+	 variance of variance* : 5.302325e-01  [5.427073e-02]
+
+	 sensibility to maximum value: 4.635589e-01	 [ rejected to sensibility criterium < 0.2 approximate batch number after discard was 9.600000e+01 ]
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : REACTION
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_FLUX
+
+
+ PARTICULE : PHOTON 
+
+
+ reaction on nucleus : KERMA_AIR_079N_021Oatoms_J2_mR_par_h
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 1
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	1.322468e+09	8.491299e-02	4.669045e+07		5.005802e-03
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 400	1.322468e+09	8.491299e-02
+
+	 variance of variance* : 1.273595e+27  [5.005802e-03]
+
+	 sensibility to maximum value: 1.538476e-01
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 2
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	5.745888e+07	3.228131e-01	2.028617e+06		4.473532e-03
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 400	5.745888e+07	3.228131e-01
+
+	 variance of variance* : 8.472348e+23  [4.473532e-03]
+
+	 sensibility to maximum value: 1.354353e-01
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 3
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy 	 vov
+
+2.000000e+01 - 1.000000e-11	1.992656e+06	1.038995e+00	7.035181e+04		6.653786e-03
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 400	1.992656e+06	1.038995e+00
+
+	 variance of variance* : 1.956016e+20  [6.653786e-03]
+
+	 sensibility to maximum value: 1.637085e-01
+
+
+
+ simulation time (s) : 33
+
+
+ Type and parameters of random generator at the end of simulation: 
+	 DRAND48_RANDOM 29391 34400 59121  COUNTER	15842852
+
+
+=====================================================================
+	NORMAL COMPLETION
+=====================================================================

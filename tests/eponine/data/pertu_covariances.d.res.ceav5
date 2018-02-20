@@ -1,0 +1,1046 @@
+
+=====================================================================
+$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+ hostname: is232540
+ pid: 20176
+
+=====================================================================
+$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+
+ HOSTNAME : is232540
+
+ PROCESS ID is : 20176
+
+ DATE : Mon Feb 19 11:04:27 2018
+
+ Version is $Name: tripoli4_10_2 $.
+
+=====================================================================
+
+ data filename = input/pertu_covariances.d
+ catalogname = /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512
+ execution call = tripoli4 -s NJOY -a -c /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512 -d input/pertu_covariances.d -o output/pertu_covariances.d.res.ceav5 
+
+
+ dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
+ mass file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
+ Q fission directory : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/Qfission
+ electron cross section  directory : /data/tmpuranus2/GALILEE-V0-3.0/PEID/Electron_Photon
+ abondance file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/abundance
+ own evaluations directory : 
+
+
+ WARNING
+ method name : T4_path
+ error message : No such directory for own evaluations
+
+
+
+
+ 	 reading geometry : 
+
+ 	 checking association of compositions and volumes :  ok 
+
+
+ reading covariance data for : FE56
+
+GEOMETRY
+TITRE Test perturbations par matrices de covariance, geometrie simplifiee
+
+COMMENT
+**********************************************
+Definition des types de la geometrie
+**********************************************
+COMMENT
+TYPE 1 BOITE 10 10 10
+VOLU 1 COMBI  1  0 0 0 FINV
+TYPE 2 BOITE 10 10 0.1
+VOLU 2 COMBI 2 0 0 5.05 FINV
+TYPE 3 BOITE 10 10 10
+VOLU 3 COMBI 3 0 0 10.1 FINV
+TYPE 4 BOITE 10 10 0.1
+VOLU 4 COMBI 4 0 0 15.15 FINV
+TYPE 5 BOITE 10 10 10
+VOLU 5 COMBI 5 0 0 20.2 FINV
+TYPE 6 BOITE 10 10 0.1
+VOLU 6 COMBI 6 0 0 25.25 FINV
+FING 
+/*
+COMMENT
+COLOR 6
+BLUE 1 1
+RED 1 2
+CORAL 1 3
+WHITE 1 4
+VIOLET 1 5
+GREY 1 6
+GRAF
+0 0 -10 1 0 0 0 0 1  40 40 1
+COMMENT
+*/
+COMPOSITION
+    1
+ PONCTUAL 300 TEST_COMPOSITION 1
+   FE56 8.E-2
+FIN_COMPO
+
+GEOMCOMP
+        TEST_COMPOSITION   6   1 2 3 4 5 6
+FIN_GEOMCOMP
+
+
+LIST_SOURCE 1
+SOURCE
+        NEUTRON PONCTUAL  0 0 -4.9
+        ANGULAR_DISTRIBUTION   MONO_DIR 0 0 1
+        ENERGETIC_DISTRIBUTION  SPECTRE   MONOCINETIQUE 19.991
+        TIME_DISTRIBUTION       DIRAC   0.
+FIN_SOURCE
+FIN_LIST_SOURCE
+
+LIST_DECOUPAGE
+        1
+        DECSIMPLE 17
+20  19.99 16 13 9
+6.6 4.6 2.6 1.8 .85101
+.6 .2 .0254 .01 .005
+.001 1.E-11
+
+FIN_LIST_DECOUPAGE
+
+REPONSE
+        1
+        FLUX NEUTRON
+FIN_REPONSE
+
+SCORE
+        1
+        1 TRACK DECOUPAGE DECSIMPLE VOLU LIST 3 2 4 6
+FIN_SCORE
+
+LIST_PERTURBATION
+	1
+	PERTURBATION
+		COVARIANCE NUCLEI 1
+		1
+		TEST_COMPOSITION VOLU LIST 6
+			1 2 3 4 5 6
+		NUCLEUS FE56 DATA input/tendl_post_processed_cov_T4_input_file
+		SCORE LIST 1 1
+		PERTU_PERIOD 10
+	FIN_PERTURBATION
+FIN_LIST_PERTURBATION
+
+SIMULATION
+        BATCH   100
+        SIZE    10000
+        EDITION 100
+        ENERGY_INF NEUTRON 0.6
+        PARTICULES   1 NEUTRON
+FIN_SIMULATION
+
+Total concentration of material TEST_COMPOSITION (1.E24at/cm3) is: 8.000000e-02
+
+
+ Loading response functions ...
+ Constructing score  ...0
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 1.000000e+00
+
+		 Energetic density simulation intensity = 1.000000e+00
+
+		 Angular intensity = 1.000000e+00
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.000000e+00
+
+		 Calculated source definition intensity = 1.000000e+00
+
+	         SIMULATION INTENSITY = 1.000000e+00   BIASED SIMULATION INTENSITY = 1.000000e+00
+
+   SUM OF SIMULATION INTENSITIES = 1.000000e+00
+
+   GLOBAL SIMULATION INTENSITY = 1.000000e+00
+
+   BIASED TOTAL SOURCE INTENSITY = 1.000000e+00
+
+
+ initialization time (s): 0
+
+
+ Type and parameters of random generator before batch 1 : 
+	 DRAND48_RANDOM 123 13 37  COUNTER	0
+
+
+ batch number : 1
+
+ initialization of random section
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.918000e+00	 sigma_n : 8.730290e-02
+
+ batch number : 2
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.023900e+00	 sigma_n : 1.960386e-02
+
+ batch number : 3
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.033800e+00	 sigma_n : 2.016448e-02
+
+ batch number : 4
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.036800e+00	 sigma_n : 2.008843e-02
+
+ batch number : 5
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.014900e+00	 sigma_n : 1.997468e-02
+
+ batch number : 6
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.038700e+00	 sigma_n : 2.035047e-02
+
+ batch number : 7
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.980300e+00	 sigma_n : 1.963644e-02
+
+ batch number : 8
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.016100e+00	 sigma_n : 2.002309e-02
+
+ batch number : 9
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.000100e+00	 sigma_n : 1.994517e-02
+
+ batch number : 10
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.016700e+00	 sigma_n : 1.976060e-02
+
+ batch number : 11
+
+ initialization of random section
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.015200e+00	 sigma_n : 1.964422e-02
+
+ batch number : 12
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.988400e+00	 sigma_n : 1.954699e-02
+
+ batch number : 13
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.996300e+00	 sigma_n : 1.976481e-02
+
+ batch number : 14
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.011100e+00	 sigma_n : 1.957590e-02
+
+ batch number : 15
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.048600e+00	 sigma_n : 2.061520e-02
+
+ batch number : 16
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.034200e+00	 sigma_n : 2.019811e-02
+
+ batch number : 17
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.978600e+00	 sigma_n : 1.944407e-02
+
+ batch number : 18
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.056800e+00	 sigma_n : 2.016180e-02
+
+ batch number : 19
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.000400e+00	 sigma_n : 1.962902e-02
+
+ batch number : 20
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.019300e+00	 sigma_n : 1.981848e-02
+
+ batch number : 21
+
+ initialization of random section
+
+ negative perturbation factor, adjusted
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.018900e+00	 sigma_n : 2.000636e-02
+
+ batch number : 22
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.017700e+00	 sigma_n : 2.008778e-02
+
+ batch number : 23
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.020100e+00	 sigma_n : 1.981991e-02
+
+ batch number : 24
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.051200e+00	 sigma_n : 2.022866e-02
+
+ batch number : 25
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.036400e+00	 sigma_n : 1.995012e-02
+
+ batch number : 26
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.051600e+00	 sigma_n : 2.005527e-02
+
+ batch number : 27
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.987100e+00	 sigma_n : 1.969447e-02
+
+ batch number : 28
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.997400e+00	 sigma_n : 1.961524e-02
+
+ batch number : 29
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.004600e+00	 sigma_n : 2.006036e-02
+
+ batch number : 30
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.024600e+00	 sigma_n : 2.032094e-02
+
+ batch number : 31
+
+ initialization of random section
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.004800e+00	 sigma_n : 1.999694e-02
+
+ batch number : 32
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.980300e+00	 sigma_n : 1.974868e-02
+
+ batch number : 33
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.034100e+00	 sigma_n : 2.033851e-02
+
+ batch number : 34
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.019100e+00	 sigma_n : 2.005626e-02
+
+ batch number : 35
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.018500e+00	 sigma_n : 2.016820e-02
+
+ batch number : 36
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.017100e+00	 sigma_n : 2.022527e-02
+
+ batch number : 37
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.034700e+00	 sigma_n : 2.017152e-02
+
+ batch number : 38
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.039100e+00	 sigma_n : 1.972704e-02
+
+ batch number : 39
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.017700e+00	 sigma_n : 1.985694e-02
+
+ batch number : 40
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.977800e+00	 sigma_n : 1.942288e-02
+
+ batch number : 41
+
+ initialization of random section
+
+ negative perturbation factor, adjusted
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.995300e+00	 sigma_n : 1.974758e-02
+
+ batch number : 42
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.033200e+00	 sigma_n : 2.016558e-02
+
+ batch number : 43
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.993400e+00	 sigma_n : 1.983923e-02
+
+ batch number : 44
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.000700e+00	 sigma_n : 2.002474e-02
+
+ batch number : 45
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.998800e+00	 sigma_n : 1.967431e-02
+
+ batch number : 46
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.015400e+00	 sigma_n : 1.966863e-02
+
+ batch number : 47
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.005500e+00	 sigma_n : 1.990142e-02
+
+ batch number : 48
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.004800e+00	 sigma_n : 1.984583e-02
+
+ batch number : 49
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.054800e+00	 sigma_n : 2.010771e-02
+
+ batch number : 50
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.046800e+00	 sigma_n : 1.991735e-02
+
+ batch number : 51
+
+ initialization of random section
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.026900e+00	 sigma_n : 1.994787e-02
+
+ batch number : 52
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.013700e+00	 sigma_n : 1.984265e-02
+
+ batch number : 53
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.017500e+00	 sigma_n : 1.995242e-02
+
+ batch number : 54
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.007100e+00	 sigma_n : 1.971253e-02
+
+ batch number : 55
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.998600e+00	 sigma_n : 1.951661e-02
+
+ batch number : 56
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.978400e+00	 sigma_n : 1.958039e-02
+
+ batch number : 57
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.998700e+00	 sigma_n : 1.960480e-02
+
+ batch number : 58
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.068200e+00	 sigma_n : 2.041951e-02
+
+ batch number : 59
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.039600e+00	 sigma_n : 1.987920e-02
+
+ batch number : 60
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.012600e+00	 sigma_n : 2.012125e-02
+
+ batch number : 61
+
+ initialization of random section
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.009900e+00	 sigma_n : 1.970124e-02
+
+ batch number : 62
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.003200e+00	 sigma_n : 1.960657e-02
+
+ batch number : 63
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.021000e+00	 sigma_n : 2.001589e-02
+
+ batch number : 64
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.035000e+00	 sigma_n : 1.988510e-02
+
+ batch number : 65
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.031000e+00	 sigma_n : 1.998059e-02
+
+ batch number : 66
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.008700e+00	 sigma_n : 1.991136e-02
+
+ batch number : 67
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.025800e+00	 sigma_n : 2.013589e-02
+
+ batch number : 68
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.030700e+00	 sigma_n : 1.990667e-02
+
+ batch number : 69
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.014700e+00	 sigma_n : 1.999921e-02
+
+ batch number : 70
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.022400e+00	 sigma_n : 2.025218e-02
+
+ batch number : 71
+
+ initialization of random section
+
+ negative perturbation factor, adjusted
+ negative perturbation factor, adjusted
+ negative perturbation factor, adjusted
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.026800e+00	 sigma_n : 2.001220e-02
+
+ batch number : 72
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.022300e+00	 sigma_n : 2.007936e-02
+
+ batch number : 73
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.012100e+00	 sigma_n : 1.988655e-02
+
+ batch number : 74
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.048400e+00	 sigma_n : 2.020858e-02
+
+ batch number : 75
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.990300e+00	 sigma_n : 1.982826e-02
+
+ batch number : 76
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.045400e+00	 sigma_n : 2.032819e-02
+
+ batch number : 77
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.004500e+00	 sigma_n : 1.966638e-02
+
+ batch number : 78
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.032600e+00	 sigma_n : 2.037094e-02
+
+ batch number : 79
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.000400e+00	 sigma_n : 1.981715e-02
+
+ batch number : 80
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.055600e+00	 sigma_n : 2.045221e-02
+
+ batch number : 81
+
+ initialization of random section
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.982700e+00	 sigma_n : 1.958516e-02
+
+ batch number : 82
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.017900e+00	 sigma_n : 1.989366e-02
+
+ batch number : 83
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.015500e+00	 sigma_n : 1.962459e-02
+
+ batch number : 84
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.982500e+00	 sigma_n : 1.966972e-02
+
+ batch number : 85
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.015300e+00	 sigma_n : 1.991347e-02
+
+ batch number : 86
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.027100e+00	 sigma_n : 2.042347e-02
+
+ batch number : 87
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.031900e+00	 sigma_n : 2.006909e-02
+
+ batch number : 88
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.013200e+00	 sigma_n : 1.981772e-02
+
+ batch number : 89
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.035200e+00	 sigma_n : 1.991421e-02
+
+ batch number : 90
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.022900e+00	 sigma_n : 1.996791e-02
+
+ batch number : 91
+
+ initialization of random section
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.986300e+00	 sigma_n : 1.970558e-02
+
+ batch number : 92
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.001700e+00	 sigma_n : 1.995619e-02
+
+ batch number : 93
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.028300e+00	 sigma_n : 2.014077e-02
+
+ batch number : 94
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.027000e+00	 sigma_n : 2.012033e-02
+
+ batch number : 95
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.002300e+00	 sigma_n : 1.977849e-02
+
+ batch number : 96
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.021900e+00	 sigma_n : 2.016786e-02
+
+ batch number : 97
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.009300e+00	 sigma_n : 1.992739e-02
+
+ batch number : 98
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.034100e+00	 sigma_n : 2.005028e-02
+
+ batch number : 99
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.996500e+00	 sigma_n : 1.984611e-02
+
+ Type and parameters of random generator before batch 100 : 
+	 DRAND48_RANDOM 44874 39631 962  COUNTER	30762209
+
+
+ batch number : 100
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 3.030900e+00	 sigma_n : 2.024785e-02
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 1.154979e+04	 sigma = 1.111601e+02	 sigma% = 9.624426e-01
+
+
+ Edition after batch number : 100
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : FLUX
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DECSIMPLE
+
+
+ PARTICULE : NEUTRON 
+******************************************************************************
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 2
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.999000e+01	1.728489e-02	2.317007e-01	3.456035e+01
+1.999000e+01 - 1.600000e+01	1.778393e-02	2.881702e-01	7.987631e-02
+1.600000e+01 - 1.300000e+01	9.723960e-04	1.798495e+00	4.683100e-03
+1.300000e+01 - 9.000000e+00	1.032136e-03	1.592433e+00	2.806817e-03
+9.000000e+00 - 6.600000e+00	1.256149e-03	1.926874e+00	4.050069e-03
+6.600000e+00 - 4.600000e+00	2.322435e-03	2.194011e+00	6.433101e-03
+4.600000e+00 - 2.600000e+00	7.069742e-03	1.049379e+00	1.239121e-02
+2.600000e+00 - 1.800000e+00	7.236300e-03	1.131470e+00	1.967858e-02
+1.800000e+00 - 8.510100e-01	1.746471e-02	7.799556e-01	2.331369e-02
+8.510100e-01 - 6.000000e-01	6.885772e-03	1.285492e+00	1.970211e-02
+6.000000e-01 - 2.000000e-01	0.000000e+00	0.000000e+00	0.000000e+00
+2.000000e-01 - 2.540000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+2.540000e-02 - 1.000000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-02 - 5.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+5.000000e-03 - 1.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-03 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 100	7.930846e-02	2.748595e-01
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 4
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.999000e+01	2.941058e-03	5.706246e-01	5.880510e+00
+1.999000e+01 - 1.600000e+01	6.400437e-03	4.636156e-01	2.874748e-02
+1.600000e+01 - 1.300000e+01	2.887864e-04	2.808392e+00	1.390808e-03
+1.300000e+01 - 9.000000e+00	2.979632e-04	2.328894e+00	8.102886e-04
+9.000000e+00 - 6.600000e+00	3.659202e-04	3.296592e+00	1.179798e-03
+6.600000e+00 - 4.600000e+00	6.442970e-04	3.589162e+00	1.784690e-03
+4.600000e+00 - 2.600000e+00	2.041175e-03	1.992697e+00	3.577589e-03
+2.600000e+00 - 1.800000e+00	2.096672e-03	1.802607e+00	5.701743e-03
+1.800000e+00 - 8.510100e-01	5.428357e-03	1.237035e+00	7.246331e-03
+8.510100e-01 - 6.000000e-01	2.264437e-03	1.650952e+00	6.479182e-03
+6.000000e-01 - 2.000000e-01	0.000000e+00	0.000000e+00	0.000000e+00
+2.000000e-01 - 2.540000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+2.540000e-02 - 1.000000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-02 - 5.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+5.000000e-03 - 1.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-03 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 100	2.276910e-02	4.952433e-01
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 6
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.999000e+01	4.931204e-04	1.594331e+00	9.859717e-01
+1.999000e+01 - 1.600000e+01	1.565451e-03	7.801830e-01	7.031201e-03
+1.600000e+01 - 1.300000e+01	6.162709e-05	5.780679e+00	2.967987e-04
+1.300000e+01 - 9.000000e+00	6.095269e-05	5.184432e+00	1.657563e-04
+9.000000e+00 - 6.600000e+00	6.289280e-05	6.901713e+00	2.027787e-04
+6.600000e+00 - 4.600000e+00	1.041930e-04	7.866177e+00	2.886125e-04
+4.600000e+00 - 2.600000e+00	3.220370e-04	3.405837e+00	5.644377e-04
+2.600000e+00 - 1.800000e+00	3.236913e-04	4.573890e+00	8.802542e-04
+1.800000e+00 - 8.510100e-01	8.167346e-04	2.400384e+00	1.090262e-03
+8.510100e-01 - 6.000000e-01	3.829487e-04	3.269168e+00	1.095723e-03
+6.000000e-01 - 2.000000e-01	0.000000e+00	0.000000e+00	0.000000e+00
+2.000000e-01 - 2.540000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+2.540000e-02 - 1.000000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-02 - 5.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+5.000000e-03 - 1.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-03 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 100	4.193648e-03	7.793424e-01
+
+
+ ================== Perturbation result edition ====================== 
+
+ Perturbation rank = 0
+
+ Method : CORRELATED SAMPLING  
+
+ Perturbation de type Covariance
+ Composition : TEST_COMPOSITION
+
+
+******************************************************************************
+RESPONSE FUNCTION : FLUX
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DECSIMPLE
+
+
+ PARTICULE : NEUTRON 
+******************************************************************************
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 2
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.999000e+01	1.741870e-02	4.038845e-01	3.482789e+01
+1.999000e+01 - 1.600000e+01	1.760264e-02	8.200521e-01	7.906204e-02
+1.600000e+01 - 1.300000e+01	1.043833e-03	6.321118e+00	5.027146e-03
+1.300000e+01 - 9.000000e+00	1.062203e-03	1.855011e+00	2.888583e-03
+9.000000e+00 - 6.600000e+00	1.245229e-03	2.052532e+00	4.014862e-03
+6.600000e+00 - 4.600000e+00	2.277467e-03	2.007652e+00	6.308540e-03
+4.600000e+00 - 2.600000e+00	7.063525e-03	1.193023e+00	1.238032e-02
+2.600000e+00 - 1.800000e+00	7.170383e-03	1.253513e+00	1.949932e-02
+1.800000e+00 - 8.510100e-01	1.733284e-02	8.517494e-01	2.313766e-02
+8.510100e-01 - 6.000000e-01	6.815397e-03	1.257221e+00	1.950074e-02
+6.000000e-01 - 2.000000e-01	0.000000e+00	0.000000e+00	0.000000e+00
+2.000000e-01 - 2.540000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+2.540000e-02 - 1.000000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-02 - 5.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+5.000000e-03 - 1.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-03 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches : 100	7.903222e-02	4.029869e-01
+
+	 variance of variance : 2.128435e-10
+
+
+
+	 UNCERTAINTY RESULTS
+	 number of first discarded batches : 0
+
+		 group (Mev) 		 sigma2(means)   mean(sigma_n2)  sigma(sigma_n2)  fisher test
+	 ----------------------------------------------------------------------------------------
+	2.000000e+01 - 1.999000e+01	3.739266e-07	1.704991e-08	8.813380e-09	2.193130e+02
+	1.999000e+01 - 1.600000e+01	2.008379e-06	2.837086e-08	1.615895e-08	7.079021e+02
+	1.600000e+01 - 1.300000e+01	4.162915e-07	6.260634e-09	5.414850e-09	6.649351e+02
+	1.300000e+01 - 9.000000e+00	6.747210e-09	3.595998e-09	2.252051e-09	1.876311e+01
+	9.000000e+00 - 6.600000e+00	9.121281e-09	6.273612e-09	5.137351e-09	1.453912e+01
+	6.600000e+00 - 4.600000e+00	1.300521e-08	2.169663e-08	1.329653e-08	5.994116e+00
+	4.600000e+00 - 2.600000e+00	1.456135e-07	6.355345e-08	2.134763e-08	2.291198e+01
+	2.600000e+00 - 1.800000e+00	1.520223e-07	7.366372e-08	4.771479e-08	2.063733e+01
+	1.800000e+00 - 8.510100e-01	3.804885e-07	2.016995e-07	2.191742e-07	1.886413e+01
+	8.510100e-01 - 6.000000e-01	1.032477e-07	7.043564e-08	5.831408e-08	1.465845e+01
+
+
+	 UNCERTAINTY ON ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+	 number of batch : 100	6.112133e-06	5.045780e-07	4.676046e-07	1.211336e+02
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 4
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.999000e+01	2.989731e-03	8.445332e-01	5.977830e+00
+1.999000e+01 - 1.600000e+01	6.377084e-03	1.210649e+00	2.864259e-02
+1.600000e+01 - 1.300000e+01	3.052690e-04	7.064378e+00	1.470188e-03
+1.300000e+01 - 9.000000e+00	3.088640e-04	3.050888e+00	8.399325e-04
+9.000000e+00 - 6.600000e+00	3.633177e-04	3.356929e+00	1.171407e-03
+6.600000e+00 - 4.600000e+00	6.367650e-04	4.000273e+00	1.763827e-03
+4.600000e+00 - 2.600000e+00	2.043704e-03	2.128510e+00	3.582022e-03
+2.600000e+00 - 1.800000e+00	2.073134e-03	1.943632e+00	5.637733e-03
+1.800000e+00 - 8.510100e-01	5.385742e-03	1.348491e+00	7.189444e-03
+8.510100e-01 - 6.000000e-01	2.251989e-03	1.779408e+00	6.443565e-03
+6.000000e-01 - 2.000000e-01	0.000000e+00	0.000000e+00	0.000000e+00
+2.000000e-01 - 2.540000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+2.540000e-02 - 1.000000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-02 - 5.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+5.000000e-03 - 1.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-03 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches : 100	2.273560e-02	8.451909e-01
+
+	 variance of variance : 2.437644e-11
+
+
+
+	 UNCERTAINTY RESULTS
+	 number of first discarded batches : 0
+
+		 group (Mev) 		 sigma2(means)   mean(sigma_n2)  sigma(sigma_n2)  fisher test
+	 ----------------------------------------------------------------------------------------
+	2.000000e+01 - 1.999000e+01	4.045011e-08	2.967772e-09	1.450221e-09	1.362979e+02
+	1.999000e+01 - 1.600000e+01	5.704773e-07	8.517422e-09	4.549622e-09	6.697770e+02
+	1.600000e+01 - 1.300000e+01	3.678397e-08	1.437312e-09	1.593890e-09	2.559218e+02
+	1.300000e+01 - 9.000000e+00	2.685328e-09	7.082090e-10	4.294388e-10	3.791716e+01
+	9.000000e+00 - 6.600000e+00	1.505013e-09	1.485751e-09	8.427413e-10	1.012965e+01
+	6.600000e+00 - 4.600000e+00	9.872122e-09	6.150029e-09	6.602926e-09	1.605216e+01
+	4.600000e+00 - 2.600000e+00	3.871052e-08	1.694414e-08	1.098896e-08	2.284596e+01
+	2.600000e+00 - 1.800000e+00	3.231611e-08	1.462815e-08	5.166387e-09	2.209172e+01
+	1.800000e+00 - 8.510100e-01	1.594389e-07	4.207644e-08	1.835095e-08	3.789267e+01
+	8.510100e-01 - 6.000000e-01	4.759661e-08	1.290382e-08	6.529391e-09	3.688568e+01
+
+
+	 UNCERTAINTY ON ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+	 number of batch : 100	2.767857e-06	1.293911e-07	6.598846e-08	2.139140e+02
+
+
+	 scoring mode : SCORE_TRACK
+	 scoring zone : 	 Volume 	 num of volume : 6
+	 Volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.999000e+01	5.067026e-04	1.890949e+00	1.013129e+00
+1.999000e+01 - 1.600000e+01	1.570317e-03	1.601665e+00	7.053059e-03
+1.600000e+01 - 1.300000e+01	7.012060e-05	8.823622e+00	3.377038e-04
+1.300000e+01 - 9.000000e+00	6.313335e-05	5.895866e+00	1.716864e-04
+9.000000e+00 - 6.600000e+00	6.156710e-05	6.636700e+00	1.985043e-04
+6.600000e+00 - 4.600000e+00	1.067925e-04	9.262436e+00	2.958132e-04
+4.600000e+00 - 2.600000e+00	3.334050e-04	3.990961e+00	5.843624e-04
+2.600000e+00 - 1.800000e+00	3.227254e-04	4.861207e+00	8.776276e-04
+1.800000e+00 - 8.510100e-01	8.076258e-04	2.443693e+00	1.078102e-03
+8.510100e-01 - 6.000000e-01	3.759780e-04	3.437966e+00	1.075777e-03
+6.000000e-01 - 2.000000e-01	0.000000e+00	0.000000e+00	0.000000e+00
+2.000000e-01 - 2.540000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+2.540000e-02 - 1.000000e-02	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-02 - 5.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+5.000000e-03 - 1.000000e-03	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-03 - 1.000000e-11	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches : 100	4.218368e-03	1.298428e+00
+
+	 variance of variance : 1.231896e-13
+
+
+
+	 UNCERTAINTY RESULTS
+	 number of first discarded batches : 0
+
+		 group (Mev) 		 sigma2(means)   mean(sigma_n2)  sigma(sigma_n2)  fisher test
+	 ----------------------------------------------------------------------------------------
+	2.000000e+01 - 1.999000e+01	3.565556e-09	6.532984e-10	4.065703e-10	5.457775e+01
+	1.999000e+01 - 1.600000e+01	5.445463e-08	1.512961e-09	9.290223e-10	3.599209e+02
+	1.600000e+01 - 1.300000e+01	1.674718e-09	2.536209e-10	2.083266e-10	6.603235e+01
+	1.300000e+01 - 9.000000e+00	4.120457e-10	1.112026e-10	7.444624e-11	3.705360e+01
+	9.000000e+00 - 6.600000e+00	2.464310e-10	1.590084e-10	8.270238e-11	1.549799e+01
+	6.600000e+00 - 4.600000e+00	9.699364e-10	9.792854e-10	2.020020e-09	9.904532e+00
+	4.600000e+00 - 2.600000e+00	4.661262e-09	1.481439e-09	8.504493e-10	3.146443e+01
+	2.600000e+00 - 1.800000e+00	3.594959e-09	2.347871e-09	2.849902e-09	1.531157e+01
+	1.800000e+00 - 8.510100e-01	5.363760e-09	3.748185e-09	3.554427e-09	1.431029e+01
+	8.510100e-01 - 6.000000e-01	1.268695e-09	1.711025e-09	1.395830e-09	7.414823e+00
+
+
+	 UNCERTAINTY ON ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+	 number of batch : 100	2.201100e-07	1.098925e-08	4.733349e-09	2.002957e+02
+
+
+
+ simulation time (s) : 27
+
+
+ Type and parameters of random generator at the end of simulation: 
+	 DRAND48_RANDOM 10338 8164 8453  COUNTER	31076985
+
+
+=====================================================================
+	NORMAL COMPLETION
+=====================================================================
