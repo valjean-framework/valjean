@@ -1,7 +1,7 @@
 '''Tests for the :mod:`common <valjean.eponine.common>` module.'''
 
 import numpy as np
-from hypothesis import given, note
+from hypothesis import given, note, settings
 from hypothesis.strategies import (integers, lists, composite, data, tuples,
                                    floats, nothing, booleans, just)
 from hypothesis.extra.numpy import arrays
@@ -308,25 +308,29 @@ def score_str():
 ''')
     return specscore_str
 
-
-def spectrum_beginning_str(units=False):
+def spectrum_beginning_str(units=False, disc_batch=0):
     '''Beginning of spectrum block in Tripoli-4 output.
     Possibility to add units.
     '''
     spec_str = ('''\
          SPECTRUM RESULTS
-         number of first discarded batches : 0
+         number of first discarded batches : {0}
 
-         group                   score           sigma_%         score/lethargy
-''')
+'''.format(disc_batch))
     if units:
         spec_str += ('''\
+         group                   score           sigma_%         score/lethargy
 Units:   MeV                     neut.s^-1       %               neut.s^-1
+
+''')
+    else:
+        spec_str += ('''\
+         group (MeV)             score           sigma_%         score/lethargy
+
 ''')
     return spec_str
 
-
-def spectrum_str(spectrum, ebins, tmuphi_index, units=False):
+def spectrum_str(spectrum, ebins, it_index, units=False, disc_batch=0):
     '''Print Tripoli-4 output for spectrum in a string to be parsed afterwards.
     Energy, time, µ and φ are available.
 
@@ -337,9 +341,11 @@ def spectrum_str(spectrum, ebins, tmuphi_index, units=False):
     :returns: T4 output as a string
     '''
     t4out = []
-    t4out.append(spectrum_beginning_str(units))
+    t4out.append(spectrum_beginning_str(units, disc_batch))
     for iebin in range(len(ebins)-1):
-        index = (0, 0, 0, iebin) + tmuphi_index
+        index = it_index[0] + (iebin,)
+        if len(it_index) > 1:
+            index += it_index[1]
         t4out.append("{0:.6e} - {1:.6e} \t {2:.6e} \t {3:.6e} \t {4:.6e}\n"
                      .format(ebins[iebin], ebins[iebin+1],
                              spectrum[index]['score'],
@@ -415,7 +421,7 @@ def phi_angle_str(iphibin, phibins):
 
 # pylint: disable=redefined-outer-name
 def spectrum_t4_output(spectrum, bins, units):
-    '''Build the Trupoli-4 output for spectra.
+    '''Build the Tripoli-4 output for spectra.
     Loops are done successively on time, µ and φ as it is done in the "real" T4
     outputs. Then the loop on energy bins is called.
 
@@ -439,9 +445,10 @@ def spectrum_t4_output(spectrum, bins, units):
             for iphibin in range(len(bins['phi'])-1):
                 if len(bins['phi']) > 2:
                     t4out.append(phi_angle_str(iphibin, bins['phi']))
+                space_index = (0, 0, 0)
                 tmuphi_index = (itbin, imubin, iphibin)
                 t4out.append(spectrum_str(spectrum, bins['e'],
-                                          tmuphi_index, units))
+                                          (space_index, tmuphi_index), units))
     return ''.join(t4out)
 
 
@@ -523,3 +530,177 @@ def test_parse_spectrum_roundtrip(array_bins, units):
     assert np.allclose(array[:]['sigma'], spectrum[:]['sigma'])
     assert np.allclose(array[:]['score/lethargy'],
                        spectrum[:]['score/lethargy'])
+
+def gb_step_str(istep, sebins):
+    '''Print the Tripoli-4 output for Green bands steps (source steps in
+    energy).
+
+    :param int istep: step number (or source energy bin number)
+    :param list sebins: edges of bins of energy of source
+    :returns: T4output as a string
+    '''
+    t4out = []
+    if sebins[istep] < sebins[istep+1]:
+        minse = sebins[istep]
+        maxse = sebins[istep+1]
+    else:
+        minse = sebins[istep+1]
+        maxse = sebins[istep]
+    t4out.append(" "*9 + "* SOURCE SPECTRUM STEP NUMBER : {}\n".format(istep))
+    t4out.append(" "*9 + "------------------------------------\n")
+    t4out.append(" "*17 + "source energy min. = {0:.6e}\n".format(minse))
+    t4out.append(" "*17 + "source energy max. = {0:.6e}\n".format(maxse))
+    t4out.append("\n")
+    return ''.join(t4out)
+
+def gb_with_tab_str(array, bins, disc_batch, istep):
+    '''Print Tripoli-4 for Green bands with tabulations.
+
+    :param numpy.ndarray array: green bands data
+    :param dict bins: dictionary of lists representing energy bins (source and
+                      observed particles).
+    :param int disc_batch: number of first discarded batchs.
+    :param int istep: current step number
+    :returns: T4output as a string
+    '''
+    t4out = []
+    for isource in range(array.shape[1]):
+        for utab in range(array.shape[2]):
+            for vtab in range(array.shape[3]):
+                for wtab in range(array.shape[4]):
+                    t4out.append(" "*9 + "SOURCE NUMBER : {0}".format(isource))
+                    t4out.append("       SOURCE TABULATION : "
+                                 "u = {0}, v = {1}, w = {2}\n"
+                                 .format(utab, vtab, wtab))
+                    t4out.append(" "*9 + "-"*72 + "\n\n")
+                    t4out.append(spectrum_str(
+                        array, bins['e'],
+                        ((istep, isource, utab, vtab, wtab),),
+                        disc_batch=disc_batch))
+    return ''.join(t4out)
+
+def gb_without_tab_str(array, bins, disc_batch, istep):
+    '''Print Tripoli-4 for Green bands without tabulations, i.e. in case of
+    dimensions of ``(u, v, w) = (1, 1, 1)``.
+
+    :param numpy.ndarray array: green bands data
+    :param dict bins: dictionary of lists representing energy bins (source and
+                      observed particles).
+    :param int disc_batch: number of first discarded batchs.
+    :param int istep: current step number
+    :returns: T4output as a string
+    '''
+    t4out = []
+    for isource in range(array.shape[1]):
+        t4out.append(" "*9 + "SOURCE NUMBER : {}\n".format(isource))
+        t4out.append(" "*9 + "------------------------------------\n\n")
+        t4out.append(spectrum_str(array, bins['e'],
+                                  ((istep, isource, 0, 0, 0),),
+                                  disc_batch=disc_batch))
+        t4out.append("\n")
+    return ''.join(t4out)
+
+def gb_t4_output(array, bins, disc_batch):
+    '''Build the Tripoli-4 output for Green bands.
+    Loops are successively done on steps (equivalent to bins in energy of
+    source), sources, tabulation if not (0, 0, 0) and energy bins.
+
+    If tabulation is (0, 0, 0), source tabulation won't be written in the
+    output (to match its absence seen some listings).
+
+    :param numpy.ndarray array: green bands data
+    :param dict bins: dictionary of lists representing energy bins (source and
+                      observed particles).
+    :param int disc_batch: number of first discarded batchs.
+    :returns: T4output as a string
+    '''
+    t4out = []
+    t4out.append(score_str())  # default score, could be somthing else...
+    t4out.append("\n")
+    for istep in range(len(bins['se'])-1):
+        t4out.append(gb_step_str(istep, bins['se']))
+        if array.shape[2:5] == (1, 1, 1):
+            t4out.append(gb_without_tab_str(array, bins, disc_batch, istep))
+        else:
+            t4out.append(gb_with_tab_str(array, bins, disc_batch, istep))
+    return ''.join(t4out)
+
+@composite
+def green_bands(draw, max_dims=(5, 3, 2, 2, 2, 5)):
+    '''Composite Hypothesis strategy to generate dimension to source
+    tabulation.
+
+    :param tuple max_dims: maximum dimensions in
+                           ``'steps', 'source', 'u', 'v', 'w', 'energy'``
+
+    .. note::
+
+       ``(u, v, w) = (1, 1, 1)`` is a special case as the SOURCE TABULATION is
+       not written in the listing in that case, it should always be run, so
+       dimensions of ``u``, ``v`` and ``w`` should not be to high.
+    '''
+    shape = draw(tuples(integers(1, max_dims[0]),  # steps (source energy bins)
+                        integers(1, max_dims[1]),  # sources
+                        integers(1, max_dims[2]),  # u
+                        integers(1, max_dims[3]),  # v
+                        integers(1, max_dims[4]),  # w
+                        integers(1, max_dims[5]))) # energy bins
+    array = draw(arrays(
+        dtype=np.dtype([('score', FTYPE), ('sigma', FTYPE),
+                        ('score/lethargy', FTYPE)]),
+        shape=shape,
+        elements=tuples(floats(0, 1), floats(0, 100), floats(0, 1)),
+        fill=nothing()))
+    bins = {}
+    bins['e'] = draw(bins(
+        elements=floats(0, 20), nbins=shape[5], revers=booleans()))
+    bins['se'] = (draw(bins(elements=floats(0, 20), nbins=shape[0],
+                            revers=just(False)))
+                  if shape[0] == 1
+                  else draw(bins(elements=floats(0, 20), nbins=shape[0],
+                                 revers=booleans())))
+    return array, bins
+
+@settings(max_examples=20, deadline=300)
+@given(sampler=data())
+def test_print_parse_green_bands(sampler):
+    '''Test printing Green bands results as Tripoli-4 output from random arrays
+    got from Hypothesis. Other needed quantities are also obtained thanks to
+    Hypothesis like steps and sources.
+
+    Tests performed:
+
+    * Presence of the parsed result
+    * Number of Green bands result = 1
+    * Keys inside parsed result
+    * Keys specific to Green band result (spectrum in energy and energy of
+      source + discarded batchs)
+    * Equality at 10\ :sup:`-8` of
+
+       * Energy bins
+       * Energy bins of source
+       * Array representing Green bands (dtype, shape and ``'score'``,
+         ``'sigma'`` and ``'score/lethargy'`` arrays)
+
+    * Equality of number of discarded batchs
+    '''
+    array, bins = sampler.draw(green_bands(max_dims=(5, 3, 2, 2, 2, 5)))
+    disc_batch = sampler.draw(integers(0, 5))
+    gb_t4_out = gb_t4_output(array, bins, disc_batch)
+    pres = pygram.scoreblock.parseString(gb_t4_out)
+    assert pres
+    assert len(pres) == 1
+    assert (sorted(list(pres[0].keys()))
+            == ['greenband_res', 'scoring_mode', 'scoring_zone'])
+    gbres = pres[0]['greenband_res']
+    assert (sorted(list(gbres.keys()))
+            == ['disc_batch', 'ebins', 'sebins', 'vals'])
+    assert np.allclose(gbres['ebins'], np.array(bins['e']))
+    assert np.allclose(gbres['sebins'], np.array(bins['se']))
+    assert array.dtype == gbres['vals'].dtype
+    assert array.shape == gbres['vals'].shape
+    assert np.allclose(gbres['vals'][:]['score'], array[:]['score'])
+    assert np.allclose(gbres['vals'][:]['sigma'], array[:]['sigma'])
+    assert np.allclose(gbres['vals'][:]['score/lethargy'],
+                       array[:]['score/lethargy'])
+    assert gbres['disc_batch'] == disc_batch

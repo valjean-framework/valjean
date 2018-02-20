@@ -1190,7 +1190,10 @@ def convert_green_bands(gbs):  # pylint: disable=R0914
                           else (istep, isource[0], 0, 0, 0, iebin))
                 vals[locind] = np.array(tuple(ivals[2:]), dtype=vals.dtype)
     # Add last bins
-    bins['se'].append(gbs[-1]['gb_step_desc'][1])
+    if len(bins['se']) > 1 and bins['se'][0] > bins['se'][1]:
+        bins['se'].append(gbs[-1]['gb_step_desc'][1])
+    else:
+        bins['se'].insert(0, gbs[0]['gb_step_desc'][1])
     bins['e'].append(spectrum['spectrum_vals'][-1][1])
     # No flip bins for the moment, question about order of steps (so energy
     # bins of sources)

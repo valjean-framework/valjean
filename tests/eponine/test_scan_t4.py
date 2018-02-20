@@ -57,7 +57,6 @@ def test_tungstene_file(datadir):
     resp0 = t4_res.result[-1]['list_responses'][0]
     assert resp0['response_description']['particle'] == "PHOTON"
     assert resp0['results'][0]['scoring_mode'] == "SCORE_TRACK"
-    print(list(resp0['results'][0].keys()))
     # assert resp0['results'][0]
 
 # def test_petit_coeur_para():
@@ -117,7 +116,6 @@ def test_entropy_in_debug(datadir):
     rescontent = ['scoring_mode', 'scoring_zone',
                   'mesh_res', 'boltzmann_entropy', 'shannon_entropy',
                   'spectrum_res', 'integrated_res']
-    print('batch:', t4_res.result[-1]['edition_batch_number'])
     assert "{0:6e}".format(res0['boltzmann_entropy']) == "8.342621e-01"
     assert sorted(list(res0.keys())) == sorted(rescontent)
 
@@ -206,7 +204,6 @@ def test_ifp(datadir):
     t4_res = T4Parser.parse_jdd(
         str(datadir/"GODIVA_ifp_statistics.d.res.ceav5"), -1)
     assert t4_res
-    print(t4_res.scan_res.end_flags)
     assert t4_res.scan_res.normalend
     assert t4_res.scan_res.times['simulation time'] == 15
     assert t4_res.scan_res.times['initialization time'] == 18
