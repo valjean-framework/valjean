@@ -12,12 +12,8 @@ import sys
 import time
 import logging
 import valjean.eponine.pyparsing_t4.grammar as pygram
-from pyparsing import ParseException
-# from pyparsing import ParseResults
-# from . import scan_t4
-# import scan_t4
-# import valjean.eponine.scan_t4
 from valjean.eponine import scan_t4
+from pyparsing import ParseException
 
 
 LOGGER = logging.getLogger('valjean')
