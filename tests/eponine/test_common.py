@@ -1,7 +1,7 @@
 '''Tests for the :mod:`common <valjean.eponine.common>` module.'''
 
 import numpy as np
-from hypothesis import given, note, settings
+from hypothesis import given, note, settings, assume
 from hypothesis.strategies import (integers, lists, composite, data, tuples,
                                    floats, nothing, booleans, just)
 from hypothesis.extra.numpy import arrays
@@ -704,3 +704,149 @@ def test_print_parse_green_bands(sampler):
     assert np.allclose(gbres['vals'][:]['score/lethargy'],
                        array[:]['score/lethargy'])
     assert gbres['disc_batch'] == disc_batch
+
+# @composite
+# def keff_matrix():
+
+def keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb):
+    '''Pring keff as generic response of Tripoli-4.'''
+    t4out = []
+    t4out.append(" "*8 + "ENERGY INTEGRATED RESULTS\n\n")
+    t4out.append("number of batches used: 80\n\n")
+    keffs = ['KSTEP ', 'KCOLL ', 'KTRACK']
+    for ikeff in range(3):
+        t4out.append(" {0} {1:.6e}    {2:.6e}\n"
+                     .format(keffs[ikeff], keffmat[ikeff][ikeff],
+                             sigmat[ikeff][ikeff]))
+    t4out.append("\n")
+    t4out.append(" "*10 + "estimators" + " "*19 + "correlations" + " "*8
+                 + "combined values" + " "*5 + "combined sigma%\n")
+    for ikeff in range(2):
+        for jkeff in range(ikeff+1, 3):
+            t4out.append(" "*10
+                         + "{0} <-> {1}".format(keffs[ikeff], keffs[jkeff])
+                         + " "*12 + "{0:.6e}".format(corrmat[ikeff][jkeff])
+                         + " "*8 + "{0:.6e}".format(keffmat[ikeff][jkeff])
+                         + " "*8 + "{0:.6e}\n".format(sigmat[ikeff][jkeff]))
+    t4out.append("\n")
+    t4out.append(" "*10 + "full combined estimator  {0:.6e} {1:.6e}"
+                 .format(fcomb[0], fcomb[1]))
+    t4out.append("\n")
+    return ''.join(t4out)
+
+@settings(max_examples=20)
+@given(sampler=data())
+def test_print_parse_keffs(sampler):
+    '''Test printing k\ :sub:`eff` results as Tripoli-4 output from Hypothesis
+    strategies then parse it and compare results.
+
+    Tests performed:
+
+    * Presence of keff result aftre parsing (success of parsing)
+    * keff result is dictionary containing one key: ``'keff_res'``
+    * Keys inside dictionary stored under ``'keff_res'`` are OK
+    * Equality at rounding (10\ :sup:`-8`) of correlation matrix, k\ :sub:`eff`
+      matrix, σ matrix and full combination estimation.
+    '''
+    corrmat = sampler.draw(
+        arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0, 0.5)))
+    corrmat += corrmat.T
+    for ielt in range(3):
+        corrmat[ielt][ielt] = 1
+    keffmat = sampler.draw(
+        arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0.3, 0.7)))
+    keffmat += keffmat.T
+    sigmat = sampler.draw(
+        arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0, 0.5)))
+    sigmat += sigmat.T
+    fcomb = sampler.draw(tuples(floats(0.6, 1.4), floats(0, 1)))
+    keff_t4_out = keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb)
+    keffres = pygram.responseblock.parseString(keff_t4_out)
+    assert keffres
+    assert list(keffres.keys()) == ['keff_res']
+    assert (sorted(list(keffres['keff_res'].keys()))
+            == ['correlation_matrix', 'estimators', 'full_comb_estimation',
+                'keff_matrix', 'sigma_matrix', 'used_batch'])
+    assert np.allclose(keffres['keff_res']['correlation_matrix'], corrmat)
+    assert np.allclose(keffres['keff_res']['keff_matrix'], keffmat)
+    assert np.allclose(keffres['keff_res']['sigma_matrix'], sigmat)
+    assert np.isclose(
+        keffres['keff_res']['full_comb_estimation']['keff'], fcomb[0])
+    assert np.isclose(
+        keffres['keff_res']['full_comb_estimation']['sigma'], fcomb[1])
+
+def array_from_t4():
+    '''Fake test'''
+    # test from a real example
+    correlation = np.array([[1, 8.220342e-01, 7.417923e-01],
+                            [8.220342e-01, 1, 8.338559e-01],
+                            [7.417923e-01, 8.338559e-01, 1]])
+    keffr = np.array([9.953052e-01, 9.958371e-01, 9.960223e-01])
+    sigmar = np.array([1.458369e-01, 1.253360e-01, 1.167335e-01])
+    print("VRAI EXEMPLE")
+    print("correlation:\n", correlation)
+    print("keffs:", keffr)
+    print("sigmas:", sigmar)
+    # print("combined keffs ?\n")
+    print("keffr * correlation:\n", keffr * correlation)
+    # print("keffr @ correlation:\n", keffr @ correlation)
+    print("dot(keffr, correlation):\n", np.dot(keffr, correlation))
+    print("dot(dot(keffr, correlation), keffr.T):\n",
+          np.dot(np.dot(keffr, correlation), keffr.T))
+    # print(correlation*correlation.T)
+    # print(np.matrix(correlation).I)
+    # print(sigmar * correlation * sigmar.T)
+    # print(sigmar*sigmar)
+    # print((sigmar * correlation * sigmar.T)/sigmar)
+    # covmat = np.array([[1.458369e-03, 1.250667e-03, 1.162897e-03],
+    #                    [1.250667e-03, 1.253360e-03, 1.149536e-03],
+    #                    [1.162897e-03, 1.149536e-03, 1.167335e-03]])
+    sig = sigmar/100.*keffr
+    print("sig =", sig)
+    # print(sigmanop*correlation*sigmanop.T)
+    # combsig = np.array([1.250667e-01, 1.162897e-01, 1.149536e-01])
+    # print("essai:", (keffr[0] + keffr[1])/2)  #- 2*correlation[0][1]*keffr[0])
+    # mydata = np.concatenate((keffr, sigmar)).reshape(3,2, order="F")
+    # print(mydata)
+    # print(np.cov(mydata))
+    # print(np.cov(keffr))
+    testmat = np.array([[sig[0]*sig[0], sig[0]*sig[1], sig[0]*sig[2]],
+                        [sig[1]*sig[0], sig[1]*sig[1], sig[1]*sig[2]],
+                        [sig[2]*sig[0], sig[2]*sig[1], sig[2]*sig[2]]])
+    print(testmat)
+    sigdiag = np.diag(sig)
+    print(sigdiag)
+    print("sigdiag-1 =\n", np.linalg.inv(sigdiag))
+    print("correlation * sigdiag-1 =\n",
+          np.dot(correlation, np.linalg.inv(sigdiag)))
+    print("dot(correlation, sigdiag) =\n", np.dot(correlation, sigdiag))
+    print("dot(correlation, sig) =\n", np.dot(correlation, sig))
+    print("dot(keffr, dot(correlation, sig).T) =\n",
+          np.dot(keffr, np.dot(correlation, sig).T))
+    print("dot(correlation, sqrt(testmat)) =\n",
+          np.dot(correlation, np.sqrt(testmat)))
+    combsig = np.array([1.250667e-01, 1.162897e-01, 1.149536e-01])
+    combkeff = np.array([9.957839e-01, 9.959473e-01, 9.959687e-01])
+    cbsig = combsig/100.*combkeff
+    # testmat2 = np.array([[sig[0]**2, cbsig]])
+    # kmat = np.array([[keffr[0], combkeff[0], combkeff[1]],
+    #                  [combkeff[0], keffr[1], combkeff[2]],
+    #                  [combkeff[1], combkeff[2], keffr[2]]])
+    # smat = np.array([[sig[0], cbsig[0], cbsig[1]],
+    #                  [cbsig[0], sig[1], cbsig[2]],
+    #                  [cbsig[1], cbsig[2], sig[2]]])
+    # print(np.cov(kmat))
+    print("sig*sig.T =\n", sig*sig.T)
+    print("dot(sig, sig.T) =\n", np.dot(sig, sig.T))
+    print(np.sqrt(sig**2) * correlation)
+    print(correlation[0][1]*np.sqrt(sig[0]*sig[1]))
+    tmat = np.array([[correlation[0][0]*np.sqrt(sig[0]*sig[0]),
+                      correlation[0][1]*np.sqrt(sig[0]*sig[1]),
+                      correlation[0][2]*np.sqrt(sig[0]*sig[2])],
+                     [correlation[1][0]*np.sqrt(sig[1]*sig[0]),
+                      correlation[1][1]*np.sqrt(sig[1]*sig[1]),
+                      correlation[1][2]*np.sqrt(sig[1]*sig[2])],
+                     [correlation[2][0]*np.sqrt(sig[2]*sig[0]),
+                      correlation[2][1]*np.sqrt(sig[2]*sig[1]),
+                      correlation[2][2]*np.sqrt(sig[2]*sig[2])]])
+    print(tmat)
