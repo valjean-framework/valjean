@@ -775,7 +775,7 @@ def test_print_parse_keffs(sampler):
     assert np.isclose(
         keffres['keff_res']['full_comb_estimation']['sigma'], fcomb[1])
 
-def array_from_t4():
+def test_array_from_t4():
     '''Fake test'''
     # test from a real example
     correlation = np.array([[1, 8.220342e-01, 7.417923e-01],
@@ -783,6 +783,7 @@ def array_from_t4():
                             [7.417923e-01, 8.338559e-01, 1]])
     keffr = np.array([9.953052e-01, 9.958371e-01, 9.960223e-01])
     sigmar = np.array([1.458369e-01, 1.253360e-01, 1.167335e-01])
+    combkeff = np.array([9.957839e-01, 9.959473e-01, 9.959687e-01])
     print("VRAI EXEMPLE")
     print("correlation:\n", correlation)
     print("keffs:", keffr)
@@ -850,3 +851,64 @@ def array_from_t4():
                       correlation[2][1]*np.sqrt(sig[2]*sig[1]),
                       correlation[2][2]*np.sqrt(sig[2]*sig[2])]])
     print(tmat)
+    covmat = np.array([[correlation[0][0]*sig[0]*sig[0],
+                        correlation[0][1]*sig[0]*sig[1],
+                        correlation[0][2]*sig[0]*sig[2]],
+                       [correlation[1][0]*sig[1]*sig[0],
+                        correlation[1][1]*sig[1]*sig[1],
+                        correlation[1][2]*sig[1]*sig[2]],
+                       [correlation[2][0]*sig[2]*sig[0],
+                        correlation[2][1]*sig[2]*sig[1],
+                        correlation[2][2]*sig[2]*sig[2]]])
+    print(covmat)
+    covmat = np.matrix(covmat)
+    print(covmat.A1)
+    # print("sig.correlation =\n", np.dot(sig, correlation))
+    # print("sig*correlation =\n", sig * correlation)
+    # print("sig.correlation.sigT =\n", np.dot(np.dot(sig, correlation), sig.T))
+    # scts = sig * correlation * sig.T
+    # print("sig*correlation*sig.T =\n", scts)
+    # print((scts + scts.T)/2)
+    sigmat = np.array([[sig[0]*sig[0], sig[0]*sig[1], sig[0]*sig[2]],
+                       [sig[1]*sig[0], sig[1]*sig[1], sig[1]*sig[2]],
+                       [sig[2]*sig[0], sig[2]*sig[1], sig[2]*sig[2]]])
+    print(sigmat)
+    print(sigmat[0][1])
+    print(sigmat[0, 1])
+    print("sig.T * sig =\n", sig.T * sig)
+    print("np.dot(sig.T, sig) =\n", np.dot(sig.T, sig))
+    print("np.dot(sig, sig.T) =\n", np.dot(sig, sig.T))
+    print("sig.dot(sig.T) =\n", sig.dot(sig.T))
+    print("sigT.dot(sig) =\n", (sig.T).dot(sig))
+    print("np.outer(sig, sig.T) =\n", np.outer(sig, sig.T))
+    print("np.outer(sig.T, sig) =\n", np.outer(sig.T, sig))
+    print("np.outer(sig, sig) =\n", np.outer(sig, sig))
+    assert np.allclose(sigmat, np.outer(sig, sig))
+    print("sig * sig.T =\n", sig * sig.T)
+    correlation = np.matrix(correlation)
+    tcovA1 = correlation.A1 * np.matrix(sigmat).A1
+    print("tcovA1 =\n", tcovA1)
+    print("outer(corr, sigmat) =\n", np.outer(correlation, sigmat))
+    print("outer(corr, sig) =\n", np.outer(correlation, sig))
+    print("(corr * sigmat) =\n", correlation *sigmat)
+    print("array(corr * sigmat) =\n", np.array(correlation) *sigmat)
+    covmat2 = tcovA1.reshape(3, 3)
+    print("covmat2 =\n", covmat2)
+    print("type covmat:", type(covmat), "covmat2:", type(covmat2))
+    print("shape covmat:", covmat.shape, "covmat2:", covmat2.shape)
+    print("ndim covmat:", covmat.ndim, "covmat2:", covmat2.ndim)
+    assert np.allclose(covmat, covmat2)
+    # combined value
+    for ikeff in range(2):
+        for jkeff in range(ikeff+1, 3):
+            print(sig[ikeff], sig[ikeff]**2, covmat2[ikeff][jkeff])
+            denom = sig[ikeff]**2 + sig[jkeff]**2 - 2*covmat2[ikeff][jkeff]
+            num = ((sig[jkeff]**2 - covmat2[ikeff][jkeff])*keffr[ikeff]
+                   + (sig[ikeff]**2 - covmat2[ikeff][jkeff])*keffr[jkeff])
+            print("comb({0}, {1}) = {2}".format(ikeff, jkeff, num/denom))
+            assert np.isclose(num/denom, combkeff[ikeff+jkeff-1])
+            print(sigmat.shape)
+            print(sigmat[ikeff, jkeff])
+            numscb = sigmat[ikeff, jkeff]**2 - covmat2[ikeff, jkeff]**2
+            print("et le sigma =", np.sqrt(numscb/denom))
+            assert np.isclose(np.sqrt(numscb/denom), cbsig[ikeff+jkeff-1])

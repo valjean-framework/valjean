@@ -11,9 +11,58 @@ import os
 import sys
 
 # pylint: disable=wrong-import-order
+import numpy as np
 import valjean.eponine.scan_t4 as scan
 from valjean.eponine.parse_t4 import T4Parser
 from valjean.eponine.pyparsing_t4 import transform
+
+def keffs_checks(keff_res):
+    '''Quick calculations on k\ :sub:`eff` to check covariance matrix
+    calculation and combination. One huge limitation: formulas used are exactly
+    the same as in Tripoli-4, so this is not a real check. Their writting in
+    matrix formualtion is not straight forward (need permutation matrices,
+    Hadamard product instead of the usual matrix product a priori).
+
+    :param dict keff_res: dictionary repesenting the k\ :sub:`eff` results,
+                          containing at least 3 `numpy.ndarray`
+
+    Tests performed:
+
+    * Check calculation of combined k\ :sub:`eff`
+    * Check calculation of combined σ
+    * Test full combination (only working if first combining KSTEP and KCOLL,
+      then KTRACK
+    '''
+    keff = keff_res['keff_matrix'].diagonal()
+    sigma = keff_res['sigma_matrix'].diagonal()
+    sigma = sigma/100. * keff
+    covmat = keff_res['correlation_matrix'] * np.outer(sigma, sigma)
+    nums = np.empty([keff.shape[0], keff.shape[0]])
+    for ikeff in range(keff.shape[0]-1):
+        for jkeff in range(ikeff+1, keff.shape[0]):
+            denom = sigma[ikeff]**2 + sigma[jkeff]**2 - 2*covmat[ikeff, jkeff]
+            nums[ikeff, jkeff] = (sigma[jkeff]**2 - covmat[ikeff, jkeff])
+            nums[jkeff, ikeff] = (sigma[ikeff]**2 - covmat[ikeff, jkeff])
+            cbkeff = (nums[ikeff, jkeff]*keff[ikeff]
+                      + nums[jkeff, ikeff]*keff[jkeff]) / denom
+            assert np.isclose(cbkeff, keff_res['keff_matrix'][ikeff, jkeff])
+            cbsig = (sigma[ikeff]*sigma[jkeff])**2 - covmat[ikeff, jkeff]**2
+            cbsig = np.sqrt(cbsig/denom)
+            assert np.isclose(cbsig*100/cbkeff,
+                              keff_res['sigma_matrix'][ikeff, jkeff])
+            # test full combination
+            itcomb = keff.shape[0] - ikeff -jkeff
+            cov012 = (nums[ikeff, jkeff] * covmat[ikeff, itcomb]
+                      + nums[jkeff, ikeff] * covmat[jkeff, itcomb]) / denom
+            d012 = sigma[itcomb]**2 + cbsig**2 - 2*cov012
+            k012 = ((sigma[itcomb]**2 - cov012) * cbkeff
+                    + (cbsig**2 - cov012) * keff[itcomb]) / d012
+            v012 = ((cbsig*sigma[itcomb])**2 - cov012**2) / d012
+            if itcomb == 2:
+                assert np.isclose(
+                    k012, keff_res['full_comb_estimation']['keff'])
+                assert np.isclose(np.sqrt(v012)*100/k012,
+                                  keff_res['full_comb_estimation']['sigma'])
 
 def test_gauss_spectrum(datadir):
     '''Test Tripoli-4 listing with spectrum in output depending on time, µ and
@@ -99,7 +148,7 @@ def test_tt_simple_packet20_para(datadir):
     assert resp2desc['compo_details'][0]['temperature'] == 300
     assert resp2desc['compo_details'][0]['composition'] == "COMBUSTIBLE"
 
-def test_entropy_in_debug(datadir):
+def test_debug_entropy(datadir):
     '''Use Tripoli-4 result from entropy.d to test entropy, mesh, spectrum and
     debug mode.
     '''
@@ -138,6 +187,7 @@ def test_entropy(datadir):
         assert ires['response_description']['resp_function'] == resp_func[ind]
     firstres = t4_res.result[0]['list_responses']
     assert 'not_converged' in firstres[1]['results']['keff_res']
+    keffs_checks(lastres[1]['results']['keff_res'])
 
 # @pytest.fixture(scope="function", params="valjean_verbose", autouse=True)
 # def use_verbosity(request):
@@ -150,7 +200,7 @@ def test_entropy(datadir):
 # def test_entropy_verbose(datadir, monkeypatch, valjean_verbose):
 # @pytest.config('valjean_verbose')
 # def test_entropy_verbose(datadir, monkeypatch):  #, pytestconfig):
-def test_entropy_verbose(datadir, monkeypatch):
+def test_verbose_entropy(datadir, monkeypatch):
     '''Use Tripoli-4 result from entropy.d to test verbosity (mesh and spectrum
     in same jdd), but long.
     '''
