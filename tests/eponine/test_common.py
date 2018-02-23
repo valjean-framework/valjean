@@ -1,10 +1,9 @@
 '''Tests for the :mod:`common <valjean.eponine.common>` module.'''
 
 import numpy as np
-from hypothesis import given, settings, assume
+from hypothesis import given, note
 from hypothesis.strategies import (integers, lists, composite, data, tuples,
-                                   shared, floats, nothing, booleans, just)
-from hypothesis.extra.numpy import array_shapes
+                                   floats, nothing, booleans, just)
 from hypothesis.extra.numpy import arrays
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
@@ -16,20 +15,16 @@ from valjean.eponine.common import (MeshDictBuilder, SpectrumDictBuilder,
 import valjean.eponine.pyparsing_t4.grammar as pygram
 from valjean import LOGGER
 
+
 @composite
-def get_shape(draw, max_dims=(3, 3, 3, 5, 5, 1, 1)):
+def shapes(draw, max_sides=(3, 3, 3, 5, 5, 1, 1)):
     '''Composite Hypothesis strategy to generate *numpy.ndarray* shapes
     taking into account maximum dimensions in space, energy, time, µ and φ
     coordinates.
     '''
-    mytuple = draw(tuples(integers(1, max_dims[0]),   # s0
-                          integers(1, max_dims[1]),   # s1
-                          integers(1, max_dims[2]),   # s2
-                          integers(1, max_dims[3]),   # e
-                          integers(1, max_dims[4]),   # t
-                          integers(1, max_dims[5]),   # mu
-                          integers(1, max_dims[6])))  # phi
+    mytuple = draw(tuples(*map(lambda i: integers(1, i), max_sides)))
     return mytuple
+
 
 @composite
 def array_and_bins(draw, dtype,
@@ -46,32 +41,44 @@ def array_and_bins(draw, dtype,
     :returns: numpy.ndarray and dictionary of bins with keys ``['e', 't',
               'mu', 'phi']``
     '''
-    shape = draw(get_shape(max_dim))
+    shape = draw(shapes(max_dim))
     array = draw(arrays(dtype=dtype, shape=shape, elements=elements,
                         fill=nothing()))
-    bins = {}
-    bins['e'] = draw(get_bins(elements=floats(0, 20), nbins=shape[3],
-                              revers=reverse))
-    bins['t'] = draw(get_bins(elements=floats(0, 10), nbins=shape[4],
-                              revers=reverse))
-    bins['mu'] = draw(get_bins(elements=floats(-1., 1.), nbins=shape[5],
-                               revers=reverse))
-    bins['phi'] = draw(get_bins(elements=floats(0, 2*np.pi),
-                                nbins=shape[6], revers=reverse))
-    return array, bins
+    the_bins = {'e':   draw(bins(elements=floats(0, 20), nbins=shape[3],
+                                 reverse=reverse)),
+                't':   draw(bins(elements=floats(0, 10), nbins=shape[4],
+                                 reverse=reverse)),
+                'mu':  draw(bins(elements=floats(-1., 1.), nbins=shape[5],
+                                 reverse=reverse)),
+                'phi': draw(bins(elements=floats(0, 2*np.pi), nbins=shape[6],
+                                 reverse=reverse))}
+    return array, the_bins
 
 
 @composite
-def get_bins(draw, elements=floats(0, 10), nbins=1, revers=booleans()):
+def bins(draw, elements=floats(0, 10), nbins=1, reverse=booleans()):
     '''Choose the (energy, time, µ or φ) bins and their order (reversed or not)
     thanks to hypothesis.
 
     Edges for the bins can be chosen to get more realistic cases.
     '''
-    mybins = sorted(draw(lists(elements, min_size=nbins+1,
-                               max_size=nbins+1, unique=True)),
-                    reverse=draw(revers))
-    return mybins
+    # we require that the bins are unique when converted to the TRIPOLI-4
+    # output format; otherwise bins that are sufficiently close together will
+    # fail to pass the roundtrip tests
+    revers = draw(reverse)
+    as_list = sorted(
+        draw(lists(elements, min_size=nbins+1, max_size=nbins+1,
+                   unique_by=lambda x: '{0:.6e}'.format(abs(x))))
+        )
+    if revers:
+        arr = np.array(reversed(as_list))
+    arr = np.array(as_list)
+    note('nbins=' + str(nbins))
+    note('as_list=' + str(as_list))
+    note('revers=' + str(revers))
+    note('bins=' + str(arr))
+    return arr
+
 
 def compare_bin_order(ibins, fbins, irdm, rev_rdm):
     '''Compare bins orders between flipped bins using
@@ -82,14 +89,14 @@ def compare_bin_order(ibins, fbins, irdm, rev_rdm):
         rev_rdm[irdm] = - rev_rdm[irdm] - 1
         assert np.array_equal(fbins, ibins[::-1])
 
-@settings(max_examples=10)
-@given(shape=get_shape(max_dims=[3, 3, 3, 5, 5, 1, 1]), sampler=data())
+
+@given(shape=shapes(max_sides=[3, 3, 3, 5, 5, 1, 1]), sampler=data())
 def test_flip_mesh(shape, sampler):
     '''Test flipping mesh.
 
-    Generate with hypothesis a mesh with max dimensions
+    Generate with hypothesis a mesh with maximum sides
     ``[s0, s1, s2, E, t, mu, phi] = [3, 3, 3, 5, 5, 1, 1]``
-    as no mu or phi bins available for the moment for meshes.
+    as no mu or phi bins are available for the moment for meshes.
 
     Generate energy and time binnings. They can be increasing or decreasing
     depending on the value of the boolean chosen by hypothesis in order to
@@ -97,32 +104,36 @@ def test_flip_mesh(shape, sampler):
 
     Flip bins if necessary and check if they were correctly flipped.
     '''
-    array = sampler.draw(arrays(dtype=np.dtype([('tally', np.float),
-                                                ('sigma', np.float)]),
+    dtype = [('tally', np.float), ('sigma', np.float)]
+    array = sampler.draw(arrays(dtype=np.dtype(dtype),
                                 shape=shape,
                                 elements=tuples(floats(0, 1), floats(5, 20)),
                                 fill=nothing()))
-    ebins = sampler.draw(get_bins(elements=floats(0, 20), nbins=shape[3]))
-    tbins = sampler.draw(get_bins(elements=floats(0, 10), nbins=shape[4]))
+    note('shape = ' + str(shape))
+    note('content = ' + str(array))
+    ebins = sampler.draw(bins(elements=floats(0, 20), nbins=shape[3]))
+    tbins = sampler.draw(bins(elements=floats(0, 10), nbins=shape[4]))
+    note(ebins.shape)
+    note(tbins.shape)
+    e_incr = 1 if len(ebins) > 1 and ebins[1] > ebins[0] else -1
+    t_incr = 1 if len(tbins) > 1 and tbins[1] > tbins[0] else -1
+
     mesh = MeshDictBuilder(['tally', 'sigma'], shape)
     mesh.bins['e'] = ebins
     mesh.bins['t'] = tbins
     mesh.arrays['default'] = array
     mesh.flip_bins()
-    rdm = sampler.draw(tuples(integers(0, shape[0]-1),
-                              integers(0, shape[1]-1),
-                              integers(0, shape[2]-1),
-                              integers(0, shape[3]-1),
-                              integers(0, shape[4]-1)))
-    rdm_r = list(rdm)
-    compare_bin_order(np.array(ebins), mesh.bins['e'], 3, rdm_r)
-    compare_bin_order(np.array(tbins), mesh.bins['t'], 4, rdm_r)
-    index = rdm + (0, 0)
-    findex = tuple(rdm_r) + (0, 0)
-    assert array[index]['tally'] == mesh.arrays['default'][findex]['tally']
 
-@settings(max_examples=5)
-@given(shape=get_shape(max_dims=[1, 1, 1, 5, 5, 3, 3]),
+    assert np.all(np.diff(mesh.bins['e']) > 0.0)
+    assert np.all(np.diff(mesh.bins['t']) > 0.0)
+
+    for comp, _ in dtype:
+        assert np.array_equal(array[comp],
+                              mesh.arrays['default'][comp]
+                              [:, :, :, ::e_incr, ::t_incr, :, :])
+
+
+@given(shape=shapes(max_sides=[1, 1, 1, 5, 5, 3, 3]),
        sampler=data())
 def test_flip_spectrum(shape, sampler):
     '''Test flipping spectrum.
@@ -136,34 +147,40 @@ def test_flip_spectrum(shape, sampler):
 
     Flip bins if necessary and check if they were correctly flipped.
     '''
+    dtype = [('score', np.float),
+             ('sigma', np.float),
+             ('score/lethargy', np.float)]
     array = sampler.draw(
-        arrays(dtype=np.dtype([('score', np.float),
-                               ('sigma', np.float),
-                               ('score/lethargy', np.float)]),
+        arrays(dtype=np.dtype(dtype),
                shape=shape,
                elements=tuples(floats(0, 1), floats(5, 20), floats(0, 1)),
                fill=nothing()))
-    ebins = sampler.draw(get_bins(elements=floats(0, 20), nbins=shape[3]))
-    tbins = sampler.draw(get_bins(elements=floats(0, 10), nbins=shape[4]))
-    mubins = sampler.draw(get_bins(elements=floats(-1., 1.), nbins=shape[5]))
-    phibins = sampler.draw(get_bins(elements=floats(0, 2*np.pi),
-                                    nbins=shape[6]))
+    ebins = sampler.draw(bins(elements=floats(0, 20), nbins=shape[3]))
+    tbins = sampler.draw(bins(elements=floats(0, 10), nbins=shape[4]))
+    mubins = sampler.draw(bins(elements=floats(-1., 1.), nbins=shape[5]))
+    phibins = sampler.draw(bins(elements=floats(0, 2*np.pi),
+                                nbins=shape[6]))
+    e_incr = 1 if len(ebins) > 1 and ebins[1] > ebins[0] else -1
+    t_incr = 1 if len(tbins) > 1 and tbins[1] > tbins[0] else -1
+    mu_incr = 1 if len(mubins) > 1 and mubins[1] > mubins[0] else -1
+    phi_incr = 1 if len(phibins) > 1 and phibins[1] > phibins[0] else -1
+
     spectrum = SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'], shape)
     spectrum.bins = {'e': ebins, 't': tbins, 'mu': mubins, 'phi': phibins}
     spectrum.arrays['default'] = array
     spectrum.flip_bins()
-    rdm = sampler.draw(tuples(integers(0, shape[3]-1),
-                              integers(0, shape[4]-1),
-                              integers(0, shape[5]-1),
-                              integers(0, shape[6]-1)))
-    rdm_r = list(rdm)
-    compare_bin_order(np.array(ebins), spectrum.bins['e'], 0, rdm_r)
-    compare_bin_order(np.array(tbins), spectrum.bins['t'], 1, rdm_r)
-    compare_bin_order(np.array(mubins), spectrum.bins['mu'], 2, rdm_r)
-    compare_bin_order(np.array(phibins), spectrum.bins['phi'], 3, rdm_r)
-    index = (0, 0, 0) + rdm
-    findex = (0, 0, 0) + tuple(rdm_r)
-    assert array[index]['score'] == spectrum.arrays['default'][findex]['score']
+
+    assert np.all(np.diff(spectrum.bins['e']) > 0.0)
+    assert np.all(np.diff(spectrum.bins['t']) > 0.0)
+    assert np.all(np.diff(spectrum.bins['mu']) > 0.0)
+    assert np.all(np.diff(spectrum.bins['phi']) > 0.0)
+    for comp, _ in dtype:
+        assert np.array_equal(
+            array[comp],
+            spectrum.arrays['default'][comp]
+            [:, :, :, ::e_incr, ::t_incr, ::mu_incr, ::phi_incr]
+            )
+
 
 def mesh_score_str():
     '''String to a mesh block in parsing, describing the score.'''
@@ -173,6 +190,7 @@ def mesh_score_str():
          Cell             tally           sigma (percent)
     '''
     return msc_str
+
 
 def build_mesh_t4_output(mesh, ebins, tbin):
     '''Build the Tripoli-4 output for meshes, looping on energy bins and
@@ -198,6 +216,7 @@ def build_mesh_t4_output(mesh, ebins, tbin):
                                          mesh[index]['sigma']))
         t4out.append("\n")
     return ''.join(t4out)
+
 
 def make_mesh_t4_output(mesh, ebins, tbins):
     '''Build the Tripoli-4 output for meshes from time binning.
@@ -232,9 +251,9 @@ def make_mesh_t4_output(mesh, ebins, tbins):
             t4out.append(build_mesh_t4_output(mesh, ebins, itbin))
     return ''.join(t4out)
 
-@settings(max_examples=10)
-@given(shape=get_shape(max_dims=[3, 3, 3, 3, 3, 1, 1]), sampler=data())
-def test_print_parse_mesh(shape, sampler):
+
+@given(shape=shapes(max_sides=[3, 3, 3, 3, 3, 1, 1]), sampler=data())
+def test_parse_mesh_roundtrip(shape, sampler):
     '''Test printing mesh as Tripoli-4 output from random arrays got from
     Hypothesis. Also get energy and time bins.
 
@@ -252,7 +271,7 @@ def test_print_parse_mesh(shape, sampler):
 
        This test can be quite long depending on number of bins in space, energy
        and time. To avoid warning about that with pytest it is easier to limit
-       these dimensions to 3 (from few runs).
+       these dimensions to 3 bins (from few runs).
     '''
     array = sampler.draw(arrays(dtype=np.dtype([('tally', FTYPE),
                                                 ('sigma', FTYPE)]),
@@ -260,16 +279,17 @@ def test_print_parse_mesh(shape, sampler):
                                 elements=tuples(floats(0, 1), floats(0, 100)),
                                 fill=nothing()))
     LOGGER.debug("shape: %s", str(shape))
-    ebins = sampler.draw(get_bins(elements=floats(0, 20), nbins=shape[3]))
-    tbins = sampler.draw(get_bins(elements=floats(0, 10), nbins=shape[4]))
+    ebins = sampler.draw(bins(elements=floats(0, 20), nbins=shape[3]))
+    tbins = sampler.draw(bins(elements=floats(0, 10), nbins=shape[4]))
     mesh_str = make_mesh_t4_output(array, ebins, tbins)
+    note('mesh output:\n' + mesh_str)
     pres = pygram.scoreblock.parseString(mesh_str)
     if pres:
         oebins = ebins if ebins[0] < ebins[1] else ebins[::-1]
         otbins = tbins if tbins[0] < tbins[1] else tbins[::-1]
-        assert np.allclose(pres[0]['mesh_res']['ebins'], np.array(oebins))
+        assert np.allclose(pres[0]['mesh_res']['ebins'], oebins)
         if len(otbins) > 2:
-            assert np.allclose(pres[0]['mesh_res']['tbins'], np.array(otbins))
+            assert np.allclose(pres[0]['mesh_res']['tbins'], otbins)
         assert array.dtype == pres[0]['mesh_res']['mesh'].dtype
         assert array.shape == pres[0]['mesh_res']['mesh'].shape
         if np.array_equal(oebins, ebins) and np.array_equal(otbins, tbins):
@@ -288,6 +308,7 @@ def score_str():
 ''')
     return specscore_str
 
+
 def spectrum_beginning_str(units=False):
     '''Beginning of spectrum block in Tripoli-4 output.
     Possibility to add units.
@@ -303,6 +324,7 @@ def spectrum_beginning_str(units=False):
 Units:   MeV                     neut.s^-1       %               neut.s^-1
 ''')
     return spec_str
+
 
 def spectrum_str(spectrum, ebins, tmuphi_index, units=False):
     '''Print Tripoli-4 output for spectrum in a string to be parsed afterwards.
@@ -326,6 +348,7 @@ def spectrum_str(spectrum, ebins, tmuphi_index, units=False):
     t4out.append("\n")
     return ''.join(t4out)
 
+
 def time_step_str(itbin, tbins):
     '''Print the Tripoli-4 output for time step.
 
@@ -346,6 +369,7 @@ def time_step_str(itbin, tbins):
     t4out.append("                  time max. = {0:.6e}\n\n".format(maxtime))
     return ''.join(t4out)
 
+
 def mu_angle_str(imubin, mubins):
     '''Print the Tripoli-4 output for µ angular zone.
 
@@ -365,6 +389,7 @@ def mu_angle_str(imubin, mubins):
     t4out.append("                  mu min. = {0:.6e}\n".format(minmu))
     t4out.append("                  mu max. = {0:.6e}\n\n".format(maxmu))
     return ''.join(t4out)
+
 
 def phi_angle_str(iphibin, phibins):
     '''Print the Tripoli-4 output for φ angular zone.
@@ -387,6 +412,8 @@ def phi_angle_str(iphibin, phibins):
                  .format(iphibin, minphi, maxphi))
     return ''.join(t4out)
 
+
+# pylint: disable=redefined-outer-name
 def spectrum_t4_output(spectrum, bins, units):
     '''Build the Trupoli-4 output for spectra.
     Loops are done successively on time, µ and φ as it is done in the "real" T4
@@ -417,6 +444,7 @@ def spectrum_t4_output(spectrum, bins, units):
                                           tmuphi_index, units))
     return ''.join(t4out)
 
+
 def reverse_bins(bins):
     '''Reverse bins if they are in decreasing order.
 
@@ -428,6 +456,7 @@ def reverse_bins(bins):
         if bins[key][0] > bins[key][1]:
             rbins[key] = bins[key][::-1]
     return rbins
+
 
 def compare_bins(bins, spectrum_res):
     '''Compare bins: generated ones versus bins retrieved from spectrum after
@@ -448,12 +477,19 @@ def compare_bins(bins, spectrum_res):
     '''
     for key in bins:
         if key+'bins' in spectrum_res:
-            assert np.allclose(spectrum_res[key+'bins'],
-                               np.array(bins[key]))
+            assert np.allclose(spectrum_res[key+'bins'], bins[key])
 
-@settings(max_examples=20)
-@given(sampler=data())
-def test_print_parse_spectrum(sampler):
+
+@given(array_bins=array_and_bins(dtype=np.dtype([('score', FTYPE),
+                                                 ('sigma', FTYPE),
+                                                 ('score/lethargy', FTYPE)]),
+                                 max_dim=(1, 1, 1, 5, 5, 2, 2),
+                                 elements=tuples(floats(0, 1),
+                                                 floats(0, 100),
+                                                 floats(0, 1)),
+                                 reverse=just(False)),
+       units=booleans())
+def test_parse_spectrum_roundtrip(array_bins, units):
     '''Test printing spectrum as Tripoli-4 output from random arrays got from
     Hypothesis. Also get energy, time, µ and φ angular bins (alwats in
     increasing order for easiness of checks and as the flip is checked in
@@ -473,16 +509,10 @@ def test_print_parse_spectrum(sampler):
 
        This test can be quite long depending on number of bins in energy, time,
        µ or φ. To avoid warning about that with pytest it is easier to limit
-       these dimensions to 3 (from few runs).
+       these dimensions to 3 bins (from few runs).
     '''
-    array, bins = sampler.draw(array_and_bins(
-        dtype=np.dtype([('score', FTYPE), ('sigma', FTYPE),
-                        ('score/lethargy', FTYPE)]),
-        max_dim=(1, 1, 1, 5, 5, 2, 2),
-        elements=tuples(floats(0, 1), floats(0, 100), floats(0, 1)),
-        reverse=just(False)))
+    array, bins = array_bins
     LOGGER.debug("shape: %s", str(array.shape))
-    units = sampler.draw(booleans())
     spectrum_t4out = spectrum_t4_output(array, bins, units)
     pres = pygram.scoreblock.parseString(spectrum_t4out)
     compare_bins(bins, pres[0]['spectrum_res'])
