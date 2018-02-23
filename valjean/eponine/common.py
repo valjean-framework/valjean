@@ -653,7 +653,7 @@ class DictBuilder(ABC):
         :type axis: int
         '''
         LOGGER.debug("Bins %s avant flip: %s", dim, str(self.bins[dim]))
-        self.bins[dim] = self.bins[dim][::-1]
+        self.bins[dim] = np.flip(self.bins[dim], 0)
         for key, array in self.arrays.items():
             self.arrays[key] = np.flip(array, axis=axis)
         LOGGER.debug("et apres: %s", str(self.bins[dim]))
@@ -672,14 +672,11 @@ class DictBuilder(ABC):
         ('e' → 3, 't' → 4, 'mu' → 5, 'phi' → 6)
         '''
         LOGGER.debug("In DictBuilder.flip_bins")
-        if self.bins['e'] and self.bins['e'][0] > self.bins['e'][1]:
-            self._flip_bins_for_dim('e', 3)
-        if self.bins['t'] and self.bins['t'][0] > self.bins['t'][1]:
-            self._flip_bins_for_dim('t', 4)
-        if self.bins['mu'] and self.bins['mu'][0] > self.bins['mu'][1]:
-            self._flip_bins_for_dim('mu', 5)
-        if self.bins['phi'] and self.bins['phi'][0] > self.bins['phi'][1]:
-            self._flip_bins_for_dim('phi', 6)
+        key_axis = [('e', 3), ('t', 4), ('mu', 5), ('phi', 6)]
+        for key, axis in key_axis:
+            bins = self.bins[key]
+            if len(bins) > 1 and bins[0] > bins[1]:
+                self._flip_bins_for_dim(key, axis)
 
     @abstractmethod
     def fill_arrays_and_bins(self, data):
