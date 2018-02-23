@@ -43,7 +43,7 @@ containing at least the flags precised in :ref:`eponine-scan_t4-caveats`.
    True
    >>> len(results)
    1
-   >>> results.initialization_time
+   >>> results.times['initialization time']
    7
    >>> 'simulation time' in results[-1]
    True
