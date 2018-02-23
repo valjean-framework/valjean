@@ -28,7 +28,7 @@ are used to represent
 * mesh results, i.e. tables splitted in space (cartesian, cylindrical,
   spherical depending on case), sometimes with additional splittings in energy
   and/or time
-* keff results, especially the matrical ones
+* |keff| results, especially the matrical ones
 * Green bands results
 * IFP results
 * k\ :sub:`ij` results (matrices, eigenvectors and eigenvalues)

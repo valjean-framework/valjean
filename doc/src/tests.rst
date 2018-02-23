@@ -43,7 +43,7 @@ Tests for the :mod:`~.code` module
 Tests for the :mod:`~.eponine` package
 --------------------------------------
 
-Tests for the :mod:`common <valjean.eponine.common` module
-``````````````````````````````````````````````````````````
+Tests for the :mod:`common <valjean.eponine.common>` module
+```````````````````````````````````````````````````````````
 
 .. automodule:: tests.eponine.test_common

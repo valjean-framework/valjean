@@ -31,7 +31,7 @@ class T4ParserException(Exception):
     pass
 
 class T4Parser():
-    '''Scan Tripoli-4 listings, then parse the required batchs.
+    '''Scan Tripoli-4 listings, then parse the required batches.
     '''
 
     @profile
@@ -46,7 +46,7 @@ class T4Parser():
         It also initalize the result of :class:`.scan_t4.Scan` to ``None`` and
         the parsing result, from *pyparsing*, to ``None``.
 
-        If ``"PARA"`` is contains in the path, the checks will be done for
+        If the path contains the ``"PARA"`` string, the checks will be done for
         parallel mode.
         '''
         self.jdd = jddname
@@ -123,7 +123,7 @@ class T4Parser():
 
     @profile
     def scan_t4_listing(self):
-        '''Scan Tripoli-4 listing, calling :mod:`.scan_t4`
+        '''Scan Tripoli-4 listing, calling :mod:`.scan_t4`.
 
         If end_flag was set, calls :meth:`.scan_t4.Scan.debug_scan` instead of
         the usual constructor.
