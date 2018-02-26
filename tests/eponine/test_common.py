@@ -88,8 +88,11 @@ def compare_bin_order(ibins, fbins, irdm, rev_rdm):
         assert np.array_equal(fbins, ibins[::-1])
 
 
-@given(shape=shapes(max_sides=[3, 3, 3, 5, 5, 1, 1]), sampler=data())
-def test_flip_mesh(shape, sampler):
+@given(array_bins=array_and_bins(
+    dtype=np.dtype([('tally', np.float), ('sigma', np.float)]),
+    max_dim=(3, 3, 3, 5, 5, 1, 1),
+    elements=tuples(floats(0, 1), floats(5, 20))))
+def test_flip_mesh(array_bins):
     '''Test flipping mesh.
 
     Generate with hypothesis a mesh with maximum sides
@@ -102,37 +105,35 @@ def test_flip_mesh(shape, sampler):
 
     Flip bins if necessary and check if they were correctly flipped.
     '''
-    dtype = [('tally', np.float), ('sigma', np.float)]
-    array = sampler.draw(arrays(dtype=np.dtype(dtype),
-                                shape=shape,
-                                elements=tuples(floats(0, 1), floats(5, 20)),
-                                fill=nothing()))
-    note('shape = ' + str(shape))
+    array, lbins = array_bins
+    note('shape = ' + str(array.shape))
     note('content = ' + str(array))
-    ebins = sampler.draw(bins(elements=floats(0, 20), nbins=shape[3]))
-    tbins = sampler.draw(bins(elements=floats(0, 10), nbins=shape[4]))
-    note(ebins.shape)
-    note(tbins.shape)
-    e_incr = 1 if len(ebins) > 1 and ebins[1] > ebins[0] else -1
-    t_incr = 1 if len(tbins) > 1 and tbins[1] > tbins[0] else -1
+    note(lbins['e'].shape)
+    note(lbins['t'].shape)
+    incr = dict(map(
+        lambda i: (i[0], 1 if len(i[1]) > 1 and i[1][1] > i[1][0] else -1),
+        lbins.items()))
 
-    mesh = MeshDictBuilder(['tally', 'sigma'], shape)
-    mesh.bins['e'] = ebins
-    mesh.bins['t'] = tbins
+    mesh = MeshDictBuilder(['tally', 'sigma'], array.shape)
+    mesh.bins['e'] = lbins['e']
+    mesh.bins['t'] = lbins['t']
     mesh.arrays['default'] = array
     mesh.flip_bins()
     assert np.all(np.diff(mesh.bins['e']) > 0.0)
     assert np.all(np.diff(mesh.bins['t']) > 0.0)
 
-    for comp, _ in dtype:
+    for comp in array.dtype.names:
         assert np.array_equal(array[comp],
                               mesh.arrays['default'][comp]
-                              [:, :, :, ::e_incr, ::t_incr, :, :])
+                              [:, :, :, ::incr['e'], ::incr['t'], :, :])
 
 
-@given(shape=shapes(max_sides=[1, 1, 1, 5, 5, 3, 3]),
-       sampler=data())
-def test_flip_spectrum(shape, sampler):
+@given(array_bins=array_and_bins(
+    dtype=np.dtype([('score', np.float), ('sigma', np.float),
+                    ('score/lethargy', np.float)]),
+    max_dim=(1, 1, 1, 5, 5, 3, 3),
+    elements=tuples(floats(0, 1), floats(5, 20), floats(0, 1))))
+def test_flip_spectrum(array_bins):
     '''Test flipping spectrum.
 
     Generate with hypothesis a mesh with max dimensions
@@ -144,26 +145,14 @@ def test_flip_spectrum(shape, sampler):
 
     Flip bins if necessary and check if they were correctly flipped.
     '''
-    dtype = [('score', np.float),
-             ('sigma', np.float),
-             ('score/lethargy', np.float)]
-    array = sampler.draw(
-        arrays(dtype=np.dtype(dtype),
-               shape=shape,
-               elements=tuples(floats(0, 1), floats(5, 20), floats(0, 1)),
-               fill=nothing()))
-    ebins = sampler.draw(bins(elements=floats(0, 20), nbins=shape[3]))
-    tbins = sampler.draw(bins(elements=floats(0, 10), nbins=shape[4]))
-    mubins = sampler.draw(bins(elements=floats(-1., 1.), nbins=shape[5]))
-    phibins = sampler.draw(bins(elements=floats(0, 2*np.pi),
-                                nbins=shape[6]))
-    e_incr = 1 if len(ebins) > 1 and ebins[1] > ebins[0] else -1
-    t_incr = 1 if len(tbins) > 1 and tbins[1] > tbins[0] else -1
-    mu_incr = 1 if len(mubins) > 1 and mubins[1] > mubins[0] else -1
-    phi_incr = 1 if len(phibins) > 1 and phibins[1] > phibins[0] else -1
+    array, lbins = array_bins
+    incr = dict(map(
+        lambda i: (i[0], 1 if len(i[1]) > 1 and i[1][1] > i[1][0] else -1),
+        lbins.items()))
 
-    spectrum = SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'], shape)
-    spectrum.bins = {'e': ebins, 't': tbins, 'mu': mubins, 'phi': phibins}
+    spectrum = SpectrumDictBuilder(array.dtype.names, array.shape)
+    spectrum.bins = {'e': lbins['e'], 't': lbins['t'], 'mu': lbins['mu'],
+                     'phi': lbins['phi']}
     spectrum.arrays['default'] = array
     spectrum.flip_bins()
 
@@ -171,12 +160,11 @@ def test_flip_spectrum(shape, sampler):
     assert np.all(np.diff(spectrum.bins['t']) > 0.0)
     assert np.all(np.diff(spectrum.bins['mu']) > 0.0)
     assert np.all(np.diff(spectrum.bins['phi']) > 0.0)
-    for comp, _ in dtype:
+    for comp in array.dtype.names:
         assert np.array_equal(
             array[comp],
             spectrum.arrays['default'][comp]
-            [:, :, :, ::e_incr, ::t_incr, ::mu_incr, ::phi_incr]
-            )
+            [:, :, :, ::incr['e'], ::incr['t'], ::incr['mu'], ::incr['phi']])
 
 
 def mesh_score_str():
