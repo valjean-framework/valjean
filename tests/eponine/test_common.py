@@ -68,9 +68,9 @@ def bins(draw, elements=floats(0, 10), nbins=1, reverse=booleans()):
     revers = draw(reverse)
     as_list = sorted(
         draw(lists(elements, min_size=nbins+1, max_size=nbins+1,
-                   unique_by=lambda x: '{0:.6e}'.format(abs(x))))
-        )
-    arr = np.array(list(reversed(as_list))) if revers else np.array(as_list)
+                   unique_by=lambda x: '{0:.6e}'.format(abs(x)))),
+        reverse=revers)
+    arr = np.array(as_list)
     note('nbins=' + str(nbins))
     note('as_list=' + str(as_list))
     note('revers=' + str(revers))
@@ -121,7 +121,6 @@ def test_flip_mesh(shape, sampler):
     mesh.bins['t'] = tbins
     mesh.arrays['default'] = array
     mesh.flip_bins()
-
     assert np.all(np.diff(mesh.bins['e']) > 0.0)
     assert np.all(np.diff(mesh.bins['t']) > 0.0)
 
@@ -250,8 +249,12 @@ def make_mesh_t4_output(mesh, ebins, tbins):
     return ''.join(t4out)
 
 
-@given(shape=shapes(max_sides=[3, 3, 3, 3, 3, 1, 1]), sampler=data())
-def test_parse_mesh_roundtrip(shape, sampler):
+@given(array_bins=array_and_bins(
+    dtype=np.dtype([('tally', FTYPE), ('sigma', FTYPE)]),
+    max_dim=(3, 3, 3, 3, 3, 1, 1),
+    elements=tuples(floats(0, 1), floats(0, 100)),
+    reverse=just(False)))
+def test_parse_mesh_roundtrip(array_bins):
     '''Test printing mesh as Tripoli-4 output from random arrays got from
     Hypothesis. Also get energy and time bins.
 
@@ -271,30 +274,20 @@ def test_parse_mesh_roundtrip(shape, sampler):
        and time. To avoid warning about that with pytest it is easier to limit
        these dimensions to 3 bins (from few runs).
     '''
-    array = sampler.draw(arrays(dtype=np.dtype([('tally', FTYPE),
-                                                ('sigma', FTYPE)]),
-                                shape=shape,
-                                elements=tuples(floats(0, 1), floats(0, 100)),
-                                fill=nothing()))
-    LOGGER.debug("shape: %s", str(shape))
-    ebins = sampler.draw(bins(elements=floats(0, 20), nbins=shape[3]))
-    tbins = sampler.draw(bins(elements=floats(0, 10), nbins=shape[4]))
-    mesh_str = make_mesh_t4_output(array, ebins, tbins)
+    array, lbins = array_bins
+    LOGGER.debug("shape: %s", str(array.shape))
+    mesh_str = make_mesh_t4_output(array, lbins['e'], lbins['t'])
     note('mesh output:\n' + mesh_str)
     pres = pygram.scoreblock.parseString(mesh_str)
-    if pres:
-        oebins = ebins if ebins[0] < ebins[1] else ebins[::-1]
-        otbins = tbins if tbins[0] < tbins[1] else tbins[::-1]
-        assert np.allclose(pres[0]['mesh_res']['ebins'], oebins)
-        if len(otbins) > 2:
-            assert np.allclose(pres[0]['mesh_res']['tbins'], otbins)
-        assert array.dtype == pres[0]['mesh_res']['mesh'].dtype
-        assert array.shape == pres[0]['mesh_res']['mesh'].shape
-        if np.array_equal(oebins, ebins) and np.array_equal(otbins, tbins):
-            assert np.allclose(array[:]['tally'],
-                               pres[0]['mesh_res']['mesh'][:]['tally'])
-            assert np.allclose(array[:]['sigma'],
-                               pres[0]['mesh_res']['mesh'][:]['sigma'])
+    assert pres
+    parsed_mesh = pres[0]['mesh_res']
+    assert np.allclose(parsed_mesh['ebins'], lbins['e'])
+    if len(lbins['t']) > 2:
+        assert np.allclose(parsed_mesh['tbins'], lbins['t'])
+    assert array.dtype == parsed_mesh['mesh'].dtype
+    assert array.shape == parsed_mesh['mesh'].shape
+    for comp in array.dtype.names:
+        assert np.allclose(array[:][comp], parsed_mesh['mesh'][:][comp])
 
 
 def score_str():
@@ -520,14 +513,14 @@ def test_parse_spectrum_roundtrip(array_bins, units):
     LOGGER.debug("shape: %s", str(array.shape))
     spectrum_t4out = spectrum_t4_output(array, bins, units)
     pres = pygram.scoreblock.parseString(spectrum_t4out)
+    assert pres
     compare_bins(bins, pres[0]['spectrum_res'])
     spectrum = pres[0]['spectrum_res']['spectrum']
     assert array.dtype == spectrum.dtype
     assert array.shape == spectrum.shape
-    assert np.allclose(array[:]['score'], spectrum[:]['score'])
-    assert np.allclose(array[:]['sigma'], spectrum[:]['sigma'])
-    assert np.allclose(array[:]['score/lethargy'],
-                       spectrum[:]['score/lethargy'])
+    for comp in array.dtype.names:
+        assert np.allclose(array[:][comp], spectrum[:][comp])
+
 
 def gb_step_str(istep, sebins):
     '''Print the Tripoli-4 output for Green bands steps (source steps in
@@ -637,12 +630,7 @@ def green_bands(draw, max_dims=(5, 3, 2, 2, 2, 5)):
        not written in the listing in that case, it should always be run, so
        dimensions of ``u``, ``v`` and ``w`` should not be to high.
     '''
-    shape = draw(tuples(integers(1, max_dims[0]),  # steps (source energy bins)
-                        integers(1, max_dims[1]),  # sources
-                        integers(1, max_dims[2]),  # u
-                        integers(1, max_dims[3]),  # v
-                        integers(1, max_dims[4]),  # w
-                        integers(1, max_dims[5]))) # energy bins
+    shape = draw(shapes(max_dims))
     array = draw(arrays(
         dtype=np.dtype([('score', FTYPE), ('sigma', FTYPE),
                         ('score/lethargy', FTYPE)]),
@@ -658,10 +646,10 @@ def green_bands(draw, max_dims=(5, 3, 2, 2, 2, 5)):
                                       reverse=booleans())))}
     return array, the_bins
 
-@settings(max_examples=20, deadline=300)
-@given(sampler=data())
-# def test_parse_green_bands_roundtrip(sampler):
-def test_parse_greenbands_roundtrip(sampler):
+@settings(max_examples=100, deadline=300)
+@given(array_bins=green_bands(max_dims=(5, 3, 2, 2, 2, 5)),
+       disc_batch=integers(0, 5))
+def test_parse_greenbands_roundtrip(array_bins, disc_batch):
     r'''Test printing Green bands results as Tripoli-4 output from random
     arrays got from Hypothesis. Other needed quantities are also obtained
     thanks to Hypothesis like steps and sources.
@@ -682,8 +670,7 @@ def test_parse_greenbands_roundtrip(sampler):
 
     * Equality of number of discarded batchs
     '''
-    array, bins = sampler.draw(green_bands(max_dims=(5, 3, 2, 2, 2, 5)))
-    disc_batch = sampler.draw(integers(0, 5))
+    array, bins = array_bins
     gb_t4_out = gb_t4_output(array, bins, disc_batch)
     pres = pygram.scoreblock.parseString(gb_t4_out)
     assert pres
@@ -697,14 +684,10 @@ def test_parse_greenbands_roundtrip(sampler):
     assert np.allclose(gbres['sebins'], np.array(bins['se']))
     assert array.dtype == gbres['vals'].dtype
     assert array.shape == gbres['vals'].shape
-    assert np.allclose(gbres['vals'][:]['score'], array[:]['score'])
-    assert np.allclose(gbres['vals'][:]['sigma'], array[:]['sigma'])
-    assert np.allclose(gbres['vals'][:]['score/lethargy'],
-                       array[:]['score/lethargy'])
+    for comp in array.dtype.names:
+        assert np.allclose(gbres['vals'][:][comp], array[:][comp])
     assert gbres['disc_batch'] == disc_batch
 
-# @composite
-# def keff_matrix():
 
 def keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb):
     '''Pring keff as generic response of Tripoli-4.'''
@@ -732,9 +715,12 @@ def keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb):
     t4out.append("\n")
     return ''.join(t4out)
 
-@settings(max_examples=20)
-@given(sampler=data())
-def test_parse_keffs_roundtrip(sampler):
+@settings(max_examples=100)
+@given(corrmat=arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0, 0.5)),
+       keffmat=arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0.3, 0.7)),
+       sigmat=arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0, 0.5)),
+       combination=tuples(floats(0.6, 1.4), floats(0, 1)))
+def test_parse_keffs_roundtrip(corrmat, keffmat, sigmat, combination):
     r'''Test printing k\ :sub:`eff` results as Tripoli-4 output from Hypothesis
     strategies then parse it and compare results.
 
@@ -745,20 +731,20 @@ def test_parse_keffs_roundtrip(sampler):
     * Keys inside dictionary stored under ``'keff_res'`` are OK
     * Equality at rounding (10\ :sup:`-8`) of correlation matrix, k\ :sub:`eff`
       matrix, σ matrix and full combination estimation.
+
+    .. note::
+
+       Only parsing is tested here, not the coherence/consistence of the matrix
+       generated by Hypothesis (no-sense combined results for example).
     '''
-    corrmat = sampler.draw(
-        arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0, 0.5)))
+    # First need to symmetrize the 3 matrix and put correlation diagonal to 1.
     corrmat += corrmat.T
     for ielt in range(3):
         corrmat[ielt][ielt] = 1
-    keffmat = sampler.draw(
-        arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0.3, 0.7)))
     keffmat += keffmat.T
-    sigmat = sampler.draw(
-        arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0, 0.5)))
     sigmat += sigmat.T
-    fcomb = sampler.draw(tuples(floats(0.6, 1.4), floats(0, 1)))
-    keff_t4_out = keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb)
+    # Then test...
+    keff_t4_out = keff_t4_genoutput(keffmat, sigmat, corrmat, combination)
     keffres = pygram.responseblock.parseString(keff_t4_out)
     assert keffres
     assert list(keffres.keys()) == ['keff_res']
@@ -769,9 +755,9 @@ def test_parse_keffs_roundtrip(sampler):
     assert np.allclose(keffres['keff_res']['keff_matrix'], keffmat)
     assert np.allclose(keffres['keff_res']['sigma_matrix'], sigmat)
     assert np.isclose(
-        keffres['keff_res']['full_comb_estimation']['keff'], fcomb[0])
+        keffres['keff_res']['full_comb_estimation']['keff'], combination[0])
     assert np.isclose(
-        keffres['keff_res']['full_comb_estimation']['sigma'], fcomb[1])
+        keffres['keff_res']['full_comb_estimation']['sigma'], combination[1])
 
 def array_from_t4():
     '''Fake test'''
