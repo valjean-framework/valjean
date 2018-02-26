@@ -70,9 +70,7 @@ def bins(draw, elements=floats(0, 10), nbins=1, reverse=booleans()):
         draw(lists(elements, min_size=nbins+1, max_size=nbins+1,
                    unique_by=lambda x: '{0:.6e}'.format(abs(x))))
         )
-    if revers:
-        arr = np.array(reversed(as_list))
-    arr = np.array(as_list)
+    arr = np.array(list(reversed(as_list))) if revers else np.array(as_list)
     note('nbins=' + str(nbins))
     note('as_list=' + str(as_list))
     note('revers=' + str(revers))
@@ -736,7 +734,7 @@ def keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb):
 
 @settings(max_examples=20)
 @given(sampler=data())
-def test_print_parse_keffs(sampler):
+def test_parse_keffs_roundtrip(sampler):
     r'''Test printing k\ :sub:`eff` results as Tripoli-4 output from Hypothesis
     strategies then parse it and compare results.
 
@@ -775,7 +773,7 @@ def test_print_parse_keffs(sampler):
     assert np.isclose(
         keffres['keff_res']['full_comb_estimation']['sigma'], fcomb[1])
 
-def test_array_from_t4():
+def array_from_t4():
     '''Fake test'''
     # test from a real example
     correlation = np.array([[1, 8.220342e-01, 7.417923e-01],
