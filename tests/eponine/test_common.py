@@ -1,7 +1,7 @@
 '''Tests for the :mod:`common <valjean.eponine.common>` module.'''
 
 import numpy as np
-from hypothesis import given, note, settings, assume
+from hypothesis import given, note, settings
 from hypothesis.strategies import (integers, lists, composite, data, tuples,
                                    floats, nothing, booleans, just)
 from hypothesis.extra.numpy import arrays
@@ -651,22 +651,22 @@ def green_bands(draw, max_dims=(5, 3, 2, 2, 2, 5)):
         shape=shape,
         elements=tuples(floats(0, 1), floats(0, 100), floats(0, 1)),
         fill=nothing()))
-    bins = {}
-    bins['e'] = draw(bins(
-        elements=floats(0, 20), nbins=shape[5], revers=booleans()))
-    bins['se'] = (draw(bins(elements=floats(0, 20), nbins=shape[0],
-                            revers=just(False)))
-                  if shape[0] == 1
-                  else draw(bins(elements=floats(0, 20), nbins=shape[0],
-                                 revers=booleans())))
-    return array, bins
+    the_bins = {'e': draw(bins(elements=floats(0, 20), nbins=shape[5],
+                               reverse=booleans())),
+                'se': (draw(bins(elements=floats(0, 20), nbins=shape[0],
+                                 reverse=just(False)))
+                       if shape[0] == 1
+                       else draw(bins(elements=floats(0, 20), nbins=shape[0],
+                                      reverse=booleans())))}
+    return array, the_bins
 
 @settings(max_examples=20, deadline=300)
 @given(sampler=data())
-def test_print_parse_green_bands(sampler):
-    '''Test printing Green bands results as Tripoli-4 output from random arrays
-    got from Hypothesis. Other needed quantities are also obtained thanks to
-    Hypothesis like steps and sources.
+# def test_parse_green_bands_roundtrip(sampler):
+def test_parse_greenbands_roundtrip(sampler):
+    r'''Test printing Green bands results as Tripoli-4 output from random
+    arrays got from Hypothesis. Other needed quantities are also obtained
+    thanks to Hypothesis like steps and sources.
 
     Tests performed:
 
@@ -737,7 +737,7 @@ def keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb):
 @settings(max_examples=20)
 @given(sampler=data())
 def test_print_parse_keffs(sampler):
-    '''Test printing k\ :sub:`eff` results as Tripoli-4 output from Hypothesis
+    r'''Test printing k\ :sub:`eff` results as Tripoli-4 output from Hypothesis
     strategies then parse it and compare results.
 
     Tests performed:
