@@ -1,5 +1,5 @@
-'''This module provides generic functions to convert parsing outputs to `numpy`
-objects.
+r'''This module provides generic functions to convert parsing outputs to
+`numpy` objects.
 
 Inputs (outputs from parsers) should be python lists or dictionary,
 dictionary keys should be the same in all parsers...
