@@ -1,9 +1,9 @@
 '''Tests for the :mod:`common <valjean.eponine.common>` module.'''
 
 import numpy as np
-from hypothesis import given, note, settings
+from hypothesis import given, note, settings, assume
 from hypothesis.strategies import (integers, lists, composite, data, tuples,
-                                   floats, nothing, booleans, just)
+                                   floats, nothing, booleans, just, complex_numbers)
 from hypothesis.extra.numpy import arrays
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
@@ -723,3 +723,99 @@ def test_parse_keffs_roundtrip(corrmat, keffmat, sigmat, combination):
         keffres['keff_res']['full_comb_estimation']['keff'], combination[0])
     assert np.isclose(
         keffres['keff_res']['full_comb_estimation']['sigma'], combination[1])
+
+
+
+def kij_t4_output(evals, evecs, matrix):
+    '''
+    '''
+    t4out = []
+    t4out.append(" "*8 + "ENERGY INTEGRATED RESULTS\n\n")
+    t4out.append("number of batches used: 80\n\n\n")
+    t4out.append(" "*12 + "kij-keff = {0:.6e}\n\n".format(np.real(evals[0])))
+    t4out.append(" "*12 + "dominant ratio = {0:.6e}\n\n\n"
+                 .format(np.real(evals[1])/np.real(evals[0])))
+    t4out.append("eigenvalues (re, im)\n\n")
+    for ival in evals:
+        t4out.append("{0:.6e}".format(np.real(ival)) + " "*4
+                     + "{0:.6e}".format(np.imag(ival)) + "\n")
+    t4out.append("\n\n")
+    t4out.append("eigenvectors\n\n")
+    for ivec in evecs:
+        for icoord in ivec:
+            t4out.append("{0:.6e}".format(icoord) + " "*4)
+        t4out.append("\n")
+    t4out.append("\n\n")
+    t4out.append("KIJ_MATRIX :\n\n")
+    for kij_i in matrix:
+        for kij_j in kij_i:
+            t4out.append("{0:.6e}".format(kij_j) + " "*4)
+        t4out.append("\n")
+    t4out.append("\n")
+    return ''.join(t4out)
+
+@composite
+def kij_results(draw, dimension):
+    r'''Composite Hypothesis strategy to generate eigenvalues, eigenvectors and
+    k\ :sub:`ij` matrix.
+
+    Construct the complex eigen values from full random real part and partially
+    random imaginary part, reprenseting maximum half of the array, rest is
+    filled with 0 (inserted at beginning of array). Real part of first
+    eigenvalue should be different from 0 to be able to calculate dominant
+    ratio.
+
+    Eigenvectors matrix is required to have det = 0. Used eigenvectors are
+    normalized.
+
+    :param int dimension: max dimension of the squared matrix
+    :returns: 3 numpy.ndarray for eigenvalues, eigenvectors and real part of
+              the matrix in T4 outputs (alawys real afak)
+    '''
+    dim = draw(integers(3, dimension))
+    ervals = draw(arrays(dtype=FTYPE, shape=(dim), elements=floats(0, 1)))
+    assume(ervals[0] != 0)
+    rdmim = draw(integers(0, dim//2))
+    eivals = draw(arrays(dtype=FTYPE, shape=(rdmim), elements=floats(0, 1e-3)))
+    eivals = np.append(eivals, -eivals)
+    eivals = np.insert(eivals, 0, values=[0]*(dim-rdmim*2))
+    evals = ervals + 1j*eivals
+    evecs = draw(arrays(dtype=FTYPE, shape=(dim, dim), elements=floats(0, 1)))
+    assume(np.linalg.det(evecs) != 0)
+    nevecs = evecs / np.linalg.norm(evecs, axis=1).reshape(dim, 1)
+    assume(np.linalg.det(nevecs) != 0)
+    matrix = np.dot(np.dot(nevecs, np.diag(evals)), np.linalg.inv(nevecs))
+    return evals, evecs, np.real(matrix)
+
+@settings(max_examples=100)
+@given(kij_res=kij_results(5))
+def test_parse_kij_roundtrip(kij_res):
+    r'''Test printing k\ :sub:`ij` results as Tripoli-4 output from random
+    tuples and array got from Hypothesis.
+
+    Eigenvalues are complex in Triploi-4 output, with (afak) Sum(Im(eval)) = 0,
+    so only half of the values are generated randomly, other half are opposite.
+
+    Tests performed:
+
+    * Successful parsing (no exception raised)
+    * 1 result
+    * List of keys contained in the result
+    * Equality (at rouding as floats and complex) of
+
+      * Eigenvalues (complex)
+      * Eigenvectors
+      * Matrix
+    '''
+    evals, evecs, matrix = kij_res
+    kij_t4_out = kij_t4_output(evals, evecs, matrix)
+    note(kij_t4_out)
+    pres = pygram.kijres.parseString(kij_t4_out)
+    assert pres
+    assert len(pres) == 1
+    assert sorted(list(pres[0].keys())) == ['kij_eigenval', 'kij_eigenvec',
+                                            'kij_matrix', 'kijdomratio',
+                                            'kijmkeff_res', 'used_batch']
+    assert np.allclose(pres[0]['kij_eigenval'], evals)
+    assert np.allclose(pres[0]['kij_eigenvec'], evecs)
+    assert np.allclose(pres[0]['kij_matrix'], matrix)
