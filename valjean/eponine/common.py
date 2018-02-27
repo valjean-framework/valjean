@@ -109,9 +109,9 @@ should be 7 as we have 7 dimensison.
 
    >>> db = DictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
    Traceback (most recent call last):
-         ...
-   TypeError: Can't instantiate abstract class DictBuilder with abstract \
-methods _add_last_energy_bin, fill_arrays_and_bins
+       ...
+   TypeError: Can't instantiate abstract class DictBuilder with abstract
+   ... methods _add_last_energy_bin, fill_arrays_and_bins
    >>> mdb = MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
    >>> sdb = SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'],
    ...                           [1,2,3,4,5,6,7])

@@ -47,7 +47,9 @@ def keffs_checks(keff_res):
     # print("1-eval0 =", 1-evals[0])
     # print("keff =", keff)
     # print("keff*evec0 =", np.dot(keff, evecs[0]**2) )
-    # print("sig*evec0 =", np.dot(sigma, evecs[0]**2)*evals[0])
+    # print("sig*evec0 *keff0=", np.dot(sigma, evecs[0]**2)*evals[0])
+    # print("sig*evec0 =", np.dot(sigma, evecs[0]**2))
+    # print("mean keffs =", np.mean(keff))
     for ikeff in range(keff.shape[0]-1):
         for jkeff in range(ikeff+1, keff.shape[0]):
             denom = sigma[ikeff]**2 + sigma[jkeff]**2 - 2*covmat[ikeff, jkeff]
@@ -68,7 +70,7 @@ def keffs_checks(keff_res):
             k012 = ((sigma[itcomb]**2 - cov012) * cbkeff
                     + (cbsig**2 - cov012) * keff[itcomb]) / d012
             v012 = ((cbsig*sigma[itcomb])**2 - cov012**2) / d012
-            # print("combination: ", k012, "±", v012)
+            # print("combination: ", k012, "±", np.sqrt(v012))
             if itcomb == 2:
                 assert np.isclose(
                     k012, keff_res['full_comb_estimation']['keff'])

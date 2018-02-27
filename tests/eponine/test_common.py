@@ -2,8 +2,8 @@
 
 import numpy as np
 from hypothesis import given, note, settings, assume
-from hypothesis.strategies import (integers, lists, composite, data, tuples,
-                                   floats, nothing, booleans, just, complex_numbers)
+from hypothesis.strategies import (integers, lists, composite, tuples,
+                                   floats, nothing, booleans, just)
 from hypothesis.extra.numpy import arrays
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
@@ -628,10 +628,10 @@ def test_parse_greenbands_roundtrip(array_bins, disc_batch):
       source + discarded batchs)
     * Equality at 10\ :sup:`-8` of
 
-       * Energy bins
-       * Energy bins of source
-       * Array representing Green bands (dtype, shape and ``'score'``,
-         ``'sigma'`` and ``'score/lethargy'`` arrays)
+      * Energy bins
+      * Energy bins of source
+      * Array representing Green bands (dtype, shape and ``'score'``,
+        ``'sigma'`` and ``'score/lethargy'`` arrays)
 
     * Equality of number of discarded batchs
     '''
@@ -727,7 +727,13 @@ def test_parse_keffs_roundtrip(corrmat, keffmat, sigmat, combination):
 
 
 def kij_t4_output(evals, evecs, matrix):
-    '''
+    r'''Print Tripoli-4 output for k\ :sub:`ij` results in a string to be
+    parsed afterwards.
+
+    :param numpy.ndarray evals: eigenvalues (N)
+    :param numpy.ndarray evecs: eigenvectors (N×N)
+    :param numpy.ndarray matrix: k\ :sub:`ij` matrix (N×N)
+    :returns: T4 output as a string
     '''
     t4out = []
     t4out.append(" "*8 + "ENERGY INTEGRATED RESULTS\n\n")
@@ -793,8 +799,9 @@ def test_parse_kij_roundtrip(kij_res):
     r'''Test printing k\ :sub:`ij` results as Tripoli-4 output from random
     tuples and array got from Hypothesis.
 
-    Eigenvalues are complex in Triploi-4 output, with (afak) Sum(Im(eval)) = 0,
-    so only half of the values are generated randomly, other half are opposite.
+    Eigenvalues are complex in Triploi-4 output, with (afak)
+    Sum(Im(eigval)) = 0, so only half of the values are generated randomly,
+    other half are opposite.
 
     Tests performed:
 
