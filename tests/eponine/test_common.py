@@ -3,7 +3,7 @@
 import numpy as np
 from hypothesis import given, note, settings, assume
 from hypothesis.strategies import (integers, lists, composite, tuples,
-                                   floats, nothing, booleans, just)
+                                   floats, nothing, booleans, just, text)
 from hypothesis.extra.numpy import arrays
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
@@ -826,3 +826,80 @@ def test_parse_kij_roundtrip(kij_res):
     assert np.allclose(pres[0]['kij_eigenval'], evals)
     assert np.allclose(pres[0]['kij_eigenvec'], evecs)
     assert np.allclose(pres[0]['kij_matrix'], matrix)
+
+
+@composite
+def keff_best_estimation(draw, n_estim):
+    n_estim = draw(integers(4, n_estim))
+    estimators = ['KSTEP', 'KCOLL', 'KTRACK']
+    if n_estim > 3:
+        estimators.append("MACRO KCOLL")
+        if n_estim > 4:
+            estimators.append(draw(text(alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+                                        min_size=3, max_size=8,
+                                        average_size=4)))
+    disc_batchs = draw(lists(elements=integers(1, 20),
+                             min_size=n_estim, max_size=n_estim))
+    keffs = draw(lists(elements=floats(0.9, 1.1),
+                       min_size=n_estim, max_size=n_estim))
+    sigmas = draw(lists(elements=floats(1e-4, 2e-1),
+                        min_size=n_estim, max_size=n_estim))
+    keff_res = []
+    for iestim, _ in enumerate(estimators):
+        keff_res.append({'estimator': estimators[iestim],
+                         'best_disc_batchs': disc_batchs[iestim],
+                         'used_batch': 100 - disc_batchs[iestim],
+                         'bestkeffres': {
+                             'keff': keffs[iestim],
+                             'sigma': sigmas[iestim],
+                             'sigma%': sigmas[iestim]/keffs[iestim]*100}})
+    return keff_res
+
+def bekeff_t4_output(be_keff):
+    r'''Print in a string the best estimation of k\ :sub:`eff` as in Tripoli-4
+    outputs.
+    '''
+    t4out = []
+    for bestim in be_keff:
+        t4out.append(" "*10 + "{0} ESTIMATOR\n".format(bestim['estimator']))
+        t4out.append(" "*9 + "-"*(len(t4out[-1])+4) + "\n\n\n")
+        t4out.append(" "*9
+                     + "best results are obtained with discarding {} batches"
+                     .format(bestim['best_disc_batchs'])
+                     + "\n\n")
+        t4out.append(" "*9
+                     + "number of batch used: {}".format(bestim['used_batch'])
+                     + " "*8
+                     + "keff = {0:.6e}".format(bestim['bestkeffres']['keff'])
+                     + " "*5
+                     + "sigma = {0:.6e}".format(bestim['bestkeffres']['sigma'])
+                     + " "*5
+                     + "sigma% = {0:.6e}".format(bestim['bestkeffres']['sigma%'])
+                     + "\n\n\n")
+    return ''.join(t4out)
+
+
+@settings(max_examples=5)
+@given(keff_res=keff_best_estimation(5))
+def test_parse_kij_keff_roundtrip(keff_res):
+    r'''Test printing k\ :sub:`eff` best estimation and optionally k\ :sub:`ij`
+    best estimation as Tripoli-4 output in a string.
+    '''
+    print(keff_res)
+    bekeff_t4_out = bekeff_t4_output(keff_res)
+    print(bekeff_t4_out)
+    pres = pygram.defkeffblock.parseString(bekeff_t4_out)
+    assert pres
+    assert len(pres) == 1
+    assert len(pres[0]) == len(keff_res)
+    assert sorted(list(pres[0][0].keys())) == sorted(list(keff_res[0].keys()))
+    print(type(pres[0][0]))
+    print(pres[0][0].asDict())
+    for ikeff, bekeff in enumerate(keff_res):
+        for key in bekeff:
+            if key != 'bestkeffres':
+                assert bekeff[key] == pres[0][ikeff][key]
+            else:
+                for ikey in bekeff[key]:
+                    assert np.isclose(bekeff[key][ikey],
+                                      pres[0][ikeff][key][ikey])
