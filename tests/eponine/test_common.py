@@ -763,7 +763,6 @@ def keff_best_estimation(draw, n_estim):
                              'keff': keffs[iestim],
                              'sigma': sigmas[iestim],
                              'sigma%': sigmas[iestim]/keffs[iestim]*100}})
-    is_kij = draw(booleans())
     return keff_res
 
 def bekeff_t4_output(be_keff):
@@ -791,15 +790,13 @@ def bekeff_t4_output(be_keff):
     return ''.join(t4out)
 
 
-@settings(max_examples=5)
+@settings(max_examples=100)
 @given(keff_res=keff_best_estimation(5))
 def test_parse_best_keff_roundtrip(keff_res):
     r'''Test printing k\ :sub:`eff` best estimation and optionally k\ :sub:`ij`
     best estimation as Tripoli-4 output in a string.
     '''
-    print(keff_res)
     bekeff_t4_out = bekeff_t4_output(keff_res)
-    # print(bekeff_t4_out)
     pres = pygram.defkeffblock.parseString(bekeff_t4_out)
     assert pres
     assert len(pres) == 1
@@ -861,68 +858,65 @@ def kij_results(draw, dimension):
     ratio.
 
     Eigenvectors matrix is required to have det = 0. Used eigenvectors are
-    normalized.
+    normalized. The eigenvectors considered here are the usual ones, i.e.
+    *right* eigenvectors (satifying *A*x = λx).
 
     :param int dimension: max dimension of the squared matrix
     :returns: 3 numpy.ndarray for eigenvalues, eigenvectors and real part of
               the matrix in T4 outputs (alawys real afak)
     '''
     dim = draw(integers(3, dimension))
-    ervals = draw(arrays(dtype=FTYPE, shape=(dim), elements=floats(0, 1)))
-    assume(ervals[0] != 0)
-    rdmim = draw(integers(0, dim//2))
+    rdmim = draw(integers(0, (dim-1)//2))
     eivals = draw(arrays(dtype=FTYPE, shape=(rdmim), elements=floats(0, 1e-3)))
     eivals = np.append(eivals, -eivals)
     eivals = np.insert(eivals, 0, values=[0]*(dim-rdmim*2))
+    ervals = draw(arrays(dtype=FTYPE, shape=(dim-rdmim), elements=floats(0, 1),
+                         fill=nothing()))
+    if rdmim != 0:
+        ervals = np.append(ervals, ervals[-rdmim:])
+    assume(ervals[0] != 0)
     evals = ervals + 1j*eivals
     evecs = draw(arrays(dtype=FTYPE, shape=(dim, dim), elements=floats(0, 1)))
     assume(np.linalg.det(evecs) != 0)
     nevecs = evecs / np.linalg.norm(evecs, axis=1).reshape(dim, 1)
     assume(np.linalg.det(nevecs) != 0)
     matrix = np.dot(np.dot(nevecs, np.diag(evals)), np.linalg.inv(nevecs))
-    print(matrix)
-    print("avant le kijdict")
     kijdict = draw(kij_best_estimation(evals, matrix))
-    print(kijdict)
-    # lvals, lvecs = np.linalg.eig(matrix.T)
-    # assume(np.allclose(np.sort(evals), np.sort(lvals)))
-    # stddevmat = draw(arrays(dtype=FTYPE,
-    #                         shape=(dim, dim),
-    #                         elements=floats(0, 1)))
-    # sensibmat = draw(arrays(dtype=FTYPE,
-    #                         shape=(dim, dim),
-    #                         elements=floats(0, 1)))
-    return evals, evecs, kijdict  #,np.real(matrix)#lvecs, stddevmat, sensibmat
-
-@composite
-def squared_matrix(draw, dim):
-    r'''Composite Hypothesis strategy to generate squared matrix in order to
-    parse them as standard deviation and sensibility matrices as used in
-    k\ :sub:`ij` estimation, more precisely in default k\ :sub:`eff` block.
-
-    :param int dim: dimension of the squared matrix, corresponding to
-                    k\ :sub:`ij` matrix dimension
-    :returns: `numpy.ndarray`
-    '''
-    matrix = draw(arrays(dtype=FTYPE, shape=(dim, dim), elements=floats(0, 1)))
-    return matrix
+    return evals, evecs, kijdict
 
 @composite
 def kij_best_estimation(draw, evals, kijmat):
-    # egvals, egvecs, kijmat = draw(kij_results(5))
-    # tmat = draw(arrays(
-    #     dtype=FTYPE, shape=kijmat.shape, elements=floats(0, 1)))
-    # olvals, olvec = np.linalg.eig(tmat.T)
-    # print(olvals, olvec)
+    r'''Composite Hypothesis strategy to generate additional k\ :sub:`ij`
+    elements appearing in Tripoli-4 listing in the k\ :sub:`eff` best
+    estimation block.
+
+    Additional elements are:
+
+    * *left* eigenvectors, corresponding to fission source rate (satifying
+      x*A* = λx)
+    * standard deviation matrix, squared matrix containing positive floats
+    * sensibility matrix, squared matrix containing positive floats
+    * spacebins, corresponding to columns and rows of all the matrices
+      (including k\ :sub:`ij` matrix)
+
+    Spacebins can be volume numbers (so a `numpy.array` of int with (nbins,)
+    as shape) or space meshes, each bin being of dimension 3 (space), so a
+    `numpy.array` of shape (nbins, 3).
+
+    :param numpy.ndarray evals: eigenvalues of k\ :sub:`ij` matrix
+    :param numpy.ndarray kijmat: k\ :sub:`ij` matrix
+    :returns: dictionary corresponding to parsing output with keys
+              ``['estimator', 'batchs_kept', 'kij-keff', 'nbins', 'spacebins',
+              'eigenvector', 'keff_KIJ_matrix', 'keff_StdDev_matrix',
+              'keff_sensibility_matrix']``.
+    '''
     lvals, levec = np.linalg.eig(kijmat.T)
     assume(np.allclose(np.sort(evals), np.sort(lvals)))
     stddevmat = draw(arrays(
         dtype=FTYPE, shape=kijmat.shape, elements=floats(0, 1)))
     sensibmat = draw(arrays(
         dtype=FTYPE, shape=kijmat.shape, elements=floats(0, 1)))
-    print("avant les space bins")
     ismesh = draw(booleans())
-    print(ismesh)
     if ismesh:
         spacebins = draw(lists(elements=tuples(integers(0, kijmat.shape[0]),
                                                integers(0, kijmat.shape[0]),
@@ -932,23 +926,102 @@ def kij_best_estimation(draw, evals, kijmat):
                                unique=True))
     else:
         spacebins = list(range(kijmat.shape[0]))
-    print("spacebins:")
-    print(spacebins)
-    # print("shape:", kijmat.shape)
-    # print("dim:", kijmat.ndim)
     kijdict = {'estimator': 'KIJ',
                'batchs_kept': draw(integers(80, 99)),
                'kij-keff': np.real(evals[0]),
+               'nbins': evals.shape[0],
                'spacebins': np.array(spacebins),
-               'eigenvector': levec[:, 0],
+               'eigenvector': np.real(levec[:, 0]),
                'keff_KIJ_matrix': np.real(kijmat),
                'keff_StdDev_matrix': stddevmat,
                'keff_sensibility_matrix': sensibmat}
     return kijdict
 
-@settings(max_examples=5)
-@given(kij_res=kij_results(5))
-def test_parse_kij_roundtrip(kij_res):
+def matrix_t4_output(matrix, spacebins):
+    r'''Print Tripoli-4 output in a string for matrices as in k\ :sub:`ij` case
+    in k\ :sub:`eff` best estimation block.
+
+    :param numpy.ndarray matrix: matrix to be printed
+    :param numpy.ndarray spacebins: space bins corresponding to columns and
+                                    rows the matrix
+    :returns: string corresponding to the T4 output.
+    '''
+    t4out = []
+    tabwidth = 16*spacebins.shape[0]
+    for spacebin in spacebins:
+        if isinstance(spacebin, np.ndarray):
+            t4out.append(" {0:<15}".format("({0},{1},{2})".format(*spacebin)))
+        else:
+            t4out.append(" {0:^15}".format(spacebin))
+    t4out.append("\n")
+    t4out.append("{0:>24}{0:->{width}}\n".format("", width=tabwidth))
+    for ilin, kij_line in enumerate(matrix):
+        if isinstance(spacebins[ilin], np.ndarray):
+            t4out.append("{0:>9}{1:<15}"
+                         .format("", "({0},{1},{2})".format(*spacebins[ilin])))
+        else:
+            t4out.append("{0:>16}{1:<8}"
+                         .format("", spacebins[ilin]))
+        for kij_col in kij_line:
+            t4out.append("| {0:<14.6e}".format(kij_col))
+        t4out.append("|\n")
+        t4out.append("{0:>24}{0:->{width}}\n".format("", width=tabwidth))
+    return ''.join(t4out)
+
+def kijkeff_t4_output(kijdict):
+    r'''Print in a string the k\ :sub:`ij` best estimation of k\ :sub:`eff` as
+    in Tripoli-4 output. This includes k\ :sub:`ij` matrix, standard deviation
+    matrix and sensibility matrix.
+
+    :param dict kijdict: k\ :sub:`ij` results stored in a dictionary
+    :returns: string corresponding to the T4 output
+    '''
+    t4out = []
+    t4out.append("{0:>10}{1} ESTIMATOR\n".format("", kijdict['estimator']))
+    t4out.append("{0:>10}{1:->13}\n\n".format("", ""))
+    t4out.append("{0:>12}number of last batches kept : {1}\n\n"
+                 .format("", kijdict['batchs_kept']))
+    t4out.append("{0:>12}kij-keff = {1:.6e}\n\n"
+                 .format("", kijdict['kij-keff']))
+    t4out.append("{0:>12}EIGENVECTOR :{0:>6}index{0:>6}source rate\n\n"
+                 .format(""))
+    for ind, ivec in enumerate(kijdict['eigenvector']):
+        t4out.append("{0:>33}{1:<8}{2:.6e}\n\n".format("", ind, np.real(ivec)))
+    t4out.append("\n")
+    t4out.append("{0:>12}K-IJ MATRIX :\n\n".format(""))
+    t4out.append("{0:>24}".format(""))
+    t4out.append(matrix_t4_output(kijdict['keff_KIJ_matrix'],
+                                  kijdict['spacebins']))
+    t4out.append("\n\n\n")
+    t4out.append("{0:>12}STANDARD DEVIATION MATRIX :\n\n".format(""))
+    t4out.append("{0:>24}".format(""))
+    t4out.append(matrix_t4_output(kijdict['keff_StdDev_matrix'],
+                                  kijdict['spacebins']))
+    t4out.append("\n\n\n")
+    t4out.append("{0:>12}SENSIBILITY MATRIX :\n\n".format(""))
+    t4out.append("{0:>24}".format(""))
+    t4out.append(matrix_t4_output(kijdict['keff_sensibility_matrix'],
+                                  kijdict['spacebins']))
+    t4out.append("\n\n\n")
+    return ''.join(t4out)
+
+def extract_list_from_keff_res(keff_res, key):
+    r'''Extract list for a given dictionary key in k\ :sub:`eff` result.
+
+    Used for dictionary comparisons, especially when containing
+    `numpy.ndarray`.
+
+    :param list keff_res: k\ :sub:`eff` results as a list of dictionaries, it
+                          can be a sublist of the initial list (especially when
+                          k\ :sub:`ij` results are present)
+    :param str key: dictionary key to match
+    :returns: list of objects matching the given key
+    '''
+    return list(map(lambda x: x[key], keff_res))
+
+@settings(max_examples=100)
+@given(kij_res=kij_results(5), keff_res=keff_best_estimation(3))
+def test_parse_kij_roundtrip(kij_res, keff_res):
     r'''Test printing k\ :sub:`ij` results as Tripoli-4 output from random
     tuples and array got from Hypothesis.
 
@@ -981,3 +1054,21 @@ def test_parse_kij_roundtrip(kij_res):
     assert np.allclose(pres[0]['kij_eigenval'], evals)
     assert np.allclose(pres[0]['kij_eigenvec'], evecs)
     assert np.allclose(pres[0]['kij_matrix'], matrix)
+    kijkeff_t4_out = bekeff_t4_output(keff_res)
+    kijkeff_t4_out = ''.join([kijkeff_t4_out, kijkeff_t4_output(kijdict)])
+    pres = pygram.defkeffblock.parseString(kijkeff_t4_out)
+    assert pres
+    assert len(pres[0]) == len(keff_res+[kijdict]) == 4
+    assert (list(map(lambda x: x['estimator'], pres[0]))
+            == list(map(lambda x: x['estimator'], keff_res+[kijdict])))
+    # test keff_best_estimation
+    assert (extract_list_from_keff_res(pres[0][:-1], 'best_disc_batchs')
+            == extract_list_from_keff_res(keff_res, 'best_disc_batchs'))
+    for num in ['keff', 'sigma', 'sigma%']:
+        assert (np.allclose(
+            list(map(lambda x, k=num: x['bestkeffres'][k], pres[0][:-1])),
+            list(map(lambda x, k=num: x['bestkeffres'][k], keff_res))))
+    # test kij estimator
+    keys = [tkey for tkey in list(kijdict.keys()) if tkey != 'estimator']
+    for key in keys:
+        assert np.allclose(pres[0][-1][key], kijdict[key])

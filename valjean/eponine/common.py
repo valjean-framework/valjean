@@ -1274,8 +1274,12 @@ def convert_kij_keff(res):
 
     ::
 
-       {'estimator': str, 'batchs_kept': int, 'kij-keff': float,
-        'nbins': int, 'spacebins': numpy.array of int or tuple(s0, s1, s2),
+       {'estimator': str,
+        'batchs_kept': int,
+        'kij-keff': float,
+        'nbins': int,
+        'spacebins': numpy.array of int with shape (nbins,) or (nbins, 3), this
+                     last case corresponding to space mesh,
         'eigenvector': numpy.array,
         'keff_KIJ_matrix': numpy.matrix,
         'keff_StdDev_matrix': numpy matrix,
@@ -1291,28 +1295,21 @@ def convert_kij_keff(res):
     if nbins != len(egvec):
         LOGGER.warning("[31mIssue in number of fissile volumes "
                        "and size of eigenvector[0m")
-    # For the moment 2 possibilities seen for space splitting: mesh or volumes
-    # in mesh case: meshes are listed in 1st row of matrix (3 elements)
-    # in volume case: list of fissile volumes given, equivalent to 1st row of
-    # matrix -> only way kept as closer to mesh case
-    if isinstance(res['keff_KIJ_matrix'][0][0], list):
-        dtspace = np.dtype([('s0', ITYPE), ('s1', ITYPE), ('s2', ITYPE)])
-        spacebins = np.empty(len(res['keff_KIJ_matrix'][0]), dtype=dtspace)
-        for ielt, spelt in enumerate(res['keff_KIJ_matrix'][0]):
-            spacebins[ielt] = np.array(spelt)
-    else:
-        spacebins = np.array(res['keff_KIJ_matrix'][0])
-    if spacebins.size != len(res['keff_KIJ_matrix'][1:]):
+    spacebins = np.array(res['keff_KIJ_matrix'][0])
+    if spacebins.shape[0] != len(res['keff_KIJ_matrix'][1:]):
         LOGGER.warning("[31mStrange: not the dimension in space mesh and "
                        "matrix, matrix expected to be squared[0m")
+    if spacebins.shape[0] != nbins:
+        LOGGER.warning("[31mStrange: not the same number of space bins and "
+                       "eigenvectors[0m")
     # Fill the 3 matrices
-    kijmat = np.empty([spacebins.size, spacebins.size])
+    kijmat = np.empty([nbins, nbins])
     for irow, row in enumerate(res['keff_KIJ_matrix'][1:]):
         kijmat[irow] = np.array(tuple(row[1:]))
-    stddevmat = np.empty([spacebins.size, spacebins.size])
+    stddevmat = np.empty([nbins, nbins])
     for irow, row in enumerate(res['keff_StdDev_matrix'][1:]):
         stddevmat[irow] = np.array(tuple(row[1:]))
-    sensibmat = np.empty([spacebins.size, spacebins.size])
+    sensibmat = np.empty([nbins, nbins])
     for irow, row in enumerate(res['keff_sensibility_matrix'][1:]):
         sensibmat[irow] = np.array(tuple(row[1:]))
     return {'estimator': res['estimator'],
