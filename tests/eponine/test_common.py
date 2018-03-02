@@ -25,12 +25,28 @@ def shapes(draw, max_sides=(3, 3, 3, 5, 5, 1, 1)):
     mytuple = draw(tuples(*map(lambda i: integers(1, i), max_sides)))
     return mytuple
 
+def integrated_array(array, axis=None):
+    '''Get structured array summed on the given axis.
+    '''
+    quantity = array.dtype.names[0]
+    nshape = ([x if ix not in axis else 1 for ix, x in enumerate(array.shape)]
+              if axis else (1,)*7)
+    sumarr = np.empty(nshape, dtype=array.dtype)
+    sumarr[quantity] = array[quantity].sum(axis, keepdims=True)
+    sumarr['sigma'] = np.sum((array['sigma']*array[quantity]/100.)**2,
+                             axis, keepdims=True)
+    tmpqty = np.copy(sumarr[quantity])
+    tmpqty[tmpqty == 0] = -100
+    sumarr['sigma'] = np.sqrt(sumarr['sigma'])/tmpqty*100
+    sumarr['sigma'][sumarr['sigma'] <= 0] = 100
+    return sumarr
 
 @composite
 def array_and_bins(draw, dtype,
                    max_dim=(3, 3, 3, 5, 5, 1, 1),
                    elements=tuples(floats(0, 1.), floats(0., 100.)),
-                   reverse=booleans()):
+                   reverse=booleans(),
+                   integrated=just(False)):
     '''Composite Hypothesis strategy to generate shapes, then array and bins
     corresponding.
 
@@ -52,7 +68,18 @@ def array_and_bins(draw, dtype,
                                  reverse=reverse)),
                 'phi': draw(bins(elements=floats(0, 2*np.pi), nbins=shape[6],
                                  reverse=reverse))}
-    return array, the_bins
+    if shape[4] == 1:
+        print("[33m1 seul bin en temps ![0m")
+    larray = {}
+    if integrated:
+        if shape[4] != 1 and shape[5] == shape[6] == 1:
+            larray['integrated'] = integrated_array(array, (0, 1, 2, 3))
+        else:
+            larray['integrated'] = integrated_array(array)
+        if shape[:3] != (1, 1, 1) and shape[-3:] == (1, 1, 1):
+            larray['energy_integrated'] = integrated_array(array, (3,))
+    larray['default'] = array
+    return larray, the_bins
 
 
 @composite
@@ -95,7 +122,8 @@ def test_flip_mesh(array_bins):
 
     Flip bins if necessary and check if they were correctly flipped.
     '''
-    array, lbins = array_bins
+    larray, lbins = array_bins
+    array = larray['default']
     note('shape = ' + str(array.shape))
     note('content = ' + str(array))
     note(lbins['e'].shape)
@@ -135,7 +163,8 @@ def test_flip_spectrum(array_bins):
 
     Flip bins if necessary and check if they were correctly flipped.
     '''
-    array, lbins = array_bins
+    larray, lbins = array_bins
+    array = larray['default']
     incr = dict(map(
         lambda i: (i[0], 1 if len(i[1]) > 1 and i[1][1] > i[1][0] else -1),
         lbins.items()))
@@ -146,10 +175,8 @@ def test_flip_spectrum(array_bins):
     spectrum.arrays['default'] = array
     spectrum.flip_bins()
 
-    assert np.all(np.diff(spectrum.bins['e']) > 0.0)
-    assert np.all(np.diff(spectrum.bins['t']) > 0.0)
-    assert np.all(np.diff(spectrum.bins['mu']) > 0.0)
-    assert np.all(np.diff(spectrum.bins['phi']) > 0.0)
+    for var in ['e', 't', 'mu', 'phi']:
+        assert np.all(np.diff(spectrum.bins[var]) > 0.0)
     for comp in array.dtype.names:
         assert np.array_equal(
             array[comp],
@@ -227,11 +254,13 @@ def make_mesh_t4_output(mesh, ebins, tbins):
     return ''.join(t4out)
 
 
+@settings(max_examples=5)
 @given(array_bins=array_and_bins(
     dtype=np.dtype([('tally', FTYPE), ('sigma', FTYPE)]),
     max_dim=(3, 3, 3, 3, 3, 1, 1),
     elements=tuples(floats(0, 1), floats(0, 100)),
-    reverse=just(False)))
+    reverse=just(False),
+    integrated=booleans()))
 def test_parse_mesh_roundtrip(array_bins):
     '''Test printing mesh as Tripoli-4 output from random arrays got from
     Hypothesis. Also get energy and time bins.
@@ -252,7 +281,8 @@ def test_parse_mesh_roundtrip(array_bins):
        and time. To avoid warning about that with pytest it is easier to limit
        these dimensions to 3 bins (from few runs).
     '''
-    array, lbins = array_bins
+    larray, lbins = array_bins
+    array = larray['default']
     LOGGER.debug("shape: %s", str(array.shape))
     mesh_str = make_mesh_t4_output(array, lbins['e'], lbins['t'])
     note('mesh output:\n' + mesh_str)
@@ -443,6 +473,7 @@ def compare_bins(bins, spectrum_res):
             assert np.allclose(spectrum_res[key+'bins'], bins[key])
 
 
+@settings(max_examples=5)
 @given(array_bins=array_and_bins(dtype=np.dtype([('score', FTYPE),
                                                  ('sigma', FTYPE),
                                                  ('score/lethargy', FTYPE)]),
@@ -450,7 +481,8 @@ def compare_bins(bins, spectrum_res):
                                  elements=tuples(floats(0, 1),
                                                  floats(0, 100),
                                                  floats(0, 1)),
-                                 reverse=just(False)),
+                                 reverse=just(False),
+                                 integrated=booleans()),
        units=booleans())
 def test_parse_spectrum_roundtrip(array_bins, units):
     '''Test printing spectrum as Tripoli-4 output from random arrays got from
@@ -474,7 +506,8 @@ def test_parse_spectrum_roundtrip(array_bins, units):
        µ or φ. To avoid warning about that with pytest it is easier to limit
        these dimensions to 3 bins (from few runs).
     '''
-    array, bins = array_bins
+    larray, bins = array_bins
+    array = larray['default']
     LOGGER.debug("shape: %s", str(array.shape))
     spectrum_t4out = spectrum_t4_output(array, bins, units)
     pres = pygram.scoreblock.parseString(spectrum_t4out)
@@ -655,7 +688,7 @@ def test_parse_greenbands_roundtrip(array_bins, disc_batch):
 
 
 def keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb):
-    '''Pring keff as generic response of Tripoli-4.'''
+    r'''Print k\ :sub:`eff` as generic response of Tripoli-4.'''
     t4out = []
     t4out.append(" "*8 + "ENERGY INTEGRATED RESULTS\n\n")
     t4out.append("number of batches used: 80\n\n")
