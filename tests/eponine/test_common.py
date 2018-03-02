@@ -790,7 +790,7 @@ def bekeff_t4_output(be_keff):
     return ''.join(t4out)
 
 
-@settings(max_examples=100)
+@settings(max_examples=5)
 @given(keff_res=keff_best_estimation(5))
 def test_parse_best_keff_roundtrip(keff_res):
     r'''Test printing k\ :sub:`eff` best estimation and optionally k\ :sub:`ij`
@@ -937,6 +937,28 @@ def kij_best_estimation(draw, evals, kijmat):
                'keff_sensibility_matrix': sensibmat}
     return kijdict
 
+def kij_sources_t4_output(kijdict):
+    r'''Print Tripoli-4 output in a string k\ :sub:`ij` sources.
+
+    Uses the *left* eigenvector calculated in :meth:`~kij_best_estimation` and
+    stored in :py:attr:`kijdict` as sources. In a real T4 output this vector is
+    supposed to be closed to the sources vector but different as evaluated from
+    a different estimator.
+
+    :param dict kijdict: dictionary containing inputs
+    :returns: string corresponding to T4 output
+    '''
+    t4out = []
+    t4out.append("{0:>8}ENERGY INTEGRATED RESULTS\n\n".format(""))
+    t4out.append("number of batches used: {}\n\n"
+                 .format(kijdict['batchs_kept']))
+    t4out.append("SOURCES VECTOR :\n\n")
+    t4out.append("Sources are ordered following GEOMCOMP:\n\n")
+    for source in kijdict['eigenvector']:
+        t4out.append("{0:.6e}\n".format(source))
+    t4out.append("\n")
+    return ''.join(t4out)
+
 def matrix_t4_output(matrix, spacebins):
     r'''Print Tripoli-4 output in a string for matrices as in k\ :sub:`ij` case
     in k\ :sub:`eff` best estimation block.
@@ -1019,7 +1041,7 @@ def extract_list_from_keff_res(keff_res, key):
     '''
     return list(map(lambda x: x[key], keff_res))
 
-@settings(max_examples=100)
+@settings(max_examples=5)
 @given(kij_res=kij_results(5), keff_res=keff_best_estimation(3))
 def test_parse_kij_roundtrip(kij_res, keff_res):
     r'''Test printing k\ :sub:`ij` results as Tripoli-4 output from random
@@ -1040,8 +1062,8 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
       * Eigenvectors
       * Matrix
     '''
-    # evals, evecs, matrix = kij_res
     evals, evecs, kijdict = kij_res
+    # KIJ RESULT block
     matrix = kijdict['keff_KIJ_matrix']
     kij_t4_out = kij_t4_output(evals, evecs, matrix)
     note(kij_t4_out)
@@ -1054,6 +1076,14 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
     assert np.allclose(pres[0]['kij_eigenval'], evals)
     assert np.allclose(pres[0]['kij_eigenvec'], evecs)
     assert np.allclose(pres[0]['kij_matrix'], matrix)
+    # KIJ SOURCES block
+    kij_sources_t4_out = kij_sources_t4_output(kijdict)
+    pres = pygram.kijsources.parseString(kij_sources_t4_out)
+    assert pres
+    assert sorted(list(pres[0].keys())) == ['kij_sources_order',
+                                            'kij_sources_vals', 'used_batch']
+    assert np.allclose(pres[0]['kij_sources_vals'], kijdict['eigenvector'])
+    # KEFF BEST ESTIMATION block
     kijkeff_t4_out = bekeff_t4_output(keff_res)
     kijkeff_t4_out = ''.join([kijkeff_t4_out, kijkeff_t4_output(kijdict)])
     pres = pygram.defkeffblock.parseString(kijkeff_t4_out)
