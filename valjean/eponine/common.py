@@ -804,7 +804,7 @@ class SpectrumDictBuilder(DictBuilder):
                     dtype=self.arrays['default'].dtype)
 
             # Fill integrated result if exist
-            if 'integrated_res' in ispec:
+            if 'integrated_res' in ispec and 'integrated_res' in self.arrays:
                 iintres = ispec['integrated_res']
                 index = (0, 0, 0, 0, self.itime, self.imu, self.iphi)
                 self.arrays['integrated_res'][index] = (np.array(

@@ -45,8 +45,7 @@ def integrated_array(array, axis=None):
 def array_and_bins(draw, dtype,
                    max_dim=(3, 3, 3, 5, 5, 1, 1),
                    elements=tuples(floats(0, 1.), floats(0., 100.)),
-                   reverse=booleans(),
-                   integrated=just(False)):
+                   reverse=booleans()):
     '''Composite Hypothesis strategy to generate shapes, then array and bins
     corresponding.
 
@@ -68,17 +67,21 @@ def array_and_bins(draw, dtype,
                                  reverse=reverse)),
                 'phi': draw(bins(elements=floats(0, 2*np.pi), nbins=shape[6],
                                  reverse=reverse))}
+    larray = {}
+    larray['default'] = array
     if shape[4] == 1:
         print("[33m1 seul bin en temps ![0m")
-    larray = {}
-    if integrated:
-        if shape[4] != 1 and shape[5] == shape[6] == 1:
-            larray['integrated'] = integrated_array(array, (0, 1, 2, 3))
-        else:
-            larray['integrated'] = integrated_array(array)
-        if shape[:3] != (1, 1, 1) and shape[-3:] == (1, 1, 1):
-            larray['energy_integrated'] = integrated_array(array, (3,))
-    larray['default'] = array
+    print("SHAPE:", shape)
+    # if integrated:
+    if draw(booleans()):
+        print("TESTING INTEGRATED")
+        if shape[5] == shape[6] == 1:
+            if shape[4] != 1:
+                larray['integrated'] = integrated_array(array, (0, 1, 2, 3))
+            else:
+                larray['integrated'] = integrated_array(array)
+                if ((shape[:3] != (1, 1, 1) and draw(booleans()))):
+                    larray['energy_integrated'] = integrated_array(array, (3,))
     return larray, the_bins
 
 
@@ -135,7 +138,7 @@ def test_flip_mesh(array_bins):
     mesh = MeshDictBuilder(['tally', 'sigma'], array.shape)
     mesh.bins['e'] = lbins['e']
     mesh.bins['t'] = lbins['t']
-    mesh.arrays['default'] = array
+    mesh.arrays = dict(larray)
     mesh.flip_bins()
     assert np.all(np.diff(mesh.bins['e']) > 0.0)
     assert np.all(np.diff(mesh.bins['t']) > 0.0)
@@ -144,6 +147,14 @@ def test_flip_mesh(array_bins):
         assert np.array_equal(array[comp],
                               mesh.arrays['default'][comp]
                               [:, :, :, ::incr['e'], ::incr['t'], :, :])
+        if 'integrated' in larray:
+            if array.shape[4] > 1:
+                assert np.array_equal(
+                    larray['integrated'][comp],
+                    mesh.arrays['integrated'][comp][..., :, ::incr['t'], :, :])
+            else:
+                assert np.array_equal(larray['integrated'][comp],
+                                      mesh.arrays['integrated'][comp])
 
 
 @given(array_bins=array_and_bins(
@@ -163,6 +174,7 @@ def test_flip_spectrum(array_bins):
 
     Flip bins if necessary and check if they were correctly flipped.
     '''
+    print("------------------")
     larray, lbins = array_bins
     array = larray['default']
     incr = dict(map(
@@ -172,17 +184,26 @@ def test_flip_spectrum(array_bins):
     spectrum = SpectrumDictBuilder(array.dtype.names, array.shape)
     spectrum.bins = {'e': lbins['e'], 't': lbins['t'], 'mu': lbins['mu'],
                      'phi': lbins['phi']}
-    spectrum.arrays['default'] = array
+    spectrum.arrays = dict(larray)
     spectrum.flip_bins()
 
     for var in ['e', 't', 'mu', 'phi']:
         assert np.all(np.diff(spectrum.bins[var]) > 0.0)
+
     for comp in array.dtype.names:
         assert np.array_equal(
             array[comp],
             spectrum.arrays['default'][comp]
             [:, :, :, ::incr['e'], ::incr['t'], ::incr['mu'], ::incr['phi']])
-
+        if 'integrated' in larray:
+            if array.shape[4] > 1:
+                assert np.array_equal(
+                    larray['integrated'][comp],
+                    spectrum.arrays['integrated'][comp]
+                    [:, :, :, :, ::incr['t'], :, :])
+            else:
+                assert np.array_equal(larray['integrated'][comp],
+                                      spectrum.arrays['integrated'][comp])
 
 def mesh_score_str():
     '''String to a mesh block in parsing, describing the score.'''
@@ -193,6 +214,25 @@ def mesh_score_str():
     '''
     return msc_str
 
+def mesh_str(mesh, ebin, tbin):
+    '''Print Tripoli-4 mesh output as a string.
+
+    :param numpy.ndarray mesh: mesh from Hypothesis
+    :param int ebin: energy bin
+    :param int tbin: time bin
+    :returns: T4 output as a string
+    '''
+    t4out = []
+    shape = mesh.shape
+    for is0 in range(shape[0]):
+        for is1 in range(shape[1]):
+            for is2 in range(shape[2]):
+                index = (is0, is1, is2, ebin, tbin, 0, 0)
+                t4out.append("\t({0},{1},{2})\t\t{3:.6e}\t{4:.6e}\n"
+                             .format(is0, is1, is2,
+                                     mesh[index]['tally'],
+                                     mesh[index]['sigma']))
+    return ''.join(t4out)
 
 def build_mesh_t4_output(mesh, ebins, tbin):
     '''Build the Tripoli-4 output for meshes, looping on energy bins and
@@ -204,28 +244,44 @@ def build_mesh_t4_output(mesh, ebins, tbin):
     :returns: T4 output as a string
     '''
     t4out = []
-    shape = mesh.shape
-    for iebin in range(len(ebins)-1):
-        t4out.append("Energy range (in MeV): {0:.6e} - {1:.6e}\n"
-                     .format(ebins[iebin], ebins[iebin+1]))
-        for is0 in range(shape[0]):
-            for is1 in range(shape[1]):
-                for is2 in range(shape[2]):
-                    index = (is0, is1, is2, iebin, tbin, 0, 0)
-                    t4out.append("\t({0},{1},{2})\t\t{3:.6e}\t{4:.6e}\n"
-                                 .format(is0, is1, is2,
-                                         mesh[index]['tally'],
-                                         mesh[index]['sigma']))
+    if ebins is None:
+        print("[31mmesh integrated in energy[0m")
+        t4out.append("ENERGY INTEGRATED RESULTS :\n")
+        t4out.append(mesh_str(mesh, 0, tbin))
         t4out.append("\n")
+    else:
+        for iebin in range(len(ebins)-1):
+            t4out.append("Energy range (in MeV): {0:.6e} - {1:.6e}\n"
+                         .format(ebins[iebin], ebins[iebin+1]))
+            t4out.append(mesh_str(mesh, iebin, tbin))
+            t4out.append("\n")
     return ''.join(t4out)
 
+def integres_str(res, tbin, flag=False):
+    '''Build the Tripoli-4 output for integrated results, in spectrum or mesh
+    cases for example.
 
-def make_mesh_t4_output(mesh, ebins, tbins):
+    :param numpy.ndarray res: 7 dimensions structured `numpy.ndarray`
+    :param int tbin: time bin
+    :param bool flag: print or not `"ENERGY INTEGRATED RESULTS"` flag
+    :returns: T4 output as a string
+    '''
+    t4out = []
+    if flag:
+        t4out.append("{0:>9}ENERGY INTEGRATED RESULTS\n\n".format(""))
+        t4out.append("         number of first discarded batches : 1\n\n")
+    quantity = res.dtype.names[0]
+    t4out.append("number of batches used: 1000    {0:.6e}    {1:6e}\n\n"
+                 .format(res[(0, 0, 0, 0, tbin, 0, 0)][quantity],
+                         res[(0, 0, 0, 0, tbin, 0, 0)]['sigma']))
+    return ''.join(t4out)
+
+def make_mesh_t4_output(meshes, ebins, tbins):
     '''Build the Tripoli-4 output for meshes from time binning.
     If only one time bin, build the T4 mesh output string directly, else loop
     on tbins and fill the output.
 
-    :param numpy.ndarray mesh: mesh from Hypothesis
+    :param list of numpy.ndarray meshes: meshes from Hypothesis
     :param list ebins: energy bins
     :param int tbin: time bin
     :returns: T4 output as a string
@@ -235,7 +291,14 @@ def make_mesh_t4_output(mesh, ebins, tbins):
     t4out.append("\n")
     if len(tbins) < 3:
         t4out.append("\n")
-        t4out.append(build_mesh_t4_output(mesh, ebins, 0))
+        t4out.append(build_mesh_t4_output(meshes['default'], ebins, 0))
+        if 'energy_integrated' in meshes:
+            t4out.append(build_mesh_t4_output(meshes['energy_integrated'],
+                                              None, 0))
+        if 'integrated' in meshes:
+            t4out.append(integres_str(meshes['integrated'], 0,
+                                      False if 'energy_integrated' in meshes
+                                      else True))
     else:
         for itbin in range(len(tbins)-1):
             mintime = (tbins[itbin] if tbins[itbin] < tbins[itbin+1]
@@ -250,17 +313,17 @@ def make_mesh_t4_output(mesh, ebins, tbins):
             '''.format(itbin, mintime, maxtime)
             t4out.append(time_str)
             t4out.append("\n")
-            t4out.append(build_mesh_t4_output(mesh, ebins, itbin))
+            t4out.append(build_mesh_t4_output(meshes['default'], ebins, itbin))
+            if 'integrated' in meshes:
+                t4out.append(integres_str(meshes['integrated'], itbin, False))
     return ''.join(t4out)
 
 
-@settings(max_examples=5)
 @given(array_bins=array_and_bins(
     dtype=np.dtype([('tally', FTYPE), ('sigma', FTYPE)]),
     max_dim=(3, 3, 3, 3, 3, 1, 1),
     elements=tuples(floats(0, 1), floats(0, 100)),
-    reverse=just(False),
-    integrated=booleans()))
+    reverse=just(False)))
 def test_parse_mesh_roundtrip(array_bins):
     '''Test printing mesh as Tripoli-4 output from random arrays got from
     Hypothesis. Also get energy and time bins.
@@ -284,10 +347,15 @@ def test_parse_mesh_roundtrip(array_bins):
     larray, lbins = array_bins
     array = larray['default']
     LOGGER.debug("shape: %s", str(array.shape))
-    mesh_str = make_mesh_t4_output(array, lbins['e'], lbins['t'])
-    note('mesh output:\n' + mesh_str)
-    pres = pygram.scoreblock.parseString(mesh_str)
+    mesh_t4_out = make_mesh_t4_output(larray, lbins['e'], lbins['t'])
+    note('mesh output:\n' + mesh_t4_out)
+    pres = pygram.scoreblock.parseString(mesh_t4_out)
     assert pres
+    keys = ['integrated_res', 'mesh_res', 'scoring_mode', 'scoring_zone']
+    if 'integrated' in larray and array.shape[4] == 1:
+        assert sorted(list(pres[0].keys())) == keys
+    else:
+        assert sorted(list(pres[0].keys())) == keys[1:]
     parsed_mesh = pres[0]['mesh_res']
     assert np.allclose(parsed_mesh['ebins'], lbins['e'])
     if len(lbins['t']) > 2:
@@ -296,6 +364,23 @@ def test_parse_mesh_roundtrip(array_bins):
     assert array.shape == parsed_mesh['mesh'].shape
     for comp in array.dtype.names:
         assert np.allclose(array[:][comp], parsed_mesh['mesh'][:][comp])
+    if 'integrated' in larray:
+        if array.shape[4] == 1:
+            assert np.isclose(pres[0]['integrated_res']['score'],
+                              larray['integrated'][:]['tally'])
+            assert np.isclose(pres[0]['integrated_res']['sigma'],
+                              larray['integrated'][:]['sigma'])
+        else:
+            assert 'integrated_res' in list(parsed_mesh.keys())
+            assert np.allclose(larray['integrated'][:]['tally'],
+                               parsed_mesh['integrated_res']['score'])
+            assert np.allclose(larray['integrated'][:]['sigma'],
+                               parsed_mesh['integrated_res']['sigma'])
+    if 'energy_integrated' in larray:
+        assert 'eintegrated_mesh' in list(parsed_mesh.keys())
+        for key in ['tally', 'sigma']:
+            assert np.allclose(larray['energy_integrated'][:][key],
+                               parsed_mesh['eintegrated_mesh'][key])
 
 
 def score_str():
@@ -368,10 +453,10 @@ def time_step_str(itbin, tbins):
     else:
         mintime = tbins[itbin+1]
         maxtime = tbins[itbin]
-    t4out.append("          TIME STEP NUMBER : {0}\n".format(itbin))
-    t4out.append("          ------------------------------------\n")
-    t4out.append("                  time min. = {0:.6e}\n".format(mintime))
-    t4out.append("                  time max. = {0:.6e}\n\n".format(maxtime))
+    t4out.append("         TIME STEP NUMBER : {0}\n".format(itbin))
+    t4out.append("         ------------------------------------\n")
+    t4out.append("                 time min. = {0:.6e}\n".format(mintime))
+    t4out.append("                 time max. = {0:.6e}\n\n".format(maxtime))
     return ''.join(t4out)
 
 
@@ -389,10 +474,10 @@ def mu_angle_str(imubin, mubins):
     else:
         minmu = mubins[imubin+1]
         maxmu = mubins[imubin]
-    t4out.append("          MU ANGULAR ZONE : {0}\n".format(imubin))
-    t4out.append("          ------------------------------------\n")
-    t4out.append("                  mu min. = {0:.6e}\n".format(minmu))
-    t4out.append("                  mu max. = {0:.6e}\n\n".format(maxmu))
+    t4out.append("         MU ANGULAR ZONE : {0}\n".format(imubin))
+    t4out.append("         ------------------------------------\n")
+    t4out.append("                 mu min. = {0:.6e}\n".format(minmu))
+    t4out.append("                 mu max. = {0:.6e}\n\n".format(maxmu))
     return ''.join(t4out)
 
 
@@ -410,16 +495,16 @@ def phi_angle_str(iphibin, phibins):
     else:
         minphi = phibins[iphibin+1]
         maxphi = phibins[iphibin]
-    t4out.append("                  PHI ANGULAR ZONE : {0}\n"
-                 "                  ------------------------------------\n"
-                 "                          phi min. = {1:.6e}\n"
-                 "                          phi max. = {2:.6e}\n\n"
+    t4out.append("                 PHI ANGULAR ZONE : {0}\n"
+                 "                 ------------------------------------\n"
+                 "                         phi min. = {1:.6e}\n"
+                 "                         phi max. = {2:.6e}\n\n"
                  .format(iphibin, minphi, maxphi))
     return ''.join(t4out)
 
 
 # pylint: disable=redefined-outer-name
-def spectrum_t4_output(spectrum, bins, units):
+def spectrum_t4_output(spectra, bins, units):
     '''Build the Tripoli-4 output for spectra.
     Loops are done successively on time, µ and φ as it is done in the "real" T4
     outputs. Then the loop on energy bins is called.
@@ -428,7 +513,8 @@ def spectrum_t4_output(spectrum, bins, units):
     output if there are at least 2 bins, except for µ bins when there are more
     than 2 bins in φ (as it is done in "real" outputs).
 
-    :param numpy.ndarray spectrum: spectrum array from Hypothesis
+    :param list of numpy.ndarray spectrum: spectra list containing spectrum
+                                           arrays from Hypothesis
     :param dict bins: dictionary of lists representing binnings. Keys are
                       ``['e', 't', 'mu', 'phi']``.
     '''
@@ -446,8 +532,13 @@ def spectrum_t4_output(spectrum, bins, units):
                     t4out.append(phi_angle_str(iphibin, bins['phi']))
                 space_index = (0, 0, 0)
                 tmuphi_index = (itbin, imubin, iphibin)
-                t4out.append(spectrum_str(spectrum, bins['e'],
+                t4out.append(spectrum_str(spectra['default'], bins['e'],
                                           (space_index, tmuphi_index), units))
+        if 'integrated' in spectra and spectra['integrated'].shape[4] > 1:
+            t4out.append(integres_str(spectra['integrated'], itbin, True))
+    if 'integrated' in spectra and spectra['integrated'].shape[4]==1:
+        print("print integrated")
+        t4out.append(integres_str(spectra['integrated'], 0, True))
     return ''.join(t4out)
 
 
@@ -473,7 +564,6 @@ def compare_bins(bins, spectrum_res):
             assert np.allclose(spectrum_res[key+'bins'], bins[key])
 
 
-@settings(max_examples=5)
 @given(array_bins=array_and_bins(dtype=np.dtype([('score', FTYPE),
                                                  ('sigma', FTYPE),
                                                  ('score/lethargy', FTYPE)]),
@@ -481,8 +571,7 @@ def compare_bins(bins, spectrum_res):
                                  elements=tuples(floats(0, 1),
                                                  floats(0, 100),
                                                  floats(0, 1)),
-                                 reverse=just(False),
-                                 integrated=booleans()),
+                                 reverse=just(False)),
        units=booleans())
 def test_parse_spectrum_roundtrip(array_bins, units):
     '''Test printing spectrum as Tripoli-4 output from random arrays got from
@@ -506,19 +595,34 @@ def test_parse_spectrum_roundtrip(array_bins, units):
        µ or φ. To avoid warning about that with pytest it is easier to limit
        these dimensions to 3 bins (from few runs).
     '''
+    print("**********************")
     larray, bins = array_bins
     array = larray['default']
     LOGGER.debug("shape: %s", str(array.shape))
-    spectrum_t4out = spectrum_t4_output(array, bins, units)
+    spectrum_t4out = spectrum_t4_output(larray, bins, units)
     pres = pygram.scoreblock.parseString(spectrum_t4out)
     assert pres
+    keys = ['integrated_res', 'scoring_mode', 'scoring_zone', 'spectrum_res']
+    if 'integrated' in larray and array.shape[4] == 1:
+        assert sorted(list(pres[0].keys())) == keys
+    else:
+        assert sorted(list(pres[0].keys())) == keys[1:]
     compare_bins(bins, pres[0]['spectrum_res'])
     spectrum = pres[0]['spectrum_res']['spectrum']
     assert array.dtype == spectrum.dtype
     assert array.shape == spectrum.shape
     for comp in array.dtype.names:
         assert np.allclose(array[:][comp], spectrum[:][comp])
-
+    if 'integrated' in larray:
+        if array.shape[4] == 1:
+            for key in ['score', 'sigma']:
+                assert np.isclose(pres[0]['integrated_res'][key],
+                                  larray['integrated'][:][key])
+        else:
+            assert 'integrated_res' in list(pres[0]['spectrum_res'].keys())
+            int_res = pres[0]['spectrum_res']['integrated_res']
+            for key in ['score', 'sigma']:
+                assert np.allclose(larray['integrated'][:][key], int_res[key])
 
 def gb_step_str(istep, sebins):
     '''Print the Tripoli-4 output for Green bands steps (source steps in
@@ -892,11 +996,11 @@ def kij_results(draw, dimension):
 
     Eigenvectors matrix is required to have det = 0. Used eigenvectors are
     normalized. The eigenvectors considered here are the usual ones, i.e.
-    *right* eigenvectors (satifying *A*x = λx).
+    **right** eigenvectors (satifying **A** X = λX).
 
     :param int dimension: max dimension of the squared matrix
     :returns: 3 numpy.ndarray for eigenvalues, eigenvectors and real part of
-              the matrix in T4 outputs (alawys real afak)
+              the matrix in T4 outputs (always real afak)
     '''
     dim = draw(integers(3, dimension))
     rdmim = draw(integers(0, (dim-1)//2))
@@ -926,7 +1030,7 @@ def kij_best_estimation(draw, evals, kijmat):
     Additional elements are:
 
     * *left* eigenvectors, corresponding to fission source rate (satifying
-      x*A* = λx)
+      X **A** = λX)
     * standard deviation matrix, squared matrix containing positive floats
     * sensibility matrix, squared matrix containing positive floats
     * spacebins, corresponding to columns and rows of all the matrices
