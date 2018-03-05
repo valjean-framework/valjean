@@ -278,7 +278,7 @@ def test_ifp(datadir):
     assert last_resp['results']['ifp_res']['used_batch'] == 81
 
 def test_kij(datadir):
-    '''Use tripoli-4 result from cylindreDecR_with_kij_on_mesh.d to test
+    r'''Use tripoli-4 result from cylindreDecR_with_kij_on_mesh.d to test
     k\ :sub:`ij` matrix parsing.
     '''
     t4_res = T4Parser.parse_jdd(

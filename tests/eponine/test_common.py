@@ -10,6 +10,8 @@ from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 # pylint: disable=no-value-for-parameter
+# pylint: disable=redefined-outer-name
+
 from valjean.eponine.common import (MeshDictBuilder, SpectrumDictBuilder,
                                     FTYPE)
 import valjean.eponine.pyparsing_t4.grammar as pygram
@@ -24,6 +26,7 @@ def shapes(draw, max_sides=(3, 3, 3, 5, 5, 1, 1)):
     '''
     mytuple = draw(tuples(*map(lambda i: integers(1, i), max_sides)))
     return mytuple
+
 
 def integrated_array(array, axis=None):
     '''Get structured array summed on the given axis.
@@ -40,6 +43,7 @@ def integrated_array(array, axis=None):
     sumarr['sigma'] = np.sqrt(sumarr['sigma'])/tmpqty*100
     sumarr['sigma'][sumarr['sigma'] <= 0] = 100
     return sumarr
+
 
 @composite
 def array_and_bins(draw, dtype,
@@ -69,18 +73,14 @@ def array_and_bins(draw, dtype,
                                  reverse=reverse))}
     larray = {}
     larray['default'] = array
-    if shape[4] == 1:
-        print("[33m1 seul bin en temps ![0m")
-    print("SHAPE:", shape)
-    # if integrated:
+
     if draw(booleans()):
-        print("TESTING INTEGRATED")
         if shape[5] == shape[6] == 1:
             if shape[4] != 1:
                 larray['integrated'] = integrated_array(array, (0, 1, 2, 3))
             else:
                 larray['integrated'] = integrated_array(array)
-                if ((shape[:3] != (1, 1, 1) and draw(booleans()))):
+                if shape[:3] != (1, 1, 1) and draw(booleans()):
                     larray['energy_integrated'] = integrated_array(array, (3,))
     return larray, the_bins
 
@@ -174,7 +174,6 @@ def test_flip_spectrum(array_bins):
 
     Flip bins if necessary and check if they were correctly flipped.
     '''
-    print("------------------")
     larray, lbins = array_bins
     array = larray['default']
     incr = dict(map(
@@ -205,6 +204,7 @@ def test_flip_spectrum(array_bins):
                 assert np.array_equal(larray['integrated'][comp],
                                       spectrum.arrays['integrated'][comp])
 
+
 def mesh_score_str():
     '''String to a mesh block in parsing, describing the score.'''
     msc_str = '''
@@ -213,6 +213,7 @@ def mesh_score_str():
          Cell             tally           sigma (percent)
     '''
     return msc_str
+
 
 def mesh_str(mesh, ebin, tbin):
     '''Print Tripoli-4 mesh output as a string.
@@ -234,6 +235,7 @@ def mesh_str(mesh, ebin, tbin):
                                      mesh[index]['sigma']))
     return ''.join(t4out)
 
+
 def build_mesh_t4_output(mesh, ebins, tbin):
     '''Build the Tripoli-4 output for meshes, looping on energy bins and
     printing all mesh results.
@@ -245,7 +247,6 @@ def build_mesh_t4_output(mesh, ebins, tbin):
     '''
     t4out = []
     if ebins is None:
-        print("[31mmesh integrated in energy[0m")
         t4out.append("ENERGY INTEGRATED RESULTS :\n")
         t4out.append(mesh_str(mesh, 0, tbin))
         t4out.append("\n")
@@ -256,6 +257,7 @@ def build_mesh_t4_output(mesh, ebins, tbin):
             t4out.append(mesh_str(mesh, iebin, tbin))
             t4out.append("\n")
     return ''.join(t4out)
+
 
 def integres_str(res, tbin, flag=False):
     '''Build the Tripoli-4 output for integrated results, in spectrum or mesh
@@ -275,6 +277,7 @@ def integres_str(res, tbin, flag=False):
                  .format(res[(0, 0, 0, 0, tbin, 0, 0)][quantity],
                          res[(0, 0, 0, 0, tbin, 0, 0)]['sigma']))
     return ''.join(t4out)
+
 
 def make_mesh_t4_output(meshes, ebins, tbins):
     '''Build the Tripoli-4 output for meshes from time binning.
@@ -392,6 +395,7 @@ def score_str():
 ''')
     return specscore_str
 
+
 def spectrum_beginning_str(units=False, disc_batch=0):
     '''Beginning of spectrum block in Tripoli-4 output.
     Possibility to add units.
@@ -413,6 +417,7 @@ Units:   MeV                     neut.s^-1       %               neut.s^-1
 
 ''')
     return spec_str
+
 
 def spectrum_str(spectrum, ebins, it_index, units=False, disc_batch=0):
     '''Print Tripoli-4 output for spectrum in a string to be parsed afterwards.
@@ -503,7 +508,6 @@ def phi_angle_str(iphibin, phibins):
     return ''.join(t4out)
 
 
-# pylint: disable=redefined-outer-name
 def spectrum_t4_output(spectra, bins, units):
     '''Build the Tripoli-4 output for spectra.
     Loops are done successively on time, µ and φ as it is done in the "real" T4
@@ -536,8 +540,7 @@ def spectrum_t4_output(spectra, bins, units):
                                           (space_index, tmuphi_index), units))
         if 'integrated' in spectra and spectra['integrated'].shape[4] > 1:
             t4out.append(integres_str(spectra['integrated'], itbin, True))
-    if 'integrated' in spectra and spectra['integrated'].shape[4]==1:
-        print("print integrated")
+    if 'integrated' in spectra and spectra['integrated'].shape[4] == 1:
         t4out.append(integres_str(spectra['integrated'], 0, True))
     return ''.join(t4out)
 
@@ -595,7 +598,6 @@ def test_parse_spectrum_roundtrip(array_bins, units):
        µ or φ. To avoid warning about that with pytest it is easier to limit
        these dimensions to 3 bins (from few runs).
     '''
-    print("**********************")
     larray, bins = array_bins
     array = larray['default']
     LOGGER.debug("shape: %s", str(array.shape))
@@ -624,6 +626,7 @@ def test_parse_spectrum_roundtrip(array_bins, units):
             for key in ['score', 'sigma']:
                 assert np.allclose(larray['integrated'][:][key], int_res[key])
 
+
 def gb_step_str(istep, sebins):
     '''Print the Tripoli-4 output for Green bands steps (source steps in
     energy).
@@ -645,6 +648,7 @@ def gb_step_str(istep, sebins):
     t4out.append(" "*17 + "source energy max. = {0:.6e}\n".format(maxse))
     t4out.append("\n")
     return ''.join(t4out)
+
 
 def gb_with_tab_str(array, bins, disc_batch, istep):
     '''Print Tripoli-4 for Green bands with tabulations.
@@ -672,6 +676,7 @@ def gb_with_tab_str(array, bins, disc_batch, istep):
                         disc_batch=disc_batch))
     return ''.join(t4out)
 
+
 def gb_without_tab_str(array, bins, disc_batch, istep):
     '''Print Tripoli-4 for Green bands without tabulations, i.e. in case of
     dimensions of ``(u, v, w) = (1, 1, 1)``.
@@ -692,6 +697,7 @@ def gb_without_tab_str(array, bins, disc_batch, istep):
                                   disc_batch=disc_batch))
         t4out.append("\n")
     return ''.join(t4out)
+
 
 def gb_t4_output(array, bins, disc_batch):
     '''Build the Tripoli-4 output for Green bands.
@@ -717,6 +723,7 @@ def gb_t4_output(array, bins, disc_batch):
         else:
             t4out.append(gb_with_tab_str(array, bins, disc_batch, istep))
     return ''.join(t4out)
+
 
 @composite
 def green_bands(draw, max_dims=(5, 3, 2, 2, 2, 5)):
@@ -747,6 +754,7 @@ def green_bands(draw, max_dims=(5, 3, 2, 2, 2, 5)):
                        else draw(bins(elements=floats(0, 20), nbins=shape[0],
                                       reverse=booleans())))}
     return array, the_bins
+
 
 @settings(max_examples=100, deadline=300)
 @given(array_bins=green_bands(max_dims=(5, 3, 2, 2, 2, 5)),
@@ -816,6 +824,7 @@ def keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb):
                  .format(fcomb[0], fcomb[1]))
     t4out.append("\n")
     return ''.join(t4out)
+
 
 @settings(max_examples=100)
 @given(corrmat=arrays(dtype=FTYPE, shape=(3, 3), elements=floats(0, 0.5)),
@@ -902,6 +911,7 @@ def keff_best_estimation(draw, n_estim):
                              'sigma%': sigmas[iestim]/keffs[iestim]*100}})
     return keff_res
 
+
 def bekeff_t4_output(be_keff):
     r'''Print in a string the best estimation of k\ :sub:`eff` as in Tripoli-4
     outputs.
@@ -927,7 +937,6 @@ def bekeff_t4_output(be_keff):
     return ''.join(t4out)
 
 
-@settings(max_examples=5)
 @given(keff_res=keff_best_estimation(5))
 def test_parse_best_keff_roundtrip(keff_res):
     r'''Test printing k\ :sub:`eff` best estimation and optionally k\ :sub:`ij`
@@ -983,6 +992,7 @@ def kij_t4_output(evals, evecs, matrix):
     t4out.append("\n")
     return ''.join(t4out)
 
+
 @composite
 def kij_results(draw, dimension):
     r'''Composite Hypothesis strategy to generate eigenvalues, eigenvectors and
@@ -1020,6 +1030,7 @@ def kij_results(draw, dimension):
     matrix = np.dot(np.dot(nevecs, np.diag(evals)), np.linalg.inv(nevecs))
     kijdict = draw(kij_best_estimation(evals, matrix))
     return evals, evecs, kijdict
+
 
 @composite
 def kij_best_estimation(draw, evals, kijmat):
@@ -1074,6 +1085,7 @@ def kij_best_estimation(draw, evals, kijmat):
                'keff_sensibility_matrix': sensibmat}
     return kijdict
 
+
 def kij_sources_t4_output(kijdict):
     r'''Print Tripoli-4 output in a string k\ :sub:`ij` sources.
 
@@ -1095,6 +1107,7 @@ def kij_sources_t4_output(kijdict):
         t4out.append("{0:.6e}\n".format(source))
     t4out.append("\n")
     return ''.join(t4out)
+
 
 def matrix_t4_output(matrix, spacebins):
     r'''Print Tripoli-4 output in a string for matrices as in k\ :sub:`ij` case
@@ -1126,6 +1139,7 @@ def matrix_t4_output(matrix, spacebins):
         t4out.append("|\n")
         t4out.append("{0:>24}{0:->{width}}\n".format("", width=tabwidth))
     return ''.join(t4out)
+
 
 def kijkeff_t4_output(kijdict):
     r'''Print in a string the k\ :sub:`ij` best estimation of k\ :sub:`eff` as
@@ -1164,6 +1178,7 @@ def kijkeff_t4_output(kijdict):
     t4out.append("\n\n\n")
     return ''.join(t4out)
 
+
 def extract_list_from_keff_res(keff_res, key):
     r'''Extract list for a given dictionary key in k\ :sub:`eff` result.
 
@@ -1178,7 +1193,7 @@ def extract_list_from_keff_res(keff_res, key):
     '''
     return list(map(lambda x: x[key], keff_res))
 
-@settings(max_examples=5)
+
 @given(kij_res=kij_results(5), keff_res=keff_best_estimation(3))
 def test_parse_kij_roundtrip(kij_res, keff_res):
     r'''Test printing k\ :sub:`ij` results as Tripoli-4 output from random
