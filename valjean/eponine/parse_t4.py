@@ -218,7 +218,6 @@ def main(myjdd="", batch_num=-1, mesh_lim=None):
         except IndexError:
             print("Eponine: argument needed (jdd name)")
             exit(-1)
-    print(myjdd)
 
     # need to think about endflag (?), meshlim and para arguments
     if mesh_lim:
@@ -226,9 +225,9 @@ def main(myjdd="", batch_num=-1, mesh_lim=None):
     else:
         t4_res = T4Parser.parse_jdd(myjdd, batch_num)
     if t4_res:
-        t4_res.print_t4_stats()
-        print("result of the function =", t4_res.check_t4_times())
-        t4_res.print_t4_times()
+        if LOGGER.isEnabledFor(logging.INFO):
+            t4_res.print_t4_stats()
+            t4_res.print_t4_times()
         return t4_res.check_t4_times()
 
 if __name__ == "__main__":
