@@ -1,4 +1,4 @@
-'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
+r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
 .. _pyparsing_wiki: http://pyparsing.wikispaces.com/
 .. |keff| replace:: k\ :sub:`eff`
@@ -966,13 +966,13 @@ _pertumethod = (Suppress(_pertumethod_kw)
 _pertuorder = Suppress(_pertuorder_kw) + _inums('order')
 _pertutype = Suppress(_pertutype_kw) + Word(alphas)('type')
 _pertucompo = Suppress(_pertucompo_kw) + Word(alphanums+'_')('composition')
-perturbation = (Group(Suppress(_perturbation_kw)
-                      + _perturank
-                      + _pertumethod
-                      + Optional(_pertuorder)
-                      + _pertutype
-                      + _pertucompo).setParseAction(trans.to_dict)
-                ('perturbation_res'))
+pertu_desc = (Group(Suppress(_perturbation_kw)
+                    + _perturank
+                    + _pertumethod
+                    + Optional(_pertuorder)
+                    + _pertutype
+                    + _pertucompo).setParseAction(trans.to_dict)
+              ('perturbation_desc'))
 
 
 # Uncertainties (linked to perturbations ?)
@@ -1013,16 +1013,17 @@ contribpartblock = (Group(Suppress(_nbcontribpart_kw)
 
 
 # Score block
-scoreblock = (scoredesc
-              + (OneOrMore(spectrumblock
-                           | meshblock
-                           | vovspectrumblock
-                           | entropy
-                           | medfile
-                           | defintegratedres
-                           | uncertblock
-                           | uncertintegblock
-                           | gbblock))).setParseAction(trans.convert_score)
+scoreblock = OneOrMore((Group(scoredesc
+                              + (OneOrMore(spectrumblock
+                                           | meshblock
+                                           | vovspectrumblock
+                                           | entropy
+                                           | medfile
+                                           | defintegratedres
+                                           | uncertblock
+                                           | uncertintegblock
+                                           | gbblock)))
+                        .setParseAction(trans.convert_score)))('score_res')
 
 # Response block
 responseblock = (keffblock
@@ -1031,13 +1032,15 @@ responseblock = (keffblock
                  | orderedres
                  | defintegratedres
                  | ifpblock
-                 | perturbation
                  | scoreblock)
 
 response = Group(_star_line
                  + respintro
                  + _star_line
-                 + Group(OneOrMore(responseblock))('results'))
+                 + Group(responseblock)('results'))
+
+perturbation = (OneOrMore(Group(pertu_desc + response('response')))
+                ('perturbation'))
 
 ################################
 #        GENERAL PARSER        #
@@ -1049,6 +1052,7 @@ mygram = (OneOrMore((intro
                         | ifpadjointcriticality)
                      + Optional(defkeffblock)
                      + Optional(contribpartblock)
+                     + Optional(perturbation)
                      + Optional(OneOrMore(runtime)))
                     .setParseAction(trans.to_dict))
           .setParseAction(trans.print_result)

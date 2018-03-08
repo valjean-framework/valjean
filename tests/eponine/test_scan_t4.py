@@ -1,23 +1,14 @@
 '''Tests for the :mod:`scan_t4` module.'''
 
-from hypothesis import given, note, assume, event, settings
-from hypothesis.strategies import (integers, sets, text, lists, composite,
-                                   sampled_from, booleans)
-import pytest
-
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
-from glob import glob
-import os
-import sys
 
 # pylint: disable=wrong-import-order
 import numpy as np
-import valjean.eponine.scan_t4 as scan
 from valjean.eponine.parse_t4 import T4Parser
 from valjean.eponine.pyparsing_t4 import transform
 
 def keffs_checks(keff_res):
-    '''Quick calculations on k\ :sub:`eff` to check covariance matrix
+    r'''Quick calculations on k\ :sub:`eff` to check covariance matrix
     calculation and combination. One huge limitation: formulas used are exactly
     the same as in Tripoli-4, so this is not a real check. Their writting in
     matrix formualtion is not straight forward (need permutation matrices,
@@ -100,7 +91,7 @@ def test_gauss_spectrum(datadir):
     assert t4_res.scan_res.get_last_edited_batch_number() == 400
     resp0 = t4_res.result[-1]['list_responses'][0]
     assert resp0['response_description']['resp_function'] == "COURANT"
-    assert resp0['results'][0]['scoring_mode'] == "SCORE_SURF"
+    assert resp0['results']['score_res'][0]['scoring_mode'] == "SCORE_SURF"
 
 
 def test_tungstene_file(datadir):
@@ -118,7 +109,7 @@ def test_tungstene_file(datadir):
     assert len(t4_res.result[-1]['list_responses']) == 1
     resp0 = t4_res.result[-1]['list_responses'][0]
     assert resp0['response_description']['particle'] == "PHOTON"
-    assert resp0['results'][0]['scoring_mode'] == "SCORE_TRACK"
+    assert resp0['results']['score_res'][0]['scoring_mode'] == "SCORE_TRACK"
     # assert resp0['results'][0]
 
 # def test_petit_coeur_para():
@@ -174,12 +165,12 @@ def test_debug_entropy(datadir):
     assert len(t4_res.scan_res) == 10
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 1
-    res0 = t4_res.result[-1]['list_responses'][0]['results'][0]
-    rescontent = ['scoring_mode', 'scoring_zone',
-                  'mesh_res', 'boltzmann_entropy', 'shannon_entropy',
-                  'spectrum_res', 'integrated_res']
+    res0 = t4_res.result[-1]['list_responses'][0]['results']['score_res'][0]
+    scorecontent = ['scoring_mode', 'scoring_zone',
+                    'mesh_res', 'boltzmann_entropy', 'shannon_entropy',
+                    'spectrum_res', 'integrated_res']
     assert "{0:6e}".format(res0['boltzmann_entropy']) == "8.342621e-01"
-    assert sorted(list(res0.keys())) == sorted(rescontent)
+    assert sorted(list(res0.keys())) == sorted(scorecontent)
 
 def test_entropy(datadir):
     '''Use Tripoli-4 result from entropy.d to test entropy, mesh, spectrum with
@@ -235,7 +226,7 @@ def test_verbose_entropy(datadir, monkeypatch):
     # monkeypatch.setattr("logger", logging.DEBUG)
     # print(metafunc.fixturenames)
     # monkeypatch.setitem(pytestconfig, "valjean-verbose", True)
-    monkeypatch.setattr("valjean.eponine.pyparsing_t4.transform.MAX_DEPTH", 5)
+    monkeypatch.setattr("valjean.eponine.pyparsing_t4.transform.MAX_DEPTH", 6)
     transform.print_result(t4_res.result)
 
 # def test_entropy_verbose(datadir, monkeypatch, verbose):
@@ -332,7 +323,14 @@ def test_pertu(datadir):
     assert t4_res.scan_res.times['simulation time'] == 27
     assert t4_res.scan_res.times['initialization time'] == 0
     assert len(t4_res.scan_res) == 1
-    assert len(t4_res.result[-1]['list_responses']) == 2
+    assert len(t4_res.result[-1]['list_responses']) == 1
+    assert (sorted(list(t4_res.result[-1].keys()))
+            == ['edition_batch_number', 'list_responses', 'mean_weigt_leak',
+                'perturbation', 'simulation_time', 'source_intensity'])
+    pertu0 = t4_res.result[-1]['perturbation'][0]
+    assert sorted(list(pertu0.keys())) == ['perturbation_desc', 'response']
+    assert sorted(list(pertu0['response'].keys())) == ['response_description',
+                                                       'results']
 
 def test_vov(datadir):
     '''Use Tripoli-4 result from vov.d to test vov spectra.'''

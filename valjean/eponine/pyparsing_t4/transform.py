@@ -100,19 +100,20 @@ def convert_score(toks):
     '''
     LOGGER.debug("Keys in score: %s", str(list(toks.keys())))
     res = {}
-    for key in toks.keys():
-        if key == 'mesh_res':
-            res['mesh_res'] = convert_mesh(toks['mesh_res'])
-        elif 'spectrum_res' in key:
-            res[key] = convert_spectrum(toks[key], key)
-        elif 'integrated_res' in key:
-            res[key] = toks[key].asDict()
-        elif key == 'greenband_res':
-            res['greenband_res'] = convert_green_bands(toks['greenband_res'])
-        elif key == "scoring_zone":
-            res['scoring_zone'] = toks[key].asDict()
-        else:
-            res[key] = toks[key]
+    for score in toks:
+        for key in score.keys():
+            if key == 'mesh_res':
+                res['mesh_res'] = convert_mesh(score['mesh_res'])
+            elif 'spectrum_res' in key:
+                res[key] = convert_spectrum(score[key], key)
+            elif 'integrated_res' in key:
+                res[key] = score[key].asDict()
+            elif key == 'greenband_res':
+                res[key] = convert_green_bands(score[key])
+            elif key == "scoring_zone":
+                res['scoring_zone'] = score[key].asDict()
+            else:
+                res[key] = score[key]
     return res
 
 
@@ -276,7 +277,7 @@ def print_list(liste, depth=0):
     :param int depth: level of prints
     :const MAX_DEPTH: maximum of prints level
     '''
-    print(len(liste), "elements -> ", end="")
+    print("list of", len(liste), "elements -> ", end="")
     for elt in liste:
         if isinstance(elt, (dict, list, np.ndarray)):
             if depth > MAX_DEPTH:
@@ -344,6 +345,10 @@ def print_result(toks):
                         print_customised_response(resp, depth)
                         depth -= 1
                 elif key == 'ifp_adjoint_crit_edition':
+                    depth += 1
+                    print_according_type(res[key], depth)
+                    depth -= 1
+                elif key == 'perturbation':
                     depth += 1
                     print_according_type(res[key], depth)
                     depth -= 1

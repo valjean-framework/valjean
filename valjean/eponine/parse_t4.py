@@ -203,7 +203,15 @@ class T4Parser():
         for stime, vtime in self.scan_res.times.items():
             print(stime.capitalize(), "=", vtime)
 
-def main(myjdd="", mode="MONO"):
+def main(myjdd="", batch_num=-1, mesh_lim=None):
+    '''Main function in order to test parsing directly from this module.
+
+    :param string myjdd: path to the T4 input
+    :param int batch_number: batch number to parse
+    :param int mesh_lim: number of lines of mesh to read
+                         (if required, else None)
+    :returns: boolean, True if parsing was successful, else False
+    '''
     if myjdd == "":
         try:
             myjdd = sys.argv[1]
@@ -211,24 +219,17 @@ def main(myjdd="", mode="MONO"):
             print("Eponine: argument needed (jdd name)")
             exit(-1)
     print(myjdd)
-    print("mode =", mode)
-    # mode = "PARA"
-
-    myendflag = "simulation time"
-    # if "exploit" in myjdd:
-    if "exp" in myjdd and "verif" not in myjdd:
-        myendflag = "exploitation time"
-    if mode == "PARA":
-        myendflag = "elapsed time"
-    print("endflag =", myendflag)
 
     # need to think about endflag (?), meshlim and para arguments
-    # t4_res = T4Parser.parse_jdd(myjdd, -1)  #, meshlim=2)
-    t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, -1, 2)
+    if mesh_lim:
+        t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, batch_num, mesh_lim)
+    else:
+        t4_res = T4Parser.parse_jdd(myjdd, batch_num)
     if t4_res:
         t4_res.print_t4_stats()
         print("result of the function =", t4_res.check_t4_times())
         t4_res.print_t4_times()
+        return t4_res.check_t4_times()
 
 if __name__ == "__main__":
     main()
