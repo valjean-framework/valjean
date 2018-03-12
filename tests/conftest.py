@@ -7,7 +7,10 @@ def pytest_addoption(parser):
     '''Add the ``--valjean-verbose`` option to :program:`pytest`.'''
     parser.addoption("--valjean-verbose", action="store_true",
                      help="Maximize valjean verbosity")
-
+    parser.addoption("--runslow", action="store_true",
+                     default=False, help="run slow tests")
+    parser.addoption("--qualtrip", action="store",
+                     default="", help="path of qualtrip folder to be tested")
 
 def pytest_generate_tests(metafunc):
     '''Handle the ``--valjean-verbose`` option.'''
@@ -21,6 +24,26 @@ def pytest_generate_tests(metafunc):
         logger.setLevel(logging.WARNING)
         for handler in logger.handlers:
             handler.setLevel(logging.WARNING)
+    # if metafunc.config.getoption('qualtrip'):
+    #     option_value = metafunc.config.option.qualtrip
+    #     print("FOUND qualtrip,", option_value)
+    #     # monkeypatch.setattr("tests.eponine.test_all_listings.QUALTRIP", option_value)
+    #     from tests.eponine.test_all_listings import QUALTRIP
+    #     print(QUALTRIP)
+    #     QUALTRIP = option_value
+    #     print(QUALTRIP)
+    # else:
+    #     print("qualtrip not found...")
+
+def pytest_collection_modifyitems(config, items):
+    '''Handle the ``--runslow`` option.'''
+    if config.getoption("--runslow"):
+        # --runslow given in cli: do not skip slow tests
+        return
+    skip_slow = pytest.mark.skip(reason="need --runslow option to run")
+    for item in items:
+        if "slow" in item.keywords:
+            item.add_marker(skip_slow)
 
 
 ##############
@@ -56,3 +79,11 @@ def verbose():
     logger = logging.getLogger('valjean')
     logger.setLevel(logging.DEBUG)
     return True
+
+
+@pytest.fixture
+def qualtrip(request):
+    print("[33min fixture qualtrip[0m")
+#     print("[36m", request.config.getoption('--qualtrip'),
+#           "type:", type(request.config.getoption('--qualtrip'), "[0m"))
+    return request.config.getoption('--qualtrip')
