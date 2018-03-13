@@ -4,13 +4,19 @@ import pytest
 
 
 def pytest_addoption(parser):
-    '''Add the ``--valjean-verbose`` option to :program:`pytest`.'''
+    '''Add the ``--valjean-verbose``, ``--runslow``, ``--qualtrip``,
+    ``--qualtrip_exclude`` and ``--qualtrip_match`` options to
+    :program:`pytest`.'''
     parser.addoption("--valjean-verbose", action="store_true",
                      help="Maximize valjean verbosity")
     parser.addoption("--runslow", action="store_true",
                      default=False, help="run slow tests")
     parser.addoption("--qualtrip", action="store",
                      default="", help="path of qualtrip folder to be tested")
+    parser.addoption("--qualtrip_exclude", action="store",
+                     default=None, help="list of patterns to exclude in paths")
+    parser.addoption("--qualtrip_match", action="store",
+                     default=None, help="list of patterns to match in paths")
 
 def pytest_generate_tests(metafunc):
     '''Handle the ``--valjean-verbose`` option.'''
@@ -24,16 +30,6 @@ def pytest_generate_tests(metafunc):
         logger.setLevel(logging.WARNING)
         for handler in logger.handlers:
             handler.setLevel(logging.WARNING)
-    # if metafunc.config.getoption('qualtrip'):
-    #     option_value = metafunc.config.option.qualtrip
-    #     print("FOUND qualtrip,", option_value)
-    #     # monkeypatch.setattr("tests.eponine.test_all_listings.QUALTRIP", option_value)
-    #     from tests.eponine.test_all_listings import QUALTRIP
-    #     print(QUALTRIP)
-    #     QUALTRIP = option_value
-    #     print(QUALTRIP)
-    # else:
-    #     print("qualtrip not found...")
 
 def pytest_collection_modifyitems(config, items):
     '''Handle the ``--runslow`` option.'''
@@ -83,7 +79,21 @@ def verbose():
 
 @pytest.fixture
 def qualtrip(request):
-    print("[33min fixture qualtrip[0m")
-#     print("[36m", request.config.getoption('--qualtrip'),
-#           "type:", type(request.config.getoption('--qualtrip'), "[0m"))
+    '''Fixture to give qualtrip folder to pytest.'''
     return request.config.getoption('--qualtrip')
+
+@pytest.fixture
+def qualtrip_exclude(request):
+    '''Fixture to exclude test on some patterns from qualtrip with pytest.
+
+    Synthax: ``--qualtrip_exclude='["spam", "egg"]'``
+    '''
+    return request.config.getoption('--qualtrip_exclude')
+
+@pytest.fixture
+def qualtrip_match(request):
+    '''Fixture to select patterns to test from qualtrip with pytest.
+
+    Synthax: ``--qualtrip_match='["bacon"]'``
+    '''
+    return request.config.getoption('--qualtrip_match')

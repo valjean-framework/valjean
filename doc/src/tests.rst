@@ -1,6 +1,12 @@
 Tests
 =====
 
+Configuration of tests module
+-----------------------------
+
+.. automodule:: tests.conftest
+   :undoc-members:
+      
 Tests for the :mod:`~valjean.config` module
 -------------------------------------------
 

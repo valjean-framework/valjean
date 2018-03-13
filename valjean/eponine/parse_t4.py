@@ -29,12 +29,13 @@ class T4ParserException(Exception):
     '''An error that may be raised by the :class:`T4Parser` class.'''
     pass
 
+
 class T4Parser():
     '''Scan Tripoli-4 listings, then parse the required batches.
     '''
 
     @profile
-    def __init__(self, jddname, batch=-1, mesh_lim=-1): #config, *,
+    def __init__(self, jddname, batch=-1, mesh_lim=-1):  # config, *,
         '''
         Initialize the :class:`T4Parser` object.
 
@@ -203,6 +204,7 @@ class T4Parser():
         for stime, vtime in self.scan_res.times.items():
             print(stime.capitalize(), "=", vtime)
 
+
 def main(myjdd="", batch_num=-1, mesh_lim=None):
     '''Main function in order to test parsing directly from this module.
 
@@ -229,6 +231,7 @@ def main(myjdd="", batch_num=-1, mesh_lim=None):
             t4_res.print_t4_stats()
             t4_res.print_t4_times()
         return t4_res.check_t4_times()
+
 
 if __name__ == "__main__":
     main()
