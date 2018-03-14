@@ -49,7 +49,8 @@ def integrated_array(array, axis=None):
 def array_and_bins(draw, dtype,
                    max_dim=(3, 3, 3, 5, 5, 1, 1),
                    elements=tuples(floats(0, 1.), floats(0., 100.)),
-                   reverse=booleans()):
+                   reverse=booleans(), integrated=booleans()):
+    # pylint: disable=too-many-arguments
     '''Composite Hypothesis strategy to generate shapes, then array and bins
     corresponding.
 
@@ -74,8 +75,8 @@ def array_and_bins(draw, dtype,
     larray = {}
     larray['default'] = array
 
-    if draw(booleans()):
-        if shape[5] == shape[6] == 1:
+    if shape[5] == shape[6] == 1:
+        if draw(integrated):
             if shape[4] != 1:
                 larray['integrated'] = integrated_array(array, (0, 1, 2, 3))
             else:

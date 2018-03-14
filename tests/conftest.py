@@ -13,9 +13,9 @@ def pytest_addoption(parser):
                      default=False, help="run slow tests")
     parser.addoption("--qualtrip", action="store",
                      default="", help="path of qualtrip folder to be tested")
-    parser.addoption("--qualtrip_exclude", action="store",
+    parser.addoption("--qualtrip-exclude", action="store",
                      default=None, help="list of patterns to exclude in paths")
-    parser.addoption("--qualtrip_match", action="store",
+    parser.addoption("--qualtrip-match", action="store",
                      default=None, help="list of patterns to match in paths")
 
 def pytest_generate_tests(metafunc):
@@ -36,7 +36,7 @@ def pytest_collection_modifyitems(config, items):
     if config.getoption("--runslow"):
         # --runslow given in cli: do not skip slow tests
         return
-    skip_slow = pytest.mark.skip(reason="need --runslow option to run")
+    skip_slow = pytest.mark.skip(reason="needs --runslow option to run")
     for item in items:
         if "slow" in item.keywords:
             item.add_marker(skip_slow)
@@ -86,14 +86,14 @@ def qualtrip(request):
 def qualtrip_exclude(request):
     '''Fixture to exclude test on some patterns from qualtrip with pytest.
 
-    Synthax: ``--qualtrip_exclude='["spam", "egg"]'``
+    Synthax: ``--qualtrip-exclude='["spam", "egg"]'``
     '''
-    return request.config.getoption('--qualtrip_exclude')
+    return request.config.getoption('--qualtrip-exclude')
 
 @pytest.fixture
 def qualtrip_match(request):
     '''Fixture to select patterns to test from qualtrip with pytest.
 
-    Synthax: ``--qualtrip_match='["bacon"]'``
+    Synthax: ``--qualtrip-match='["bacon"]'``
     '''
-    return request.config.getoption('--qualtrip_match')
+    return request.config.getoption('--qualtrip-match')

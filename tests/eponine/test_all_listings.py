@@ -22,32 +22,49 @@ EXCLUDED_STRINGS_PARA = ["part1", "exp", "etape2", "homog_p3_prot",
 EXCLUDED_STRINGS = ["sauv", "_v0", "save"]
 MESH_LIM_FILES = ['godivaBeff_MED.d.res.ceav5']
 
-EXPECTED_RESULTS = {"cristal": [[148, 0, 0], [148, 0, 0]],
-                    "elem": [[99, 0, 0], [99, 0, 0]],
-                    "protection": [[25, 0, 0], [25, 0, 0]],
-                    "tripoli44": [[23, 0, 0], [18, 1, 4]],
-                    "tripoli45": [[24, 0, 0], [21, 0, 2]],
-                    "tripoli46": [[8, 0, 0], [5, 0, 3]],
-                    "tripoli47": [[27, 0, 1], [28, 0, 0]],
-                    "tripoli48": [[36, 0, 2], [37, 0, 2]],
-                    "tripoli49": [[43, 0, 1], [36, 0, 1]],
-                    "tripoli410": [[62, 5, 5], [59, 4, 6]],
-                    "tripoli4102": [[2, 0, 0], [0, 0, 0]]}
+# EXPECTED_RESULTS are counts expected from the input files run for a given
+# version of the code.
+# Numbers correspond to: files to read, jobs that fail, files excluded.
+# Files can be excluded for various reasons: too long (gado-assembly), in MONO
+# folder but run in PARA like epicure, run in MONO but in PARA like
+# exploitation input files.
+EXPECTED_RESULTS = {("cristal", MONO): (148, 0, 0),
+                    ("cristal", PARA): (148, 0, 0),
+                    ("elem", MONO): (99, 0, 0),
+                    ("elem", PARA): (99, 0, 0),
+                    ("protection", MONO): (25, 0, 0),
+                    ("protection", PARA): (25, 0, 0),
+                    ("tripoli44", MONO): (23, 0, 0),
+                    ("tripoli44", PARA): (18, 1, 4),
+                    ("tripoli45", MONO): (24, 0, 0),
+                    ("tripoli45", PARA): (21, 0, 2),
+                    ("tripoli46", MONO): (8, 0, 0),
+                    ("tripoli46", PARA): (5, 0, 3),
+                    ("tripoli47", MONO): (27, 0, 1),
+                    ("tripoli47", PARA): (28, 0, 0),
+                    ("tripoli48", MONO): (36, 0, 2),
+                    ("tripoli48", PARA): (37, 0, 2),
+                    ("tripoli49", MONO): (43, 0, 1),
+                    ("tripoli49", PARA): (36, 0, 1),
+                    ("tripoli410", MONO): (62, 5, 5),
+                    ("tripoli410", PARA): (59, 4, 6),
+                    ("tripoli4102", MONO): (2, 0, 0)}
 
-AUX_CATEGORIES = sorted([key for key in list(EXPECTED_RESULTS.keys())
-                         if key not in MAIN_CATEGORIES])
+AUX_CATEGORIES = sorted(list(
+    filter(lambda y: y not in MAIN_CATEGORIES,
+           set(map(lambda x: x[0], EXPECTED_RESULTS.keys())))))
 
-QUALT_CATEGORIES = (list(map(lambda x: (MAIN, x), MAIN_CATEGORIES))
-                    + list(map(lambda x: (AUX, x), AUX_CATEGORIES)))
+QUALT_CATEGORIES = ([(MAIN, x) for x in MAIN_CATEGORIES]
+                    + [(AUX, x) for x in AUX_CATEGORIES])
 ALL_FOLDERS = [os.path.join(mode, *qualt_fold)
                for mode in [MONO, PARA]
                for qualt_fold in QUALT_CATEGORIES]
 # need to remove tripoli4102 as was not run in PARA for VV of 10.2
-ALL_FOLDERS.remove("PARA/qualtrip_aux/tripoli4102")
+ALL_FOLDERS.remove(os.path.join(PARA, AUX, "tripoli4102"))
 
 
 @pytest.fixture(params=ALL_FOLDERS)
-def list_of_folders(qualtrip, qualtrip_exclude, qualtrip_match, request):
+def folder(qualtrip, qualtrip_exclude, qualtrip_match, request):
     '''Return folder from ``qualtrip`` to test following path given thought
     fixture :py:func:`tests.conftest.qualtrip`.
 
@@ -69,7 +86,7 @@ def loop_on_files(filelist):
     result of this parsing.
 
     :param list filelist: list of paths to the files to be read and parsed
-    :returns:
+    :returns: a tuple containing
 
              * **nb_jdds_ok**, `int`: number of jdds correctly parsed
                (``'NORMAL COMPLETION'`` and duration at the end)
@@ -103,19 +120,19 @@ def print_summary(nb_ok, nb_used, failed, excluded):
 
 
 @pytest.mark.slow
-def test_all_folders(list_of_folders):
+def test_t4_listings(folder):
     '''Test parsing of files contained in ``qualtrip``.
-    Per default all files are included, nor depending on mode (MONO or PARA),
-    neither on report (main or aux). Restrictions are possible from commande
-    line, via options ``'--qualtrip_exclude='["spam", "egg"]'`` and
-    ``'--qualtrip_match='["bacon"]'``.
+    By default all files are included, independent of the mode (MONO or PARA),
+    and of the report section (main or aux). Restrictions are possible from
+    command line, via options ``'--qualtrip-exclude='["spam", "egg"]'`` and
+    ``'--qualtrip-match='["bacon"]'``.
     Currently adapted to version 10.2 of Tripoli-4.
 
-    Tests performed on number of jdds used, excluded and failed.
+    Tests performed on number of input files used, excluded and failed.
     '''
-    all_files = sorted(glob(os.path.join(list_of_folders, "*.res.ceav5")))
+    all_files = sorted(glob(os.path.join(folder, "*.res.ceav5")))
     excluded_patterns = (EXCLUDED_STRINGS_MONO + EXCLUDED_STRINGS
-                         if MONO in list_of_folders
+                         if MONO in folder
                          else EXCLUDED_STRINGS_PARA + EXCLUDED_STRINGS)
     excluded_files = [fil for fil in all_files
                       if any(pat in fil for pat in excluded_patterns)]
@@ -125,7 +142,7 @@ def test_all_folders(list_of_folders):
     jdds_ok, failed_jdds = loop_on_files(used_files)
     print_summary(jdds_ok, len(used_files), failed_jdds, excluded_files)
     category = used_files[0].split('/')[-4]
-    mode = 0 if MONO in list_of_folders else 1
-    assert len(used_files) == EXPECTED_RESULTS[category][mode][0]
-    assert len(failed_jdds) == EXPECTED_RESULTS[category][mode][1]
-    assert len(excluded_files) == EXPECTED_RESULTS[category][mode][2]
+    mode = MONO if MONO in folder else PARA
+    assert len(used_files) == EXPECTED_RESULTS[(category, mode)][0]
+    assert len(failed_jdds) == EXPECTED_RESULTS[(category, mode)][1]
+    assert len(excluded_files) == EXPECTED_RESULTS[(category, mode)][2]
