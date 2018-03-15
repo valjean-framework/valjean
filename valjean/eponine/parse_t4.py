@@ -6,6 +6,11 @@ This module also allows quick checks on outputs:
 * presence and values of times (simulation, exploitation)
 
 Some options for debugging are available (end flag).
+
+.. todo::
+
+   Change absolute imports in relative ones when main will be moved to
+   :doc:`cambronne <../cambronne>` .
 '''
 
 import sys

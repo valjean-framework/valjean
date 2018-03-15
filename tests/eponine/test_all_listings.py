@@ -1,4 +1,12 @@
-'''Test parsing of all listing contained in Qualtrip in MONO  and PARA.'''
+'''Test parsing of all listing contained in Qualtrip in MONO  and PARA.
+
+.. todo::
+
+   * To be moved in the future "qualtrip" package, in the corresponding
+     chronological folder (here checks for version 10.2).
+   * ``qualtrip*`` fixtures will also probably be moved to new "qualtrip"
+     conftest module instead of here.
+'''
 
 import os
 from glob import glob
