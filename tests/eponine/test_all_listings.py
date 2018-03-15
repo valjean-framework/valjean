@@ -63,6 +63,30 @@ ALL_FOLDERS = [os.path.join(mode, *qualt_fold)
 ALL_FOLDERS.remove(os.path.join(PARA, AUX, "tripoli4102"))
 
 
+@pytest.fixture
+def qualtrip(request):
+    '''Fixture to give qualtrip folder to pytest.'''
+    return request.config.getoption('--qualtrip')
+
+
+@pytest.fixture
+def qualtrip_exclude(request):
+    '''Fixture to exclude test on some patterns from qualtrip with pytest.
+
+    Synthax: ``--qualtrip-exclude='["spam", "egg"]'``
+    '''
+    return request.config.getoption('--qualtrip-exclude')
+
+
+@pytest.fixture
+def qualtrip_match(request):
+    '''Fixture to select patterns to test from qualtrip with pytest.
+
+    Synthax: ``--qualtrip-match='["bacon"]'``
+    '''
+    return request.config.getoption('--qualtrip-match')
+
+
 @pytest.fixture(params=ALL_FOLDERS)
 def folder(qualtrip, qualtrip_exclude, qualtrip_match, request):
     '''Return folder from ``qualtrip`` to test following path given thought

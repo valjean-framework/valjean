@@ -75,25 +75,3 @@ def verbose():
     logger = logging.getLogger('valjean')
     logger.setLevel(logging.DEBUG)
     return True
-
-
-@pytest.fixture
-def qualtrip(request):
-    '''Fixture to give qualtrip folder to pytest.'''
-    return request.config.getoption('--qualtrip')
-
-@pytest.fixture
-def qualtrip_exclude(request):
-    '''Fixture to exclude test on some patterns from qualtrip with pytest.
-
-    Synthax: ``--qualtrip-exclude='["spam", "egg"]'``
-    '''
-    return request.config.getoption('--qualtrip-exclude')
-
-@pytest.fixture
-def qualtrip_match(request):
-    '''Fixture to select patterns to test from qualtrip with pytest.
-
-    Synthax: ``--qualtrip-match='["bacon"]'``
-    '''
-    return request.config.getoption('--qualtrip-match')
