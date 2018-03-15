@@ -323,6 +323,7 @@ def make_mesh_t4_output(meshes, ebins, tbins):
     return ''.join(t4out)
 
 
+@settings(deadline=300)
 @given(array_bins=array_and_bins(
     dtype=np.dtype([('tally', FTYPE), ('sigma', FTYPE)]),
     max_dim=(3, 3, 3, 3, 3, 1, 1),
@@ -894,7 +895,7 @@ def keff_best_estimation(draw, n_estim):
         if n_estim > 4:
             estimators.append(draw(text(alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
                                         min_size=3, max_size=8,
-                                        average_size=4)).rstrip())
+                                        average_size=4)).strip())
     disc_batchs = draw(lists(elements=integers(1, 20),
                              min_size=n_estim, max_size=n_estim))
     keffs = draw(lists(elements=floats(0.9, 1.1),
