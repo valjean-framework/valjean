@@ -4,8 +4,10 @@ from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 import numpy as np
+import logging
 from valjean.eponine.parse_t4 import T4Parser
 from valjean.eponine.pyparsing_t4 import transform
+
 
 def keffs_checks(keff_res):
     r'''Quick calculations on k\ :sub:`eff` to check covariance matrix
@@ -68,6 +70,7 @@ def keffs_checks(keff_res):
                 assert np.isclose(np.sqrt(v012)*100/k012,
                                   keff_res['full_comb_estimation']['sigma'])
 
+
 def test_gauss_spectrum(datadir):
     '''Test Tripoli-4 listing with spectrum in output depending on time, µ and
     φ angles. Also control number of batchs.
@@ -110,7 +113,7 @@ def test_tungstene_file(datadir):
     resp0 = t4_res.result[-1]['list_responses'][0]
     assert resp0['response_description']['particle'] == "PHOTON"
     assert resp0['results']['score_res'][0]['scoring_mode'] == "SCORE_TRACK"
-    # assert resp0['results'][0]
+
 
 # def test_petit_coeur_para():
 #     t4_res = T4Parser.parse_jdd_with_mesh_lim(
@@ -132,6 +135,7 @@ def test_tungstene_file(datadir):
 #         print("nbre respinbses :", len(t4_res.result[-1]['list_responses']))
 #         assert len(t4_res.result[-1]['list_responses']) == 2
 
+
 def test_tt_simple_packet20_para(datadir):
     '''Use Tripoli-4 result from ttsSimplePacket100.d run in parallel mode to
     test parallel mode specific features (number of batchs used for edition,
@@ -152,6 +156,7 @@ def test_tt_simple_packet20_para(datadir):
     assert resp2desc['compo_details'][0]['temperature'] == 300
     assert resp2desc['compo_details'][0]['composition'] == "COMBUSTIBLE"
 
+
 def test_debug_entropy(datadir):
     '''Use Tripoli-4 result from entropy.d to test entropy, mesh, spectrum and
     debug mode.
@@ -171,6 +176,7 @@ def test_debug_entropy(datadir):
                     'spectrum_res', 'integrated_res']
     assert "{0:6e}".format(res0['boltzmann_entropy']) == "8.342621e-01"
     assert sorted(list(res0.keys())) == sorted(scorecontent)
+
 
 def test_entropy(datadir):
     '''Use Tripoli-4 result from entropy.d to test entropy, mesh, spectrum with
@@ -193,64 +199,19 @@ def test_entropy(datadir):
     assert 'not_converged' in firstres[1]['results']['keff_res']
     keffs_checks(lastres[1]['results']['keff_res'])
 
-# @pytest.fixture(scope="function", params="valjean_verbose", autouse=True)
-# def use_verbosity(request):
-#     # print(request.config.getoption("valjean-verbose"))
-#     yield request.param
 
-# def test_entropy_verbose(datadir, monkeypatch, use_verbosity):
-# def test_entropy_verbose(datadir, monkeypatch, pytestconfig):
-# def test_entropy_verbose(datadir, monkeypatch, metafunc):
-# def test_entropy_verbose(datadir, monkeypatch, valjean_verbose):
-# @pytest.config('valjean_verbose')
-# def test_entropy_verbose(datadir, monkeypatch):  #, pytestconfig):
-def test_verbose_entropy(datadir, monkeypatch):
+def test_verbose_entropy(datadir, caplog, monkeypatch):
     '''Use Tripoli-4 result from entropy.d to test verbosity (mesh and spectrum
     in same jdd), but long.
     '''
-    # verb = pytestconfig.getoption('valjean_verbose')
-    # print("verb =", verb)
-    # print(valjean_verbose)
+    caplog.set_level(logging.DEBUG, logger='valjean')
     t4_res = T4Parser.parse_jdd_with_mesh_lim(
         str(datadir/"entropy.d.res.ceav5"), -1, 10)
     assert t4_res
     assert t4_res.scan_res.normalend
-    # pytestconfig.addinivalue_line('valjean_verbose', "--valjean-verbose")
-    # print(pytestconfig.getoption('valjean_verbose', default=True))
-    # if verbose:
-    import logging
-    logger = logging.getLogger('valjean')
-    logger.setLevel(logging.DEBUG)
-    # monkeypatch.setattr(logging, "getLogger", logging.DEBUG)
-    # monkeypatch.setattr("logging.getLogger('valjean')", logging.DEBUG)
-    # monkeypatch.setattr("logger", logging.DEBUG)
-    # print(metafunc.fixturenames)
-    # monkeypatch.setitem(pytestconfig, "valjean-verbose", True)
     monkeypatch.setattr("valjean.eponine.pyparsing_t4.transform.MAX_DEPTH", 6)
     transform.print_result(t4_res.result)
 
-# def test_entropy_verbose(datadir, monkeypatch, verbose):
-#     '''Use Tripoli-4 result from entropy.d to test verbosity (mesh and spectrum
-#     in same jdd), but long.
-#     '''
-#     # verb = pytestconfig.getoption('valjean_verbose')
-#     # print("verb =", verb)
-#     # print(valjean_verbose)
-#     t4_res = T4Parser.parse_jdd_with_mesh_lim(
-#         str(datadir/"entropy.d.res.ceav5"), -1, 10)
-#     assert t4_res
-#     assert t4_res.scan_res.normalend
-#     # if verbose:
-#     # import logging
-#     # logger = logging.getLogger('valjean')
-#     # logger.setLevel(logging.DEBUG)
-#     # monkeypatch.setattr(logging, "getLogger", logging.DEBUG)
-#     # monkeypatch.setattr("logging.getLogger('valjean')", logging.DEBUG)
-#     # monkeypatch.setattr("logger", logging.DEBUG)
-#     # print(metafunc.fixturenames)
-#     if verbose:
-#         monkeypatch.setattr("valjean.eponine.pyparsing_t4.transform.MAX_DEPTH", 5)
-#     transform.print_result(t4_res.result)
 
 def test_ifp(datadir):
     '''Use Tripoli-4 result from GODIVA_ifp_statistics.d to test IFP parsing.
@@ -267,6 +228,7 @@ def test_ifp(datadir):
     assert (last_resp['response_description']['resp_function']
             == "IFP ADJOINT WEIGHTED ROSSI ALPHA")
     assert last_resp['results']['ifp_res']['used_batch'] == 81
+
 
 def test_kij(datadir):
     r'''Use tripoli-4 result from cylindreDecR_with_kij_on_mesh.d to test
@@ -287,6 +249,7 @@ def test_kij(datadir):
             == "KIJ_SOURCES")
     assert resp_list[15]['response_description']['resp_function'] == "KEFFS"
 
+
 def test_green_bands(datadir):
     '''Use Tripoli-4 result from greenband_exploit_T410_contrib.d to test Green
     bands parsing and exploitation jobs.
@@ -298,6 +261,7 @@ def test_green_bands(datadir):
     assert t4_res.scan_res.times['exploitation time'] == 2
     assert t4_res.scan_res.times['initialization time'] == 2
     assert len(t4_res.result) == 1
+
 
 def test_tt_simple_packet20_mono(datadir):
     '''Use Tripoli-4 result from ttsSimplePacket20.d run in mono-processor
@@ -311,6 +275,7 @@ def test_tt_simple_packet20_mono(datadir):
     assert t4_res.scan_res.times['initialization time'] == 3
     assert len(t4_res.scan_res) == 2
     assert len(t4_res.result[-1]['list_responses']) == 4
+
 
 def test_pertu(datadir):
     '''Use Tripoli-4 result from pertu_covariances.d to test perturbations and
@@ -331,6 +296,7 @@ def test_pertu(datadir):
     assert sorted(list(pertu0.keys())) == ['perturbation_desc', 'response']
     assert sorted(list(pertu0['response'].keys())) == ['response_description',
                                                        'results']
+
 
 def test_vov(datadir):
     '''Use Tripoli-4 result from vov.d to test vov spectra.'''
