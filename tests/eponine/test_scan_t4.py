@@ -12,8 +12,8 @@ from valjean.eponine.pyparsing_t4 import transform
 def keffs_checks(keff_res):
     r'''Quick calculations on k\ :sub:`eff` to check covariance matrix
     calculation and combination. One huge limitation: formulas used are exactly
-    the same as in Tripoli-4, so this is not a real check. Their writting in
-    matrix formualtion is not straight forward (need permutation matrices,
+    the same as in Tripoli-4, so this is not a real check. Their writing in
+    matrix formualtion is not straightforward (need permutation matrices,
     Hadamard product instead of the usual matrix product a priori).
 
     :param dict keff_res: dictionary repesenting the k\ :sub:`eff` results,

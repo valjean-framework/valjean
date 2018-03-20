@@ -1278,8 +1278,8 @@ def convert_kij_keff(res):
         'batchs_kept': int,
         'kij-keff': float,
         'nbins': int,
-        'spacebins': numpy.array of int with shape (nbins,) or (nbins, 3), this
-                     last case corresponding to space mesh,
+        'spacebins': numpy.array of int with shape (nbins,) or (nbins, 3), the
+                     latter case corresponding to space mesh,
         'eigenvector': numpy.array,
         'keff_KIJ_matrix': numpy.matrix,
         'keff_StdDev_matrix': numpy matrix,
