@@ -109,11 +109,11 @@ class LivermoreExps():
                              "MONO/qualtrip_main/elem/post_processing_main/"
                              "s10a11.res.mesure")):
         self.fname = path
-        self.exp_res = {}
+        self.res = {}
         self.read_results()
-        print(self.exp_res)
+        # print(self.res)
         print("ALL KEYS:")
-        print(list(self.exp_res.keys()))
+        print(list(self.res.keys()))
 
     def read_results(self):
         charac = None
@@ -131,11 +131,11 @@ class LivermoreExps():
                     charac = lelts[:-1]
                 elif "DEGRES" in line:
                     charac.append(line.split()[1])
-                elif "FP=" in line:
-                    charac.append(line.split()[1])
+                # elif "FP=" in line:
+                #     charac.append(line.split()[1])
                 elif "TEMPS" in line and "TO" in line:
                     results = []
-                elif "CNT" in line or "prob" in line:
+                elif "CNT" in line or "prob" in line or "FP=" in line:
                     continue
                 else:
                     elts = line.split()
@@ -145,14 +145,14 @@ class LivermoreExps():
         dtype = np.dtype({
             'names': ['time', 'cntPtimePsource', 'error', 'cntCum'],
             'formats': [np.int32, np.float32, np.float32, np.float32]})
-        self.exp_res[tuple(charac)] = np.array(results, dtype=dtype)
+        self.res[tuple(charac)] = np.array(results, dtype=dtype)
 
     def plot_res(self, charac):
         plt.figure(1)
         plt.subplot(111)
-        plt.errorbar(self.exp_res[charac]['time'],
-                     self.exp_res[charac]['cntPtimePsource'],
-                     yerr=self.exp_res[charac]['error'],
+        plt.errorbar(self.res[charac]['time'],
+                     self.res[charac]['cntPtimePsource'],
+                     yerr=self.res[charac]['error'],
                      fmt='none')
         plt.xlabel("time bins [ns]")
         plt.yscale("log", nonposy='clip')
@@ -162,52 +162,70 @@ class LivermoreExps():
 class Comparison():
     '''Class to compare, using matplotlib, experiment and Tripoli-4 results.'''
 
-    def __init__(self, charac, jdd_sphere, jdd_air):
+    # def __init__(self, charac, jdd_sphere, jdd_air):
+    def __init__(self, charac, jdds):
         self.charac = charac
         self.exp_res = LivermoreExps()
-        self.simu_res = SpherePlot(jdd_sphere, jdd_air)
+        self.simu_res = {}
+        for name, jdd in jdds:
+            print(jdd)
+            self.simu_res[name] = SpherePlot(jdd.replace("SPHAIR", "sphere"),
+                                             jdd.replace("SPHAIR", "air"))
+        # self.simu_res = SpherePlot(jdd_sphere, jdd_air)
         # self.norm_simu, self.norm_sig = self.simu_res.normalized_sphere()
 
     def compare_plots(self):
-        # middle of T4 bins
-        tbinle = self.simu_res.sphere.spectrum['tbins'][:-1]
-        tbinhe = self.simu_res.sphere.spectrum['tbins'][1:]
-        mtbins = (tbinle+tbinhe)/2*1e9
         # experiment bins
-        expbins = self.exp_res.exp_res[self.charac]['time']
-        print("mtbins:")
-        print(mtbins[1:-1])
-        print(mtbins[1:-1].astype(int))
-        print("expbins:")
-        print(expbins)
-        mexpbins = (expbins[:-1]+expbins[1:])/2
-        print(mexpbins)
-        print(mtbins[1:-1].shape)
-        print(mexpbins.shape)
+        # expbins = self.exp_res.exp_res[self.charac]['time']
         plt.figure(1)
         plt.subplot(111)
-        plt.errorbar(self.exp_res.exp_res[self.charac]['time'],
-                     self.exp_res.exp_res[self.charac]['cntPtimePsource'],
-                     yerr=self.exp_res.exp_res[self.charac]['error']*2,
-                     fmt='none', ecolor='orange')
-        plt.errorbar(self.exp_res.exp_res[self.charac]['time'],
-                     self.exp_res.exp_res[self.charac]['cntPtimePsource'],
-                     yerr=self.exp_res.exp_res[self.charac]['error'],
-                     fmt='none', ecolor='r')
-        norm_simu = self.simu_res.normalized_sphere()
-        print(type(norm_simu))
-        # print(norm_simu)
-        print(norm_simu[0].ravel())
-        print(norm_simu[0].ravel()/10)
-        # print(self.norm_simu.ravel())
-        # print(norm_simu[0].ravel()[2:-1])
-        print(norm_simu[0].ravel()[1:-1].shape)
-        # print(norm_simu[1].ravel()[2:-1])
-        print(norm_simu[1].ravel()[1:-1].shape)
-        print(self.exp_res.exp_res[self.charac]['time'].shape)
-        plt.errorbar(self.exp_res.exp_res[self.charac]['time'],
-                     norm_simu[0].ravel()[1:-1]/2,
-                     yerr=norm_simu[1].ravel()[1:-1])
+        exp2sig = plt.errorbar(self.exp_res.res[self.charac]['time'],
+                               self.exp_res.res[self.charac]['cntPtimePsource'],
+                               yerr=self.exp_res.res[self.charac]['error']*2,
+                               fmt='none', ecolor='orange')
+                               # fmt='none', ecolor='orange', elinewidth=3)
+        exp1sig = plt.errorbar(self.exp_res.res[self.charac]['time'],
+                               self.exp_res.res[self.charac]['cntPtimePsource'],
+                               yerr=self.exp_res.res[self.charac]['error'],
+                               fmt='none', ecolor='r', ls=':')
+        # plt.errorbar(self.exp_res.res[self.charac]['time'],
+        #              self.exp_res.res[self.charac]['cntPtimePsource'],
+        #              yerr=self.exp_res.res[self.charac]['error']*2,
+        #              fmt='none', ecolor='orange')
+        # plt.errorbar(self.exp_res.res[self.charac]['time'],
+        #              self.exp_res.res[self.charac]['cntPtimePsource'],
+        #              yerr=self.exp_res.res[self.charac]['error'],
+        #              fmt='none', ecolor='r')
+        cols = ['b', 'g', 'm', 'darkviolet']
+        simu = []
+        labels = []
+        for ires, (sname, simres) in enumerate(self.simu_res.items()):
+            print(ires)
+            print(simres)
+            # middle of T4 bins
+            tbinle = simres.sphere.spectrum['tbins'][:-1]
+            tbinhe = simres.sphere.spectrum['tbins'][1:]
+            mtbins = (tbinle+tbinhe)/2*1e9
+            norm_simu = simres.normalized_sphere()
+            print(norm_simu[0].ravel()[1:-1].shape)
+            # print(norm_simu[1].ravel()[2:-1])
+            print(norm_simu[1].ravel()[1:-1].shape)
+            print(self.exp_res.res[self.charac]['time'].shape)
+            simu.append(plt.errorbar(mtbins[1:-1],
+                                     norm_simu[0].ravel()[1:-1]/2,
+                                     yerr=norm_simu[1].ravel()[1:-1],
+                                     ecolor=cols[ires], color=cols[ires],
+                                     label=simres.sphere.name[0]))
+            labels.append(sname)
+            # plt.errorbar(mtbins[1:-1],
+            #              norm_simu[0].ravel()[1:-1]/2,
+            #              yerr=norm_simu[1].ravel()[1:-1],
+            #              ecolor=cols[ires]))
         plt.xlabel("time bins [ns]")
         plt.yscale("log", nonposy='clip')
+        # plt.legend()
+        plt.legend([(exp2sig, exp1sig)]+simu, ["experiment"]+labels) # + simu)
+        plt.title("{elt}, {mfp} mfp, detector at {deg}°"
+                  .format(elt=self.charac[0].capitalize(),
+                          mfp=self.charac[1], deg=self.charac[2]))
         plt.show()
