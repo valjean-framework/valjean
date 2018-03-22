@@ -20,7 +20,7 @@ from valjean import LOGGER
 
 @composite
 def shapes(draw, max_sides=(3, 3, 3, 5, 5, 1, 1)):
-    '''Composite Hypothesis strategy to generate *numpy.ndarray* shapes
+    '''Composite Hypothesis strategy to generate :obj:`numpy.ndarray` shapes
     taking into account maximum dimensions in space, energy, time, µ and φ
     coordinates.
     '''
@@ -56,10 +56,11 @@ def array_and_bins(draw, dtype,
 
     :param numpy.dtype dtype: dtype of the future array
     :param tuple max_dim: maximum shape of the future array
-    :param strategy elements: tuples of float with edges corresponding to dtype
-    :param strategy reverse: boolean strategy to get order of bins
-    :returns: numpy.ndarray and dictionary of bins with keys ``['e', 't',
-              'mu', 'phi']``
+    :param hypothesis.strategies.tuples elements: edges of random floats
+      corresponding to :obj:`numpy.dtype`
+    :param hypothesis.strategies.booleans reverse: random order of bins
+    :returns: :obj:`numpy.ndarray` and :obj:`dict` of bins with keys
+       ``['e', 't', 'mu', 'phi']``
     '''
     shape = draw(shapes(max_dim))
     array = draw(arrays(dtype=dtype, shape=shape, elements=elements,
@@ -426,8 +427,8 @@ def spectrum_str(spectrum, ebins, it_index, units=False, disc_batch=0):
     Energy, time, µ and φ are available.
 
     :param numpy.ndarray spectrum: spectrum array from Hypothesis
-    :param list ebins: energy bins
-    :param tuple(ints) tmuphi_index: time, µ and φ bin
+    :param list(float) ebins: energy bins
+    :param tuple(int) tmuphi_index: time, µ and φ bin
     :param bool units: activate or not printing of units
     :returns: T4 output as a string
     '''
@@ -1092,7 +1093,7 @@ def kij_sources_t4_output(kijdict):
     r'''Print Tripoli-4 output in a string k\ :sub:`ij` sources.
 
     Uses the *left* eigenvector calculated in :meth:`~kij_best_estimation` and
-    stored in :py:attr:`kijdict` as sources. In a real T4 output this vector is
+    stored in ``kijdict`` as sources. In a real T4 output this vector is
     supposed to be closed to the sources vector but different as evaluated from
     a different estimator.
 

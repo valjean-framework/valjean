@@ -268,14 +268,14 @@ class Scan(Mapping):
         file and store the relevant parts of it, i.e. result block for each
         batch edition.
 
-        Results are stored in an internal `OrderedDict`:
+        Results are stored in an internal :obj:`collections.OrderedDict`:
         ``{batch_number_1: 'result_1', batch_number_2: 'result_2', ...}``
 
         * `batch_number` is `int`
         * `result` is `str`
         * Order follows the listing order, so increasing `batch_number`
 
-        :ivar reqbatchs: number of batchs required (read from file fname)
+        :ivar int reqbatchs: number of batchs required (read from file fname)
         :ivar bool normalend: presence of "NORMAL COMPLETION"
         :ivar int countwarnings: count number of warnings (for statistics)
         :ivar int counterrors: count number of errors (for statistics)

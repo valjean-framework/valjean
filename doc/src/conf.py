@@ -160,7 +160,8 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'sphinx': ('http://www.sphinx-doc.org/en/stable/', None),
     'pytest': ('https://docs.pytest.org/en/latest/', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy/', None)}
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'hypothesis': ('https://hypothesis.readthedocs.io/en/latest/', None)}
 
 # -- doctest options ------------------------------------------------------
 
