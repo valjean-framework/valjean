@@ -63,7 +63,7 @@ Beginning and end of results sections
 Important for the scan: results will be kept
 
 * **from** "RESULTS ARE GIVEN"
-* **to** an end flag available in the list :py:attr:`Scan.END_FLAGS`.
+* **to** an end flag available in the list :data:`Scan.end_flags`.
   Possibilities are:
 
   * Default end flag is ``"simulation time"``;
@@ -153,7 +153,7 @@ class BatchResultScanner:
         :param count_excess: counter for mesh lines excess
         :type count_excess: int
         :param result: batch result
-        :type result: list of strings
+        :type result: list(string)
         :param line: mesh line
         :type line: string
         '''
@@ -248,9 +248,7 @@ class Scan(Mapping):
 
     :param fname: name of the input file
     :type fname: string
-    :param endflag: end flag of the results block in Tripoli-4 listing
-    :type endflag: string
-    :param mesh_limit: limit on number of lines to read in meshes outputs
+    :param mesh_lim: limit on number of lines to read in meshes outputs
                       (can be really long).
 
                       * default = -1, all cells will be read
@@ -258,8 +256,10 @@ class Scan(Mapping):
                       * If 0 is used, AssertException will be raised (else
                         parsing would fail)
 
-    :type mesh_limit: int
+    :type mesh_lim: int
     :param bool para: run in mono-processor or parallel mode
+    :param end_flag: end flag of the results block in Tripoli-4 listing
+    :type end_flag: string
     '''
 
     @profile
@@ -276,22 +276,21 @@ class Scan(Mapping):
         * Order follows the listing order, so increasing `batch_number`
 
         :ivar reqbatchs: number of batchs required (read from file fname)
-        :type reqbatchs: int
-        :ivar normalend: presence of "NORMAL COMPLETION"
-        :type normalend: bool
-        :ivar countwarnings: count number of warnings (for statistics)
-        :type countwarnings: int
-        :var counterrors: count number of errors (for statistics)
-        :type counterrors: int
+        :ivar bool normalend: presence of "NORMAL COMPLETION"
+        :ivar int countwarnings: count number of warnings (for statistics)
+        :ivar int counterrors: count number of errors (for statistics)
         :ivar dict times: save times (initialization, simulation, exploitation
                           and elapsed if exists). Mandatory ones are
                           ``'initialization time'`` and ``'simulation time'``
                           or ``'exploitation time'``. ``'elapsed time'`` only
                           appears in listings from parallel jobs.
-        :var last_generator_state: keep the random generator state (not
-                                     included in the result as given after
-                                     `endflag`)
-        :type last_generator_state: string
+        :ivar string last_generator_state: keep the random generator state (not
+                    included in the result as given after `endflag`)
+
+        .. attribute:: end_flags
+
+           :obj:`string`
+           number of batchs required (read from file fname)
         '''
         self.fname = fname
         self.reqbatchs = -1
@@ -304,7 +303,6 @@ class Scan(Mapping):
         # risk of changing its value for all instances of the class
         self.mesh_limit = mesh_lim
         self.para = para
-        self.counts = {'warning': 0, 'error': 0}
         self.countwarnings = 0
         self.counterrors = 0
         self.times = OrderedDict()

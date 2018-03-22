@@ -1,8 +1,14 @@
-'''This module converts `pyparsing` objects in python or `numpy` objects.
+'''This module converts `pyparsing` objects in `python` or :obj:`numpy`
+objects.
 
 It is called in the module :mod:`~.grammar` via
-:func:`pyparsing.ParserElement.setParseAction` functions. It calls the general
+`pyparsing.ParserElement.setParseAction` functions. It calls the general
 module :mod:`common <valjean.eponine.common>`.
+
+.. _numpy structured array:
+   https://docs.scipy.org/doc/numpy/user/basics.rec.html
+
+.. |parseres| replace:: pyparsing.ParseResults
 
 .. note::
 
@@ -19,10 +25,11 @@ MAX_DEPTH = 0
 
 
 def convert_spectrum(toks, colnames):
-    '''Convert spectrum to `numpy` object using
+    '''Convert spectrum to :obj:`numpy` object using
     :mod:`common <valjean.eponine.common>`.
 
-    :param pyparsing.ParseResults toks: spectrum result
+    :param toks: spectrum result
+    :type toks: |parseres|
     :param str colnames: names of the columns
 
     * Default **colnames**: ``['score', 'sigma', 'score/lethargy']``
@@ -32,8 +39,8 @@ def convert_spectrum(toks, colnames):
        - uncert: names are ``['sigma2(means)', 'mean(sigma_n2)',
          'sigma(sigma_n2)', 'fisher test']``
 
-    :returns: dictionary containing spectrum as 7-dimensions `numpy` structured
-       array for result, `numpy.array` for binnings, discarded batchs,
+    :returns: dictionary containing spectrum as 7-dimensions `numpy structured
+       array`_ for result, :obj:`numpy.ndarray` for binnings, discarded batchs,
        used batchs, integrated result (depending on availability)
 
     .. seealso::
@@ -53,12 +60,13 @@ def convert_spectrum(toks, colnames):
 
 
 def convert_mesh(toks):
-    '''Convert mesh to `numpy` object using
+    '''Convert mesh to :obj:`numpy` object using
     :mod:`common <valjean.eponine.common>`.
 
-    :param pyparsing.ParseResults toks: mesh result
+    :param toks: mesh result
+    :type toks: |parseres|
     :returns: dictionary containing meshes (integrated over energy or not) as
-       7-dimensions `numpy` structured array, binnings, etc. depending
+       7-dimensions `numpy structured array`_, binnings, etc. depending
        on availability
 
     .. seealso::
@@ -72,12 +80,13 @@ def convert_mesh(toks):
 
 
 def convert_green_bands(toks):
-    '''Convert Green bands to `numpy` object using
+    '''Convert Green bands to :obj:`numpy` object using
     :mod:`common <valjean.eponine.common>`.
 
-    :param pyparsing.ParseResults toks: Green bands result
-    :returns: dictionary containing Green bands as 6-dimensions `numpy`
-       structured array, `numpy.array` for binnings, etc. depending on
+    :param toks: Green bands result
+    :type toks: |parseres|
+    :returns: dictionary containing Green bands as 6-dimensions `numpy
+       structured array`_, :obj:`numpy.ndarray` for binnings, etc. depending on
        availability
 
     .. seealso::
@@ -91,12 +100,14 @@ def convert_green_bands(toks):
 
 
 def convert_score(toks):
-    '''Convert score to `numpy` and python objects.
+    '''Convert score to :obj:`numpy` and python objects.
     Calls various conversion functions depending on input key (mesh, spectrum,
     Green bands, default python `dict`, etc.).
 
-    :param pyparsing.ParseResults toks: score result interpreted as dictionary
-    :returns: dictionary using the previous keys and numpy objects as values.
+    :param toks: score result interpreted as dictionary
+    :type toks: |parseres|
+    :returns: dictionary using the previous keys and :obj:`numpy` objects as
+      values.
     '''
     LOGGER.debug("Keys in score: %s", str(list(toks.keys())))
     res = {}
@@ -118,11 +129,12 @@ def convert_score(toks):
 
 
 def convert_ifp(toks):
-    '''Convert IFP output in `numpy` object using
+    '''Convert IFP output in :obj:`numpy` object using
     :mod:`common <valjean.eponine.common>`.
 
-    :param pyparsing.ParseResults toks: IFP result
-    :returns: `numpy` structured array (dimension 1)
+    :param toks: IFP result
+    :type toks: |parseres|
+    :returns: `numpy structured array`_ (dimension 1)
 
     .. seealso::
 
@@ -133,12 +145,13 @@ def convert_ifp(toks):
 
 
 def convert_keff(toks):
-    r'''Convert k\ :sub:`eff` response in python dictionary including `numpy`
-    matrices and using :mod:`common <valjean.eponine.common>`.
+    r'''Convert k\ :sub:`eff` response in python dictionary including
+    :obj:`numpy.matrix` and using :mod:`common <valjean.eponine.common>`.
 
-    :param pyparsing.ParseResults toks: k\ :sub:`eff` result interpreted as
-      dictionary
-    :returns: dictionary using `numpy` objects including `numpy.matrix`
+    :param toks: k\ :sub:`eff` result interpreted as dictionary
+    :type toks: |parseres|
+    :returns: dictionary using :obj:`numpy` objects including
+      :obj:`numpy.matrix`
 
     .. note::
 
@@ -157,12 +170,13 @@ def convert_keff(toks):
 
 
 def convert_kij_sources(toks):
-    r'''Convert k\ :sub:`ij` sources to python dictionary containing `numpy`
-    objects and using :mod:`common <valjean.eponine.common>`.
+    r'''Convert k\ :sub:`ij` sources to python dictionary containing
+    :obj:`numpy` objects and using :mod:`common <valjean.eponine.common>`.
 
-    :param pyparsing.ParseResults toks: k\ :sub:`ij` source result (interpreted
-      as dictionary)
-    :returns: dictionary where k\ :sub:`ij` values are inside `numpy.array`
+    :param toks: k\ :sub:`ij` source result (interpreted as dictionary)
+    :type toks: |parseres|
+    :returns: dictionary where k\ :sub:`ij` values are inside
+      :obj:`numpy.ndarray`
 
     .. seealso::
        :func:`common.convert_kij_sources
@@ -174,12 +188,12 @@ def convert_kij_sources(toks):
 
 
 def convert_kij_result(toks):
-    r'''Convert k\ :sub:`ij` result to dictionary of `numpy` objects using
+    r'''Convert k\ :sub:`ij` result to dictionary of :obj:`numpy` objects using
     :mod:`common <valjean.eponine.common>`.
 
-    :param pyparsing.ParseResults toks: k\ :sub:`ij` results (interpreted as
-      dictionary)
-    :returns: dictionary of `numpy.array` and `numpy.matrix`
+    :param toks: k\ :sub:`ij` results (interpreted as dictionary)
+    :type toks: |parseres|
+    :returns: dictionary of :obj:`numpy.ndarray` and :obj:`numpy.matrix`
 
     .. seealso::
        :func:`common.convert_kij_result
@@ -192,12 +206,12 @@ def convert_kij_result(toks):
 
 def convert_kij_keff(toks):
     r'''Convert k\ :sub:`eff` estimated from k\ :sub:`ij` to dictionary of
-    `numpy` objects using :mod:`common <valjean.eponine.common>`.
+    :obj:`numpy` objects using :mod:`common <valjean.eponine.common>`.
 
-    :param pyparsing.ParseResults toks: k\ :sub:`eff` block result interpreted
-      as a list t. Only last element is used here (others go to
-      :func:`convert_keff`).
-    :returns: dictionary of numpy arrays and matrices.
+    :param toks: k\ :sub:`eff` block result interpreted as a list t. Only last
+      element is used here (others go to :func:`convert_keff`).
+    :type toks: |parseres|
+    :returns: dictionary of :obj:`numpy.ndarray` and :obj:`numpy.matrix`.
 
     .. note:: It is possible to add a check on estimator if issue.
 
@@ -213,7 +227,8 @@ def convert_kij_keff(toks):
 def to_dict(toks):
     '''Convert to dictionary result of `pyparsing`.
 
-    :param pyparsing.ParseResults toks: `pyparsing` element
+    :param toks: `pyparsing` element
+    :type toks: |parseres|
     :returns: python dictionary corresponding to input `pyparsing` dictionary
     '''
     res = toks.asDict()
@@ -221,9 +236,9 @@ def to_dict(toks):
 
 
 def print_array(array):
-    '''Print `numpy.array` in condensed format.
+    '''Print :obj:`numpy.ndarray` in condensed format.
 
-    :param numpy.array array: array to print
+    :param numpy.ndarray array: array to print
     '''
     print(type(array))
     print("shape:", array.shape)
@@ -235,7 +250,8 @@ def print_array(array):
 def print_according_type(res, depth=0):
     '''Choose function to be used for printing according to `res` type.
 
-    :param res: result as `dict`, `list`, `numpy` object, etc.
+    :param res: interpreted result from `pyparsing`
+    :type res: dict, list, numpy.ndarray
     :param int depth: level of prints
     :const MAX_DEPTH: maximum of prints level
     '''
@@ -273,7 +289,7 @@ def print_dict(diction, depth=0):
 def print_list(liste, depth=0):
     '''Customised printing of list.
 
-    :param list liste: python list
+    :param list liste: python list to be printed
     :param int depth: level of prints
     :const MAX_DEPTH: maximum of prints level
     '''
@@ -315,7 +331,8 @@ def print_customised_response(res, depth=0):
 def print_result(toks):
     '''Customised printing of the result of parsing.
 
-    :param pyparsing.ParseResults toks: `pyparsing` result
+    :param toks: `pyparsing` result
+    :type toks: |parseres|
     :const MAX_DEPTH: maximum of prints level
 
     Print will be done only in DEBUG mode (logger), if MAX_DEPTH != 0.

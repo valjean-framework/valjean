@@ -1,16 +1,18 @@
 r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
 .. _pyparsing_wiki: http://pyparsing.wikispaces.com/
+.. _pyparsing_pip: https://pypi.python.org/pypi/pyparsing/2.2.0
 .. |keff| replace:: k\ :sub:`eff`
 .. |kij| replace:: k\ :sub:`ij`
+.. role :: parsing_var(literal)
 
-Documentation on `pyparsing` package can be found in `pyparsing`_ documentation
-linked to *pip* and on `pyparsing_wiki`_ with examples.
+Documentation on **pyparsing** package can be found in `pyparsing`_
+documentation linked to `pyparsing_pip`_ and on `pyparsing_wiki`_ with
+examples.
 
 Transformation from `pyparsing.ParseResults` to more standard python objects,
 including `numpy` ones,is done with :mod:`~.transform`, calling
 :mod:`common <valjean.eponine.common>`.
-
 
 Generalitites
 -------------
@@ -55,30 +57,29 @@ Keywords are in most of the cases used as flags and suppressed when data are
 stored.
 
 A first structure is designed when building the parsers results as lists and
-dictionaries in the ``pyparsing.ParseResults``. Then *parse actions* are used
-to standard python or *numpy* objects. These *parse actions*, called with
-:meth:`pyparsing.ParserElement.setParseAction`, can be found in
-:mod:`~.transform`.
-
+dictionaries in the `pyparsing.ParseResults`. Then "parse actions" are used
+to standard python or :obj:`numpy` objects. These *parse actions*, called with
+`pyparsing.ParserElement.setParseAction`, can be found in :mod:`~.transform`.
 
 Main parsers blocks
 ```````````````````
 The main parsers blocks are defined at the end of the file, see
-:py:obj:`mygram` and :py:obj:`response`.
+``mygram`` and ``response``.
 
-Typically, each result block in the
-listing should start by the :py:obj:`intro` block and end with at least one
-:py:obj:`runtime` block. This parts follows the :mod:`scan_t4
-<valjean.eponine.scan_t4>`: *string* starting by ``RESULTS ARE GIVEN`` and
-ending with ``simulation time``, ``exploitation time`` or ``elapsed time``.
+Typically, each result block in the listing should start by the `intro` block
+and end with at least one `runtime` block. This parts follows the :mod:`scan_t4
+<valjean.eponine.scan_t4>`: `string` starting by ``'RESULTS ARE GIVEN'`` and
+ending with ``'simulation time'``, ``'exploitation time'`` or
+``'elapsed time'``.
 
 Between these blocks can be found the data blocks. The major ones are:
 
-* one or more responses, driven by the keyword ``RESPONSE FUNCTION``,
+* one or more responses, driven by the keyword ``'RESPONSE FUNCTION'``,
 * the editions of IFP adjoint criticality,
 * the "default" |keff| block, in most of the cases at the end of the listing,
 * the *contributing particles block*, mainly in first pass listings,
-* an optional additional :py:obj:`runtime` block.
+* the perturbation block,
+* an optional additional ``runtime`` block.
 
 Main data blocks are described below (results taken into account, main
 features).
@@ -87,24 +88,24 @@ Response blocks
 ```````````````
 The core of the listings is the list of responses, including all the required
 scores. This big block is constructed as a **list** of **dictionaries**, each
-one representing a response (flag ``list_responses`` in the final result).
+one representing a response (key ``'list_responses'`` in the final result).
 
 Response are constructed as:
 
 * response introduction containing its definition:
 
-  * a description of the response, :py:obj:`respdesc` including:
+  * a description of the response, ``respdesc`` including:
 
-    * ``RESPONSE FUNCTION`` keyword as mandatory (afak)
-    * ``RESPONSE NAME``, ``SCORE NAME`` and ``ENERGY DECOUPAGE NAME`` that are
-      present in most of the cases
+    * ``'RESPONSE FUNCTION'`` keyword as mandatory (afak)
+    * ``'RESPONSE NAME'``, ``'SCORE NAME'`` and ``'ENERGY DECOUPAGE NAME'``
+      that are present in most of the cases
 
-  * more characteristics of the response, stored under :py:obj:`respcarac`,
+  * more characteristics of the response, stored under `respcarac`,
     like:
 
-    * considered particle (``PARTICULE`` in the listing)
-    * nucleus on which the reaction happens (if ``RESPONSE FUNCTION`` is a
-      ``REACTION``)
+    * considered particle (``'PARTICULE'`` in the listing)
+    * nucleus on which the reaction happens (if ``'RESPONSE FUNCTION'`` is a
+      ``'REACTION'``)
     * temperature
     * compostion of the volumes considered
     * concentration
@@ -113,32 +114,54 @@ Response are constructed as:
 
 * responses themselves, various:
 
-  * responses including *score* description, all included in the
-    :py:obj:`scoreblock` parser (more than one can be present):
+  * responses including *score* description, all included in the ``scoreblock``
+    parser (more than one can be present):
 
-    * score description (:py:obj:`scoredesc`) contains the score mode
-      (``TRACK``, ``SURF`` or ``COLL``) and the score zone (currently taken
-      into account: mesh, results cumulated on all geometry or on all sources,
+    * score description (``scoredesc``) contains the score mode (``'TRACK'``,
+      ``'SURF'`` or ``'COLL'``) and the score zone (currently taken into
+      account: mesh, results cumulated on all geometry or on all sources,
       Volume, Volume Sum, Frontier, Frontier Sum, Point, Cells and Maille)
 
     * results block, where at least one of these results can be found:
-      spectrum (:py:obj:`spectrumblock`), mesh (:py:obj:`meshblock`),
-      spectrum with variance of variance (:py:obj:`vovspectrumblock`),
-      entropy results (:py:obj:`entropy`), location of optional MED file
-      (:py:obj:`medfle`), default result integrated over energy
-      (:py:obj:`defintegratedres`), uncertainties results
-      (:py:obj:`uncertblock`), uncertainties on integrated results over energy
-      (:py:obj:`uncertintegblock`) and Green bands results (:py:obj:`gbblock`).
+
+      * :parsing_var:`spectrumblock`: spectrum
+      * :parsing_var:`meshblock`: mesh
+      * :parsing_var:`vovspectrumblock`: spectrum with variance of variance
+      * :parsing_var:`boltzmann_entropy` and :parsing_var:`shannon_entropy`:
+        entropy results
+      * :parsing_var:`medfile`: location of optional MED file
+      * :parsing_var:`defintegratedres`: default result integrated over energy
+      * :parsing_var:`uncertblock`: uncertainty results
+      * :parsing_var:`uncertintegblock`: uncertainties on integrated results
+        over energy
+      * :parsing_var:`gbblock`: Green bands results
 
   * |keff| presented as a generic response, possibly transformed in
-    `numpy.matrix` (:py:obj:`keffblock`)
-  * |kij| results: matrix, eigenvalues, eigenvectors (:py:obj:`kijres`)
-  * |kij| sources (:py:obj:`kijsources`)
-  * ordered results (in nucleus and/or family (:py:obj:`orderedres`)
+    :obj:`numpy.matrix` (:parsing_var:`keffblock`)
+  * |kij| results: matrix, eigenvalues, eigenvectors (:parsing_var:`kijres`)
+  * |kij| sources (:parsing_var:`kijsources`)
+  * ordered results (in nucleus and/or family (:parsing_var:`orderedres`)
   * default result integrated over energy where no scoring mode and zone are
-    precised (:py:obj:`defintegratedres`)
-  * IFP results (:py:obj:`ifpblock`)
-  * perturbation results (:py:obj:`perturbation`)
+    precised (:parsing_var:`defintegratedres`)
+  * IFP results (:parsing_var:`ifpblock`)
+  * perturbation results (:parsing_var:`perturbation`)
+
+
+Other blocks
+````````````
+Various other blocks can appear in the Tripoli-4 listing, located at the level
+of the responses block, identified by the key ``'list_responses'``. Other
+possibilities are:
+
+* :parsing_var:`ifpadjointcriticality`: edition of IFP adjoint criticality,
+* :parsing_var:`defkeffblock`: "default" |keff| block, containing for example
+  the best estimation of |keff| using variable number of discarded batches,
+* :parsing_var:`contribpartblock`: *contributing particles block*,
+* :parsing_var:`perturbation`: perturbation results, containing a description
+  of the calculation of the perturbation followed by the perturbation result
+  presented like a usual response (spectrum, mesh, etc. depending on required
+  score),
+* :parsing_var:`runtime`: simulation, exploitation or elapsed time.
 
 .. todo:: need to test with "fake" outputs from Tripoli-4 (to be thought)
 '''
