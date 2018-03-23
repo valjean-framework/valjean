@@ -106,6 +106,9 @@ def folder(qualtrip, qualtrip_exclude, qualtrip_match, request):
     respectively called by ``--qualtrip-exclude=`` and ``--qualtrip-match=``
     command line options.
     '''
+    if not qualtrip:
+        pytest.skip('A "qualtrip" folder is need to run this test, '
+                    'please specify it thanks to --qualtrip= option')
     folder = request.param
     if qualtrip_exclude:
         if any(pat in folder for pat in ast.literal_eval(qualtrip_exclude)):
