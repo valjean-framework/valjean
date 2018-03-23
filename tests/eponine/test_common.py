@@ -1,4 +1,8 @@
-'''Tests for the :mod:`common <valjean.eponine.common>` module.'''
+# pylint: disable=too-many-lines
+'''Tests for the :mod:`common <valjean.eponine.common>` module: random
+generation of data thanks to :mod:`hypothesis` then test parsing and building
+output objects (typically from :mod:`numpy`.
+'''
 
 import numpy as np
 from hypothesis import given, note, settings, assume

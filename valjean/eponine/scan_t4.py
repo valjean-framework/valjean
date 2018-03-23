@@ -115,16 +115,13 @@ if 'profile' not in globals()['__builtins__']:
 
 
 class BatchResultScanner:
+    # pylint: disable=too-many-instance-attributes
     '''Class to build batchs collection.
 
-    :param count_excess: current count of meshes
-    :type count_excess: int
-    :param current_batch: current batch number
-    :type current_batch: int
-    :param mesh_limit: limit of number of lines of mesh
-    :type mesh_limit: int
-    :param line: current line in file
-    :type line: str
+    :param int count_excess: current count of meshes
+    :param int current_batch: current batch number
+    :param int mesh_limit: limit of number of lines of mesh
+    :param str line: current line in file
 
     .. note::
 
@@ -135,7 +132,9 @@ class BatchResultScanner:
         initialize the list of strings corresponding to the result block.
 
     '''
+
     def __init__(self, count_excess, current_batch, mesh_limit, para, line):
+        # pylint: disable=too-many-arguments
         self.count_mesh_exceeding = count_excess
         self.batch_counts = {'number': -1,
                              'current': current_batch,
@@ -242,6 +241,7 @@ class BatchResultScanner:
 
 
 class Scan(Mapping):
+    # pylint: disable=too-many-instance-attributes
     '''Class to keep marks on the file
 
     Members needed at initialization:
@@ -271,13 +271,14 @@ class Scan(Mapping):
         Results are stored in an internal :obj:`collections.OrderedDict`:
         ``{batch_number_1: 'result_1', batch_number_2: 'result_2', ...}``
 
-        * `batch_number` is `int`
-        * `result` is `str`
-        * Order follows the listing order, so increasing `batch_number`
+        * ``batch_number_*`` is `int`
+        * ``result_*`` is `str`
+        * Order follows the listing order, so increasing ``batch_number``
 
-        :ivar int reqbatchs: number of batchs required (read from file fname)
-        :ivar bool normalend: presence of "NORMAL COMPLETION"
-        :ivar int countwarnings: count number of warnings (for statistics)
+        :ivar reqbatchs: number of batchs required (read from file fname)
+        :vartype reqbatchs: int
+        :cvar bool normalend: presence of "NORMAL COMPLETION"
+        :var int countwarnings: count number of warnings (for statistics)
         :ivar int counterrors: count number of errors (for statistics)
         :ivar dict times: save times (initialization, simulation, exploitation
                           and elapsed if exists). Mandatory ones are
@@ -354,6 +355,7 @@ class Scan(Mapping):
 
     @profile
     def _get_collres(self):
+        # pylint: disable=too-many-branches
         '''Read the file and store all relevant information.
         '''
         count_mesh_exceeding = 0

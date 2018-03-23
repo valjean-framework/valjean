@@ -1,3 +1,5 @@
+# pylint: disable=anomalous-backslash-in-string
+# pylint: disable=too-many-lines
 '''This module provides generic functions to convert parsing outputs to
 `numpy` objects.
 
@@ -221,8 +223,8 @@ mesh
 
    Other keys can be available:
 
-   * ``'tbins'``: :obj:`numpy.ndarray` of edges of time bins (if ``'time_step'``
-     available)
+   * ``'tbins'``: :obj:`numpy.ndarray` of edges of time bins (if
+     ``'time_step'`` available)
    * ``'mesh_energyintegrated'``: 7-dimensions `numpy structured array`_ with
      dtype ``('tally', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[n_s0, n_s1, n_s2, 1, n_t, 1, 1]``
@@ -248,8 +250,8 @@ spectrum
 
    Optional keys are:
 
-   * ``'tbins'``: :obj:`numpy.ndarray` of edges of time bins (if ``'time_step'``
-     available)
+   * ``'tbins'``: :obj:`numpy.ndarray` of edges of time bins (if
+     ``'time_step'`` available)
    * ``'mubins'``: :obj:`numpy.ndarray` of edges of µ angle bins (if
      ``'mu_angle_zone'`` available)
    * ``'phibins'``: :obj:`numpy.ndarray` of edges of φ angle bins (if

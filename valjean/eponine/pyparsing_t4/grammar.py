@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
 .. _pyparsing_wiki: http://pyparsing.wikispaces.com/
