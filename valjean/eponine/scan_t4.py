@@ -63,7 +63,7 @@ Beginning and end of results sections
 Important for the scan: results will be kept
 
 * **from** "RESULTS ARE GIVEN"
-* **to** an end flag available in the list :data:`Scan.end_flags`.
+* **to** an end flag available in the list ``Scan.end_flags``.
   Possibilities are:
 
   * Default end flag is ``"simulation time"``;
@@ -242,24 +242,30 @@ class BatchResultScanner:
 
 class Scan(Mapping):
     # pylint: disable=too-many-instance-attributes
-    '''Class to keep marks on the file
+    '''Class to scan the Tripoli-4 listing and keep the relevant parts of it
+    like results per batch used for edition or times.
 
-    Members needed at initialization:
+    There are no class variables, but instance variables (initialized when
+    the object is built or when the file is read). They are directly accessible
+    from the object. Main results are accessible directly from the :obj:`Scan`
+    object.
 
-    :param fname: name of the input file
-    :type fname: string
-    :param mesh_lim: limit on number of lines to read in meshes outputs
-                      (can be really long).
-
-                      * default = -1, all cells will be read
-                      * Minimum value is 1, use it to skip the mesh.
-                      * If 0 is used, AssertException will be raised (else
-                        parsing would fail)
-
-    :type mesh_lim: int
-    :param bool para: run in mono-processor or parallel mode
-    :param end_flag: end flag of the results block in Tripoli-4 listing
-    :type end_flag: string
+    :ivar fname: name of the file that will be scanned
+    :ivar int reqbatchs: number of batchs required (read from file fname)
+    :ivar bool normalend: presence of "NORMAL COMPLETION"
+    :ivar list(string) end_flags: possible end flags to stop the saving of
+      results
+    :ivar int mesh_limit: maximum lines of mesh to be stored
+    :ivar bool para: True is PARALLEL mode, else False
+    :ivar int countwarnings: count number of warnings (for statistics)
+    :ivar int counterrors: count number of errors (for statistics)
+    :ivar times: save times (initialization, simulation, exploitation and
+      elapsed if exists). Mandatory ones are ``'initialization time'`` and
+      ``'simulation time'`` or ``'exploitation time'``. ``'elapsed time'`` only
+      appears in listings from parallel jobs.
+    :vartype times: :obj:`collections.OrderedDict`
+    :ivar string last_generator_state: keep the random generator state (not
+      included in the result as given after `endflag`)
     '''
 
     @profile
@@ -275,23 +281,20 @@ class Scan(Mapping):
         * ``result_*`` is `str`
         * Order follows the listing order, so increasing ``batch_number``
 
-        :ivar reqbatchs: number of batchs required (read from file fname)
-        :vartype reqbatchs: int
-        :cvar bool normalend: presence of "NORMAL COMPLETION"
-        :var int countwarnings: count number of warnings (for statistics)
-        :ivar int counterrors: count number of errors (for statistics)
-        :ivar dict times: save times (initialization, simulation, exploitation
-                          and elapsed if exists). Mandatory ones are
-                          ``'initialization time'`` and ``'simulation time'``
-                          or ``'exploitation time'``. ``'elapsed time'`` only
-                          appears in listings from parallel jobs.
-        :ivar string last_generator_state: keep the random generator state (not
-                    included in the result as given after `endflag`)
+        Members needed at initialization:
 
-        .. attribute:: end_flags
+        :param string fname: name of the input file
+        :param int mesh_lim: limit on number of lines to read in meshes outputs
+                      (can be really long).
 
-           :obj:`string`
-           number of batchs required (read from file fname)
+                      * default = -1, all cells will be read
+                      * Minimum value is 1, use it to skip the mesh.
+                      * If 0 is used, AssertException will be raised (else
+                        parsing would fail)
+
+        :param bool para: run in mono-processor or parallel mode
+        :param end_flag: end flag of the results block in Tripoli-4 listing
+        :type end_flag: string
         '''
         self.fname = fname
         self.reqbatchs = -1
