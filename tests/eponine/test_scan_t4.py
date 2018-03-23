@@ -60,7 +60,7 @@ def keffs_checks(keff_res):
             assert np.isclose(cbsig*100/cbkeff,
                               keff_res['sigma_matrix'][ikeff, jkeff])
             # test full combination
-            itcomb = keff.shape[0] - ikeff -jkeff
+            itcomb = keff.shape[0] - ikeff - jkeff
             cov012 = (nums[ikeff, jkeff] * covmat[ikeff, itcomb]
                       + nums[jkeff, ikeff] * covmat[jkeff, itcomb]) / denom
             d012 = sigma[itcomb]**2 + cbsig**2 - 2*cov012

@@ -478,7 +478,7 @@ _compoptions = (_reactiononnucl
                 | _composition
                 | _concentration
                 | _reaction).setParseAction(_next_compos)
-_compodetails << Group(_compoptions + _otherdetails) # pylint: disable=W0106
+_compodetails << Group(_compoptions + _otherdetails)  # pylint: disable=W0106
 _nuclflags = Group(OneOrMore(_compodetails))('compo_details')
 
 
