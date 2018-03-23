@@ -163,8 +163,9 @@ class Comparison():
     '''Class to compare, using matplotlib, experiment and Tripoli-4 results.'''
 
     # def __init__(self, charac, jdd_sphere, jdd_air):
-    def __init__(self, charac, jdds):
-        self.charac = charac
+    # def __init__(self, charac, jdds):
+    def __init__(self, jdds):
+        # self.charac = charac
         self.exp_res = LivermoreExps()
         self.simu_res = {}
         for name, jdd in jdds:
@@ -174,19 +175,19 @@ class Comparison():
         # self.simu_res = SpherePlot(jdd_sphere, jdd_air)
         # self.norm_simu, self.norm_sig = self.simu_res.normalized_sphere()
 
-    def compare_plots(self):
+    def compare_plots(self, charac):
         # experiment bins
         # expbins = self.exp_res.exp_res[self.charac]['time']
         plt.figure(1)
         plt.subplot(111)
-        exp2sig = plt.errorbar(self.exp_res.res[self.charac]['time'],
-                               self.exp_res.res[self.charac]['cntPtimePsource'],
-                               yerr=self.exp_res.res[self.charac]['error']*2,
+        exp2sig = plt.errorbar(self.exp_res.res[charac]['time'],
+                               self.exp_res.res[charac]['cntPtimePsource'],
+                               yerr=self.exp_res.res[charac]['error']*2,
                                fmt='none', ecolor='orange')
                                # fmt='none', ecolor='orange', elinewidth=3)
-        exp1sig = plt.errorbar(self.exp_res.res[self.charac]['time'],
-                               self.exp_res.res[self.charac]['cntPtimePsource'],
-                               yerr=self.exp_res.res[self.charac]['error'],
+        exp1sig = plt.errorbar(self.exp_res.res[charac]['time'],
+                               self.exp_res.res[charac]['cntPtimePsource'],
+                               yerr=self.exp_res.res[charac]['error'],
                                fmt='none', ecolor='r', ls=':')
         # plt.errorbar(self.exp_res.res[self.charac]['time'],
         #              self.exp_res.res[self.charac]['cntPtimePsource'],
@@ -210,7 +211,7 @@ class Comparison():
             print(norm_simu[0].ravel()[1:-1].shape)
             # print(norm_simu[1].ravel()[2:-1])
             print(norm_simu[1].ravel()[1:-1].shape)
-            print(self.exp_res.res[self.charac]['time'].shape)
+            print(self.exp_res.res[charac]['time'].shape)
             simu.append(plt.errorbar(mtbins[1:-1],
                                      norm_simu[0].ravel()[1:-1]/2,
                                      yerr=norm_simu[1].ravel()[1:-1],
@@ -226,6 +227,6 @@ class Comparison():
         # plt.legend()
         plt.legend([(exp2sig, exp1sig)]+simu, ["experiment"]+labels) # + simu)
         plt.title("{elt}, {mfp} mfp, detector at {deg}°"
-                  .format(elt=self.charac[0].capitalize(),
-                          mfp=self.charac[1], deg=self.charac[2]))
+                  .format(elt=charac[0].capitalize(),
+                          mfp=charac[1], deg=self.charac[2]))
         plt.show()
