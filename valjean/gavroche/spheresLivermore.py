@@ -20,6 +20,7 @@ class LivermoreSphere():
 
     def add_result(self, jdd):
         self.parsed_res = T4Parser.parse_jdd(jdd, -1).result
+        print("nbre de responses:", len(self.parsed_res[-1]['list_responses']))
         spec_resp = self.parsed_res[-1]['list_responses'][0]
         print(list(spec_resp.keys()))
         score_res = spec_resp['results']['score_res']
