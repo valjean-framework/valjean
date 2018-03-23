@@ -98,11 +98,14 @@ def qualtrip_match(request):
 @pytest.fixture(params=ALL_FOLDERS)
 def folder(qualtrip, qualtrip_exclude, qualtrip_match, request):
     '''Return folder from ``qualtrip`` to test following path given thought
-    fixture :py:func:`tests.conftest.qualtrip`.
+    fixture :py:func:`~.qualtrip`, called by ``--quatrip=`` command line
+    option.
 
     Restriction are done using
-    :py:func:`tests.conftest.qualtrip_exclude` and
-    :py:func:`tests.conftest.qualtrip_match` fixtures'''
+    :py:func:`~.qualtrip_exclude` and :py:func:`~.qualtrip_match` fixtures
+    respectively called by ``--qualtrip-exclude=`` and ``--qualtrip-match=``
+    command line options.
+    '''
     folder = request.param
     if qualtrip_exclude:
         if any(pat in folder for pat in ast.literal_eval(qualtrip_exclude)):

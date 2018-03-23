@@ -1,4 +1,8 @@
-'''Tests for the :mod:`scan_t4` module.'''
+'''Tests for the :mod:`~.scan_t4` module: scan and parse Tripoli-4 outputs
+stored in the data folder associated to tests on :mod:`~.eponine` package.
+These tests should cover most of functionalities of :mod:`~.scan_t4` and main
+ones for :mod:`~.parse_t4`.
+'''
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
