@@ -4,7 +4,8 @@
 
 This module defines a dummy :class:`Task` class that may be used as a base
 class and extended. However, the current implementation of :meth:`.Task.do()`
-is a no-op and any class with a :meth:`do()` method works just as well.
+is a no-op and any class with a :meth:`do() <valjean.cosette.task.Task.do>`
+method works just as well.
 
 The :meth:`.Task.do()` method takes only one argument `env`, which is an
 environment for task execution. The idea of the environment is that tasks may
@@ -100,7 +101,7 @@ def _q(arg):
 
 
 class TaskError(Exception):
-    '''An error that may be raised by :mod:`~Task` classes.'''
+    '''An error that may be raised by :class:`~Task` classes.'''
     pass
 
 
@@ -178,7 +179,7 @@ class RunTask(Task):
     format strings of the form ``'{spam}'``. When the :meth:`do()` method is
     called, the command line is formatted using the keyword-value pairs that
     were passed to the constructor. Additionally, the special `config`
-    parameter will also be passed to the :meth:`format()` call and will contain
+    parameter will also be passed to the :func:`format()` call and will contain
     the global current :class:`~.Config` object.
     '''
 
@@ -303,7 +304,7 @@ class ShellTask(Task):
     strings of the form ``'{spam}'``. When the :meth:`do()` method is called,
     the script string is formatted using the keyword-value pairs that were
     passed to the constructor. Additionally, the special `config` parameter
-    will also be passed to the :meth:`format()` call and will contain the
+    will also be passed to the :func:`format()` call and will contain the
     global current :class:`~.Config` object.
     '''
 

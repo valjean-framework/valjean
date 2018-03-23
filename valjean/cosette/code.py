@@ -209,7 +209,8 @@ class CheckoutTask(ShellTask):
                     ``'git'`` (default), ``'svn'``, ``'cvs'``, ``'copy'``.
         :type vcs: str or None
         :param deps: The dependencies for this task (see
-                     :meth:`Task.__init__()` for the format), or `None`.
+               :meth:`Task.__init__() <valjean.cosette.task.Task.__init__>`
+               for the format), or `None`.
         :type deps: str or None
         '''
 
@@ -385,7 +386,8 @@ class BuildTask(ShellTask):
                             build time, as a list of strings.
         :type build_flags: list
         :param deps: The dependencies for this task (see
-                     :meth:`Task.__init__()` for the format), or `None`.
+                 :meth:`Task.__init__() <valjean.cosette.task.Task.__init__>`
+                 for the format), or `None`.
         :type deps: str or None
         '''
 

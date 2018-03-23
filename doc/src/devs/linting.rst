@@ -26,7 +26,7 @@ often. If the linter emits a warning, you can do one of the following:
 :command:`flake8`
 -----------------
 
-The :command:`flake8` linter is integrated with :mod:`setuptools` and can also
+The :command:`flake8` linter is integrated with :ref:`setuptools` and can also
 be invoked as an option to the ``setup.py`` script::
 
     $ ./setup.py flake8

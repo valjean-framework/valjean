@@ -313,7 +313,7 @@ def test_get_wrong_arg_number(empty_config):
 
 
 def test_set_wrong_arg_number(empty_config):
-    '''Test that :meth:`~.Config.set` cannot be called with less than 3 or
+    '''Test that :meth:`~.BaseConfig.set` cannot be called with less than 3 or
     more than 4 arguments.'''
     with pytest.raises(ValueError):
         empty_config.set('first')

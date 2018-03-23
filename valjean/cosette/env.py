@@ -17,7 +17,7 @@ inherits from :class:`dict`), but its main purpose is really to store
 information about concurrently running tasks.  For this purpose, :class:`Env`
 provides a number of practical methods.  First of all, if you have a list of
 tasks handy, you can generate an :class:`Env` object from them using the
-:meth:`from_tasks()` class method:
+:meth:`.from_tasks()` class method:
 
 .. doctest:: env
 
@@ -39,7 +39,7 @@ follows:
     >>> env.is_waiting(tasks[0])  # equivalently
     True
 
-There are :meth:`is_*` methods for all members of the :class:`~.TaskStatus`
+There are ``is_*`` methods for all members of the :class:`~.TaskStatus`
 enumeration. Additionally, you can change the status of a task with
 
 .. doctest:: env
@@ -97,7 +97,7 @@ from .depgraph import DepGraph
 
 
 class EnvError(Exception):
-    '''An error that may be raised by the :mod:`~Env` class.'''
+    '''An error that may be raised by the :class:`~Env` class.'''
     pass
 
 

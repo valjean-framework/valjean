@@ -1,7 +1,7 @@
 # pylint: disable=too-many-lines
 '''Tests for the :mod:`common <valjean.eponine.common>` module: random
 generation of data thanks to :mod:`hypothesis` then test parsing and building
-output objects (typically from :mod:`numpy`.
+output objects (typically from :mod:`numpy`).
 '''
 
 import numpy as np

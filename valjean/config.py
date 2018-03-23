@@ -28,7 +28,7 @@ using the ``paths`` argument:
 
     >>> config = Config(paths=['valjean.conf'])
 
-The default files are in the :data:`Config.DEFAULT_CONFIG_FILES` class
+The default files are in the :data:`BaseConfig.DEFAULT_CONFIG_FILES` class
 attribute, so you can do
 
 .. doctest:: config
@@ -235,9 +235,9 @@ class BaseConfig:
 
         This function can be called with two signatures:
 
-          * :meth:`get(section, option)` returns the value of `option` in
+          * ``get(section, option)`` returns the value of `option` in
             `section`;
-          * :meth:`get(section_family, section_id, option)` returns the value
+          * ``get(section_family, section_id, option)`` returns the value
             of `option` in section ``section_family/section_id``.
 
         :param str section: The name of the section.
@@ -354,7 +354,8 @@ class BaseConfig:
         :param str sec_family: A prefix to match.
         :returns: A tuple containing the full name of the found configuration
                   section and its ID.
-        :raises NoSectionError: if no section from this family can be found.
+        :raises configparser.NoSectionError: if no section from this family can
+                                             be found.
         '''
         try:
             return next(self.sections_by_family(sec_family))
@@ -445,9 +446,9 @@ class Config(BaseConfig):
 
         This function can be called with two signatures:
 
-          * :meth:`get(section, option)` returns the value of `option` in
+          * ``get(section, option)`` returns the value of `option` in
             `section`;
-          * :meth:`get(section_family, section_id, option)` returns the value
+          * ``get(section_family, section_id, option)`` returns the value
             of `option` in section ``section_family/section_id``.
 
         :param str section: The name of the section.

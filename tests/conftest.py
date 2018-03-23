@@ -4,9 +4,8 @@ import pytest
 
 
 def pytest_addoption(parser):
-    '''Add the ``--valjean-verbose``, ``--runslow``, ``--qualtrip``,
-    ``--qualtrip_exclude`` and ``--qualtrip_match`` options to
-    :program:`pytest`.'''
+    '''Add the ``--valjean-verbose`` and ``--runslow`` options to
+    :class:`pytest`.'''
     parser.addoption("--valjean-verbose", action="store_true",
                      help="Maximize valjean verbosity")
     parser.addoption("--runslow", action="store_true",

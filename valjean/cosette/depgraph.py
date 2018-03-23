@@ -51,7 +51,7 @@ dictionary may be seen as a sparse representation of the graph adjacency
 matrix.
 
 You can recover the dependency dictionary by passing the graph to
-:func:`dict()`:
+:class:`dict() <dict>`:
 
 .. doctest:: depgraph
 
@@ -255,10 +255,10 @@ as you can verify yourself:
 
 The nice thing about this feature is that it makes it easier (more modular) to
 build complex graphs. Just build smaller subgraphs and assemble them together
-as if they were nodes! The :meth:`flatten()` method will recursively graft all
+as if they were nodes! The :meth:`.flatten` method will recursively graft all
 graph nodes into the main graph.
 
-(Fun fact: the :class:`DepGraph` type is a monad, with :meth:`flatten()`
+(Fun fact: the :class:`DepGraph` type is a monad, with :meth:`.flatten`
 playing the role of ``join``. If what I just wrote makes no sense to you, don't
 worry.)
 

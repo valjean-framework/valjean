@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # pylint: disable=no-value-for-parameter
 
-'''Tests for the :mod:`depgraph` module.'''
+'''Tests for the :mod:`.depgraph` module.'''
 
 from hypothesis import given, note, assume, event, settings
 from hypothesis.strategies import (integers, sets, text, lists, composite,

@@ -22,7 +22,7 @@ from valjean.cosette.task import TaskStatus, DelayTask, Task
 
 @composite
 def graphs(draw, task_strategy, dep_frac=0.0):
-    '''Composite Hypothesis strategy to generate a :class:`DepGraph`.
+    '''Composite Hypothesis strategy to generate a :class:`.DepGraph`.
 
     :param task_strategy: A hypothesis strategy that generates tasks.
     '''
@@ -61,7 +61,7 @@ def failing_tasks(draw, min_size=1, max_size=20):
 ######################
 
 def make_graph(tasks, randoms, dep_frac):
-    '''Create a :class:`DepGraph` from a list of tasks and a list of random
+    '''Create a :class:`.DepGraph` from a list of tasks and a list of random
     values.'''
     task_deps = {}
     all_tasks = []

@@ -51,12 +51,14 @@ alternative to manage virtual Python environments.
 Prerequisites
 -------------
 
+.. _pyparsing: http://pythonhosted.org/pyparsing/
+
 In order to use :mod:`valjean`, you will need at least Python v3.4. Some of the
 prerequisites for testing and documentation generation (*looking at you,*
-:mod:`sphinx`) have known installation problems with old versions of the
-:mod:`setuptools` standard library package. This is the case, for instance, of
-boxes running Ubuntu 14.04, that ships by default with :mod:`setuptools` v2.2.
-You can work around these problems by upgrading your :mod:`setuptools` package
+:doc:`sphinx <sphinx-doc/sphinx>`) have known installation problems with old versions of the
+:ref:`setuptools` standard library package. This is the case, for instance, of
+boxes running Ubuntu 14.04, that ships by default with :ref:`setuptools` v2.2.
+You can work around these problems by upgrading your :ref:`setuptools` package
 (and :mod:`pip`, since you're at it) in your virtual environment, before
 installing :mod:`valjean` or its dependencies. The command is::
 
@@ -64,5 +66,5 @@ installing :mod:`valjean` or its dependencies. The command is::
 
 .. todo::
 
-   Document the real dependencies (:mod:`pyparsing`, etc.) as soon as the code
+   Document the real dependencies (`pyparsing`_, etc.) as soon as the code
    that requires them lands in the repository.
