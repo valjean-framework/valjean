@@ -2,8 +2,9 @@ Building the documentation
 ==========================
 
 .. highlight:: bash
+.. _sphinx: http://www.sphinx-doc.org/en/stable
 
-:mod:`valjean` uses the :mod:`sphinx` package for its own documentation.
+:mod:`valjean` uses the `sphinx`_ package for its own documentation.
 Before building the documentation, you will need to install :mod:`valjean`, as
 explained in :ref:`the installation section <installation>`.
 
@@ -15,7 +16,7 @@ The HTML documentation can be built with::
 The documentation will appear in :file:`doc/build/html` and can be browsed
 starting with the :file:`index.html` file.
 
-:mod:`sphinx` is also able to build a LaTeX version of the documentation with::
+`sphinx` is also able to build a LaTeX version of the documentation with::
 
     $ ./setup.py build_sphinx -b latex
     $ cd doc/src && make latex   # equivalently
@@ -23,13 +24,13 @@ starting with the :file:`index.html` file.
 This will dump the LaTeX sources in :file:`doc/build/latex`, where you can compile
 them to PDF with :command:`make`.
 
-The :mod:`sphinx` system is deeply customizable; most of the options are set in
+The `sphinx` system is deeply customizable; most of the options are set in
 :file:`doc/src/conf.py`, which is fairly well documented.
 
 Version numbering weirdness
 ---------------------------
 
-By default, the version number in the :mod:`sphinx` documentation is extracted
+By default, the version number in the `sphinx` documentation is extracted
 from the **installed** version of :mod:`valjean`, and **not** the version in
 the current directory. Yeah, I know. If you are building the package
 documentation locally, then it doesn't really matter, but if you are building
@@ -44,7 +45,7 @@ You will find the full recipe in :ref:`release-recipe`.
 Extensions
 ----------
 
-We use a few :mod:`sphinx` extensions:
+We use a few `sphinx` extensions:
 
 :mod:`~sphinx.ext.autodoc`
   Extracts the docstrings from the Python code and turns them into
@@ -55,7 +56,7 @@ We use a few :mod:`sphinx` extensions:
   execution at a Python prompt.
 
 :mod:`~sphinx.ext.intersphinx`
-  Add hyperlinks to :mod:`sphinx` documentation outside the current project
+  Add hyperlinks to `sphinx` documentation outside the current project
   (for instance, in the Python standard library).
 
 :mod:`~sphinx.ext.graphviz`

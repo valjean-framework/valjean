@@ -254,7 +254,8 @@ class CheckoutTask(ShellTask):
             env[task.name]['repository'] = repository
             env[task.name]['checkout_log'] = checkout_log
 
-        :param mapping env: The environment for the execution of this task.
+        :param env: The environment for the execution of this task.
+        :type env: :term:`mapping`
         :returns: The proposed environment updates.
         '''
 
@@ -461,7 +462,8 @@ class BuildTask(ShellTask):
             env[task.name]['configure_log'] = configure_log
             env[task.name]['build_log'] = build_log
 
-        :param mapping env: The environment for the execution of this task.
+        :param env: The environment for the execution of this task.
+        :type env: :term:`mapping`
         :returns: The proposed environment updates.
         '''
 

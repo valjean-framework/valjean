@@ -77,8 +77,9 @@ class QueueScheduling:
     def execute_tasks(self, tasks, graph, env):
         '''Execute the tasks.
 
-        :param iterable tasks: Iterable over tasks to be executed, possibly
-                               sorted according to some order.
+        :param tasks: Iterable over tasks to be executed, possibly sorted
+                      according to some order.
+        :type tasks: :term:`iterable`
         :param DepGraph graph: Dependency graph for the tasks.
         :param env: An initial environment for the scheduled tasks.
         :type env: Env

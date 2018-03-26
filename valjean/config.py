@@ -146,7 +146,7 @@ class BaseConfig:
                       If you want to read the default files **and** some
                       additional ones, the default files are available as
                       ``Config.DEFAULT_CONFIG_FILES``.
-        :type paths: iterable or None
+        :type paths: :term:`iterable` or None
         '''
 
         self._conf = ConfigParser(interpolation=ExtendedInterpolation(),
@@ -185,7 +185,8 @@ class BaseConfig:
         string mappings. Note that `mapping` may also be a :class:`BaseConfig`
         or :class:`Config` object (in which case this method acts as a copy).
 
-        :param mapping mapping: The mapping for initialization.
+        :param mapping: The mapping for initialization.
+        :type mapping: :term:`mapping`
         :returns: The constructed BaseConfig object.
         '''
         new = cls()
@@ -249,7 +250,7 @@ class BaseConfig:
                          information).
         :param vars: An option/value dictionary that will be looked up before
                      the configuration itself, or `None` if not needed.
-        :type vars: mapping or None
+        :type vars: :term:`mapping` or None
         :param fallback: A value to return if the option cannot be found.
         '''
 
@@ -414,7 +415,7 @@ class Config(BaseConfig):
                       If you want to read the default files **and** some
                       additional ones, the default files are available as
                       ``Config.DEFAULT_CONFIG_FILES``.
-        :type paths: iterable or None
+        :type paths: :term:`iterable` or None
         :param handlers: An iterable of handlers for specific options. If this
                          is `None`, the default handlers from
                          ``Config.DEFAULT_HANDLERS`` will be installed. The
@@ -422,7 +423,7 @@ class Config(BaseConfig):
                          ``(fams, opt, handler)``, where ``fams`` is a list of
                          section families, ``opt`` is the name of the option to
                          handle and ``handler`` is the handler callable proper.
-        :type handlers: iterable or None
+        :type handlers: :term:`iterable` or None
         '''
         super().__init__(paths)
 
@@ -460,7 +461,7 @@ class Config(BaseConfig):
                          information).
         :param vars: An option/value dictionary that will be looked up before
                      the configuration itself, or `None` if not needed.
-        :type vars: mapping or None
+        :type vars: :term:`mapping` or None
         :param fallback: A value to return if the option cannot be found.
         '''
 

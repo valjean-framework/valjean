@@ -16,8 +16,8 @@ directory.  This way, you will not need to reinstall the package every time you
 modify the sources.
 
 Also, the ``[dev]`` suffix will trigger the installation of all the development
-dependencies for :mod:`valjean` (e.g. :py:mod:`sphinx`, :mod:`pytest`, etc.). They
-are specified in the ``extras_require`` argument to :func:`setup()`, in
+dependencies for :mod:`valjean` (e.g. `sphinx`, `pytest`, etc.). They are
+specified in the ``extras_require`` argument to ``setup()``, in
 :file:`setup.py`.
 
 The :file:`setup.py` script

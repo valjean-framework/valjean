@@ -34,7 +34,7 @@ be invoked as an option to the ``setup.py`` script::
 .. _flake8_shutup:
 
 Sometimes, :command:`flake8` emits a warning, but you **know** that the warning
-is actually benign. For instance, the :mod:`sphinx` configuration file
+is actually benign. For instance, the `sphinx` configuration file
 :file:`doc/src/conf.py` contains the following lines:
 
 .. code-block:: python

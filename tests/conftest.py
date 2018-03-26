@@ -1,11 +1,13 @@
-''':mod:`pytest` configuration file.'''
+'''.. _pytest: https://docs.pytest.org/en/latest
+
+`pytest`_ configuration file.
+'''
 
 import pytest
 
 
 def pytest_addoption(parser):
-    '''Add the ``--valjean-verbose`` and ``--runslow`` options to
-    :class:`pytest`.'''
+    '''Add the ``--valjean-verbose`` and ``--runslow`` options to `pytest`.'''
     parser.addoption("--valjean-verbose", action="store_true",
                      help="Maximize valjean verbosity")
     parser.addoption("--runslow", action="store_true",

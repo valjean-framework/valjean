@@ -353,10 +353,12 @@ class DepGraph:
     def __init__(self, nodes=None, edges=None):
         '''Initialize the object from a list of nodes and an edge dictionary.
 
-        :param iterable nodes: An iterable over the nodes of the graph, or
-                              `None` for an empty graph.
-        :param mapping edges: A mapping between integers representing the
-                              nodes, or `None` for an empty graph.
+        :param nodes: An iterable over the nodes of the graph, or `None` for an
+                      empty graph.
+        :type nodes: :term:`iterable`
+        :param edges: A mapping between integers representing the nodes, or
+                      `None` for an empty graph.
+        :type edges: :term:`mapping`
         '''
 
         if nodes is None or edges is None:

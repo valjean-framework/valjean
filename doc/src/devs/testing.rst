@@ -2,14 +2,16 @@ Testing
 =======
 
 .. highlight:: bash
+.. _pytest: https://docs.pytest.org/en/latest
+.. _pytest-doc: http://pytest-cov.readthedocs.io/en/latest/
 
 Unit tests
 ----------
 
-:mod:`valjean` uses :mod:`pytest` as a unit-test framework; some of the unit
+:mod:`valjean` uses `pytest`_ as a unit-test framework; some of the unit
 tests rely on the :mod:`hypothesis` package for property-based testing. The
 tests are defined in the :file:`tests` folder and are automatically discovered
-by :mod:`pytest`.
+by `pytest`.
 
 You can run the unit-test suite with::
 
@@ -17,13 +19,13 @@ You can run the unit-test suite with::
     $ ./setup.py pytest  # equivalently
     $ py.test
 
-This will run the tests and produce a summary report. Additionally,
-:mod:`pytest` will calculate code coverage; a text report will be printed to
-stdout, and a nice HTML report will be written to :file:`tests/htmlcov`.
+This will run the tests and produce a summary report. Additionally, `pytest`_
+will calculate code coverage; a text report will be printed to stdout,
+and a nice HTML report will be written to :file:`tests/htmlcov`.
 
-The default :mod:`pytest` options are defined in the :file:`pytest.ini` file,
-and :mod:`coverage` options are defined in :file:`.coveragerc`. Extra options
-to :mod:`pytest` can be passed on the command line::
+The default `pytest` options are defined in the :file:`pytest.ini` file, and
+`coverage` options are defined in :file:`.coveragerc`, using `pytest-doc`_.
+Extra options to `pytest` can be passed on the command line::
 
     $ py.test -k depgraph        # select tests whose name matches "depgraph"
     $ py.test --valjean-verbose  # verbose test output
@@ -68,8 +70,8 @@ developer hold. If a counterexample is found, it will be shown to the user.
 In Python, the standard property-based test library is :mod:`hypothesis`, which
 offers a flexible and `well-documented API
 <https://hypothesis.readthedocs.io/en/latest/>`_. Additionally,
-:mod:`hypothesis` is well integrated with :mod:`pytest`.  :mod:`valjean` unit
-tests leverage :mod:`hypothesis` whenever possible.
+:mod:`hypothesis` is well integrated with `pytest`. :mod:`valjean` unit tests
+leverage :mod:`hypothesis` whenever possible.
 
 If you want some examples within :mod:`valjean`, a good place to start is the
 :mod:`~tests.cosette.test_depgraph` test module, which tests the invariants of
@@ -86,7 +88,7 @@ Sometimes the docstrings contain example code such as the following:
    3
 
 These examples can be automatically tested with :mod:`~sphinx.ext.doctest`, a
-:mod:`sphinx` extension. You can run the examples with::
+`sphinx` extension. You can run the examples with::
 
     $ ./setup.py build_sphinx -b doctest
     $ cd doc/src && make doctest  # equivalently

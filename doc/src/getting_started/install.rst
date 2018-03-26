@@ -1,6 +1,11 @@
 Installing :mod:`valjean`
 =========================
 
+.. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.io/en/latest
+.. _sphinx: http://www.sphinx-doc.org/en/stable
+.. _pyparsing: http://pythonhosted.org/pyparsing
+.. _pip: https://pip.pypa.io/en/stable
+
 Quick start
 -----------
 
@@ -45,21 +50,19 @@ distribution::
      $ source ~/.venv/valjean/bin/activate
      (valjean) $ pip3 install /path/to/valjean-x.y.z
 
-For the record, the :mod:`virtualenvwrapper` package also provides a practical
+For the record, the `virtualenvwrapper`_ package also provides a practical
 alternative to manage virtual Python environments.
 
 Prerequisites
 -------------
 
-.. _pyparsing: http://pythonhosted.org/pyparsing/
-
 In order to use :mod:`valjean`, you will need at least Python v3.4. Some of the
 prerequisites for testing and documentation generation (*looking at you,*
-:doc:`sphinx <sphinx-doc/sphinx>`) have known installation problems with old versions of the
+`sphinx`_) have known installation problems with old versions of the
 :ref:`setuptools` standard library package. This is the case, for instance, of
 boxes running Ubuntu 14.04, that ships by default with :ref:`setuptools` v2.2.
 You can work around these problems by upgrading your :ref:`setuptools` package
-(and :mod:`pip`, since you're at it) in your virtual environment, before
+(and `pip`_, since you're at it) in your virtual environment, before
 installing :mod:`valjean` or its dependencies. The command is::
 
     (valjean) $ pip3 install --upgrade setuptools pip
