@@ -26,7 +26,100 @@ keyword.
 
 .. automodule:: valjean.eponine.pyparsing_t4.grammar
    :synopsis: Grammar for pyparsing parser
+   :members:
 
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.intro
+      :annotation: introduction parser
+		   
+      ..
+	 .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+	    :lines: 418
+		   
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.runtime
+      :annotation: run time parser
+
+	 ..
+	    .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+	       :lines: 426
+      
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.respdesc
+      :annotation: response description
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.respcarac
+      :annotation: response characteristics
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.respintro
+      :annotation: response introduction
+   .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+      :lines: 526
+		   
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.scoremode
+      :annotation: score mode
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.scorezone
+      :annotation: score zone
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.scoredesc
+      :annotation: score description
+   .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+      :lines: 610-611
+	      
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.defintegratedres
+      :annotation: default integrated result
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.spectrumblock
+      :annotation: spectrum block result
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.vovspectrumblock
+      :annotation: spectrum block result with variance of variance
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.meshblock
+      :annotation: mesh block result
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.kijres
+      :annotation: kij result
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.kijsources
+      :annotation: kij sources
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.keffblock
+      :annotation: keff block result
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.defkeffblock
+      :annotation: default keff block result
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.medfile
+      :annotation: med file path
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.entropy
+      :annotation: entropy results
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.orderedres
+      :annotation: ordred results
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.gbblock
+      :annotation: Green bands block result
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.ifpblock
+      :annotation: IFP block result
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.ifpadjointcriticality
+      :annotation: IFP adjoint criticality edition block
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.pertu_desc
+      :annotation: perturbation description
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.uncertblock
+      :annotation: uncertainties block parser
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.uncertintegblock
+      :annotation: = integrated uncertainties block parser
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.contribpartblock
+      :annotation: = contributing particles block parser
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.scoreblock
+      :annotation:
+   .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+      :lines: 1047-1058
+	      
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.responseblock
+      :annotation: response block parser
+   .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+      :lines: 1060-1067
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.response
+      :annotation: response parser
+   .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+      :lines: 1069-1072
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.perturbation
+      :annotation: perturbation parser
+   .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+      :lines: 1074-1075
+   .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.mygram
+      :annotation:
+	 
+      Tripoli-4 parser (full)
+   .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+      :lines: 1082-1091
+      
 
 :mod:`~.transform` – Transform pyparsing result
 -----------------------------------------------

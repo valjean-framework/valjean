@@ -5,7 +5,7 @@ r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 .. _pyparsing_pip: https://pypi.python.org/pypi/pyparsing/2.2.0
 .. |keff| replace:: k\ :sub:`eff`
 .. |kij| replace:: k\ :sub:`ij`
-.. role :: parsing_var(literal)
+.. role :: parsing_var(attr)
 
 Documentation on **pyparsing** package can be found in `pyparsing`_
 documentation linked to `pyparsing_pip`_ and on `pyparsing_wiki`_ with
@@ -128,8 +128,8 @@ Response are constructed as:
       * :parsing_var:`spectrumblock`: spectrum
       * :parsing_var:`meshblock`: mesh
       * :parsing_var:`vovspectrumblock`: spectrum with variance of variance
-      * :parsing_var:`boltzmann_entropy` and :parsing_var:`shannon_entropy`:
-        entropy results
+      * :parsing_var:`entropy`: entropy results (Boltzmann and Shannon
+        entropies)
       * :parsing_var:`medfile`: location of optional MED file
       * :parsing_var:`defintegratedres`: default result integrated over energy
       * :parsing_var:`uncertblock`: uncertainty results
@@ -164,8 +164,16 @@ possibilities are:
   score),
 * :parsing_var:`runtime`: simulation, exploitation or elapsed time.
 
+.. _link to grammar: ../../_modules/valjean/eponine/pyparsing_t4/grammar.html
+
+Et le lien vers le code: `link to grammar`_.
+
 .. todo:: need to test with "fake" outputs from Tripoli-4 (to be thought)
+
 '''
+
+# .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
+#    :lines: 938-945
 # pylint: disable=invalid-name
 
 import logging
