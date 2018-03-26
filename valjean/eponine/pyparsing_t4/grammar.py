@@ -172,10 +172,6 @@ Et le lien vers le code: `link to grammar`_.
 
 '''
 
-# .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
-#    :lines: 938-945
-# pylint: disable=invalid-name
-
 import logging
 from pyparsing import (Word, Keyword, White, alphas, alphanums,
                        Suppress, Optional, LineEnd, LineStart,
