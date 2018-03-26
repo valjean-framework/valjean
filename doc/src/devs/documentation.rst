@@ -75,3 +75,19 @@ We use a few `sphinx` extensions:
 
 :mod:`~sphinx.ext.imgmath`
   Allows to write in math mode.
+
+
+Checking references
+-------------------
+
+To check references the ``nitpicky`` option can be used::
+
+      $ sphinx-build -a -n src/ build/html
+
+from the ``doc`` folder, ``-n`` to activate the ``nitpicky`` option and ``-a``
+(optional) to reconstruct documentation for all files.
+
+This option has to be used carefully, some links are not obvious (especially
+the :mod:`~sphinx.ext.intersphinx` ones. Warnings will probably still be
+present, like the ones linked to used of ``:ivar:`` sphinx keywords for
+instance variables that are badly cross-referenced for the moment.

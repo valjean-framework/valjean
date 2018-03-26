@@ -11,5 +11,5 @@ For developers
 
 .. todo::
 
-   Write a release checklist, including: pytest, doctest, sphinx doc with
-   nitpicky=True...
+   For each new release, please be sure to check all the previous steps before
+   tagging (setup, testing, linting, documentation).
