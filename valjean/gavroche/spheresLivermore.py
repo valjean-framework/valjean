@@ -10,16 +10,16 @@ import matplotlib.pyplot as plt
 class LivermoreSphere():
     '''Class to study Livermore Spheres.'''
 
-    def __init__(self, jdd, short_name, responses, charac=None):
+    def __init__(self, jdd, short_name, charac=None):
         self.name = (short_name, jdd)
         self.characteristics = charac
-        self.parsed_res = None
+        self.parsed_res = T4Parser.parse_jdd(jdd, -1).result
         self.spectrum = None
         self.integrated = None
-        self.add_result(jdd, eval(responses))
+        # self.add_result(jdd, eval(responses))
 
-    def add_result(self, jdd, responses):
-        self.parsed_res = T4Parser.parse_jdd(jdd, -1).result
+    def set_result(self, response):
+        responses = eval(response)
         print("nbre de responses:", len(self.parsed_res[-1]['list_responses']))
         if not isinstance(responses, list):
             print("No response or not a list")
@@ -82,25 +82,28 @@ class SpherePlot():
     air input.
     '''
 
-    def __init__(self, jdd_sphere, jdd_air, responses):
-        self.sphere = LivermoreSphere(jdd_sphere, "Sphere", responses)
-        self.air = LivermoreSphere(jdd_air, "Air", responses)
+    def __init__(self, jdd_sphere, jdd_air):
+        self.sphere = LivermoreSphere(jdd_sphere, "Sphere")  #, responses)
+        self.air = LivermoreSphere(jdd_air, "Air")  #, responses)
 
-    def normalized_sphere(self):
+    def normalized_sphere(self, responses):
+        print(responses)
+        self.sphere.set_result(responses)
+        self.air.set_result(responses)
         spectrum = self.sphere.spectrum['spectrum']
         print(type(spectrum))
         normalization = self.air.integrated['integrated_res']
-        print(normalization['score'].ravel()[0])
+        # print(normalization['score'].ravel()[0])
         norm_spec = spectrum['score']/normalization['score'].ravel()[0]
-        print(spectrum['score'].ravel())
-        print("sigma from spectrum:")
-        print(spectrum['sigma'].ravel())
-        print("sigma from integrated:")
-        print(normalization['sigma'].ravel()[0])
-        print("normalized spectrum")
-        print(norm_spec.ravel())
+        # print(spectrum['score'].ravel())
+        # print("sigma from spectrum:")
+        # print(spectrum['sigma'].ravel())
+        # print("sigma from integrated:")
+        # print(normalization['sigma'].ravel()[0])
+        # print("normalized spectrum")
+        # print(norm_spec.ravel())
         testerr = spectrum['sigma']*norm_spec/100.
-        print(testerr.ravel())
+        # print(testerr.ravel())
         print("shape=", testerr.shape)
         norm_spec_sig = spectrum['sigma']*norm_spec/100.  #/normalization['sigma'].ravel()[0]
         # print(norm_spec)
@@ -208,19 +211,27 @@ class Comparison():
 
     # def __init__(self, charac, jdd_sphere, jdd_air):
     # def __init__(self, charac, jdds):
-    def __init__(self, jdds):
+    def __init__(self):
         # self.charac = charac
         self.exp_res = LivermoreExps()
         self.simu_res = {}
-        for name, jdd in jdds:
-            print(jdd)
-            self.simu_res[name] = SpherePlot(jdd[0].replace("SPHAIR", "sphere"),
-                                             jdd[0].replace("SPHAIR", "air"),
-                                             jdd[1])
+        # for name, jdd in jdds:
+        #     print(jdd)
+        #     self.simu_res[name] = SpherePlot(jdd[0].replace("SPHAIR", "sphere"),
+        #                                      jdd[0].replace("SPHAIR", "air"),
+        #                                      jdd[1])
         # self.simu_res = SpherePlot(jdd_sphere, jdd_air)
         # self.norm_simu, self.norm_sig = self.simu_res.normalized_sphere()
 
-    def compare_plots(self, charac):
+
+    def set_t4_files(self, jdds):
+        for name, jdd in jdds:
+            print(jdd)
+            self.simu_res[name] = SpherePlot(jdd.replace("SPHAIR", "sphere"),
+                                             jdd.replace("SPHAIR", "air"))
+
+
+    def compare_plots(self, charac, responses):
         # experiment bins
         # expbins = self.exp_res.exp_res[self.charac]['time']
         plt.figure(1)
@@ -248,18 +259,22 @@ class Comparison():
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
             print(ires)
             print(simres)
+            print(sname)
+            print(responses[ires], type(responses[ires]), type(eval(responses[ires])))
             # middle of T4 bins
+            norm_simu = simres.normalized_sphere(responses[ires])
             tbinle = simres.sphere.spectrum['tbins'][:-1]
             tbinhe = simres.sphere.spectrum['tbins'][1:]
             mtbins = (tbinle+tbinhe)/2*1e9
-            norm_simu = simres.normalized_sphere()
-            print(norm_simu[0].ravel()[1:-1].shape)
+            print("shape score:", norm_simu[0].ravel()[1:-1].shape)
             # print(norm_simu[1].ravel()[2:-1])
-            print(norm_simu[1].ravel()[1:-1].shape)
-            print(self.exp_res.res[charac]['time'].shape)
-            simu.append(plt.errorbar(mtbins[1:-1],
-                                     norm_simu[0].ravel()[1:-1]/2,
-                                     yerr=norm_simu[1].ravel()[1:-1],
+            print("shape sigma:", norm_simu[1].ravel()[1:-1].shape)
+            print("shape exp:", self.exp_res.res[charac]['time'].shape)
+            print(mtbins[3:-1])
+            print(self.exp_res.res[charac]['time'])
+            simu.append(plt.errorbar(mtbins[3:-1],
+                                     norm_simu[0].ravel()[3:-1]/2,
+                                     yerr=norm_simu[1].ravel()[3:-1],
                                      ecolor=cols[ires], color=cols[ires],
                                      label=simres.sphere.name[0]))
             labels.append(sname)
@@ -269,6 +284,7 @@ class Comparison():
             #              ecolor=cols[ires]))
         plt.xlabel("time bins [ns]")
         plt.yscale("log", nonposy='clip')
+        plt.ylim(ymin=5e-5)
         # plt.legend()
         plt.legend([(exp2sig, exp1sig)]+simu, ["experiment"]+labels) # + simu)
         plt.title("{elt}, {mfp} mfp, detector at {deg}°"
