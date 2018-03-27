@@ -10,19 +10,36 @@ import matplotlib.pyplot as plt
 class LivermoreSphere():
     '''Class to study Livermore Spheres.'''
 
-    def __init__(self, jdd, short_name, charac=None):
+    def __init__(self, jdd, short_name, responses, charac=None):
         self.name = (short_name, jdd)
         self.characteristics = charac
         self.parsed_res = None
         self.spectrum = None
         self.integrated = None
-        self.add_result(jdd)
+        self.add_result(jdd, eval(responses))
 
-    def add_result(self, jdd):
+    def add_result(self, jdd, responses):
         self.parsed_res = T4Parser.parse_jdd(jdd, -1).result
         print("nbre de responses:", len(self.parsed_res[-1]['list_responses']))
+        if not isinstance(responses, list):
+            print("No response or not a list")
+            self.add_default_result()
+        else:
+            if len(responses) == 1:
+                self.add_default_result()
+            else:
+                if isinstance(responses[0], int):
+                    print("First response is an int")
+                    self.add_result_from_ints(responses)
+                else:
+                    print("First response should be a string")
+                    self.add_result_from_score_names(responses)
+
+    def add_default_result(self):
+        print("in add_default_result")
         spec_resp = self.parsed_res[-1]['list_responses'][0]
         print(list(spec_resp.keys()))
+        print(list(spec_resp['response_description'].keys()))
         score_res = spec_resp['results']['score_res']
         print("Check: number of scores =", len(score_res))
         self.spectrum = score_res[0]['spectrum_res']
@@ -30,18 +47,44 @@ class LivermoreSphere():
         integ_resp = self.parsed_res[-1]['list_responses'][1]
         score1_res = integ_resp['results']['score_res']
         self.integrated = score1_res[0]['spectrum_res']
-        print(self.integrated)
+        # print(self.integrated)
         return
 
+    def add_result_from_ints(self, responses):
+        print("add_result_from_ints")
+        allresp = self.parsed_res[-1]['list_responses']
+        spec_resp = allresp[responses[0]]
+        score_res = spec_resp['results']['score_res']
+        print("Check: number of scores =", len(score_res))
+        self.spectrum = score_res[0]['spectrum_res']
+        integ_resp = allresp[responses[1]]
+        score1_res = integ_resp['results']['score_res']
+        self.integrated = score1_res[0]['spectrum_res']
+
+    def add_result_from_score_names(self, responses):
+        print("add_result_from_score_names")
+        allresp = self.parsed_res[-1]['list_responses']
+        corr_names = dict(
+            map(lambda xy: (xy[1]['response_description']['score_name'], xy[0]),
+                enumerate(allresp)))
+        print(corr_names)
+        spec_resp = allresp[corr_names[responses[0]]]
+        score_res = spec_resp['results']['score_res']
+        print("Check: number of scores =", len(score_res))
+        self.spectrum = score_res[0]['spectrum_res']
+        integ_resp = allresp[corr_names[responses[1]]]
+        score1_res = integ_resp['results']['score_res']
+        self.integrated = score1_res[0]['spectrum_res']
+        print(self.integrated)
 
 class SpherePlot():
     '''Class to build plot for Livermore spheres from one sphere and associated
     air input.
     '''
 
-    def __init__(self, jdd_sphere, jdd_air):
-        self.sphere = LivermoreSphere(jdd_sphere, "Sphere", [30, 0.8])
-        self.air = LivermoreSphere(jdd_air, "Air")
+    def __init__(self, jdd_sphere, jdd_air, responses):
+        self.sphere = LivermoreSphere(jdd_sphere, "Sphere", responses)
+        self.air = LivermoreSphere(jdd_air, "Air", responses)
 
     def normalized_sphere(self):
         spectrum = self.sphere.spectrum['spectrum']
@@ -171,8 +214,9 @@ class Comparison():
         self.simu_res = {}
         for name, jdd in jdds:
             print(jdd)
-            self.simu_res[name] = SpherePlot(jdd.replace("SPHAIR", "sphere"),
-                                             jdd.replace("SPHAIR", "air"))
+            self.simu_res[name] = SpherePlot(jdd[0].replace("SPHAIR", "sphere"),
+                                             jdd[0].replace("SPHAIR", "air"),
+                                             jdd[1])
         # self.simu_res = SpherePlot(jdd_sphere, jdd_air)
         # self.norm_simu, self.norm_sig = self.simu_res.normalized_sphere()
 
@@ -229,5 +273,5 @@ class Comparison():
         plt.legend([(exp2sig, exp1sig)]+simu, ["experiment"]+labels) # + simu)
         plt.title("{elt}, {mfp} mfp, detector at {deg}°"
                   .format(elt=charac[0].capitalize(),
-                          mfp=charac[1], deg=self.charac[2]))
+                          mfp=charac[1], deg=charac[2]))
         plt.show()
