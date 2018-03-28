@@ -81,11 +81,6 @@ read-and-modify trip above is implemented as follows:
     >>> env.atomically(modify_task1)
     >>> env.is_skipped(tasks[1])
     True
-
-.. todo::
-
-    Document :meth:`~.Env.from_graph`, :meth:`~.Env.from_file` and
-    :meth:`~.Env.to_file`.
 """
 
 import threading

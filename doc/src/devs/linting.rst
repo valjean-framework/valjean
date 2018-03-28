@@ -76,7 +76,3 @@ seems to have very clear (albeit configurable) ideas about what your variable
 names should and should not be, how many public methods your classes should
 have... At the time of writing, :mod:`valjean` is :command:`pylint`-clean, but
 the tests are not.
-
-.. todo::
-
-   Fix the :command:`pylint` warnings in the unit tests.
