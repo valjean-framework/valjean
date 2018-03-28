@@ -6,6 +6,7 @@ import valjean.eponine.pyparsing_t4.transform as trans
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 class LivermoreSphere():
     '''Class to study Livermore Spheres.'''
@@ -234,8 +235,11 @@ class Comparison():
     def compare_plots(self, charac, responses):
         # experiment bins
         # expbins = self.exp_res.exp_res[self.charac]['time']
+        print("[31mNbre fichiers:", len(self.simu_res), "[0m")
         plt.figure(1)
-        plt.subplot(111)
+        gs = gridspec.GridSpec(2, 1, height_ratios=[4, 1])
+        # 211 -> gs[0], 212 -> gs[1]
+        plt.subplot(gs[0])
         exp2sig = plt.errorbar(self.exp_res.res[charac]['time'],
                                self.exp_res.res[charac]['cntPtimePsource'],
                                yerr=self.exp_res.res[charac]['error']*2,
@@ -245,24 +249,27 @@ class Comparison():
                                self.exp_res.res[charac]['cntPtimePsource'],
                                yerr=self.exp_res.res[charac]['error'],
                                fmt='none', ecolor='r', ls=':')
-        # plt.errorbar(self.exp_res.res[self.charac]['time'],
-        #              self.exp_res.res[self.charac]['cntPtimePsource'],
-        #              yerr=self.exp_res.res[self.charac]['error']*2,
-        #              fmt='none', ecolor='orange')
-        # plt.errorbar(self.exp_res.res[self.charac]['time'],
-        #              self.exp_res.res[self.charac]['cntPtimePsource'],
-        #              yerr=self.exp_res.res[self.charac]['error'],
-        #              fmt='none', ecolor='r')
+        plt.yscale("log", nonposy='clip')
+        # plt.legend()
+        plt.title("{elt}, {mfp} mfp, detector at {deg}°"
+                  .format(elt=charac[0].capitalize(),
+                          mfp=charac[1], deg=charac[2]))
         cols = ['b', 'g', 'm', 'darkviolet']
         simu = []
         labels = []
+        expcut = 3 if charac[2] == '30' else 2
+        if charac[0] == "BERYLLIUM":
+            expcut = 1
+        print(len(responses))
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
             print(ires)
             print(simres)
             print(sname)
-            print(responses[ires], type(responses[ires]), type(eval(responses[ires])))
+            if sname not in responses:
+                continue
+            print(responses[sname], type(responses[sname]), type(eval(responses[sname])))
             # middle of T4 bins
-            norm_simu = simres.normalized_sphere(responses[ires])
+            norm_simu = simres.normalized_sphere(responses[sname])
             tbinle = simres.sphere.spectrum['tbins'][:-1]
             tbinhe = simres.sphere.spectrum['tbins'][1:]
             mtbins = (tbinle+tbinhe)/2*1e9
@@ -270,24 +277,47 @@ class Comparison():
             # print(norm_simu[1].ravel()[2:-1])
             print("shape sigma:", norm_simu[1].ravel()[1:-1].shape)
             print("shape exp:", self.exp_res.res[charac]['time'].shape)
-            print(mtbins[3:-1])
+            print(mtbins[1:-1])
             print(self.exp_res.res[charac]['time'])
-            simu.append(plt.errorbar(mtbins[3:-1],
-                                     norm_simu[0].ravel()[3:-1]/2,
-                                     yerr=norm_simu[1].ravel()[3:-1],
-                                     ecolor=cols[ires], color=cols[ires],
-                                     label=simres.sphere.name[0]))
+            print(type(eval(responses[sname])[0]))
+            if isinstance(eval(responses[sname])[0], str):
+                plt.subplot(gs[0])
+                simu.append(plt.errorbar(mtbins[expcut:-1],
+                                         norm_simu[0].ravel()[expcut:-1]/2,
+                                         # norm_simu[0].ravel()[3:-1]/2,
+                                         yerr=norm_simu[1].ravel()[expcut:-1],
+                                         ecolor=cols[ires], color=cols[ires],
+                                         label=simres.sphere.name[0]))
+                plt.subplot(gs[1])
+                plt.errorbar(mtbins[expcut:-1],
+                             norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[charac]['cntPtimePsource'],
+                             yerr=self.exp_res.res[charac]['error'],
+                             ecolor=cols[ires], color=cols[ires],
+                             label=simres.sphere.name[0])
+            else:
+                plt.subplot(gs[0])
+                simu.append(plt.errorbar(mtbins[1:-1],
+                                         norm_simu[0].ravel()[1:-1]/2,
+                                         yerr=norm_simu[1].ravel()[1:-1],
+                                         ecolor=cols[ires], color=cols[ires],
+                                         label=simres.sphere.name[0]))
+                plt.subplot(gs[1])
+                plt.errorbar(mtbins[1:-1],
+                             norm_simu[0].ravel()[1:-1]/2/self.exp_res.res[charac]['cntPtimePsource'],
+                             yerr=self.exp_res.res[charac]['error'],
+                             ecolor=cols[ires], color=cols[ires],
+                             label=simres.sphere.name[0])
             labels.append(sname)
             # plt.errorbar(mtbins[1:-1],
             #              norm_simu[0].ravel()[1:-1]/2,
             #              yerr=norm_simu[1].ravel()[1:-1],
             #              ecolor=cols[ires]))
-        plt.xlabel("time bins [ns]")
-        plt.yscale("log", nonposy='clip')
-        plt.ylim(ymin=5e-5)
-        # plt.legend()
+        plt.subplot(gs[0])
         plt.legend([(exp2sig, exp1sig)]+simu, ["experiment"]+labels) # + simu)
-        plt.title("{elt}, {mfp} mfp, detector at {deg}°"
-                  .format(elt=charac[0].capitalize(),
-                          mfp=charac[1], deg=charac[2]))
+        plt.ylabel("neutron count rate [1/(ns.source)]")
+        plt.ylim(ymin=1e-4)
+        plt.subplot(gs[1])
+        plt.grid(axis='y')
+        plt.xlabel("time bins [ns]")
+        plt.ylabel("simu/exp")
         plt.show()
