@@ -1,3 +1,5 @@
+.. _package-installation:
+
 Installing :mod:`valjean`
 =========================
 

@@ -19,6 +19,8 @@ Welcome to valjean's documentation!
    tests
 
 
+.. _todolist:
+
 TODO list
 =========
 
