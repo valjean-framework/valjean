@@ -207,6 +207,52 @@ class LivermoreExps():
         plt.show()
 
 
+class MCNPSphere():
+    '''Class to read MCNP outputs.
+    Par contre pour le moment les seuls que j'ai sont les donnees
+    experimentales (que j'ai aussi grace a T4 !).
+    '''
+
+    def __init__(self, path, charac):
+        self.fname = path
+        self.charac = charac
+        self.tbins = []
+        self.counts = []
+        self.sigma = []
+        self.read_mcnp()
+
+    def read_mcnp(self):
+        nb_tbins = 0
+        tbins_block = False
+        vals_block = False
+        with open(self.fname) as fil:
+            for line in fil:
+                if line.startswith('tt') or line.startswith('tc'):
+                    nb_tbins = line.split()[1]
+                    tbins_block = True
+                elif line.startswith('vals'):
+                    tbins_block = False
+                    vals_block = True
+                elif tbins_block:
+                    self.tbins += line.split()
+                elif vals_block:
+                    self.counts += [float(x) for x in line.split()]
+                else:
+                    continue
+        # print("MCNP tbins:", self.tbins)
+        # print("MCNP vals:", self.counts)
+        # print("len(tbins) =", len(self.tbins), "et vals:", len(self.counts))
+        self.tbins = np.array([float(x) for x in self.tbins])*10
+        # print(self.tbins)
+        self.sigma = np.array(
+            [x for ind, x in enumerate(self.counts) if ind%2!=0])
+        self.counts = np.array(
+            [x for ind, x in enumerate(self.counts) if ind%2==0])
+        self.sigma = self.sigma*self.counts
+        # print(self.sigma)
+        # print(self.counts)
+        # print(self.sigma*self.counts, len(self.sigma*self.counts))
+
 class Comparison():
     '''Class to compare, using matplotlib, experiment and Tripoli-4 results.'''
 
@@ -216,6 +262,7 @@ class Comparison():
         # self.charac = charac
         self.exp_res = LivermoreExps()
         self.simu_res = {}
+        self.mcnp_res = {}
         # for name, jdd in jdds:
         #     print(jdd)
         #     self.simu_res[name] = SpherePlot(jdd[0].replace("SPHAIR", "sphere"),
@@ -232,7 +279,10 @@ class Comparison():
                                              jdd.replace("SPHAIR", "air"))
 
 
-    def compare_plots(self, charac, responses):
+    def set_mcnp_files(self, jdd, name):
+        self.mcnp_res[name] = MCNPSphere(jdd, name)
+
+    def compare_plots(self, charac, responses, mcnp=None):
         # experiment bins
         # expbins = self.exp_res.exp_res[self.charac]['time']
         print("[31mNbre fichiers:", len(self.simu_res), "[0m")
@@ -312,8 +362,19 @@ class Comparison():
             #              norm_simu[0].ravel()[1:-1]/2,
             #              yerr=norm_simu[1].ravel()[1:-1],
             #              ecolor=cols[ires]))
+        legends_curves = [(exp2sig, exp1sig)]+simu
+        legends_leg = ["experiment"]+labels
+        if mcnp:
+            plt.subplot(gs[0])
+            mcnp_plot = plt.errorbar(self.mcnp_res[mcnp].tbins,
+                                     self.mcnp_res[mcnp].counts,
+                                     yerr=self.mcnp_res[mcnp].sigma,
+                                     ecolor='c', color='c',
+                                     label="MCNP")
+            legends_curves += [mcnp_plot]
+            legends_leg += ["MCNP"]
         plt.subplot(gs[0])
-        plt.legend([(exp2sig, exp1sig)]+simu, ["experiment"]+labels) # + simu)
+        plt.legend(legends_curves, legends_leg)
         plt.ylabel("neutron count rate [1/(ns.source)]")
         plt.ylim(ymin=1e-4)
         plt.subplot(gs[1])
