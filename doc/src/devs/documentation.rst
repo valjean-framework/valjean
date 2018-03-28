@@ -37,7 +37,8 @@ documentation locally, then it doesn't really matter, but if you are building
 the documentation because you want to distribute the code to your users,
 **remember to install the package first!** It is simple::
 
-    $ pip install -U -e .
+    $ cd /path/to/valjean  # the path containing setup.py
+    $ pip install -U .[dev]
     $ ./setup.py build_sphinx
 
 You will find the full recipe in :ref:`release-recipe`.
