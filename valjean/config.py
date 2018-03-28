@@ -79,15 +79,18 @@ It also provides some additional convenience methods:
 
     >>> from pprint import pprint
 
-    # convert the configuration to an ordered dictionary
-    >>> pprint(config.as_dict(raw=True))
-    {'core': {'work-dir': '...',
-              'log-root': '${work-dir}/log_dir',
-              'checkout-root': '${work-dir}/checkout',
-              'build-root': '${work-dir}/build',
-              'run-root': '${work-dir}/run',
-              'test-root': '${work-dir}/test',
-              'report-root': '${work-dir}/report'}}
+    # convert the configuration to a dictionary
+    # the as_dict method actually returns an OrderedDict
+    >>> for sec_name, section in config.as_dict(raw=True).items():
+    ...   for option, value in section.items():
+    ...     print('{}/{}: {}'.format(sec_name, option, value))
+    core/work-dir: /...
+    core/log-root: ${work-dir}/log_dir
+    core/checkout-root: ${work-dir}/checkout
+    core/build-root: ${work-dir}/build
+    core/run-root: ${work-dir}/run
+    core/test-root: ${work-dir}/test
+    core/report-root: ${work-dir}/report
 
     # merge two configuration objects; options from the second
     # configuration override those from the first one
