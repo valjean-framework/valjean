@@ -81,15 +81,13 @@ It also provides some additional convenience methods:
 
     # convert the configuration to an ordered dictionary
     >>> pprint(config.as_dict(raw=True))
-    OrderedDict([('core',
-                  OrderedDict([('work-dir', '...'),
-                               ('log-root', '${work-dir}/log_dir'),
-                               ('checkout-root', '${work-dir}/checkout'),
-                               ('build-root', '${work-dir}/build'),
-                               ('run-root', '${work-dir}/run'),
-                               ('test-root', '${work-dir}/test'),
-                               ('report-root', '${work-dir}/report')]))])
-
+    {'core': {'work-dir': '...',
+              'log-root': '${work-dir}/log_dir',
+              'checkout-root': '${work-dir}/checkout',
+              'build-root': '${work-dir}/build',
+              'run-root': '${work-dir}/run',
+              'test-root': '${work-dir}/test',
+              'report-root': '${work-dir}/report'}}
 
     # merge two configuration objects; options from the second
     # configuration override those from the first one
