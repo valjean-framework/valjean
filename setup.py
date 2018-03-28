@@ -30,8 +30,9 @@ setup(name=name,
       packages=find_packages(exclude=['doc', 'tests', 'tests.*']),
       python_requires='>=3.4',
       setup_requires=['pytest-runner', 'setuptools_scm'],
-      install_requires=['numpy'],
-      tests_require=test_deps, extras_require={
+      install_requires=['pyparsing', 'numpy'],
+      tests_require=test_deps,
+      extras_require={
           'dev': dev_deps,
           'graphviz': graphviz_deps
           },
