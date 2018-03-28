@@ -19,6 +19,7 @@ def pytest_addoption(parser):
     parser.addoption("--qualtrip-match", action="store",
                      default=None, help="list of patterns to match in paths")
 
+
 def pytest_generate_tests(metafunc):
     '''Handle the ``--valjean-verbose`` option.'''
     import logging
@@ -31,6 +32,7 @@ def pytest_generate_tests(metafunc):
         logger.setLevel(logging.WARNING)
         for handler in logger.handlers:
             handler.setLevel(logging.WARNING)
+
 
 def pytest_collection_modifyitems(config, items):
     '''Handle the ``--runslow`` option.'''
