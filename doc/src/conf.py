@@ -167,7 +167,7 @@ intersphinx_mapping = {
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'hypothesis': ('https://hypothesis.readthedocs.io/en/latest/', None),
     'virtualenvwrapper': (
-        ('https://virtualenvwrapper.readthedocs.io/en/latest/', None)),
+        ('http://virtualenvwrapper.readthedocs.io/en/latest/', None)),
     'setuptools': ('https://setuptools.readthedocs.io/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None)}
 
