@@ -14,6 +14,7 @@ class Accessor():
         if 'list_responses' not in self.parsed_res[-1]:
             print("T4 listing seems hving no responses in last batch.")
             raise KeyError
+        # make a return instead ?
         allresp = self.parsed_res[-1]['list_responses']
         if 'score_name' in allresp[0]['response_description']:
             self.tables['score_name'] = dict(
