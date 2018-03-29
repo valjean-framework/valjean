@@ -1,6 +1,9 @@
 '''Access to parsed data and get results in a more friendly way.'''
 
 from valjean.eponine.parse_t4 import T4Parser
+import logging
+
+LOGGER = logging.getLogger('valjean')
 
 class Accessor():
     '''Class to access T4 results in a friendly way.'''
@@ -8,34 +11,43 @@ class Accessor():
     def __init__(self, jdd):
         self.fname = jdd
         self.parsed_res = T4Parser.parse_jdd(jdd, -1).result
-        self.tables = {}
+        self.tables = self.default_tables()
 
     def default_tables(self):
         if 'list_responses' not in self.parsed_res[-1]:
             print("T4 listing seems hving no responses in last batch.")
             raise KeyError
-        # make a return instead ?
+        tables = {}
+        self._add_to_table_from_res_desc(tables, 'score_name')
+        self._add_to_table_from_res_desc(tables, 'resp_name')
+        self._add_to_table_from_res_desc(tables, 'resp_function')
+        self._add_to_table_from_res_desc(tables, 'energy_split_name')
+        # possibility to put it on the call instead of here
+        self._check_table(tables)
+        return tables
+
+    def _add_to_table_from_res_desc(self, table, keyword):
         allresp = self.parsed_res[-1]['list_responses']
-        if 'score_name' in allresp[0]['response_description']:
-            self.tables['score_name'] = dict(
-                map(lambda xy: (xy[1]['response_description']['score_name'],
-                                xy[0]),
+        if keyword in allresp[0]['response_description']:
+            table[keyword] = dict(map(
+                lambda xy: (xy[1]['response_description'][keyword], xy[0]),
                 enumerate(allresp)))
-        if 'resp_name' in allresp[0]['response_description']:
-            self.tables['resp_name'] = dict(
-                map(lambda xy: (xy[1]['response_description']['resp_name'],
-                                xy[0]),
-                enumerate(allresp)))
-        if 'resp_function' in allresp[0]['response_description']:
-            self.tables['resp_function'] = dict(
-                map(lambda xy: (xy[1]['response_description']['resp_function'],
-                                xy[0]),
-                enumerate(allresp)))
-        if 'energy_split_name' in allresp[0]['response_description']:
-            self.tables['resp_function'] = dict(map(
-                lambda xy: (xy[1]['response_description']['energy_split_name'],
-                            xy[0]),
-                enumerate(allresp)))
+            if len(allresp) != len(table[keyword]):
+                LOGGER.warning(
+                    "N(resps) != N(%s): '%s' useless to identify responses.",
+                    keyword, keyword)
+
+    def _check_table(self, table):
+        allresp = self.parsed_res[-1]['list_responses']
+        bad_keys = []
+        good_keys = []
+        for key in table:
+            if len(allresp) != len(table[key]):
+                bad_keys.append(key)
+            else:
+                good_keys.append(key)
+        LOGGER.warning("Keys %s are useless to identify responses (not 1 to 1)"
+                       ", please use %s", bad_keys, good_keys)
 
     def get_response(self, response):
         print("nbre de responses:", len(self.parsed_res[-1]['list_responses']))
