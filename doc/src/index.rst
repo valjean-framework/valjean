@@ -17,6 +17,7 @@ Welcome to valjean's documentation!
    devs
    modules
    tests
+   changelog
 
 
 .. _todolist:

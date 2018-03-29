@@ -3,8 +3,8 @@ Release checklist
 
 .. highlight:: bash
 
-This document contains a list of things that you should check before issuing a
-new :mod:`valjean` release. In the future, some or all of the things below may
+This page contains a list of things that you should check before issuing a new
+:mod:`valjean` release. In the future, some or all of the things below may
 (should!) be automated.
 
 #. Create a new branch off the development branch. If you are aiming at
@@ -48,7 +48,7 @@ new :mod:`valjean` release. In the future, some or all of the things below may
 #. Check the :ref:`TODO list <todolist>` and update it. Can anything be
    removed?
 
-#. Update the changelog.
+#. Update the :ref:`changelog <changelog>`.
 
 #. Commit and make a pull request.
 
