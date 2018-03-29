@@ -49,7 +49,7 @@ keyword.
    .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.respintro
       :annotation: response introduction
    .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
-      :lines: 526
+      :lines: 523
 		   
    .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.scoremode
       :annotation: score mode
@@ -58,7 +58,7 @@ keyword.
    .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.scoredesc
       :annotation: score description
    .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
-      :lines: 610-611
+      :lines: 607-608
 	      
    .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.defintegratedres
       :annotation: default integrated result
@@ -99,27 +99,31 @@ keyword.
    .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.scoreblock
       :annotation:
    .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
-      :lines: 1047-1058
+      :lines: 1044-1055
 	      
    .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.responseblock
       :annotation: response block parser
    .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
-      :lines: 1060-1067
+      :lines: 1057-1064
    .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.response
       :annotation: response parser
    .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
-      :lines: 1069-1072
+      :lines: 1066-1069
    .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.perturbation
       :annotation: perturbation parser
    .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
-      :lines: 1074-1075
+      :lines: 1071-1072
+
    .. autoattribute:: valjean.eponine.pyparsing_t4.grammar.mygram
       :annotation:
 	 
       Tripoli-4 parser (full)
    .. literalinclude:: ../../../../valjean/eponine/pyparsing_t4/grammar.py
-      :lines: 1082-1091
+      :lines: 1079-1088
       
+   ..
+      .. autodata:: valjean.eponine.pyparsing_t4.grammar.mygram
+	 :annotation:
 
 :mod:`~.transform` – Transform pyparsing result
 -----------------------------------------------

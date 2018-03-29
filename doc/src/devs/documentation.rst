@@ -88,6 +88,11 @@ from the ``doc`` folder, ``-n`` to activate the ``nitpicky`` option and ``-a``
 (optional) to reconstruct documentation for all files.
 
 This option has to be used carefully, some links are not obvious (especially
-the :mod:`~sphinx.ext.intersphinx` ones. Warnings will probably still be
-present, like the ones linked to used of ``:ivar:`` sphinx keywords for
-instance variables that are badly cross-referenced for the moment.
+those from :mod:`~sphinx.ext.intersphinx` ones).
+We intentionally refuse to correct some warnings, like those concerning the
+(mis)use of the ``:ivar:`` role. They look like this::
+
+    $ .../valjean/eponine/scan_t4.py:docstring of valjean.eponine.scan_t4.Scan:: WARNING: py:obj reference target not found: fname
+
+We use ``:ivar:`` to document instance variables (that is what they are for,
+right?), but apparently `sphinx`_ expects some target object which is not there.

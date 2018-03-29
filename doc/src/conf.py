@@ -17,7 +17,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+'''Configuration file for sphinx documentation.'''
+
 from pkg_resources import get_distribution
+
+# pylint: disable=invalid-name
 
 # -- General configuration ------------------------------------------------
 
@@ -51,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 author = u'Ève Le Ménédeu, Davide Mancusi'
-copyright = u'2017, ' + author
+copyright = u'2017, ' + author  # pylint: disable=redefined-builtin
 project = 'valjean'
 release = get_distribution(project).version
 version = '.'.join(release.split('.')[:2])
@@ -162,22 +166,21 @@ intersphinx_mapping = {
     'pytest': ('https://docs.pytest.org/en/latest/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'hypothesis': ('https://hypothesis.readthedocs.io/en/latest/', None),
-    'virtualenvwrapper': ('https://virtualenvwrapper.readthedocs.io/en/latest/',
-                          None),
+    'virtualenvwrapper': (
+        ('https://virtualenvwrapper.readthedocs.io/en/latest/', None)),
     'setuptools': ('https://setuptools.readthedocs.io/en/latest/', None),
-    'pip': ('https://pip.pypa.io/en/stable/', None),
-    'pytest-cov': ('http://pytest-cov.readthedocs.io/en/latest/', None)}
+    'pip': ('https://pip.pypa.io/en/stable/', None)}
 
 # -- doctest options ------------------------------------------------------
 
 # Do not use doctest to test code examples that are not explicitly marked as
 # doctest
 doctest_test_doctest_blocks = ''
-doctest_global_setup='''
+doctest_global_setup = '''
 import tempfile
 doctest_tmpdir = tempfile.mkdtemp()
 '''
-doctest_global_cleanup='''
+doctest_global_cleanup = '''
 import shutil
 shutil.rmtree(doctest_tmpdir)
 '''
@@ -191,7 +194,7 @@ autodoc_default_flags = ['members', 'special-members']
 # list members by order of appearance in the source file
 autodoc_member_order = 'bysource'
 
-
+# pylint: disable=missing-docstring, unused-argument, too-many-arguments
 def skip_weakref(app, what, name, obj, skip, options):
     if name == '__weakref__' or name == '__dict__' or name == '__module__':
         return True
@@ -200,3 +203,5 @@ def skip_weakref(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect('autodoc-skip-member', skip_weakref)
+
+viewcode_import = True

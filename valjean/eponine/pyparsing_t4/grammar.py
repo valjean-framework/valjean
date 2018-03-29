@@ -1,4 +1,5 @@
 # pylint: disable=too-many-lines
+# pylint: disable=invalid-name
 r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
 .. _pyparsing_wiki: http://pyparsing.wikispaces.com/
@@ -7,12 +8,12 @@ r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 .. |kij| replace:: k\ :sub:`ij`
 .. role :: parsing_var(attr)
 
-Documentation on **pyparsing** package can be found in `pyparsing`_
+Documentation on ``pyparsing`` package can be found in `pyparsing`_
 documentation linked to `pyparsing_pip`_ and on `pyparsing_wiki`_ with
 examples.
 
-Transformation from `pyparsing.ParseResults` to more standard python objects,
-including `numpy` ones,is done with :mod:`~.transform`, calling
+Transformation from ``pyparsing.ParseResults`` to more standard python objects,
+including :obj:`numpy` arrays, is done with :mod:`~.transform`, calling
 :mod:`common <valjean.eponine.common>`.
 
 Generalitites
@@ -34,8 +35,8 @@ Generalitites
 
 * A general parser is proposed for use in the file, but other parsers can be
   built from the partial parsers written here
-* Numbers are automatically converted to `numpy` numbers (possibility to choose
-  the dtype used for numbers)
+* Numbers are automatically converted to :obj:`numpy` numbers (possibility to
+  choose the dtype used for numbers)
 * Keywords and most of the variables used to build parsers are private
 
 
@@ -97,7 +98,7 @@ Response are constructed as:
 
   * a description of the response, ``respdesc`` including:
 
-    * ``'RESPONSE FUNCTION'`` keyword as mandatory (afak)
+    * ``'RESPONSE FUNCTION'`` keyword as mandatory (afaik)
     * ``'RESPONSE NAME'``, ``'SCORE NAME'`` and ``'ENERGY DECOUPAGE NAME'``
       that are present in most of the cases
 

@@ -4,8 +4,7 @@
 
 This module defines a dummy :class:`Task` class that may be used as a base
 class and extended. However, the current implementation of :meth:`.Task.do()`
-is a no-op and any class with a :meth:`do() <valjean.cosette.task.Task.do>`
-method works just as well.
+is a no-op and any class with ``do()`` method works just as well.
 
 The :meth:`.Task.do()` method takes only one argument `env`, which is an
 environment for task execution. The idea of the environment is that tasks may
