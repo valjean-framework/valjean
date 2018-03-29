@@ -203,5 +203,3 @@ def skip_weakref(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect('autodoc-skip-member', skip_weakref)
-
-viewcode_import = True

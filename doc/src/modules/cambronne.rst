@@ -1,3 +1,5 @@
+.. _cambronne-main:
+
 cambronne — Commandes, Actions et MoBilisation Rapide des OpératioNs Exécutables
 ================================================================================
 

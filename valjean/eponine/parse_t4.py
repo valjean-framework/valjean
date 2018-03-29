@@ -10,7 +10,7 @@ Some options for debugging are available (end flag).
 .. todo::
 
    Change absolute imports in relative ones when main will be moved to
-   :doc:`cambronne <../cambronne>` .
+   :ref:`cambronne <cambronne-main>`.
 '''
 
 import sys

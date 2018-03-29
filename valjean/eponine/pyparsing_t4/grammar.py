@@ -6,9 +6,9 @@ r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 .. _pyparsing_pip: https://pypi.python.org/pypi/pyparsing/2.2.0
 .. |keff| replace:: k\ :sub:`eff`
 .. |kij| replace:: k\ :sub:`ij`
-.. role :: parsing_var(attr)
+.. role :: parsing_var(literal)
 
-Documentation on ``pyparsing`` package can be found in `pyparsing`_
+Documentation on the ``pyparsing`` package can be found in `pyparsing`_
 documentation linked to `pyparsing_pip`_ and on `pyparsing_wiki`_ with
 examples.
 
@@ -59,18 +59,20 @@ Keywords are in most of the cases used as flags and suppressed when data are
 stored.
 
 A first structure is designed when building the parsers results as lists and
-dictionaries in the `pyparsing.ParseResults`. Then "parse actions" are used
-to standard python or :obj:`numpy` objects. These *parse actions*, called with
-`pyparsing.ParserElement.setParseAction`, can be found in :mod:`~.transform`.
+dictionaries in the ``pyparsing.ParseResults``. Then `parse actions` are used
+to standard python or :obj:`numpy` objects. These `parse actions`, called with
+``pyparsing.ParserElement.setParseAction``, can be found in :mod:`~.transform`.
 
 Main parsers blocks
 ```````````````````
-The main parsers blocks are defined at the end of the file, see
-``mygram`` and ``response``.
+The main parsers blocks are defined at the end of the module, named
+:parsing_var:`mygram` and :parsing_var:`response`. The default parser is
+:parsing_var:`mygram`.
 
-Typically, each result block in the listing should start by the `intro` block
-and end with at least one `runtime` block. This parts follows the :mod:`scan_t4
-<valjean.eponine.scan_t4>`: `string` starting by ``'RESULTS ARE GIVEN'`` and
+Typically, each result block in the listing should start by the `intro` block,
+parsed by :parsing_var:`intro`, and end with at least one `runtime` block,
+parsed by :parsing_var:`runtime`. This parts follows the :mod:`scan_t4
+<valjean.eponine.scan_t4>`: :obj:`str` starting by ``'RESULTS ARE GIVEN'`` and
 ending with ``'simulation time'``, ``'exploitation time'`` or
 ``'elapsed time'``.
 
@@ -81,28 +83,29 @@ Between these blocks can be found the data blocks. The major ones are:
 * the "default" |keff| block, in most of the cases at the end of the listing,
 * the *contributing particles block*, mainly in first pass listings,
 * the perturbation block,
-* an optional additional ``runtime`` block.
+* an optional additional `runtime` block.
 
 Main data blocks are described below (results taken into account, main
 features).
 
-Response blocks
-```````````````
+Response block, parser :parsing_var:`response`
+``````````````````````````````````````````````
 The core of the listings is the list of responses, including all the required
-scores. This big block is constructed as a **list** of **dictionaries**, each
+scores. This big block is constructed as a :obj:`list` of :obj:`dict`, each
 one representing a response (key ``'list_responses'`` in the final result).
 
 Response are constructed as:
 
-* response introduction containing its definition:
+* response introduction containing its definition, parsed by
+  :parsing_var:`respintro`:
 
-  * a description of the response, ``respdesc`` including:
+  * a description of the response parsed by :parsing_var:`respdesc` including:
 
     * ``'RESPONSE FUNCTION'`` keyword as mandatory (afaik)
     * ``'RESPONSE NAME'``, ``'SCORE NAME'`` and ``'ENERGY DECOUPAGE NAME'``
       that are present in most of the cases
 
-  * more characteristics of the response, stored under `respcarac`,
+  * more characteristics of the response, parsed by :parsing_var:`respcarac`,
     like:
 
     * considered particle (``'PARTICULE'`` in the listing)
@@ -114,17 +117,19 @@ Response are constructed as:
     * reaction considered (usually given as codes)
     * others like DPA type, required arguments, mode, filters, etc.
 
-* responses themselves, various:
+* responses themselves, using parser :parsing_var:`responseblock`, are various:
 
-  * responses including *score* description, all included in the ``scoreblock``
-    parser (more than one can be present):
+  * responses including *score* description, all included in the
+    :parsing_var:`scoreblock` parser (more than one can be present):
 
-    * score description (``scoredesc``) contains the score mode (``'TRACK'``,
-      ``'SURF'`` or ``'COLL'``) and the score zone (currently taken into
-      account: mesh, results cumulated on all geometry or on all sources,
-      Volume, Volume Sum, Frontier, Frontier Sum, Point, Cells and Maille)
+    * score description (parser :parsing_var:`scoredesc`) contains the score
+      mode (``'TRACK'``, ``'SURF'`` or ``'COLL'``) and the score zone
+      (currently taken into account: mesh, results cumulated on all geometry or
+      on all sources, Volume, Volume Sum, Frontier, Frontier Sum, Point, Cells
+      and Maille)
 
-    * results block, where at least one of these results can be found:
+    * results block, where at least one of these results can be found, are by
+      parsed by the following parsers:
 
       * :parsing_var:`spectrumblock`: spectrum
       * :parsing_var:`meshblock`: mesh
@@ -139,37 +144,36 @@ Response are constructed as:
       * :parsing_var:`gbblock`: Green bands results
 
   * |keff| presented as a generic response, possibly transformed in
-    :obj:`numpy.matrix` (:parsing_var:`keffblock`)
-  * |kij| results: matrix, eigenvalues, eigenvectors (:parsing_var:`kijres`)
-  * |kij| sources (:parsing_var:`kijsources`)
-  * ordered results (in nucleus and/or family (:parsing_var:`orderedres`)
+    :obj:`numpy.matrix` (parser :parsing_var:`keffblock`)
+  * |kij| results: matrix, eigenvalues, eigenvectors (parser
+    :parsing_var:`kijres`)
+  * |kij| sources (parser :parsing_var:`kijsources`)
+  * ordered results (in nucleus and/or family (parser
+    :parsing_var:`orderedres`)
   * default result integrated over energy where no scoring mode and zone are
-    precised (:parsing_var:`defintegratedres`)
-  * IFP results (:parsing_var:`ifpblock`)
-  * perturbation results (:parsing_var:`perturbation`)
+    precised (parser :parsing_var:`defintegratedres`)
+  * IFP results (parser :parsing_var:`ifpblock`)
+  * perturbation results (parser :parsing_var:`perturbation`)
 
 
-Other blocks
-````````````
-Various other blocks can appear in the Tripoli-4 listing, located at the level
-of the responses block, identified by the key ``'list_responses'``. Other
-possibilities are:
+Other parsers
+`````````````
+Various other blocks can appear in the Tripoli-4 listing, located at the same
+level as the response block. These parsers and the associated dictionary key
+(same level as ``'list_responses'``) are:
 
-* :parsing_var:`ifpadjointcriticality`: edition of IFP adjoint criticality,
+* :parsing_var:`ifpadjointcriticality`: edition of IFP adjoint criticality, key
+  ``'ifp_adjoint_crit_edition'``;
 * :parsing_var:`defkeffblock`: "default" |keff| block, containing for example
-  the best estimation of |keff| using variable number of discarded batches,
-* :parsing_var:`contribpartblock`: *contributing particles block*,
+  the best estimation of |keff| using variable number of discarded batches, key
+  ``'default_keffs'``;
+* :parsing_var:`contribpartblock`: *contributing particles block*, key
+  ``'contributing_particles'``
 * :parsing_var:`perturbation`: perturbation results, containing a description
   of the calculation of the perturbation followed by the perturbation result
   presented like a usual response (spectrum, mesh, etc. depending on required
-  score),
+  score), key ``'perturbation'``
 * :parsing_var:`runtime`: simulation, exploitation or elapsed time.
-
-.. _link to grammar: ../../_modules/valjean/eponine/pyparsing_t4/grammar.html
-
-Et le lien vers le code: `link to grammar`_.
-
-.. todo:: need to test with "fake" outputs from Tripoli-4 (to be thought)
 
 '''
 
