@@ -32,10 +32,6 @@ class Accessor():
             table[keyword] = dict(map(
                 lambda xy: (xy[1]['response_description'][keyword], xy[0]),
                 enumerate(allresp)))
-            if len(allresp) != len(table[keyword]):
-                LOGGER.warning(
-                    "N(resps) != N(%s): '%s' useless to identify responses.",
-                    keyword, keyword)
 
     def _check_table(self, table):
         allresp = self.parsed_res[-1]['list_responses']

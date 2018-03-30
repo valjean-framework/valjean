@@ -233,6 +233,8 @@ class MCNPSphere():
                 elif line.startswith('vals'):
                     tbins_block = False
                     vals_block = True
+                elif line.startswith('tfc'):
+                    vals_block = False
                 elif tbins_block:
                     self.tbins += line.split()
                 elif vals_block:
@@ -241,16 +243,21 @@ class MCNPSphere():
                     continue
         # print("MCNP tbins:", self.tbins)
         # print("MCNP vals:", self.counts)
-        # print("len(tbins) =", len(self.tbins), "et vals:", len(self.counts))
-        self.tbins = np.array([float(x) for x in self.tbins])*10
+        print("len(tbins) =", len(self.tbins), "et vals:", len(self.counts))
+        print((len(self.counts)/2)/len(self.tbins))
+        self.tbins = np.array([float(x)-0.2 for x in self.tbins])*10
         # print(self.tbins)
         self.sigma = np.array(
-            [x for ind, x in enumerate(self.counts) if ind%2!=0])
+            [x for ind, x in enumerate(self.counts) if ind%2 != 0])
         self.counts = np.array(
-            [x for ind, x in enumerate(self.counts) if ind%2==0])
+            [x for ind, x in enumerate(self.counts) if ind%2 == 0])
         self.sigma = self.sigma*self.counts
-        # print(self.sigma)
-        # print(self.counts)
+        # print(len(self.sigma))
+        # print(len(self.counts))
+        # print(len(self.counts[136:]), self.counts[136:][2], self.counts[136:][-1])
+        # print(len(self.counts[:136]), self.counts[:136][2], self.counts[:136][-1])
+        self.counts = self.counts[:136]
+        self.sigma = self.sigma[:136]
         # print(self.sigma*self.counts, len(self.sigma*self.counts))
 
 class Comparison():
@@ -263,13 +270,6 @@ class Comparison():
         self.exp_res = LivermoreExps()
         self.simu_res = {}
         self.mcnp_res = {}
-        # for name, jdd in jdds:
-        #     print(jdd)
-        #     self.simu_res[name] = SpherePlot(jdd[0].replace("SPHAIR", "sphere"),
-        #                                      jdd[0].replace("SPHAIR", "air"),
-        #                                      jdd[1])
-        # self.simu_res = SpherePlot(jdd_sphere, jdd_air)
-        # self.norm_simu, self.norm_sig = self.simu_res.normalized_sphere()
 
 
     def set_t4_files(self, jdds):
@@ -299,6 +299,8 @@ class Comparison():
                                self.exp_res.res[charac]['cntPtimePsource'],
                                yerr=self.exp_res.res[charac]['error'],
                                fmt='none', ecolor='r', ls=':')
+        legends_curves = [(exp2sig, exp1sig)]
+        legends_leg = ["experiment"]
         plt.yscale("log", nonposy='clip')
         # plt.legend()
         plt.title("{elt}, {mfp} mfp, detector at {deg}°"
@@ -357,13 +359,9 @@ class Comparison():
                              yerr=self.exp_res.res[charac]['error'],
                              ecolor=cols[ires], color=cols[ires],
                              label=simres.sphere.name[0])
+            legends_curves += simu
             labels.append(sname)
-            # plt.errorbar(mtbins[1:-1],
-            #              norm_simu[0].ravel()[1:-1]/2,
-            #              yerr=norm_simu[1].ravel()[1:-1],
-            #              ecolor=cols[ires]))
-        legends_curves = [(exp2sig, exp1sig)]+simu
-        legends_leg = ["experiment"]+labels
+            legends_leg += labels
         if mcnp:
             plt.subplot(gs[0])
             mcnp_plot = plt.errorbar(self.mcnp_res[mcnp].tbins,
