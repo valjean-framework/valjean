@@ -60,7 +60,7 @@ class T4Parser():
         self.end_flag = ""
         self.scan_res = None
         self.result = None
-        self.para = True if "PARA" in jddname else False
+        self.para = True if "PARA" in jddname or "task" in jddname  else False
 
     @classmethod
     def parse_jdd(cls, jdd, batch):
@@ -210,7 +210,7 @@ class T4Parser():
             print(stime.capitalize(), "=", vtime)
 
 
-def main(myjdd="", batch_num=-1, mesh_lim=None):
+def main(myjdd="", batch_num=-1, mesh_lim=None, end_flag=""):
     '''Main function in order to test parsing directly from this module.
 
     :param string myjdd: path to the T4 input
@@ -222,13 +222,18 @@ def main(myjdd="", batch_num=-1, mesh_lim=None):
     if myjdd == "":
         try:
             myjdd = sys.argv[1]
+            if "end_flag" in sys.argv:
+                end_flag = sys.argv[sys.argv.index("end_flag")+1]
         except IndexError:
             print("Eponine: argument needed (jdd name)")
             exit(-1)
 
     # need to think about endflag (?), meshlim and para arguments
-    if mesh_lim:
-        t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, batch_num, mesh_lim)
+    if mesh_lim or end_flag:
+        if not mesh_lim:
+            mesh_lim = -1
+        t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, batch_num, mesh_lim,
+                                                  end_flag)
     else:
         t4_res = T4Parser.parse_jdd(myjdd, batch_num)
     if t4_res:

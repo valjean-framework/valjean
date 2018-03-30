@@ -321,6 +321,15 @@ _familiesorder_kw = Keyword("Scores are ordered from family i = 1 to i = MAX:")
 _nucleifamilyorder_kw = Keyword("Scores are ordered "
                                 "by nuclei and by families:")
 _nucleus_kw = Keyword("Nucleus :")
+# Perturbation order
+_perturborder_kw = Keyword("Scores are ordered by perturbation index:")
+# Sensitivities
+_sensitivitytypeorder_kw = Keyword("Scores are ordered by type")
+_sensitivityindexorder_kw = Keyword("and index:")
+_sensitivity_kw = Keyword("SENSITIVITY :")
+_sensitivity_energyint_kw = Keyword("Energy integrated S")
+_sensitivity_incenergy_kw = Keyword("Incident energy interval in MeV:")
+_sensitivity_dircos_kw = Keyword("Direction cosine interval:")
 
 # Variance of variance
 _vovstar_kw = Keyword("variance of variance* :")
@@ -431,6 +440,9 @@ runtime = _simutime | _elapsedtime | _exploitime
 _respfunc = (Suppress(_respfunction_kw + ':')
              + OneOrMore(Word(alphanums + '_() =+/:-'), stopOn=LineEnd())
              .setParseAction(''.join)('resp_function'))
+             # + OneOrMore(Word(alphanums + '_() =+/:-'),
+             #             stopOn=(_star_line | _respname_kw
+             #                     | _energysplitname_kw))
 # warning: order matters hier, LineEnd has to be before Optional(Word)
 _respname = (Suppress(_respname_kw + ':')
              + (Suppress(LineEnd())
@@ -909,11 +921,49 @@ _familyorder = (Suppress(_familiesorder_kw)
 # Nuclei and families order
 _nucleusid = _nucleus_kw + Word(alphanums)('nucleus') + Suppress('.')
 _nucleusfam = Group(_nucleusid + _familyorder)
-_nuclfamoreder = (Suppress(_nucleifamilyorder_kw)
-                  + OneOrMore(_nucleusfam)('score_per_nucleus_and_family'))
+_nuclfamorder = (Suppress(_nucleifamilyorder_kw)
+                 + OneOrMore(_nucleusfam)('score_per_nucleus_and_family'))
+# Perturbation index order
+_scoreperpertuind = Group(Suppress("i =")
+                          + _inums('perturbation_index') + Suppress(':')
+                          + _integratedres)
+_perturborder = (_perturborder_kw
+                 + OneOrMore(_scoreperpertuind)('score_per_pertubation_index'))
+# sensitivities
+_sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
+                     + OneOrMore(Word(alphas + '_,()'),
+                                 stopOn=_sensitivityindexorder_kw)
+                     .setParseAction(''.join)
+                     + _sensitivityindexorder_kw)
+_sensitivity_type = (OneOrMore(Word(alphas.upper()), stopOn=_sensitivity_kw)
+                     .setParseAction(' '.join)
+                     + Suppress(_sensitivity_kw))('typeI')
+_sensitivity_index = Group(Suppress("i =") + _inums('index') + Suppress(';')
+                           + Suppress("NUCLEUS :") + Word(alphanums)('nucleus')
+                           + Suppress(',') + Suppress("TYPE :")
+                           + Word(alphanums.upper() + '_() ')('type'))
+_sensitivity_dircos = Group(Suppress(_sensitivity_dircos_kw)
+                            + _fnums*2)('direction_cosine')
+_sensitivity_energyinc = Group(Suppress(_sensitivity_incenergy_kw)
+                               + _fnums*2)('energy_incident')
+_sensitivity_cols = (Keyword("E min") + Keyword("E max")
+                     + Keyword("S(E)") + Keyword("sigma"))
+_sensitivity_vals = Group(_fnums*4)
+_sensitivity_energyint = Suppress(_sensitivity_energyint_kw) + _integratedres
+_sensitivity_res = Group(_sensitivity_index('charac')
+                         + ZeroOrMore(_sensitivity_dircos
+                                      | _sensitivity_energyinc)
+                         + Suppress(_sensitivity_cols)
+                         + OneOrMore(_sensitivity_vals)('values')
+                         + _sensitivity_energyint('energy_integrated'))
+_sensitivity = (_sensitivityorder
+                + OneOrMore(Group(_sensitivity_type('type')
+                                  + OneOrMore(_sensitivity_res)('res'))
+                            ('res_type')))
 orderedres = Group(Suppress(_integratedres_kw)
                    + _numusedbatch
-                   + (_nucleiorder | _familyorder | _nuclfamoreder)
+                   + (_nucleiorder | _familyorder | _nuclfamorder
+                      | _perturborder | _sensitivity)
                    + Optional(_unitsres))('ordered_res')
 
 
