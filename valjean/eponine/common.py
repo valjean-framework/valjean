@@ -781,7 +781,11 @@ class SpectrumDictBuilder(DictBuilder):
         * ``'integrated_res'`` (over energy, splitted in time for the moment)
         '''
         LOGGER.debug("In SpectrumDictBuilder.fill_arrays_and_bins")
+        # print(data)
+        # print(data.asDict())
         for ispec in data:
+            print(ispec)
+            print(ispec.asDict())
             # Fill bins -> caution to not replicate them
             if 'time_step' in ispec:
                 self.itime = ispec['time_step'][0]
@@ -978,12 +982,12 @@ def convert_mesh(meshres):
         * ``'tbins'``: time binning if time grid required
         * ``'eintegrated_mesh'``: 7-dimensions numpy structured array
           ``v[s0,s1,s2,E,t,mu,phi] = ('tally', 'sigma')``
-          corresponding to mesh integreted on energy (facultative)
+          corresponding to mesh integrated on energy (facultative)
         * ``'integrated_res'``: 7 dimensions numpy structured array
           ``v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)``
           corresponding to mesh integrated over energy and space;
           *facultative*, available when time grid is required (so
-          corresponds to integreated results splitted in time)
+          corresponds to integrated results splitted in time)
         * ``'used_batch'``: number of used batchs (only if integrated result)
     '''
     LOGGER.debug("In convert_mesh_class")
@@ -1312,3 +1316,105 @@ def convert_kij_keff(res):
             'keff_KIJ_matrix': np.matrix(kijmat),
             'keff_StdDev_matrix': np.matrix(stddevmat),
             'keff_sensibility_matrix': np.matrix(sensibmat)}
+
+
+def add_last_sensitivities_bins(data, bins):
+    '''Add last bins (E, E', µ) for sensitivities. All orders are possible.'''
+    if len(bins['e']) > 1 and bins['e'][0] > bins['e'][1]:
+        bins['e'].insert(0, data[-1]['values'][0][1])
+    else:
+        bins['e'].append(data[-1]['values'][-1][1])
+    if bins['mu']:
+        if len(bins['mu']) > 1 and bins['mu'][0] > bins['mu'][1]:
+            bins['mu'].insert(0, data[0]['direction_cosine'][1])
+        else:
+            bins['mu'].append(data[-len(bins['einc'])]['direction_cosine'][1])
+    if bins['einc']:
+        if len(bins['einc']) > 1 and bins['einc'][0] > bins['einc'][1]:
+            bins['einc'].insert(0, data[0]['energy_incident'][1])
+        else:
+            bins['einc'].append(data[-1]['energy_incident'][1])
+
+
+def fill_sensitivities_arrays(data):
+    '''Fill array and bins for sensitivities.'''
+    print("dans fill_sensitivities_arrays")
+    dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
+    # variables: E, E', mu
+    # nbres de bins
+    nbcos = len([x for x in data if "direction_cosine" in x.keys()])
+    if nbcos == 0:
+        nbcos = 1
+    nbeinc = int(len([x for x in data if "energy_incident" in x.keys()])/nbcos)
+    if nbeinc == 0:
+        nbeinc = 1
+    nbebins = len(data[-1]['values'])
+    print("nbcos =", nbcos, "nbeinc =", nbeinc, "nbebins =", nbebins)
+    # initialisation et remplissage
+    bins = {'einc': [], 'e': [], 'mu': []}
+    array = np.empty((nbeinc, nbebins, nbcos), dtype)
+    ibin = [0, 0, 0]
+    for ind, vals in enumerate(data):
+        if 'direction_cosine' in vals:
+            if ind != 0:
+                ibin[2] += 1
+                ibin[:2] = [0, 0]
+            bins['mu'].append(vals['direction_cosine'][0])
+        if 'energy_incident' in vals:
+            if ibin[2] == 0:
+                bins['einc'].append(vals['energy_incident'][0])
+            if ind % nbeinc != 0:
+                ibin[0] += 1
+        for ienergy, ivals in enumerate(vals['values']):
+            if ibin[0] == ibin[2] == 0:
+                bins['e'].append(ivals[0])
+            ibin[1] = ienergy
+            array[tuple(ibin)] = np.array(tuple(ivals[2:]), dtype=dtype)
+    add_last_sensitivities_bins(data, bins)
+    return array, bins
+
+def convert_sensitivities(res):
+    '''Convert sensitivities.
+
+    :param res: result
+    :return: dict with :obj:`numpy.ndarray`
+    '''
+    # print(res)
+    # print(res.asDict())
+    # print(res['sensitivity'], type(res['sensitivity']))
+    thedict = {}
+    for ires in res:
+        print("[31mKeys:", list(ires.keys()), "[0m")
+        # print(ires.asDict())
+        # ires['res'] ne devrait pas avoir de clefs : list et non pas dict...
+        print("nbre clefs =", len(list(ires['res'])),
+              "taille objet =", len(ires['res']))
+        # print("clefs =", list(ires['res']))
+        print(ires['type'])
+        print(ires['type'][0], type(ires['type'][0]))
+        print(''.join(ires['type']))
+        itype = ''.join(ires['type'])
+        thedict[itype] = {}
+        for iindex in ires['res']:
+            print(list(iindex.keys()), len(list(iindex.keys())))
+            print("nbre elts =", len(iindex))
+            print(iindex['charac'])
+            # for elt in iindex['vals']:
+            #     print("Clefs elt:", list(elt.keys()))
+            array, bins = fill_sensitivities_arrays(iindex['vals'])
+            print(array.shape)
+            print(list(iindex['energy_integrated'].keys()),
+                  type(iindex['energy_integrated']))
+            print(iindex['energy_integrated'].asDict())
+            print(iindex['energy_integrated'])
+            icharac = tuple(iindex['charac'])
+            thedict[itype][icharac] = {
+                'energy_integrated': iindex['energy_integrated'].asDict(),
+                'array': array,
+                'ebins': np.array(bins['e'])}
+            if bins['mu']:
+                thedict[itype][icharac]['mubins'] = np.array(bins['mu'])
+            if bins['einc']:
+                thedict[itype][icharac]['eincbins'] = np.array(bins['einc'])
+    # print(thedict)
+    return thedict

@@ -934,7 +934,7 @@ _sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
                      + OneOrMore(Word(alphas + '_,()'),
                                  stopOn=_sensitivityindexorder_kw)
                      .setParseAction(''.join)
-                     + _sensitivityindexorder_kw)
+                     + Suppress(_sensitivityindexorder_kw))
 _sensitivity_type = (OneOrMore(Word(alphas.upper()), stopOn=_sensitivity_kw)
                      .setParseAction(' '.join)
                      + Suppress(_sensitivity_kw))('typeI')
@@ -951,19 +951,21 @@ _sensitivity_cols = (Keyword("E min") + Keyword("E max")
 _sensitivity_vals = Group(_fnums*4)
 _sensitivity_energyint = Suppress(_sensitivity_energyint_kw) + _integratedres
 _sensitivity_res = Group(_sensitivity_index('charac')
-                         + ZeroOrMore(_sensitivity_dircos
-                                      | _sensitivity_energyinc)
-                         + Suppress(_sensitivity_cols)
-                         + OneOrMore(_sensitivity_vals)('values')
-                         + _sensitivity_energyint('energy_integrated'))
+                         + Group(OneOrMore(Group(
+                             ZeroOrMore(_sensitivity_dircos
+                                        | _sensitivity_energyinc)
+                             + Suppress(_sensitivity_cols)
+                             + OneOrMore(_sensitivity_vals)('values'))))('vals')
+                             + _sensitivity_energyint('energy_integrated'))
 _sensitivity = (_sensitivityorder
                 + OneOrMore(Group(_sensitivity_type('type')
                                   + OneOrMore(_sensitivity_res)('res'))
-                            ('res_type')))
+                )('sensit_res'))
 orderedres = Group(Suppress(_integratedres_kw)
                    + _numusedbatch
                    + (_nucleiorder | _familyorder | _nuclfamorder
-                      | _perturborder | _sensitivity)
+                      | _perturborder
+                      | _sensitivity.setParseAction(trans.convert_sensitivities)('sensitivity'))
                    + Optional(_unitsres))('ordered_res')
 
 
