@@ -128,22 +128,6 @@ def convert_score(toks):
     return res
 
 
-def convert_ifp(toks):
-    '''Convert IFP output in :obj:`numpy` object using
-    :mod:`common <valjean.eponine.common>`.
-
-    :param toks: IFP result
-    :type toks: |parseres|
-    :returns: `numpy structured array`_ (dimension 1)
-
-    .. seealso::
-
-       :func:`common.convert_ifp <valjean.eponine.common.convert_ifp>`
-       and more generally :mod:`common <valjean.eponine.common>`
-    '''
-    return common.convert_ifp(toks['ifp_stat'])
-
-
 def convert_generic_ifp(toks):
     '''Convert IFP output in :obj:`numpy` object using
     :mod:`common <valjean.eponine.common>`.
@@ -157,12 +141,12 @@ def convert_generic_ifp(toks):
        :func:`common.convert_generic_ifp <valjean.eponine.common.convert_ifp>`
        and more generally :mod:`common <valjean.eponine.common>`
     '''
-    print(list(toks.keys()))
-    if 'sensit_res' in toks.keys():
-        return common.convert_sensitivities(toks['sensit_res'])
+    rtoks = toks['ifp_scores']
+    if 'sensit_res' in rtoks.keys():
+        return common.convert_sensitivities(rtoks['sensit_res'])
     else:
-        if len(list(toks.keys())) == 1:
-            return common.convert_generic_ifp(toks, list(toks.keys())[0])
+        if len(list(rtoks.keys())) == 1:
+            return common.convert_generic_ifp(rtoks, list(rtoks.keys())[0])
         else:
             print("more than one key available, what should we do ?")
 

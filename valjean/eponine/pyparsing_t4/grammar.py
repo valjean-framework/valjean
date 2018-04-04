@@ -924,34 +924,29 @@ _gbstep = Group(_gbstepdesc + Group(OneOrMore(_gbrespersource))('gb_step_res'))
 gbblock = Group(OneOrMore(_gbstep))('greenband_res')
 
 
-# Scores ordered by nuclei and precursor families
-_generic_score = Suppress(':') + _integratedres
-# _generic_score = Suppress(':') + _fnums + _fnums
+# Scores ordered by nuclei and precursor families, IFP outputs
+_generic_score = Suppress(':') + _fnums + _fnums
 # Nuclei order alone
-# _scorepernucleus = Group(Word(alphanums)('nucleus') + Suppress(':')
-#                          + _integratedres)
-_scorepernucleus = Group(Word(alphanums)('nucleus') + _generic_score)
-# _scorepernucleus = Group(Word(alphanums) + _generic_score)
+_scorepernucleus = Group(Word(alphanums) + _generic_score)
 _nucleiorder = (Suppress(_nucleiorder_kw)
-                + OneOrMore(_scorepernucleus)('score_per_nucleus'))
+                + ZeroOrMore(_scorepernucleus)('score_per_nucleus'))
 # Families order alone
-# _scoreperfamily = Group(Suppress("i =")
-#                         + _inums('family_number') + Suppress(':')
-#                         + _integratedres)
-_scoreperfamily = Group(Suppress("i =") + _inums('family') + _generic_score)
+_scoreperfamily = Group(Suppress("i =") + _inums + _generic_score)
 _familyorder = (Suppress(_familiesorder_kw)
-                + OneOrMore(_scoreperfamily)('score_per_family'))
+                + ZeroOrMore(_scoreperfamily)('score_per_family'))
 # Nuclei and families order
-_nucleusid = Suppress(_nucleus_kw) + Word(alphanums)('nucleus') + Suppress('.')
+_nucleusid = Suppress(_nucleus_kw) + Word(alphanums) + Suppress('.')
 _nucleusfam = Group(_nucleusid + _familyorder)
 _nuclfamorder = (Suppress(_nucleifamilyorder_kw)
-                 + OneOrMore(_nucleusfam)('score_per_nucleus_family'))
+                 + ZeroOrMore(_nucleusfam)('score_per_nucleus_family'))
 # Perturbation index order
-_scoreperpertuind = Group(Suppress("i =")
-                          + _inums('perturbation_index') + Suppress(':')
-                          + _integratedres)
-_perturborder = (_perturborder_kw
-                 + OneOrMore(_scoreperpertuind)('score_per_pertubation'))
+_scoreperpertuind = Group(Suppress("i =") + _inums + _generic_score)
+_perturborder = (Suppress(_perturborder_kw)
+                 + ZeroOrMore(_scoreperpertuind)('score_per_perturbation'))
+# IFP convergence statistics
+_ifpline = Group(Suppress("L =") + _inums + _generic_score)
+_ifpstat = (Suppress(_ifpcvgstat_kw)
+            + ZeroOrMore(_ifpline)('score_per_length'))
 # sensitivities
 _sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
                      + OneOrMore(Word(alphas + '_,()'),
@@ -978,34 +973,23 @@ _sensitivity_res = Group(_sensitivity_index('charac')
                              ZeroOrMore(_sensitivity_dircos
                                         | _sensitivity_energyinc)
                              + Suppress(_sensitivity_cols)
-                             + OneOrMore(_sensitivity_vals)('values'))))('vals')
-                             + _sensitivity_energyint('energy_integrated'))
+                             + OneOrMore(_sensitivity_vals)('values'))))
+                         ('vals')
+                         + _sensitivity_energyint('energy_integrated'))
 _sensitivity = (_sensitivityorder
                 + OneOrMore(Group(_sensitivity_type('type')
-                                  + OneOrMore(_sensitivity_res)('res'))
-                )('sensit_res'))
+                                  + OneOrMore(_sensitivity_res)('res')))
+                ('sensit_res'))('sensitivity')
 orderedres = Group(Suppress(_integratedres_kw)
                    + _numusedbatch
-                   + Group(_nucleiorder
-                      | _familyorder
-                      | _nuclfamorder
-                      | _perturborder
-                      | _sensitivity('sensitivity'))
-                      # | _sensitivity.setParseAction(trans.convert_sensitivities)('sensitivity'))
+                   + Group(_nuclfamorder
+                           | _nucleiorder
+                           | _familyorder
+                           | _perturborder
+                           | _ifpstat
+                           | _sensitivity)
                    .setParseAction(trans.convert_generic_ifp)('ifp_scores')
                    + Optional(_unitsres))('ordered_res')
-
-
-# IFP convergence statistics
-_ifpline = Group(Suppress("L =") + _inums + Suppress(':') + _fnums + _fnums)
-# lines exists only if converged...
-ifpblock = (Group(Suppress(_integratedres_kw)
-                  + _numusedbatch
-                  + Suppress(_ifpcvgstat_kw)
-                  + Optional(Group(OneOrMore(_ifpline))
-                             .setParseAction(trans.convert_ifp)('ifp_stat'))
-                  + Optional(_unitsres))
-            ('ifp_res'))
 
 
 def _rename_norm_kw():
@@ -1125,7 +1109,6 @@ responseblock = (keffblock
                  | kijsources
                  | orderedres
                  | defintegratedres
-                 | ifpblock
                  | scoreblock)
 
 response = Group(_star_line

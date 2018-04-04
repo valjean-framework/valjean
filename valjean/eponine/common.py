@@ -1200,29 +1200,16 @@ def convert_green_bands(gbs):  # pylint: disable=R0914
             'disc_batch': spectrum['disc_batch']}
 
 
-def convert_ifp(ifp):
-    '''Convert IFP (statistics) result in numpy array.
-
-    :param list ifp: cycle and associated results
-    :returns: numpy structured array of dimension 1
-    '''
-    dtifp = np.dtype([('length', ITYPE), ('score', FTYPE), ('sigma', FTYPE)])
-    vals = np.empty((len(ifp)), dtype=dtifp)
-    for ind, ifpcycle in enumerate(ifp):
-        vals[ind] = np.array(tuple(ifpcycle), dtype=dtifp)
-    return vals
-
-
 def convert_generic_ifp(res, loctype):
     '''Convert IFP results in association of dictionaries and numpy array.
     '''
     dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
-    print(len(res[loctype]))
-    print("[35m", loctype, "[0m")
-    print(list(res[loctype].keys()))
     mydict = {}
     for ires in res[loctype]:
         find = ires[0]
+        if len(ires) == 1:
+            mydict[find] = "No result available"
+            continue
         if isinstance(ires[1], FTYPE):
             mydict[find] = np.array(tuple(ires[1:]), dtype=dtype)
         else:
@@ -1230,9 +1217,7 @@ def convert_generic_ifp(res, loctype):
             for iires in ires[1:]:
                 lind = iires[0]
                 mydict[find][lind] = np.array(tuple(iires[1:]), dtype=dtype)
-    print(mydict)
-    index = list(res[loctype].keys())[0].split('_')[2:]
-    print(index)
+    index = loctype.split('_')[2:]
     return {'index': index, 'scores': mydict}
 
 def convert_kij_sources(res):
@@ -1360,7 +1345,6 @@ def add_last_sensitivities_bins(data, bins):
 
 def fill_sensitivities_arrays(data):
     '''Fill array and bins for sensitivities.'''
-    print("dans fill_sensitivities_arrays")
     dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
     # variables: E, E', mu
     # nbres de bins
@@ -1371,7 +1355,6 @@ def fill_sensitivities_arrays(data):
     if nbeinc == 0:
         nbeinc = 1
     nbebins = len(data[-1]['values'])
-    print("nbcos =", nbcos, "nbeinc =", nbeinc, "nbebins =", nbebins)
     # initialisation et remplissage
     bins = {'einc': [], 'e': [], 'mu': []}
     array = np.empty((nbeinc, nbebins, nbcos), dtype)
