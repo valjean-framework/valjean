@@ -144,6 +144,29 @@ def convert_ifp(toks):
     return common.convert_ifp(toks['ifp_stat'])
 
 
+def convert_generic_ifp(toks):
+    '''Convert IFP output in :obj:`numpy` object using
+    :mod:`common <valjean.eponine.common>`.
+
+    :param toks: IFP result
+    :type toks: |parseres|
+    :returns: `numpy structured array`_ (dimension 1)
+
+    .. seealso::
+
+       :func:`common.convert_generic_ifp <valjean.eponine.common.convert_ifp>`
+       and more generally :mod:`common <valjean.eponine.common>`
+    '''
+    print(list(toks.keys()))
+    if 'sensit_res' in toks.keys():
+        return common.convert_sensitivities(toks['sensit_res'])
+    else:
+        if len(list(toks.keys())) == 1:
+            return common.convert_generic_ifp(toks, list(toks.keys())[0])
+        else:
+            print("more than one key available, what should we do ?")
+
+
 def convert_keff(toks):
     r'''Convert k\ :sub:`eff` response in python dictionary including
     :obj:`numpy.matrix` and using :mod:`common <valjean.eponine.common>`.
@@ -246,11 +269,14 @@ def print_array(array):
 
     :param numpy.ndarray array: array to print
     '''
-    print(type(array))
-    print("shape:", array.shape)
-    if array.dtype.names:
-        print("dtype:", array.dtype)
-    print("squeezed:", np.squeeze(array))
+    if array.shape != ():
+        print(type(array))
+        print("shape:", array.shape)
+        print("squeezed:", np.squeeze(array))
+        if array.dtype.names:
+            print("dtype:", array.dtype)
+    else:
+        print(array, array.dtype)
 
 
 def print_according_type(res, depth=0):

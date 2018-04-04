@@ -906,29 +906,52 @@ _shannonentropy = Suppress(_shannonentropy_kw) + _fnums('shannon_entropy')
 entropy = _boltzmannentropy + _shannonentropy
 
 
+# Greenbands exploitation
+_gbspectrumstep = Suppress(_gbspectrumstep_kw) + _inums
+_gbenergymin = Suppress(_gbenergymin_kw) + _fnums
+_gbenergymax = Suppress(_gbenergymax_kw) + _fnums
+_gbstepdesc = Group(_gbspectrumstep + _minus_line
+                    + _gbenergymin + _gbenergymax)('gb_step_desc')
+_gbtabulation = (Suppress(_gbsourcetab_kw)
+                 + Group(Suppress('u =') + _inums
+                         + Suppress(', v =') + _inums
+                         + Suppress(', w =') + _inums))
+_gbsource = Group(Suppress(_gbsourcenum_kw)
+                  + _inums
+                  + (_minus_line | (_gbtabulation + _minus_line)))('gb_source')
+_gbrespersource = Group(_gbsource + spectrumblock)
+_gbstep = Group(_gbstepdesc + Group(OneOrMore(_gbrespersource))('gb_step_res'))
+gbblock = Group(OneOrMore(_gbstep))('greenband_res')
+
+
 # Scores ordered by nuclei and precursor families
+_generic_score = Suppress(':') + _integratedres
+# _generic_score = Suppress(':') + _fnums + _fnums
 # Nuclei order alone
-_scorepernucleus = Group(Word(alphanums)('nucleus') + Suppress(':')
-                         + _integratedres)
+# _scorepernucleus = Group(Word(alphanums)('nucleus') + Suppress(':')
+#                          + _integratedres)
+_scorepernucleus = Group(Word(alphanums)('nucleus') + _generic_score)
+# _scorepernucleus = Group(Word(alphanums) + _generic_score)
 _nucleiorder = (Suppress(_nucleiorder_kw)
                 + OneOrMore(_scorepernucleus)('score_per_nucleus'))
 # Families order alone
-_scoreperfamily = Group(Suppress("i =")
-                        + _inums('family_number') + Suppress(':')
-                        + _integratedres)
+# _scoreperfamily = Group(Suppress("i =")
+#                         + _inums('family_number') + Suppress(':')
+#                         + _integratedres)
+_scoreperfamily = Group(Suppress("i =") + _inums('family') + _generic_score)
 _familyorder = (Suppress(_familiesorder_kw)
                 + OneOrMore(_scoreperfamily)('score_per_family'))
 # Nuclei and families order
-_nucleusid = _nucleus_kw + Word(alphanums)('nucleus') + Suppress('.')
+_nucleusid = Suppress(_nucleus_kw) + Word(alphanums)('nucleus') + Suppress('.')
 _nucleusfam = Group(_nucleusid + _familyorder)
 _nuclfamorder = (Suppress(_nucleifamilyorder_kw)
-                 + OneOrMore(_nucleusfam)('score_per_nucleus_and_family'))
+                 + OneOrMore(_nucleusfam)('score_per_nucleus_family'))
 # Perturbation index order
 _scoreperpertuind = Group(Suppress("i =")
                           + _inums('perturbation_index') + Suppress(':')
                           + _integratedres)
 _perturborder = (_perturborder_kw
-                 + OneOrMore(_scoreperpertuind)('score_per_pertubation_index'))
+                 + OneOrMore(_scoreperpertuind)('score_per_pertubation'))
 # sensitivities
 _sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
                      + OneOrMore(Word(alphas + '_,()'),
@@ -963,28 +986,14 @@ _sensitivity = (_sensitivityorder
                 )('sensit_res'))
 orderedres = Group(Suppress(_integratedres_kw)
                    + _numusedbatch
-                   + (_nucleiorder | _familyorder | _nuclfamorder
+                   + Group(_nucleiorder
+                      | _familyorder
+                      | _nuclfamorder
                       | _perturborder
-                      | _sensitivity.setParseAction(trans.convert_sensitivities)('sensitivity'))
+                      | _sensitivity('sensitivity'))
+                      # | _sensitivity.setParseAction(trans.convert_sensitivities)('sensitivity'))
+                   .setParseAction(trans.convert_generic_ifp)('ifp_scores')
                    + Optional(_unitsres))('ordered_res')
-
-
-# Greenbands exploitation
-_gbspectrumstep = Suppress(_gbspectrumstep_kw) + _inums
-_gbenergymin = Suppress(_gbenergymin_kw) + _fnums
-_gbenergymax = Suppress(_gbenergymax_kw) + _fnums
-_gbstepdesc = Group(_gbspectrumstep + _minus_line
-                    + _gbenergymin + _gbenergymax)('gb_step_desc')
-_gbtabulation = (Suppress(_gbsourcetab_kw)
-                 + Group(Suppress('u =') + _inums
-                         + Suppress(', v =') + _inums
-                         + Suppress(', w =') + _inums))
-_gbsource = Group(Suppress(_gbsourcenum_kw)
-                  + _inums
-                  + (_minus_line | (_gbtabulation + _minus_line)))('gb_source')
-_gbrespersource = Group(_gbsource + spectrumblock)
-_gbstep = Group(_gbstepdesc + Group(OneOrMore(_gbrespersource))('gb_step_res'))
-gbblock = Group(OneOrMore(_gbstep))('greenband_res')
 
 
 # IFP convergence statistics

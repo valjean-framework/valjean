@@ -1213,6 +1213,28 @@ def convert_ifp(ifp):
     return vals
 
 
+def convert_generic_ifp(res, loctype):
+    '''Convert IFP results in association of dictionaries and numpy array.
+    '''
+    dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
+    print(len(res[loctype]))
+    print("[35m", loctype, "[0m")
+    print(list(res[loctype].keys()))
+    mydict = {}
+    for ires in res[loctype]:
+        find = ires[0]
+        if isinstance(ires[1], FTYPE):
+            mydict[find] = np.array(tuple(ires[1:]), dtype=dtype)
+        else:
+            mydict[find] = {}
+            for iires in ires[1:]:
+                lind = iires[0]
+                mydict[find][lind] = np.array(tuple(iires[1:]), dtype=dtype)
+    print(mydict)
+    index = list(res[loctype].keys())[0].split('_')[2:]
+    print(index)
+    return {'index': index, 'scores': mydict}
+
 def convert_kij_sources(res):
     '''Convert |kij| sources result in python dictionary in which |kij| sources
     values are converted in a numpy array.
@@ -1379,34 +1401,12 @@ def convert_sensitivities(res):
     :param res: result
     :return: dict with :obj:`numpy.ndarray`
     '''
-    # print(res)
-    # print(res.asDict())
-    # print(res['sensitivity'], type(res['sensitivity']))
     thedict = {}
     for ires in res:
-        print("[31mKeys:", list(ires.keys()), "[0m")
-        # print(ires.asDict())
-        # ires['res'] ne devrait pas avoir de clefs : list et non pas dict...
-        print("nbre clefs =", len(list(ires['res'])),
-              "taille objet =", len(ires['res']))
-        # print("clefs =", list(ires['res']))
-        print(ires['type'])
-        print(ires['type'][0], type(ires['type'][0]))
-        print(''.join(ires['type']))
         itype = ''.join(ires['type'])
         thedict[itype] = {}
         for iindex in ires['res']:
-            print(list(iindex.keys()), len(list(iindex.keys())))
-            print("nbre elts =", len(iindex))
-            print(iindex['charac'])
-            # for elt in iindex['vals']:
-            #     print("Clefs elt:", list(elt.keys()))
             array, bins = fill_sensitivities_arrays(iindex['vals'])
-            print(array.shape)
-            print(list(iindex['energy_integrated'].keys()),
-                  type(iindex['energy_integrated']))
-            print(iindex['energy_integrated'].asDict())
-            print(iindex['energy_integrated'])
             icharac = tuple(iindex['charac'])
             thedict[itype][icharac] = {
                 'energy_integrated': iindex['energy_integrated'].asDict(),
@@ -1416,5 +1416,4 @@ def convert_sensitivities(res):
                 thedict[itype][icharac]['mubins'] = np.array(bins['mu'])
             if bins['einc']:
                 thedict[itype][icharac]['eincbins'] = np.array(bins['einc'])
-    # print(thedict)
     return thedict
