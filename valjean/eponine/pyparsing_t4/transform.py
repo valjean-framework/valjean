@@ -252,6 +252,83 @@ def to_dict(toks):
     return res
 
 
+def make_choice(ldict, flag, value):
+    choices = {'index': 0, 'resp_function':1, 'score_name': 2}
+    res = [ldict[ind] for ind in ldict if ind[choices[flag]] == value]
+    print("[94mNombre de resultats correspondants:", len(res), "[0m")
+    # return res[0]
+    if len(res) > 1:
+        print("More than one result matching your selection, "
+              "return only the first one (but how are they ordered ?)")
+    return res
+
+
+def other_choice(ldict, index=None, resp_function=None, score_name=None):
+    ind = (index, resp_function, score_name)
+    print(ind)
+
+
+def yet_another_choice(ldict, **kwargs):
+    # print(kwargs)
+    # for key, value in kwargs.items():
+    #     print(key, "(", type(key), "):", value)
+    mesres = []
+    choices = {'index': 0, 'resp_function':1, 'score_name': 2}
+    for ind in ldict:
+        lind, lrfunc, lsname = ind
+        if 'index' in kwargs and kwargs['index'] != lind:
+            continue
+        if 'resp_function' in kwargs and kwargs['resp_function'] != lrfunc:
+            continue
+        if 'score_name' in kwargs and kwargs['score_name'] != lsname:
+            continue
+        mesres.append(ind)
+    # print("index to be screen:", list(kwargs.keys()))
+    ttuple = tuple(kwargs.values())
+    # print(ttuple)
+    # print("NUMBER OF KEPT INDICES:", len(mesres))
+    # print("KEPT INDICES:", mesres)
+    # res = [ldict[ind] for ind in ldict if ind[choices[flag]] == value]
+    return mesres
+
+
+def resp_dict(toks):
+    test4 = dict(map(lambda xy: ((xy[0] + 1,
+                                  xy[1]['response_description']['resp_function'],
+                                  (xy[1]['response_description']['score_name']
+                                   if 'score_name' in xy[1]['response_description']
+                                   else None)),
+                                 xy[1].asDict()),
+                     enumerate(toks['list_responses'])))
+    resp1 = yet_another_choice(test4,
+                               score_name="neutron_response_integral_30deg")
+    resp2 = yet_another_choice(test4, resp_function="REACTION")
+    resp3 = yet_another_choice(test4,
+                               resp_function="REACTION",
+                               score_name="neutron_response_integral_30deg")
+    resp4 = yet_another_choice(test4, index=1)
+    lscoresnames = list(map(lambda x:
+                            (x['response_description']['score_name']
+                             if 'score_name' in x['response_description']
+                             else None),
+                            toks['list_responses']))
+    lscoresnames = list(filter(None.__ne__, lscoresnames))
+    for resp in test4:
+        # print(resp)
+        print("resp keys:", list(test4[resp].keys()))
+        lkeys = list(test4[resp]['results'].keys())
+        # print("[33mClefs dans results:", lkeys, "->", len(lkeys), "clefs[0m")
+        if len(lkeys) != 1:
+            print("Number of keys is not 1: to be checked...")
+            print(lkeys)
+        for key, vals in test4[resp]['results'].items():
+            print("Nb res for", key, ":", len(vals), "type:", type(vals))
+        # print("values:")
+        # print(test4[resp]['results'].values())
+        # print(list(test4[resp]['results'].values()))
+        # NOT WORKING! THIS IS NOT A DICT !!!
+        # print(dict(test4[resp]['results'].values()))
+
 def print_array(array):
     '''Print :obj:`numpy.ndarray` in condensed format.
 

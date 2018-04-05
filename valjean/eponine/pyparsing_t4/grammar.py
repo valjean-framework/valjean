@@ -1122,6 +1122,9 @@ response = Group(_star_line
                  + _star_line
                  + Group(responseblock)('results'))
 
+listresponses = (Group(OneOrMore(response)).setParseAction(trans.resp_dict)
+                 ('list_responses'))
+
 perturbation = (OneOrMore(Group(pertu_desc + response('response')))
                 ('perturbation'))
 
@@ -1131,12 +1134,17 @@ perturbation = (OneOrMore(Group(pertu_desc + response('response')))
 
 # replace group by real dict, need to check if fine or not (risk: list needed)
 mygram = (OneOrMore((intro
-                     + (Group(OneOrMore(response))('list_responses')
-                        | ifpadjointcriticality)
-                     + Optional(defkeffblock)
-                     + Optional(contribpartblock)
-                     + Optional(perturbation)
-                     + Optional(OneOrMore(runtime)))
+                     # + (listresponses | ifpadjointcriticality)
+                     # + ZeroOrMore(defkeffblock | contribpartblock
+                     #              | perturbation | OneOrMore(runtime)))
+                     + OneOrMore(listresponses | ifpadjointcriticality
+                                 | defkeffblock | contribpartblock
+                                 | perturbation | OneOrMore(runtime)))
+                     # + (listresponses | ifpadjointcriticality)
+                     # + Optional(defkeffblock)
+                     # + Optional(contribpartblock)
+                     # + Optional(perturbation)
+                     # + Optional(OneOrMore(runtime)))
                     .setParseAction(trans.to_dict))
           .setParseAction(trans.print_result)
           | intro + OneOrMore(runtime))
