@@ -138,7 +138,8 @@ def convert_generic_ifp(toks):
 
     .. seealso::
 
-       :func:`common.convert_generic_ifp <valjean.eponine.common.convert_ifp>`
+       :func:`common.convert_generic_ifp
+       <valjean.eponine.common.convert_generic_ifp>`
        and more generally :mod:`common <valjean.eponine.common>`
     '''
     rtoks = toks['ifp_scores']

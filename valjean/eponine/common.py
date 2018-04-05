@@ -781,11 +781,7 @@ class SpectrumDictBuilder(DictBuilder):
         * ``'integrated_res'`` (over energy, splitted in time for the moment)
         '''
         LOGGER.debug("In SpectrumDictBuilder.fill_arrays_and_bins")
-        # print(data)
-        # print(data.asDict())
         for ispec in data:
-            print(ispec)
-            print(ispec.asDict())
             # Fill bins -> caution to not replicate them
             if 'time_step' in ispec:
                 self.itime = ispec['time_step'][0]
@@ -1202,6 +1198,18 @@ def convert_green_bands(gbs):  # pylint: disable=R0914
 
 def convert_generic_ifp(res, loctype):
     '''Convert IFP results in association of dictionaries and numpy array.
+
+    :param list res: IFP result to be converted
+    :returns: dict of
+
+      * index: list of keys used to identify dictionary order
+      * scores: dict of :obj:`numpy.ndarray` or dict of dict of
+        :obj:`numpy.ndarray`
+
+    Indexes correspond to names of the dictionaries keys.
+
+    Examples: if ``'index': ['nucleus', 'family']``, scores will be ordered as
+    ``{nucleus_1: {family_1: array, family_2: array, }, nucleus_2: {}, }``
     '''
     dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
     mydict = {}
@@ -1219,6 +1227,7 @@ def convert_generic_ifp(res, loctype):
                 mydict[find][lind] = np.array(tuple(iires[1:]), dtype=dtype)
     index = loctype.split('_')[2:]
     return {'index': index, 'scores': mydict}
+
 
 def convert_kij_sources(res):
     '''Convert |kij| sources result in python dictionary in which |kij| sources

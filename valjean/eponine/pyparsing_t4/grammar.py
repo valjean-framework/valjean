@@ -148,11 +148,13 @@ Response are constructed as:
   * |kij| results: matrix, eigenvalues, eigenvectors (parser
     :parsing_var:`kijres`)
   * |kij| sources (parser :parsing_var:`kijsources`)
-  * ordered results (in nucleus and/or family (parser
-    :parsing_var:`orderedres`)
+  * IFP related results (parser :parsing_var:`ifpres`): scores ordered by
+    precursors and families, by perturbation index, by cycle length or
+    sensitivities (this last case is represented in a 3 dimensions
+    :obj:`numpy.ndarray`, incident energy, energy ("leaving neutron"),
+    direction cosine (µ))
   * default result integrated over energy where no scoring mode and zone are
     precised (parser :parsing_var:`defintegratedres`)
-  * IFP results (parser :parsing_var:`ifpblock`)
   * perturbation results (parser :parsing_var:`perturbation`)
 
 
@@ -980,16 +982,16 @@ _sensitivity = (_sensitivityorder
                 + OneOrMore(Group(_sensitivity_type('type')
                                   + OneOrMore(_sensitivity_res)('res')))
                 ('sensit_res'))('sensitivity')
-orderedres = Group(Suppress(_integratedres_kw)
-                   + _numusedbatch
-                   + Group(_nuclfamorder
-                           | _nucleiorder
-                           | _familyorder
-                           | _perturborder
-                           | _ifpstat
-                           | _sensitivity)
-                   .setParseAction(trans.convert_generic_ifp)('ifp_scores')
-                   + Optional(_unitsres))('ordered_res')
+ifpres = Group(Suppress(_integratedres_kw)
+               + _numusedbatch
+               + Group(_nuclfamorder
+                       | _nucleiorder
+                       | _familyorder
+                       | _perturborder
+                       | _ifpstat
+                       | _sensitivity)
+               .setParseAction(trans.convert_generic_ifp)('ifp_scores')
+               + Optional(_unitsres))('ifp_res')
 
 
 def _rename_norm_kw():
@@ -1107,7 +1109,7 @@ scoreblock = OneOrMore((Group(scoredesc
 responseblock = (keffblock
                  | kijres
                  | kijsources
-                 | orderedres
+                 | ifpres
                  | defintegratedres
                  | scoreblock)
 
