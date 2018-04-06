@@ -1335,7 +1335,12 @@ def convert_kij_keff(res):
 
 
 def add_last_sensitivities_bins(data, bins):
-    '''Add last bins (E, E', µ) for sensitivities. All orders are possible.'''
+    '''Add last bins (E, E', µ) for sensitivities. All orders are possible.
+
+    :param list data: results as a list of dictionaries
+    :param bins: all bins (minus one edge to be updated
+    :type bins: dict(:obj:`numpy.ndarray`)
+    '''
     if len(bins['e']) > 1 and bins['e'][0] > bins['e'][1]:
         bins['e'].insert(0, data[-1]['values'][0][1])
     else:
@@ -1353,7 +1358,11 @@ def add_last_sensitivities_bins(data, bins):
 
 
 def fill_sensitivities_arrays(data):
-    '''Fill array and bins for sensitivities.'''
+    '''Build array and bins for sensitivities.
+
+    :param list data: results as a list of dictionaries
+    :returns: array and bins as :obj:`numpy.ndarray`
+    '''
     dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
     # variables: E, E', mu
     # nbres de bins
@@ -1387,11 +1396,16 @@ def fill_sensitivities_arrays(data):
     add_last_sensitivities_bins(data, bins)
     return array, bins
 
+
 def convert_sensitivities(res):
-    '''Convert sensitivities.
+    '''Convert sensitivities to dictionary containing :obj:`numpy.ndarray`.
 
     :param res: result
     :return: dict with :obj:`numpy.ndarray`
+
+    The dictionary contains a structured array of 3 dimensions: incident
+    energy ``'einc'``, exiting energy ``'e'`` and direction cosine ``'mu'``.
+    The dtype is ``('score', 'sigma')``.
     '''
     thedict = {}
     for ires in res:

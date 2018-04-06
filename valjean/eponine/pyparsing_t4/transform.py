@@ -233,10 +233,15 @@ def convert_kij_keff(toks):
 
 
 def convert_sensitivities(toks):
-    '''Convert sensitivity results.
+    '''Convert sensitivity results to dictionary of :obj:`numpy` objects using
+    :mod:`common <valjean.eponine.common>`..
+
+    :param toks: `pyparsing` element
+    :returns: python dictionary corresponding to input `pyparsing` dictionary
     '''
     sensitivity = common.convert_sensitivities(toks['sensit_res'])
     return sensitivity
+
 
 def to_dict(toks):
     '''Convert to dictionary result of `pyparsing`.

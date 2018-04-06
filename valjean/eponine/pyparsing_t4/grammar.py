@@ -442,9 +442,6 @@ runtime = _simutime | _elapsedtime | _exploitime
 _respfunc = (Suppress(_respfunction_kw + ':')
              + OneOrMore(Word(alphanums + '_() =+/:-'), stopOn=LineEnd())
              .setParseAction(''.join)('resp_function'))
-             # + OneOrMore(Word(alphanums + '_() =+/:-'),
-             #             stopOn=(_star_line | _respname_kw
-             #                     | _energysplitname_kw))
 # warning: order matters hier, LineEnd has to be before Optional(Word)
 _respname = (Suppress(_respname_kw + ':')
              + (Suppress(LineEnd())

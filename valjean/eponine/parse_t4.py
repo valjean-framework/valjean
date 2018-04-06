@@ -60,7 +60,7 @@ class T4Parser():
         self.end_flag = ""
         self.scan_res = None
         self.result = None
-        self.para = True if "PARA" in jddname or "task" in jddname  else False
+        self.para = True if "PARA" in jddname or "task" in jddname else False
 
     @classmethod
     def parse_jdd(cls, jdd, batch):
