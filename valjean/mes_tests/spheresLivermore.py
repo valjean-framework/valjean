@@ -88,11 +88,12 @@ class SpherePlot():
         self.air = LivermoreSphere(jdd_air, "Air")  #, responses)
 
     def normalized_sphere(self, responses):
-        print(responses)
+        print("Set sphere results")
         self.sphere.set_result(responses)
+        print("Set air results")
         self.air.set_result(responses)
         spectrum = self.sphere.spectrum['spectrum']
-        print(type(spectrum))
+        # print(type(spectrum))
         normalization = self.air.integrated['integrated_res']
         # print(normalization['score'].ravel()[0])
         norm_spec = spectrum['score']/normalization['score'].ravel()[0]
@@ -244,8 +245,10 @@ class MCNPSphere():
         # print("MCNP tbins:", self.tbins)
         # print("MCNP vals:", self.counts)
         print("len(tbins) =", len(self.tbins), "et vals:", len(self.counts))
+        print(self.tbins)
         print((len(self.counts)/2)/len(self.tbins))
         self.tbins = np.array([float(x)-0.2 for x in self.tbins])*10
+        # ntbins = np.array([])
         # print(self.tbins)
         self.sigma = np.array(
             [x for ind, x in enumerate(self.counts) if ind%2 != 0])
@@ -256,8 +259,10 @@ class MCNPSphere():
         # print(len(self.counts))
         # print(len(self.counts[136:]), self.counts[136:][2], self.counts[136:][-1])
         # print(len(self.counts[:136]), self.counts[:136][2], self.counts[:136][-1])
+        initial_counts = self.counts
         self.counts = self.counts[:136]
         self.sigma = self.sigma[:136]
+        print(self.counts[-1], initial_counts[136], initial_counts[136:139], len(initial_counts))
         # print(self.sigma*self.counts, len(self.sigma*self.counts))
 
 class Comparison():
@@ -312,26 +317,27 @@ class Comparison():
         expcut = 3 if charac[2] == '30' else 2
         if charac[0] == "BERYLLIUM":
             expcut = 1
-        print(len(responses))
+        print("Number of responses required:", len(responses))
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
-            print(ires)
-            print(simres)
-            print(sname)
+            # print(ires)
+            # print(simres)
+            print("[94mName of the sample", ires, ":", sname, "[0m")
             if sname not in responses:
                 continue
-            print(responses[sname], type(responses[sname]), type(eval(responses[sname])))
+            # print(responses[sname], type(responses[sname]), type(eval(responses[sname])))
             # middle of T4 bins
             norm_simu = simres.normalized_sphere(responses[sname])
             tbinle = simres.sphere.spectrum['tbins'][:-1]
             tbinhe = simres.sphere.spectrum['tbins'][1:]
             mtbins = (tbinle+tbinhe)/2*1e9
-            print("shape score:", norm_simu[0].ravel()[1:-1].shape)
-            # print(norm_simu[1].ravel()[2:-1])
-            print("shape sigma:", norm_simu[1].ravel()[1:-1].shape)
-            print("shape exp:", self.exp_res.res[charac]['time'].shape)
-            print(mtbins[1:-1])
-            print(self.exp_res.res[charac]['time'])
-            print(type(eval(responses[sname])[0]))
+            print("[37mGot sample", sname, "normalized[0m")
+            # print("shape score:", norm_simu[0].ravel()[1:-1].shape)
+            # # print(norm_simu[1].ravel()[2:-1])
+            # print("shape sigma:", norm_simu[1].ravel()[1:-1].shape)
+            # print("shape exp:", self.exp_res.res[charac]['time'].shape)
+            # print(mtbins[1:-1])
+            # print(self.exp_res.res[charac]['time'])
+            # print(type(eval(responses[sname])[0]))
             if isinstance(eval(responses[sname])[0], str):
                 plt.subplot(gs[0])
                 simu.append(plt.errorbar(mtbins[expcut:-1],
@@ -359,18 +365,57 @@ class Comparison():
                              yerr=self.exp_res.res[charac]['error'],
                              ecolor=cols[ires], color=cols[ires],
                              label=simres.sphere.name[0])
-            legends_curves += simu
+            print("[36mLabels:", labels, "[0m")
             labels.append(sname)
-            legends_leg += labels
+        legends_curves += simu
+        legends_leg += labels
         if mcnp:
             plt.subplot(gs[0])
+            # print("MCNP bins:", self.mcnp_res[mcnp].tbins,
+            #       "nbre:", len(self.mcnp_res[mcnp].tbins))
+            # print("Exp bins:", self.exp_res.res[charac]['time'],
+            #       "nbre:", len(self.exp_res.res[charac]['time']))
             mcnp_plot = plt.errorbar(self.mcnp_res[mcnp].tbins,
                                      self.mcnp_res[mcnp].counts,
                                      yerr=self.mcnp_res[mcnp].sigma,
                                      ecolor='c', color='c',
                                      label="MCNP")
-            legends_curves += [mcnp_plot]
-            legends_leg += ["MCNP"]
+            # mcnp_plot2 = plt.errorbar(self.exp_res.res[charac]['time']-1,
+            #                           self.mcnp_res[mcnp].counts[1:],
+            #                           yerr=self.mcnp_res[mcnp].sigma[1:],
+            #                           ecolor='y', color='y',
+            #                           label="MCNP th bins", fmt="none")
+            plt.subplot(gs[1])
+            # plt.errorbar(self.exp_res.res[charac]['time']-1,
+            #              self.mcnp_res[mcnp].counts[1:]/2/self.exp_res.res[charac]['cntPtimePsource'],
+            #              yerr=self.mcnp_res[mcnp].sigma[1:],
+            #              ecolor='y', color='y',
+            #              label="MCNP")
+            plt.errorbar(self.mcnp_res[mcnp].tbins[1:],
+                         self.mcnp_res[mcnp].counts[1:]/self.exp_res.res[charac]['cntPtimePsource'],
+                         yerr=self.mcnp_res[mcnp].sigma[1:],
+                         ecolor='c', color='c',
+                         label="MCNP")
+            # plt.errorbar(self.mcnp_res[mcnp].tbins[1:],
+            #              self.mcnp_res[mcnp].counts[:-1]/2/self.exp_res.res[charac]['cntPtimePsource'],
+            #              yerr=self.mcnp_res[mcnp].sigma[:-1],
+            #              ecolor='y', color='y',
+            #              label="MCNP")
+            # print(mcnp_plot)
+            # print(type(mcnp_plot))
+            # mpl.artist.getp(mcnp_plot)
+            # print(mcnp_plot.lines)
+            # mpl.artist.getp(mcnp_plot.lines)
+            # mpl.artist.getp(mcnp_plot.lines[0])
+            # print(mcnp_plot.lines[0].get_data())
+            if "New ceav5" in labels:
+                plt.errorbar(self.mcnp_res[mcnp].tbins[1:],
+                             simu[labels.index("New ceav5")].lines[0].get_data()[1]/self.mcnp_res[mcnp].counts[1:],
+                             yerr=self.mcnp_res[mcnp].sigma[1:],
+                             ecolor='r', color='r',
+                             label="MCNP")
+            legends_curves += [mcnp_plot]  # , mcnp_plot2]
+            legends_leg += ["MCNP"]  # , "MCNP th bins"]
         plt.subplot(gs[0])
         plt.legend(legends_curves, legends_leg)
         plt.ylabel("neutron count rate [1/(ns.source)]")
