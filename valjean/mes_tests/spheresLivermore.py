@@ -311,12 +311,15 @@ class Comparison():
         plt.title("{elt}, {mfp} mfp, detector at {deg}°"
                   .format(elt=charac[0].capitalize(),
                           mfp=charac[1], deg=charac[2]))
-        cols = ['b', 'g', 'm', 'darkviolet']
+        cols = ['b', 'g', 'm', 'darkviolet', 'orchid', 'darkmagenta',
+                'dodgerblue']
         simu = []
         labels = []
         expcut = 3 if charac[2] == '30' else 2
+        nexptbins = self.exp_res.res[charac]['time'].shape[0]
         if charac[0] == "BERYLLIUM":
             expcut = 1
+        print(responses)
         print("Number of responses required:", len(responses))
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
             # print(ires)
@@ -338,33 +341,56 @@ class Comparison():
             # print(mtbins[1:-1])
             # print(self.exp_res.res[charac]['time'])
             # print(type(eval(responses[sname])[0]))
-            if isinstance(eval(responses[sname])[0], str):
-                plt.subplot(gs[0])
-                simu.append(plt.errorbar(mtbins[expcut:-1],
-                                         norm_simu[0].ravel()[expcut:-1]/2,
-                                         # norm_simu[0].ravel()[3:-1]/2,
-                                         yerr=norm_simu[1].ravel()[expcut:-1],
-                                         ecolor=cols[ires], color=cols[ires],
-                                         label=simres.sphere.name[0]))
-                plt.subplot(gs[1])
-                plt.errorbar(mtbins[expcut:-1],
-                             norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[charac]['cntPtimePsource'],
-                             yerr=self.exp_res.res[charac]['error'],
-                             ecolor=cols[ires], color=cols[ires],
-                             label=simres.sphere.name[0])
-            else:
-                plt.subplot(gs[0])
-                simu.append(plt.errorbar(mtbins[1:-1],
-                                         norm_simu[0].ravel()[1:-1]/2,
-                                         yerr=norm_simu[1].ravel()[1:-1],
-                                         ecolor=cols[ires], color=cols[ires],
-                                         label=simres.sphere.name[0]))
-                plt.subplot(gs[1])
-                plt.errorbar(mtbins[1:-1],
-                             norm_simu[0].ravel()[1:-1]/2/self.exp_res.res[charac]['cntPtimePsource'],
-                             yerr=self.exp_res.res[charac]['error'],
-                             ecolor=cols[ires], color=cols[ires],
-                             label=simres.sphere.name[0])
+            print("[36m", self.exp_res.res[charac]['time'].shape, "[0m")
+            print("[36m", norm_simu[0].ravel()[expcut:-1].shape, "[0m")
+            print("[36m", mtbins[expcut:-1].shape, "[0m")
+            nsimtbins = mtbins[expcut:-1].shape[0]
+            if nexptbins != nsimtbins:
+                if nexptbins > nsimtbins:
+                    expcut = expcut - nexptbins + nsimtbins
+                else:
+                    expcut = expcut + nsimtbins - nexptbins
+            print("[35m", self.exp_res.res[charac]['time'].shape, "[0m")
+            print("[35m", norm_simu[0].ravel()[expcut:-1].shape, "[0m")
+            print("[35m", mtbins[expcut:-1].shape, "[0m")
+            marker = '-'
+            print(marker)
+            print(responses[sname])
+            if len(eval(responses[sname])) > 2:
+                marker += eval(responses[sname])[2]
+            print(marker)
+            # if ((isinstance(eval(responses[sname])[0], str)
+            #      and "old" not in sname and "Old" not in sname)):
+            #     print("[34m", sname, "[0m")
+            #     print(eval(responses[sname])[0])
+            plt.subplot(gs[0])
+            simu.append(plt.errorbar(mtbins[expcut:-1],
+                                     norm_simu[0].ravel()[expcut:-1]/2,
+                                     # norm_simu[0].ravel()[3:-1]/2,
+                                     yerr=norm_simu[1].ravel()[expcut:-1],
+                                     ecolor=cols[ires], color=cols[ires],
+                                     fmt=marker, ms=3, mfc="none",
+                                     label=simres.sphere.name[0]))
+            plt.subplot(gs[1])
+            plt.errorbar(mtbins[expcut:-1],
+                         norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[charac]['cntPtimePsource'],
+                         yerr=self.exp_res.res[charac]['error'],
+                         ecolor=cols[ires], color=cols[ires],
+                         label=simres.sphere.name[0])
+            # else:
+            #     print("[35m", sname, "[0m")
+            #     plt.subplot(gs[0])
+            #     simu.append(plt.errorbar(mtbins[1:-1],
+            #                              norm_simu[0].ravel()[1:-1]/2,
+            #                              yerr=norm_simu[1].ravel()[1:-1],
+            #                              ecolor=cols[ires], color=cols[ires],
+            #                              label=simres.sphere.name[0]))
+            #     plt.subplot(gs[1])
+            #     plt.errorbar(mtbins[1:-1],
+            #                  norm_simu[0].ravel()[1:-1]/2/self.exp_res.res[charac]['cntPtimePsource'],
+            #                  yerr=self.exp_res.res[charac]['error'],
+            #                  ecolor=cols[ires], color=cols[ires],
+            #                  label=simres.sphere.name[0])
             print("[36mLabels:", labels, "[0m")
             labels.append(sname)
         legends_curves += simu
