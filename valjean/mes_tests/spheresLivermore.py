@@ -84,7 +84,9 @@ class SpherePlot():
     '''
 
     def __init__(self, jdd_sphere, jdd_air):
+        print("Parsing", jdd_sphere)
         self.sphere = LivermoreSphere(jdd_sphere, "Sphere")  #, responses)
+        print("Parsing", jdd_air)
         self.air = LivermoreSphere(jdd_air, "Air")  #, responses)
 
     def normalized_sphere(self, responses):
@@ -260,10 +262,29 @@ class MCNPSphere():
         # print(len(self.counts[136:]), self.counts[136:][2], self.counts[136:][-1])
         # print(len(self.counts[:136]), self.counts[:136][2], self.counts[:136][-1])
         initial_counts = self.counts
+        self.integral = self.counts[136]
+        self.sigma_integral = self.sigma[136]
         self.counts = self.counts[:136]
         self.sigma = self.sigma[:136]
         print(self.counts[-1], initial_counts[136], initial_counts[136:139], len(initial_counts))
+        print("Sum of counts:", np.sum(self.counts), "integral:", self.integral)
         # print(self.sigma*self.counts, len(self.sigma*self.counts))
+
+class MCNPrenormalizedSphere():
+    '''Class to buld renormalized spheres for MCNP.'''
+
+    def __init__(self, out_sphere, out_air):
+        print("Get results for the sphere")
+        self.sphere = MCNPSphere(out_sphere, "Sphere")
+        self.air = MCNPSphere(out_air, "Air")
+        self.counts, self.sigma, self.tbins = self.normalized_sphere()
+        print("Renormalized counts:", self.counts)
+
+    def normalized_sphere(self):
+        counts = self.sphere.counts/self.air.integral
+        sigma = self.sphere.sigma/self.air.integral
+        tbins = self.sphere.tbins
+        return counts, sigma, tbins
 
 class Comparison():
     '''Class to compare, using matplotlib, experiment and Tripoli-4 results.'''
@@ -285,13 +306,15 @@ class Comparison():
 
 
     def set_mcnp_files(self, jdd, name):
-        self.mcnp_res[name] = MCNPSphere(jdd, name)
+        # self.mcnp_res[name] = MCNPSphere(jdd, name)
+        print("Read MCNP results for sphere", jdd, "and air", jdd[:-1]+"_airm")
+        self.mcnp_res[name] = MCNPrenormalizedSphere(jdd, jdd[:-1]+"_airm")
 
     def compare_plots(self, charac, responses, mcnp=None):
         # experiment bins
         # expbins = self.exp_res.exp_res[self.charac]['time']
         print("[31mNbre fichiers:", len(self.simu_res), "[0m")
-        plt.figure(1)
+        plt.figure(1, (15, 8))
         gs = gridspec.GridSpec(2, 1, height_ratios=[4, 1])
         # 211 -> gs[0], 212 -> gs[1]
         plt.subplot(gs[0])
@@ -371,12 +394,32 @@ class Comparison():
                                      ecolor=cols[ires], color=cols[ires],
                                      fmt=marker, ms=3, mfc="none",
                                      label=simres.sphere.name[0]))
+            if sname == "New ceav5":
+                simu.append(plt.errorbar(mtbins[expcut:-1],
+                                         norm_simu[0].ravel()[expcut:-1]/1.975,
+                                         fmt='--', color='plum',
+                                         label=sname + " normed by integrals"))
             plt.subplot(gs[1])
             plt.errorbar(mtbins[expcut:-1],
                          norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[charac]['cntPtimePsource'],
                          yerr=self.exp_res.res[charac]['error'],
                          ecolor=cols[ires], color=cols[ires],
                          label=simres.sphere.name[0])
+            if sname == "New ceav5":
+                plt.plot(mtbins[expcut:-1],
+                         norm_simu[0].ravel()[expcut:-1]/1.975/self.exp_res.res[charac]['cntPtimePsource'],
+                         '--', color='plum',
+                         label="normalisation")
+                plt.plot(mtbins[expcut:-1],
+                         simu[-1].lines[0].get_data()[1]
+                         / (norm_simu[0].ravel()[expcut:-1]/1.975),
+                         color='blueviolet',
+                         label="ratio")
+            # plt.errorbar(mtbins[expcut:-1],plt.errorbar(mtbins[expcut:-1],
+            #              norm_simu[0].ravel()[expcut:-1]/2*1.01908/self.exp_res.res[charac]['cntPtimePsource'],
+            #              yerr=self.exp_res.res[charac]['error'],
+            #              ecolor=cols[ires], color=cols[ires],
+            #              label="normalisation")
             # else:
             #     print("[35m", sname, "[0m")
             #     plt.subplot(gs[0])
@@ -392,7 +435,22 @@ class Comparison():
             #                  ecolor=cols[ires], color=cols[ires],
             #                  label=simres.sphere.name[0])
             print("[36mLabels:", labels, "[0m")
+            print("T4: first time bin =", mtbins[:2],
+                  "ou", simres.sphere.spectrum['tbins'][:2],
+                  "last time bin =", mtbins[-2:],
+                  "ou", simres.sphere.spectrum['tbins'][-2:])
+            print("Integral T4 data =",
+                  np.trapz(norm_simu[0].ravel()[expcut:-1]/2, dx=2.0))
+            print("Integral T4 data (no norm) =",
+                  np.trapz(norm_simu[0].ravel()[expcut:-1], dx=2.0))
+            print("Integral T4 data (sum) =",
+                  np.trapz(norm_simu[0].ravel()[expcut:-1], dx=1.0),
+                  "check =", np.sum(norm_simu[0].ravel()[expcut:-1]),
+                  "check with width =",
+                  np.sum(norm_simu[0].ravel()[expcut:-1])*2)
             labels.append(sname)
+            if sname == "New ceav5":
+                labels.append(sname + " normed by integrals")
         legends_curves += simu
         legends_leg += labels
         if mcnp:
@@ -402,10 +460,14 @@ class Comparison():
             # print("Exp bins:", self.exp_res.res[charac]['time'],
             #       "nbre:", len(self.exp_res.res[charac]['time']))
             mcnp_plot = plt.errorbar(self.mcnp_res[mcnp].tbins,
-                                     self.mcnp_res[mcnp].counts,
+                                     self.mcnp_res[mcnp].counts/2.082,
                                      yerr=self.mcnp_res[mcnp].sigma,
                                      ecolor='c', color='c',
                                      label="MCNP")
+            mcnp_plot2 = plt.errorbar(self.mcnp_res[mcnp].tbins,
+                                      self.mcnp_res[mcnp].counts/2,
+                                      fmt='--', color='cyan',
+                                      label="MCNP normed by 2")
             # mcnp_plot2 = plt.errorbar(self.exp_res.res[charac]['time']-1,
             #                           self.mcnp_res[mcnp].counts[1:],
             #                           yerr=self.mcnp_res[mcnp].sigma[1:],
@@ -418,10 +480,19 @@ class Comparison():
             #              ecolor='y', color='y',
             #              label="MCNP")
             plt.errorbar(self.mcnp_res[mcnp].tbins[1:],
-                         self.mcnp_res[mcnp].counts[1:]/self.exp_res.res[charac]['cntPtimePsource'],
+                         self.mcnp_res[mcnp].counts[1:]/2.082/self.exp_res.res[charac]['cntPtimePsource'],
                          yerr=self.mcnp_res[mcnp].sigma[1:],
                          ecolor='c', color='c',
                          label="MCNP")
+            plt.plot(self.mcnp_res[mcnp].tbins[1:],
+                     self.mcnp_res[mcnp].counts[1:]/2/self.exp_res.res[charac]['cntPtimePsource'],
+                     '--', color='cyan',
+                     label="MCNP norm")
+            plt.plot(self.mcnp_res[mcnp].tbins[1:],
+                     self.mcnp_res[mcnp].counts[1:]/2
+                     / (self.mcnp_res[mcnp].counts[1:]/2.082),
+                     color='blueviolet',
+                     label="ratio")
             # plt.errorbar(self.mcnp_res[mcnp].tbins[1:],
             #              self.mcnp_res[mcnp].counts[:-1]/2/self.exp_res.res[charac]['cntPtimePsource'],
             #              yerr=self.mcnp_res[mcnp].sigma[:-1],
@@ -434,14 +505,29 @@ class Comparison():
             # mpl.artist.getp(mcnp_plot.lines)
             # mpl.artist.getp(mcnp_plot.lines[0])
             # print(mcnp_plot.lines[0].get_data())
+            print("Integral MCNP data =",
+                  np.trapz(self.mcnp_res[mcnp].counts, dx=2.0))
+            print("Integral MCNP data wuith norm =",
+                  np.trapz(self.mcnp_res[mcnp].counts/2.082, dx=2.0))
+            print("Integral MCNP data (sum) =",
+                  np.trapz(self.mcnp_res[mcnp].counts, dx=1.0),
+                  "check =", np.sum(self.mcnp_res[mcnp].counts),
+                  "check with width =", np.sum(self.mcnp_res[mcnp].counts)*2)
             if "New ceav5" in labels:
-                plt.errorbar(self.mcnp_res[mcnp].tbins[1:],
-                             simu[labels.index("New ceav5")].lines[0].get_data()[1]/self.mcnp_res[mcnp].counts[1:],
-                             yerr=self.mcnp_res[mcnp].sigma[1:],
-                             ecolor='r', color='r',
-                             label="MCNP")
-            legends_curves += [mcnp_plot]  # , mcnp_plot2]
-            legends_leg += ["MCNP"]  # , "MCNP th bins"]
+                plt.plot(self.mcnp_res[mcnp].tbins[1:],
+                         # simu[labels.index("New ceav5")].lines[0].get_data()[1]/self.mcnp_res[mcnp].counts[1:],
+                         simu[labels.index("New ceav5")].lines[0].get_data()[1]/mcnp_plot.lines[0].get_data()[1][1:],
+                         color='r',
+                         label="ratio")
+            legends_curves += [mcnp_plot, mcnp_plot2]
+            legends_leg += ["MCNP", "MCNP normed by 2"]
+            print("bla")
+        print("Data: first time bin =", self.exp_res.res[charac]['time'][0],
+              "last time bin =", self.exp_res.res[charac]['time'][-1])
+        print("Integral exp data =",
+              np.trapz(self.exp_res.res[charac]['cntPtimePsource'], dx=2.0))
+        print("Integral exp data (width = 1) =",
+              np.trapz(self.exp_res.res[charac]['cntPtimePsource'], dx=1.0))
         plt.subplot(gs[0])
         plt.legend(legends_curves, legends_leg)
         plt.ylabel("neutron count rate [1/(ns.source)]")
