@@ -280,7 +280,8 @@ class MCNPrenormalizedSphere():
 
 class Comparison():
     '''Class to compare, using matplotlib, experiment and Tripoli-4 results.'''
-    RENORM_FACTOR = 2
+    NORM_FACTOR = 2
+    TIME_SHIFT = 2
 
     def __init__(self):
         self.exp_res = LivermoreExps()
@@ -321,95 +322,59 @@ class Comparison():
     def plot_t4(self, responses, splt, legend):
         cols = ['b', 'g', 'm', 'darkviolet', 'orchid', 'darkmagenta',
                 'dodgerblue']
-        expcut = 3 if self.charac[2] == '30' else 2
         nexptbins = self.exp_res.res[self.charac]['time'].shape[0]
-        if self.charac[0] == "BERYLLIUM":
-            expcut = 1
         print("Number of responses required:", len(responses))
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
-            # print(ires)
-            # print(simres)
             print("[94mName of the sample", ires, ":", sname, "[0m")
             if sname not in responses:
                 continue
             # middle of T4 bins
             norm_simu = simres.normalized_sphere(responses[sname])
-            # tbinle = simres.sphere.spectrum['tbins'][:-1]
-            # tbinhe = simres.sphere.spectrum['tbins'][1:]
-            # mtbins = (tbinle+tbinhe)/2*1e9
             tbins = simres.sphere.spectrum['tbins'][1:-1]*1e9
-            mtbins = simres.sphere.spectrum['tbins']*1e9 - 1
             # remove first bin edge as 1 edge more than bins (normal)
             mtbins2 = tbins[1:] - 1
-            t4vals = norm_simu[0].ravel()[1:-1]/2
-            t4sigma = norm_simu[1].ravel()[1:-1]/2
-            print(mtbins.shape, mtbins2.shape, t4vals.shape)
-            # print("T4 tbins:", simres.sphere.spectrum['tbins']*1e9)
-            # print("Final T4 tbins:", mtbins)
-            print(mtbins2)
-            print("[37mGot sample", sname, "normalized[0m")
-            # print("[36m", self.exp_res.res[self.charac]['time'].shape, "[0m")
-            # print("[36m", norm_simu[0].ravel()[expcut:-1].shape, "[0m")
-            # print("[36m", mtbins[expcut:-1].shape, "[0m")
-            # nsimtbins = mtbins[expcut:-1].shape[0]
+            t4vals = norm_simu[0].ravel()[1:-1]/Comparison.NORM_FACTOR
+            t4sigma = norm_simu[1].ravel()[1:-1]/Comparison.NORM_FACTOR
             nsimtbins = mtbins2.shape[0]
+            print("nexptbins =", nexptbins, "nsimtbins =", nsimtbins)
+            # cut first points of simulation as data 'only' start at 141 ns
+            cut = 0
             if nexptbins != nsimtbins:
                 if nexptbins > nsimtbins:
-                    expcut = expcut - nexptbins + nsimtbins
+                    cut = nexptbins + nsimtbins
                 else:
-                    expcut = expcut + nsimtbins - nexptbins
-            print("[35m", self.exp_res.res[self.charac]['time'].shape, "[0m")
-            print("[35m", norm_simu[0].ravel()[expcut:-1].shape, "[0m")
-            print("[35m", mtbins[expcut:-1].shape, "[0m")
+                    cut = nsimtbins - nexptbins
+            print("cut =", cut)
             marker = '+-'
-            print(marker)
-            print(responses[sname])
             if len(ast.literal_eval(responses[sname])) > 2:
                 marker += ast.literal_eval(responses[sname])[2]
-            print(marker)
             simu = splt[0].errorbar(mtbins2, t4vals, yerr=t4sigma,
                                     ecolor=cols[ires], color=cols[ires],
                                     fmt=marker, ms=3, mfc="none")
-            simu2 = splt[0].errorbar(mtbins2-2, t4vals, yerr=t4sigma,
+            simu2 = splt[0].errorbar(mtbins2-Comparison.TIME_SHIFT,
+                                     t4vals, yerr=t4sigma,
                                      ecolor='m', color='m',
                                      fmt=marker, ms=3, mfc="none")
             legend['curves'].append(simu)
             legend['labels'].append(sname)
-            splt[1].errorbar(simu.lines[0].get_data()[0][2:],
-                             simu.lines[0].get_data()[1][2:]
-                             /legend['curves'][0][1].lines[0].get_data()[1],
-                             ecolor=cols[ires], color=cols[ires])
-            print("[34mBleue curve mean =",
-                  np.mean( simu.lines[0].get_data()[1][3:]
-                           /legend['curves'][0][1].lines[0].get_data()[1][:-1]),
-                  "[0m")
-            print(norm_simu[0].ravel()[expcut-1:-1].shape,
-                  norm_simu[0].ravel()[expcut:-2].shape,
-                  norm_simu[0].ravel()[expcut-1:-2].shape,
-                  norm_simu[0].ravel()[expcut-2:-2].shape,
-                  legend['curves'][0][1].lines[0].get_data()[1].shape,
-                  mtbins[expcut:-1].shape)
-            splt[1].errorbar(simu2.lines[0].get_data()[0][3:],
-                             simu2.lines[0].get_data()[1][3:]
-                             /legend['curves'][0][1].lines[0].get_data()[1][:-1],
-                             ecolor='m', color='m')
-            print("[35mMagenta curve mean =",
-                  np.mean(norm_simu[0].ravel()[3:-1]/2
-                          /legend['curves'][0][1].lines[0].get_data()[1]),
-                  "[0m")
-            print("T4: first time bin =", mtbins[:2],
-                  "ou", simres.sphere.spectrum['tbins'][:2],
-                  "last time bin =", mtbins[-2:],
-                  "ou", simres.sphere.spectrum['tbins'][-2:])
+            if "Experiment" in legend['labels']:
+                exp_data = legend['curves'][0][1].lines[0].get_data()[1]
+                splt[1].errorbar(simu.lines[0].get_data()[0][cut:],
+                                 simu.lines[0].get_data()[1][cut:]/exp_data,
+                                 ecolor=cols[ires], color=cols[ires])
+                splt[1].errorbar(simu2.lines[0].get_data()[0][cut+1:],
+                                 simu2.lines[0].get_data()[1][cut+1:]
+                                 /exp_data[:-1],
+                                 ecolor='m', color='m')
             print("Integral T4 data =",
-                  np.trapz(norm_simu[0].ravel()[expcut:-1]/2, dx=2.0))
+                  np.trapz(norm_simu[0].ravel()[cut:-1]/2, dx=2.0))
             print("Integral T4 data (no norm) =",
-                  np.trapz(norm_simu[0].ravel()[expcut:-1], dx=2.0))
+                  np.trapz(norm_simu[0].ravel()[cut:-1], dx=2.0))
             print("Integral T4 data (sum) =",
-                  np.trapz(norm_simu[0].ravel()[expcut:-1], dx=1.0),
-                  "check =", np.sum(norm_simu[0].ravel()[expcut:-1]),
+                  np.trapz(norm_simu[0].ravel()[cut:-1], dx=1.0),
+                  "check =", np.sum(norm_simu[0].ravel()[cut:-1]),
                   "check with width =",
-                  np.sum(norm_simu[0].ravel()[expcut:-1])*2)
+                  np.sum(norm_simu[0].ravel()[cut:-1])*2)
 
     def compare_plots(self, charac, responses, mcnp=None):
         # experiment bins
