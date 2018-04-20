@@ -112,6 +112,7 @@ class SpherePlot():
         print("shape=", testerr.shape)
         norm_spec_sig = spectrum['sigma']*norm_spec/100.  #/normalization['sigma'].ravel()[0]
         # print(norm_spec)
+        # removing first and last bins as irrelevant here
         return norm_spec, norm_spec_sig
 
     def plot_sphere(self):
@@ -333,14 +334,25 @@ class Comparison():
                 continue
             # middle of T4 bins
             norm_simu = simres.normalized_sphere(responses[sname])
-            tbinle = simres.sphere.spectrum['tbins'][:-1]
-            tbinhe = simres.sphere.spectrum['tbins'][1:]
-            mtbins = (tbinle+tbinhe)/2*1e9
+            # tbinle = simres.sphere.spectrum['tbins'][:-1]
+            # tbinhe = simres.sphere.spectrum['tbins'][1:]
+            # mtbins = (tbinle+tbinhe)/2*1e9
+            tbins = simres.sphere.spectrum['tbins'][1:-1]*1e9
+            mtbins = simres.sphere.spectrum['tbins']*1e9 - 1
+            # remove first bin edge as 1 edge more than bins (normal)
+            mtbins2 = tbins[1:] - 1
+            t4vals = norm_simu[0].ravel()[1:-1]/2
+            t4sigma = norm_simu[1].ravel()[1:-1]/2
+            print(mtbins.shape, mtbins2.shape, t4vals.shape)
+            # print("T4 tbins:", simres.sphere.spectrum['tbins']*1e9)
+            # print("Final T4 tbins:", mtbins)
+            print(mtbins2)
             print("[37mGot sample", sname, "normalized[0m")
             # print("[36m", self.exp_res.res[self.charac]['time'].shape, "[0m")
-            print("[36m", norm_simu[0].ravel()[expcut:-1].shape, "[0m")
-            print("[36m", mtbins[expcut:-1].shape, "[0m")
-            nsimtbins = mtbins[expcut:-1].shape[0]
+            # print("[36m", norm_simu[0].ravel()[expcut:-1].shape, "[0m")
+            # print("[36m", mtbins[expcut:-1].shape, "[0m")
+            # nsimtbins = mtbins[expcut:-1].shape[0]
+            nsimtbins = mtbins2.shape[0]
             if nexptbins != nsimtbins:
                 if nexptbins > nsimtbins:
                     expcut = expcut - nexptbins + nsimtbins
@@ -349,28 +361,115 @@ class Comparison():
             print("[35m", self.exp_res.res[self.charac]['time'].shape, "[0m")
             print("[35m", norm_simu[0].ravel()[expcut:-1].shape, "[0m")
             print("[35m", mtbins[expcut:-1].shape, "[0m")
-            marker = '-'
+            marker = '+-'
             print(marker)
             print(responses[sname])
             if len(ast.literal_eval(responses[sname])) > 2:
                 marker += ast.literal_eval(responses[sname])[2]
             print(marker)
-            simu = splt[0].errorbar(mtbins[expcut:-1],
-                                    norm_simu[0].ravel()[expcut:-1]/2,
+            # simu = splt[0].errorbar(mtbins[expcut:-2],
+            #                         norm_simu[0].ravel()[expcut:-1]/2,
+            #                         # norm_simu[0].ravel()[3:-1]/2,
+            #                         yerr=norm_simu[1].ravel()[expcut:-1],
+            print("shape mtbins =", mtbins.shape, "values =",  norm_simu[0].ravel().shape)
+            simu = splt[0].errorbar(mtbins[1:-2],
+                                    norm_simu[0].ravel()[1:-1]/2,
                                     # norm_simu[0].ravel()[3:-1]/2,
-                                    yerr=norm_simu[1].ravel()[expcut:-1],
+                                    yerr=norm_simu[1].ravel()[1:-1],
                                     ecolor=cols[ires], color=cols[ires],
                                     fmt=marker, ms=3, mfc="none",
                                     label=simres.sphere.name[0])
+            # print("La courbe magenta")
+            # print(mtbins[2:-1].shape)
+            # print(norm_simu[0].ravel()[1:-1]/2)
+            # print(expcut)
+            simu2 = splt[0].errorbar(mtbins[2:-1],
+                                     norm_simu[0].ravel()[1:-1]/2,
+                                     yerr=norm_simu[1].ravel()[1:-1],
+                                     ecolor='m', color='m',
+                                     fmt=marker, ms=3, mfc="none",
+                                     label=simres.sphere.name[0])
+            simu3 = splt[0].errorbar(mtbins2,
+                                     t4vals,
+                                     yerr=t4sigma,
+                                     ecolor='plum', color='plum',
+                                     fmt='--', ms=3, mfc="none",
+                                     label=simres.sphere.name[0])
             legend['curves'].append(simu)
             legend['labels'].append(sname)
-            splt[1].errorbar(mtbins[expcut:-1],
-                             norm_simu[0].ravel()[expcut:-1]/2/legend['curves'][0][1].lines[0].get_data()[1],
+            # print(mtbins[1:-2])
+            # print(simu.lines[0].get_data()[0][1:],
+            #       simu.lines[0].get_data()[0][1:].shape)
+            # print(legend['curves'][0][1].lines[0].get_data()[0],
+            #       legend['curves'][0][1].lines[0].get_data()[0].shape)
+            # print(simu.lines[0].get_data()[0][3:].shape,
+            #       simu.lines[0].get_data()[1][3:].shape,
+            #       legend['curves'][0][1].lines[0].get_data()[1][:-1].shape)
+            splt[1].errorbar(simu.lines[0].get_data()[0][3:],
+                             # mtbins[expcut:-1],
+                             simu.lines[0].get_data()[1][3:]/legend['curves'][0][1].lines[0].get_data()[1][:-1],
+                             # norm_simu[0].ravel()[expcut-1:-1]/2/legend['curves'][0][1].lines[0].get_data()[1],
                              # norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[self.charac]['cntPtimePsource'],
                              # yerr=self.exp_res.res[self.charac]['error'],
                              yerr=0,
                              ecolor=cols[ires], color=cols[ires],
                              label=simres.sphere.name[0])
+            print("[34mBleue curve mean =",
+                  np.mean( simu.lines[0].get_data()[1][3:]
+                           /legend['curves'][0][1].lines[0].get_data()[1][:-1]),
+                  "[0m")
+            print(norm_simu[0].ravel()[expcut-1:-1].shape,
+                  norm_simu[0].ravel()[expcut:-2].shape,
+                  norm_simu[0].ravel()[expcut-1:-2].shape,
+                  norm_simu[0].ravel()[expcut-2:-2].shape,
+                  legend['curves'][0][1].lines[0].get_data()[1].shape,
+                  mtbins[expcut:-1].shape)
+            # print( norm_simu[0].ravel()/2)
+            # print(norm_simu[0].ravel()[expcut-1:-1]/2)
+            # print(norm_simu[0].ravel()[expcut:-1]/2)
+            # print(legend['curves'][0][1].lines[0].get_data()[1])
+            # # print(norm_simu[0].ravel()[expcut:-1]/2/legend['curves'][0][1].lines[0].get_data()[1])
+            # print(mtbins[expcut:-1])
+            # print(mtbins[3:-1].shape,
+            #       norm_simu[0].ravel()[3:-1].shape,
+            #       legend['curves'][0][1].lines[0].get_data()[1].shape)
+            # print(mtbins[3:-1])
+            # splt[1].errorbar(simu.lines[0].get_data()[0][2:],
+            #                  # mtbins[4:-1],
+            #                  simu.lines[0].get_data()[1][2:]/legend['curves'][0][1].lines[0].get_data()[1],
+            #                  # norm_simu[0].ravel()[3:-1]/2/legend['curves'][0][1].lines[0].get_data()[1],
+            #                  # norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[self.charac]['cntPtimePsource'],
+            #                  # yerr=self.exp_res.res[self.charac]['error'],
+            #                  yerr=0,
+            #                  ecolor='m', color='m',
+            #                  label=simres.sphere.name[0])
+            splt[1].errorbar(simu2.lines[0].get_data()[0][2:],
+                             # mtbins[4:-1],
+                             simu2.lines[0].get_data()[1][2:]/legend['curves'][0][1].lines[0].get_data()[1],
+                             # norm_simu[0].ravel()[3:-1]/2/legend['curves'][0][1].lines[0].get_data()[1],
+                             # norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[self.charac]['cntPtimePsource'],
+                             # yerr=self.exp_res.res[self.charac]['error'],
+                             yerr=0,
+                             ecolor='m', color='m',
+                             label=simres.sphere.name[0])
+            splt[1].errorbar(simu.lines[0].get_data()[0][15:],
+                             simu.lines[0].get_data()[1][15:]/legend['curves'][0][1].lines[0].get_data()[1][12:-1],
+                             fmt='r--')
+            splt[1].errorbar(simu2.lines[0].get_data()[0][14:],
+                             simu2.lines[0].get_data()[1][14:]/legend['curves'][0][1].lines[0].get_data()[1][12:],
+                             fmt='y--')
+            print("[35mMagenta curve mean =",
+                  np.mean(norm_simu[0].ravel()[3:-1]/2
+                          /legend['curves'][0][1].lines[0].get_data()[1]),
+                  "[0m")
+            print("[31mRed curve mean =",
+                  np.mean(simu.lines[0].get_data()[1][15:]
+                          /legend['curves'][0][1].lines[0].get_data()[1][12:-1]),
+                  "[0m")
+            print("[93mYellow curve mean =",
+                  np.mean(simu2.lines[0].get_data()[1][14:]
+                          /legend['curves'][0][1].lines[0].get_data()[1][12:]),
+                  "[0m")
             print("T4: first time bin =", mtbins[:2],
                   "ou", simres.sphere.spectrum['tbins'][:2],
                   "last time bin =", mtbins[-2:],
@@ -499,10 +598,21 @@ class Comparison():
                 # plt.subplot(gs[0])
                 # print(mcnp_labels)
                 print(type(self.mcnp_res[sname]))
-                if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
+                # isinstance only works the first time with autoreload
+                # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
+                if hasattr(self.mcnp_res[sname], 'sphere'):
                     print("Renormalised sphere")
+                    print("MCNP tbins:", self.mcnp_res[sname].tbins)
+                    tbinle = self.mcnp_res[sname].tbins[:-1]
+                    tbinhe = self.mcnp_res[sname].tbins[1:]
+                    mtbins = (tbinle+tbinhe)/2
+                    # np.append(mtbins,
+                    mtbins = self.mcnp_res[sname].tbins - 1
+                    print(mtbins, len(mtbins), type(mtbins))
+                    print(self.exp_res.res[charac]['time'])
                     legend['curves'].append(
-                        splt[0].errorbar(self.mcnp_res[sname].tbins,
+                        splt[0].errorbar(mtbins,
+                                         # self.mcnp_res[sname].tbins,
                                          self.mcnp_res[sname].counts/2,
                                          yerr=self.mcnp_res[sname].sigma,
                                          ecolor='c', fmt='c+',
@@ -541,11 +651,13 @@ class Comparison():
                       "check with width =", np.sum(self.mcnp_res[sname].counts)*2)
                 print(legend['labels'])
                 if "New ceav5" in legend['labels']:
-                    plt.plot(self.mcnp_res[sname].tbins[1:],
-                             legend['curves'][legend['labels'].index("New ceav5")].lines[0].get_data()[1]
-                             /legend['curves'][legend['labels'].index("MCNP")].lines[0].get_data()[1][1:],
-                             color='r',
-                             label="ratio")
+                    print("t4 shape =", legend['curves'][legend['labels'].index("New ceav5")].lines[0].get_data()[1].shape)
+                    print("mcnp shape =", legend['curves'][legend['labels'].index("MCNP")].lines[0].get_data()[1].shape)
+                    # plt.plot(self.mcnp_res[sname].tbins[1:],
+                    #          legend['curves'][legend['labels'].index("New ceav5")].lines[0].get_data()[1]
+                    #          /legend['curves'][legend['labels'].index("MCNP")].lines[0].get_data()[1][1:],
+                    #          color='r',
+                    #          label="ratio")
             if "MCNP" in legend['labels'] and "Default MCNP" in legend['labels']:
                 plt.plot(self.mcnp_res[mcnp[0]].tbins,
                          legend['curves'][legend['labels'].index("MCNP")].lines[0].get_data()[1]/
@@ -567,6 +679,7 @@ class Comparison():
         splt[0].set_ylim(ymin=2e-4)
         # plt.subplot(gs[1])
         # plt.grid(axis='y')
+        splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
         splt[1].set_xlabel("time bins [ns]")
         splt[1].set_ylabel("simu/exp")
         plt.show()
