@@ -367,53 +367,18 @@ class Comparison():
             if len(ast.literal_eval(responses[sname])) > 2:
                 marker += ast.literal_eval(responses[sname])[2]
             print(marker)
-            # simu = splt[0].errorbar(mtbins[expcut:-2],
-            #                         norm_simu[0].ravel()[expcut:-1]/2,
-            #                         # norm_simu[0].ravel()[3:-1]/2,
-            #                         yerr=norm_simu[1].ravel()[expcut:-1],
-            print("shape mtbins =", mtbins.shape, "values =",  norm_simu[0].ravel().shape)
-            simu = splt[0].errorbar(mtbins[1:-2],
-                                    norm_simu[0].ravel()[1:-1]/2,
-                                    # norm_simu[0].ravel()[3:-1]/2,
-                                    yerr=norm_simu[1].ravel()[1:-1],
+            simu = splt[0].errorbar(mtbins2, t4vals, yerr=t4sigma,
                                     ecolor=cols[ires], color=cols[ires],
-                                    fmt=marker, ms=3, mfc="none",
-                                    label=simres.sphere.name[0])
-            # print("La courbe magenta")
-            # print(mtbins[2:-1].shape)
-            # print(norm_simu[0].ravel()[1:-1]/2)
-            # print(expcut)
-            simu2 = splt[0].errorbar(mtbins[2:-1],
-                                     norm_simu[0].ravel()[1:-1]/2,
-                                     yerr=norm_simu[1].ravel()[1:-1],
+                                    fmt=marker, ms=3, mfc="none")
+            simu2 = splt[0].errorbar(mtbins2-2, t4vals, yerr=t4sigma,
                                      ecolor='m', color='m',
-                                     fmt=marker, ms=3, mfc="none",
-                                     label=simres.sphere.name[0])
-            simu3 = splt[0].errorbar(mtbins2,
-                                     t4vals,
-                                     yerr=t4sigma,
-                                     ecolor='plum', color='plum',
-                                     fmt='--', ms=3, mfc="none",
-                                     label=simres.sphere.name[0])
+                                     fmt=marker, ms=3, mfc="none")
             legend['curves'].append(simu)
             legend['labels'].append(sname)
-            # print(mtbins[1:-2])
-            # print(simu.lines[0].get_data()[0][1:],
-            #       simu.lines[0].get_data()[0][1:].shape)
-            # print(legend['curves'][0][1].lines[0].get_data()[0],
-            #       legend['curves'][0][1].lines[0].get_data()[0].shape)
-            # print(simu.lines[0].get_data()[0][3:].shape,
-            #       simu.lines[0].get_data()[1][3:].shape,
-            #       legend['curves'][0][1].lines[0].get_data()[1][:-1].shape)
-            splt[1].errorbar(simu.lines[0].get_data()[0][3:],
-                             # mtbins[expcut:-1],
-                             simu.lines[0].get_data()[1][3:]/legend['curves'][0][1].lines[0].get_data()[1][:-1],
-                             # norm_simu[0].ravel()[expcut-1:-1]/2/legend['curves'][0][1].lines[0].get_data()[1],
-                             # norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[self.charac]['cntPtimePsource'],
-                             # yerr=self.exp_res.res[self.charac]['error'],
-                             yerr=0,
-                             ecolor=cols[ires], color=cols[ires],
-                             label=simres.sphere.name[0])
+            splt[1].errorbar(simu.lines[0].get_data()[0][2:],
+                             simu.lines[0].get_data()[1][2:]
+                             /legend['curves'][0][1].lines[0].get_data()[1],
+                             ecolor=cols[ires], color=cols[ires])
             print("[34mBleue curve mean =",
                   np.mean( simu.lines[0].get_data()[1][3:]
                            /legend['curves'][0][1].lines[0].get_data()[1][:-1]),
@@ -424,51 +389,13 @@ class Comparison():
                   norm_simu[0].ravel()[expcut-2:-2].shape,
                   legend['curves'][0][1].lines[0].get_data()[1].shape,
                   mtbins[expcut:-1].shape)
-            # print( norm_simu[0].ravel()/2)
-            # print(norm_simu[0].ravel()[expcut-1:-1]/2)
-            # print(norm_simu[0].ravel()[expcut:-1]/2)
-            # print(legend['curves'][0][1].lines[0].get_data()[1])
-            # # print(norm_simu[0].ravel()[expcut:-1]/2/legend['curves'][0][1].lines[0].get_data()[1])
-            # print(mtbins[expcut:-1])
-            # print(mtbins[3:-1].shape,
-            #       norm_simu[0].ravel()[3:-1].shape,
-            #       legend['curves'][0][1].lines[0].get_data()[1].shape)
-            # print(mtbins[3:-1])
-            # splt[1].errorbar(simu.lines[0].get_data()[0][2:],
-            #                  # mtbins[4:-1],
-            #                  simu.lines[0].get_data()[1][2:]/legend['curves'][0][1].lines[0].get_data()[1],
-            #                  # norm_simu[0].ravel()[3:-1]/2/legend['curves'][0][1].lines[0].get_data()[1],
-            #                  # norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[self.charac]['cntPtimePsource'],
-            #                  # yerr=self.exp_res.res[self.charac]['error'],
-            #                  yerr=0,
-            #                  ecolor='m', color='m',
-            #                  label=simres.sphere.name[0])
-            splt[1].errorbar(simu2.lines[0].get_data()[0][2:],
-                             # mtbins[4:-1],
-                             simu2.lines[0].get_data()[1][2:]/legend['curves'][0][1].lines[0].get_data()[1],
-                             # norm_simu[0].ravel()[3:-1]/2/legend['curves'][0][1].lines[0].get_data()[1],
-                             # norm_simu[0].ravel()[expcut:-1]/2/self.exp_res.res[self.charac]['cntPtimePsource'],
-                             # yerr=self.exp_res.res[self.charac]['error'],
-                             yerr=0,
-                             ecolor='m', color='m',
-                             label=simres.sphere.name[0])
-            splt[1].errorbar(simu.lines[0].get_data()[0][15:],
-                             simu.lines[0].get_data()[1][15:]/legend['curves'][0][1].lines[0].get_data()[1][12:-1],
-                             fmt='r--')
-            splt[1].errorbar(simu2.lines[0].get_data()[0][14:],
-                             simu2.lines[0].get_data()[1][14:]/legend['curves'][0][1].lines[0].get_data()[1][12:],
-                             fmt='y--')
+            splt[1].errorbar(simu2.lines[0].get_data()[0][3:],
+                             simu2.lines[0].get_data()[1][3:]
+                             /legend['curves'][0][1].lines[0].get_data()[1][:-1],
+                             ecolor='m', color='m')
             print("[35mMagenta curve mean =",
                   np.mean(norm_simu[0].ravel()[3:-1]/2
                           /legend['curves'][0][1].lines[0].get_data()[1]),
-                  "[0m")
-            print("[31mRed curve mean =",
-                  np.mean(simu.lines[0].get_data()[1][15:]
-                          /legend['curves'][0][1].lines[0].get_data()[1][12:-1]),
-                  "[0m")
-            print("[93mYellow curve mean =",
-                  np.mean(simu2.lines[0].get_data()[1][14:]
-                          /legend['curves'][0][1].lines[0].get_data()[1][12:]),
                   "[0m")
             print("T4: first time bin =", mtbins[:2],
                   "ou", simres.sphere.spectrum['tbins'][:2],
