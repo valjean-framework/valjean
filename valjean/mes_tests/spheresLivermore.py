@@ -479,20 +479,26 @@ class Comparison():
                 # I did not find a way to use isinstance et get the correct
                 # type for MCNPrenormalizedSphere
                 # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere.__class__):
+                if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
+                    print("Renormalised sphere")
+                else:
+                    print("Sphere already normalised")
                 print(mcnp_labels)
                 if hasattr(self.mcnp_res[sname], 'sphere'):
                     print("ICI,", mcnp_labels)
-                    mcnp_plots.append(plt.errorbar(self.mcnp_res[sname].tbins,
-                                                   self.mcnp_res[sname].counts/2.082,
-                                                   yerr=self.mcnp_res[sname].sigma,
-                                                   ecolor='c', color='c',
-                                                   label="MCNP"))
+                    mcnp_plots.append(
+                        plt.errorbar(self.mcnp_res[sname].tbins,
+                                     self.mcnp_res[sname].counts/2,
+                                     yerr=self.mcnp_res[sname].sigma,
+                                     ecolor='c', color='c',
+                                     label="MCNP normed by 2"))
                     mcnp_labels.append("MCNP")
-                    mcnp_plots.append(plt.errorbar(self.mcnp_res[sname].tbins,
-                                                   self.mcnp_res[sname].counts/2,
-                                                   fmt='--', color='cyan',
-                                                   label="MCNP normed by 2"))
-                    mcnp_labels.append("MCNP normed by 2")
+                    mcnp_plots.append(
+                        plt.errorbar(self.mcnp_res[sname].tbins,
+                                     self.mcnp_res[sname].counts/2.082,
+                                     fmt='--', color='cyan',
+                                     label="MCNP"))
+                    mcnp_labels.append("MCNP (normalised to exp. data)")
                     # mcnp_plot2 = plt.errorbar(self.exp_res.res[charac]['time']-1,
                     #                           self.mcnp_res[sname].counts[1:],
                     #                           yerr=self.mcnp_res[sname].sigma[1:],
@@ -505,14 +511,14 @@ class Comparison():
                     #              ecolor='y', color='y',
                     #              label="MCNP")
                     plt.errorbar(self.mcnp_res[sname].tbins[1:],
-                                 self.mcnp_res[sname].counts[1:]/2.082/self.exp_res.res[charac]['cntPtimePsource'],
+                                 self.mcnp_res[sname].counts[1:]/2/self.exp_res.res[charac]['cntPtimePsource'],
                                  yerr=self.mcnp_res[sname].sigma[1:],
                                  ecolor='c', color='c',
                                  label="MCNP")
                     plt.plot(self.mcnp_res[sname].tbins[1:],
-                             self.mcnp_res[sname].counts[1:]/2/self.exp_res.res[charac]['cntPtimePsource'],
+                             self.mcnp_res[sname].counts[1:]/2.082/self.exp_res.res[charac]['cntPtimePsource'],
                              '--', color='cyan',
-                             label="MCNP norm")
+                             label="MCNP (normalised to exp. data)")
                 else:
                     col = 'c' if len(mcnp) == 1 else 'darkcyan'
                     mcnp_plots.append(plt.errorbar(self.mcnp_res[sname].tbins,
