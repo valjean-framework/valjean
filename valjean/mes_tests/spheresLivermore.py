@@ -249,7 +249,8 @@ class MCNPSphere():
         print("len(tbins) =", len(self.tbins), "et vals:", len(self.counts))
         print(self.tbins)
         print((len(self.counts)/2)/len(self.tbins))
-        self.tbins = np.array([float(x)-0.2 for x in self.tbins])*10
+        # self.tbins = np.array([float(x)-0.2 for x in self.tbins])*10
+        self.tbins = np.array([float(x) for x in self.tbins])*10
         self.sigma = np.array(
             [x for ind, x in enumerate(self.counts) if ind%2 != 0])
         self.counts = np.array(
@@ -359,6 +360,49 @@ class Comparison():
             print("Integral T4 data =",
                   np.trapz(norm_simu[0].ravel()[cut:-1]/2, dx=2.0))
 
+    def plot_mcnp(self, mcnp, splt, legend):
+        for sname in self.mcnp_res:
+            if sname not in mcnp:
+                continue
+            print(type(self.mcnp_res[sname]))
+            # isinstance only works the first time with autoreload
+            # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
+            if hasattr(self.mcnp_res[sname], 'sphere'):
+                print("Renormalised sphere")
+                print("MCNP tbins:", self.mcnp_res[sname].tbins)
+                mtbins = self.mcnp_res[sname].tbins - 1
+                legend['curves'].append(
+                    splt[0].errorbar(mtbins,
+                                     self.mcnp_res[sname].counts/Comparison.NORM_FACTOR,
+                                     yerr=self.mcnp_res[sname].sigma/Comparison.NORM_FACTOR,
+                                     ecolor='c', fmt='c+',
+                                     label="MCNP"))
+                legend['labels'].append("MCNP")
+                splt[1].errorbar(mtbins[1:],
+                                 self.mcnp_res[sname].counts[1:]
+                                 /Comparison.NORM_FACTOR
+                                 /self.exp_res.res[self.charac]['cntPtimePsource'],
+                                 yerr=self.mcnp_res[sname].sigma[1:],
+                                 ecolor='c', color='c',
+                                 label="MCNP")
+            else:
+                print("Already normalised sphere")
+                col = 'c' if len(mcnp) == 1 else 'darkcyan'
+                legend['curves'].append(
+                    splt[0].errorbar(m.tbins,
+                                     self.mcnp_res[sname].counts,
+                                     yerr=self.mcnp_res[sname].sigma,
+                                     ecolor=col, color=col,
+                                     label="MCNP not renormed"))
+                splt[1].plot(self.mcnp_res[sname].tbins[1:],
+                             self.mcnp_res[sname].counts[1:]
+                             /self.exp_res.res[self.charac]['cntPtimePsource'],
+                             color=col,
+                             label="default MCNP")
+                legend['labels'].append("Default MCNP")
+            print("Integral MCNP data =",
+                  np.trapz(self.mcnp_res[sname].counts, dx=2.0))
+
     def compare_plots(self, charac, responses, mcnp=None):
         # experiment bins
         print("[31mNbre fichiers:", len(self.simu_res), "[0m")
@@ -374,83 +418,32 @@ class Comparison():
                           .format(elt=charac[0].capitalize(),
                                   mfp=charac[1], deg=charac[2]))
         self.plot_t4(responses, splt, legend)
-        # mcnp_plots = []
-        # mcnp_labels = []
         if mcnp:
-            for ires, (sname, simres) in enumerate(self.mcnp_res.items()):
-                if sname not in mcnp:
-                    continue
-                # plt.subplot(gs[0])
-                # print(mcnp_labels)
-                print(type(self.mcnp_res[sname]))
-                # isinstance only works the first time with autoreload
-                # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
-                if hasattr(self.mcnp_res[sname], 'sphere'):
-                    print("Renormalised sphere")
-                    print("MCNP tbins:", self.mcnp_res[sname].tbins)
-                    tbinle = self.mcnp_res[sname].tbins[:-1]
-                    tbinhe = self.mcnp_res[sname].tbins[1:]
-                    mtbins = (tbinle+tbinhe)/2
-                    # np.append(mtbins,
-                    mtbins = self.mcnp_res[sname].tbins - 1
-                    print(mtbins, len(mtbins), type(mtbins))
-                    print(self.exp_res.res[charac]['time'])
-                    legend['curves'].append(
-                        splt[0].errorbar(mtbins,
-                                         # self.mcnp_res[sname].tbins,
-                                         self.mcnp_res[sname].counts/2,
-                                         yerr=self.mcnp_res[sname].sigma,
-                                         ecolor='c', fmt='c+',
-                                         # ecolor='c', color='c', fmt='+'
-                                         label="MCNP"))
-                    legend['labels'].append("MCNP")
-                    # plt.subplot(gs[1])
-                    splt[1].errorbar(self.mcnp_res[sname].tbins[1:],
-                                     self.mcnp_res[sname].counts[1:]/2/self.exp_res.res[charac]['cntPtimePsource'],
-                                     yerr=self.mcnp_res[sname].sigma[1:],
-                                     ecolor='c', color='c',
-                                     label="MCNP")
-                else:
-                    print("Already normalised sphere")
-                    col = 'c' if len(mcnp) == 1 else 'darkcyan'
-                    legend['curves'].append(
-                        splt[0].errorbar(self.mcnp_res[sname].tbins,
-                                         self.mcnp_res[sname].counts,
-                                         yerr=self.mcnp_res[sname].sigma,
-                                         ecolor=col, color=col,
-                                         label="MCNP not renormed"))
-                    # plt.subplot(gs[1])
-                    splt[1].plot(self.mcnp_res[sname].tbins[1:],
-                                 self.mcnp_res[sname].counts[1:]/self.exp_res.res[charac]['cntPtimePsource'],
-                                 color=col,
-                                 label="default MCNP")
-                    legend['labels'].append("Default MCNP")
-                    # print(mcnp_labels)
-                print("Integral MCNP data =",
-                      np.trapz(self.mcnp_res[sname].counts, dx=2.0))
-                print("Integral MCNP data wuith norm =",
-                      np.trapz(self.mcnp_res[sname].counts/2.082, dx=2.0))
-                print("Integral MCNP data (sum) =",
-                      np.trapz(self.mcnp_res[sname].counts, dx=1.0),
-                      "check =", np.sum(self.mcnp_res[sname].counts),
-                      "check with width =", np.sum(self.mcnp_res[sname].counts)*2)
-                print(legend['labels'])
-                if "New ceav5" in legend['labels']:
-                    print("t4 shape =", legend['curves'][legend['labels'].index("New ceav5")].lines[0].get_data()[1].shape)
-                    print("mcnp shape =", legend['curves'][legend['labels'].index("MCNP")].lines[0].get_data()[1].shape)
-                    # plt.plot(self.mcnp_res[sname].tbins[1:],
-                    #          legend['curves'][legend['labels'].index("New ceav5")].lines[0].get_data()[1]
-                    #          /legend['curves'][legend['labels'].index("MCNP")].lines[0].get_data()[1][1:],
-                    #          color='r',
-                    #          label="ratio")
-            if "MCNP" in legend['labels'] and "Default MCNP" in legend['labels']:
-                plt.plot(self.mcnp_res[mcnp[0]].tbins,
-                         legend['curves'][legend['labels'].index("MCNP")].lines[0].get_data()[1]/
-                         legend['curves'][legend['labels'].index("Default MCNP")].lines[0].get_data()[1],
-                         color='blueviolet',
-                         label="ratio")
-            # legends_curves += mcnp_plots
-            # legends_leg += mcnp_labels
+            self.plot_mcnp(mcnp, splt, legend)
+        print(legend['labels'])
+        if "New ceav5" in legend['labels'] and "MCNP" in legend['labels']:
+            print("t4 shape =", legend['curves'][legend['labels']
+                                                 .index("New ceav5")].lines[0]
+                  .get_data()[1].shape)
+            print("mcnp shape =", legend['curves'][legend['labels']
+                                                   .index("MCNP")].lines[0]
+                  .get_data()[1].shape)
+            plt.plot(legend['curves'][legend['labels'].index("New ceav5")]
+                     .lines[0].get_data()[0][1:],
+                     legend['curves'][legend['labels'].index("New ceav5")]
+                     .lines[0].get_data()[1][1:]
+                     /legend['curves'][legend['labels'].index("MCNP")]
+                     .lines[0].get_data()[1],
+                     color='r',
+                     label="ratio")
+        if "MCNP" in legend['labels'] and "Default MCNP" in legend['labels']:
+            plt.plot(self.mcnp_res[mcnp[0]].tbins,
+                     legend['curves'][legend['labels'].index("MCNP")]
+                     .lines[0].get_data()[1]/
+                     legend['curves'][legend['labels'].index("Default MCNP")]
+                     .lines[0].get_data()[1],
+                     color='blueviolet',
+                     label="ratio")
         print("Data: first time bin =", self.exp_res.res[charac]['time'][0],
               "last time bin =", self.exp_res.res[charac]['time'][-1])
         print("Integral exp data =",
@@ -458,7 +451,8 @@ class Comparison():
         print("Integral exp data (width = 1) =",
               np.trapz(self.exp_res.res[charac]['cntPtimePsource'], dx=1.0))
         # plt.subplot(gs[0])
-        splt[0].legend(legend['curves'], legend['labels'], markerscale=2, fontsize=12)
+        splt[0].legend(legend['curves'], legend['labels'],
+                       markerscale=2, fontsize=12)
         # splt[0].legend()
         splt[0].set_ylabel("neutron count rate [1/(ns.source)]")
         splt[0].set_ylim(ymin=2e-4)
