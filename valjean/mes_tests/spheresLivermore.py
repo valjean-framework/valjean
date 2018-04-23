@@ -365,43 +365,43 @@ class Comparison():
             if sname not in mcnp:
                 continue
             print(type(self.mcnp_res[sname]))
+            print("MCNP tbins:", self.mcnp_res[sname].tbins)
+            mtbins = self.mcnp_res[sname].tbins - 1
+            mcnp_simu = self.mcnp_res[sname].counts
+            mcnp_sigma = self.mcnp_res[sname].sigma
+            exp_data = self.exp_res.res[self.charac]['cntPtimePsource']
             # isinstance only works the first time with autoreload
             # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
             if hasattr(self.mcnp_res[sname], 'sphere'):
                 print("Renormalised sphere")
-                print("MCNP tbins:", self.mcnp_res[sname].tbins)
-                mtbins = self.mcnp_res[sname].tbins - 1
                 legend['curves'].append(
                     splt[0].errorbar(mtbins,
-                                     self.mcnp_res[sname].counts/Comparison.NORM_FACTOR,
-                                     yerr=self.mcnp_res[sname].sigma/Comparison.NORM_FACTOR,
+                                     mcnp_simu/Comparison.NORM_FACTOR,
+                                     yerr=mcnp_sigma/Comparison.NORM_FACTOR,
                                      ecolor='c', fmt='c+',
                                      label="MCNP"))
                 legend['labels'].append("MCNP")
                 splt[1].errorbar(mtbins[1:],
-                                 self.mcnp_res[sname].counts[1:]
-                                 /Comparison.NORM_FACTOR
-                                 /self.exp_res.res[self.charac]['cntPtimePsource'],
-                                 yerr=self.mcnp_res[sname].sigma[1:],
+                                 mcnp_simu[1:]/Comparison.NORM_FACTOR/exp_data,
+                                 yerr=mcnp_sigma[1:]/Comparison.NORM_FACTOR,
                                  ecolor='c', color='c',
                                  label="MCNP")
             else:
                 print("Already normalised sphere")
                 col = 'c' if len(mcnp) == 1 else 'darkcyan'
                 legend['curves'].append(
-                    splt[0].errorbar(m.tbins,
-                                     self.mcnp_res[sname].counts,
-                                     yerr=self.mcnp_res[sname].sigma,
+                    splt[0].errorbar(mtbins,
+                                     mcnp_simu,
+                                     yerr=mcnp_sigma,
                                      ecolor=col, color=col,
                                      label="MCNP not renormed"))
-                splt[1].plot(self.mcnp_res[sname].tbins[1:],
-                             self.mcnp_res[sname].counts[1:]
-                             /self.exp_res.res[self.charac]['cntPtimePsource'],
+                splt[1].plot(mtbins[1:],
+                             mcnp_simu[1:]/exp_data,
                              color=col,
                              label="default MCNP")
                 legend['labels'].append("Default MCNP")
             print("Integral MCNP data =",
-                  np.trapz(self.mcnp_res[sname].counts, dx=2.0))
+                  np.trapz(mcnp_simu, dx=2.0))
 
     def compare_plots(self, charac, responses, mcnp=None):
         # experiment bins
@@ -422,12 +422,6 @@ class Comparison():
             self.plot_mcnp(mcnp, splt, legend)
         print(legend['labels'])
         if "New ceav5" in legend['labels'] and "MCNP" in legend['labels']:
-            print("t4 shape =", legend['curves'][legend['labels']
-                                                 .index("New ceav5")].lines[0]
-                  .get_data()[1].shape)
-            print("mcnp shape =", legend['curves'][legend['labels']
-                                                   .index("MCNP")].lines[0]
-                  .get_data()[1].shape)
             plt.plot(legend['curves'][legend['labels'].index("New ceav5")]
                      .lines[0].get_data()[0][1:],
                      legend['curves'][legend['labels'].index("New ceav5")]
@@ -444,20 +438,12 @@ class Comparison():
                      .lines[0].get_data()[1],
                      color='blueviolet',
                      label="ratio")
-        print("Data: first time bin =", self.exp_res.res[charac]['time'][0],
-              "last time bin =", self.exp_res.res[charac]['time'][-1])
         print("Integral exp data =",
               np.trapz(self.exp_res.res[charac]['cntPtimePsource'], dx=2.0))
-        print("Integral exp data (width = 1) =",
-              np.trapz(self.exp_res.res[charac]['cntPtimePsource'], dx=1.0))
-        # plt.subplot(gs[0])
         splt[0].legend(legend['curves'], legend['labels'],
                        markerscale=2, fontsize=12)
-        # splt[0].legend()
         splt[0].set_ylabel("neutron count rate [1/(ns.source)]")
         splt[0].set_ylim(ymin=2e-4)
-        # plt.subplot(gs[1])
-        # plt.grid(axis='y')
         splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
         splt[1].set_xlabel("time bins [ns]")
         splt[1].set_ylabel("simu/exp")
