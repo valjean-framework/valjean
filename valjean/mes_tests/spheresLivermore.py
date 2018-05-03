@@ -556,7 +556,8 @@ class Comparison():
     def new_plot_ratios(self, ratios, cplot):
         '''Plot required ratios.
 
-        :param dict(str, list(str)) ratios: list of short labels
+        :param dict(str, list) ratios: list of short labels, then optional dict
+                                       for line style (sent as kwargs)
         :param CompPlot cplot: plot on which adding the ratio
         :returns: (nothing: updated plot)
         '''
@@ -566,19 +567,13 @@ class Comparison():
                 print("Wrong flag, please check, possibilities are",
                       cplot.legend['flag'])
                 continue
-            numn, denomn = (cplot.legend['labels'][cplot.legend['flag']
-                                                   .index(flag)]
-                            for flag in ratio[:2])
-            print(numn, denomn)
-            ilines = [0, 0] if "exp" not in ratio else [0, 1]
-            print(list(zip(ratio, ilines)))
-            num = (cplot.legend['curves'][cplot.legend['flag'].index(ratio[0])]
-                   .lines[0].get_data()[1])
+            flagn = cplot.legend['flag'].index(ratio[0])
+            num = cplot.legend['curves'][flagn].lines[0].get_data()[1]
+            flagd = cplot.legend['flag'].index(ratio[1])
             denom = (self.exp_res.res[cplot.charac]['cntPtimePsource']
                      if 'exp' in ratio
-                     else (cplot.legend['curves'][cplot.legend['flag']
-                                                 .index(ratio[1])]
-                           .lines[0].get_data()[1]))
+                     else cplot.legend['curves'][flagd].lines[0].get_data()[1])
+            # check number of bins and buts if necessary
             cutn, cutd = 0, 0
             if num.shape != denom.shape:
                 print("something will have to be done for number of bins")
@@ -587,13 +582,11 @@ class Comparison():
                     cutn = num.shape[0] - denom.shape[0]
                 else:
                     cutd = denom.shape[0] - num.shape[0]
-            binsn = (cplot.legend['curves'][cplot.legend['flag'].index(ratio[0])]
-                     .lines[0].get_data()[0])
+            binsn = cplot.legend['curves'][flagn].lines[0].get_data()[0]
             binsd = (self.exp_res.res[cplot.charac]['time']
                      if 'exp' in ratio
-                     else (cplot.legend['curves'][cplot.legend['flag']
-                                                 .index(ratio[1])]
-                           .lines[0].get_data()[0]))
+                     else cplot.legend['curves'][flagd].lines[0].get_data()[0])
+            # check on first time bin value
             if not np.isclose(binsn[cutn:][0], binsd[cutd:][0]):
                 print("Maybe the first time bins are not the same: "
                       "num = {0}, denom = {1}"
