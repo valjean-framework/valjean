@@ -308,12 +308,10 @@ class CompPlot():
         self.splt[0].legend(self.legend['curves'], self.legend['labels'],
                             markerscale=2, fontsize=12)
 
-    def add_errorbar_plot(self, bins, vals, errors,
-                          label='', col='b', **kwargs):
+    def add_errorbar_plot(self, bins, vals, errors, label='', **kwargs):
         print("[1mkwargs:", kwargs, "[0m")
         tmp_curve = self.splt[0].errorbar(
-            bins, vals, yerr=errors,
-            ecolor=col, color=col, **kwargs)
+            bins, vals, yerr=errors, **kwargs)
         self.legend['curves'].append(tmp_curve)
         self.legend['labels'].append(label)
 
@@ -527,20 +525,15 @@ class Comparison():
             t4vals = norm_simu[0]/Comparison.NORM_FACTOR
             t4sigma = norm_simu[1]/Comparison.NORM_FACTOR
             print("[1;31mT4", sname, "first t bin:", mtbins[0], "[0m")
-            fmt = '-'
-            label = sname
-            resp_args = {}
-            if len(ast.literal_eval(responses[sname])) > 2:
-                resp_args = ast.literal_eval(responses[sname])[2:][0]
-                if 'fmt' in resp_args:
-                    # fmt = resp_args['fmt']
-                    fmt = resp_args.pop('fmt')
-                if 'label' in resp_args:
-                    label = resp_args.pop('label')
-                print("[34m", resp_args, "[0m")
-            cplot.add_errorbar_plot(mtbins, t4vals, t4sigma, label, cols[ires],
-                                    fmt=fmt, ms=3, mfc="none", **resp_args)
-                                    # fmt=fmt, ms=3, mfc="none", **resp_args)
+            resp_args = (ast.literal_eval(responses[sname])[2:][0]
+                         if len(ast.literal_eval(responses[sname])) > 2
+                         else {})
+            resp_args.setdefault('fmt', '-')
+            resp_args.setdefault('label', sname)
+            resp_args.setdefault('c', resp_args.pop('color', cols[ires]))
+            resp_args.setdefault('ecolor', cols[ires])
+            print("[94m", resp_args, "[0m")
+            cplot.add_errorbar_plot(mtbins, t4vals, t4sigma, **resp_args)
 
     def new_comparison(self, charac, responses, mcnp=None):
         complot = CompPlot(charac)
