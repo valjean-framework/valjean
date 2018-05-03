@@ -282,6 +282,41 @@ class MCNPrenormalizedSphere():
         tbins = self.sphere.tbins
         return counts, sigma, tbins
 
+
+class CompPlot():
+    '''Comparison plot'''
+
+    def __init__(self, charac):
+        self.charac = charac
+        self.fig, self.splt = plt.subplots(
+            2, sharex=True, figsize=(15, 8),
+            gridspec_kw={'height_ratios': [4, 1], 'hspace': 0.05})
+        self.legend = {'curves': [], 'labels': []}
+        self.nbins = {'exp': 0, 't4': 0, 'mcnp': 0}
+
+    def customize_plot(self):
+        self.splt[0].set_yscale("log", nonposy='clip')
+        self.splt[0].set_title("{elt}, {mfp} mfp, detector at {deg}°"
+                               .format(elt=self.charac[0].capitalize(),
+                                       mfp=self.charac[1],
+                                       deg=self.charac[2]))
+        self.splt[0].set_ylabel("neutron count rate [1/(ns.source)]")
+        self.splt[0].set_ylim(ymin=2e-4)
+        self.splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
+        self.splt[1].set_xlabel("time bins [ns]")
+        self.splt[1].set_ylabel("simu/exp")
+        self.splt[0].legend(self.legend['curves'], self.legend['labels'],
+                            markerscale=2, fontsize=12)
+
+    def add_errorbar_plot(self, bins, vals, errors,
+                          label='', col='b', **kwargs):
+        print("[1mkwargs:", kwargs, "[0m")
+        tmp_curve = self.splt[0].errorbar(
+            bins, vals, yerr=errors,
+            ecolor=col, color=col, **kwargs)
+        self.legend['curves'].append(tmp_curve)
+        self.legend['labels'].append(label)
+
 class Comparison():
     '''Class to compare, using matplotlib, experiment and Tripoli-4 results.'''
     NORM_FACTOR = 2
@@ -337,24 +372,13 @@ class Comparison():
                 continue
             # middle of T4 bins
             norm_simu = simres.normalized_sphere(responses[sname])
-            # tbins = simres.sphere.spectrum['tbins'][1:-1]*1e9
-            tbins = norm_simu[2]
             # remove first bin edge as 1 edge more than bins (normal)
-            mtbins = tbins[1:] - 1
-            # t4vals = norm_simu[0].ravel()[1:-1]/Comparison.NORM_FACTOR
-            # t4sigma = norm_simu[1].ravel()[1:-1]/Comparison.NORM_FACTOR
+            mtbins = norm_simu[2][1:] - 1
             t4vals = norm_simu[0]/Comparison.NORM_FACTOR
             t4sigma = norm_simu[1]/Comparison.NORM_FACTOR
             nsimtbins = mtbins.shape[0]
             print("[1;31mT4", sname, "first t bin:", mtbins[0], "[0m")
-            # cut first points of simulation as data 'only' start at 141 ns
-            cut = 0
-            if nexptbins != nsimtbins:
-                if nexptbins > nsimtbins:
-                    cut = nexptbins + nsimtbins
-                else:
-                    cut = nsimtbins - nexptbins
-            marker = '+-'
+            marker = '-'
             if len(ast.literal_eval(responses[sname])) > 2:
                 marker += ast.literal_eval(responses[sname])[2]
             simu = splt[0].errorbar(mtbins, t4vals, yerr=t4sigma,
@@ -363,6 +387,13 @@ class Comparison():
             legend['curves'].append(simu)
             legend['labels'].append(sname)
             if "Experiment" in legend['labels']:
+                # cut first points of simulation as data 'only' start at 141 ns
+                cut = 0
+                if nexptbins != nsimtbins:
+                    if nexptbins > nsimtbins:
+                        cut = nexptbins + nsimtbins
+                    else:
+                        cut = nsimtbins - nexptbins
                 exp_data = legend['curves'][0][1].lines[0].get_data()[1]
                 splt[1].errorbar(simu.lines[0].get_data()[0][cut:],
                                  simu.lines[0].get_data()[1][cut:]/exp_data,
@@ -462,4 +493,58 @@ class Comparison():
         splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
         splt[1].set_xlabel("time bins [ns]")
         splt[1].set_ylabel("simu/exp")
+        plt.show()
+
+    def new_plot_exp(self, charac, cplot):
+        exp2sig = cplot.splt[0].errorbar(
+            self.exp_res.res[charac]['time'],
+            self.exp_res.res[charac]['cntPtimePsource'],
+            yerr=self.exp_res.res[charac]['error']*2,
+            fmt='s', ms=3, ecolor='orange', c='orange')
+        exp1sig = cplot.splt[0].errorbar(
+            self.exp_res.res[charac]['time'],
+            self.exp_res.res[charac]['cntPtimePsource'],
+            yerr=self.exp_res.res[charac]['error'],
+            fmt='rs', ms=1, ecolor='r')
+        print("[1;31mExp. first t bin:", self.exp_res.res[charac]['time'][0],
+              "[0m")
+        cplot.legend['curves'].append((exp2sig, exp1sig))
+        cplot.legend['labels'].append("Experiment")
+        cplot.nbins['exp'] = self.exp_res.res[charac]['time'].shape[0]
+
+    def new_plot_t4(self, responses, cplot):
+        cols = ['b', 'g', 'm', 'darkviolet', 'orchid', 'darkmagenta',
+                'dodgerblue']
+        print("Number of responses required:", len(responses))
+        print("[32mResponses:", responses, "[0m")
+        for ires, (sname, simres) in enumerate(self.simu_res.items()):
+            print("[94mName of the sample", ires, ":", sname, "[0m")
+            if sname not in responses:
+                continue
+            norm_simu = simres.normalized_sphere(responses[sname])
+            # remove first bin edge as 1 edge more than bins (normal)
+            mtbins = norm_simu[2][1:] - 1
+            t4vals = norm_simu[0]/Comparison.NORM_FACTOR
+            t4sigma = norm_simu[1]/Comparison.NORM_FACTOR
+            print("[1;31mT4", sname, "first t bin:", mtbins[0], "[0m")
+            fmt = '-'
+            label = sname
+            resp_args = {}
+            if len(ast.literal_eval(responses[sname])) > 2:
+                resp_args = ast.literal_eval(responses[sname])[2:][0]
+                if 'fmt' in resp_args:
+                    # fmt = resp_args['fmt']
+                    fmt = resp_args.pop('fmt')
+                if 'label' in resp_args:
+                    label = resp_args.pop('label')
+                print("[34m", resp_args, "[0m")
+            cplot.add_errorbar_plot(mtbins, t4vals, t4sigma, label, cols[ires],
+                                    fmt=fmt, ms=3, mfc="none", **resp_args)
+                                    # fmt=fmt, ms=3, mfc="none", **resp_args)
+
+    def new_comparison(self, charac, responses, mcnp=None):
+        complot = CompPlot(charac)
+        self.new_plot_exp(charac, complot)
+        self.new_plot_t4(responses, complot)
+        complot.customize_plot()
         plt.show()
