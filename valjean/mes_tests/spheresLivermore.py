@@ -113,7 +113,9 @@ class SpherePlot():
         norm_spec_sig = spectrum['sigma']*norm_spec/100.  #/normalization['sigma'].ravel()[0]
         # print(norm_spec)
         # removing first and last bins as irrelevant here
-        return norm_spec, norm_spec_sig
+        return (norm_spec.ravel()[1:-1],
+                norm_spec_sig.ravel()[1:-1],
+                self.sphere.spectrum['tbins'][1:-1]*1e9)
 
     def plot_sphere(self):
         spectrum, spec_err = self.normalized_sphere()
@@ -246,6 +248,7 @@ class MCNPSphere():
                     self.counts += [float(x) for x in line.split()]
                 else:
                     continue
+        nbtbins = len(self.tbins)
         print("len(tbins) =", len(self.tbins), "et vals:", len(self.counts))
         print(self.tbins)
         print((len(self.counts)/2)/len(self.tbins))
@@ -257,10 +260,10 @@ class MCNPSphere():
             [x for ind, x in enumerate(self.counts) if ind%2 == 0])
         self.sigma = self.sigma*self.counts
         initial_counts = self.counts
-        self.integral = self.counts[136]
-        self.sigma_integral = self.sigma[136]
-        self.counts = self.counts[:136]
-        self.sigma = self.sigma[:136]
+        self.integral = self.counts[nbtbins]
+        self.sigma_integral = self.sigma[nbtbins]
+        self.counts = self.counts[:nbtbins]
+        self.sigma = self.sigma[:nbtbins]
         print("Sum of counts:", np.sum(self.counts), "integral:", self.integral)
 
 class MCNPrenormalizedSphere():
@@ -317,6 +320,8 @@ class Comparison():
                                    self.exp_res.res[charac]['cntPtimePsource'],
                                    yerr=self.exp_res.res[charac]['error'],
                                    fmt='rs', ms=1, ecolor='r')
+        print("[1;31mExp. first t bin:", self.exp_res.res[charac]['time'][0],
+              "[0m")
         legend['curves'].append((exp2sig, exp1sig))
         legend['labels'].append("Experiment")
 
@@ -325,18 +330,23 @@ class Comparison():
                 'dodgerblue']
         nexptbins = self.exp_res.res[self.charac]['time'].shape[0]
         print("Number of responses required:", len(responses))
+        print("[32mResponses:", responses, "[0m")
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
             print("[94mName of the sample", ires, ":", sname, "[0m")
             if sname not in responses:
                 continue
             # middle of T4 bins
             norm_simu = simres.normalized_sphere(responses[sname])
-            tbins = simres.sphere.spectrum['tbins'][1:-1]*1e9
+            # tbins = simres.sphere.spectrum['tbins'][1:-1]*1e9
+            tbins = norm_simu[2]
             # remove first bin edge as 1 edge more than bins (normal)
             mtbins = tbins[1:] - 1
-            t4vals = norm_simu[0].ravel()[1:-1]/Comparison.NORM_FACTOR
-            t4sigma = norm_simu[1].ravel()[1:-1]/Comparison.NORM_FACTOR
+            # t4vals = norm_simu[0].ravel()[1:-1]/Comparison.NORM_FACTOR
+            # t4sigma = norm_simu[1].ravel()[1:-1]/Comparison.NORM_FACTOR
+            t4vals = norm_simu[0]/Comparison.NORM_FACTOR
+            t4sigma = norm_simu[1]/Comparison.NORM_FACTOR
             nsimtbins = mtbins.shape[0]
+            print("[1;31mT4", sname, "first t bin:", mtbins[0], "[0m")
             # cut first points of simulation as data 'only' start at 141 ns
             cut = 0
             if nexptbins != nsimtbins:
@@ -365,36 +375,37 @@ class Comparison():
             if sname not in mcnp:
                 continue
             print(type(self.mcnp_res[sname]))
-            print("MCNP tbins:", self.mcnp_res[sname].tbins)
+            # print("MCNP tbins:", self.mcnp_res[sname].tbins)
             mtbins = self.mcnp_res[sname].tbins - 1
             mcnp_simu = self.mcnp_res[sname].counts
             mcnp_sigma = self.mcnp_res[sname].sigma
             exp_data = self.exp_res.res[self.charac]['cntPtimePsource']
+            print("[1;31mMCNP", sname, "first t bin:", mtbins[0], "[0m")
             # isinstance only works the first time with autoreload
             # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
             if hasattr(self.mcnp_res[sname], 'sphere'):
                 print("Renormalised sphere")
+                print(mtbins.shape)
+                print(mcnp_simu.shape)
                 legend['curves'].append(
                     splt[0].errorbar(mtbins,
                                      mcnp_simu/Comparison.NORM_FACTOR,
                                      yerr=mcnp_sigma/Comparison.NORM_FACTOR,
-                                     ecolor='c', fmt='c+',
-                                     label="MCNP"))
+                                     ecolor='c', fmt='c+'))
                 legend['labels'].append("MCNP")
                 splt[1].errorbar(mtbins[1:],
                                  mcnp_simu[1:]/Comparison.NORM_FACTOR/exp_data,
                                  yerr=mcnp_sigma[1:]/Comparison.NORM_FACTOR,
-                                 ecolor='c', color='c',
-                                 label="MCNP")
+                                 ecolor='c', color='c')
             else:
                 print("Already normalised sphere")
                 col = 'c' if len(mcnp) == 1 else 'darkcyan'
+                print(col)
                 legend['curves'].append(
                     splt[0].errorbar(mtbins,
                                      mcnp_simu,
                                      yerr=mcnp_sigma,
-                                     ecolor=col, color=col,
-                                     label="MCNP not renormed"))
+                                     ecolor=col, color=col))
                 splt[1].plot(mtbins[1:],
                              mcnp_simu[1:]/exp_data,
                              color=col,
@@ -422,14 +433,18 @@ class Comparison():
             self.plot_mcnp(mcnp, splt, legend)
         print(legend['labels'])
         if "New ceav5" in legend['labels'] and "MCNP" in legend['labels']:
-            plt.plot(legend['curves'][legend['labels'].index("New ceav5")]
-                     .lines[0].get_data()[0][1:],
-                     legend['curves'][legend['labels'].index("New ceav5")]
-                     .lines[0].get_data()[1][1:]
-                     /legend['curves'][legend['labels'].index("MCNP")]
-                     .lines[0].get_data()[1],
-                     color='r',
-                     label="ratio")
+            if ((legend['curves'][legend['labels'].index("New ceav5")].lines[0]
+                 .get_data()[1].shape[0]-1 == legend['curves'][legend['labels']
+                                                               .index("MCNP")]
+                 .lines[0].get_data()[1].shape[0])):
+                plt.plot(legend['curves'][legend['labels'].index("New ceav5")]
+                         .lines[0].get_data()[0][1:],
+                         legend['curves'][legend['labels'].index("New ceav5")]
+                         .lines[0].get_data()[1][1:]
+                         /legend['curves'][legend['labels'].index("MCNP")]
+                         .lines[0].get_data()[1],
+                         color='r',
+                         label="ratio")
         if "MCNP" in legend['labels'] and "Default MCNP" in legend['labels']:
             plt.plot(self.mcnp_res[mcnp[0]].tbins,
                      legend['curves'][legend['labels'].index("MCNP")]
