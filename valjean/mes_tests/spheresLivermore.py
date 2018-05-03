@@ -291,7 +291,7 @@ class CompPlot():
         self.fig, self.splt = plt.subplots(
             2, sharex=True, figsize=(15, 8),
             gridspec_kw={'height_ratios': [4, 1], 'hspace': 0.05})
-        self.legend = {'curves': [], 'labels': []}
+        self.legend = {'curves': [], 'labels': [], 'flag': []}
         self.nbins = {'exp': 0, 't4': 0, 'mcnp': 0}
 
     def customize_plot(self):
@@ -304,16 +304,32 @@ class CompPlot():
         self.splt[0].set_ylim(ymin=2e-4)
         self.splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
         self.splt[1].set_xlabel("time bins [ns]")
-        self.splt[1].set_ylabel("simu/exp")
+        self.splt[1].set_ylabel("Ratios")
+        self.splt[1].set_ylim(ymin=0.5, ymax=1.5)
         self.splt[0].legend(self.legend['curves'], self.legend['labels'],
                             markerscale=2, fontsize=12)
+        self.splt[1].legend(loc='lower right')
 
-    def add_errorbar_plot(self, bins, vals, errors, label='', **kwargs):
+    def add_errorbar_plot(self, bins, vals, errors, label='', slab='',
+                          **kwargs):
+        # possibility to remove slab and put it in kwargs, but less obvious
+        # would need to append labels before curve and pop it
         print("[1mkwargs:", kwargs, "[0m")
         tmp_curve = self.splt[0].errorbar(
             bins, vals, yerr=errors, **kwargs)
+        print(tmp_curve)
+        print(tmp_curve.lines)
+        print(tmp_curve.lines[0].get_drawstyle())
+        print(tmp_curve.lines[0])
+        print(tmp_curve.lines[2][0])
         self.legend['curves'].append(tmp_curve)
         self.legend['labels'].append(label)
+        self.legend['flag'].append(slab)
+
+    def add_errorbar_ratio(self, bins, vals, errors, **kwargs):
+        print("[1mkwargs:", kwargs, "[0m")
+        self.splt[1].errorbar(bins, vals, yerr=errors, **kwargs)
+
 
 class Comparison():
     '''Class to compare, using matplotlib, experiment and Tripoli-4 results.'''
@@ -508,6 +524,7 @@ class Comparison():
               "[0m")
         cplot.legend['curves'].append((exp2sig, exp1sig))
         cplot.legend['labels'].append("Experiment")
+        cplot.legend['flag'].append("exp")
         cplot.nbins['exp'] = self.exp_res.res[charac]['time'].shape[0]
 
     def new_plot_t4(self, responses, cplot):
@@ -530,14 +547,67 @@ class Comparison():
                          else {})
             resp_args.setdefault('fmt', '-')
             resp_args.setdefault('label', sname)
+            resp_args.setdefault('slab', sname)
             resp_args.setdefault('c', resp_args.pop('color', cols[ires]))
-            resp_args.setdefault('ecolor', cols[ires])
+            resp_args.setdefault('ecolor', resp_args.get('c', cols[ires]))
             print("[94m", resp_args, "[0m")
             cplot.add_errorbar_plot(mtbins, t4vals, t4sigma, **resp_args)
 
-    def new_comparison(self, charac, responses, mcnp=None):
+    def new_plot_ratios(self, ratios, cplot):
+        '''Plot required ratios.
+
+        :param dict(str, list(str)) ratios: list of short labels
+        :param CompPlot cplot: plot on which adding the ratio
+        :returns: (nothing: updated plot)
+        '''
+        for leg, ratio in ratios.items():
+            # sanity check
+            if len([fl for fl in ratio if fl in cplot.legend['flag']]) != 2:
+                print("Wrong flag, please check, possibilities are",
+                      cplot.legend['flag'])
+                continue
+            numn, denomn = (cplot.legend['labels'][cplot.legend['flag']
+                                                   .index(flag)]
+                            for flag in ratio[:2])
+            print(numn, denomn)
+            ilines = [0, 0] if "exp" not in ratio else [0, 1]
+            print(list(zip(ratio, ilines)))
+            num = (cplot.legend['curves'][cplot.legend['flag'].index(ratio[0])]
+                   .lines[0].get_data()[1])
+            denom = (self.exp_res.res[cplot.charac]['cntPtimePsource']
+                     if 'exp' in ratio
+                     else (cplot.legend['curves'][cplot.legend['flag']
+                                                 .index(ratio[1])]
+                           .lines[0].get_data()[1]))
+            cutn, cutd = 0, 0
+            if num.shape != denom.shape:
+                print("something will have to be done for number of bins")
+                print("num:", num.shape, "denom:", denom.shape)
+                if num.shape > denom.shape:
+                    cutn = num.shape[0] - denom.shape[0]
+                else:
+                    cutd = denom.shape[0] - num.shape[0]
+            binsn = (cplot.legend['curves'][cplot.legend['flag'].index(ratio[0])]
+                     .lines[0].get_data()[0])
+            binsd = (self.exp_res.res[cplot.charac]['time']
+                     if 'exp' in ratio
+                     else (cplot.legend['curves'][cplot.legend['flag']
+                                                 .index(ratio[1])]
+                           .lines[0].get_data()[0]))
+            if not np.isclose(binsn[cutn:][0], binsd[cutd:][0]):
+                print("Maybe the first time bins are not the same: "
+                      "num = {0}, denom = {1}"
+                      .format(binsn[cutn:][0], binsd[cutd:][0]))
+            ratio_args = ratio[2] if len(ratio) > 2 else {}
+            cplot.add_errorbar_ratio(binsn[cutn:], num[cutn:]/denom[cutd:],
+                                     0, label=leg, **ratio_args)
+
+    def new_comparison(self, charac, responses, mcnp=None, ratios=None):
         complot = CompPlot(charac)
-        self.new_plot_exp(charac, complot)
+        if charac[-1] is not False:
+            self.new_plot_exp(charac, complot)
         self.new_plot_t4(responses, complot)
+        if ratios:
+            self.new_plot_ratios(ratios, complot)
         complot.customize_plot()
         plt.show()
