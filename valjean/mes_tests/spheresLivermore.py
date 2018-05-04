@@ -1,17 +1,17 @@
 '''VV of Livermore spheres: comparison to experiment and between various
 results (change in nuclear data, T4, MCNP, SCALE, ...)'''
 
-from valjean.eponine.parse_t4 import T4Parser
-import valjean.eponine.pyparsing_t4.transform as trans
-import numpy as np
 import ast
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from collections import namedtuple
+import numpy as np
+from valjean.eponine.parse_t4 import T4Parser
+import matplotlib.pyplot as plt
+import logging
 
 Histo = namedtuple('Histo', ['tbins', 'vals', 'sigma'])
 Integral = namedtuple('Integral', ['value', 'sigma'])
+
+LOGGER = logging.getLogger('valjean')
 
 class LivermoreSphere():
     '''Class to study Livermore Spheres.'''
@@ -26,62 +26,59 @@ class LivermoreSphere():
 
     def set_result(self, response):
         responses = ast.literal_eval(response)
-        print("nbre de responses:", len(self.parsed_res[-1]['list_responses']))
+        LOGGER.info("nbre de responses: %d",
+                    len(self.parsed_res[-1]['list_responses']))
         if not isinstance(responses, list):
-            print("No response or not a list")
+            LOGGER.debug("No response or not a list")
             self.add_default_result()
         else:
             if len(responses) == 1:
                 self.add_default_result()
             else:
                 if isinstance(responses[0], int):
-                    print("First response is an int")
+                    LOGGER.debug("First response is an int")
                     self.add_result_from_ints(responses)
                 else:
-                    print("First response should be a string")
+                    LOGGER.debug("First response should be a string")
                     self.add_result_from_score_names(responses)
 
     def add_default_result(self):
-        print("in add_default_result")
+        LOGGER.debug("in add_default_result")
         spec_resp = self.parsed_res[-1]['list_responses'][0]
-        print(list(spec_resp.keys()))
-        print(list(spec_resp['response_description'].keys()))
         score_res = spec_resp['results']['score_res']
-        print("Check: number of scores =", len(score_res))
+        LOGGER.debug("Check: number of scores = %d", len(score_res))
         self.spectrum = score_res[0]['spectrum_res']
-        print(list(self.spectrum.keys()))
+        LOGGER.debug("KEYS: %s", str(list(self.spectrum.keys())))
         integ_resp = self.parsed_res[-1]['list_responses'][1]
         score1_res = integ_resp['results']['score_res']
         self.integrated = score1_res[0]['spectrum_res']
-        # print(self.integrated)
         return
 
     def add_result_from_ints(self, responses):
-        print("add_result_from_ints")
+        LOGGER.debug("add_result_from_ints")
         allresp = self.parsed_res[-1]['list_responses']
         spec_resp = allresp[responses[0]]
         score_res = spec_resp['results']['score_res']
-        print("Check: number of scores =", len(score_res))
+        LOGGER.debug("Check: number of scores = %d", len(score_res))
         self.spectrum = score_res[0]['spectrum_res']
         integ_resp = allresp[responses[1]]
         score1_res = integ_resp['results']['score_res']
         self.integrated = score1_res[0]['spectrum_res']
 
     def add_result_from_score_names(self, responses):
-        print("add_result_from_score_names")
+        LOGGER.debug("add_result_from_score_names")
         allresp = self.parsed_res[-1]['list_responses']
         corr_names = dict(
             map(lambda xy: (xy[1]['response_description']['score_name'], xy[0]),
                 enumerate(allresp)))
-        print(corr_names)
+        LOGGER.debug(corr_names)
         spec_resp = allresp[corr_names[responses[0]]]
         score_res = spec_resp['results']['score_res']
-        print("Check: number of scores =", len(score_res))
+        LOGGER.debug("Check: number of scores = %s", len(score_res))
         self.spectrum = score_res[0]['spectrum_res']
         integ_resp = allresp[corr_names[responses[1]]]
         score1_res = integ_resp['results']['score_res']
         self.integrated = score1_res[0]['spectrum_res']
-        print(self.integrated)
 
 class SpherePlot():
     '''Class to build plot for Livermore spheres from one sphere and associated
@@ -89,33 +86,20 @@ class SpherePlot():
     '''
 
     def __init__(self, jdd_sphere, jdd_air):
-        print("Parsing", jdd_sphere)
+        LOGGER.info("Parsing %s", jdd_sphere)
         self.sphere = LivermoreSphere(jdd_sphere, "Sphere")  #, responses)
-        print("Parsing", jdd_air)
+        LOGGER.info("Parsing %s", jdd_air)
         self.air = LivermoreSphere(jdd_air, "Air")  #, responses)
 
     def normalized_sphere(self, responses):
-        print("Set sphere results")
+        LOGGER.info("Set sphere results")
         self.sphere.set_result(responses)
-        print("Set air results")
+        LOGGER.info("Set air results")
         self.air.set_result(responses)
         spectrum = self.sphere.spectrum['spectrum']
-        # print(type(spectrum))
         normalization = self.air.integrated['integrated_res']
-        # print(normalization['score'].ravel()[0])
         norm_spec = spectrum['score']/normalization['score'].ravel()[0]
-        # print(spectrum['score'].ravel())
-        # print("sigma from spectrum:")
-        # print(spectrum['sigma'].ravel())
-        # print("sigma from integrated:")
-        # print(normalization['sigma'].ravel()[0])
-        # print("normalized spectrum")
-        # print(norm_spec.ravel())
-        testerr = spectrum['sigma']*norm_spec/100.
-        # print(testerr.ravel())
-        print("shape=", testerr.shape)
-        norm_spec_sig = spectrum['sigma']*norm_spec/100.  #/normalization['sigma'].ravel()[0]
-        # print(norm_spec)
+        norm_spec_sig = spectrum['sigma']*norm_spec/100.
         # removing first and last bins as irrelevant here
         return Histo(self.sphere.spectrum['tbins'][1:-1]*1e9,
                      norm_spec.ravel()[1:-1],
@@ -170,9 +154,7 @@ class LivermoreExps():
         self.fname = path
         self.res = {}
         self.read_results()
-        # print(self.res)
-        print("ALL KEYS:")
-        print(list(self.res.keys()))
+        LOGGER.info("ALL KEYS:\n%s", list(self.res.keys()))
 
     def read_results(self):
         charac = None
@@ -252,9 +234,8 @@ class MCNPSphere():
                 else:
                     continue
         nbtbins = len(tbins)
-        print("len(tbins) =", len(tbins), "et vals:", len(counts))
-        print(tbins)
-        print((len(counts)/2)/len(tbins))
+        LOGGER.debug("len(tbins) =", len(tbins), "et vals:", len(counts))
+        LOGGER.debug(tbins)
         tbins = np.array([float(x) for x in tbins])*10
         sigma = np.array(
             [x for ind, x in enumerate(counts) if ind%2 != 0])
@@ -262,19 +243,17 @@ class MCNPSphere():
             [x for ind, x in enumerate(counts) if ind%2 == 0])
         sigma = sigma*counts
         self.integral = Integral(counts[nbtbins], sigma[nbtbins])
-        print("Sum of counts:", np.sum(counts),
-              "integral:", self.integral.value)
         self.histo = Histo(tbins, counts[:nbtbins], sigma[:nbtbins])
 
 class MCNPrenormalizedSphere():
     '''Class to buld renormalized spheres for MCNP.'''
 
     def __init__(self, out_sphere, out_air):
-        print("Get results for the sphere")
+        LOGGER.info("Get results for the MCNP sphere")
         self.sphere = MCNPSphere(out_sphere, "Sphere")
         self.air = MCNPSphere(out_air, "Air")
         self.histo = self.normalized_sphere()
-        print("Renormalized counts:", self.histo.vals)
+        LOGGER.debug("Renormalized counts:", self.histo.vals)
 
     def normalized_sphere(self):
         counts = self.sphere.histo.vals/self.air.integral.value
@@ -314,20 +293,15 @@ class CompPlot():
                           **kwargs):
         # possibility to remove slab and put it in kwargs, but less obvious
         # would need to append labels before curve and pop it
-        print("[1mkwargs:", kwargs, "[0m")
+        LOGGER.debug("kwargs: %s", kwargs)
         tmp_curve = self.splt[0].errorbar(
             bins, vals, yerr=errors, **kwargs)
-        print(tmp_curve)
-        print(tmp_curve.lines)
-        print(tmp_curve.lines[0].get_drawstyle())
-        print(tmp_curve.lines[0])
-        print(tmp_curve.lines[2][0])
         self.legend['curves'].append(tmp_curve)
         self.legend['labels'].append(label)
         self.legend['flag'].append(slab)
 
     def add_errorbar_ratio(self, bins, vals, errors, **kwargs):
-        print("[1mkwargs:", kwargs, "[0m")
+        LOGGER.debug("kwargs (ratio): %s", kwargs)
         self.splt[1].errorbar(bins, vals, yerr=errors, **kwargs)
 
 
@@ -345,15 +319,14 @@ class Comparison():
 
     def set_t4_files(self, jdds):
         for name, jdd in jdds:
-            print(jdd)
             self.simu_res[name] = SpherePlot(jdd.replace("SPHAIR", "sphere"),
                                              jdd.replace("SPHAIR", "air"))
 
 
     def set_mcnp_files(self, jdds):
         for name, jdd, renorm in jdds:
-            print("Read MCNP results for sphere", jdd,
-                  "and air", jdd[:-1]+"_airm")
+            LOGGER.info("Read MCNP results for sphere %s and air %s_airm",
+                        jdd, jdd[:-1])
             if renorm:
                 self.mcnp_res[name] = MCNPrenormalizedSphere(jdd,
                                                              jdd[:-1]+"_airm")
@@ -369,8 +342,8 @@ class Comparison():
                                    self.exp_res.res[charac]['cntPtimePsource'],
                                    yerr=self.exp_res.res[charac]['error'],
                                    fmt='rs', ms=1, ecolor='r')
-        print("[1;31mExp. first t bin:", self.exp_res.res[charac]['time'][0],
-              "[0m")
+        LOGGER.debug("[1;31mExp. first t bin: %d[0m",
+                     self.exp_res.res[charac]['time'][0])
         legend['curves'].append((exp2sig, exp1sig))
         legend['labels'].append("Experiment")
 
@@ -378,20 +351,20 @@ class Comparison():
         cols = ['b', 'g', 'm', 'darkviolet', 'orchid', 'darkmagenta',
                 'dodgerblue']
         nexptbins = self.exp_res.res[self.charac]['time'].shape[0]
-        print("Number of responses required:", len(responses))
-        print("[32mResponses:", responses, "[0m")
+        LOGGER.info("Number of responses required: %d", len(responses))
+        LOGGER.debug("[32mResponses: %s[0m", responses)
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
-            print("[94mName of the sample", ires, ":", sname, "[0m")
+            LOGGER.info("[94mName of the sample %d: %s[0m", ires, sname)
             if sname not in responses:
                 continue
             # middle of T4 bins
             norm_simu = simres.normalized_sphere(responses[sname])
             # remove first bin edge as 1 edge more than bins (normal)
-            mtbins = norm_simu[2][1:] - 1
-            t4vals = norm_simu[0]/Comparison.NORM_FACTOR
-            t4sigma = norm_simu[1]/Comparison.NORM_FACTOR
+            mtbins = norm_simu.tbins[1:] - 1
+            t4vals = norm_simu.vals/Comparison.NORM_FACTOR
+            t4sigma = norm_simu.sigma/Comparison.NORM_FACTOR
             nsimtbins = mtbins.shape[0]
-            print("[1;31mT4", sname, "first t bin:", mtbins[0], "[0m")
+            LOGGER.debug("[1;31mT4 %s first t bin: %d[0m", sname, mtbins[0])
             marker = '-'
             if len(ast.literal_eval(responses[sname])) > 2:
                 marker += ast.literal_eval(responses[sname])[2]
@@ -412,26 +385,24 @@ class Comparison():
                 splt[1].errorbar(simu.lines[0].get_data()[0][cut:],
                                  simu.lines[0].get_data()[1][cut:]/exp_data,
                                  ecolor=cols[ires], color=cols[ires])
-            print("Integral T4 data =",
-                  np.trapz(norm_simu[0].ravel()[cut:-1]/2, dx=2.0))
+            LOGGER.info("Integral T4 data = %f",
+                        np.trapz(norm_simu[0].ravel()[cut:-1]/2, dx=2.0))
 
     def plot_mcnp(self, mcnp, splt, legend):
         for sname in self.mcnp_res:
             if sname not in mcnp:
                 continue
-            print(type(self.mcnp_res[sname]))
-            # print("MCNP tbins:", self.mcnp_res[sname].tbins)
-            mtbins = self.mcnp_res[sname].tbins - 1
-            mcnp_simu = self.mcnp_res[sname].counts
-            mcnp_sigma = self.mcnp_res[sname].sigma
+            LOGGER.debug(type(self.mcnp_res[sname]))
+            mtbins = self.mcnp_res[sname].histo.tbins - 1
+            mcnp_simu = self.mcnp_res[sname].histo.vals
+            mcnp_sigma = self.mcnp_res[sname].histo.sigma
             exp_data = self.exp_res.res[self.charac]['cntPtimePsource']
-            print("[1;31mMCNP", sname, "first t bin:", mtbins[0], "[0m")
+            LOGGER.debug("[1;31mMCNP %s first t bin: %d[0m",
+                         sname, mtbins[0])
             # isinstance only works the first time with autoreload
             # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
             if hasattr(self.mcnp_res[sname], 'sphere'):
-                print("Renormalised sphere")
-                print(mtbins.shape)
-                print(mcnp_simu.shape)
+                LOGGER.debug("Renormalised sphere")
                 legend['curves'].append(
                     splt[0].errorbar(mtbins,
                                      mcnp_simu/Comparison.NORM_FACTOR,
@@ -443,9 +414,8 @@ class Comparison():
                                  yerr=mcnp_sigma[1:]/Comparison.NORM_FACTOR,
                                  ecolor='c', color='c')
             else:
-                print("Already normalised sphere")
+                LOGGER.debug("Already normalised sphere")
                 col = 'c' if len(mcnp) == 1 else 'darkcyan'
-                print(col)
                 legend['curves'].append(
                     splt[0].errorbar(mtbins,
                                      mcnp_simu,
@@ -456,12 +426,12 @@ class Comparison():
                              color=col,
                              label="default MCNP")
                 legend['labels'].append("Default MCNP")
-            print("Integral MCNP data =",
-                  np.trapz(mcnp_simu, dx=2.0))
+            LOGGER.info("Integral MCNP data = %f",
+                        np.trapz(mcnp_simu, dx=2.0))
 
     def compare_plots(self, charac, responses, mcnp=None):
         # experiment bins
-        print("[31mNbre fichiers:", len(self.simu_res), "[0m")
+        LOGGER.info("[31mNbre fichiers: %d[0m", len(self.simu_res))
         self.charac = charac
         fig, splt = plt.subplots(2, sharex=True,
                                  gridspec_kw={'height_ratios': [4, 1],
@@ -476,7 +446,7 @@ class Comparison():
         self.plot_t4(responses, splt, legend)
         if mcnp:
             self.plot_mcnp(mcnp, splt, legend)
-        print(legend['labels'])
+        LOGGER.debug(legend['labels'])
         if "New ceav5" in legend['labels'] and "MCNP" in legend['labels']:
             if ((legend['curves'][legend['labels'].index("New ceav5")].lines[0]
                  .get_data()[1].shape[0]-1 == legend['curves'][legend['labels']
@@ -498,8 +468,9 @@ class Comparison():
                      .lines[0].get_data()[1],
                      color='blueviolet',
                      label="ratio")
-        print("Integral exp data =",
-              np.trapz(self.exp_res.res[charac]['cntPtimePsource'], dx=2.0))
+        LOGGER.info("Integral exp data = %f",
+                    np.trapz(self.exp_res.res[charac]['cntPtimePsource'],
+                             dx=2.0))
         splt[0].legend(legend['curves'], legend['labels'],
                        markerscale=2, fontsize=12)
         splt[0].set_ylabel("neutron count rate [1/(ns.source)]")
@@ -520,8 +491,8 @@ class Comparison():
             self.exp_res.res[charac]['cntPtimePsource'],
             yerr=self.exp_res.res[charac]['error'],
             fmt='rs', ms=1, ecolor='r')
-        print("[1;31mExp. first t bin:", self.exp_res.res[charac]['time'][0],
-              "[0m")
+        LOGGER.debug("[1;31mExp. first t bin: %d[0m",
+                     self.exp_res.res[charac]['time'][0])
         cplot.legend['curves'].append((exp2sig, exp1sig))
         cplot.legend['labels'].append("Experiment")
         cplot.legend['flag'].append("exp")
@@ -530,10 +501,10 @@ class Comparison():
     def new_plot_t4(self, responses, cplot):
         cols = ['b', 'g', 'm', 'darkviolet', 'orchid', 'darkmagenta',
                 'dodgerblue']
-        print("Number of responses required:", len(responses))
-        print("[32mResponses:", responses, "[0m")
+        LOGGER.info("Number of responses required: %d", len(responses))
+        LOGGER.debug("[32mResponses: %s[0m", responses)
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
-            print("[94mName of the sample", ires, ":", sname, "[0m")
+            LOGGER.info("[94mName of the sample %d: %s[0m", ires, sname)
             if sname not in responses:
                 continue
             norm_simu = simres.normalized_sphere(responses[sname])
@@ -541,7 +512,7 @@ class Comparison():
             mtbins = norm_simu.tbins[1:] - 1
             t4vals = norm_simu.vals/Comparison.NORM_FACTOR
             t4sigma = norm_simu.sigma/Comparison.NORM_FACTOR
-            print("[1;31mT4", sname, "first t bin:", mtbins[0], "[0m")
+            LOGGER.debug("[1;31mT4%s first t bin: %f[0m", sname, mtbins[0])
             resp_args = (ast.literal_eval(responses[sname])[2:][0]
                          if len(ast.literal_eval(responses[sname])) > 2
                          else {})
@@ -550,7 +521,7 @@ class Comparison():
             resp_args.setdefault('slab', sname)
             resp_args.setdefault('c', resp_args.pop('color', cols[ires]))
             resp_args.setdefault('ecolor', resp_args.get('c', cols[ires]))
-            print("[94m", resp_args, "[0m")
+            LOGGER.debug("T4 plot args:%s", resp_args)
             cplot.add_errorbar_plot(mtbins, t4vals, t4sigma, **resp_args)
 
     def new_plot_mcnp(self, mcnp, cplot):
@@ -563,11 +534,9 @@ class Comparison():
             # isinstance only works the first time with autoreload
             # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
             if hasattr(self.mcnp_res[sname], 'sphere'):
-                print("Renormalised sphere")
+                LOGGER.debug("Renormalised sphere")
                 mcnp_vals /= Comparison.NORM_FACTOR
                 mcnp_sigma /= Comparison.NORM_FACTOR
-            if isinstance(mcnp, dict):
-                print(sname, mcnp[sname])
             mcnp_args = mcnp[sname] if isinstance(mcnp, dict) else {}
             mcnp_args.setdefault('c', 'c')
             mcnp_args.setdefault('label', "MCNP")
@@ -585,8 +554,8 @@ class Comparison():
         for leg, ratio in ratios.items():
             # sanity check
             if len([fl for fl in ratio if fl in cplot.legend['flag']]) != 2:
-                print("Wrong flag, please check, possibilities are",
-                      cplot.legend['flag'])
+                LOGGER.warning("Wrong flag, possibilities are %s:",
+                               cplot.legend['flag'])
                 continue
             flagn = cplot.legend['flag'].index(ratio[0])
             num = cplot.legend['curves'][flagn].lines[0].get_data()[1]
@@ -601,10 +570,11 @@ class Comparison():
                      if 'exp' in ratio
                      else cplot.legend['curves'][flagd].lines[0].get_data()[0])
             if num.shape != denom.shape:
-                print("something will have to be done for number of bins")
-                print("num:", num.shape, "denom:", denom.shape)
+                LOGGER.debug("Something has to be done for number of bins")
+                LOGGER.debug("num: %d, denom: %d",
+                             num.shape[0], denom.shape[0])
                 if num.shape > denom.shape:
-                    print(binsn[0]-binsd[0])
+                    LOGGER.debug("tbinN-tbinD = %f", binsn[0]-binsd[0])
                     if np.isclose(binsn[0]-binsd[0], -2):
                         cutnf = num.shape[0] - denom.shape[0]
                     else:
@@ -613,8 +583,8 @@ class Comparison():
                     cutd = denom.shape[0] - num.shape[0]
             # check on first time bin value
             if not np.isclose(binsn[cutnf:][0], binsd[cutd:][0]):
-                print("Maybe the first time bins are not the same: "
-                      "num = {0}, denom = {1}"
+                LOGGER.warning("First time bins are not the same: "
+                               "num = {0}, denom = {1}"
                       .format(binsn[cutnf:][0], binsd[cutd:][0]))
             ratio_args = ratio[2] if len(ratio) > 2 else {}
             cplot.add_errorbar_ratio(binsn[cutnf:cutnl],
