@@ -28,9 +28,8 @@ class LivermoreSphere():
         self.integrated = None
         # self.add_result(jdd, ast.literal_eval(responses))
 
-    def set_result(self, response):
+    def set_result(self, responses):
         '''Fill results for the considered sphere from given responses.'''
-        responses = ast.literal_eval(response)
         LOGGER.info("nbre de responses: %d",
                     len(self.parsed_res[-1]['list_responses']))
         if not isinstance(responses, list):
@@ -418,12 +417,13 @@ class Comparison():
         :returns: nothing, fill the internal dict of MCNP results
         '''
         for name, jdd, renorm in jdds:
-            LOGGER.info("Read MCNP results for sphere %s and air %s_airm",
-                        jdd, jdd[:-1])
             if renorm:
+                LOGGER.info("Read MCNP results for sphere %s and air %s_airm",
+                            jdd, jdd[:-1])
                 self.mcnp_res[name] = MCNPrenormalizedSphere(jdd,
                                                              jdd[:-1]+"_airm")
             else:
+                LOGGER.info("Read MCNP results for %s", jdd)
                 self.mcnp_res[name] = MCNPSphere(jdd, name)
 
     def plot_exp(self, charac, cplot):
@@ -473,8 +473,7 @@ class Comparison():
             t4vals = norm_simu.vals/Comparison.NORM_FACTOR
             t4sigma = norm_simu.sigma/Comparison.NORM_FACTOR
             LOGGER.debug("[1;31mT4%s first t bin: %f[0m", sname, mtbins[0])
-            resp_args = (ast.literal_eval(responses[sname])[2:][0]
-                         if len(ast.literal_eval(responses[sname])) > 2
+            resp_args = (responses[sname][2:][0] if len(responses[sname]) > 2
                          else {})
             resp_args.setdefault('fmt', '-')
             resp_args.setdefault('label', sname)
@@ -558,7 +557,8 @@ class Comparison():
                                      num[cutnf:cutnl]/denom[cutd:],
                                      0, label=leg, **ratio_args)
 
-    def compare_plots(self, charac, responses, mcnp=None, ratios=None):
+    def compare_plots(self, charac, responses, mcnp=None, ratios=None,
+                      save_file=None):
         '''Compare plots for Livermore spheres (data from experiment, T4 and
         MCNP possible).
 
@@ -594,4 +594,7 @@ class Comparison():
         if ratios:
             self.plot_ratios(ratios, complot)
         complot.customize_plot()
-        plt.show()
+        if save_file:
+            plt.savefig(save_file)
+        else:
+            plt.show()
