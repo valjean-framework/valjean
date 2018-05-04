@@ -553,6 +553,27 @@ class Comparison():
             print("[94m", resp_args, "[0m")
             cplot.add_errorbar_plot(mtbins, t4vals, t4sigma, **resp_args)
 
+    def new_plot_mcnp(self, mcnp, cplot):
+        for sname in self.mcnp_res:
+            if sname not in mcnp:
+                continue
+            mtbins = self.mcnp_res[sname].tbins - 1
+            mcnp_vals = np.copy(self.mcnp_res[sname].counts)
+            mcnp_sigma = np.copy(self.mcnp_res[sname].sigma)
+            # isinstance only works the first time with autoreload
+            # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
+            if hasattr(self.mcnp_res[sname], 'sphere'):
+                print("Renormalised sphere")
+                mcnp_vals /= Comparison.NORM_FACTOR
+                mcnp_sigma /= Comparison.NORM_FACTOR
+            if isinstance(mcnp, dict):
+                print(sname, mcnp[sname])
+            mcnp_args = mcnp[sname] if isinstance(mcnp, dict) else {}
+            mcnp_args.setdefault('c', 'c')
+            mcnp_args.setdefault('label', "MCNP")
+            mcnp_args.setdefault('slab', "MCNP")
+            cplot.add_errorbar_plot(mtbins, mcnp_vals, mcnp_sigma, **mcnp_args)
+
     def new_plot_ratios(self, ratios, cplot):
         '''Plot required ratios.
 
@@ -574,25 +595,30 @@ class Comparison():
                      if 'exp' in ratio
                      else cplot.legend['curves'][flagd].lines[0].get_data()[1])
             # check number of bins and buts if necessary
-            cutn, cutd = 0, 0
-            if num.shape != denom.shape:
-                print("something will have to be done for number of bins")
-                print("num:", num.shape, "denom:", denom.shape)
-                if num.shape > denom.shape:
-                    cutn = num.shape[0] - denom.shape[0]
-                else:
-                    cutd = denom.shape[0] - num.shape[0]
+            cutnf, cutnl, cutd = 0, num.shape[0], 0
             binsn = cplot.legend['curves'][flagn].lines[0].get_data()[0]
             binsd = (self.exp_res.res[cplot.charac]['time']
                      if 'exp' in ratio
                      else cplot.legend['curves'][flagd].lines[0].get_data()[0])
+            if num.shape != denom.shape:
+                print("something will have to be done for number of bins")
+                print("num:", num.shape, "denom:", denom.shape)
+                if num.shape > denom.shape:
+                    print(binsn[0]-binsd[0])
+                    if np.isclose(binsn[0]-binsd[0], -2):
+                        cutnf = num.shape[0] - denom.shape[0]
+                    else:
+                        cutnl = denom.shape[0]
+                else:
+                    cutd = denom.shape[0] - num.shape[0]
             # check on first time bin value
-            if not np.isclose(binsn[cutn:][0], binsd[cutd:][0]):
+            if not np.isclose(binsn[cutnf:][0], binsd[cutd:][0]):
                 print("Maybe the first time bins are not the same: "
                       "num = {0}, denom = {1}"
-                      .format(binsn[cutn:][0], binsd[cutd:][0]))
+                      .format(binsn[cutnf:][0], binsd[cutd:][0]))
             ratio_args = ratio[2] if len(ratio) > 2 else {}
-            cplot.add_errorbar_ratio(binsn[cutn:], num[cutn:]/denom[cutd:],
+            cplot.add_errorbar_ratio(binsn[cutnf:cutnl],
+                                     num[cutnf:cutnl]/denom[cutd:],
                                      0, label=leg, **ratio_args)
 
     def new_comparison(self, charac, responses, mcnp=None, ratios=None):
@@ -600,6 +626,8 @@ class Comparison():
         if charac[-1] is not False:
             self.new_plot_exp(charac, complot)
         self.new_plot_t4(responses, complot)
+        if mcnp:
+            self.new_plot_mcnp(mcnp, complot)
         if ratios:
             self.new_plot_ratios(ratios, complot)
         complot.customize_plot()
