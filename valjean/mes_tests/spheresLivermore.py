@@ -8,6 +8,10 @@ import ast
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from collections import namedtuple
+
+Histo = namedtuple('Histo', ['tbins', 'vals', 'sigma'])
+Integral = namedtuple('Integral', ['value', 'sigma'])
 
 class LivermoreSphere():
     '''Class to study Livermore Spheres.'''
@@ -113,9 +117,9 @@ class SpherePlot():
         norm_spec_sig = spectrum['sigma']*norm_spec/100.  #/normalization['sigma'].ravel()[0]
         # print(norm_spec)
         # removing first and last bins as irrelevant here
-        return (norm_spec.ravel()[1:-1],
-                norm_spec_sig.ravel()[1:-1],
-                self.sphere.spectrum['tbins'][1:-1]*1e9)
+        return Histo(self.sphere.spectrum['tbins'][1:-1]*1e9,
+                     norm_spec.ravel()[1:-1],
+                     norm_spec_sig.ravel()[1:-1])
 
     def plot_sphere(self):
         spectrum, spec_err = self.normalized_sphere()
@@ -223,15 +227,14 @@ class MCNPSphere():
     def __init__(self, path, charac):
         self.fname = path
         self.charac = charac
-        self.tbins = []
-        self.counts = []
-        self.sigma = []
+        self.histo = None
+        self.integral = None
         self.read_mcnp()
 
     def read_mcnp(self):
-        nb_tbins = 0
         tbins_block = False
         vals_block = False
+        tbins, counts = [], []
         with open(self.fname) as fil:
             for line in fil:
                 if line.startswith('tt') or line.startswith('tc'):
@@ -243,28 +246,25 @@ class MCNPSphere():
                 elif line.startswith('tfc'):
                     vals_block = False
                 elif tbins_block:
-                    self.tbins += line.split()
+                    tbins += line.split()
                 elif vals_block:
-                    self.counts += [float(x) for x in line.split()]
+                    counts += [float(x) for x in line.split()]
                 else:
                     continue
-        nbtbins = len(self.tbins)
-        print("len(tbins) =", len(self.tbins), "et vals:", len(self.counts))
-        print(self.tbins)
-        print((len(self.counts)/2)/len(self.tbins))
-        # self.tbins = np.array([float(x)-0.2 for x in self.tbins])*10
-        self.tbins = np.array([float(x) for x in self.tbins])*10
-        self.sigma = np.array(
-            [x for ind, x in enumerate(self.counts) if ind%2 != 0])
-        self.counts = np.array(
-            [x for ind, x in enumerate(self.counts) if ind%2 == 0])
-        self.sigma = self.sigma*self.counts
-        initial_counts = self.counts
-        self.integral = self.counts[nbtbins]
-        self.sigma_integral = self.sigma[nbtbins]
-        self.counts = self.counts[:nbtbins]
-        self.sigma = self.sigma[:nbtbins]
-        print("Sum of counts:", np.sum(self.counts), "integral:", self.integral)
+        nbtbins = len(tbins)
+        print("len(tbins) =", len(tbins), "et vals:", len(counts))
+        print(tbins)
+        print((len(counts)/2)/len(tbins))
+        tbins = np.array([float(x) for x in tbins])*10
+        sigma = np.array(
+            [x for ind, x in enumerate(counts) if ind%2 != 0])
+        counts = np.array(
+            [x for ind, x in enumerate(counts) if ind%2 == 0])
+        sigma = sigma*counts
+        self.integral = Integral(counts[nbtbins], sigma[nbtbins])
+        print("Sum of counts:", np.sum(counts),
+              "integral:", self.integral.value)
+        self.histo = Histo(tbins, counts[:nbtbins], sigma[:nbtbins])
 
 class MCNPrenormalizedSphere():
     '''Class to buld renormalized spheres for MCNP.'''
@@ -273,14 +273,14 @@ class MCNPrenormalizedSphere():
         print("Get results for the sphere")
         self.sphere = MCNPSphere(out_sphere, "Sphere")
         self.air = MCNPSphere(out_air, "Air")
-        self.counts, self.sigma, self.tbins = self.normalized_sphere()
-        print("Renormalized counts:", self.counts)
+        self.histo = self.normalized_sphere()
+        print("Renormalized counts:", self.histo.vals)
 
     def normalized_sphere(self):
-        counts = self.sphere.counts/self.air.integral
-        sigma = self.sphere.sigma/self.air.integral
-        tbins = self.sphere.tbins
-        return counts, sigma, tbins
+        counts = self.sphere.histo.vals/self.air.integral.value
+        sigma = self.sphere.histo.sigma/self.air.integral.value
+        tbins = self.sphere.histo.tbins
+        return Histo(tbins, counts, sigma)
 
 
 class CompPlot():
@@ -538,9 +538,9 @@ class Comparison():
                 continue
             norm_simu = simres.normalized_sphere(responses[sname])
             # remove first bin edge as 1 edge more than bins (normal)
-            mtbins = norm_simu[2][1:] - 1
-            t4vals = norm_simu[0]/Comparison.NORM_FACTOR
-            t4sigma = norm_simu[1]/Comparison.NORM_FACTOR
+            mtbins = norm_simu.tbins[1:] - 1
+            t4vals = norm_simu.vals/Comparison.NORM_FACTOR
+            t4sigma = norm_simu.sigma/Comparison.NORM_FACTOR
             print("[1;31mT4", sname, "first t bin:", mtbins[0], "[0m")
             resp_args = (ast.literal_eval(responses[sname])[2:][0]
                          if len(ast.literal_eval(responses[sname])) > 2
@@ -557,9 +557,9 @@ class Comparison():
         for sname in self.mcnp_res:
             if sname not in mcnp:
                 continue
-            mtbins = self.mcnp_res[sname].tbins - 1
-            mcnp_vals = np.copy(self.mcnp_res[sname].counts)
-            mcnp_sigma = np.copy(self.mcnp_res[sname].sigma)
+            mtbins = self.mcnp_res[sname].histo.tbins - 1
+            mcnp_vals = np.copy(self.mcnp_res[sname].histo.vals)
+            mcnp_sigma = np.copy(self.mcnp_res[sname].histo.sigma)
             # isinstance only works the first time with autoreload
             # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
             if hasattr(self.mcnp_res[sname], 'sphere'):
