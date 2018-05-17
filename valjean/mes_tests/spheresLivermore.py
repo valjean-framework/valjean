@@ -181,7 +181,7 @@ class LivermoreExps():
         print(self.fname)
         with open(self.fname) as fil:
             for line in fil:
-                if "MFP" in line:
+                if "MFP" in line or not line.split():
                     if charac:
                         print(charac)
                         self.save_res(charac, results)
@@ -278,7 +278,7 @@ class MCNPSphere():
                 else:
                     continue
         nbtbins = len(tbins)
-        LOGGER.debug("len(tbins) = %d et vals: %d, Ntbins = %d",
+        LOGGER.debug("len(tbins) = %d et vals: %d, Ntbins = %s",
                      len(tbins), len(counts), nb_tbins)
         LOGGER.debug(tbins)
         tbins = np.array([float(x) for x in tbins])*10
@@ -335,10 +335,10 @@ class CompPlot():
         self.splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
         self.splt[1].set_xlabel("time bins [ns]")
         self.splt[1].set_ylabel("Ratios")
-        self.splt[1].set_ylim(ymin=0.5, ymax=1.5)
+        # self.splt[1].set_ylim(ymin=0.5, ymax=1.5)
         self.splt[0].legend(self.legend['curves'], self.legend['labels'],
                             markerscale=2, fontsize=12)
-        self.splt[1].legend(loc='lower right')
+        self.splt[1].legend(loc='upper right')
 
     def add_errorbar_plot(self, bins, vals, errors, label='', slab='',
                           **kwargs):
@@ -460,7 +460,8 @@ class Comparison():
         :returns: (nothing, updated plot)
         '''
         cols = ['b', 'g', 'm', 'darkviolet', 'orchid', 'darkmagenta',
-                'dodgerblue']
+                'dodgerblue', 'b', 'g', 'm', 'b', 'g', 'm', 'b', 'g', 'm',
+                'b', 'g', 'm', 'b', 'g', 'm','b', 'g', 'm', 'b', 'g', 'm']
         LOGGER.info("Number of responses required: %d", len(responses))
         LOGGER.debug("[32mResponses: %s[0m", responses)
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
@@ -478,6 +479,7 @@ class Comparison():
             resp_args.setdefault('fmt', '-')
             resp_args.setdefault('label', sname)
             resp_args.setdefault('slab', sname)
+            print(resp_args)
             resp_args.setdefault('c', resp_args.pop('color', cols[ires]))
             resp_args.setdefault('ecolor', resp_args.get('c', cols[ires]))
             LOGGER.debug("T4 plot args:%s", resp_args)
@@ -518,6 +520,7 @@ class Comparison():
         :returns: (nothing: updated plot)
         '''
         for leg, ratio in ratios.items():
+            LOGGER.debug("Ratio: %s", leg)
             # sanity check
             if len([fl for fl in ratio if fl in cplot.legend['flag']]) != 2:
                 LOGGER.warning("Wrong flag, possibilities are %s:",
