@@ -30,7 +30,7 @@ def read_file(tfile):
     table = np.array(table)
     return table
 
-def draw_plot_for_var(ltable, var, unit=None, nbins=None, const=1, fit=False):
+def draw_plot_for_var(ltable, var, unit=None, nbins=None, const=1, fit=None):
     plt.figure(1)
     n, bins, patches = plt.hist(ltable[:][var]*const, bins=nbins, density=1)
     print(ltable.shape)
@@ -39,12 +39,12 @@ def draw_plot_for_var(ltable, var, unit=None, nbins=None, const=1, fit=False):
         print(mu, sigma)
         pdf_hist = stats.norm.pdf(bins, mu, sigma)
         plt.plot(bins, pdf_hist, 'r--', label='Fit')
-        pdf_hist4ns = stats.norm.pdf(bins, 0, 4)
+        pdf_hist4ns = stats.norm.pdf(bins, 0, fit)
         plt.plot(bins, pdf_hist4ns, '--', c='limegreen',
-                 label=r'$\sigma$ = 4 ns')
-        pdf_hist4ns_fwhm = stats.norm.pdf(bins, 0, 4/(2*np.sqrt(2*np.log(2))))
+                 label=r'$\sigma$ = {0} ns'.format(fit))
+        pdf_hist4ns_fwhm = stats.norm.pdf(bins, 0, fit/(2*np.sqrt(2*np.log(2))))
         plt.plot(bins, pdf_hist4ns_fwhm, '--', c='lightblue',
-                 label='FWHM = 4 ns')
+                 label='FWHM = {0} ns'.format(fit))
     plt.xlabel("{0} [{1}]".format(var, unit))
     plt.legend()
     plt.show()

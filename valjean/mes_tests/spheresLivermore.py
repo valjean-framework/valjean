@@ -199,7 +199,7 @@ class LivermoreExps():
                     continue
                 else:
                     elts = line.split()
-                    results.append(tuple(map(eval, elts)))
+                    results.append(tuple(map(ast.literal_eval, elts)))
 
     def save_res(self, charac, results):
         '''Fill the internal dictionary for experimental results.
