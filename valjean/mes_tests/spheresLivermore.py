@@ -452,7 +452,7 @@ class Comparison():
         cplot.legend['flag'].append("exp")
         cplot.nbins['exp'] = self.exp_res.res[charac]['time'].shape[0]
 
-    def plot_t4(self, responses, cplot):
+    def plot_t4(self, responses, cplot, print_file=None):
         '''Plot TRIPOLI-4 results.
 
         :param dict responses: T4 results (see :meth:compare_plots)
@@ -484,6 +484,8 @@ class Comparison():
             resp_args.setdefault('ecolor', resp_args.get('c', cols[ires]))
             LOGGER.debug("T4 plot args:%s", resp_args)
             cplot.add_errorbar_plot(mtbins, t4vals, t4sigma, **resp_args)
+            if print_file and sname in print_file:
+                self.print_distrib(print_file[sname], mtbins, t4vals, t4sigma)
 
     def plot_mcnp(self, mcnp, cplot):
         '''Plot MCNP results.
@@ -544,7 +546,7 @@ class Comparison():
                              num.shape[0], denom.shape[0])
                 if num.shape > denom.shape:
                     LOGGER.debug("tbinN-tbinD = %f", binsn[0]-binsd[0])
-                    if np.isclose(binsn[0]-binsd[0], -2):
+                    if (binsn[0]-binsd[0])//-2 > 0.9:
                         cutnf = num.shape[0] - denom.shape[0]
                     else:
                         cutnl = denom.shape[0]
@@ -552,16 +554,22 @@ class Comparison():
                     cutd = denom.shape[0] - num.shape[0]
             # check on first time bin value
             if not np.isclose(binsn[cutnf:][0], binsd[cutd:][0]):
-                LOGGER.warning("First time bins are not the same: "
+                LOGGER.warning("First time bins are not the same in %s: "
                                "num = %f, denom = %f",
-                               binsn[cutnf:][0], binsd[cutd:][0])
+                               leg, binsn[cutnf:][0], binsd[cutd:][0])
             ratio_args = ratio[2] if len(ratio) > 2 else {}
             cplot.add_errorbar_ratio(binsn[cutnf:cutnl],
                                      num[cutnf:cutnl]/denom[cutd:],
                                      0, label=leg, **ratio_args)
 
+    def print_distrib(self, name, tbins, vals, sigma):
+        with open("t4_"+name+".dat", 'w') as ofile:
+            for itime, ttime in enumerate(tbins):
+                ofile.write("{0} {1} {2}\n"
+                            .format(ttime, vals[itime], sigma[itime]))
+
     def compare_plots(self, charac, responses, mcnp=None, ratios=None,
-                      save_file=None):
+                      save_file=None, print_file=None):
         '''Compare plots for Livermore spheres (data from experiment, T4 and
         MCNP possible).
 
@@ -591,7 +599,7 @@ class Comparison():
         complot = CompPlot(charac)
         if charac[-1] is not False:
             self.plot_exp(charac, complot)
-        self.plot_t4(responses, complot)
+        self.plot_t4(responses, complot, print_file)
         if mcnp:
             self.plot_mcnp(mcnp, complot)
         if ratios:
