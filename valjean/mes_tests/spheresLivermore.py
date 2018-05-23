@@ -658,7 +658,6 @@ class Comparison():
         print("will compare T4 with exp")
         fp_exp = self.exp_res.res[charac]['flight_path']
         print("flight path =", fp_exp)
-        time_16MeV = energy_to_time(16, fp_exp)
         times = [energy_to_time(x, fp_exp) for x in [16, 12, 2]]
         print(times)
         if times[-1] > self.exp_res.res[charac]['res']['time'][-1]:
@@ -666,12 +665,92 @@ class Comparison():
         print(times)
         bins_exp = [np.searchsorted(self.exp_res.res[charac]['res']['time'], x)
                     for x in times]
-        # bins_exp = [ib if ib < self.exp_res.res[charac]['res']['time'].shape[0]
-        #             else ib - 1 for ib in bins_exp]
         print(bins_exp)
+        print(self.exp_res.res[charac]['res']['cntPtimePsource']
+                     [bins_exp[0]:bins_exp[1]+1])
+        print(self.exp_res.res[charac]['res']['time']
+                     [bins_exp[0]:bins_exp[1]+1])
+        print([time_to_energy(x, fp_exp)
+               for x in self.exp_res.res[charac]['res']['time'][bins_exp[0]:bins_exp[1]+1]])
+        hnrg = (np.sum(self.exp_res.res[charac]['res']['cntPtimePsource']
+                       [bins_exp[0]:bins_exp[1]+1] * Comparison.NORM_FACTOR))
+        mnrg = (np.sum(self.exp_res.res[charac]['res']['cntPtimePsource']
+                       [bins_exp[0]:bins_exp[2]+1] * Comparison.NORM_FACTOR))
+        tot = (np.sum(self.exp_res.res[charac]['res']['cntPtimePsource']
+                      * Comparison.NORM_FACTOR))
+        error = np.sum(self.exp_res.res[charac]['res']['error']) * Comparison.NORM_FACTOR
+               # (np.sum(self.exp_res.res[charac]['res']['cntPtimePsource']
+               #       * Comparison.NORM_FACTOR)
+        print("16 - 12 MeV:", hnrg)
+        print("16 - 2 MeV:", mnrg)
+        print("Total:", tot)
         print([self.exp_res.res[charac]['res']['time'][ib] for ib in bins_exp])
+        print("test erreurs", error)
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
             if sname not in responses:
                 continue
+            print("[94m", sname, "[0m")
+            # les bins extremes sont supprimes dans norm_sphere... d'ou un
+            # decalage avec la VV faite jusqu'a present
+            # (une solution ? un decoupage a 2 bins pour une meilleure
+            # comparaison et avoir une erreur exploitable ?)
             t4histo = simres.norm_sphere(responses[sname],
                                          Comparison.NORM_FACTOR)
+            bins_simu = [np.searchsorted(t4histo.tbins, x) for x in times]
+            print(bins_simu)
+            print([self.exp_res.res[charac]['res']['time'][ib] for ib in bins_exp])
+            bins_simu2 = [np.searchsorted(t4histo.tbins, x)
+                          for x in [self.exp_res.res[charac]['res']['time'][ib]
+                                    for ib in bins_exp]]
+            print(bins_simu2)
+            print(t4histo.tbins.shape)
+            print(t4histo.tbins[bins_exp[0]:bins_exp[1]+1])
+            print(t4histo.tbins[bins_simu[0]:bins_simu[1]+1])
+            # air integral
+            # air_integ = np.sum(simres.air.spectrum['spectrum']['score'][-1])
+            air_integ = np.sum(simres.air.spectrum['spectrum']['score'].ravel()[:-1])
+            print(air_integ, "comp to", simres.air.integrated['integrated_res']['score'])
+            print("16 - 12 MeV:",
+                  np.sum(t4histo.vals[bins_simu[0]:bins_simu[1]+1])
+                  * Comparison.NORM_FACTOR)
+            print("16 - 12 MeV:",
+                  np.sum(t4histo.vals[bins_exp[0]:bins_exp[1]+1])
+                  * Comparison.NORM_FACTOR)
+            print("16 - 12 MeV:",
+                  np.sum(t4histo.vals[bins_simu[0]:bins_simu2[1]+1])
+                  * Comparison.NORM_FACTOR)
+            print("16 - 12 MeV:",
+                  np.sum(t4histo.vals[bins_simu2[0]+1:bins_simu2[1]+1])
+                  * Comparison.NORM_FACTOR)
+            print("16 - 2 MeV:",
+                  np.sum(t4histo.vals[bins_simu[0]:bins_simu[2]+1])
+                  * Comparison.NORM_FACTOR)
+            print("16 - 2 MeV:",
+                  np.sum(t4histo.vals[bins_exp[0]:bins_exp[2]+1])
+                  * Comparison.NORM_FACTOR)
+            integ16t2 =  (np.sum(t4histo.vals[bins_simu[0]:bins_simu2[2]+1])
+                          * Comparison.NORM_FACTOR)
+            err16t2 = (np.sum(t4histo.sigma[bins_simu[0]:bins_simu2[2]+1])
+                       * Comparison.NORM_FACTOR)
+                       # / simres.air.integrated['integrated_res']['score'].ravel()[0])
+            # print((t4histo.vals[bins_simu[0]:bins_simu2[2]+1]
+            #        * t4histo.sigma[bins_simu[0]:bins_simu2[2]+1]).shape)
+            print("16 - 2 MeV:", integ16t2, "+/-", err16t2)
+            print("16 - 2 MeV:",
+                  np.sum(t4histo.vals) * Comparison.NORM_FACTOR)
+            print("pour info (last bin -> 10 s):",
+                  t4histo.vals[-1], "+/-", t4histo.sigma[-1])
+            print("Integral:")
+            print(simres.sphere.integrated['integrated_res'],
+                  simres.sphere.integrated['integrated_res'].dtype,
+                  simres.sphere.integrated)
+            integ = ((simres.sphere.integrated['integrated_res']['score']
+                      / simres.air.integrated['integrated_res']['score'])
+                     .ravel()[0])
+            print("Total =", integ, "+/-",
+                  integ / 100
+                  / simres.sphere.integrated['integrated_res']['sigma'].ravel()[0])
+            sph_integ = (np.sum(simres.sphere.spectrum['spectrum']['score']
+                                .ravel()[:-1])
+                         / air_integ)
+            print("Total =", sph_integ)
