@@ -10,11 +10,38 @@ import logging
 import numpy as np
 from valjean.eponine.parse_t4 import T4Parser
 import matplotlib.pyplot as plt
+import scipy.constants as sci_consts
 
 Histo = namedtuple('Histo', ['tbins', 'vals', 'sigma'])
 Integral = namedtuple('Integral', ['value', 'sigma'])
 
 LOGGER = logging.getLogger('valjean')
+
+# Calculation energy from time
+# E= rme*((1.0/dsqrt(1.0-(fp*fp/(t*t*c*c))))-1.0)
+# where
+#    c= velocity of light = 29.97925 cm/nanosecond
+#    t= the time (in nanoseconds), at the midpoint of the time bin
+#    fp= the length of the flightpath (in cm)
+#    rme= the rest mass energy of a neutron (939.550 MeV)
+#    E= the energy of the neutron
+
+light_speed = sci_consts.c * sci_consts.nano / sci_consts.centi
+neutron_mass = sci_consts.physical_constants[
+    "neutron mass energy equivalent in MeV"][0]
+
+
+def time_to_energy(time, length):
+    gamma = np.sqrt(1 - (length**2 / (time**2 * light_speed**2)))
+    energy = neutron_mass * (1/gamma - 1)
+    return energy
+
+
+def energy_to_time(energy, length):
+    num = 1 + energy / neutron_mass
+    denom = np.sqrt(num**2 -1)
+    time = length / light_speed * num / denom
+    return time
 
 
 class LivermoreSphere():
@@ -99,6 +126,7 @@ class SpherePlot():
         self.sphere = LivermoreSphere(jdd_sphere, "Sphere")
         LOGGER.info("Parsing %s", jdd_air)
         self.air = LivermoreSphere(jdd_air, "Air")
+        self.normed_histo = None
 
     def normalized_sphere(self, responses):
         '''Normalise T4 sphere results to air ones.
@@ -119,6 +147,17 @@ class SpherePlot():
         return Histo(self.sphere.spectrum['tbins'][1:-1]*1e9,
                      norm_spec.ravel()[1:-1],
                      norm_spec_sig.ravel()[1:-1])
+
+    def norm_sphere(self, responses, norm_factor=1):
+        if self.normed_histo:
+            print("normed shpere already exists")
+            return self.normed_histo
+        histo = self.normalized_sphere(responses)
+        # remove first bin edge as 1 edge more than bins (normal)
+        self.normed_histo = Histo(histo.tbins[1:] -1,
+                                  histo.vals/norm_factor,
+                                  histo.sigma/norm_factor)
+        return self.normed_histo
 
     def plot_sphere(self):
         '''Test to plot T4 results.'''
@@ -191,11 +230,11 @@ class LivermoreExps():
                     charac = lelts[:-1]
                 elif "DEGRES" in line:
                     charac.append(line.split()[1])
-                # elif "FP=" in line:
-                #     charac.append(line.split()[1])
+                elif "FP=" in line:
+                    charac.append(ast.literal_eval(line.split()[1]))
                 elif "TEMPS" in line and "TO" in line:
                     results = []
-                elif "CNT" in line or "prob" in line or "FP=" in line:
+                elif "CNT" in line or "prob" in line: # or "FP=" in line:
                     continue
                 else:
                     elts = line.split()
@@ -213,7 +252,8 @@ class LivermoreExps():
         dtype = np.dtype({
             'names': ['time', 'cntPtimePsource', 'error', 'cntCum'],
             'formats': [np.int32, np.float32, np.float32, np.float32]})
-        self.res[tuple(charac)] = np.array(results, dtype=dtype)
+        self.res[tuple(charac[:-1])] = {'res': np.array(results, dtype=dtype),
+                                        'flight_path': charac[-1]}
 
     def plot_res(self, charac):
         '''Plot experimental results for charac.
@@ -436,21 +476,21 @@ class Comparison():
         :returns: (nothing, updated plot)
         '''
         exp2sig = cplot.splt[0].errorbar(
-            self.exp_res.res[charac]['time'],
-            self.exp_res.res[charac]['cntPtimePsource'],
-            yerr=self.exp_res.res[charac]['error']*2,
+            self.exp_res.res[charac]['res']['time'],
+            self.exp_res.res[charac]['res']['cntPtimePsource'],
+            yerr=self.exp_res.res[charac]['res']['error']*2,
             fmt='s', ms=3, ecolor='orange', c='orange')
         exp1sig = cplot.splt[0].errorbar(
-            self.exp_res.res[charac]['time'],
-            self.exp_res.res[charac]['cntPtimePsource'],
-            yerr=self.exp_res.res[charac]['error'],
+            self.exp_res.res[charac]['res']['time'],
+            self.exp_res.res[charac]['res']['cntPtimePsource'],
+            yerr=self.exp_res.res[charac]['res']['error'],
             fmt='rs', ms=1, ecolor='r')
         LOGGER.debug("[1;31mExp. first t bin: %d[0m",
-                     self.exp_res.res[charac]['time'][0])
+                     self.exp_res.res[charac]['res']['time'][0])
         cplot.legend['curves'].append((exp2sig, exp1sig))
         cplot.legend['labels'].append("Experiment")
         cplot.legend['flag'].append("exp")
-        cplot.nbins['exp'] = self.exp_res.res[charac]['time'].shape[0]
+        cplot.nbins['exp'] = self.exp_res.res[charac]['res']['time'].shape[0]
 
     def plot_t4(self, responses, cplot, print_file=None):
         '''Plot TRIPOLI-4 results.
@@ -473,6 +513,10 @@ class Comparison():
             mtbins = norm_simu.tbins[1:] - 1
             t4vals = norm_simu.vals/Comparison.NORM_FACTOR
             t4sigma = norm_simu.sigma/Comparison.NORM_FACTOR
+            histo_simu = simres.norm_sphere(responses[sname],
+                                            Comparison.NORM_FACTOR)
+            print(np.array_equal(mtbins, histo_simu.tbins))
+            print(np.array_equal(t4vals, histo_simu.vals))
             LOGGER.debug("[1;31mT4%s first t bin: %f[0m", sname, mtbins[0])
             resp_args = (responses[sname][2:][0] if len(responses[sname]) > 2
                          else {})
@@ -531,13 +575,13 @@ class Comparison():
             flagn = cplot.legend['flag'].index(ratio[0])
             num = cplot.legend['curves'][flagn].lines[0].get_data()[1]
             flagd = cplot.legend['flag'].index(ratio[1])
-            denom = (self.exp_res.res[cplot.charac]['cntPtimePsource']
+            denom = (self.exp_res.res[cplot.charac]['res']['cntPtimePsource']
                      if 'exp' in ratio
                      else cplot.legend['curves'][flagd].lines[0].get_data()[1])
             # check number of bins and buts if necessary
             cutnf, cutnl, cutd = 0, num.shape[0], 0
             binsn = cplot.legend['curves'][flagn].lines[0].get_data()[0]
-            binsd = (self.exp_res.res[cplot.charac]['time']
+            binsd = (self.exp_res.res[cplot.charac]['res']['time']
                      if 'exp' in ratio
                      else cplot.legend['curves'][flagd].lines[0].get_data()[0])
             if num.shape != denom.shape:
@@ -609,3 +653,25 @@ class Comparison():
             plt.savefig(save_file)
         else:
             plt.show()
+
+    def compare_integrals(self, charac, responses):
+        print("will compare T4 with exp")
+        fp_exp = self.exp_res.res[charac]['flight_path']
+        print("flight path =", fp_exp)
+        time_16MeV = energy_to_time(16, fp_exp)
+        times = [energy_to_time(x, fp_exp) for x in [16, 12, 2]]
+        print(times)
+        if times[-1] > self.exp_res.res[charac]['res']['time'][-1]:
+            times[-1] = self.exp_res.res[charac]['res']['time'][-1]
+        print(times)
+        bins_exp = [np.searchsorted(self.exp_res.res[charac]['res']['time'], x)
+                    for x in times]
+        # bins_exp = [ib if ib < self.exp_res.res[charac]['res']['time'].shape[0]
+        #             else ib - 1 for ib in bins_exp]
+        print(bins_exp)
+        print([self.exp_res.res[charac]['res']['time'][ib] for ib in bins_exp])
+        for ires, (sname, simres) in enumerate(self.simu_res.items()):
+            if sname not in responses:
+                continue
+            t4histo = simres.norm_sphere(responses[sname],
+                                         Comparison.NORM_FACTOR)
