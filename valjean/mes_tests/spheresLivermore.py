@@ -115,6 +115,21 @@ class LivermoreSphere():
         score1_res = integ_resp['results']['score_res']
         self.integrated = score1_res[0]['spectrum_res']
 
+    def use_response(self, response):
+        '''Use only one response (photon flux)'''
+        if not isinstance(response, str):
+            LOGGER.debug("use_response can only be used for a single response")
+            return
+        allresp = self.parsed_res[-1]['list_responses']
+        corr_names = dict(
+            map(lambda xy: (xy[1]['response_description']['score_name'],
+                            xy[0]),
+                enumerate(allresp)))
+        spec_resp = allresp[corr_names[response]]
+        # print(spec_resp)
+        print(list(spec_resp['results']['score_res'][0].keys()))
+        self.spectrum = spec_resp['results']['score_res'][0]['spectrum_res']
+
 
 class SpherePlot():
     '''Class to build plot for Livermore spheres from one sphere and associated
@@ -141,7 +156,8 @@ class SpherePlot():
         self.air.set_result(responses)
         spectrum = self.sphere.spectrum['spectrum']
         normalization = self.air.integrated['integrated_res']
-        norm_spec = spectrum['score']/normalization['score'].ravel()[0]
+        norm_bin = 1 if normalization['score'].ravel().shape[0] > 1 else 0
+        norm_spec = spectrum['score']/normalization['score'].ravel()[norm_bin]
         norm_spec_sig = spectrum['sigma']*norm_spec/100.
         # removing first and last bins as irrelevant here
         return Histo(self.sphere.spectrum['tbins'][1:-1]*1e9,
@@ -754,3 +770,64 @@ class Comparison():
                                 .ravel()[:-1])
                          / air_integ)
             print("Total =", sph_integ)
+
+    def compare_photons(self, charac, responses, ratio=None):
+        '''Response as {"name_sphere": ["name_response", is_air=False]'''
+        fig, splt = (plt.subplots(2, sharex=True, figsize=(15, 8),
+                                 gridspec_kw={'height_ratios': [4, 1],
+                                              'hspace': 0.05})
+                     if ratio else plt.subplots(1, figsize=(15, 8)))
+        # plt.figure(1, (15, 8))
+        main_splt = splt if not ratio else splt[0]
+        main_splt.set_title("{elt}, {mfp} mfp"
+                          .format(elt=charac[0].capitalize(), mfp=charac[1]))
+        if ratio:
+            splt[1].set_xlabel("Photon energy [MeV]")
+            splt[1].set_ylabel("Ratio")
+        else:
+            main_splt.set_xlabel("Photon energy [MeV]")
+        main_splt.set_ylabel("Photon flux [photon/s]")
+        rebins, rspectrum = None, None
+        for  ires, (sname, simres) in enumerate(self.simu_res.items()):
+            if sname not in responses:
+                continue
+            # t4histo = Histo(simres.
+            print(responses[sname][0])
+            for elt, resp_args in responses[sname][1].items():
+                if elt == 'air':
+                    simres.air.use_response(responses[sname][0])
+                    spectrum = simres.air.spectrum['spectrum']['score'].ravel()
+                    ebins = simres.air.spectrum['ebins'].ravel()
+                    mebins = (ebins[1:] + ebins[:-1])/2
+                    errors = ((simres.air.spectrum['spectrum']['score']
+                               * simres.air.spectrum['spectrum']['sigma'] / 100)
+                              .ravel())
+                    resp_args.setdefault('fmt', '-')
+                    resp_args.setdefault('label', sname)
+                    print(ebins.shape, spectrum.shape)
+                    main_splt.errorbar(mebins, spectrum, yerr=errors, **resp_args)
+                elif elt == 'sphere':
+                    simres.sphere.use_response(responses[sname][0])
+                    spectrum = simres.sphere.spectrum['spectrum']['score'].ravel()
+                    ebins = simres.sphere.spectrum['ebins'].ravel()
+                    mebins = (ebins[1:] + ebins[:-1])/2
+                    errors = ((simres.sphere.spectrum['spectrum']['score']
+                               * simres.sphere.spectrum['spectrum']['sigma'] / 100)
+                              .ravel())
+                    resp_args.setdefault('fmt', '-')
+                    resp_args.setdefault('label', sname)
+                    print(ebins.shape, spectrum.shape)
+                    main_splt.errorbar(mebins, spectrum, yerr=errors, **resp_args)
+                else:
+                    print("2 allowed keys: air and sphere")
+                if ratio:
+                    if rebins is None:
+                        print('should be filled')
+                        rebins = np.copy(mebins)
+                        rspectrum = np.copy(spectrum)
+                    else:
+                        print(rebins)
+                        rspectrum /= spectrum
+                        splt[1].plot(mebins, rspectrum)
+        main_splt.legend()
+        plt.show()
