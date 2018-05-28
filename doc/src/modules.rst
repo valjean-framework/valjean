@@ -7,3 +7,4 @@ Package API
    modules/cambronne
    modules/cosette
    modules/eponine
+   modules/gavroche
