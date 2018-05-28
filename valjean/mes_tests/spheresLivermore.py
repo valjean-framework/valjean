@@ -367,6 +367,42 @@ class MCNPrenormalizedSphere():
         return Histo(tbins, counts, sigma)
 
 
+class MonacoSphere():
+    '''Class to build Monaco spheres (from T. Miller)'''
+
+    def __init__(self, path, charac):
+        self.fname = path
+        self.charac = charac
+        self.bins = None
+        self.vals = None
+        self.errors = None
+        self.read_monaco()
+
+    def read_monaco(self):
+        '''Read Monaco results.
+        Caution: times bins are given by number and not by value, will need to
+        use data bins (or code ones).
+        Last column not understood...
+        '''
+        with open(self.fname) as fil:
+            vals, err, bins = [], [], []
+            for line in fil:
+                if not line.split():
+                    break
+                else:
+                    vals.append(float(line.split()[1]))
+                    err.append(float(line.split()[2]))
+                    if 'photons' in self.charac:
+                        bins.append(float(line.split()[0]))
+        self.vals = np.array(vals)
+        self.errors = np.array(err)
+        if bins:
+            self.bins = np.array(bins)*1e-6  # to use MeV instead of eV
+            if self.bins[0] > self.bins[1]:
+                self.bins = np.flip(self.bins, axis=0)
+                self.vals = np.flip(self.vals, axis=0)
+                self.errors = np.flip(self.errors, axis=0)
+
 class CompPlot():
     '''Comparison plot class'''
 
@@ -444,6 +480,7 @@ class Comparison():
         self.exp_res = LivermoreExps()
         self.simu_res = {}
         self.mcnp_res = {}
+        self.monaco_res = {}
 
     def set_t4_files(self, jdds):
         '''Set the TRIPOLI-4 files and call parsing.
@@ -481,6 +518,12 @@ class Comparison():
             else:
                 LOGGER.info("Read MCNP results for %s", jdd)
                 self.mcnp_res[name] = MCNPSphere(jdd, name)
+
+    def set_monaco_files(self, jdds):
+        '''Set the MONACO files containing the results.'''
+        print(jdds)
+        for name, jdd in jdds:
+            self.monaco_res[name] = MonacoSphere(jdd, name)
 
     def plot_exp(self, charac, cplot):
         '''Plot experimental data points (directly on the subplot as 1 and 2 σ
@@ -574,6 +617,32 @@ class Comparison():
             mcnp_args.setdefault('slab', "MCNP")
             cplot.add_errorbar_plot(mtbins, mcnp_vals, mcnp_sigma, **mcnp_args)
 
+    def plot_monaco(self, monaco, cplot, tbins):
+        '''Plot Monaco result, need to use bins from other distribution -> data
+        '''
+        for sname in self.monaco_res:
+            if sname not in monaco:
+                continue
+            print("Data t bins shape:", tbins.shape,
+                  "and for MONACO:", self.monaco_res[sname].vals.shape)
+            mon_res = self.monaco_res[sname]
+            shift_t, shift_m = 0, 0
+            if tbins.shape != mon_res.vals.shape:
+                LOGGER.warning('Not correct number of bins in MONACO')
+                if mon_res.vals.shape > tbins.shape:
+                    shift_m = mon_res.vals.shape[0] - tbins.shape[0]
+                else:
+                    shift_t = tbins.shape[0] - mon_res.vals.shape[0]
+            monaco_args = monaco[sname] if isinstance(monaco, dict) else {}
+            print(monaco_args)
+            monaco_args.setdefault('c', 'g')
+            monaco_args.setdefault('label', 'MONACO')
+            monaco_args.setdefault('slab', 'MONACO')
+            cplot.add_errorbar_plot(tbins,
+                                    self.monaco_res[sname].vals[shift_m:],
+                                    self.monaco_res[sname].errors[shift_m:],
+                                    **monaco_args)
+
     def plot_ratios(self, ratios, cplot):
         '''Plot required ratios.
 
@@ -639,8 +708,8 @@ class Comparison():
                          ['integrated_res']['sigma'].ravel()[norm_id] / 100)
             ofile.write("INTEGRAL {0} {1}".format(integ, err_integ))
 
-    def compare_plots(self, charac, responses, mcnp=None, ratios=None,
-                      save_file=None, print_file=None):
+    def compare_plots(self, charac, responses, mcnp=None, monaco=None,
+                      ratios=None, save_file=None, print_file=None):
         '''Compare plots for Livermore spheres (data from experiment, T4 and
         MCNP possible).
 
@@ -673,6 +742,9 @@ class Comparison():
         self.plot_t4(responses, complot, print_file)
         if mcnp:
             self.plot_mcnp(mcnp, complot)
+        if monaco:
+            self.plot_monaco(monaco, complot,
+                             self.exp_res.res[charac]['res']['time'])
         if ratios:
             self.plot_ratios(ratios, complot)
         complot.customize_plot()
@@ -795,7 +867,8 @@ class Comparison():
                 ofile.write("{0:.2f} {1} {2}\n"
                             .format(tbin, vals[ibin], sigma[ibin]))
 
-    def compare_photons(self, charac, responses, ratio=None, print_file=None):
+    def compare_photons(self, charac, responses, monaco=None, ratio=None,
+                        print_file=None):
         '''Response as {"name_sphere": ["name_response", is_air=False]'''
         fig, splt = (plt.subplots(2, sharex=True, figsize=(15, 8),
                                  gridspec_kw={'height_ratios': [4, 1],
@@ -857,5 +930,15 @@ class Comparison():
                 if print_file and sname in print_file:
                     self.print_photons(print_file[sname],
                                        mebins, spectrum, errors)
+        if monaco:
+            for melt, monaco_args in monaco.items():
+                if melt not in self.monaco_res:
+                    continue
+                monaco_args.setdefault('c', 'g')
+                monaco_args.setdefault('label', 'MONACO')
+                main_splt.errorbar(self.monaco_res[melt].bins,
+                                   self.monaco_res[melt].vals,
+                                   self.monaco_res[melt].errors,
+                                   **monaco_args)
         main_splt.legend()
         plt.show()
