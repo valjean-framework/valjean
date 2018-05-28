@@ -885,13 +885,14 @@ class Comparison():
             main_splt.set_xlabel("Photon energy [MeV]")
         main_splt.set_ylabel("Photon flux [photon/s]")
         main_splt.set_yscale('log', nonposy='clip')
-        rebins, rspectrum = None, None
+        rebins, rspectrum_n, rspectrum_d = None, None, None
         for sname, simres in self.simu_res.items():
             if sname not in responses:
                 continue
             # t4histo = Histo(simres.
             print(responses[sname][0])
             for elt, resp_args in responses[sname][1].items():
+                ewidth = resp_args.pop('ewidth', 1)
                 if elt == 'air':
                     simres.air.use_response(responses[sname][0])
                     spectrum = simres.air.spectrum['spectrum']['score'].ravel()
@@ -903,7 +904,8 @@ class Comparison():
                     resp_args.setdefault('fmt', '-')
                     resp_args.setdefault('label', sname)
                     print(ebins.shape, spectrum.shape)
-                    main_splt.errorbar(mebins, spectrum, yerr=errors, **resp_args)
+                    main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors,
+                                       **resp_args)
                 elif elt == 'sphere':
                     simres.sphere.use_response(responses[sname][0])
                     spectrum = simres.sphere.spectrum['spectrum']['score'].ravel()
@@ -914,19 +916,26 @@ class Comparison():
                               .ravel())
                     resp_args.setdefault('fmt', '-')
                     resp_args.setdefault('label', sname)
-                    print(ebins.shape, spectrum.shape)
-                    main_splt.errorbar(mebins, spectrum, yerr=errors, **resp_args)
+                    print(ebins.shape, spectrum.shape, mebins[:10])
+                    main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors,
+                                       **resp_args)
+                    if sname in ratio[0]:
+                        rspectrum_n = np.copy(spectrum*ewidth)
+                        rebins = np.copy(mebins)
+                    elif sname in ratio[1]:
+                        rspectrum_d = np.copy(spectrum*ewidth)
+                        rebins = np.copy(mebins)
                 else:
                     print("2 allowed keys: air and sphere")
-                if ratio:
-                    if rebins is None:
-                        print('should be filled')
-                        rebins = np.copy(mebins)
-                        rspectrum = np.copy(spectrum)
-                    else:
-                        print(rebins)
-                        rspectrum /= spectrum
-                        splt[1].plot(mebins, rspectrum)
+                # if ratio:
+                #     if rebins is None:
+                #         print('should be filled')
+                #         rebins = np.copy(mebins)
+                #         rspectrum = np.copy(spectrum)
+                #     else:
+                #         print(rebins)
+                #         rspectrum /= spectrum
+                #         splt[1].plot(mebins, rspectrum)
                 if print_file and sname in print_file:
                     self.print_photons(print_file[sname],
                                        mebins, spectrum, errors)
@@ -936,9 +945,18 @@ class Comparison():
                     continue
                 monaco_args.setdefault('c', 'g')
                 monaco_args.setdefault('label', 'MONACO')
+                print(self.monaco_res[melt].bins.shape,
+                      self.monaco_res[melt].bins[:10])
                 main_splt.errorbar(self.monaco_res[melt].bins,
                                    self.monaco_res[melt].vals,
                                    self.monaco_res[melt].errors,
                                    **monaco_args)
+                if melt in ratio[0]:
+                    rspectrum_n = self.monaco_res[melt].vals[::2]
+                elif melt in ratio[1]:
+                    rspectrum_d = self.monaco_res[melt].vals[::2]
+        if ratio:
+            splt[1].plot(rebins[:-1], rspectrum_n/rspectrum_d[:-1])
+            print((rspectrum_n/rspectrum_d[:-1])[:10])
         main_splt.legend()
         plt.show()
