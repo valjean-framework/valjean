@@ -545,7 +545,8 @@ class Comparison():
             LOGGER.debug("T4 plot args:%s", resp_args)
             cplot.add_errorbar_plot(mtbins, t4vals, t4sigma, **resp_args)
             if print_file and sname in print_file:
-                self.print_distrib(print_file[sname], mtbins, t4vals, t4sigma)
+                self.print_distrib(print_file[sname], sname,
+                                   mtbins, t4vals, t4sigma)
 
     def plot_mcnp(self, mcnp, cplot):
         '''Plot MCNP results.
@@ -622,11 +623,21 @@ class Comparison():
                                      num[cutnf:cutnl]/denom[cutd:],
                                      0, label=leg, **ratio_args)
 
-    def print_distrib(self, name, tbins, vals, sigma):
+    def print_distrib(self, name, sname, tbins, vals, sigma):
         with open("t4_"+name+".dat", 'w') as ofile:
             for itime, ttime in enumerate(tbins):
-                ofile.write("{0} {1} {2}\n"
+                ofile.write("{0:.2f} {1} {2}\n"
                             .format(ttime, vals[itime], sigma[itime]))
+            norm_id = (1 if self.simu_res[sname].sphere.integrated
+                       ['integrated_res']['score'].ravel().shape[0] > 1
+                       else 0)
+            integ = ((self.simu_res[sname].sphere.integrated['integrated_res']
+                      ['score'].ravel()[norm_id]
+                      / self.simu_res[sname].air.integrated['integrated_res']
+                      ['score'].ravel()[norm_id]))
+            err_integ = (integ * self.simu_res[sname].sphere.integrated
+                         ['integrated_res']['sigma'].ravel()[norm_id] / 100)
+            ofile.write("INTEGRAL {0} {1}".format(integ, err_integ))
 
     def compare_plots(self, charac, responses, mcnp=None, ratios=None,
                       save_file=None, print_file=None):
@@ -694,7 +705,7 @@ class Comparison():
                        [bins_exp[0]:bins_exp[2]+1] * Comparison.NORM_FACTOR))
         tot = (np.sum(self.exp_res.res[charac]['res']['cntPtimePsource']
                       * Comparison.NORM_FACTOR))
-        error = np.sum(self.exp_res.res[charac]['res']['error']) * Comparison.NORM_FACTOR
+        error = np.sqrt(np.sum(np.square(self.exp_res.res[charac]['res']['error']))) * Comparison.NORM_FACTOR
                # (np.sum(self.exp_res.res[charac]['res']['cntPtimePsource']
                #       * Comparison.NORM_FACTOR)
         print("16 - 12 MeV:", hnrg)
@@ -746,8 +757,10 @@ class Comparison():
                   * Comparison.NORM_FACTOR)
             integ16t2 =  (np.sum(t4histo.vals[bins_simu[0]:bins_simu2[2]+1])
                           * Comparison.NORM_FACTOR)
-            err16t2 = (np.sum(t4histo.sigma[bins_simu[0]:bins_simu2[2]+1])
-                       * Comparison.NORM_FACTOR)
+            # err16t2 = (np.sum(t4histo.sigma[bins_simu[0]:bins_simu2[2]+1])
+            #            * Comparison.NORM_FACTOR)
+            err16t2 = (np.sqrt(np.sum(np.square(
+                t4histo.sigma[bins_simu[0]:bins_simu2[2]+1]))))* Comparison.NORM_FACTOR
                        # / simres.air.integrated['integrated_res']['score'].ravel()[0])
             # print((t4histo.vals[bins_simu[0]:bins_simu2[2]+1]
             #        * t4histo.sigma[bins_simu[0]:bins_simu2[2]+1]).shape)
@@ -760,18 +773,29 @@ class Comparison():
             print(simres.sphere.integrated['integrated_res'],
                   simres.sphere.integrated['integrated_res'].dtype,
                   simres.sphere.integrated)
+            norm_id = (1 if simres.sphere.integrated['integrated_res']['score']
+                       .ravel().shape[0] > 1
+                       else 0)
             integ = ((simres.sphere.integrated['integrated_res']['score']
-                      / simres.air.integrated['integrated_res']['score'])
-                     .ravel()[0])
+                      .ravel()[norm_id]
+                      / simres.air.integrated['integrated_res']['score']
+                      .ravel()[norm_id]))
             print("Total =", integ, "+/-",
-                  integ / 100
-                  / simres.sphere.integrated['integrated_res']['sigma'].ravel()[0])
+                  integ
+                  * simres.sphere.integrated['integrated_res']['sigma']
+                  .ravel()[norm_id] / 100)
             sph_integ = (np.sum(simres.sphere.spectrum['spectrum']['score']
                                 .ravel()[:-1])
                          / air_integ)
             print("Total =", sph_integ)
 
-    def compare_photons(self, charac, responses, ratio=None):
+    def print_photons(self, name, bins, vals, sigma):
+        with open("t4_photons_"+name+".dat", 'w') as ofile:
+            for ibin, tbin in enumerate(bins):
+                ofile.write("{0:.2f} {1} {2}\n"
+                            .format(tbin, vals[ibin], sigma[ibin]))
+
+    def compare_photons(self, charac, responses, ratio=None, print_file=None):
         '''Response as {"name_sphere": ["name_response", is_air=False]'''
         fig, splt = (plt.subplots(2, sharex=True, figsize=(15, 8),
                                  gridspec_kw={'height_ratios': [4, 1],
@@ -787,8 +811,9 @@ class Comparison():
         else:
             main_splt.set_xlabel("Photon energy [MeV]")
         main_splt.set_ylabel("Photon flux [photon/s]")
+        main_splt.set_yscale('log', nonposy='clip')
         rebins, rspectrum = None, None
-        for  ires, (sname, simres) in enumerate(self.simu_res.items()):
+        for sname, simres in self.simu_res.items():
             if sname not in responses:
                 continue
             # t4histo = Histo(simres.
@@ -829,5 +854,8 @@ class Comparison():
                         print(rebins)
                         rspectrum /= spectrum
                         splt[1].plot(mebins, rspectrum)
+                if print_file and sname in print_file:
+                    self.print_photons(print_file[sname],
+                                       mebins, spectrum, errors)
         main_splt.legend()
         plt.show()
