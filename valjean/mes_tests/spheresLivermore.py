@@ -558,38 +558,31 @@ class Comparison():
         :param CompPlot cplot: current figure and subplots
         :returns: (nothing, updated plot)
         '''
-        cols = ['b', 'g', 'm', 'darkviolet', 'orchid', 'darkmagenta',
-                'dodgerblue', 'b', 'g', 'm', 'b', 'g', 'm', 'b', 'g', 'm',
-                'b', 'g', 'm', 'b', 'g', 'm','b', 'g', 'm', 'b', 'g', 'm']
         LOGGER.info("Number of responses required: %d", len(responses))
         LOGGER.debug("[32mResponses: %s[0m", responses)
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
             LOGGER.info("[94mName of the sample %d: %s[0m", ires, sname)
             if sname not in responses:
                 continue
-            norm_simu = simres.normalized_sphere(responses[sname])
-            # remove first bin edge as 1 edge more than bins (normal)
-            mtbins = norm_simu.tbins[1:] - 1
-            t4vals = norm_simu.vals/Comparison.NORM_FACTOR
-            t4sigma = norm_simu.sigma/Comparison.NORM_FACTOR
-            histo_simu = simres.norm_sphere(responses[sname],
+            histo_t4 = simres.norm_sphere(responses[sname],
                                             Comparison.NORM_FACTOR)
-            print(np.array_equal(mtbins, histo_simu.tbins))
-            print(np.array_equal(t4vals, histo_simu.vals))
-            LOGGER.debug("[1;31mT4%s first t bin: %f[0m", sname, mtbins[0])
+            LOGGER.debug("[1;31mT4%s first t bin: %f[0m",
+                         sname, histo_t4.tbins[0])
             resp_args = (responses[sname][2:][0] if len(responses[sname]) > 2
                          else {})
             resp_args.setdefault('fmt', '-')
             resp_args.setdefault('label', sname)
             resp_args.setdefault('slab', sname)
             print(resp_args)
-            resp_args.setdefault('c', resp_args.pop('color', cols[ires]))
-            resp_args.setdefault('ecolor', resp_args.get('c', cols[ires]))
+            resp_args.setdefault('c', resp_args.pop('color', 'b'))
+            resp_args.setdefault('ecolor', resp_args.get('c', 'b'))
             LOGGER.debug("T4 plot args:%s", resp_args)
-            cplot.add_errorbar_plot(mtbins, t4vals, t4sigma, **resp_args)
+            cplot.add_errorbar_plot(histo_t4.tbins, histo_t4.vals,
+                                    histo_t4.sigma, **resp_args)
             if print_file and sname in print_file:
                 self.print_distrib(print_file[sname], sname,
-                                   mtbins, t4vals, t4sigma)
+                                   histo_t4.tbins, histo_t4.vals,
+                                   histo_t4.sigma)
 
     def plot_mcnp(self, mcnp, cplot):
         '''Plot MCNP results.
