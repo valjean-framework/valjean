@@ -165,10 +165,14 @@ class SpherePlot():
                      norm_spec_sig.ravel()[1:-1])
 
     def norm_sphere(self, responses, norm_factor=1):
-        if self.normed_histo:
-            print("normed shpere already exists")
-            return self.normed_histo
+        # if self.normed_histo:
+        #     print("normed shpere already exists")
+        #     print("Normalisation factor = {0:.6e}".format(
+        #           1/self.air.integrated['integrated_res']['score'].ravel()[1]/2))
+        #     return self.normed_histo
         histo = self.normalized_sphere(responses)
+        print("Normalisation factor = {0:.6e}".format(
+            1/self.air.integrated['integrated_res']['score'].ravel()[1]/2))
         # remove first bin edge as 1 edge more than bins (normal)
         self.normed_histo = Histo(histo.tbins[1:] -1,
                                   histo.vals/norm_factor,
@@ -648,8 +652,8 @@ class Comparison():
             LOGGER.debug("Ratio: %s", leg)
             # sanity check
             if len([fl for fl in ratio if fl in cplot.legend['flag']]) != 2:
-                LOGGER.warning("Wrong flag, possibilities are %s:",
-                               cplot.legend['flag'])
+                LOGGER.warning("Wrong flag %s, possibilities are %s:",
+                               str(ratio[:2]), cplot.legend['flag'])
                 continue
             flagn = cplot.legend['flag'].index(ratio[0])
             num = cplot.legend['curves'][flagn].lines[0].get_data()[1]
@@ -778,6 +782,7 @@ class Comparison():
         print("Total:", tot)
         print([self.exp_res.res[charac]['res']['time'][ib] for ib in bins_exp])
         print("test erreurs", error)
+        print("Total = {0:.6f} +/- {1:.6f}".format(tot, error))
         for ires, (sname, simres) in enumerate(self.simu_res.items()):
             if sname not in responses:
                 continue
@@ -841,14 +846,24 @@ class Comparison():
             norm_id = (1 if simres.sphere.integrated['integrated_res']['score']
                        .ravel().shape[0] > 1
                        else 0)
-            integ = ((simres.sphere.integrated['integrated_res']['score']
-                      .ravel()[norm_id]
-                      / simres.air.integrated['integrated_res']['score']
-                      .ravel()[norm_id]))
-            print("Total =", integ, "+/-",
-                  integ
-                  * simres.sphere.integrated['integrated_res']['sigma']
-                  .ravel()[norm_id] / 100)
+            air_int = (simres.air.integrated['integrated_res']['score']
+                       .ravel()[norm_id])
+            sph_int = (simres.sphere.integrated['integrated_res']['score']
+                      .ravel()[norm_id])
+            integ = sph_int / air_int
+            print(simres.sphere.integrated['integrated_res']['score'].ravel())
+            print(simres.air.integrated['integrated_res']['score'].ravel())
+            sph_abserr = (sph_int
+                          * simres.sphere.integrated['integrated_res']['sigma']
+                          .ravel()[norm_id] / 100)
+            err = sph_abserr / air_int
+            print("Total = {0:.6f} +/- {1:.6f}".format(integ, err))
+            air_abserr = (air_int
+                          * simres.air.integrated['integrated_res']['sigma']
+                          .ravel()[norm_id] / 100)
+            errwair = np.sqrt((sph_abserr/air_int)**2
+                              + (sph_int * air_abserr / air_int**2)**2)
+            print("Total = {0:.6f} +/- {1:.6f}".format(integ, errwair))
             sph_integ = (np.sum(simres.sphere.spectrum['spectrum']['score']
                                 .ravel()[:-1])
                          / air_integ)
@@ -912,10 +927,10 @@ class Comparison():
                     print(ebins.shape, spectrum.shape, mebins[:10])
                     main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors,
                                        **resp_args)
-                    if sname in ratio[0]:
+                    if ratio and sname in ratio[0]:
                         rspectrum_n = np.copy(spectrum*ewidth)
                         rebins = np.copy(mebins)
-                    elif sname in ratio[1]:
+                    elif ratio and sname in ratio[1]:
                         rspectrum_d = np.copy(spectrum*ewidth)
                         rebins = np.copy(mebins)
                 else:
