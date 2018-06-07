@@ -405,7 +405,13 @@ class MonacoSphere():
             if self.bins[0] > self.bins[1]:
                 self.bins = np.flip(self.bins, axis=0)
                 self.vals = np.flip(self.vals, axis=0)
-                self.errors = np.flip(self.errors, axis=0)
+                self.errors = np.flip(self.errors, axis=0)  # cannot be one edge
+            if self.bins[1] == self.bins[2]:
+                # print(self.bins[::2], self.bins[1::2],
+                #       (self.bins[1::2]+self.bins[::2])/2)
+                self.bins = (self.bins[1::2]+self.bins[::2])/2
+                self.vals = self.vals[::2]
+                self.errors = self.errors[::2]
 
 class CompPlot():
     '''Comparison plot class'''
@@ -434,7 +440,7 @@ class CompPlot():
         # self.splt[1].set_ylim(ymin=0.5, ymax=1.5)
         self.splt[0].legend(self.legend['curves'], self.legend['labels'],
                             markerscale=2, fontsize=12)
-        self.splt[1].legend(loc='upper right')
+        self.splt[1].legend(loc='lower right')
 
     def add_errorbar_plot(self, bins, vals, errors, label='', slab='',
                           **kwargs):
@@ -581,6 +587,7 @@ class Comparison():
             resp_args.setdefault('c', resp_args.pop('color', 'b'))
             resp_args.setdefault('ecolor', resp_args.get('c', 'b'))
             LOGGER.debug("T4 plot args:%s", resp_args)
+            print("[32merror 1 =", histo_t4.sigma[0], "[0m")
             cplot.add_errorbar_plot(histo_t4.tbins, histo_t4.vals,
                                     histo_t4.sigma, **resp_args)
             if print_file and sname in print_file:
@@ -640,7 +647,7 @@ class Comparison():
                                     self.monaco_res[sname].errors[shift_m:],
                                     **monaco_args)
 
-    def plot_ratios(self, ratios, cplot):
+    def plot_ratios(self, ratios, cplot, err=None):
         '''Plot required ratios.
 
         :param dict(str, list) ratios: list of short labels, then optional dict
@@ -685,9 +692,35 @@ class Comparison():
                                "num = %f, denom = %f",
                                leg, binsn[cutnf:][0], binsd[cutd:][0])
             ratio_args = ratio[2] if len(ratio) > 2 else {}
+            error = 0
+            if err is not None:
+                num_segments = (cplot.legend['curves'][flagn].lines[2][0]
+                                .get_segments())
+                num_err = num - np.array([x[:,1][1] for x in num_segments])
+                denom_err = (
+                    self.exp_res.res[cplot.charac]['res']['error']
+                    if 'exp' in ratio
+                    else (denom - np.array([
+                            x[:,1][1]
+                            for x in (
+                                    cplot.legend['curves'][flagd]
+                                    .lines[2][0].get_segments())])))
+                if err == "indep":
+                    # print(num_err)
+                    # print(ratio)
+                    # print(num_err[cutnf:cutnl].shape, denom[cutd:].shape)
+                    error = np.sqrt((num_err[cutnf:cutnl]/denom[cutd:])**2
+                                    + (num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]**2)**2)
+                    # for ie, ierr in enumerate(error):
+                    #     print("Dn = {0:.4e}, Dd = {1:.4e} -> D = {2:.4e}"
+                              # .format(num_err[ie], denom_err[ie], ierr))
+                else:
+                    error = (1/denom[cutd:] *
+                             (num_err[cutnf:cutnl]
+                              + num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]))
             cplot.add_errorbar_ratio(binsn[cutnf:cutnl],
                                      num[cutnf:cutnl]/denom[cutd:],
-                                     0, label=leg, **ratio_args)
+                                     error, label=leg, **ratio_args)
 
     def print_distrib(self, name, sname, tbins, vals, sigma):
         with open("t4_"+name+".dat", 'w') as ofile:
@@ -743,7 +776,7 @@ class Comparison():
             self.plot_monaco(monaco, complot,
                              self.exp_res.res[charac]['res']['time'])
         if ratios:
-            self.plot_ratios(ratios, complot)
+            self.plot_ratios(ratios, complot, err="indep")
         complot.customize_plot()
         if save_file:
             plt.savefig(save_file)
@@ -893,7 +926,7 @@ class Comparison():
             main_splt.set_xlabel("Photon energy [MeV]")
         main_splt.set_ylabel("Photon flux [photon/s]")
         main_splt.set_yscale('log', nonposy='clip')
-        rebins, rspectrum_n, rspectrum_d = None, None, None
+        rebins, rspectrum = None, {}
         for sname, simres in self.simu_res.items():
             if sname not in responses:
                 continue
@@ -925,14 +958,17 @@ class Comparison():
                     resp_args.setdefault('fmt', '-')
                     resp_args.setdefault('label', sname)
                     print(ebins.shape, spectrum.shape, mebins[:10])
-                    main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors,
+                    main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors*ewidth,
                                        **resp_args)
-                    if ratio and sname in ratio[0]:
-                        rspectrum_n = np.copy(spectrum*ewidth)
-                        rebins = np.copy(mebins)
-                    elif ratio and sname in ratio[1]:
-                        rspectrum_d = np.copy(spectrum*ewidth)
-                        rebins = np.copy(mebins)
+                    if ratio:
+                        print([x for x in ratio if sname in x])
+                    # if ratio and sname in ratio[0]:
+                    if ratio and [x for x in ratio if sname in x]:
+                        rspectrum[sname] = np.copy(spectrum[1:]*ewidth)
+                        rebins = np.copy(mebins[1:])
+                    # elif ratio and sname in ratio[1]:
+                    #     rspectrum_d = np.copy(spectrum[1:]*ewidth)
+                    #     rebins = np.copy(mebins[1:])
                 else:
                     print("2 allowed keys: air and sphere")
                 # if ratio:
@@ -953,18 +989,30 @@ class Comparison():
                     continue
                 monaco_args.setdefault('c', 'g')
                 monaco_args.setdefault('label', 'MONACO')
+                ewidth = monaco_args.pop('ewidth', 1)
                 print(self.monaco_res[melt].bins.shape,
                       self.monaco_res[melt].bins[:10])
                 main_splt.errorbar(self.monaco_res[melt].bins,
-                                   self.monaco_res[melt].vals,
-                                   self.monaco_res[melt].errors,
+                                   self.monaco_res[melt].vals*ewidth,
+                                   self.monaco_res[melt].errors*ewidth,
                                    **monaco_args)
-                if melt in ratio[0]:
-                    rspectrum_n = self.monaco_res[melt].vals[::2]
-                elif melt in ratio[1]:
-                    rspectrum_d = self.monaco_res[melt].vals[::2]
+                # if ratio and melt in ratio[0]:
+                #     rspectrum_n = self.monaco_res[melt].vals*ewidth
+                #     print(self.monaco_res[melt].vals[:10]*ewidth)
+                #     print(self.monaco_res[melt].bins[:10])
+                # elif ratio and melt in ratio[1]:
+                #     rspectrum_d = self.monaco_res[melt].vals*ewidth
+                if ratio and [x for x in ratio if melt in x]:
+                    rspectrum[melt] = self.monaco_res[melt].vals*ewidth
         if ratio:
-            splt[1].plot(rebins[:-1], rspectrum_n/rspectrum_d[:-1])
-            print((rspectrum_n/rspectrum_d[:-1])[:10])
+            for rat in ratio:
+                # print(rspectrum_n[:10])
+                # print(rspectrum_n.shape, rspectrum_d.shape)
+                # print(rebins[:10])
+                # print(rspectrum_d[:10])
+                # splt[1].plot(rebins, rspectrum_n/rspectrum_d)
+                # print((rspectrum_n/rspectrum_d)[:10])
+                print(list(rspectrum.keys()))
+                splt[1].plot(rebins, rspectrum[rat[0]]/rspectrum[rat[1]])
         main_splt.legend()
         plt.show()
