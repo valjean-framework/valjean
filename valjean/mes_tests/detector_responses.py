@@ -7,6 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
+plt.rcParams['font.size'] = 15
+
 def read_file(tfile):
     '''Read the file and return energy bin and associated response.'''
     ebins, response = [], []
@@ -423,6 +425,30 @@ splt[1].set_ylabel("Ratio")
 splt[1].set_xlabel("Time [ns]")
 splt[1].legend()
 plt.savefig("PILOT-B_responses_vs_time.png")
+
+
+
+fig, splt = plt.subplots(1)
+splt.plot(time_from_new_pilotb_30deg, pilotb_ucid16372_resp,
+          'o-', ms=2, color='C0', label="PILOT-B")
+splt.plot(time_from_new_ne213_30deg, ne213_ucid16372_resp,
+          'o-', ms=2, color='C1', label="NE213")
+splt.set_ylabel(r"Response (A$\epsilon$) [%]")
+splt.set_title("Detector responses")  # from UCID-16372
+splt.set_xlabel("Time [ns]")
+splt.legend()
+plt.savefig("detector_responses_vs_time.png")
+
+fig, splt = plt.subplots(1)
+splt.plot(pilotb_ucid16372_eb, pilotb_ucid16372_resp,
+          'o-', ms=2, color='C0', label="PILOT-B")
+splt.plot(ne213_ucid16372_eb, ne213_ucid16372_resp,
+          'o-', ms=2, color='C1', label="NE213")
+splt.set_ylabel(r"Response (A$\epsilon$) [%]")
+splt.set_title("Detector responses")  # from UCID-16372
+splt.set_xlabel("Energy [MeV]")
+splt.legend()
+plt.savefig("detector_responses_vs_energy.png")
 
 # num_ne213_interp = np.interp(new_ne213_eb, num_ne213_eb1, num_ne213_resp1)
 # ofile2 = open("ne213_digitized_response.txt", 'w')
