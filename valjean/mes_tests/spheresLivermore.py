@@ -15,6 +15,9 @@ import scipy.constants as sci_consts
 Histo = namedtuple('Histo', ['tbins', 'vals', 'sigma'])
 Integral = namedtuple('Integral', ['value', 'sigma'])
 
+plt.rcParams['font.size'] = 15
+# plt.rcParams['font.family'] = 'serif'
+
 LOGGER = logging.getLogger('valjean')
 
 # Calculation energy from time
@@ -432,15 +435,15 @@ class CompPlot():
                                .format(elt=self.charac[0].capitalize(),
                                        mfp=self.charac[1],
                                        deg=self.charac[2]))
-        self.splt[0].set_ylabel("neutron count rate [1/(ns.source)]")
+        self.splt[0].set_ylabel("neutron count rate [neutron/(ns.source)]")
         self.splt[0].set_ylim(ymin=2e-4)
         self.splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
         self.splt[1].set_xlabel("time bins [ns]")
         self.splt[1].set_ylabel("Ratios")
         # self.splt[1].set_ylim(ymin=0.5, ymax=1.5)
         self.splt[0].legend(self.legend['curves'], self.legend['labels'],
-                            markerscale=2, fontsize=12)
-        self.splt[1].legend(loc='lower right')
+                            markerscale=2)  #, fontsize=12
+        # self.splt[1].legend(loc='lower right')
 
     def add_errorbar_plot(self, bins, vals, errors, label='', slab='',
                           **kwargs):
@@ -544,19 +547,25 @@ class Comparison():
         :param CompPlot cplot: current figure and subplots
         :returns: (nothing, updated plot)
         '''
-        exp2sig = cplot.splt[0].errorbar(
-            self.exp_res.res[charac]['res']['time'],
-            self.exp_res.res[charac]['res']['cntPtimePsource'],
-            yerr=self.exp_res.res[charac]['res']['error']*2,
-            fmt='s', ms=3, ecolor='orange', c='orange')
+        # exp2sig = cplot.splt[0].errorbar(
+        #     self.exp_res.res[charac]['res']['time'],
+        #     self.exp_res.res[charac]['res']['cntPtimePsource'],
+        #     yerr=self.exp_res.res[charac]['res']['error']*2,
+        #     fmt='s', ms=3, ecolor='orange', c='orange')
+        # exp1sig = cplot.splt[0].errorbar(
+        #     self.exp_res.res[charac]['res']['time'],
+        #     self.exp_res.res[charac]['res']['cntPtimePsource'],
+        #     yerr=self.exp_res.res[charac]['res']['error'],
+        #     fmt='rs', ms=1, ecolor='r')
         exp1sig = cplot.splt[0].errorbar(
             self.exp_res.res[charac]['res']['time'],
             self.exp_res.res[charac]['res']['cntPtimePsource'],
             yerr=self.exp_res.res[charac]['res']['error'],
-            fmt='rs', ms=1, ecolor='r')
+            fmt='o', c='black', ms=2, ecolor='black')
         LOGGER.debug("[1;31mExp. first t bin: %d[0m",
                      self.exp_res.res[charac]['res']['time'][0])
-        cplot.legend['curves'].append((exp2sig, exp1sig))
+        # cplot.legend['curves'].append((exp2sig, exp1sig))
+        cplot.legend['curves'].append(exp1sig)
         cplot.legend['labels'].append("Experiment")
         cplot.legend['flag'].append("exp")
         cplot.nbins['exp'] = self.exp_res.res[charac]['res']['time'].shape[0]
@@ -706,21 +715,26 @@ class Comparison():
                                     cplot.legend['curves'][flagd]
                                     .lines[2][0].get_segments())])))
                 if err == "indep":
-                    # print(num_err)
-                    # print(ratio)
-                    # print(num_err[cutnf:cutnl].shape, denom[cutd:].shape)
                     error = np.sqrt((num_err[cutnf:cutnl]/denom[cutd:])**2
                                     + (num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]**2)**2)
-                    # for ie, ierr in enumerate(error):
-                    #     print("Dn = {0:.4e}, Dd = {1:.4e} -> D = {2:.4e}"
-                              # .format(num_err[ie], denom_err[ie], ierr))
                 else:
-                    error = (1/denom[cutd:] *
-                             (num_err[cutnf:cutnl]
-                              + num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]))
+                    error = 0
+                    # error = (1/denom[cutd:] *
+                    #          (num_err[cutnf:cutnl]
+                    #           + num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]))
             cplot.add_errorbar_ratio(binsn[cutnf:cutnl],
                                      num[cutnf:cutnl]/denom[cutd:],
                                      error, label=leg, **ratio_args)
+        if err == "data":
+            nbbins = binsn[cutnf:cutnl].shape[0]
+            data_args = {'facecolor': 'lightgrey', 'step': 'mid'}
+            cplot.splt[1].fill_between(binsn[cutnf:cutnl],
+                                       np.ones(nbbins) - denom_err/denom[cutd:],
+                                       np.ones(nbbins) + denom_err/denom[cutd:],
+                                       **data_args)
+            # print(np.ones(nbbins) - denom_err/denom[cutd:])
+            # print(np.ones(nbbins) + denom_err/denom[cutd:])
+            print("cplot should be updated")
 
     def print_distrib(self, name, sname, tbins, vals, sigma):
         with open("t4_"+name+".dat", 'w') as ofile:
@@ -776,7 +790,7 @@ class Comparison():
             self.plot_monaco(monaco, complot,
                              self.exp_res.res[charac]['res']['time'])
         if ratios:
-            self.plot_ratios(ratios, complot, err="indep")
+            self.plot_ratios(ratios, complot, err="data")  #, err="indep"
         complot.customize_plot()
         if save_file:
             plt.savefig(save_file)
@@ -911,6 +925,8 @@ class Comparison():
     def compare_photons(self, charac, responses, monaco=None, ratio=None,
                         print_file=None):
         '''Response as {"name_sphere": ["name_response", is_air=False]'''
+        # plt.rcParams['font.family'] = 'sans-serif'
+        # plt.rcParams['font.serif'] = ['DejaVu']
         fig, splt = (plt.subplots(2, sharex=True, figsize=(15, 8),
                                  gridspec_kw={'height_ratios': [4, 1],
                                               'hspace': 0.05})
@@ -924,7 +940,7 @@ class Comparison():
             splt[1].set_ylabel("Ratio")
         else:
             main_splt.set_xlabel("Photon energy [MeV]")
-        main_splt.set_ylabel("Photon flux [photon/s]")
+        main_splt.set_ylabel(r"Photon flux [photon/(MeV.cm$^2$.source)]")
         main_splt.set_yscale('log', nonposy='clip')
         rebins, rspectrum = None, {}
         for sname, simres in self.simu_res.items():
@@ -958,28 +974,14 @@ class Comparison():
                     resp_args.setdefault('fmt', '-')
                     resp_args.setdefault('label', sname)
                     print(ebins.shape, spectrum.shape, mebins[:10])
-                    main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors*ewidth,
+                    main_splt.errorbar(mebins, spectrum*ewidth,
+                                       yerr=errors*ewidth,
                                        **resp_args)
-                    if ratio:
-                        print([x for x in ratio if sname in x])
-                    # if ratio and sname in ratio[0]:
                     if ratio and [x for x in ratio if sname in x]:
                         rspectrum[sname] = np.copy(spectrum[1:]*ewidth)
                         rebins = np.copy(mebins[1:])
-                    # elif ratio and sname in ratio[1]:
-                    #     rspectrum_d = np.copy(spectrum[1:]*ewidth)
-                    #     rebins = np.copy(mebins[1:])
                 else:
                     print("2 allowed keys: air and sphere")
-                # if ratio:
-                #     if rebins is None:
-                #         print('should be filled')
-                #         rebins = np.copy(mebins)
-                #         rspectrum = np.copy(spectrum)
-                #     else:
-                #         print(rebins)
-                #         rspectrum /= spectrum
-                #         splt[1].plot(mebins, rspectrum)
                 if print_file and sname in print_file:
                     self.print_photons(print_file[sname],
                                        mebins, spectrum, errors)
@@ -996,23 +998,16 @@ class Comparison():
                                    self.monaco_res[melt].vals*ewidth,
                                    self.monaco_res[melt].errors*ewidth,
                                    **monaco_args)
-                # if ratio and melt in ratio[0]:
-                #     rspectrum_n = self.monaco_res[melt].vals*ewidth
-                #     print(self.monaco_res[melt].vals[:10]*ewidth)
-                #     print(self.monaco_res[melt].bins[:10])
-                # elif ratio and melt in ratio[1]:
-                #     rspectrum_d = self.monaco_res[melt].vals*ewidth
                 if ratio and [x for x in ratio if melt in x]:
                     rspectrum[melt] = self.monaco_res[melt].vals*ewidth
         if ratio:
             for rat in ratio:
-                # print(rspectrum_n[:10])
-                # print(rspectrum_n.shape, rspectrum_d.shape)
-                # print(rebins[:10])
-                # print(rspectrum_d[:10])
-                # splt[1].plot(rebins, rspectrum_n/rspectrum_d)
-                # print((rspectrum_n/rspectrum_d)[:10])
+                ratio_args = rat[2] if len(rat) > 2 else {}
+                print(ratio_args)
                 print(list(rspectrum.keys()))
-                splt[1].plot(rebins, rspectrum[rat[0]]/rspectrum[rat[1]])
+                splt[1].plot(rebins, rspectrum[rat[0]]/rspectrum[rat[1]],
+                             **ratio_args)
+                splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
+                splt[1].legend()
         main_splt.legend()
         plt.show()
