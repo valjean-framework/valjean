@@ -10,3 +10,8 @@ gavroche — ???
 
 .. automodule:: valjean.gavroche
    :undoc-members:
+
+.. toctree::
+   :caption: Submodules
+
+   gavroche/harvest

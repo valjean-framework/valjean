@@ -70,3 +70,9 @@ Tests for the :mod:`~.using` module
 ```````````````````````````````````
 
 .. automodule:: tests.eponine.test_using
+
+
+Tests for the :mod:`~.harvest` module
+`````````````````````````````````````
+
+.. automodule:: tests.gavroche.test_harvest
