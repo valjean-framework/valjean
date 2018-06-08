@@ -15,8 +15,14 @@ import scipy.constants as sci_consts
 Histo = namedtuple('Histo', ['tbins', 'vals', 'sigma'])
 Integral = namedtuple('Integral', ['value', 'sigma'])
 
-plt.rcParams['font.size'] = 15
+plt.rcParams['font.size'] = 20
 # plt.rcParams['font.family'] = 'serif'
+# font = {
+#     'family' : 'serif',
+#     'serif'  : 'Times',
+#     'size'   : 20
+# }
+# plt.rc('font', **font)
 
 LOGGER = logging.getLogger('valjean')
 
@@ -579,10 +585,11 @@ class Comparison():
         '''
         LOGGER.info("Number of responses required: %d", len(responses))
         LOGGER.debug("[32mResponses: %s[0m", responses)
-        for ires, (sname, simres) in enumerate(self.simu_res.items()):
-            LOGGER.info("[94mName of the sample %d: %s[0m", ires, sname)
-            if sname not in responses:
+        for sname in responses:
+            if sname not in self.simu_res:
                 continue
+            simres = self.simu_res[sname]
+            LOGGER.info("[94mName of the sample: %s[0m", sname)
             histo_t4 = simres.norm_sphere(responses[sname],
                                             Comparison.NORM_FACTOR)
             LOGGER.debug("[1;31mT4%s first t bin: %f[0m",
