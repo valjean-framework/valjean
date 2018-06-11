@@ -439,7 +439,7 @@ splt.set_xlabel("Time [ns]")
 splt.legend()
 plt.savefig("detector_responses_vs_time.png")
 
-fig, splt = plt.subplots(1)
+fig, splt = plt.subplots(1, figsize=(8, 6.2))
 splt.plot(pilotb_ucid16372_eb, pilotb_ucid16372_resp,
           'o-', ms=2, color='C0', label="PILOT-B")
 splt.plot(ne213_ucid16372_eb, ne213_ucid16372_resp,
