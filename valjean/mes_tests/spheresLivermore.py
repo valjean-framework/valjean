@@ -441,12 +441,26 @@ class CompPlot():
                                .format(elt=self.charac[0].capitalize(),
                                        mfp=self.charac[1],
                                        deg=self.charac[2]))
-        self.splt[0].set_ylabel("neutron count rate [neutron/(ns.source)]")
+        # self.splt[0].set_ylabel("Neutron count rate [1/(ns.source)]", labelpad=40)
+        self.splt[0].set_ylabel("Neutron count rate [1/(ns.source)]")
         self.splt[0].set_ylim(ymin=2e-4)
+        self.splt[1].set_ylim(ymin=0.4, ymax=2.5)
+        self.splt[1].set_yscale("log", nonposy='clip')
+        # self.splt[1].set_yticks([], minor=True)
+        self.splt[1].set_yticklabels([], minor=True)
+        self.splt[1].set_yticks([0.4, 1, 2])
+        # self.splt[1].set_yticks([0.4, 1, 2], minor=True)
+        self.splt[1].set_yticklabels(["0.4", "1", "2"])
         self.splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
-        self.splt[1].set_xlabel("time bins [ns]")
-        self.splt[1].set_ylabel("Ratios")
-        # self.splt[1].set_ylim(ymin=0.5, ymax=1.5)
+        # self.splt[1].yaxis.set_major_locator(plt.NullLocator())
+        # self.splt[1].set_yticks([0.4, 1, 2])
+        # self.splt[1].set_yticklabels(["0.4", "1", "2"])
+        # self.splt[1].yaxis.set_major_locator(plt.MaxNLocator(nbins=1))
+        # self.splt[1].yaxis.set_major_locator(plt.MaxNLocator(1))
+        self.splt[1].set_xlabel("Time [ns]")
+        self.splt[1].set_ylabel("C/E")
+        # self.splt[1].locator_params(axis='y', nbins=2)
+        # print("labels %s", str([x for x in self.splt[1].get_yminorticklabels()]))
         self.splt[0].legend(self.legend['curves'], self.legend['labels'],
                             markerscale=2)  #, fontsize=12
         # self.splt[1].legend(loc='lower right')
@@ -585,8 +599,11 @@ class Comparison():
         '''
         LOGGER.info("Number of responses required: %d", len(responses))
         LOGGER.debug("[32mResponses: %s[0m", responses)
+        print(list(responses.keys()))
         for sname in responses:
+            print("Sample:", sname)
             if sname not in self.simu_res:
+                LOGGER.warning("[94mSample %s no available[0m", sname)
                 continue
             simres = self.simu_res[sname]
             LOGGER.info("[94mName of the sample: %s[0m", sname)
@@ -801,6 +818,7 @@ class Comparison():
         complot.customize_plot()
         if save_file:
             plt.savefig(save_file)
+            plt.close()
         else:
             plt.show()
 
@@ -930,7 +948,7 @@ class Comparison():
                             .format(tbin, vals[ibin], sigma[ibin]))
 
     def compare_photons(self, charac, responses, monaco=None, ratio=None,
-                        print_file=None):
+                        print_file=None, save_file=None):
         '''Response as {"name_sphere": ["name_response", is_air=False]'''
         # plt.rcParams['font.family'] = 'sans-serif'
         # plt.rcParams['font.serif'] = ['DejaVu']
@@ -947,13 +965,14 @@ class Comparison():
             splt[1].set_ylabel("Ratio")
         else:
             main_splt.set_xlabel("Photon energy [MeV]")
-        main_splt.set_ylabel(r"Photon flux [photon/(MeV.cm$^2$.source)]")
+        main_splt.set_ylabel(r"Photon flux [1/(MeV.cm$^2$.source)]")
         main_splt.set_yscale('log', nonposy='clip')
         rebins, rspectrum = None, {}
-        for sname, simres in self.simu_res.items():
-            if sname not in responses:
+        for sname in responses:
+            if sname not in self.simu_res:
+                LOGGER.warning("[94mSample %s no available[0m", sname)
                 continue
-            # t4histo = Histo(simres.
+            simres = self.simu_res[sname]
             print(responses[sname][0])
             for elt, resp_args in responses[sname][1].items():
                 ewidth = resp_args.pop('ewidth', 1)
@@ -1015,6 +1034,15 @@ class Comparison():
                 splt[1].plot(rebins, rspectrum[rat[0]]/rspectrum[rat[1]],
                              **ratio_args)
                 splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
-                splt[1].legend()
+                splt[1].set_ylim(ymin=0.4, ymax=2.5)
+                splt[1].set_yscale("log", nonposy='clip')
+                splt[1].set_yticklabels([], minor=True)
+                splt[1].set_yticks([0.4, 1, 2])
+                splt[1].set_yticklabels(["0.4", "1", "2"])
+                # splt[1].legend()
         main_splt.legend()
-        plt.show()
+        if save_file:
+            plt.savefig(save_file)
+            plt.close()
+        else:
+            plt.show()
