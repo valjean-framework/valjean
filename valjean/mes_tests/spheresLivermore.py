@@ -267,7 +267,14 @@ class LivermoreExps():
                     continue
                 else:
                     elts = line.split()
-                    results.append(tuple(map(ast.literal_eval, elts)))
+                    # print(elts[0], 'type:', type(elts[0]))
+                    # print(np.fromstring('137 345', sep=' '))
+                    # print(np.fromstring(elts[0], dtype=int, count=-1))
+                    # results.append(tuple(map(lambda e: np.fromstring(e, sep=''),
+                    #                          elts)))
+                    results.append(tuple(np.fromstring(line, sep=' ')))
+                    # results.append(tuple(map(ast.literal_eval, elts)))
+        print(self.res)
 
     def save_res(self, charac, results):
         '''Fill the internal dictionary for experimental results.
@@ -340,6 +347,7 @@ class MCNPSphere():
                     vals_block = True
                 elif line.startswith('tfc'):
                     vals_block = False
+                    break
                 elif tbins_block:
                     tbins += line.split()
                 elif vals_block:
@@ -403,8 +411,22 @@ class MonacoSphere():
                 if not line.split():
                     break
                 else:
-                    vals.append(float(line.split()[1]))
-                    err.append(float(line.split()[2]))
+                    # CAUTION: patch for 2 bins
+                    # if ((line.split()[0] == "T65" or line.split()[0] == "T66")
+                    #     and 'conc' in self.fname):
+                    #     vals.append(float(line.split()[1])*2/3)
+                    #     err.append(float(line.split()[2])*2/3)
+                    if 'conc' in self.fname and line.split()[0] == "T65":
+                        vals.append(float(line.split()[1])*2/3)
+                        err.append(float(line.split()[2])*2/3)
+                        vals.append(np.nan)
+                        err.append(np.nan)
+                    elif 'conc' in self.fname and line.split()[0] == "T66":
+                        vals.append(float(line.split()[1])*2/3)
+                        err.append(float(line.split()[2])*2/3)
+                    else:
+                        vals.append(float(line.split()[1]))
+                        err.append(float(line.split()[2]))
                     if 'photons' in self.charac:
                         bins.append(float(line.split()[0]))
         self.vals = np.array(vals)
@@ -437,10 +459,10 @@ class CompPlot():
         '''Customize plot: axis labels, title, scale and legend.
         '''
         self.splt[0].set_yscale("log", nonposy='clip')
-        self.splt[0].set_title("{elt}, {mfp} mfp, detector at {deg}°"
-                               .format(elt=self.charac[0].capitalize(),
-                                       mfp=self.charac[1],
-                                       deg=self.charac[2]))
+        # self.splt[0].set_title("{elt}, {mfp} mfp, detector at {deg}°"
+        #                        .format(elt=self.charac[0].capitalize(),
+        #                                mfp=self.charac[1],
+        #                                deg=self.charac[2]))
         # self.splt[0].set_ylabel("Neutron count rate [1/(ns.source)]", labelpad=40)
         self.splt[0].set_ylabel("Neutron count rate [1/(ns.source)]")
         self.splt[0].set_ylim(ymin=2e-4)
@@ -510,7 +532,7 @@ class Comparison():
     TIME_SHIFT = 0
 
     def __init__(self):
-        self.exp_res = LivermoreExps()
+        self.exp_res = LivermoreExps("s10a11.res.mesure")
         self.simu_res = {}
         self.mcnp_res = {}
         self.monaco_res = {}
@@ -577,6 +599,9 @@ class Comparison():
         #     self.exp_res.res[charac]['res']['cntPtimePsource'],
         #     yerr=self.exp_res.res[charac]['res']['error'],
         #     fmt='rs', ms=1, ecolor='r')
+        print(self.exp_res.res[charac]['res']['cntPtimePsource'])
+        print(self.exp_res.res[charac]['res']['error'])
+        print(self.exp_res.res[charac]['res']['cntPtimePsource'].dtype)
         exp1sig = cplot.splt[0].errorbar(
             self.exp_res.res[charac]['res']['time'],
             self.exp_res.res[charac]['res']['cntPtimePsource'],
@@ -663,6 +688,7 @@ class Comparison():
             print("Data t bins shape:", tbins.shape,
                   "and for MONACO:", self.monaco_res[sname].vals.shape)
             mon_res = self.monaco_res[sname]
+            print(tbins)
             shift_t, shift_m = 0, 0
             if tbins.shape != mon_res.vals.shape:
                 LOGGER.warning('Not correct number of bins in MONACO')
@@ -746,6 +772,13 @@ class Comparison():
                     # error = (1/denom[cutd:] *
                     #          (num_err[cutnf:cutnl]
                     #           + num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]))
+            print(leg)
+            for ibin, tbin in enumerate(binsn[cutnf:cutnl]):
+                if tbin > 300 and tbin < 320:
+                    print("time:", tbin,
+                          "val:", (num[cutnf:cutnl]/denom[cutd:])[ibin],
+                          "from:", num[cutnf:cutnl][ibin],
+                          "and", denom[cutd:][ibin])
             cplot.add_errorbar_ratio(binsn[cutnf:cutnl],
                                      num[cutnf:cutnl]/denom[cutd:],
                                      error, label=leg, **ratio_args)
