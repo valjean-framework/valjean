@@ -10,7 +10,8 @@ T4ENDF = join(FOLDER, "PARA/endfb7r1")
 T4resp30deg = 'neutron_response_30deg'
 T4resp30degInt = 'neutron_response_integral_30deg'
 
-odir = 'final_plots_v4'
+# odir = 'final_plots_v6'
+odir = 'essai'
 
 comp = Comparison()
 
@@ -115,6 +116,7 @@ theta_Conc = 4 + theta2_Conc*180/np.pi
 A_Conc = 2*np.pi*(1+np.cos(theta_Conc*np.pi/180))*21.0**2
 Norm_Conc = normalisation(A_Conc)
 
+extensions = [".svg"]  #, ".pdf", ".svg"]
 spheresDict = {
     'N_30': {
         'exp': ('NITROGEN', '3.1', '30'),
@@ -124,8 +126,8 @@ spheresDict = {
         'resp_angle': '30deg',
         'monaco_neutrons': 'N_monaco_30',
         'monaco_photons': 'N_monaco_photons',
-        'file_neutrons': join(odir, 'N_3.1_30deg.png'),
-        'file_photons': join(odir, 'N_3.1_photons.png')},
+        'file_neutrons': join(odir, 'N_3.1_30deg'),
+        'file_photons': [join(odir, 'N_3.1_photons.png')]},
     'C_30': {
         'exp': ('CARBON', '2.9', '30'),
         'ceav': 'C_ceav5',
@@ -134,8 +136,8 @@ spheresDict = {
         'resp_angle': '30deg',
         'monaco_neutrons': 'C_monaco_30',
         'monaco_photons': 'C_monaco_photons',
-        'file_neutrons': join(odir, 'C_2.9_30deg.png'),
-        'file_photons': join(odir, 'C_2.9_photons.png')},
+        'file_neutrons': join(odir, 'C_2.9_30deg'),
+        'file_photons': [join(odir, 'C_2.9_photons.png')]},
     'C_120': {
         'exp': ('CARBON', '2.9', '120'),
         'ceav': 'C_ceav5',
@@ -144,8 +146,8 @@ spheresDict = {
         'resp_angle': '120deg',
         'monaco_neutrons': 'C_monaco_120',
         'monaco_photons': 'C_monaco_photons',
-        'file_neutrons': join(odir, 'C_2.9_120deg.png'),
-        'file_photons': join(odir, 'C_2.9_photons.png')},
+        'file_neutrons': join(odir, 'C_2.9_120deg'),
+        'file_photons': [join(odir, 'C_2.9_photons.png')]},
     'Fe_30': {
         'exp': ('IRON', '0.9', '30'),
         'ceav': 'Fe_ceav5',
@@ -154,8 +156,8 @@ spheresDict = {
         'resp_angle': '30deg',
         'monaco_neutrons': 'Fe_monaco_30',
         'monaco_photons': 'Fe_monaco_photons',
-        'file_neutrons': join(odir, 'Fe_0.9_30deg.png'),
-        'file_photons': join(odir, 'Fe_0.9_photons.png')},
+        'file_neutrons': join(odir, 'Fe_0.9_30deg'),
+        'file_photons': [join(odir, 'Fe_0.9_photons.png')]},
     'Fe_120': {
         'exp': ('IRON', '0.9', '120'),
         'ceav': 'Fe_ceav5',
@@ -164,8 +166,8 @@ spheresDict = {
         'resp_angle': '120deg',
         'monaco_neutrons': 'Fe_monaco_120',
         'monaco_photons': 'Fe_monaco_photons',
-        'file_neutrons': join(odir, 'Fe_0.9_120deg.png'),
-        'file_photons': join(odir, 'Fe_0.9_photons.png')},
+        'file_neutrons': join(odir, 'Fe_0.9_120deg'),
+        'file_photons': [join(odir, 'Fe_0.9_photons.png')]},
     'Be_30': {
         'exp': ('BERYLLIUM', '0.8', '30'),
         'ceav': 'Be_ceav5',
@@ -174,9 +176,11 @@ spheresDict = {
         'resp_angle': '30deg',
         'monaco_neutrons': 'Be_monaco_30',
         'monaco_photons': 'Be_monaco_photons',
-        'file_neutrons': join(odir, 'Be_0.8_30deg.png'),
-        'file_photons': join(odir, 'Be_0.8_photons.png')},
-    'Conc_30': {
+        'file_neutrons': join(odir, 'Be_0.8_30deg'),
+        'file_photons': [join(odir, 'Be_0.8_photons.png'),
+                         join(odir, 'Be_0.8_photons.pdf'),
+                         join(odir, 'Be_0.8_photons.svg')]},
+    'Conc_120': {
         'exp': ('CONCRETE', '2.0', '120'),
         'ceav': 'Conc_ceav5',
         'endf': 'Conc_endf',
@@ -184,8 +188,11 @@ spheresDict = {
         'resp_angle': '120deg',
         'monaco_neutrons': 'Conc_monaco_120',
         'monaco_photons': 'Conc_monaco_photons',
-        'file_neutrons': join(odir, 'Conc_2.0_120deg.png'),
-        'file_photons': join(odir, 'Conc_2.0_photons.png')}
+        'file_neutrons': join(odir, 'Conc_2.0_120deg'),
+        # 'file_photons': [join(odir, 'Conc_2.0_photons.png')]}
+        'file_photons': [join(odir, 'Conc_2.0_photons.pdf'),
+                         join(odir, 'Conc_2.0_photons.png'),
+                         join(odir, 'Conc_2.0_photons.svg')]}
 }
 
 for key, sphere in spheresDict.items():
@@ -230,23 +237,24 @@ for key, sphere in spheresDict.items():
         {'fmt': '-', 'label': 'T4, ENDF/BVII.1',
          'c': 'C2', 'slab': 'endf',
          'drawstyle': 'steps-mid'}]
-    comp.compare_plots(
-        sphere['exp'],
-        t4_ordDict_n,
-        monaco={sphere['monaco_neutrons']: {'c': 'C1',
-                                            'label': 'MONACO ENDF/BVII.1',
-                                            'fmt': '-',
-                                            'drawstyle': 'steps-mid'}},
-        ratios={'T4, ENDF/exp': ['endf', 'exp',
-                                 {'c': 'C2',
-                                  'drawstyle': 'steps-mid'}],
-                "T4, JEFF/exp": ["ceav5", 'exp',
-                                 {'c': 'C0',
-                                  'drawstyle': 'steps-mid'}],
-                'MONACO, ENDF/exp': ['MONACO', 'exp',
-                                     {'c': 'C1',
-                                      'drawstyle': 'steps-mid'}]},
-        save_file=sphere['file_neutrons'])
+    for ext in extensions:
+        comp.compare_plots(
+            sphere['exp'],
+            t4_ordDict_n,
+            monaco={sphere['monaco_neutrons']: {'c': 'C1',
+                                                'label': 'MONACO ENDF/BVII.1',
+                                                'fmt': '-',
+                                                'drawstyle': 'steps-mid'}},
+            ratios={'T4, ENDF/exp': ['endf', 'exp',
+                                     {'c': 'C2',
+                                      'drawstyle': 'steps-mid'}],
+                    "T4, JEFF/exp": ["ceav5", 'exp',
+                                     {'c': 'C0',
+                                      'drawstyle': 'steps-mid'}],
+                    'MONACO, ENDF/exp': ['MONACO', 'exp',
+                                         {'c': 'C1',
+                                          'drawstyle': 'steps-mid'}]},
+            save_file=sphere['file_neutrons']+ext)
 
 fe_ordered_120 = OrderedDict()
 fe_ordered_120["Fe_ceav5"] = ['neutron_response_120deg',
@@ -298,12 +306,12 @@ fe_ratios={'T4, ENDF/exp': ['endf', 'exp',
            'T4, JEFF, leakage/exp': ["ceav5_leak", 'exp',
                                      {'c': 'C3', 'drawstyle': 'steps-mid'}]}
 
-comp.compare_plots(('IRON', '0.9', '120'),
-                   fe_ordered_120,
-                   ratios=fe_ratios,
-                   save_file=join(odir, "Fe_0.9_120deg_collimators.png"))
-
-comp.compare_plots(('IRON', '0.9', '30'),
-                   fe_ordered_30,
-                   ratios=fe_ratios,
-                   save_file=join(odir, "Fe_0.9_30deg_collimators.png"))
+for ext in extensions:
+    comp.compare_plots(('IRON', '0.9', '120'),
+                       fe_ordered_120,
+                       ratios=fe_ratios,
+                       save_file=join(odir, "Fe_0.9_120deg_collimators"+ext))
+    comp.compare_plots(('IRON', '0.9', '30'),
+                       fe_ordered_30,
+                       ratios=fe_ratios,
+                       save_file=join(odir, "Fe_0.9_30deg_collimators"+ext))
