@@ -610,9 +610,7 @@ class Comparison():
         '''
         LOGGER.info("Number of responses required: %d", len(responses))
         LOGGER.debug("[32mResponses: %s[0m", responses)
-        print(list(responses.keys()))
         for sname in responses:
-            print("Sample:", sname)
             if sname not in self.simu_res:
                 LOGGER.warning("[94mSample %s no available[0m", sname)
                 continue
@@ -627,11 +625,9 @@ class Comparison():
             resp_args.setdefault('fmt', '-')
             resp_args.setdefault('label', sname)
             resp_args.setdefault('slab', sname)
-            print(resp_args)
             resp_args.setdefault('c', resp_args.pop('color', 'b'))
             resp_args.setdefault('ecolor', resp_args.get('c', 'b'))
             LOGGER.debug("T4 plot args:%s", resp_args)
-            print("[32merror 1 =", histo_t4.sigma[0], "[0m")
             cplot.add_errorbar_plot(histo_t4.tbins, histo_t4.vals,
                                     histo_t4.sigma, **resp_args)
             if print_file and sname in print_file:
@@ -671,8 +667,6 @@ class Comparison():
         for sname in self.monaco_res:
             if sname not in monaco:
                 continue
-            print("Data t bins shape:", tbins.shape,
-                  "and for MONACO:", self.monaco_res[sname].vals.shape)
             mon_res = self.monaco_res[sname]
             shift_t, shift_m = 0, 0
             if tbins.shape != mon_res.vals.shape:
@@ -682,7 +676,6 @@ class Comparison():
                 else:
                     shift_t = tbins.shape[0] - mon_res.vals.shape[0]
             monaco_args = monaco[sname] if isinstance(monaco, dict) else {}
-            print(monaco_args)
             monaco_args.setdefault('c', 'g')
             monaco_args.setdefault('label', 'MONACO')
             monaco_args.setdefault('slab', 'MONACO')
@@ -699,6 +692,7 @@ class Comparison():
         :param CompPlot cplot: plot on which adding the ratio
         :returns: (nothing: updated plot)
         '''
+        count = 0
         for leg, ratio in ratios.items():
             LOGGER.debug("Ratio: %s", leg)
             # sanity check
@@ -738,9 +732,6 @@ class Comparison():
             ratio_args = ratio[2] if len(ratio) > 2 else {}
             error = 0
             if err is not None:
-                num_segments = (cplot.legend['curves'][flagn].lines[2][0]
-                                .get_segments())
-                num_err = num - np.array([x[:,1][1] for x in num_segments])
                 denom_err = (
                     self.exp_res.res[cplot.charac]['res']['error']
                     if 'exp' in ratio
@@ -750,26 +741,31 @@ class Comparison():
                                     cplot.legend['curves'][flagd]
                                     .lines[2][0].get_segments())])))
                 if err == "indep":
-                    error = np.sqrt((num_err[cutnf:cutnl]/denom[cutd:])**2
-                                    + (num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]**2)**2)
+                    num_segments = (cplot.legend['curves'][flagn].lines[2][0]
+                                    .get_segments())
+                    num_err = num - np.array([x[:,1][1] for x in num_segments])
+
+                    error = np.sqrt(
+                        (num_err[cutnf:cutnl]/denom[cutd:])**2
+                        + (num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]**2)**2)
                 else:
                     error = 0
                     # error = (1/denom[cutd:] *
                     #          (num_err[cutnf:cutnl]
-                    #           + num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]))
+                    #         + num[cutnf:cutnl]*denom_err[cutd:]/denom[cutd:]))
             cplot.add_errorbar_ratio(binsn[cutnf:cutnl],
                                      num[cutnf:cutnl]/denom[cutd:],
                                      error, label=leg, **ratio_args)
-        if err == "data":
-            nbbins = binsn[cutnf:cutnl].shape[0]
-            data_args = {'facecolor': 'lightgrey', 'step': 'mid'}
-            cplot.splt[1].fill_between(binsn[cutnf:cutnl],
-                                       np.ones(nbbins) - denom_err/denom[cutd:],
-                                       np.ones(nbbins) + denom_err/denom[cutd:],
-                                       **data_args)
-            # print(np.ones(nbbins) - denom_err/denom[cutd:])
-            # print(np.ones(nbbins) + denom_err/denom[cutd:])
-            print("cplot should be updated")
+            if err == "data" and count == 0:
+                nbbins = binsn[cutnf:cutnl].shape[0]
+                data_args = {'facecolor': 'lightgrey', 'step': 'mid'}
+                cplot.splt[1].fill_between(
+                    binsn[cutnf:cutnl],
+                    np.ones(nbbins) - denom_err/denom[cutd:],
+                    np.ones(nbbins) + denom_err/denom[cutd:],
+                    **data_args)
+                count += 1
+        print("cplot should be updated")
 
     def print_distrib(self, name, sname, tbins, vals, sigma):
         with open("t4_"+name+".dat", 'w') as ofile:
@@ -969,8 +965,8 @@ class Comparison():
                      if ratio else plt.subplots(1, figsize=(15, 8)))
         # plt.figure(1, (15, 8))
         main_splt = splt if not ratio else splt[0]
-        main_splt.set_title("{elt}, {mfp} mfp"
-                          .format(elt=charac[0].capitalize(), mfp=charac[1]))
+        # main_splt.set_title("{elt}, {mfp} mfp"
+        #                   .format(elt=charac[0].capitalize(), mfp=charac[1]))
         if ratio:
             splt[1].set_xlabel("Photon energy [MeV]")
             splt[1].set_ylabel("Ratio")
@@ -1002,12 +998,14 @@ class Comparison():
                                        **resp_args)
                 elif elt == 'sphere':
                     simres.sphere.use_response(responses[sname][0])
-                    spectrum = simres.sphere.spectrum['spectrum']['score'].ravel()
+                    spectrum = (simres.sphere.spectrum['spectrum']['score']
+                                .ravel())
                     ebins = simres.sphere.spectrum['ebins'].ravel()
                     mebins = (ebins[1:] + ebins[:-1])/2
-                    errors = ((simres.sphere.spectrum['spectrum']['score']
-                               * simres.sphere.spectrum['spectrum']['sigma'] / 100)
-                              .ravel())
+                    errors = (
+                        (simres.sphere.spectrum['spectrum']['score']
+                         * simres.sphere.spectrum['spectrum']['sigma'] / 100)
+                        .ravel())
                     resp_args.setdefault('fmt', '-')
                     resp_args.setdefault('label', sname)
                     print(ebins.shape, spectrum.shape, mebins[:10])
@@ -1053,7 +1051,8 @@ class Comparison():
                 # splt[1].legend()
         main_splt.legend()
         if save_file:
-            plt.savefig(save_file)
+            for sfile in save_file:
+                plt.savefig(sfile)
             plt.close()
         else:
             plt.show()
