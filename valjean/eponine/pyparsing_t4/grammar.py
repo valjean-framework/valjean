@@ -212,8 +212,8 @@ _endtable = LineEnd() + LineEnd()
 
 # Introduction keywords
 _sourceintensity_kw = Keyword("RESULTS ARE GIVEN FOR SOURCE INTENSITY")
-_meanweightleakage_kw = Keyword("Mean weight leakage =")
-_meanweightleakagein_kw = Keyword("Mean weight leakage inside =")
+_meanweightleakage_kw = Keyword("Mean weight leakage")
+_meanweightleakagein_kw = Keyword("Mean weight leakage inside")
 _edbatchnum_kw = Keyword("Edition after batch number")
 _meanweightrestartpart_kw = Keyword("Mean weight of restarted particles :")
 
@@ -421,10 +421,12 @@ _meanweightleakvals = Group(_fnums('val')
                             + Suppress("sigma =") + _fnums('sigma')
                             + Suppress('sigma% =') + _fnums('sigma%'))
 _meanweightleak = (Suppress(_meanweightleakage_kw)
-                   + (_meanweightleakvals | Suppress(':') + _unknown_kw)
+                   + (Suppress('=') + _meanweightleakvals
+                      | Suppress(':') + _unknown_kw)
                    ('mean_weigt_leak'))
 _meanweightleakin = (Suppress(_meanweightleakagein_kw)
-                   + (_meanweightleakvals | Suppress(':') + _unknown_kw)
+                   + (Suppress('=') + _meanweightleakvals
+                      | Suppress(':') + _unknown_kw)
                    ('mean_weigt_leak_inside'))
 _edbatchnum = Suppress(_edbatchnum_kw + ':') + _inums('edition_batch_number')
 
