@@ -434,7 +434,7 @@ splt.plot(time_from_new_pilotb_30deg, pilotb_ucid16372_resp,
 splt.plot(time_from_new_ne213_30deg, ne213_ucid16372_resp,
           'o-', ms=2, color='C1', label="NE213")
 splt.set_ylabel(r"Response (A$\epsilon$) [%]")
-splt.set_title("Detector responses")  # from UCID-16372
+# splt.set_title("Detector responses")  # from UCID-16372
 splt.set_xlabel("Time [ns]")
 splt.legend()
 plt.savefig("detector_responses_vs_time.png")
@@ -445,7 +445,7 @@ splt.plot(pilotb_ucid16372_eb, pilotb_ucid16372_resp,
 splt.plot(ne213_ucid16372_eb, ne213_ucid16372_resp,
           'o-', ms=2, color='C1', label="NE213")
 splt.set_ylabel(r"Response (A$\epsilon$) [%]")
-splt.set_title("Detector responses")  # from UCID-16372
+# splt.set_title("Detector responses")  # from UCID-16372
 splt.set_xlabel("Energy [MeV]")
 splt.legend()
 plt.savefig("detector_responses_vs_energy.png")
