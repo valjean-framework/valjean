@@ -1,4 +1,4 @@
-.. _release-recipe:
+.. _distributing-code:
 
 Distributing the code
 =====================

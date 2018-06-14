@@ -37,10 +37,11 @@ documentation locally, then it doesn't really matter, but if you are building
 the documentation because you want to distribute the code to your users,
 **remember to install the package first!** It is simple::
 
-    $ pip install -U -e .
+    $ cd /path/to/valjean  # the path containing setup.py
+    $ pip install -U .[dev]
     $ ./setup.py build_sphinx
 
-You will find the full recipe in :ref:`release-recipe`.
+You will find the full recipe in :ref:`distributing-code`.
 
 Extensions
 ----------
@@ -77,10 +78,12 @@ We use a few `sphinx` extensions:
   Allows to write in math mode.
 
 
+.. _nitpicky-mode:
+
 Checking references
 -------------------
 
-To check references the ``nitpicky`` option can be used::
+To check internal references the ``nitpicky`` option can be used::
 
       $ sphinx-build -a -n src/ build/html
 
@@ -96,3 +99,14 @@ We intentionally refuse to correct some warnings, like those concerning the
 
 We use ``:ivar:`` to document instance variables (that is what they are for,
 right?), but apparently `sphinx`_ expects some target object which is not there.
+
+.. _linkcheck:
+
+Checking external links
+-----------------------
+
+The special ``linkcheck`` builder can be used to check any external links found
+in the documentation. Of course you must run the check from a machine with good
+network connectivity. The command is::
+
+      $ sphinx-build -a -b linkcheck src/ build/html

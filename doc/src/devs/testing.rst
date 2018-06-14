@@ -1,17 +1,20 @@
 Testing
 =======
 
-.. highlight:: bash
 .. _pytest: https://docs.pytest.org/en/latest
 .. _pytest-doc: http://pytest-cov.readthedocs.io/en/latest/
+
+.. highlight:: bash
+
+.. _unit-tests:
 
 Unit tests
 ----------
 
-:mod:`valjean` uses `pytest`_ as a unit-test framework; some of the unit
-tests rely on the :mod:`hypothesis` package for property-based testing. The
-tests are defined in the :file:`tests` folder and are automatically discovered
-by `pytest`.
+:mod:`valjean` uses `pytest`_ as a unit-test framework; some of the unit tests
+rely on the :mod:`hypothesis` package for property-based testing. The tests are
+defined in the :file:`tests` folder and are automatically discovered by
+`pytest`_.
 
 You can run the unit-test suite with::
 
@@ -76,6 +79,8 @@ leverage :mod:`hypothesis` whenever possible.
 If you want some examples within :mod:`valjean`, a good place to start is the
 :mod:`~tests.cosette.test_depgraph` test module, which tests the invariants of
 the :class:`~valjean.cosette.depgraph.DepGraph` class.
+
+.. _doctest-tests:
 
 Testing example docstrings with :mod:`~sphinx.ext.doctest`
 ----------------------------------------------------------
