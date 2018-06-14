@@ -137,7 +137,7 @@ Response are constructed as:
       * :parsing_var:`entropy`: entropy results (Boltzmann and Shannon
         entropies)
       * :parsing_var:`medfile`: location of optional MED file
-      * :parsing_var:`defintegratedres`: default result integrated over energy
+      * :parsing_var:`genericscoreblock`: default result integrated over energy
       * :parsing_var:`uncertblock`: uncertainty results
       * :parsing_var:`uncertintegblock`: uncertainties on integrated results
         over energy
@@ -281,7 +281,6 @@ _correlations_kw = Group(Keyword("estimators")
                          + Keyword("combined values")
                          + Keyword("combined sigma%"))
 _estimator_kw = Keyword("ESTIMATOR")
-_bestresdiscbatchs_kw = Keyword("best results are obtained with discarding")
 _equivkeff_kw = Keyword("Equivalent Keff:")
 
 # Time steps
@@ -338,7 +337,6 @@ _sensitivity_dircos_kw = Keyword("Direction cosine interval:")
 _vovstar_kw = Keyword("variance of variance* :")
 _sensibtomaxval_kw = Keyword("sensibility to maximum value:")
 _vov_kw = Keyword("variance of variance :")
-_bestres_kw = Keyword("best results are obtained with discarding")
 
 # Greenbands
 _gbspectrumstep_kw = Keyword("* SOURCE SPECTRUM STEP NUMBER :")
@@ -669,19 +667,25 @@ _sensibtomaxval = Group(Suppress(_sensibtomaxval_kw)
                         + Optional(_rejection))('sensibility_max_val')
 _vov = (_vovnostar | _vovstar + _sensibtomaxval)
 # best result
-_bestres = Group(Suppress(_bestres_kw) + _inums + Suppress("batches")
+_bestres = Group(Suppress(_bestresdiscbatchs_kw) + _inums + Suppress("batches")
                  + _minus_line
-                 + _numusedbatch + _fnums + _fnums)('bestresult')
+                 + _numusedbatch + _fnums('score') + _fnums('sigma')
+                ).setParseAction(trans.group_to_dict)('bestresult')
 
-defintegratedres = (Group(Optional(Suppress(_integratedres_kw))
-                          + Optional(_numdiscbatch)
-                          + ((_numusedbatch
-                              + _integratedres
-                              + Optional(_unitsres)
-                              + Optional(_vov)
-                              + Optional(_bestres))
-                             | _notconverged_kw('not_converged')))
-                    ('integrated_res'))
+
+integratedres = (Group(Optional(Suppress(_integratedres_kw))
+                       + Optional(_numdiscbatch)
+                       + _numusedbatch
+                       + _integratedres
+                       + Optional(_vov)
+                       + Optional(_bestres)))('integrated_res')
+
+genericscoreblock = (Group(Optional(Suppress(_integratedres_kw))
+                           + ((_numusedbatch
+                               + _integratedres
+                               + Optional(_unitsres))
+                              | _notconverged_kw('not_converged')))
+                     ('integrated_res').setParseAction(trans.group_to_dict))
 
 
 # Time steps
@@ -719,7 +723,7 @@ _spectrum = (Suppress(_spectrum_kw)
 spectrumblock = Group(OneOrMore
                       (Group(OneOrMore(_timestep | _muangzone | _phiangzone)
                              + _spectrum
-                             + Optional(defintegratedres)))
+                             + Optional(integratedres)))
                       | Group(_spectrum))('spectrum_res')
 
 
@@ -756,7 +760,7 @@ _meshres = Group(_mesh_energyline
                  ('mesh_vals'))
 meshblock = Group(OneOrMore(Group(_timestep
                                   + Group(OneOrMore(_meshres))('meshes')
-                                  + Optional(defintegratedres)))
+                                  + Optional(integratedres)))
                   | Group(Group(OneOrMore(_meshres))('meshes')))('mesh_res')
 
 
@@ -1055,7 +1059,7 @@ pertu_desc = (Group(Suppress(_perturbation_kw)
                     + _pertumethod
                     + Optional(_pertuorder)
                     + _pertutype
-                    + _pertucompo).setParseAction(trans.to_dict)
+                    + _pertucompo).setParseAction(trans.group_to_dict)
               ('perturbation_desc'))
 
 
@@ -1103,30 +1107,32 @@ scoreblock = OneOrMore((Group(scoredesc
                                            | vovspectrumblock
                                            | entropy
                                            | medfile
-                                           | defintegratedres
+                                           | integratedres
                                            | uncertblock
                                            | uncertintegblock
                                            | gbblock)))
                         .setParseAction(trans.convert_score)))('score_res')
 
 # Response block
-responseblock = (keffblock
-                 | kijres
-                 | kijsources
-                 | ifpres
-                 | defintegratedres
-                 | scoreblock)
+responseblock = Group(keffblock
+                      | kijres
+                      | kijsources
+                      | ifpres
+                      | genericscoreblock
+                      | scoreblock)('results')
 
 response = Group(_star_line
                  + respintro
                  + _star_line
-                 + Group(responseblock)('results'))
+                 + responseblock).setParseAction(trans.resp_tuple)
+                 # + responseblock.setParseAction(trans.resp_tuple)('results'))
+                 # + Group(responseblock.setParseAction(trans.resp_tuple))('results'))
 
 listresponses = (Group(OneOrMore(response)).setParseAction(trans.resp_dict)
                  ('list_responses'))
 
-perturbation = (OneOrMore(Group(pertu_desc + response('response')))
-                ('perturbation'))
+perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
+
 
 ################################
 #        GENERAL PARSER        #
@@ -1140,11 +1146,11 @@ mygram = (OneOrMore((intro
                      + OneOrMore(listresponses | ifpadjointcriticality
                                  | defkeffblock | contribpartblock
                                  | perturbation | OneOrMore(runtime)))
-                     # + (listresponses | ifpadjointcriticality)
-                     # + Optional(defkeffblock)
-                     # + Optional(contribpartblock)
-                     # + Optional(perturbation)
-                     # + Optional(OneOrMore(runtime)))
+                    # + (listresponses | ifpadjointcriticality)
+                    # + Optional(defkeffblock)
+                    # + Optional(contribpartblock)
+                    # + Optional(perturbation)
+                    # + Optional(OneOrMore(runtime)))
                     .setParseAction(trans.to_dict))
           .setParseAction(trans.print_result)
           | intro + OneOrMore(runtime))

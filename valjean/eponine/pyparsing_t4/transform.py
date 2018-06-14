@@ -118,6 +118,7 @@ def convert_score(toks):
             elif 'spectrum_res' in key:
                 res[key] = convert_spectrum(score[key], key)
             elif 'integrated_res' in key:
+                # print("\033[35m", score[key], "\033[0m")
                 res[key] = score[key].asDict()
             elif key == 'greenband_res':
                 res[key] = convert_green_bands(score[key])
@@ -252,6 +253,7 @@ def to_dict(toks):
     return res
 
 
+
 def make_choice(ldict, flag, value):
     choices = {'index': 0, 'resp_function':1, 'score_name': 2}
     res = [ldict[ind] for ind in ldict if ind[choices[flag]] == value]
@@ -292,42 +294,105 @@ def yet_another_choice(ldict, **kwargs):
     return mesres
 
 
+def to_list(toks):
+    '''Convert to list result of `pyparsing`.
+
+    :param toks: `pyparsing` element
+    :type toks: |parseres|
+    :returns: python list corresponding to input `pyparsing` list
+    '''
+    res = toks.asList()
+    return res
+
+
+resp_type_dict = {'score_res': to_list,
+                  'ifp_res': to_dict}
+
+def resp_tuple(toks):
+    mydict = toks[0].asDict()
+    # print(mydict['results'])
+    # Solution with tuple constructed before
+    ttuple = tuple((key, resp_type_dict[key](val)) if not isinstance(val, dict)
+                   else (key, val)
+                   for key, val in toks[0]['results'].items())
+    # print(ttuple)
+    mydict['results'] = ttuple[0]
+    # Solution with assert and local variables
+    # assert len(toks[0]['results'].asDict()) == 1, \
+    #    "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
+    # key = list(toks[0]['results'].keys())[0]
+    # val = list(toks[0]['results'].values())[0]
+    # mydict['results'] = (key,
+    #                      resp_type_dict[key](val) if not isinstance(val, dict)
+    #                      else val)
+    # print("[33mtype de results apres test3:",
+    #      type(mydict['results']), "[0m")
+    # print(mydict['results'])
+    return mydict
+
 def resp_dict(toks):
-    test4 = dict(map(lambda xy: ((xy[0] + 1,
-                                  xy[1]['response_description']['resp_function'],
-                                  (xy[1]['response_description']['score_name']
-                                   if 'score_name' in xy[1]['response_description']
-                                   else None)),
-                                 xy[1].asDict()),
-                     enumerate(toks['list_responses'])))
-    resp1 = yet_another_choice(test4,
-                               score_name="neutron_response_integral_30deg")
-    resp2 = yet_another_choice(test4, resp_function="REACTION")
-    resp3 = yet_another_choice(test4,
-                               resp_function="REACTION",
-                               score_name="neutron_response_integral_30deg")
-    resp4 = yet_another_choice(test4, index=1)
-    lscoresnames = list(map(lambda x:
-                            (x['response_description']['score_name']
-                             if 'score_name' in x['response_description']
-                             else None),
-                            toks['list_responses']))
-    lscoresnames = list(filter(None.__ne__, lscoresnames))
-    for resp in test4:
-        # print(resp)
-        print("resp keys:", list(test4[resp].keys()))
-        lkeys = list(test4[resp]['results'].keys())
-        # print("[33mClefs dans results:", lkeys, "->", len(lkeys), "clefs[0m")
-        if len(lkeys) != 1:
-            print("Number of keys is not 1: to be checked...")
-            print(lkeys)
-        for key, vals in test4[resp]['results'].items():
-            print("Nb res for", key, ":", len(vals), "type:", type(vals))
+    test4 = dict(map(
+        lambda xy: ((xy[0] + 1,
+                     xy[1]['response_description']['resp_function'],
+                     (xy[1]['response_description']['score_name']
+                      if 'score_name' in xy[1]['response_description']
+                      else None)),
+                    xy[1]),
+        enumerate(toks['list_responses'])))
+    # resp1 = yet_another_choice(test4,
+    #                            score_name="neutron_response_integral_30deg")
+    # resp2 = yet_another_choice(test4, resp_function="REACTION")
+    # resp3 = yet_another_choice(test4,
+    #                            resp_function="REACTION",
+    #                            score_name="neutron_response_integral_30deg")
+    # resp4 = yet_another_choice(test4, index=1)
+    # lscoresnames = list(map(lambda x:
+    #                         (x['response_description']['score_name']
+    #                          if 'score_name' in x['response_description']
+    #                          else None),
+    #                         toks['list_responses']))
+    # lscoresnames = list(filter(None.__ne__, lscoresnames))
+    # for resp in test4:
+    #     # print(resp)
+    #     print("resp keys:", list(test4[resp].keys()))
+    #     print("type resp =", type(test4[resp]))
+    #     print("type obj results:", type(test4[resp]['results']))
+    #     # print(list(test4[resp]['results'].keys()))
+    #     print(test4[resp]['results'])
+        # lkeys = test4[resp]['results'][0]
+        # print("[33mType de result:", lkeys, "[0m")
+        # # if len(lkeys) != 1:
+        # #     print("Number of keys is not 1: to be checked...")
+        # #     print(lkeys)
+        # print("Nb res =", len(test4[resp]['results'][1]),
+        #       "type:", type(test4[resp]['results'][1]))
         # print("values:")
         # print(test4[resp]['results'].values())
         # print(list(test4[resp]['results'].values()))
         # NOT WORKING! THIS IS NOT A DICT !!!
         # print(dict(test4[resp]['results'].values()))
+    return test4
+
+def group_to_dict(toks):
+    # print("\033[1;36m", toks, "\033[0m")
+    # print(toks.asDict())
+    # print(toks[0].asDict())
+    assert len(toks) == 1
+    key = list(toks.keys())[0]
+    tmpdict = toks.asDict()
+    # print(tmpdict)
+    # print("LOOP")
+    for elt in toks[0]:
+        # print(elt)
+        if isinstance(elt, dict):
+            # print("un dictionnaire dans l'elt")
+            tmpdict[key].update(elt)
+    # print("END OF LOOP")
+    # print(tmpdict)
+    return tmpdict[key]
+
+def print_tmp2(toks):
+    print("dans print_tmp2")
 
 def print_array(array):
     '''Print :obj:`numpy.ndarray` in condensed format.
