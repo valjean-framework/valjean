@@ -7,8 +7,8 @@ pytest configuration
 .. automodule:: conftest
    :undoc-members:
 
-Tests for the :mod:`~valjean.config` module
--------------------------------------------
+Tests for the :mod:`~valjean.config` package
+--------------------------------------------
 
 .. automodule:: tests.test_config
    :undoc-members:
@@ -72,7 +72,22 @@ Tests for the :mod:`~.using` module
 .. automodule:: tests.eponine.test_using
 
 
+Tests for the :mod:`~valjean.gavroche` package
+----------------------------------------------
+
+Fixtures
+````````
+
+.. automodule:: tests.gavroche.fixtures
+
+
 Tests for the :mod:`~.harvest` module
 `````````````````````````````````````
 
 .. automodule:: tests.gavroche.test_harvest
+
+
+Tests for the :mod:`~.test` module
+`````````````````````````````````````
+
+.. automodule:: tests.gavroche.test_test

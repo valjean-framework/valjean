@@ -15,3 +15,4 @@ gavroche — ???
    :caption: Submodules
 
    gavroche/harvest
+   gavroche/test

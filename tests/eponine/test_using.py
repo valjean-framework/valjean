@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 '''Tests for the :mod:`~.using` module.'''
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
