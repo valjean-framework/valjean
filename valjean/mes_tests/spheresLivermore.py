@@ -332,9 +332,12 @@ class MCNPSphere():
         tbins, counts = [], []
         with open(self.fname) as fil:
             for line in fil:
-                if line.startswith('tt') or line.startswith('tc'):
+                if (line.startswith('tt') or line.startswith('tc')
+                    or line.startswith('et')):
                     nb_tbins = line.split()[1]
                     tbins_block = True
+                elif 't        0' in line:
+                    continue
                 elif line.startswith('vals'):
                     tbins_block = False
                     vals_block = True
@@ -351,7 +354,9 @@ class MCNPSphere():
         LOGGER.debug("len(tbins) = %d et vals: %d, Ntbins = %s",
                      len(tbins), len(counts), nb_tbins)
         LOGGER.debug(tbins)
-        tbins = np.array([float(x) for x in tbins])*10
+        tbins = np.array([float(x) for x in tbins])
+        if "photon" not in self.fname:
+            tbins *= 10
         sigma = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 != 0])
         counts = np.array(
@@ -954,8 +959,8 @@ class Comparison():
                 ofile.write("{0:.2f} {1} {2}\n"
                             .format(tbin, vals[ibin], sigma[ibin]))
 
-    def compare_photons(self, charac, responses, monaco=None, ratio=None,
-                        print_file=None, save_file=None):
+    def compare_photons(self, charac, responses, monaco=None, mcnp=None,
+                        ratio=None, print_file=None, save_file=None):
         '''Response as {"name_sphere": ["name_response", is_air=False]'''
         # plt.rcParams['font.family'] = 'sans-serif'
         # plt.rcParams['font.serif'] = ['DejaVu']
@@ -994,6 +999,9 @@ class Comparison():
                     resp_args.setdefault('fmt', '-')
                     resp_args.setdefault('label', sname)
                     print(ebins.shape, spectrum.shape)
+                    if ewidth == 'integ':
+                        integ = np.sum(spectrum)*0.1
+                        ewidth = 1/integ
                     main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors,
                                        **resp_args)
                 elif elt == 'sphere':
@@ -1006,9 +1014,17 @@ class Comparison():
                         (simres.sphere.spectrum['spectrum']['score']
                          * simres.sphere.spectrum['spectrum']['sigma'] / 100)
                         .ravel())
+                    print("T4 n bins =", spectrum.shape)
+                    # print("ebins[:10] =", ebins[:10])
+                    # print("ebins[190:] =", ebins[190:])
                     resp_args.setdefault('fmt', '-')
                     resp_args.setdefault('label', sname)
                     print(ebins.shape, spectrum.shape, mebins[:10])
+                    if ewidth == 'integ':
+                        integ = np.sum(spectrum)*0.1
+                        ewidth = 1/integ
+                    # print("vals[:10] =", spectrum[:10])
+                    # print("vals[190:] =", spectrum[190:]*ewidth)
                     main_splt.errorbar(mebins, spectrum*ewidth,
                                        yerr=errors*ewidth,
                                        **resp_args)
@@ -1027,6 +1043,9 @@ class Comparison():
                 monaco_args.setdefault('c', 'g')
                 monaco_args.setdefault('label', 'MONACO')
                 ewidth = monaco_args.pop('ewidth', 1)
+                if ewidth == 'integ':
+                    integ = np.sum(self.monaco_res[melt].vals)*0.1
+                    ewidth = 1/integ
                 print(self.monaco_res[melt].bins.shape,
                       self.monaco_res[melt].bins[:10])
                 main_splt.errorbar(self.monaco_res[melt].bins,
@@ -1035,19 +1054,42 @@ class Comparison():
                                    **monaco_args)
                 if ratio and [x for x in ratio if melt in x]:
                     rspectrum[melt] = self.monaco_res[melt].vals*ewidth
+        if mcnp:
+            print("Found MCNP")
+            for melt, mcnp_args in mcnp.items():
+                if melt not in self.mcnp_res:
+                    continue
+                mcnp_args.setdefault('c', 'g')
+                mcnp_args.setdefault('label', 'MCNP')
+                # print("MCNP n bins =", self.mcnp_res[melt].histo.vals.shape)
+                # print("ebins[:10] =", self.mcnp_res[melt].histo.tbins[:10])
+                # print("ebins[190:] =", self.mcnp_res[melt].histo.tbins[190:])
+                ewidth = mcnp_args.pop('ewidth', 1)
+                if ewidth == 'integ':
+                    integ = np.sum(self.mcnp_res[melt].histo.vals)*0.1
+                    ewidth = 1/integ
+                # print("vals[:10] =", self.mcnp_res[melt].histo.vals[:10])
+                # print("vals[190:] =", self.mcnp_res[melt].histo.vals[190:]*ewidth)
+                main_splt.errorbar(self.mcnp_res[melt].histo.tbins-0.05,
+                                   self.mcnp_res[melt].histo.vals*ewidth,
+                                   self.mcnp_res[melt].histo.sigma*ewidth,
+                                   **mcnp_args)
+                if ratio and [x for x in ratio if melt in x]:
+                    rspectrum[melt] = self.mcnp_res[melt].histo.vals[2:]*ewidth
         if ratio:
             for rat in ratio:
+                print(rat)
                 ratio_args = rat[2] if len(rat) > 2 else {}
                 print(ratio_args)
                 print(list(rspectrum.keys()))
                 splt[1].plot(rebins, rspectrum[rat[0]]/rspectrum[rat[1]],
                              **ratio_args)
                 splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
-                splt[1].set_ylim(ymin=0.4, ymax=2.5)
+                # splt[1].set_ylim(ymin=0.4, ymax=2.5)
                 splt[1].set_yscale("log", nonposy='clip')
-                splt[1].set_yticklabels([], minor=True)
-                splt[1].set_yticks([0.4, 1, 2])
-                splt[1].set_yticklabels(["0.4", "1", "2"])
+                # splt[1].set_yticklabels([], minor=True)
+                # splt[1].set_yticks([0.4, 1, 2])
+                # splt[1].set_yticklabels(["0.4", "1", "2"])
                 # splt[1].legend()
         main_splt.legend()
         if save_file:
