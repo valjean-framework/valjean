@@ -307,14 +307,14 @@ class MCNPSphere():
     experimentales (que j'ai aussi grace a T4 !).
     '''
 
-    def __init__(self, path, charac):
+    def __init__(self, path, charac, tally=205):
         self.fname = path
         self.charac = charac
         self.histo = None
         self.integral = None
-        self.read_mcnp()
+        self.read_mcnp(tally)
 
-    def read_mcnp(self):
+    def read_mcnp(self, tally):
         '''Read MCNP results and fill its histo and integral.
 
         Time bins are multiplied by 10 to convert shakes to ns (...).
@@ -326,53 +326,57 @@ class MCNPSphere():
         Remark: ntbins = number of edges and not of bins, so Nbins+1. The
         comment above takes into account the fact that indexes start at 0...
         '''
-        nb_tbins = 0
-        tbins_block = False
+        nb_bins = 0
+        bins_block = False
         vals_block = False
-        tbins, counts = [], []
+        bins, counts = [], []
+        ftally = False
         with open(self.fname) as fil:
             for line in fil:
-                if (line.startswith('tt') or line.startswith('tc')
-                    or line.startswith('et')):
-                    nb_tbins = line.split()[1]
-                    tbins_block = True
-                elif 't        0' in line:
-                    continue
-                elif line.startswith('vals'):
-                    tbins_block = False
+                if line.startswith('tally') and int(line.split()[1]) == tally:
+                    ftally = True
+                elif (ftally
+                      and (line.startswith('tt') or line.startswith('et'))):
+                    nb_bins = line.split()[1]
+                    bins_block = True
+                elif ftally and line.startswith('vals'):
+                    bins_block = False
                     vals_block = True
-                elif line.startswith('tfc'):
+                elif ftally and line.startswith('tfc'):
                     vals_block = False
+                    ftally = False
                     break
-                elif tbins_block:
-                    tbins += line.split()
+                elif bins_block and not line.startswith(' '):
+                    continue
+                elif bins_block and ftally:
+                    bins += line.split()
                 elif vals_block:
                     counts += [float(x) for x in line.split()]
                 else:
                     continue
-        nbtbins = len(tbins)
-        LOGGER.debug("len(tbins) = %d et vals: %d, Ntbins = %s",
-                     len(tbins), len(counts), nb_tbins)
-        LOGGER.debug(tbins)
-        tbins = np.array([float(x) for x in tbins])
-        if "photon" not in self.fname:
-            tbins *= 10
+        nbbins = len(bins)
+        LOGGER.debug("len(bins) = %d et vals: %d, Nbins = %s",
+                     len(bins), len(counts), nb_bins)
+        LOGGER.debug(bins)
+        bins = np.array([float(x) for x in bins])
+        if tally != 2:
+            bins *= 10
         sigma = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 != 0])
         counts = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 == 0])
         sigma = sigma*counts
-        self.integral = Integral(counts[nbtbins], sigma[nbtbins])
-        self.histo = Histo(tbins, counts[:nbtbins], sigma[:nbtbins])
+        self.integral = Integral(counts[nbbins], sigma[nbbins])
+        self.histo = Histo(bins, counts[:nbbins], sigma[:nbbins])
 
 
 class MCNPrenormalizedSphere():
     '''Class to buld renormalized spheres for MCNP.'''
 
-    def __init__(self, out_sphere, out_air):
+    def __init__(self, out_sphere, out_air, tally=205):
         LOGGER.info("Get results for the MCNP sphere")
-        self.sphere = MCNPSphere(out_sphere, "Sphere")
-        self.air = MCNPSphere(out_air, "Air")
+        self.sphere = MCNPSphere(out_sphere, "Sphere", tally)
+        self.air = MCNPSphere(out_air, "Air", tally)
         self.histo = self.normalized_sphere()
         LOGGER.debug("Renormalized counts: %s", str(self.histo.vals))
 
@@ -558,15 +562,21 @@ class Comparison():
           in that case, sphere and air), False if already normalised.
         :returns: nothing, fill the internal dict of MCNP results
         '''
-        for name, jdd, renorm in jdds:
+        tally = 205
+        for args in jdds:
+            if len(args) == 3:
+                name, jdd, renorm = args
+            else:
+                name, jdd, renorm, tally = args
             if renorm:
                 LOGGER.info("Read MCNP results for sphere %s and air %s_airm",
                             jdd, jdd[:-1])
                 self.mcnp_res[name] = MCNPrenormalizedSphere(jdd,
-                                                             jdd[:-1]+"_airm")
+                                                             jdd[:-1]+"_airm",
+                                                             tally)
             else:
                 LOGGER.info("Read MCNP results for %s", jdd)
-                self.mcnp_res[name] = MCNPSphere(jdd, name)
+                self.mcnp_res[name] = MCNPSphere(jdd, name, tally)
 
     def set_monaco_files(self, jdds):
         '''Set the MONACO files containing the results.'''
