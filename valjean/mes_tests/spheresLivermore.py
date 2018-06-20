@@ -359,7 +359,7 @@ class MCNPSphere():
                      len(bins), len(counts), nb_bins)
         LOGGER.debug(bins)
         bins = np.array([float(x) for x in bins])
-        if tally != 2:
+        if tally == 205:
             bins *= 10
         sigma = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 != 0])
@@ -995,57 +995,65 @@ class Comparison():
                 LOGGER.warning("[94mSample %s no available[0m", sname)
                 continue
             simres = self.simu_res[sname]
-            print(responses[sname][0])
-            for elt, resp_args in responses[sname][1].items():
-                ewidth = resp_args.pop('ewidth', 1)
-                if elt == 'air':
-                    simres.air.use_response(responses[sname][0])
-                    spectrum = simres.air.spectrum['spectrum']['score'].ravel()
-                    ebins = simres.air.spectrum['ebins'].ravel()
-                    mebins = (ebins[1:] + ebins[:-1])/2
-                    errors = ((simres.air.spectrum['spectrum']['score']
-                               * simres.air.spectrum['spectrum']['sigma'] / 100)
-                              .ravel())
-                    resp_args.setdefault('fmt', '-')
-                    resp_args.setdefault('label', sname)
-                    print(ebins.shape, spectrum.shape)
-                    if ewidth == 'integ':
-                        integ = np.sum(spectrum)*0.1
-                        ewidth = 1/integ
-                    main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors,
-                                       **resp_args)
-                elif elt == 'sphere':
-                    simres.sphere.use_response(responses[sname][0])
-                    spectrum = (simres.sphere.spectrum['spectrum']['score']
-                                .ravel())
-                    ebins = simres.sphere.spectrum['ebins'].ravel()
-                    mebins = (ebins[1:] + ebins[:-1])/2
-                    errors = (
-                        (simres.sphere.spectrum['spectrum']['score']
-                         * simres.sphere.spectrum['spectrum']['sigma'] / 100)
-                        .ravel())
-                    print("T4 n bins =", spectrum.shape)
-                    # print("ebins[:10] =", ebins[:10])
-                    # print("ebins[190:] =", ebins[190:])
-                    resp_args.setdefault('fmt', '-')
-                    resp_args.setdefault('label', sname)
-                    print(ebins.shape, spectrum.shape, mebins[:10])
-                    if ewidth == 'integ':
-                        integ = np.sum(spectrum)*0.1
-                        ewidth = 1/integ
-                    # print("vals[:10] =", spectrum[:10])
-                    # print("vals[190:] =", spectrum[190:]*ewidth)
-                    main_splt.errorbar(mebins, spectrum*ewidth,
-                                       yerr=errors*ewidth,
-                                       **resp_args)
-                    if ratio and [x for x in ratio if sname in x]:
-                        rspectrum[sname] = np.copy(spectrum[1:]*ewidth)
-                        rebins = np.copy(mebins[1:])
-                else:
-                    print("2 allowed keys: air and sphere")
-                if print_file and sname in print_file:
-                    self.print_photons(print_file[sname],
-                                       mebins, spectrum, errors)
+            print("simres:", simres)
+            # print(responses[sname][0])
+            # for elt, resp_args in responses[sname][1].items():
+            for resp in responses[sname]:
+                print(resp)
+                print(responses[sname][resp].items())
+                for elt, resp_args in responses[sname][resp].items():
+                    ewidth = resp_args.pop('ewidth', 1)
+                    print(elt, resp_args)
+                    if elt == 'air':
+                        # simres.air.use_response(responses[sname][0])
+                        simres.air.use_response(responses[sname])
+                        spectrum = simres.air.spectrum['spectrum']['score'].ravel()
+                        ebins = simres.air.spectrum['ebins'].ravel()
+                        mebins = (ebins[1:] + ebins[:-1])/2
+                        errors = ((simres.air.spectrum['spectrum']['score']
+                                   * simres.air.spectrum['spectrum']['sigma'] / 100)
+                                  .ravel())
+                        resp_args.setdefault('fmt', '-')
+                        resp_args.setdefault('label', sname)
+                        print(ebins.shape, spectrum.shape)
+                        if ewidth == 'integ':
+                            integ = np.sum(spectrum)*0.1
+                            ewidth = 1/integ
+                            main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors,
+                                               **resp_args)
+                    elif elt == 'sphere':
+                        # simres.sphere.use_response(responses[sname][0])
+                        simres.sphere.use_response(resp)
+                        spectrum = (simres.sphere.spectrum['spectrum']['score']
+                                    .ravel())
+                        ebins = simres.sphere.spectrum['ebins'].ravel()
+                        mebins = (ebins[1:] + ebins[:-1])/2
+                        errors = (
+                            (simres.sphere.spectrum['spectrum']['score']
+                             * simres.sphere.spectrum['spectrum']['sigma'] / 100)
+                            .ravel())
+                        print("T4 n bins =", spectrum.shape)
+                        # print("ebins[:10] =", ebins[:10])
+                        # print("ebins[190:] =", ebins[190:])
+                        resp_args.setdefault('fmt', '-')
+                        resp_args.setdefault('label', sname)
+                        print(ebins.shape, spectrum.shape, mebins[:10])
+                        if ewidth == 'integ':
+                            integ = np.sum(spectrum)*0.1
+                            ewidth = 1/integ
+                        # print("vals[:10] =", spectrum[:10])
+                        # print("vals[190:] =", spectrum[190:]*ewidth)
+                        main_splt.errorbar(mebins, spectrum*ewidth,
+                                           yerr=errors*ewidth,
+                                           **resp_args)
+                        if ratio and [x for x in ratio if sname in x]:
+                            rspectrum[sname] = np.copy(spectrum[1:]*ewidth)
+                            rebins = np.copy(mebins[1:])
+                    else:
+                        print("2 allowed keys: air and sphere")
+                    if print_file and sname in print_file:
+                        self.print_photons(print_file[sname],
+                                           mebins, spectrum, errors)
         if monaco:
             for melt, monaco_args in monaco.items():
                 if melt not in self.monaco_res:
@@ -1101,7 +1109,7 @@ class Comparison():
                 # splt[1].set_yticks([0.4, 1, 2])
                 # splt[1].set_yticklabels(["0.4", "1", "2"])
                 # splt[1].legend()
-        main_splt.legend()
+        main_splt.legend(fontsize=12)
         if save_file:
             for sfile in save_file:
                 plt.savefig(sfile)
