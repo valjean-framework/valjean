@@ -327,38 +327,66 @@ class MCNPSphere():
         comment above takes into account the fact that indexes start at 0...
         '''
         nb_bins = 0
-        bins_block = False
+        bins_block = ""
         vals_block = False
-        bins, counts = [], []
+        bins, counts = {}, []
         ftally = False
         with open(self.fname) as fil:
             for line in fil:
-                if line.startswith('tally') and int(line.split()[1]) == tally:
+                elts = line.split()
+                if line.startswith('tally') and tally.count(int(elts[1])) != 0:
+                    print(tally, "line:", elts)
+                    print(tally.count(int(elts[1])))
                     ftally = True
-                elif (ftally
-                      and (line.startswith('tt') or line.startswith('et'))):
-                    nb_bins = line.split()[1]
-                    bins_block = True
+                elif (ftally and not line.startswith(' ') and len(elts) == 2):
+                    print("2 elts in line:", elts)
+                    if not elts[1].isdigit() or int(elts[1]) < 1:
+                        continue
+                    if elts[0][0] not in ('e', 't', 'u'):
+                        continue
+                    print("bins_block =", bins_block)
+                    if bins_block != "":
+                        print(len(bins[bins_block]))
+                    print("real bin found")
+                    bins[elts[0]] = []
+                    bins_block = elts[0]
                 elif ftally and line.startswith('vals'):
-                    bins_block = False
+                    bins_block = ""
                     vals_block = True
                 elif ftally and line.startswith('tfc'):
                     vals_block = False
                     ftally = False
-                    break
-                elif bins_block and not line.startswith(' '):
-                    continue
+                    LOGGER.warning("len(bins) = %d et vals: %d, Nbins = %s",
+                       len(bins), len(counts), nb_bins)
+                    # self.finish_tally(tally, bins, counts)
+                    # break
+                # elif bins_block and not line.startswith(' '):
+                #     continue
                 elif bins_block and ftally:
-                    bins += line.split()
+                    bins[bins_block] += [float(x) for x in elts]
                 elif vals_block:
-                    counts += [float(x) for x in line.split()]
+                    counts += [float(x) for x in elts]
                 else:
                     continue
+        # nbbins = len(bins)
+        # LOGGER.warning("len(bins) = %d et vals: %d, Nbins = %s",
+        #              len(bins), len(counts), nb_bins)
+        # LOGGER.debug(bins)
+        # bins = np.array([float(x) for x in bins])
+        # if tally == 205:
+        #     bins *= 10
+        # sigma = np.array(
+        #     [x for ind, x in enumerate(counts) if ind % 2 != 0])
+        # counts = np.array(
+        #     [x for ind, x in enumerate(counts) if ind % 2 == 0])
+        # sigma = sigma*counts
+        # self.integral = Integral(counts[nbbins], sigma[nbbins])
+        # self.histo = Histo(bins, counts[:nbbins], sigma[:nbbins])
+
+    def finish_tally(self, tally, bins, counts):
         nbbins = len(bins)
-        LOGGER.debug("len(bins) = %d et vals: %d, Nbins = %s",
-                     len(bins), len(counts), nb_bins)
-        LOGGER.debug(bins)
-        bins = np.array([float(x) for x in bins])
+        bins = np.array(bins)
+        # bins = np.array([float(x) for x in bins])
         if tally == 205:
             bins *= 10
         sigma = np.array(
@@ -1109,7 +1137,7 @@ class Comparison():
                 # splt[1].set_yticks([0.4, 1, 2])
                 # splt[1].set_yticklabels(["0.4", "1", "2"])
                 # splt[1].legend()
-        main_splt.legend(fontsize=12)
+        main_splt.legend(fontsize=10)
         if save_file:
             for sfile in save_file:
                 plt.savefig(sfile)
