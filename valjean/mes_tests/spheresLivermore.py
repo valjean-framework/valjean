@@ -392,34 +392,17 @@ class MCNPSphere():
         sigma = sigma*counts
         print(sigma.shape)
         ubins = [bins[x] for x in bins if 'u' in x]
-        # print(ubins)
         udim = 1 if len(ubins) == 0 else len(ubins[0]) + 1
-        print('udim =', udim)
-        # print(counts)
         self.integral[tally] = []
         self.histo[tally] = []
         for iubin in range(udim):
             ifirstbin = iubin * (nbinste + 1)
             ilastbin = iubin * (nbinste + 1) + nbinste
-            print(ilastbin)
-            # print("size counts:", counts.shape, "ilastbin =", ilastbin,
-            #       'ifirstbin =', ifirstbin)
-            # print(counts[ilastbin], sigma[ilastbin])
-            # print(counts[ilastbin-5:ilastbin+5], sigma[ilastbin-5:ilastbin+5])
-            # print("[94m", counts[ifirstbin:ilastbin],
-            #       "[33m", sigma[ifirstbin:ilastbin], "[0m")
-            print("integral =", counts[ilastbin])
             self.integral[tally].append(Integral(counts[ilastbin],
                                                  sigma[ilastbin]))
             self.histo[tally].append(Histo(bins_array,
                                            counts[ifirstbin:ilastbin],
                                            sigma[ifirstbin:ilastbin]))
-        # print(self.integral)
-        # print(self.histo)
-            # print(counts[nbinste], sigma[nbinste])
-            # print(counts[nbinste-3:nbinste+3], sigma[nbinste-3:nbinste+3])
-        # self.integral = Integral(counts[nbbins], sigma[nbbins])
-        # self.histo = Histo(bins, counts[:nbbins], sigma[:nbbins])
 
 
 class MCNPrenormalizedSphere():
@@ -429,7 +412,6 @@ class MCNPrenormalizedSphere():
         LOGGER.info("Get results for the MCNP sphere")
         self.sphere = MCNPSphere(out_sphere, "Sphere", tally)
         self.histo = self.sphere.histo
-        print(out_air)
         self.air = MCNPSphere(out_air, "Air", tally)
         self.histo[205][0] = self.normalized_sphere()
         LOGGER.debug("Renormalized counts: %s", str(self.histo[205][0].vals))
@@ -440,13 +422,11 @@ class MCNPrenormalizedSphere():
         '''
         tally = 205
         ubin = 0
-        print(self.sphere.integral[tally][ubin].value)
-        print(self.air.integral[tally][ubin].value)
-        # print(self.sphere.histo[tally][ubin].vals)
-        counts = self.sphere.histo[tally][ubin].vals/self.air.integral[tally][ubin].value
-        sigma = self.sphere.histo[tally][ubin].sigma/self.air.integral[tally][ubin].value
+        counts = (self.sphere.histo[tally][ubin].vals
+                  / self.air.integral[tally][ubin].value)
+        sigma = (self.sphere.histo[tally][ubin].sigma
+                 / self.air.integral[tally][ubin].value)
         tbins = self.sphere.histo[tally][ubin].tbins
-        # print(counts)
         return Histo(tbins, counts, sigma)
 
 
@@ -721,21 +701,13 @@ class Comparison():
         for sname in mcnp:
             if sname not in self.mcnp_res:
                 continue
-        # for sname in self.mcnp_res:
-        #     if sname not in mcnp:
-        #         continue
             tally = 205
             ubin = 0
-            # print(list(self.mcnp_res[sname].histo.keys()))
             mtbins = self.mcnp_res[sname].histo[tally][ubin].tbins - 1
             mcnp_vals = np.copy(self.mcnp_res[sname].histo[tally][ubin].vals)
             mcnp_sigma = np.copy(self.mcnp_res[sname].histo[tally][ubin].sigma)
-            # mtbins = self.mcnp_res[sname].histo.tbins - 1
-            # mcnp_vals = np.copy(self.mcnp_res[sname].histo.vals)
-            # mcnp_sigma = np.copy(self.mcnp_res[sname].histo.sigma)
             print(mcnp_vals.shape)
             print(mtbins.shape)
-            # print(self.mcnp_res[sname].histo[tally][ubin].tbins)
             print(mcnp_sigma.shape)
             # isinstance only works the first time with autoreload
             # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
@@ -1107,16 +1079,12 @@ class Comparison():
                              * simres.sphere.spectrum['spectrum']['sigma'] / 100)
                             .ravel())
                         print("T4 n bins =", spectrum.shape)
-                        # print("ebins[:10] =", ebins[:10])
-                        # print("ebins[190:] =", ebins[190:])
                         resp_args.setdefault('fmt', '-')
                         resp_args.setdefault('label', sname)
                         print(ebins.shape, spectrum.shape, mebins[:10])
                         if ewidth == 'integ':
                             integ = np.sum(spectrum)*0.1
                             ewidth = 1/integ
-                        # print("vals[:10] =", spectrum[:10])
-                        # print("vals[190:] =", spectrum[190:]*ewidth)
                         main_splt.errorbar(mebins, spectrum*ewidth,
                                            yerr=errors*ewidth,
                                            **resp_args)
