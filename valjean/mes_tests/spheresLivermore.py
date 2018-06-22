@@ -370,44 +370,52 @@ class MCNPSphere():
         # (but both not expected together for the moment)
         # this removed the total bins if present
         dims = [x for x in bins.keys() if 'u' not in x]
-        if len(dims) != 1:
-            print("Double differential distributions are not taken into"
-                  " account for the moment")
-            return
         nbinste = sum([len(bins[x]) for x in bins if 'u' not in x])
+        if len(dims) != 1:
+            if 'e' in bins and len(bins['e']) == 1:
+                dims.remove('e')
+                nbinste -= 1
+            else:
+                print("Double differential distributions are not taken into"
+                      " account for the moment")
+                return
         print(nbinste)
         bins_array = np.array(bins[dims[0]])
         # convert shakes in ns !!!
         if dims[0][0] == 't':
+            print(bins_array.shape)
             bins_array *= 10
         sigma = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 != 0])
         counts = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 == 0])
         sigma = sigma*counts
+        print(sigma.shape)
         ubins = [bins[x] for x in bins if 'u' in x]
-        print(ubins)
+        # print(ubins)
         udim = 1 if len(ubins) == 0 else len(ubins[0]) + 1
         print('udim =', udim)
-        print(counts)
+        # print(counts)
         self.integral[tally] = []
         self.histo[tally] = []
         for iubin in range(udim):
             ifirstbin = iubin * (nbinste + 1)
             ilastbin = iubin * (nbinste + 1) + nbinste
-            print("size counts:", counts.shape, "ilastbin =", ilastbin,
-                  'ifirstbin =', ifirstbin)
-            print(counts[ilastbin], sigma[ilastbin])
-            print(counts[ilastbin-5:ilastbin+5], sigma[ilastbin-5:ilastbin+5])
-            print("[94m", counts[ifirstbin:ilastbin],
-                  "[33m", sigma[ifirstbin:ilastbin], "[0m")
+            print(ilastbin)
+            # print("size counts:", counts.shape, "ilastbin =", ilastbin,
+            #       'ifirstbin =', ifirstbin)
+            # print(counts[ilastbin], sigma[ilastbin])
+            # print(counts[ilastbin-5:ilastbin+5], sigma[ilastbin-5:ilastbin+5])
+            # print("[94m", counts[ifirstbin:ilastbin],
+            #       "[33m", sigma[ifirstbin:ilastbin], "[0m")
+            print("integral =", counts[ilastbin])
             self.integral[tally].append(Integral(counts[ilastbin],
                                                  sigma[ilastbin]))
             self.histo[tally].append(Histo(bins_array,
                                            counts[ifirstbin:ilastbin],
                                            sigma[ifirstbin:ilastbin]))
-        print(self.integral)
-        print(self.histo)
+        # print(self.integral)
+        # print(self.histo)
             # print(counts[nbinste], sigma[nbinste])
             # print(counts[nbinste-3:nbinste+3], sigma[nbinste-3:nbinste+3])
         # self.integral = Integral(counts[nbbins], sigma[nbbins])
@@ -420,17 +428,25 @@ class MCNPrenormalizedSphere():
     def __init__(self, out_sphere, out_air, tally=205):
         LOGGER.info("Get results for the MCNP sphere")
         self.sphere = MCNPSphere(out_sphere, "Sphere", tally)
+        self.histo = self.sphere.histo
+        print(out_air)
         self.air = MCNPSphere(out_air, "Air", tally)
-        self.histo = self.normalized_sphere()
-        LOGGER.debug("Renormalized counts: %s", str(self.histo.vals))
+        self.histo[205][0] = self.normalized_sphere()
+        LOGGER.debug("Renormalized counts: %s", str(self.histo[205][0].vals))
 
     def normalized_sphere(self):
         '''Normalize sphere for MCNP results from sphere and air results.
         :returns: Histo named tuple (tbins, vals, sigma)
         '''
-        counts = self.sphere.histo.vals/self.air.integral.value
-        sigma = self.sphere.histo.sigma/self.air.integral.value
-        tbins = self.sphere.histo.tbins
+        tally = 205
+        ubin = 0
+        print(self.sphere.integral[tally][ubin].value)
+        print(self.air.integral[tally][ubin].value)
+        # print(self.sphere.histo[tally][ubin].vals)
+        counts = self.sphere.histo[tally][ubin].vals/self.air.integral[tally][ubin].value
+        sigma = self.sphere.histo[tally][ubin].sigma/self.air.integral[tally][ubin].value
+        tbins = self.sphere.histo[tally][ubin].tbins
+        # print(counts)
         return Histo(tbins, counts, sigma)
 
 
@@ -702,12 +718,25 @@ class Comparison():
         :param CompPlot cplot: current figure and subplots
         :returns: (nothing, updated plot)
         '''
-        for sname in self.mcnp_res:
-            if sname not in mcnp:
+        for sname in mcnp:
+            if sname not in self.mcnp_res:
                 continue
-            mtbins = self.mcnp_res[sname].histo.tbins - 1
-            mcnp_vals = np.copy(self.mcnp_res[sname].histo.vals)
-            mcnp_sigma = np.copy(self.mcnp_res[sname].histo.sigma)
+        # for sname in self.mcnp_res:
+        #     if sname not in mcnp:
+        #         continue
+            tally = 205
+            ubin = 0
+            # print(list(self.mcnp_res[sname].histo.keys()))
+            mtbins = self.mcnp_res[sname].histo[tally][ubin].tbins - 1
+            mcnp_vals = np.copy(self.mcnp_res[sname].histo[tally][ubin].vals)
+            mcnp_sigma = np.copy(self.mcnp_res[sname].histo[tally][ubin].sigma)
+            # mtbins = self.mcnp_res[sname].histo.tbins - 1
+            # mcnp_vals = np.copy(self.mcnp_res[sname].histo.vals)
+            # mcnp_sigma = np.copy(self.mcnp_res[sname].histo.sigma)
+            print(mcnp_vals.shape)
+            print(mtbins.shape)
+            # print(self.mcnp_res[sname].histo[tally][ubin].tbins)
+            print(mcnp_sigma.shape)
             # isinstance only works the first time with autoreload
             # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
             if hasattr(self.mcnp_res[sname], 'sphere'):
@@ -715,6 +744,7 @@ class Comparison():
                 mcnp_vals /= Comparison.NORM_FACTOR
                 mcnp_sigma /= Comparison.NORM_FACTOR
             mcnp_args = mcnp[sname] if isinstance(mcnp, dict) else {}
+            print(mcnp_args)
             mcnp_args.setdefault('c', 'c')
             mcnp_args.setdefault('label', "MCNP")
             mcnp_args.setdefault('slab', "MCNP")
@@ -1126,15 +1156,10 @@ class Comparison():
                     ubin = mcnp_args.pop('ubin', 0)
                     mcnp_args.setdefault('c', 'g')
                     mcnp_args.setdefault('label', 'MCNP')
-                    # print("MCNP n bins =", self.mcnp_res[melt].histo.vals.shape)
-                    # print("ebins[:10] =", self.mcnp_res[melt].histo.tbins[:10])
-                    # print("ebins[190:] =", self.mcnp_res[melt].histo.tbins[190:])
                     ewidth = mcnp_args.pop('ewidth', 1)
                     if ewidth == 'integ':
                         integ = np.sum(self.mcnp_res[melt].histo[tally][ubin].vals)*0.1
                         ewidth = 1/integ
-                        # print("vals[:10] =", self.mcnp_res[melt].histo.vals[:10])
-                        # print("vals[190:] =", self.mcnp_res[melt].histo.vals[190:]*ewidth)
                     main_splt.errorbar(self.mcnp_res[melt].histo[tally][ubin].tbins-0.05,
                                        self.mcnp_res[melt].histo[tally][ubin].vals*ewidth,
                                        self.mcnp_res[melt].histo[tally][ubin].sigma*ewidth,
