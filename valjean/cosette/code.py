@@ -273,7 +273,8 @@ class CheckoutTask(ShellTask):
     _GIT_TEMPLATE = r'''test -d {log_root} || mkdir -p {log_root}
 test -d {checkout_dir} || mkdir -p {checkout_dir}
 {GIT} clone {flags} -- {repository} {checkout_dir} >>{checkout_log} 2>&1
-{GIT} -C {checkout_dir} checkout {ref} >>{checkout_log} 2>&1
+cd ${checkout_dir}
+{GIT} checkout {ref} >>{checkout_log} 2>&1
 '''
 
 
