@@ -310,8 +310,8 @@ class MCNPSphere():
     def __init__(self, path, charac, tally=205):
         self.fname = path
         self.charac = charac
-        self.histo = None
-        self.integral = None
+        self.histo = {}
+        self.integral = {}
         self.read_mcnp(tally)
 
     def read_mcnp(self, tally):
@@ -330,7 +330,7 @@ class MCNPSphere():
         bins_block = ""
         vals_block = False
         bins, counts = {}, []
-        ftally = False
+        ftally, ltally = False, -1
         with open(self.fname) as fil:
             for line in fil:
                 elts = line.split()
@@ -338,16 +338,13 @@ class MCNPSphere():
                     print(tally, "line:", elts)
                     print(tally.count(int(elts[1])))
                     ftally = True
-                elif (ftally and not line.startswith(' ') and len(elts) == 2):
+                    ltally = int(elts[1])
+                elif ftally and not line.startswith(' ') and len(elts) == 2:
                     print("2 elts in line:", elts)
                     if not elts[1].isdigit() or int(elts[1]) < 1:
                         continue
                     if elts[0][0] not in ('e', 't', 'u'):
                         continue
-                    print("bins_block =", bins_block)
-                    if bins_block != "":
-                        print(len(bins[bins_block]))
-                    print("real bin found")
                     bins[elts[0]] = []
                     bins_block = elts[0]
                 elif ftally and line.startswith('vals'):
@@ -357,45 +354,64 @@ class MCNPSphere():
                     vals_block = False
                     ftally = False
                     LOGGER.warning("len(bins) = %d et vals: %d, Nbins = %s",
-                       len(bins), len(counts), nb_bins)
-                    # self.finish_tally(tally, bins, counts)
+                                   len(bins), len(counts), nb_bins)
+                    self.finish_tally(ltally, bins, counts)
+                    bins, counts = {}, []
                     # break
-                # elif bins_block and not line.startswith(' '):
-                #     continue
                 elif bins_block and ftally:
                     bins[bins_block] += [float(x) for x in elts]
                 elif vals_block:
                     counts += [float(x) for x in elts]
                 else:
                     continue
-        # nbbins = len(bins)
-        # LOGGER.warning("len(bins) = %d et vals: %d, Nbins = %s",
-        #              len(bins), len(counts), nb_bins)
-        # LOGGER.debug(bins)
-        # bins = np.array([float(x) for x in bins])
-        # if tally == 205:
-        #     bins *= 10
-        # sigma = np.array(
-        #     [x for ind, x in enumerate(counts) if ind % 2 != 0])
-        # counts = np.array(
-        #     [x for ind, x in enumerate(counts) if ind % 2 == 0])
-        # sigma = sigma*counts
-        # self.integral = Integral(counts[nbbins], sigma[nbbins])
-        # self.histo = Histo(bins, counts[:nbbins], sigma[:nbbins])
 
     def finish_tally(self, tally, bins, counts):
-        nbbins = len(bins)
-        bins = np.array(bins)
-        # bins = np.array([float(x) for x in bins])
-        if tally == 205:
-            bins *= 10
+        # number of bins in energy and time
+        # (but both not expected together for the moment)
+        # this removed the total bins if present
+        dims = [x for x in bins.keys() if 'u' not in x]
+        if len(dims) != 1:
+            print("Double differential distributions are not taken into"
+                  " account for the moment")
+            return
+        nbinste = sum([len(bins[x]) for x in bins if 'u' not in x])
+        print(nbinste)
+        bins_array = np.array(bins[dims[0]])
+        # convert shakes in ns !!!
+        if dims[0][0] == 't':
+            bins_array *= 10
         sigma = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 != 0])
         counts = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 == 0])
         sigma = sigma*counts
-        self.integral = Integral(counts[nbbins], sigma[nbbins])
-        self.histo = Histo(bins, counts[:nbbins], sigma[:nbbins])
+        ubins = [bins[x] for x in bins if 'u' in x]
+        print(ubins)
+        udim = 1 if len(ubins) == 0 else len(ubins[0]) + 1
+        print('udim =', udim)
+        print(counts)
+        self.integral[tally] = []
+        self.histo[tally] = []
+        for iubin in range(udim):
+            ifirstbin = iubin * (nbinste + 1)
+            ilastbin = iubin * (nbinste + 1) + nbinste
+            print("size counts:", counts.shape, "ilastbin =", ilastbin,
+                  'ifirstbin =', ifirstbin)
+            print(counts[ilastbin], sigma[ilastbin])
+            print(counts[ilastbin-5:ilastbin+5], sigma[ilastbin-5:ilastbin+5])
+            print("[94m", counts[ifirstbin:ilastbin],
+                  "[33m", sigma[ifirstbin:ilastbin], "[0m")
+            self.integral[tally].append(Integral(counts[ilastbin],
+                                                 sigma[ilastbin]))
+            self.histo[tally].append(Histo(bins_array,
+                                           counts[ifirstbin:ilastbin],
+                                           sigma[ifirstbin:ilastbin]))
+        print(self.integral)
+        print(self.histo)
+            # print(counts[nbinste], sigma[nbinste])
+            # print(counts[nbinste-3:nbinste+3], sigma[nbinste-3:nbinste+3])
+        # self.integral = Integral(counts[nbbins], sigma[nbbins])
+        # self.histo = Histo(bins, counts[:nbbins], sigma[:nbbins])
 
 
 class MCNPrenormalizedSphere():
@@ -1102,26 +1118,29 @@ class Comparison():
                     rspectrum[melt] = self.monaco_res[melt].vals*ewidth
         if mcnp:
             print("Found MCNP")
-            for melt, mcnp_args in mcnp.items():
+            for melt, mcontent in mcnp.items():
                 if melt not in self.mcnp_res:
                     continue
-                mcnp_args.setdefault('c', 'g')
-                mcnp_args.setdefault('label', 'MCNP')
-                # print("MCNP n bins =", self.mcnp_res[melt].histo.vals.shape)
-                # print("ebins[:10] =", self.mcnp_res[melt].histo.tbins[:10])
-                # print("ebins[190:] =", self.mcnp_res[melt].histo.tbins[190:])
-                ewidth = mcnp_args.pop('ewidth', 1)
-                if ewidth == 'integ':
-                    integ = np.sum(self.mcnp_res[melt].histo.vals)*0.1
-                    ewidth = 1/integ
-                # print("vals[:10] =", self.mcnp_res[melt].histo.vals[:10])
-                # print("vals[190:] =", self.mcnp_res[melt].histo.vals[190:]*ewidth)
-                main_splt.errorbar(self.mcnp_res[melt].histo.tbins-0.05,
-                                   self.mcnp_res[melt].histo.vals*ewidth,
-                                   self.mcnp_res[melt].histo.sigma*ewidth,
-                                   **mcnp_args)
+                for mcnp_args in mcontent:
+                    tally = mcnp_args.pop('tally', 2)
+                    ubin = mcnp_args.pop('ubin', 0)
+                    mcnp_args.setdefault('c', 'g')
+                    mcnp_args.setdefault('label', 'MCNP')
+                    # print("MCNP n bins =", self.mcnp_res[melt].histo.vals.shape)
+                    # print("ebins[:10] =", self.mcnp_res[melt].histo.tbins[:10])
+                    # print("ebins[190:] =", self.mcnp_res[melt].histo.tbins[190:])
+                    ewidth = mcnp_args.pop('ewidth', 1)
+                    if ewidth == 'integ':
+                        integ = np.sum(self.mcnp_res[melt].histo[tally][ubin].vals)*0.1
+                        ewidth = 1/integ
+                        # print("vals[:10] =", self.mcnp_res[melt].histo.vals[:10])
+                        # print("vals[190:] =", self.mcnp_res[melt].histo.vals[190:]*ewidth)
+                    main_splt.errorbar(self.mcnp_res[melt].histo[tally][ubin].tbins-0.05,
+                                       self.mcnp_res[melt].histo[tally][ubin].vals*ewidth,
+                                       self.mcnp_res[melt].histo[tally][ubin].sigma*ewidth,
+                                       **mcnp_args)
                 if ratio and [x for x in ratio if melt in x]:
-                    rspectrum[melt] = self.mcnp_res[melt].histo.vals[2:]*ewidth
+                    rspectrum[melt] = self.mcnp_res[melt].histo[tally][ubin].vals[2:]*ewidth
         if ratio:
             for rat in ratio:
                 print(rat)
