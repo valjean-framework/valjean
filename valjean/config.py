@@ -388,6 +388,35 @@ class BaseConfig:
         return repr(self._conf)
 
 
+
+
+def on(family=None, section_id=None, option=None):
+    if family is None and section_id is None and option is None:
+        return lambda x: True
+    elif family is None and section_id is None:
+        def accepts(_1, _2, opt, *, capture=option):
+            return opt == capture
+    elif family is None and option is None:
+        def accepts(_1, sec_id, _2, *, capture=section_id):
+            return sec_id == capture
+    elif section_id is None and option is None:
+        def accepts(fam, _1, _2, *, capture=family):
+            return fam == capture
+    elif family is None:
+        def accepts(_, sec_id, opt, *, capture=(section_id, option)):
+            return (sec_id, opt) == capture
+    elif section_id is None:
+        def accepts(fam, _, opt, *, capture=(family, option)):
+            return (fam, opt) == capture
+    elif option is None:
+        def accepts(fam, sec_id, _, *, capture=(family, section_id)):
+            return (fam, sec_id) == capture
+    else:
+        def accepts(fam, sec_id, opt, capture=(family, section_id, option)):
+            return (fam, sec_id, opt) == capture
+    return accepts
+
+
 class Config(BaseConfig):
     '''The real configuration class for :mod:`valjean`. It derives from
     :class:`BaseConfig` and extends it by providing the possibility to define
@@ -420,14 +449,12 @@ class Config(BaseConfig):
         '''
         super().__init__(paths)
 
-        #: dictionary
-        self._handlers = dict()
+        #: list of handlers
+        self._handlers = []
         if handlers is None:
-            the_handlers = self.DEFAULT_HANDLERS
+            self._handlers.extend(self.DEFAULT_HANDLERS)
         else:
-            the_handlers = handlers
-        for handler in the_handlers:
-            self.add_option_handler(*handler)
+            self._handlers.extend(handlers)
 
         # initialize the list of cumulated dependencies with an empty set
         self._deps = set()
@@ -472,19 +499,19 @@ class Config(BaseConfig):
             val = self._conf.get(xsection, option, raw=raw, vars=vars)
             LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
             return val
-        except NoOptionError:
+        except (NoOptionError, NoSectionError):
             split = self.split_section(xsection)
             if len(split) > 1:
-                handler = self._handlers.get((option, split[0]), None)
-                if handler is not None:
-                    LOGGER.debug('treating option %s in section %s as special',
-                                 xsection, option)
-                    val, deps = handler(self, xsection, split, option, raw,
-                                        vars, fallback)
-                    self._deps.update(deps)
-                    LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
-                    LOGGER.debug('deps = %r', deps)
-                    return val
+                for handler in self._handlers:
+                    if handler.accepts(split[0], split[1], option):
+                        LOGGER.debug('treating option %s in section %s as special',
+                                     xsection, option)
+                        val, deps = handler(self, xsection, split, option, raw,
+                                            vars, fallback)
+                        self._deps.update(deps)
+                        LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
+                        LOGGER.debug('deps = %r', deps)
+                        return val
             if fallback is not _UNSET:
                 LOGGER.debug('get(%r, %r) falls back to %r', xsection, option,
                              fallback)
@@ -500,7 +527,7 @@ class Config(BaseConfig):
         '''Clear the cached dependencies.'''
         self._deps.clear()
 
-    def add_option_handler(self, sec_families, option, handler):
+    def add_option_handler(self, handler):
         '''Add an option handler.
 
         :param list sec_families: The list of section families where the
@@ -508,20 +535,26 @@ class Config(BaseConfig):
         :param str option: The name of the option to be handled.
         :param handler: An option handler.
         '''
-        for sec_family in sec_families:
-            self._handlers[(option, sec_family)] = handler
+        self._handlers.append(handler)
 
     def has_option_handler(self, sec_family, option):
         '''Check if an option handler is installed for given section family and
         option name.'''
-        return (option, sec_family) in self._handlers
+        return any(h.accepts((sec_family, '') , option) for h in self._handlers)
 
     def get_option_handler(self, sec_family, option):
         '''Return the option handler for given section family and option
         name.'''
-        return self._handlers[(option, sec_family)]
+        return next(h for h in self._handlers if h.accepts((sec_family, '') , option))
 
-    class LookupOtherHandler:
+    class Handler:
+        def __init__(self, accepts):
+            self._accepts = accepts
+
+        def accepts(self, *args):
+            return self._accepts(*args)
+
+    class LookupOtherHandler(Handler):
         '''Handle missing options by looking up alternate options.
 
         This handler can be used to look up different options in other sections
@@ -537,7 +570,8 @@ class Config(BaseConfig):
         will be passed through to the lookup of the alternate option.
         '''
 
-        def __init__(self, other_sec=None, other_opt=None, finalizer=None):
+        def __init__(self, accepts, other_sec=None, other_opt=None,
+                     finalizer=None):
             '''Instantiate an option handler.
 
             :param other_sec: Name of the alternate section where the lookup
@@ -554,6 +588,7 @@ class Config(BaseConfig):
                               handler. If finalizer is `None`, the value for
                               the alternate look-up will be returned as-is.
             '''
+            super().__init__(accepts)
             self.other_sec = other_sec
             self.other_opt = other_opt
             self.finalizer = finalizer
@@ -576,7 +611,7 @@ class Config(BaseConfig):
                 return self.finalizer(val, split, opt), deps
             return val, deps
 
-    class LookupSectionFromOptHandler:
+    class LookupSectionFromOptHandler(Handler):
         '''Handle missing options by looking up options in sections defined by
         other options.
 
@@ -679,9 +714,10 @@ class Config(BaseConfig):
         override them in later sections (``run/chest``).
         '''
 
-        def __init__(self, opt, finalizer=None):
+        def __init__(self, accepts, opt, finalizer=None):
             '''Instantiate an option handler.
 
+            :param applies: a callable that decides
             :param str opt: Name of an option that indicates in which section
                             the lookup should be performed. The option name is
                             taken to be the section family, and the option
@@ -689,6 +725,7 @@ class Config(BaseConfig):
             :param finalizer: A callable; see
                               :meth:`.LookupOtherHandler.__init__()`.
             '''
+            super().__init__(accepts)
             self.opt = opt
             self.finalizer = finalizer
 
@@ -711,7 +748,7 @@ class Config(BaseConfig):
             deps = ['{}/{}'.format(self.opt, sec_id)]
             return val, deps
 
-    class PathHandler:
+    class PathHandler(Handler):
         '''Handle the 'path' option for executable/run sections.
 
         This handler specifies the logic to extract the path of an executable
@@ -721,6 +758,9 @@ class Config(BaseConfig):
         must be a relative path). The path to the executable is constructed by
         concatenating the build directory of `from-build` with `relative-path`.
         '''
+
+        def __init__(self, accepts):
+            super().__init__(accepts)
 
         # pylint: disable=too-many-arguments
         @staticmethod
@@ -742,17 +782,14 @@ class Config(BaseConfig):
 
     #: Default option handlers
     DEFAULT_HANDLERS = (
-        (('run',), 'args', LookupSectionFromOptHandler('executable')),
-        (('executable',), 'build-dir',
-         LookupSectionFromOptHandler('from-build')),
-        (('executable',), 'path', PathHandler()),
-        (('run',), 'path', LookupSectionFromOptHandler('executable')),
-        (('checkout',), 'checkout-dir',
-         LookupOtherHandler(other_opt='checkout-root',
-                            finalizer=lambda val, split, opt:
-                            os.path.join(val, split[1]))),
-        (('build',), 'build-dir',
-         LookupOtherHandler(other_opt='build-root',
-                            finalizer=lambda val, split, _:
-                            os.path.join(val, split[1])))
+        LookupSectionFromOptHandler(on(family='run', option='args'), 'executable'),
+        LookupSectionFromOptHandler(on(family='executable', option='build-dir'), 'from-build'),
+        PathHandler(on(family='executable', option='path')),
+        LookupSectionFromOptHandler(on(family='run', option='path'), 'executable'),
+        LookupOtherHandler(on(family='checkout', option='checkout-dir'),
+            other_opt='checkout-root',
+            finalizer=lambda val, split, opt: os.path.join(val, split[1])),
+        LookupOtherHandler(on(family='build', option='build-dir'),
+            other_opt='build-root',
+            finalizer=lambda val, split, _: os.path.join(val, split[1]))
     )
