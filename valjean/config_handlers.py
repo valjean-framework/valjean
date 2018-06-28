@@ -78,7 +78,7 @@ Now we construct a :class:`.Config` object and we attach the handler to it:
     >>> conf.add_section('no_eggs')
     >>> conf.set('no_eggs', 'spam', 'BACON')
     >>> conf.add_section('empty')
-    >>> conf.add_option_handler(EggsHandler())
+    >>> conf.add_option_handler(50, EggsHandler())
 
 and here we see the handler in action:
 
@@ -223,9 +223,9 @@ class LookupSectionFromOptHandler(Handler):
         arg2 = chest
 
     Assume we install the following option handler for `args` in the `run`
-    sections:
+    sections::
 
-        >>> config.add_option_handler(
+        >>> config.add_option_handler(50,   # a priority
         ...   LookupSectionFromOptHandler(trigger(family='run', option='args'),
         ...                               'executable')
         ...   )
@@ -254,6 +254,8 @@ class LookupSectionFromOptHandler(Handler):
     fails, because this option is not defined in ``executable/dog_kennel``.
     Now consider the following:
 
+    .. doctest:: config_handlers_lookupsection
+
         >>> config.get('run', 'paper_bag', 'args', raw=True)
         '${arg1} ${arg2}'
 
@@ -265,6 +267,8 @@ class LookupSectionFromOptHandler(Handler):
 
     If we activate interpolation (``raw=False``)
 
+    .. doctest:: config_handlers_lookupsection
+
         >>> config.get('run', 'paper_bag', 'args')
         'mattress paper_bag'
 
@@ -272,6 +276,8 @@ class LookupSectionFromOptHandler(Handler):
     from ``executable/dog_kennel`` above).  The ``${arg1}`` option is
     interpolated from the ``executable/dog_kennel`` section, but
     ``${arg2}`` is interpolated from ``run/paper_bag``.
+
+    .. doctest:: config_handlers_lookupsection
 
         >>> config.get('run', 'chest', 'args')
         'sing chest'

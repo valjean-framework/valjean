@@ -1,6 +1,4 @@
-'''Module containing the configuration classes for the :mod:`valjean` package.
-
-:class:`Config` objects encapsulate a set of configuration options for a
+''':class:`Config` objects encapsulate a set of configuration options for a
 :mod:`valjean` run. Here is how you create one:
 
     >>> from valjean.config import Config
@@ -120,6 +118,9 @@ Automatic dependency discovery
 ------------------------------
 
 .. todo:: Document it. Perhaps refactor it somewhere else?
+
+Module API
+----------
 '''
 
 from configparser import (ConfigParser, ExtendedInterpolation, _UNSET,
@@ -129,6 +130,7 @@ import os
 import re
 
 from . import LOGGER
+from .priority_set import PrioritySet
 from .config_handlers import (LookupOtherHandler, LookupSectionFromOptHandler,
                               PathHandler, trigger)
 
@@ -444,11 +446,10 @@ class Config(BaseConfig):
         super().__init__(paths)
 
         #: list of handlers
-        self._handlers = []
         if handlers is None:
-            self._handlers.extend(self.DEFAULT_HANDLERS)
+            self._handlers = PrioritySet(self.DEFAULT_HANDLERS)
         else:
-            self._handlers.extend(handlers)
+            self._handlers = PrioritySet(handlers)
 
         # initialize the list of cumulated dependencies with an empty set
         self._deps = set()
@@ -524,15 +525,13 @@ class Config(BaseConfig):
         '''Clear the cached dependencies.'''
         self._deps.clear()
 
-    def add_option_handler(self, handler):
+    def add_option_handler(self, priority, handler):
         '''Add an option handler.
 
-        :param list sec_families: The list of section families where the
-                                  handler will be active.
-        :param str option: The name of the option to be handled.
-        :param handler: An option handler.
+        :param int priority: the priority of the new handler.
+        :param handler: an option handler.
         '''
-        self._handlers.append(handler)
+        self._handlers.add(priority, handler)
 
     def has_option_handler(self, family=None, section_id=None, option=None):
         '''Check if an option handler is installed for given section family,
@@ -548,26 +547,26 @@ class Config(BaseConfig):
 
     #: Default option handlers
     DEFAULT_HANDLERS = (
-        LookupSectionFromOptHandler(
+        (10, PathHandler('executable')),
+        (50, LookupSectionFromOptHandler(
             trigger(family='run', option='args'),
             'executable'
-            ),
-        LookupSectionFromOptHandler(
+            )),
+        (50, LookupSectionFromOptHandler(
             trigger(family='executable', option='build-dir'),
             'from-build'
-            ),
-        PathHandler('executable'),
-        LookupSectionFromOptHandler(
+            )),
+        (50, LookupSectionFromOptHandler(
             trigger(family='run', option='path'), 'executable'
-            ),
-        LookupOtherHandler(
+            )),
+        (50, LookupOtherHandler(
             trigger(family='checkout', option='checkout-dir'),
             other_opt='checkout-root',
             finalizer=lambda val, split, opt: os.path.join(val, split[1])
-            ),
-        LookupOtherHandler(
+            )),
+        (50, LookupOtherHandler(
             trigger(family='build', option='build-dir'),
             other_opt='build-root',
             finalizer=lambda val, split, _: os.path.join(val, split[1])
-            )
+            )),
     )
