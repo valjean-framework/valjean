@@ -395,6 +395,15 @@ class BaseConfig:
             return False
         return self._conf == other._conf  # pylint: disable=protected-access
 
+    def __str__(self):
+        return ('\n'.join('[{}]\n'.format(sec) + '\n'
+                          .join('{} = {}'.format(key, val)
+                                for key, val in proxy.items())
+                          for sec, proxy in self.items(raw=True)))
+
+    def __repr__(self):
+        return repr(self._conf)
+
 
 class Config(BaseConfig):
     '''The real configuration class for :mod:`valjean`. It derives from

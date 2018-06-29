@@ -198,6 +198,7 @@ autodoc_default_flags = ['members', 'special-members']
 # list members by order of appearance in the source file
 autodoc_member_order = 'bysource'
 
+
 # pylint: disable=missing-docstring, unused-argument, too-many-arguments
 def skip_weakref(app, what, name, obj, skip, options):
     if name == '__weakref__' or name == '__dict__' or name == '__module__':

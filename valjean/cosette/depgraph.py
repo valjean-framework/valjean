@@ -459,7 +459,7 @@ class DepGraph:
 
         if node in self:
             LOGGER.info('Node %s already belongs to the graph', node)
-            return
+            return self
 
         new_index = len(self._nodes)
         self._nodes.append(node)
@@ -477,7 +477,7 @@ class DepGraph:
         i = self._nodes.get_index(node, None)
         if i is None:
             LOGGER.warning('Cannot remove node %s: not in graph', node)
-            return
+            return self
 
         # first, we need to put the selected node at the end of the _nodes list
         last = len(self._nodes) - 1

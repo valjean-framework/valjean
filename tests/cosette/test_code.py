@@ -5,6 +5,8 @@
 
 import os
 from configparser import NoSectionError
+from subprocess import check_call, check_output, DEVNULL, CalledProcessError
+import re
 
 import pytest
 
@@ -18,7 +20,51 @@ from valjean.cosette.env import Env
 from valjean import LOGGER
 
 
+def make_skip_marker(command, regex):
+    '''Create a :func:`pytest.mark.skipif` marker for a command.
+
+    :param str command: the name of a command (an executable). If the command
+                        is not available, the marker will flag the tests as
+                        SKIPPED.
+    :param str regex: a regex to extract the version number of the command from
+                      the output of ``command --version``. The version number
+                      must appear in the first capture group.
+    '''
+    import locale
+    has = False
+    try:
+        encoding = locale.getpreferredencoding(False)
+        version_str = check_output([command, '--version']).decode(encoding)
+        match = re.match(regex, version_str)
+        if match is None:
+            version = ''
+            reason = ('could not parse version string for ' + command +
+                      ', needed for this test')
+        else:
+            version = match.group(1)
+            has = True
+            reason = ''
+    except FileNotFoundError:
+        version = ''
+        reason = 'could not find ' + command + ', needed for this test'
+    except CalledProcessError:
+        version = ''
+        reason = 'call to `' + command + ' --version` failed'
+
+    marker = pytest.mark.skipif(not has, reason=reason)
+    return marker, version
+
+
+# pylint: disable=invalid-name
+requires_cmake, _CMAKE_VERSION = make_skip_marker(code.BuildTask.CMAKE,
+                                                  r'^cmake version (.*)')
+HAS_CMAKE = not requires_cmake.args[0]
+requires_git, _ = make_skip_marker(code.CheckoutTask.GIT,
+                                   r'^git version (.*)$')
+HAS_GIT = not requires_git.args[0]
+
 CMAKELISTS = r'''project(TestCodeTasks C)
+cmake_minimum_required(VERSION ''' + _CMAKE_VERSION + ''')
 set(SOURCE_FILENAME "${PROJECT_BINARY_DIR}/test.c")
 file(WRITE "${SOURCE_FILENAME}" "int main() { return 0; }")
 add_executable(test_exe "${SOURCE_FILENAME}")
@@ -40,14 +86,22 @@ def setup_project(project_dir):
 
     The project consists of a git repository containing a simple
     `CMakelists.txt` file.
+
+    :param str project_dir: the path to an existing directory.
     '''
-    from subprocess import check_call, DEVNULL
+    LOGGER.debug('HAS_GIT: %s', HAS_GIT)
+    LOGGER.debug('HAS_CMAKE: %s', HAS_CMAKE)
+
+    filename = os.path.join(project_dir, 'CMakeLists.txt')
+
+    with open(filename, 'w') as cmakelists_file:
+        cmakelists_file.write(CMAKELISTS)
+
+    if not HAS_GIT:
+        return
 
     check_call([code.CheckoutTask.GIT, 'init', project_dir],
                stdout=DEVNULL, stderr=DEVNULL)
-    filename = os.path.join(project_dir, 'CMakeLists.txt')
-    with open(filename, 'wb') as cmakelists_file:
-        cmakelists_file.write(CMAKELISTS.encode('utf-8'))
     git_dir = os.path.join(project_dir, '.git')
     check_call([code.CheckoutTask.GIT, '--git-dir', git_dir,
                 '--work-tree', project_dir, 'add', filename],
@@ -291,8 +345,6 @@ def do_git_checkout(config, env=None):
 
 def do_cmake_build(config, env=None):
     '''Actually perform the CMake build.'''
-    from subprocess import check_call
-
     # extract the section name and the task name
     sec_name, name = config.section_by_family('build')
 
@@ -335,16 +387,20 @@ def do_cmake_build(config, env=None):
 ###########
 
 
+@requires_git
 def test_git_checkout(git_config):
     '''Test that git checkout works from a generated configuration.'''
     return do_git_checkout(git_config)
 
 
+@requires_cmake
 def test_cmake_build(cmake_config):
     '''Test that CMake build works from a generated configuration.'''
     return do_cmake_build(cmake_config)
 
 
+@requires_git
+@requires_cmake
 def test_git_checkout_cmake_build(git_cmake_config):
     '''Test a git checkout followed by a CMake build.'''
     # extract the section name and the task name
@@ -387,11 +443,16 @@ def test_unknown_checkout(simple_git_config):
 
 def test_missing_build_section(simple_cmake_config):
     '''Test that a missing build section raises an error on build.'''
+    with pytest.raises(NoSectionError):
+        missing_build_section(simple_cmake_config)
+
+
+def missing_build_section(simple_cmake_config):
+    '''Actual test implementation for :func:`test_missing_build_section`.'''
     # extract the section name and the task name
     sec_name, name = simple_cmake_config.section_by_family('build')
     simple_cmake_config.remove_section(sec_name)
-    with pytest.raises(NoSectionError):
-        code.BuildTask.from_config(name, simple_cmake_config)
+    code.BuildTask.from_config(name, simple_cmake_config)
 
 
 def test_notimpl_build(simple_cmake_config, failing_build):

@@ -16,9 +16,10 @@ Some options for debugging are available (end flag).
 import sys
 import time
 import logging
+from pyparsing import ParseException
+
 import valjean.eponine.pyparsing_t4.grammar as pygram
 from valjean.eponine import scan_t4
-from pyparsing import ParseException
 
 
 LOGGER = logging.getLogger('valjean')
@@ -79,14 +80,14 @@ class T4Parser():
             parser.scan_t4_listing()
         except T4ParserException as t4pe:
             print(t4pe)
-            return
+            return None
         LOGGER.info("Successful scan in %f s", time.time()-start_time)
         start_parse = time.time()
         try:
             parser.parse_t4_listing()
         except T4ParserException as t4pe:
             print(t4pe)
-            return
+            return None
         LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
         LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
         return parser
@@ -114,14 +115,14 @@ class T4Parser():
             parser.scan_t4_listing()
         except T4ParserException as t4pe:
             print(t4pe)
-            return
+            return None
         LOGGER.info("Successful scan in %f s", time.time()-start_time)
         start_parse = time.time()
         try:
             parser.parse_t4_listing()
         except T4ParserException as t4pe:
             print(t4pe)
-            return
+            return None
         LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
         LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
         return parser
@@ -241,6 +242,7 @@ def main(myjdd="", batch_num=-1, mesh_lim=None, end_flag=""):
             t4_res.print_t4_stats()
             t4_res.print_t4_times()
         return t4_res.check_t4_times()
+    return None
 
 
 if __name__ == "__main__":

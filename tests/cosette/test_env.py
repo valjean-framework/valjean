@@ -8,8 +8,7 @@ import tempfile
 import pytest
 from hypothesis import given, event
 from hypothesis.strategies import (text, lists, integers, dictionaries,
-                                   sampled_from, composite, tuples, one_of,
-                                   just)
+                                   sampled_from, composite, one_of, just, data)
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
@@ -32,7 +31,7 @@ class DoNothingTask(Task):
 
 def env_names():
     '''Strategy to generate names for :class:`~.Env`.'''
-    return text(min_size=1, average_size=3)
+    return text(min_size=1)
 
 
 @composite
@@ -48,7 +47,7 @@ def env_keys(draw, from_keys=None, **kwargs):
 
 
 @composite
-def env(draw, keys=env_keys()):
+def envs(draw, keys=env_keys()):
     '''Generate an environment with some random information.'''
     # sample the dictionary keys
     the_keys = draw(keys)
@@ -98,7 +97,7 @@ def event_frac(name, frac):
 #  tests  #
 ###########
 
-@given(env=env())
+@given(env=envs())
 def test_persistence_roundtrip(env, persistence_format):
     '''Test the roundtrip to all the persistence formats.'''
     with tempfile.NamedTemporaryFile() as persist:
@@ -107,15 +106,11 @@ def test_persistence_roundtrip(env, persistence_format):
     assert env == re_env
 
 
-# the following strategy generates two environment with keys taken from the
-# same set
-@given(envs=env_keys()
-       .flatmap(lambda keys: tuples(env(keys=sampled_from(keys)),
-                                    env(keys=sampled_from(keys)))))
-def test_updates(envs):
+@given(env=envs(), data=data())
+def test_updates(env, data):
     '''Test environment updates.'''
-    # assume that the second environment represents updates for the first one
-    env, env_update = envs
+    # generate a new environment with keys taken from those of the first
+    env_update = data.draw(envs(sampled_from(list(env.keys()))))
     old_env = env.copy()
     env.apply(env_update)
 
@@ -153,15 +148,11 @@ def test_updates(envs):
                count_sub_update / (count_sub_update + count_sub_no_update))
 
 
-# the following strategy generates two environment with keys taken from the
-# same set
-@given(envs=env_keys()
-       .flatmap(lambda keys: tuples(env(keys=sampled_from(keys)),
-                                    env(keys=sampled_from(keys)))))
-def test_merge_done_tasks(envs):
+@given(env=envs(), data=data())
+def test_merge_done_tasks(env, data):
     '''Test merging two environments.'''
-    # merge the second environment in the first one
-    env, env_to_merge = envs
+    # generate a new environment with keys taken from those of the first
+    env_to_merge = data.draw(envs(sampled_from(list(env.keys()))))
     old_env = env.copy()
     env.merge_done_tasks(env_to_merge)
 

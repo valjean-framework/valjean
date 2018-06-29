@@ -346,10 +346,11 @@ class Scan(Mapping):
     def _is_end_flag(self, line):
         # len(end_flags) == 3: default list, no user's end flag added
         if "time" not in line and len(self.end_flags) == 3:
-            return
+            return None
         for end_flag in self.end_flags:
             if end_flag in line:
                 return end_flag
+        return None
 
     def _add_time(self, end_flag, line):
         self.times[end_flag] = (int(line.split()[-1])

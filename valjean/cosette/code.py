@@ -273,8 +273,7 @@ class CheckoutTask(ShellTask):
     _GIT_TEMPLATE = r'''test -d {log_root} || mkdir -p {log_root}
 test -d {checkout_dir} || mkdir -p {checkout_dir}
 {GIT} clone {flags} -- {repository} {checkout_dir} >>{checkout_log} 2>&1
-cd ${checkout_dir}
-{GIT} checkout {ref} >>{checkout_log} 2>&1
+cd {checkout_dir} && {GIT} checkout {ref} >>{checkout_log} 2>&1
 '''
 
 
@@ -354,7 +353,7 @@ class BuildTask(ShellTask):
                                        fallback=''))
         source_dir = config.get(sec_fam, name, 'source-dir', fallback=None)
         targets = config.get(sec_fam, name, 'build-targets', fallback=None)
-        if targets is not None:
+        if isinstance(targets, str):
             targets = split(targets)
         deps = config.get(sec_fam, name, 'depends-on', fallback=None)
 

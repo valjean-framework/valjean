@@ -145,11 +145,9 @@ def convert_generic_ifp(toks):
     rtoks = toks['ifp_scores']
     if 'sensit_res' in rtoks.keys():
         return common.convert_sensitivities(rtoks['sensit_res'])
-    else:
-        if len(list(rtoks.keys())) == 1:
-            return common.convert_generic_ifp(rtoks, list(rtoks.keys())[0])
-        else:
-            print("more than one key available, what should we do ?")
+    elif len(list(rtoks.keys())) == 1:
+        return common.convert_generic_ifp(rtoks, list(rtoks.keys())[0])
+    raise ValueError("more than one key available, what should we do ?")
 
 
 def convert_keff(toks):

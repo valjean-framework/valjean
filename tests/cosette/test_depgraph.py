@@ -16,28 +16,28 @@ import valjean.cosette.depgraph as depgraph
 
 # pylint: disable=too-many-arguments
 @composite
-def dep_dicts(draw, elements=integers(0, 10), average_size=10, min_deps=0,
-              max_deps=None, average_deps=2, **kwargs):
+def dep_dicts(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
+              **kwargs):
     '''Composite Hypothesis strategy to generate acyclic dependency
     dictionaries.'''
-    keys = draw(lists(elements, average_size=average_size, unique=True,
-                      **kwargs).map(sorted))
+    keys = draw(lists(elements, unique=True, **kwargs).map(sorted))
     dag = {}
     for i, key in enumerate(keys):
-        vals = draw(sets(sampled_from(keys[i+1:]), min_size=min_deps,
-                         average_size=average_deps, max_size=max_deps))
+        vals = draw(sets(sampled_from(keys[i+1:]),
+                         min_size=min_deps,
+                         max_size=max_deps))
         dag[key] = vals
     return dag
 
 
 # pylint: disable=too-many-arguments
 @composite
-def depgraphs(draw, elements=integers(0, 10), average_size=10, min_deps=0,
-              max_deps=None, average_deps=2, **kwargs):
+def depgraphs(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
+              **kwargs):
     '''Composite Hypothesis strategy to generate acyclic DepGraph objects.'''
-    dag = draw(dep_dicts(elements, average_size=average_size,
-                         min_deps=min_deps, average_deps=average_deps,
-                         max_deps=max_deps, **kwargs))
+    dag = draw(dep_dicts(elements,
+                         min_deps=min_deps, max_deps=max_deps,
+                         **kwargs))
     return depgraph.DepGraph.from_dependency_dictionary(dag)
 
 ######################
@@ -83,7 +83,7 @@ def test_topological_sort_int(graph):
     do_test_topological_sort(graph)
 
 
-@given(graph=depgraphs(elements=text(average_size=10)))
+@given(graph=depgraphs(elements=text()))
 def test_topological_sort_str(graph):
     '''Test the topological sort invariant with string dicts.'''
     do_test_topological_sort(graph)
@@ -502,6 +502,7 @@ def test_dependees(graph):
         assert node0 in graph[dep]
 
 
+@settings(deadline=None)
 @given(graph=depgraphs(min_size=1))
 def test_to_graphviz(graph):
     '''Test that DepGraph produces syntactically correct `dot` files.'''
@@ -522,7 +523,7 @@ def test_cyclic_raises():
 
 
 @settings(max_examples=10)
-@given(graph=depgraphs(max_deps=0, average_deps=0, min_size=2))
+@given(graph=depgraphs(max_deps=0, min_size=2))
 def test_remove_missing_edge_raises(graph):
     '''Test that removing a missing edge raises an exception.'''
     nodes = graph.nodes()

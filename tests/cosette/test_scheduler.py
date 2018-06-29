@@ -35,12 +35,11 @@ def graphs(draw, task_strategy, dep_frac=0.0):
 
 # pylint: disable=too-many-arguments
 @composite
-def delay_tasks(draw, min_duration=1e-15, max_duration=1e-5, average_size=100,
+def delay_tasks(draw, min_duration=1e-15, max_duration=1e-5,
                 min_size=None, max_size=None):
     '''Composite Hypothesis strategy to generate a list of delay tasks.'''
     durations = draw(
         lists(floats(min_value=min_duration, max_value=max_duration),
-              average_size=average_size,
               min_size=min_size, max_size=max_size)
         )
 
@@ -98,8 +97,7 @@ def run(graph, n_workers):
 
 @settings(deadline=None, max_examples=25)
 @given(graph=graphs(task_strategy=delay_tasks(min_duration=1e-15,
-                                              max_duration=1e-5,
-                                              average_size=100),
+                                              max_duration=1e-5),
                     dep_frac=0.0),
        n_workers=integers(min_value=0, max_value=100))
 def test_indep_tasks(graph, n_workers):
@@ -109,8 +107,7 @@ def test_indep_tasks(graph, n_workers):
 
 @settings(deadline=None, max_examples=25)
 @given(graph=graphs(task_strategy=delay_tasks(min_duration=0.0,
-                                              max_duration=0.0,
-                                              average_size=50),
+                                              max_duration=0.0),
                     dep_frac=0.02),
        n_workers=integers(min_value=0, max_value=100))
 def test_dep_tasks(graph, n_workers):
@@ -119,8 +116,7 @@ def test_dep_tasks(graph, n_workers):
 
 
 @given(graph=graphs(task_strategy=delay_tasks(min_duration=0.1,
-                                              max_duration=1.0,
-                                              average_size=6),
+                                              max_duration=1.0),
                     dep_frac=0.1),
        n_workers=integers(min_value=0, max_value=6))
 @settings(max_examples=5, deadline=10000)
@@ -131,7 +127,6 @@ def test_few_dep_tasks_few_workers(graph, n_workers):
 
 @given(graph=graphs(task_strategy=delay_tasks(min_duration=1.0,
                                               max_duration=1.0,
-                                              average_size=None,
                                               min_size=1,
                                               max_size=1)),
        n_workers=integers(min_value=0, max_value=1000))
@@ -172,7 +167,7 @@ class TestSchedulerOnFailingTasks:
 
     @staticmethod
     @given(graph=graphs(delay_tasks(min_duration=0.0, max_duration=0.0,
-                                    average_size=10, min_size=3),
+                                    min_size=3),
                         dep_frac=0.3),
            n_workers=integers(min_value=0, max_value=100))
     @settings(max_examples=30)

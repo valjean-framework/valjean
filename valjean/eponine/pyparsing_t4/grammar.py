@@ -425,9 +425,9 @@ _meanweightleak = (Suppress(_meanweightleakage_kw)
                       | Suppress(':') + _unknown_kw)
                    ('mean_weigt_leak'))
 _meanweightleakin = (Suppress(_meanweightleakagein_kw)
-                   + (Suppress('=') + _meanweightleakvals
-                      | Suppress(':') + _unknown_kw)
-                   ('mean_weigt_leak_inside'))
+                     + (Suppress('=') + _meanweightleakvals
+                        | Suppress(':') + _unknown_kw)
+                     ('mean_weigt_leak_inside'))
 _edbatchnum = Suppress(_edbatchnum_kw + ':') + _inums('edition_batch_number')
 
 _meanweightrestartpart = (Suppress(_meanweightrestartpart_kw)
@@ -637,8 +637,8 @@ def _set_no_unit_case(toks):
     '''Deal with the "not unit" case'''
     if len(toks) == 1:
         return {'uscore': '', 'usigma': toks[0]}
-    else:
-        LOGGER.warning("more than one unit, please check: %s", str(toks))
+    LOGGER.warning("more than one unit, please check: %s", str(toks))
+    return None
 
 
 def _rm_blanks(toks):

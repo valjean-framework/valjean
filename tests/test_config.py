@@ -3,7 +3,7 @@
 
 '''Tests for the :mod:`~.valjean.config` module.'''
 
-from string import ascii_letters
+from string import ascii_lowercase
 from configparser import (DuplicateSectionError, NoOptionError, NoSectionError,
                           InterpolationMissingOptionError)
 from collections import Counter, defaultdict
@@ -11,7 +11,7 @@ from itertools import chain
 import os
 
 import pytest
-from hypothesis import given, note, settings, HealthCheck, event, assume
+from hypothesis import given, note, settings, event, assume, HealthCheck
 from hypothesis.strategies import (text, dictionaries, composite, sampled_from,
                                    lists)
 
@@ -21,8 +21,10 @@ from valjean import LOGGER
 from valjean.config import BaseConfig, Config
 
 
-ID_CHARS = ascii_letters
-IDS = text(ID_CHARS, min_size=1)
+ID_CHARS = ascii_lowercase
+
+# normalized IDs are stripped lowercase strings
+IDS = text(ID_CHARS, min_size=1).map(lambda s: s.strip())
 
 STANDARD_SECS = ['build/{}', 'checkout/{}', 'executable/{}', 'run/{}',
                  'other/{}']
@@ -32,7 +34,6 @@ STANDARD_SECS = ['build/{}', 'checkout/{}', 'executable/{}', 'run/{}',
 #  Hypothesis strategies  #
 ###########################
 
-@settings(suppress_health_check=(HealthCheck.too_slow,))
 @composite
 def sec_names(draw, sec_ids):
     '''Hypothesis strategy to generate section names, with or without slash
@@ -44,14 +45,9 @@ def sec_names(draw, sec_ids):
 @composite
 def baseconfig(draw, keys=IDS, vals=IDS, sec_names=sec_names(IDS)):
     '''Composite Hypothesis strategy to generate BaseConfig objects.'''
-    secs = dictionaries(keys, vals, min_size=2)
-    as_dict = draw(dictionaries(sec_names, secs, min_size=2))
-    conf = BaseConfig()
-    for sec, opts in as_dict.items():
-        ssec = sec.strip()
-        conf.add_section(ssec)
-        for opt, val in opts.items():
-            conf.set(ssec, opt.strip(), val.strip())
+    secs = dictionaries(keys, vals)
+    as_dict = draw(dictionaries(sec_names, secs))
+    conf = BaseConfig.from_mapping(as_dict)
     return conf
 
 
@@ -106,7 +102,7 @@ def test_equality_reflective(conf):
     assert conf == conf
 
 
-@settings(suppress_health_check=(HealthCheck.too_slow,))
+@settings(deadline=None)
 @given(conf=baseconfig())
 def test_merge_with_self(conf):
     '''Test that merging with `self` results in the identity.'''
@@ -126,16 +122,18 @@ def test_merge_associative(conf1, conf2, conf3):
     assert (conf1 + conf2) + conf3 == conf1 + (conf2 + conf3)
 
 
-@settings(suppress_health_check=(HealthCheck.too_slow,))
+@settings(deadline=None, suppress_health_check=(HealthCheck.too_slow,))
 @given(conf1=baseconfig(), conf2=baseconfig())
 def test_merge_all_sections(conf1, conf2):
     '''Test that merging all configuration sections is the same as merging
     the whole configuration.'''
     conf_merge = conf1 + conf2
-    conf_copy = BaseConfig().merge(conf1)
     for sec in conf2.sections():
-        conf_copy.merge_section(conf2, sec)
-    assert conf_merge == conf_copy
+        LOGGER.debug('merging section %s', sec)
+        conf1.merge_section(conf2, sec)
+    note('conf1: {}'.format(conf1))
+    note('conf_merge: {}'.format(conf_merge))
+    assert conf1 == conf_merge
 
 
 @given(conf=baseconfig())
@@ -279,12 +277,10 @@ def test_compare_wrong_type_raises(empty_config):
     assert not empty_config == 'Romani ite domum'
 
 
-@settings(suppress_health_check=(HealthCheck.too_slow,))
+@settings(deadline=None)
 @given(conf=baseconfig(),
-       spaces_before=text([' '], average_size=2),
-       spaces_in1=text([' '], average_size=2),
-       spaces_in2=text([' '], average_size=2),
-       spaces_after=text([' '], average_size=2))
+       spaces_before=text([' ']), spaces_in1=text([' ']),
+       spaces_in2=text([' ']), spaces_after=text([' ']))
 def test_duplicate_sections(conf, spaces_before, spaces_in1, spaces_in2,
                             spaces_after):
     '''Test that section names which differ only in the amount of

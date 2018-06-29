@@ -328,7 +328,7 @@ def make_mesh_t4_output(meshes, ebins, tbins):
     return ''.join(t4out)
 
 
-@settings(deadline=300)
+@settings(deadline=None)
 @given(array_bins=array_and_bins(
     dtype=np.dtype([('tally', FTYPE), ('sigma', FTYPE)]),
     max_dim=(3, 3, 3, 3, 3, 1, 1),
@@ -574,6 +574,7 @@ def compare_bins(bins, spectrum_res):
             assert np.allclose(spectrum_res[key+'bins'], bins[key])
 
 
+@settings(deadline=None)
 @given(array_bins=array_and_bins(dtype=np.dtype([('score', FTYPE),
                                                  ('sigma', FTYPE),
                                                  ('score/lethargy', FTYPE)]),
@@ -763,7 +764,7 @@ def green_bands(draw, max_dims=(5, 3, 2, 2, 2, 5)):
     return array, the_bins
 
 
-@settings(max_examples=100, deadline=300)
+@settings(max_examples=100, deadline=None)
 @given(array_bins=green_bands(max_dims=(5, 3, 2, 2, 2, 5)),
        disc_batch=integers(0, 5))
 def test_parse_greenbands_roundtrip(array_bins, disc_batch):
@@ -899,8 +900,7 @@ def keff_best_estimation(draw, n_estim):
         estimators.append("MACRO KCOLL")
         if n_estim > 4:
             estimators.append(draw(text(alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
-                                        min_size=3, max_size=8,
-                                        average_size=4)).strip())
+                                        min_size=3, max_size=8)).strip())
     disc_batchs = draw(lists(elements=integers(1, 20),
                              min_size=n_estim, max_size=n_estim))
     keffs = draw(lists(elements=floats(0.9, 1.1),
