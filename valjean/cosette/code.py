@@ -23,33 +23,35 @@ to the ``cmake`` executable may be specified through the
 
    Implement ``autoconf``/``configure``/``make`` builds.
 
-.. testsetup:: code
+.. doctest:: code
+   :hide:
 
-   from valjean.cosette.code import CheckoutTask, BuildTask
-   import os
-   work_dir = os.path.join(doctest_tmpdir, 'code')
-   os.mkdir(work_dir)
-   repo_dir = os.path.join(work_dir, 'repo')
-   os.mkdir(repo_dir)
-   os.system(CheckoutTask.GIT + ' init ' + repo_dir)
-   cmakelists_path = os.path.join(repo_dir, 'CMakeLists.txt')
-   with open(cmakelists_path, 'w') as cmake_file:
-       cmake_file.write('project(TestCodeTasks C)\\n'
-           'set(SOURCE_FILENAME "${PROJECT_BINARY_DIR}/test.c")\\n'
-           'file(WRITE "${SOURCE_FILENAME}" "int main() { return 0; }")\\n'
-           'add_executable(test_exe "${SOURCE_FILENAME}")\\n'
-           )
-   git_dir = os.path.join(repo_dir, '.git')
-   os.system(CheckoutTask.GIT + ' --git-dir ' + git_dir + ' --work-tree ' +
-             repo_dir + ' add CMakeLists.txt')
-   os.system(CheckoutTask.GIT + ' --git-dir ' + git_dir + ' --work-tree ' +
-             repo_dir + ' commit -a -m "Test commit"')
+   >>> from valjean.cosette.code import CheckoutTask, BuildTask
+   >>> import os
+   >>> work_dir = 'work_dir'
+   >>> os.mkdir(work_dir)
+   >>> repo_dir = os.path.join(work_dir, 'repo')
+   >>> os.mkdir(repo_dir)
+   >>> os.system(CheckoutTask.GIT + ' init ' + repo_dir)
+   0
+   >>> cmakelists_path = os.path.join(repo_dir, 'CMakeLists.txt')
+   >>> with open(cmakelists_path, 'w') as cmake_file:
+   ...     print('project(TestCodeTasks C)\\n'
+   ...           'set(SOURCE_FILENAME "${PROJECT_BINARY_DIR}/test.c")\\n'
+   ...           'file(WRITE "${SOURCE_FILENAME}" "int main(){return 0;}")\\n'
+   ...           'add_executable(test_exe "${SOURCE_FILENAME}")\\n',
+   ...           file=cmake_file)
+   >>> git_dir = os.path.join(repo_dir, '.git')
+   >>> os.system(CheckoutTask.GIT + ' --git-dir ' + git_dir + ' --work-tree ' +
+   ...           repo_dir + ' add CMakeLists.txt')
+   0
+   >>> os.system(CheckoutTask.GIT + ' --git-dir ' + git_dir + ' --work-tree ' +
+   ...           repo_dir + ' commit -a -m "Test commit"')
+   0
 
 To describe the usage of :class:`CheckoutTask` and :class:`BuildTask`, let us
 assume that ``repo_dir`` contains a ``git`` repository with a CMake project.
 We use a temporary directory ``work_dir`` for our test:
-
-.. doctest:: code
 
    >>> import os
    >>> checkout_dir = os.path.join(work_dir, 'checkout')
@@ -58,9 +60,7 @@ We use a temporary directory ``work_dir`` for our test:
 
 Now we can build checkout and build tasks for this repository:
 
-.. doctest:: code
-
-   >>> from valjean.cosette.env import Env
+   >>> from valjean.cosette.code import CheckoutTask, BuildTask
    >>> from pprint import pprint
    >>> ct = CheckoutTask(name='project_checkout',
    ...                   repository=repo_dir,
@@ -71,6 +71,8 @@ Now we can build checkout and build tasks for this repository:
    ...                build_dir=build_dir,
    ...                build_flags=['--' ,'-j4'],
    ...                log_root=log_dir)
+
+   >>> from valjean.cosette.env import Env
    >>> env = Env()
    >>> ct_up, ct_status = ct.do(env)
    >>> print(ct_status)
@@ -109,6 +111,7 @@ docstrings.
 """
 
 import os
+import logging
 
 from ..config import Config
 from .task import ShellTask
@@ -264,6 +267,10 @@ class CheckoutTask(ShellTask):
         env_up[self.name]['checkout_dir'] = self.checkout_dir
         env_up[self.name]['repository'] = self.repository
         env_up[self.name]['checkout_log'] = self.checkout_log
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            with open(self.checkout_log) as fco:
+                LOGGER.debug('  - checkout log = \n###### LOG/START #####\n'
+                             '%s\n#####  LOG/END  #####', fco.read())
         return env_up, status
 
     #: Path to the :file:`git` executable. May be overridden before class
@@ -471,6 +478,13 @@ class BuildTask(ShellTask):
         env_up.setdefault(self.name, {})
         env_up[self.name]['configure_log'] = self.configure_log
         env_up[self.name]['build_log'] = self.build_log
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            with open(self.configure_log) as fconf:
+                LOGGER.debug('  - configure log = \n###### LOG/START #####\n'
+                             '%s\n#####  LOG/END  #####', fconf.read())
+            with open(self.build_log) as fbuild:
+                LOGGER.debug('  - build log = \n###### LOG/START #####\n'
+                             '%s\n#####  LOG/END  #####', fbuild.read())
         return env_up, status
 
     #: Path to the :file:`cmake` executable. May be overridden before class

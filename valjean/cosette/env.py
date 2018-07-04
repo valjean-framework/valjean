@@ -3,12 +3,7 @@
 information about running tasks. An :class:`Env` object can be created from an
 existing dictionary as follows:
 
-.. testsetup:: env
-
-    from valjean.cosette.env import Env
-
-.. doctest:: env
-
+    >>> from valjean.cosette.env import Env
     >>> quest = {'name': 'Sir Galahad', 'favourite colour': 'blue'}
     >>> env_quest = Env(quest)  # a shallow copy of `quest` is performed
 
@@ -18,8 +13,6 @@ information about concurrently running tasks.  For this purpose, :class:`Env`
 provides a number of practical methods.  First of all, if you have a list of
 tasks handy, you can generate an :class:`Env` object from them using the
 :meth:`.from_tasks()` class method:
-
-.. doctest:: env
 
     >>> from valjean.cosette.task import Task
     >>> class DoNothing(Task):
@@ -32,8 +25,6 @@ tasks handy, you can generate an :class:`Env` object from them using the
 This initializes all tasks with a status of `WAITING`. You can check that as
 follows:
 
-.. doctest:: env
-
     >>> print(env.get_status(tasks[0]))
     TaskStatus.WAITING
     >>> env.is_waiting(tasks[0])  # equivalently
@@ -42,16 +33,12 @@ follows:
 There are ``is_*`` methods for all members of the :class:`~.TaskStatus`
 enumeration. Additionally, you can change the status of a task with
 
-.. doctest:: env
-
     >>> from valjean.cosette.task import TaskStatus
     >>> env.set_status(tasks[0], TaskStatus.DONE)
     >>> env.set_done(tasks[0])  # equivalent, shorter version
 
 Information about the tasks, incuding their status, is stored with the task
 name as the key:
-
-.. doctest:: env
 
     >>> print(env[tasks[0].name]['status'])
     TaskStatus.DONE
@@ -72,8 +59,6 @@ as an argument the action that should be performed.  When called,
 :meth:`~.atomically()` first acquires the lock on the object, and then passes
 the :class:`Env` object to the action. A thread-safe implementation of the
 read-and-modify trip above is implemented as follows:
-
-.. doctest:: env
 
     >>> def modify_task1(env):
     ...     if env.is_done(tasks[0]):

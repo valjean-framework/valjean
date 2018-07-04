@@ -176,18 +176,6 @@ intersphinx_mapping = {
 # Do not use doctest to test code examples that are not explicitly marked as
 # doctest
 doctest_test_doctest_blocks = ''
-doctest_global_setup = '''
-import tempfile
-import os
-doctest_tmpdir = tempfile.mkdtemp()
-os.chdir(doctest_tmpdir)
-'''
-doctest_global_cleanup = '''
-import shutil
-import os
-shutil.rmtree(doctest_tmpdir)
-os.chdir('/')
-'''
 
 
 # -- autodoc options ------------------------------------------------------

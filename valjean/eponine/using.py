@@ -7,9 +7,6 @@ and, more generally, reducing the boilerplate in user test code.  Ideally, test
 code should be extremely concise and should not be cluttered by administrative
 tasks such as opening result files, invoking parsers, etc.
 
-.. testsetup:: using
-
-   from valjean.eponine.using import using
 
 The problem
 -----------
@@ -18,8 +15,7 @@ Let us assume that Alice, a :program:`valjean` user, wants to check if the
 strings contained in files :file:`spam.txt` and :file:`eggs.txt` have the same
 length. Alice writes the following simplified test function:
 
-.. doctest:: using
-
+    >>> from valjean.eponine.using import using
     >>> def compare_strlen_generic(x, y):
     ...     print('OK' if len(x) == len(y) else 'KO')
 
@@ -28,8 +24,6 @@ Alice is happy, because this function is generic (it works for many types of
 does not specify that `x` and `y` should respectively be read from
 :file:`spam.txt` and :file:`eggs.txt`. Alice briefly considers amending the
 function as follows:
-
-.. doctest:: using
 
     >>> def compare_strlen_by_hand():
     ...     with open('spam.txt') as fx:
@@ -57,8 +51,6 @@ The :func:`using` decorator
 
 Alice reads about the :func:`using` decorator and writes the following:
 
-.. doctest:: using
-
     >>> def slurp(filename):
     ...     with open(filename) as f:
     ...         content = f.read()
@@ -76,16 +68,12 @@ to the decorated function.  Alice still thinks this looks a bit noisy, but at
 least the boilerplate has been pushed outside the test function.  She tests her
 shiny new function by creating some files:
 
-.. doctest:: using
-
     >>> with open('spam.txt', 'w') as spam:
     ...     print('spam', file=spam)
     >>> with open('eggs.txt', 'w') as eggs:
     ...     print('eggs', file=eggs)
 
 And it works!
-
-.. doctest:: using
 
     >>> compare_strlen_by_hand()
     OK
@@ -103,8 +91,6 @@ Explicit data dependencies
 How does :func:`using` solve Alice's data-dependency problem? Well, the data
 dependencies of :func:`compare_strlen_using` can be inspected through its
 `using_dict` attribute:
-
-.. doctest:: using
 
     >>> from pprint import pprint
     >>> pprint(compare_strlen_using.using_dict)
@@ -129,8 +115,6 @@ Keyword arguments
 :func:`~.using` can also pass named arguments to the function it delays. For
 instance:
 
-.. doctest:: using
-
     >>> @using('hexa42', int, '2A', base=16)
     ... def print_it(hexa42):
     ...     print(hexa42)
@@ -138,8 +122,6 @@ instance:
     42
 
 Keyword arguments show up in the third element of the `using_dict` value:
-
-.. doctest:: using
 
     >>> pprint(print_it.using_dict['hexa42'])
     (<class 'int'>, ('2A',), {'base': 16})

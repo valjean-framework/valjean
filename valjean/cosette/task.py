@@ -22,12 +22,7 @@ The :class:`RunTask` class is the basic building block to execute tasks that
 consist in spawning external processes and waiting for their completion.  It
 makes it possible to execute arbitrary commands. Consider:
 
-.. testsetup:: task
-
-   from valjean.cosette.task import RunTask, ShellTask
-
-.. doctest:: task
-
+   >>> from valjean.cosette.task import RunTask, ShellTask
    >>> from pprint import pprint
    >>> task = RunTask(name='say',
    ...                cli=['echo', 'ni!'])
@@ -40,8 +35,6 @@ makes it possible to execute arbitrary commands. Consider:
 Note that the `command` is not parsed by a shell. So the following may not do
 what you expect:
 
-.. doctest:: task
-
    >>> task = RunTask(name='want',
    ...                cli=['echo', 'We want...', '&&',
    ...                     'echo', '...a shrubbery!'])
@@ -51,8 +44,6 @@ what you expect:
 If you need to execute several commands, either wrap them in a shell script or
 create separate tasks for them. This is made easier by the :class:`ShellTask`
 class:
-
-.. doctest:: task
 
    >>> task = ShellTask(name='want',
    ...                  shell='/bin/sh',  # optional, defaults to '/bin/bash'

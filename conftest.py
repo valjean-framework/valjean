@@ -71,6 +71,19 @@ def workdir(tmpdir):
         yield tmpdir
 
 
+@pytest.fixture(autouse=True, scope='module')
+def cwd_testing(tmpdir_factory):
+    '''Fixture that prepares the cwd for testing.'''
+    test_dir = tmpdir_factory.mktemp('test_module')
+    import logging
+    import os
+    logger = logging.getLogger('valjean')
+    with test_dir.as_cwd():
+        logger.debug("Look ma, I'm in %s!", os.getcwd())
+        yield
+    logger.debug("Oh noes, now I'm in %s...", os.getcwd())
+
+
 @pytest.fixture
 def verbose():
     '''Fixture to use debug mode with pytest.'''

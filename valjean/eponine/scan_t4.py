@@ -1,5 +1,4 @@
-'''
-Module performing a scan of Tripoli-4 output listing in order to only keep
+'''Module performing a scan of Tripoli-4 output listing in order to only keep
 relevant parts of it = results to be used for V&V or analysis or the run.
 
 Summary
@@ -14,30 +13,28 @@ Summary
 Use of ``scan_t4``
 ------------------
 
+.. doctest:: scan_t4
+   :hide:
+
+   >>> import os
+   >>> work_dir = 'scan_t4'
+   >>> os.mkdir(work_dir)
+   >>> with open(os.path.join(work_dir, 'spam.res'), 'w') as tmpfile:
+   ...     print("BATCH 10\\n"
+   ...           "initialization time (s): 7\\n"
+   ...           " batch number : 10\\n"
+   ...           "RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00\\n"
+   ...           "Edition after batch number : 10\\n"
+   ...           "simulation time (s) : 1\\n"
+   ...           "NORMAL COMPLETION",
+   ...           file=tmpfile)
+
 To use ``scan_t4`` you need to create a :class:`Scan` object giving at least
 the path to the file you want to read. This file should be a Tripoli-4 output
 containing at least the flags precised in :ref:`eponine-scan_t4-caveats`.
 
-.. testsetup:: scan_t4
-
-   from valjean.eponine.scan_t4 import Scan
-   import os
-   work_dir = os.path.join(doctest_tmpdir, 'scan_t4')
-   os.mkdir(work_dir)
-   tmpfile = open(os.path.join(work_dir, 'spam.res'), 'w')
-   tmpfile.write("BATCH 10\\n")
-   tmpfile.write("initialization time (s): 7\\n")
-   tmpfile.write(" batch number : 10\\n")
-   tmpfile.write("RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00\\n")
-   tmpfile.write("Edition after batch number : 10\\n")
-   tmpfile.write("simulation time (s) : 1\\n")
-   tmpfile.write("NORMAL COMPLETION")
-   tmpfile.close()
-
-
-.. doctest:: scan_t4
-
    >>> import os
+   >>> from valjean.eponine.scan_t4 import Scan
    >>> results = Scan(os.path.join(work_dir, 'spam.res'))
    >>> results.normalend
    True

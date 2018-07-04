@@ -104,25 +104,17 @@ Initialization is done giving names of the columns (``'tally'`` and ``'sigma'``
 for mesh for example) and the list of number of bins. The length of this list
 should be 7 as we have 7 dimensison.
 
-.. testsetup:: common
-
-   from valjean.eponine.common import (DictBuilder, MeshDictBuilder,
-                                       SpectrumDictBuilder)
-
-.. doctest:: common
-
+   >>> from valjean.eponine.common import (DictBuilder, MeshDictBuilder,
+   ...                                     SpectrumDictBuilder)
    >>> db = DictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
    Traceback (most recent call last):
-       ...
-   TypeError: Can't instantiate abstract class DictBuilder with abstract
-   ... methods _add_last_energy_bin, fill_arrays_and_bins
+       [...]
+   TypeError: Can't instantiate abstract class DictBuilder with ...
    >>> mdb = MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
    >>> sdb = SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'],
    ...                           [1,2,3,4,5,6,7])
 
 Errors are raised if the dimension is not correct.
-
-.. doctest:: common
 
    >>> mdb = MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6])
    Traceback (most recent call last):

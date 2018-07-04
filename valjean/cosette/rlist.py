@@ -2,12 +2,7 @@
 its elements for fast reverse lookup. It has mostly the same semantics as
 lists:
 
-.. testsetup:: reversible-list
-
-    from valjean.cosette.rlist import RList
-
-.. doctest:: reversible-list
-
+    >>> from valjean.cosette.rlist import RList
     >>> dead, stiff, bereft, rests = ('dead', 'stiff', 'bereft of life',
     ...                               'rests in peace')
     >>> parrot = RList([dead, stiff, bereft, rests])
@@ -21,8 +16,6 @@ lists:
 
 Additionally, you can quickly (in `O(1)` time on average) look up the index of
 an item:
-
-.. doctest:: reversible-list
 
     >>> parrot.index(rests)
     2
@@ -38,8 +31,6 @@ Python lists are:
      operator, while :class:`RList` compares object IDs.  Objects that compare
      equal (with the standard ``==`` operator) may be used interchangeably in a
      list, but not in a :class:`RList`.  For example:
-
-     .. doctest:: reversible-list
 
         >>> class A:
         ...    def __eq__(self, other):
@@ -57,8 +48,6 @@ Python lists are:
      ``[a2]`` they are "the same". :class:`RList`, on the other hand, does not
      play along with this charade:
 
-     .. doctest:: reversible-list
-
         >>> a1 is a2
         False
         >>> id(a1) == id(a2)  # equivalent to the line above
@@ -71,8 +60,6 @@ Python lists are:
      may result in unexpected behaviour, especially with strings, ints or other
      small objects for which the Python interepreter may provide some kind of
      caching optimisation:
-
-     .. doctest:: reversible-list
 
         >>> lst = RList([1])
         >>> 1 in lst

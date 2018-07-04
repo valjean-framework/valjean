@@ -1,12 +1,12 @@
 Tests
 =====
 
-Configuration of tests module
------------------------------
+pytest configuration
+--------------------
 
-.. automodule:: tests.conftest
+.. automodule:: conftest
    :undoc-members:
-      
+
 Tests for the :mod:`~valjean.config` module
 -------------------------------------------
 

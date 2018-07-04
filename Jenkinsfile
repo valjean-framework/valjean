@@ -86,17 +86,6 @@ pipeline {
         }
       }
     }
-    stage('Run doctests') {
-      steps {
-        echo 'Running doctests...'
-          dir("${SRC}/doc") {
-            sh """
-               source "${VENV}/bin/activate"
-               sphinx-build -b doctest src build/doctest | tee doctest.out
-               """
-          }
-      }
-    }
     stage('Run unit tests') {
       steps {
         echo 'Running unit tests...'
@@ -132,7 +121,6 @@ pipeline {
       archiveArtifacts artifacts: "**/pylint.out", fingerprint: true
       archiveArtifacts artifacts: "**/flake8.out", fingerprint: true
       archiveArtifacts artifacts: "**/pytest.out", fingerprint: true
-      archiveArtifacts artifacts: "**/doctest.out", fingerprint: true
       archiveArtifacts artifacts: "**/sphinx.out", fingerprint: true
       junit "**/pytest.xml"
     }

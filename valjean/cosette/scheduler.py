@@ -4,22 +4,19 @@ possibly dependent on each other.
 
 Example usage:
 
-.. testsetup:: scheduler
-
-   from valjean.cosette.depgraph import DepGraph
-   from valjean.cosette.task import DelayTask
-   from valjean.cosette.scheduler import Scheduler
-
-.. doctest:: scheduler
-
+   >>> from valjean.cosette.task import DelayTask
    >>> spam = DelayTask('spam', 0.1)
    >>> eggs = DelayTask('eggs', 0.2)
    >>> bacon = DelayTask('bacon', 0.2)
+
+   >>> from valjean.cosette.depgraph import DepGraph
    >>> g = DepGraph.from_dependency_dictionary({
    ...         spam: [],
    ...         bacon: [spam],
    ...         eggs: []
    ...     })
+
+   >>> from valjean.cosette.scheduler import Scheduler
    >>> s = Scheduler(g)
    >>> env = s.schedule()  # executes the tasks in the correct order
 '''

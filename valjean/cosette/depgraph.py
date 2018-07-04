@@ -23,12 +23,7 @@ You can create a :class:`DepGraph` in of two ways. Either you pass a dictionary
 representing the dependencies between items to the
 :meth:`~DepGraph.from_dependency_dictionary()` class method:
 
-.. testsetup:: depgraph
-
-   from valjean.cosette.depgraph import DepGraph
-
-.. doctest:: depgraph
-
+   >>> from valjean.cosette.depgraph import DepGraph
    >>> from pprint import pprint
    >>> deps = {'bacon': ['spam'], 'sausage': ['eggs', 'spam']}
    >>> pprint(deps)
@@ -36,8 +31,6 @@ representing the dependencies between items to the
    >>> g = DepGraph.from_dependency_dictionary(deps)
 
 or you create an empty graph and add nodes and dependencies by hand:
-
-.. doctest:: depgraph
 
    >>> h = DepGraph().add_dependency('bacon', on='spam') \\
    ...               .add_dependency('sausage', on='eggs') \\
@@ -53,16 +46,12 @@ matrix.
 You can recover the dependency dictionary by passing the graph to
 :class:`dict() <dict>`:
 
-.. doctest:: depgraph
-
    >>> pprint(dict(g))  # doctest: +SKIP
    {'bacon': {'spam'}, 'eggs': set(), 'sausage': {'eggs', 'spam'}, \
 'spam': set()}
 
 If you print the dictionary, you will notice that `spam` and `eggs` have been
 added as nodes with no dependencies:
-
-.. doctest:: depgraph
 
    >>> print(g)
    [('bacon', ['spam']), ('eggs', []), ('sausage', ['eggs', 'spam']), \
@@ -71,13 +60,9 @@ added as nodes with no dependencies:
 What if a node has no dependencies and no other node depends on it? Just add it
 to the dictionary with the empty list as a value:
 
-.. doctest:: depgraph
-
    >>> free = DepGraph.from_dependency_dictionary({'kazantzakis': []})
 
 You can also add it after creating the graph:
-
-.. doctest:: depgraph
 
    >>> also_free = DepGraph().add_node('kazantzakis')
    >>> free == also_free
@@ -89,14 +74,10 @@ Querying
 
 You can inspect the nodes of the graph:
 
-.. doctest:: depgraph
-
    >>> sorted(g.nodes())
    ['bacon', 'eggs', 'sausage', 'spam']
 
 or ask for the dependencies of a node:
-
-.. doctest:: depgraph
 
    >>> sorted(g.dependencies('sausage'))
    ['eggs', 'spam']
@@ -107,14 +88,10 @@ or ask for the nodes that depend on another node (careful though, this
 operation has `O(N)` time complexity, `N` being the number of nodes in the
 graph):
 
-.. doctest:: depgraph
-
    >>> sorted(g.dependees('spam'))
    ['bacon', 'sausage']
 
 You can also iterate over graphs:
-
-.. doctest:: depgraph
 
    >>> for k, vs in sorted(g):
    ...     for v in sorted(vs):
@@ -124,8 +101,6 @@ You can also iterate over graphs:
    You can't have sausage without spam!
 
 Finally, you can check if a graph is a subgraph of another one:
-
-.. doctest:: depgraph
 
    >>> sub_g = DepGraph().add_dependency('bacon', on='spam') \\
    ...                   .add_dependency('sausage', on='eggs')
@@ -138,8 +113,6 @@ Merging, sorting and other operations
 
 Given two graphs, possibly sharing some nodes and edges, you can construct the
 *union* `g12` as follows:
-
-.. doctest:: depgraph
 
    >>> g1 = sub_g
    >>> g2 = DepGraph().add_dependency('sausage', on='spam')
@@ -159,8 +132,6 @@ number of edges), provably unique subgraph of `g` over the same vertices with
 the following property: for each pair of nodes `A` and `B`, `A` is reachable
 from `B` within `g` iff it is reachable within `tr(g)`.
 
-.. doctest:: depgraph
-
    >>> g_redundant = DepGraph() \\
    ...     .add_dependency('eggs', on='bacon') \\
    ...     .add_dependency('bacon', on='spam') \\
@@ -175,8 +146,6 @@ You can also do a topological sort of the graph. The result is a list of the
 graph nodes, with the property that each node is guaranteed to appear after all
 the nodes it depends on. Note that in general there are several possible
 topological sorts for a given graph.
-
-.. doctest:: depgraph
 
    >>> g.topological_sort()  # doctest: +SKIP
    ['eggs', 'spam', 'bacon', 'sausage']
@@ -204,8 +173,6 @@ themselves instances of :class:`DepGraph`! Consider the following graph:
 
 Here is the code that generates it:
 
-.. doctest:: depgraph
-
    >>> spanish_inq = 'Spanish Inquisition'
    >>> surprise, fear, efficiency = 'surprise', 'fear', 'efficiency'
    >>> devotion, uniforms = 'devotion', 'nice red uniforms'
@@ -220,8 +187,6 @@ Here is the code that generates it:
 
 Here `chief_weapons` is a :class:`DepGraph` itself, but it is also a node of
 `spanish`. You can graft `chief_weapons` inside `spanish` like so:
-
-.. doctest:: depgraph
 
    >>> spanish.graft(chief_weapons)
    DepGraph(...)
@@ -240,8 +205,6 @@ This yields the following graph
    "devotion" -> "nice red uniforms";
 
 as you can verify yourself:
-
-.. doctest:: depgraph
 
    >>> full_graph = DepGraph.from_dependency_dictionary({
    ...    spanish_inq: [surprise],
@@ -275,7 +238,7 @@ Some things you should be aware of when using :class:`DepGraph`:
   dependency, as in the case of `bacon`. So this is wrong:
 
     >>> bad_deps = {0: 1, 7: [0, 42]}  # error, should be 0: [1]
-    >>> bad = DepGraph.from_dependency_dictionary(deps)
+    >>> bad = DepGraph.from_dependency_dictionary(bad_deps)
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
         [...]

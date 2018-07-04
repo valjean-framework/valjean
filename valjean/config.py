@@ -3,12 +3,7 @@
 :class:`Config` objects encapsulate a set of configuration options for a
 :mod:`valjean` run. Here is how you create one:
 
-.. testsetup:: config
-
-    from valjean.config import Config
-
-.. doctest:: config
-
+    >>> from valjean.config import Config
     >>> config = Config()
 
 The :class:`Config` constructor will look for the following configuration
@@ -24,14 +19,10 @@ current test run.
 If you want to read other files on object creation instead, you can pass them
 using the ``paths`` argument:
 
-.. doctest:: config
-
     >>> config = Config(paths=['valjean.conf'])
 
 The default files are in the :data:`BaseConfig.DEFAULT_CONFIG_FILES` class
 attribute, so you can do
-
-.. doctest:: config
 
     >>> config = Config(paths=list(Config.DEFAULT_CONFIG_FILES)
     ...                 + ['valjean.conf'])
@@ -41,15 +32,11 @@ to read the default files *and* :file:`valjean.conf`.
 If you don't want to read any files (useful for testing), just pass an empty
 list:
 
-.. doctest:: config
-
     >>> config = Config(paths=[])
 
 By default, :class:`Config` objects come with a ``'core'`` configuration
 section, which may be used to set default values for any configuration option.
 A few options are set from the beginning:
-
-.. doctest:: config
 
     >>> for opt, val in config.items('core', raw=True):
     ...     print('{} = {}'.format(opt, val))
@@ -63,8 +50,6 @@ A few options are set from the beginning:
 
 The :class:`Config` class provides getters and setters:
 
-.. doctest:: config
-
     >>> print(config.get('core', 'build-root'))
     /.../build
 
@@ -74,8 +59,6 @@ The :class:`Config` class provides getters and setters:
     /.../log_dir
 
 It also provides some additional convenience methods:
-
-.. doctest:: config
 
     >>> from pprint import pprint
 
@@ -601,17 +584,36 @@ class Config(BaseConfig):
         based on the values of other options in sections specified in the
         configuration file.
 
+.. doctest:: LookupSectionFromOptHandler
+   :hide:
+
+            >>> config_str = """[executable/dog_kennel]
+            ... args = ${arg1} ${arg2}
+            ... arg1 = mattress
+            ...
+            ... [run/paper_bag]
+            ... executable = dog_kennel
+            ... arg2 = paper_bag
+            ...
+            ... [run/chest]
+            ... executable = dog_kennel
+            ... arg1 = sing
+            ... arg2 = chest"""
+            >>> with open('config_file', 'w') as fconf:
+            ...     print(config_str, file=fconf)
+
         Let's make an example, so it will hopefully be clearer. Consider the
-        following configuration::
+        following configuration:
 
+            >>> print(config_str)
             [executable/dog_kennel]
-            args = ${arg1} {arg2}
+            args = ${arg1} ${arg2}
             arg1 = mattress
-
+            <BLANKLINE>
             [run/paper_bag]
             executable = dog_kennel
             arg2 = paper_bag
-
+            <BLANKLINE>
             [run/chest]
             executable = dog_kennel
             arg1 = sing
@@ -620,17 +622,18 @@ class Config(BaseConfig):
         Assume we install the following option handler for `args` in the `run`
         sections::
 
-            Config.add_option_handler(
-                ['run'],
-                'args',
-                Config.LookupSectionFromOptHandler('executable')
-                )
+            >>> config = Config(paths=['config_file'], handlers=[])
+            >>> config.add_option_handler(
+            ...   ['run'],
+            ...   'args',
+            ...   Config.LookupSectionFromOptHandler('executable')
+            ...   )
 
         This means that the handler will fire only in sections of the `run`
         family.  Now let us look up `args` in the different sections::
 
             >>> config.get('executable', 'dog_kennel', 'args', raw=True)
-            ${arg1} ${arg2}
+            '${arg1} ${arg2}'
 
         The handler does not fire here because we are asking for the `args`
         option of the ``executable/dog_kennel`` section, which does not belong
@@ -639,14 +642,16 @@ class Config(BaseConfig):
         ${arg2}``. Suppressing ``raw=True`` results in an exception:
 
             >>> config.get('executable', 'dog_kennel', 'args')
-            # throws InterpolationMissingOptionError
+            Traceback (most recent call last):
+                [...]
+            configparser.InterpolationMissingOptionError: ...
 
         Without ``raw=True``, the configuration tries to interpolate `arg2` and
         fails, because this option is not defined in ``executable/dog_kennel``.
         Now consider the following:
 
             >>> config.get('run', 'paper_bag', 'args', raw=True)
-            ${arg1} ${arg2}
+            '${arg1} ${arg2}'
 
         Here the handler fires because the `args` option is not explicitly
         present in the ``run/paper_bag`` section. The handler looks up the
@@ -657,7 +662,7 @@ class Config(BaseConfig):
         If we activate interpolation (``raw=False``)
 
             >>> config.get('run', 'paper_bag', 'args')
-            mattress paper_bag
+            'mattress paper_bag'
 
         we see that the query now succeeds (compare to the lookup of `args`
         from ``executable/dog_kennel`` above).  The ``${arg1}`` option is
@@ -665,7 +670,7 @@ class Config(BaseConfig):
         ``${arg2}`` is interpolated from ``run/paper_bag``.
 
             >>> config.get('run', 'chest', 'args')
-            sing chest
+            'sing chest'
 
         From the ``run/chest`` section, interpolation also works. However, note
         that here ``${arg1}`` has been overridden by the value specified in
