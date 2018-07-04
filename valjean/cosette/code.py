@@ -217,16 +217,16 @@ class CheckoutTask(ShellTask):
         :type deps: str or None
         '''
 
-        self.log_root = log_root
-        self.checkout_dir = checkout_dir
-        self.checkout_log = os.path.join(
-            log_root, 'checkout_{}.log'.format(self.sanitize_filename(name)))
+        self.log_root = os.path.abspath(log_root)
+        self.checkout_dir = os.path.abspath(checkout_dir)
+        self.checkout_log = os.path.abspath(os.path.join(
+            log_root, 'checkout_{}.log'.format(self.sanitize_filename(name))))
 
         keywords = ['log_root', 'checkout_dir', 'checkout_log', 'repository',
                     'flags', 'ref', 'GIT']
 
         if vcs == 'git':
-            self.repository = os.path.expanduser(repository)
+            self.repository = os.path.abspath(os.path.expanduser(repository))
             self.flags = flags if flags is not None else []
             self.ref = ref if ref is not None else 'master'
             unformatted_script = self._GIT_TEMPLATE
@@ -278,9 +278,12 @@ class CheckoutTask(ShellTask):
     GIT = 'git'
 
     _GIT_TEMPLATE = r'''test -d {log_root} || mkdir -p {log_root}
-test -d {checkout_dir} || mkdir -p {checkout_dir}
-{GIT} clone {flags} -- {repository} {checkout_dir} >>{checkout_log} 2>&1
-cd {checkout_dir} && {GIT} checkout {ref} >>{checkout_log} 2>&1
+{{{{
+  test -d {checkout_dir} || mkdir -p {checkout_dir}
+  {GIT} clone {flags} -- {repository} {checkout_dir} && \
+    cd {checkout_dir} && \
+    {GIT} checkout {ref}
+}}}} &>>{checkout_log}
 '''
 
 
@@ -399,10 +402,10 @@ class BuildTask(ShellTask):
         :type deps: str or None
         '''
 
-        self.log_root = log_root
+        self.log_root = os.path.abspath(log_root)
 
         if source_dir is not None:
-            self.source_dir = source_dir
+            self.source_dir = os.path.abspath(source_dir)
         else:
             self.source_dir = (
                 '{{env[checkout/{name}][checkout_dir]}}'
@@ -410,7 +413,7 @@ class BuildTask(ShellTask):
                 )
 
         LOGGER.debug('will look for source files in %s', self.source_dir)
-        self.build_dir = build_dir
+        self.build_dir = os.path.abspath(build_dir)
         LOGGER.debug('will use build dir %s', self.build_dir)
 
         keywords = ['log_root', 'configure_log', 'build_log',
@@ -440,14 +443,14 @@ class BuildTask(ShellTask):
         self.configure_flags = (configure_flags if configure_flags is not None
                                 else [])
         self.build_flags = build_flags if build_flags is not None else []
-        self.configure_log = os.path.join(
+        self.configure_log = os.path.abspath(os.path.join(
             log_root,
             'configure_{}.log'.format(self.sanitize_filename(name))
-            )
-        self.build_log = os.path.join(
+            ))
+        self.build_log = os.path.abspath(os.path.join(
             log_root,
             'build_{}.log'.format(self.sanitize_filename(name))
-            )
+            ))
 
         kwargs = self._make_kwargs(keywords)
         task_name = 'build/' + name
@@ -492,9 +495,10 @@ class BuildTask(ShellTask):
     CMAKE = 'cmake'
 
     _CMAKE_TEMPLATE = r'''test -d {log_root} || mkdir -p {log_root}
-test -d {build_dir} || mkdir -p {build_dir}
-cd {build_dir}
-{CMAKE} {configure_flags} {source_dir} >>{configure_log} 2>&1'''
+{{{{
+  test -d {build_dir} || mkdir -p {build_dir}
+  cd {build_dir} && {CMAKE} {configure_flags} {source_dir}
+}}}} &>>{configure_log}'''
 
     _CMAKE_BUILD_TEMPLATE = (r'''{{CMAKE}} --build {{build_dir}} '''
                              '''--target {{target{i}}} '''

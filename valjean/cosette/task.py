@@ -59,6 +59,7 @@ class:
     output files.
 '''
 
+import os
 import enum
 from abc import ABC, abstractmethod
 
@@ -325,7 +326,7 @@ class ShellTask(Task):
         self.script = script
         self.shell = shell
         self.delete = delete
-        self.dir = directory
+        self.dir = None if directory is None else os.path.abspath(directory)
         self.subprocess_args = subprocess_args
         self.kwargs = kwargs
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
