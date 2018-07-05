@@ -29,11 +29,7 @@ This page contains a list of things that you should check before issuing a new
    Also, run the command above a few times, in case some tests fail
    erratically.
 
-#. Run all the :ref:`doctest tests <doctest-tests>`::
-
-    $ ./setup.py build_sphinx -b doctest
-
-   Make sure they all pass.
+   Running `pytest` also runs doctests.  Make sure they all pass.
 
 #. Test :ref:`package installation <package-installation>`, with and without
    optional dependencies. Check the install/setup/tests/extras requirements:
@@ -52,8 +48,6 @@ This page contains a list of things that you should check before issuing a new
 
 #. Commit and make a pull request.
 
-#. Remember to merge any release changes back into the development branch.
-
 #. Once the pull request is accepted, tag the new version::
 
     $ git tag vx.y  # for appropriate values of x and y
@@ -63,5 +57,7 @@ This page contains a list of things that you should check before issuing a new
 #. :ref:`Create a source tarball and deploy it on the local network
    <distributing-code>`. This requires reinstalling the package and rebuilding
    the documentation.
+
+#. Remember to merge any release changes back into the development branch.
 
 #. Congratulations, you have made a new :mod:`valjean` release!
