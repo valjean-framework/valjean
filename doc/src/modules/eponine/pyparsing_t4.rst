@@ -4,7 +4,7 @@ pyparsing_t4 – Pyparsing parser for TRIPOLI-4
 .. automodule:: valjean.eponine.pyparsing_t4
    :undoc-members:
 
-.. _pyparsing: http://pythonhosted.org/pyparsing/
+.. _pyparsing: https://pythonhosted.org/pyparsing/
       
 Module using the `pyparsing`_ package to parse Tripoli-4 output listings.
 
