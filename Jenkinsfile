@@ -94,8 +94,7 @@ pipeline {
         dir("${SRC}") {
           sh """
              source "${VENV}/bin/activate"
-             pytest --cov-report=xml --cov=valjean --junit-xml=pytest.xml | tee pytest.out
-             readlink -f pytest.xml tests/coverage.xml
+             pytest --cov-report term-missing --cov-config .coveragerc --cov-report=xml --cov=valjean --junit-xml=pytest.xml | tee pytest.out
              """
           step([$class: 'CoberturaPublisher',
                 autoUpdateHealth: false,
