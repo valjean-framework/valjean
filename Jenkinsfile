@@ -119,9 +119,9 @@ pipeline {
         notifyTuleap(false)
     }
     always {
-      warnings(parserConfigurations: [[parserName: 'flake8', pattern: "**/flake8.out"],
+      warnings(parserConfigurations: [[parserName: 'pep8', pattern: "**/flake8.out"],
                                       [parserName: 'pylint', pattern: "**/pylint.out"],
-                                      [parserName: 'sphinx-html', pattern: "**/sphinx-html.out"],
+                                      [parserName: 'sphinx-build', pattern: "**/sphinx-html.out"],
                                       [parserName: 'sphinx-linkcheck', pattern: "**/sphinx-linkcheck.out"]],
                usePreviousBuildAsReference: true)
       archiveArtifacts artifacts: "**/flake8.out", fingerprint: true
