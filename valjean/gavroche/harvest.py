@@ -5,30 +5,28 @@ Python source files and filters out functions (actually, any callable object)
 matching a specific regular expression. For instance, let us write some Python
 code to a test file:
 
-.. testsetup:: harvest
-
-   from pprint import pprint
-
-   code = "def test_function():\\n  return sentence" \\
-          "\\n\\nsentence = 'My hovercraft is full of eels!'"
-   more_code = "def compute_stuff(x):\\n  return 5 * 9 - x"
-   bad = 'for i in range(4):\\n  def test_in_loop(x=i):\\n    print(x)'
-   better = "import sys\\n" \\
-            "for i in range(4):\\n" \\
-            "  def test_in_loop(x=i):\\n" \\
-            "    print(x)\\n" \\
-            "  name = 'test_in_loop_{}'.format(i)\\n" \\
-            "  setattr(sys.modules[__name__], name, test_in_loop)\\n" \\
-            "del test_in_loop  # required to remove the last function"
-   best = "from valjean.gavroche.harvest import export\\n" \\
-          "for i in range(4):\\n" \\
-          "  @export\\n" \\
-          "  def test_in_loop(x=i):\\n" \\
-          "    print(x)\\n" \\
-          "del test_in_loop  # required to remove the last function"
-
-
 .. doctest:: harvest
+   :hide:
+
+   >>> from pprint import pprint
+   >>> code = ("def test_function():\\n  return sentence"
+   ...         "\\n\\nsentence = 'My hovercraft is full of eels!'")
+   >>> more_code = "def compute_stuff(x):\\n  return 5 * 9 - x"
+   >>> bad = 'for i in range(4):\\n  def test_in_loop(x=i):\\n    print(x)'
+   >>> better = ("import sys\\n"
+   ...           "for i in range(4):\\n"
+   ...           "  def test_in_loop(x=i):\\n"
+   ...           "    print(x)\\n"
+   ...           "  name = 'test_in_loop_{}'.format(i)\\n"
+   ...           "  setattr(sys.modules[__name__], name, test_in_loop)\\n"
+   ...           "del test_in_loop  # required to remove the last function")
+   >>> best = ("from valjean.gavroche.harvest import export\\n"
+   ...         "for i in range(4):\\n"
+   ...         "  @export\\n"
+   ...         "  def test_in_loop(x=i):\\n"
+   ...         "    print(x)\\n"
+   ...         "del test_in_loop  # required to remove the last function")
+
 
    >>> print(code)
    def test_function():
@@ -39,15 +37,11 @@ code to a test file:
 Our test consists of a single function called, well, :func:`test_function`. We
 write it to a file called, well, :file:`test_file.py`:
 
-.. doctest:: harvest
-
    >>> test_file = 'test_file.py'
    >>> with open(test_file, 'w') as fout:
    ...   print(code, file=fout)
 
 Now we can invoke :func:`harvest` to collect it:
-
-.. doctest:: harvest
 
    >>> from valjean.gavroche.harvest import harvest
    >>> tests = harvest(test_file)
@@ -57,8 +51,6 @@ Now we can invoke :func:`harvest` to collect it:
 As you can see, :func:`harvest` returns a dictionary mapping test names to
 their representation as a Python object (a function, in this case).  We can
 invoke the test function as follows:
-
-.. doctest:: harvest
 
    >>> result = tests['test_function']()
    >>> print(result)
@@ -75,8 +67,6 @@ principle is very similar to unit-testing frameworks such as :mod:`unittest` or
 
 If you want to harvest functions matching a different regex, you can customize
 it:
-
-.. doctest:: harvest
 
    >>> print(more_code)
    def compute_stuff(x):
@@ -96,8 +86,6 @@ The :func:`export` decorator
 
 A rather common need is to programmatically generate test code based on some
 kind of iteration. This doesn't work:
-
-.. doctest:: harvest
 
    >>> print(bad)  # DO NOT TRY THIS AT HOME
    for i in range(4):
@@ -124,8 +112,6 @@ tell them apart since they have the same name?
 
 So, if you want to define tests in a loop, you may be tempted to attempt
 shenanigans such as:
-
-.. doctest:: harvest
 
    >>> print(better)  # DO NOT TRY THIS AT HOME EITHER
    import sys
@@ -156,8 +142,6 @@ shenanigans such as:
 This works but it is way too verbose. You can actually ask :mod:`gavroche` to
 jump through all the hoops using the :func:`export` decorator:
 
-.. doctest:: harvest
-
    >>> print(best)
    from valjean.gavroche.harvest import export
    for i in range(4):
@@ -182,8 +166,6 @@ jump through all the hoops using the :func:`export` decorator:
 As you can see, the function names were decorated with a hexadecimal hash to
 make them unique. If you prefer to specify the suffix yourself, you can do so
 by passing an argument to :func:`export`:
-
-.. doctest:: harvest
 
    >>> from valjean.gavroche.harvest import export
    >>> @export('expect_spanish_inquisition')
@@ -212,8 +194,6 @@ in the :mod:`builtins` module.
 
 Note that the old function is still around:
 
-.. doctest:: harvest
-
    >>> surprise()
    NOBODY EXPECTS THE SPANISH INQUISITION!
 
@@ -222,8 +202,6 @@ Harvesting directories or collections of files
 ----------------------------------------------
 
 You can harvest many files at once with :func:`harvest_many`:
-
-.. doctest:: harvest
 
    >>> from valjean.gavroche.harvest import harvest_many
    >>> tests = harvest_many([test_loop_bad, test_loop_better, test_loop_best])
@@ -236,8 +214,6 @@ You can also harvest whole directories with :func:`harvest_dir`, which accepts
 a `file_regex` argument to filter which files should be harvested; by default,
 the file name must match ``'test_.*\\.py$'``. You can harvest recursively using
 `recurse=True`.
-
-.. doctest:: harvest
 
    >>> from valjean.gavroche.harvest import harvest_dir
    >>> tests_dir = harvest_dir('.')
