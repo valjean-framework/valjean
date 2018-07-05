@@ -75,13 +75,15 @@ pipeline {
         }
       }
     }
-    stage('Build HTML doc') {
+    stage('Build and check HTML doc') {
       steps {
-        echo 'Building documentation...'
+        echo 'Building and checking documentation...'
         dir("${SRC}") {
           sh """
              source "${VENV}/bin/activate"
-             sphinx-build -b html doc/src doc/build/html | tee sphinx.out
+             # be nitpicky on the HTML documentation
+             sphinx-build -a -n -b html doc/src doc/build/html |& tee sphinx-html.out
+             sphinx-build -a -b linkcheck doc/src doc/build/linkcheck && mv doc/build/linkcheck/output.txt sphinx-linkcheck.out
              """
         }
       }
@@ -117,11 +119,16 @@ pipeline {
         notifyTuleap(false)
     }
     always {
-      warnings parserConfigurations: [[parserName: 'flake8', pattern: "flake8.out"], [parserName: 'pylint', pattern: "pylint.out"]], usePreviousBuildAsReference: true
-      archiveArtifacts artifacts: "**/pylint.out", fingerprint: true
+      warnings(parserConfigurations: [[parserName: 'flake8', pattern: "**/flake8.out"],
+                                      [parserName: 'pylint', pattern: "**/pylint.out"],
+                                      [parserName: 'sphinx-html', pattern: "**/sphinx-html.out"],
+                                      [parserName: 'sphinx-linkcheck', pattern: "**/sphinx-linkcheck.out"]],
+               usePreviousBuildAsReference: true)
       archiveArtifacts artifacts: "**/flake8.out", fingerprint: true
+      archiveArtifacts artifacts: "**/pylint.out", fingerprint: true
+      archiveArtifacts artifacts: "**/sphinx-html.out", fingerprint: true
+      archiveArtifacts artifacts: "**/sphinx-linkcheck.out", fingerprint: true
       archiveArtifacts artifacts: "**/pytest.out", fingerprint: true
-      archiveArtifacts artifacts: "**/sphinx.out", fingerprint: true
       junit "**/pytest.xml"
     }
     cleanup {
