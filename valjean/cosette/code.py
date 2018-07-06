@@ -361,7 +361,7 @@ class BuildTask(ShellTask):
                                            fallback=''))
         build_flags = split(config.get(sec_fam, name, 'build-flags',
                                        fallback=''))
-        source_dir = config.get(sec_fam, name, 'source-dir', fallback=None)
+        source_dir = config.get(sec_fam, name, 'source-dir')
         targets = config.get(sec_fam, name, 'build-targets', fallback=None)
         if isinstance(targets, str):
             targets = split(targets)
@@ -404,13 +404,7 @@ class BuildTask(ShellTask):
 
         self.log_root = os.path.abspath(log_root)
 
-        if source_dir is not None:
-            self.source_dir = os.path.abspath(source_dir)
-        else:
-            self.source_dir = (
-                '{{env[checkout/{name}][checkout_dir]}}'
-                .format(name=name)
-                )
+        self.source_dir = os.path.abspath(source_dir)
 
         LOGGER.debug('will look for source files in %s', self.source_dir)
         self.build_dir = os.path.abspath(build_dir)

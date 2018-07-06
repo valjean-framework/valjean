@@ -132,7 +132,8 @@ import re
 from . import LOGGER
 from .priority_set import PrioritySet
 from .config_handlers import (LookupOtherHandler, LookupSectionFromOptHandler,
-                              PathHandler, trigger)
+                              PathHandler, AddMissingSectionHandler,
+                              DefineHandler, trigger)
 
 
 class BaseConfig:
@@ -198,7 +199,7 @@ class BaseConfig:
         :type mapping: :term:`mapping`
         :returns: The constructed BaseConfig object.
         '''
-        new = cls()
+        new = cls(paths=[])
         new.merge(mapping)
         return new
 
@@ -339,6 +340,7 @@ class BaseConfig:
         if not self.has_section(section):
             self.add_section(section)
         for opt, val in other.items(section, raw=True):
+            LOGGER.debug('merging option %r:%r = %r', section, opt, val)
             self.set(section, opt, val)
         return self
 
@@ -421,7 +423,7 @@ class Config(BaseConfig):
     handlers for special options that are invoked on lookup failure.
     '''
 
-    def __init__(self, paths=None, handlers=None):
+    def __init__(self, paths=None, handlers=None, defines=True):
         '''Construct a configuration object.
 
         :param paths: An iterable of paths for configuration files. If this is
@@ -444,6 +446,8 @@ class Config(BaseConfig):
                          section families, ``opt`` is the name of the option to
                          handle and ``handler`` is the handler callable proper.
         :type handlers: :term:`iterable` or None
+        :param bool defines: If `True`, add special handlers for
+                             :samp:`[define/{sec_id}]` sections.
         '''
         super().__init__(paths)
 
@@ -455,6 +459,25 @@ class Config(BaseConfig):
 
         # initialize the list of cumulated dependencies with an empty set
         self._deps = set()
+
+        if defines:
+            # add DefineHandlers for each 'define/*' section
+            for sec, _ in self.items():
+                if sec.startswith('define/'):
+                    self._add_define_handler(50, sec)
+
+    def _add_define_handler(self, priority, sec):
+        _, sec_id = self.split_section(sec)
+        try:
+            base = self.get(sec, 'base')
+        except NoOptionError:
+            err = "[define/*] sections must have a 'base' option"
+            raise ValueError(err)
+        extra = {key: value
+                 for key, value in self.items(section=sec, raw=True)
+                 if key != 'base'}
+        handler = DefineHandler(sec_id, base=base, extra=extra)
+        self.add_option_handler(priority, handler)
 
     # pylint: disable=redefined-builtin
     def get(self, *args, raw=False, vars=None, fallback=_UNSET):
@@ -503,9 +526,9 @@ class Config(BaseConfig):
             else:
                 family, sec_id = split
             for handler in self._handlers:
-                if handler.accepts(family, sec_id, option):
-                    LOGGER.debug('handler triggers on %s/%s:%s',
-                                 family, sec_id, option)
+                if handler.accepts(self, family, sec_id, option):
+                    LOGGER.debug('handler %s triggers on %s/%s:%s',
+                                 handler, family, sec_id, option)
                     val, deps = handler(self, xsection, split, option, raw,
                                         vars, fallback)
                     self._deps.update(deps)
@@ -538,28 +561,29 @@ class Config(BaseConfig):
     def has_option_handler(self, family=None, section_id=None, option=None):
         '''Check if an option handler is installed for given section family,
         section ID and option name.'''
-        return any(h.accepts(family, section_id, option)
+        return any(h.accepts(self, family, section_id, option)
                    for h in self._handlers)
 
     def get_option_handler(self, family=None, section_id=None, option=None):
         '''Return the option handler for given section family and option
         name.'''
         return next(h for h in self._handlers
-                    if h.accepts(family, section_id, option))
+                    if h.accepts(self, family, section_id, option))
 
     def __repr__(self):
         return 'Config({})'.format(self.as_dict())
 
     #: Default option handlers
     DEFAULT_HANDLERS = (
+        (0, AddMissingSectionHandler()),
         (10, PathHandler('executable')),
+        (50, LookupSectionFromOptHandler(
+            trigger(family='build', option='source-dir'),
+            'checkout'
+            )),
         (50, LookupSectionFromOptHandler(
             trigger(family='run', option='args'),
             'executable'
-            )),
-        (50, LookupSectionFromOptHandler(
-            trigger(family='executable', option='build-dir'),
-            'from-build'
             )),
         (50, LookupSectionFromOptHandler(
             trigger(family='run', option='path'), 'executable'
@@ -567,7 +591,11 @@ class Config(BaseConfig):
         (50, LookupOtherHandler(
             trigger(family='checkout', option='checkout-dir'),
             other_opt='checkout-root',
-            finalizer=lambda val, split, opt: os.path.join(val, split[1])
+            finalizer=lambda val, split, _: os.path.join(val, split[1])
+            )),
+        (50, LookupOtherHandler(
+            trigger(family='checkout', option='source-dir'),
+            other_opt='checkout-dir'
             )),
         (50, LookupOtherHandler(
             trigger(family='build', option='build-dir'),

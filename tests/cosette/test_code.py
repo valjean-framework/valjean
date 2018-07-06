@@ -4,7 +4,7 @@
 '''Tests for the :mod:`~.code` module.'''
 
 import os
-from configparser import NoSectionError
+from configparser import NoOptionError
 from subprocess import check_call, check_output, DEVNULL, CalledProcessError
 import re
 
@@ -278,14 +278,28 @@ def simple_cmake_config(task_name, tmpdir_factory, build_core):
                              build_core)
 
 
+@pytest.fixture(scope='function', params=[True, False])
+def with_source_dir(request):
+    '''Return the unimplemented version-control systems.'''
+    return request.param
+
+
 @pytest.fixture(scope='function')
-def git_cmake_config(simple_git_config, simple_cmake_config):
+def git_cmake_config(simple_git_config, simple_cmake_config, with_source_dir):
     '''Set up a Config object for combined git checkout/CMake build testing.'''
     sec_name, _ = simple_cmake_config.section_by_family('build')
     simple_git_config.merge_section(simple_cmake_config, sec_name)
-    simple_git_config.set('core', 'build-root',
-                          simple_cmake_config.get('core', 'build-root'))
-    yield simple_git_config
+
+    if not with_source_dir:
+        sec_name, _ = simple_git_config.section_by_family('build')
+        _, name = simple_git_config.section_by_family('checkout')
+        LOGGER.debug('modifying sections %s and %s',
+                     sec_name, name)
+        simple_git_config.remove_option(sec_name, 'source-dir')
+        simple_git_config.set(sec_name, 'checkout', name)
+
+    LOGGER.debug('git_cmake_config: %s', simple_git_config)
+    return simple_git_config
 
 
 @pytest.fixture(scope='function', params=['svn', 'cvs', 'copy'])
@@ -404,8 +418,6 @@ def test_cmake_build(cmake_config):
 def test_git_checkout_cmake_build(git_cmake_config):
     '''Test a git checkout followed by a CMake build.'''
     # extract the section name and the task name
-    sec_name, _ = git_cmake_config.section_by_family('build')
-    git_cmake_config.remove_option(sec_name, 'source-dir')
     env = do_git_checkout(git_cmake_config)
     do_cmake_build(git_cmake_config, env)
 
@@ -419,7 +431,7 @@ def test_missing_checkout_section(simple_git_config):
     # extract the section name and the task name
     sec_name, name = simple_git_config.section_by_family('checkout')
     simple_git_config.remove_section(sec_name)
-    with pytest.raises(NoSectionError):
+    with pytest.raises(NoOptionError):
         code.CheckoutTask.from_config(name, simple_git_config)
 
 
@@ -443,7 +455,7 @@ def test_unknown_checkout(simple_git_config):
 
 def test_missing_build_section(simple_cmake_config):
     '''Test that a missing build section raises an error on build.'''
-    with pytest.raises(NoSectionError):
+    with pytest.raises(NoOptionError):
         missing_build_section(simple_cmake_config)
 
 

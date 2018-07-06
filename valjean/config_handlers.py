@@ -50,12 +50,11 @@ As an example, here is a handler that turns all unsuccessful lookups of the
 `'eggs'` option into lookups of `'spam'`:
 
     >>> from valjean.config_handlers import trigger
-
     >>> from configparser import NoOptionError
     >>> from valjean.config import BaseConfig, Config
     >>> class EggsHandler:
     ...     @staticmethod
-    ...     def accepts(family, sec_id, option):
+    ...     def accepts(config, family, sec_id, option):
     ...         return option == 'eggs'
     ...     @staticmethod
     ...     def __call__(config, section, split, option, raw, vars, fallback):
@@ -94,10 +93,15 @@ and here we see the handler in action:
 
 Some useful handlers
 --------------------
+
+This module provides a few useful handlers:
 '''
 
 import os
 from configparser import NoOptionError
+from collections import ChainMap
+
+from . import LOGGER
 
 
 class Handler:
@@ -115,6 +119,11 @@ class Handler:
         '''Return `True` if this handler accepts to deal with the requested
         option.'''
         return self._accepts(*args)
+
+    # pylint: disable=too-many-arguments
+    def __call__(self, config, sec, split, opt, raw, vars_, fallback):
+        error = 'handlers must implement the __call__() method'
+        raise NotImplementedError(error)
 
 
 class LookupOtherHandler(Handler):
@@ -254,8 +263,6 @@ class LookupSectionFromOptHandler(Handler):
     fails, because this option is not defined in ``executable/dog_kennel``.
     Now consider the following:
 
-    .. doctest:: config_handlers_lookupsection
-
         >>> config.get('run', 'paper_bag', 'args', raw=True)
         '${arg1} ${arg2}'
 
@@ -267,8 +274,6 @@ class LookupSectionFromOptHandler(Handler):
 
     If we activate interpolation (``raw=False``)
 
-    .. doctest:: config_handlers_lookupsection
-
         >>> config.get('run', 'paper_bag', 'args')
         'mattress paper_bag'
 
@@ -276,8 +281,6 @@ class LookupSectionFromOptHandler(Handler):
     from ``executable/dog_kennel`` above).  The ``${arg1}`` option is
     interpolated from the ``executable/dog_kennel`` section, but
     ``${arg2}`` is interpolated from ``run/paper_bag``.
-
-    .. doctest:: config_handlers_lookupsection
 
         >>> config.get('run', 'chest', 'args')
         'sing chest'
@@ -306,12 +309,7 @@ class LookupSectionFromOptHandler(Handler):
 
     # pylint: disable=too-many-arguments
     def __call__(self, config, sec, split, opt, raw, vars_, fallback):
-        from collections import ChainMap
-        try:
-            sec_id = config.get(sec, self.opt, raw=False)
-        except NoOptionError:
-            deps = []
-            return fallback, deps
+        sec_id = config.get(sec, self.opt, raw=False)
 
         # pylint: disable=protected-access
         chain = ChainMap(config._conf[sec])
@@ -358,6 +356,138 @@ class PathHandler(Handler):
             return fallback, deps
 
 
+class DefineHandler(Handler):
+    '''Handle user-defined sections.
+
+    This handler is instantiated by the :class:`~.Config` constructor on all
+    sections of the form :samp:`[define/{name}]`. It allows to "subclass" the
+    behaviour of any existing section by specifying some of its option values.
+
+.. doctest:: DefineHandler
+   :hide:
+
+    >>> from valjean.config import Config
+    >>> config_string= """[build/frob]
+    ... source-dir = /path/to/frob/sec
+    ...
+    ... [define/frob it]
+    ... base = executable
+    ... from-build = frob
+    ... args = ${it} ${SECTION_ID}
+    ... it = this
+    ...
+    ... [frob it/foo]
+    ... it = that
+    ...
+    ... [frob it/bar]"""
+    >>> with open('file.cfg', 'w') as fout:
+    ...     print(config_string, file=fout)
+    >>> config = Config(paths=['file.cfg'])
+
+    Let us look at an example:
+
+    >>> print(config_string)
+    [build/frob]
+    source-dir = /path/to/frob/sec
+    <BLANKLINE>
+    [define/frob it]
+    base = executable
+    from-build = frob
+    args = ${it} ${SECTION_ID}
+    it = this
+    <BLANKLINE>
+    [frob it/foo]
+    it = that
+    <BLANKLINE>
+    [frob it/bar]
+
+    This config file defines a new section family called ``frob it``. The
+    ``base = executable`` option specifies that ``frob it`` sections are
+    nothing but ``executable`` sections, but the ``path`` and ``args`` are
+    fixed beforehand.
+
+    We add the handler to the config object:
+
+    >>> from valjean.config_handlers import DefineHandler, trigger
+    >>> config.add_option_handler(60,   # a priority
+    ...   DefineHandler('frob it',
+    ...                 base='executable',
+    ...                 extra={'from-build': 'frob',
+    ...                        'args': '${it} ${SECTION_ID}',
+    ...                        'it': 'this'}))
+
+    Now the ``frob it`` sections are treated as ``executable`` sections. Proof:
+
+    >>> config.get('frob it', 'foo', 'from-build')
+    'frob'
+    >>> config.get('frob it', 'foo', 'args')
+    'that foo'
+    >>> config.get('frob it', 'bar', 'args')
+    'this bar'
+
+    :class:`DefineHandler` plays especially well with
+    :class:`MissingSectionHandler`, which adds a section when it is missing
+    from the input file.
+
+    >>> config.get('frob it', 'fleep', 'args')
+    'this fleep'
+    '''
+
+    def __init__(self, name, base, extra):
+        super().__init__(trigger(family=name))
+        self.base = base
+        self.extra = extra
+
+    # pylint: disable=too-many-arguments
+    def __call__(self, config, sec, split, opt, raw, vars_, fallback):
+        other_opts = {key: value
+                      for key, value in config.items(sec, raw=True)
+                      if key != opt}
+        other_opts['SECTION_ID'] = split[1]
+        chain = ChainMap()
+        chain.maps.extend(dic
+                          for dic in (vars_, other_opts, self.extra)
+                          if dic is not None)
+
+        LOGGER.debug('DefineHandler: chain.maps=%s', chain.maps)
+
+        new_sec = self.base + '/' + split[1]
+        LOGGER.debug('DefineHandler: looking up %r in %r',
+                     opt, new_sec)
+        val = config.get(new_sec, opt, raw=raw, vars=chain,
+                         fallback=fallback)
+        LOGGER.debug('DefineHandler: got %r', val)
+        deps = [new_sec]
+        return val, deps
+
+
+class AddMissingSectionHandler:
+    '''Add empty sections if they are missing.
+
+    This handler simply adds an empty section to the configuration if the
+    section is not present, and calls
+    :meth:`Config.get <valjean.config.Config.get>` again.
+    '''
+    @staticmethod
+    def accepts(config, family, sec_id, _):
+        '''Returns `True` if the configuration does not contain a section
+        called :samp:`{family}/{sec_id}`.
+        '''
+        if family is not None and sec_id is not None:
+            return not config.has_section('/'.join([family, sec_id]))
+        return False
+
+    # pylint: disable=too-many-arguments
+    @staticmethod
+    def __call__(config, sec, split, opt, raw, vars_, fallback):
+        '''Add the missing section and recurse on
+        :meth:`Config.get <valjean.config.Config.get>`'''
+        assert not config.has_section(sec)  # otherwise what are we doing here?
+        config.add_section(sec)
+        val = config.get(sec, opt, raw=raw, vars=vars_, fallback=fallback)
+        return val, []
+
+
 def trigger(family=None, section_id=None, option=None):
     '''Return a predicate to recognize a particular family/section_id/option.
 
@@ -371,15 +501,17 @@ def trigger(family=None, section_id=None, option=None):
 
         >>> from valjean.config import Config
         >>> family_foo = trigger(family='foo')
-        >>> family_foo('foo', 'some_id', 'some_opt')
+        >>> from valjean.config import Config
+        >>> conf = Config([])
+        >>> family_foo(conf, 'foo', 'some_id', 'some_opt')
         True
-        >>> family_foo('bar', 'some_id', 'some_opt')
+        >>> family_foo(conf, 'bar', 'some_id', 'some_opt')
         False
 
         >>> family_foo_option_frob = trigger(family='foo', option='frob')
-        >>> family_foo_option_frob('foo', 'some_id', 'some_opt')
+        >>> family_foo_option_frob(conf, 'foo', 'some_id', 'some_opt')
         False
-        >>> family_foo_option_frob('foo', 'some_id', 'frob')
+        >>> family_foo_option_frob(conf, 'foo', 'some_id', 'frob')
         True
 
     :param family: a section family.
@@ -390,26 +522,27 @@ def trigger(family=None, section_id=None, option=None):
     :type option: str or None
     '''
     if family is None and section_id is None and option is None:
-        return lambda x: True
+        def _accepts(_0, _1, _2, _3):
+            return True
     elif family is None and section_id is None:
-        def _accepts(_1, _2, opt, *, capture=option):
+        def _accepts(_0, _1, _2, opt, *, capture=option):
             return opt == capture
     elif family is None and option is None:
-        def _accepts(_1, sec_id, _2, *, capture=section_id):
+        def _accepts(_0, _1, sec_id, _2, *, capture=section_id):
             return sec_id == capture
     elif section_id is None and option is None:
-        def _accepts(fam, _1, _2, *, capture=family):
+        def _accepts(_0, fam, _1, _2, *, capture=family):
             return fam == capture
     elif family is None:
-        def _accepts(_, sec_id, opt, *, capture=(section_id, option)):
+        def _accepts(_0, _1, sec_id, opt, *, capture=(section_id, option)):
             return (sec_id, opt) == capture
     elif section_id is None:
-        def _accepts(fam, _, opt, *, capture=(family, option)):
+        def _accepts(_0, fam, _1, opt, *, capture=(family, option)):
             return (fam, opt) == capture
     elif option is None:
-        def _accepts(fam, sec_id, _, *, capture=(family, section_id)):
+        def _accepts(_0, fam, sec_id, _1, *, capture=(family, section_id)):
             return (fam, sec_id) == capture
     else:
-        def _accepts(fam, sec_id, opt, capture=(family, section_id, option)):
-            return (fam, sec_id, opt) == capture
+        def _accepts(_, fam, sec_id, opt, capt=(family, section_id, option)):
+            return (fam, sec_id, opt) == capt
     return _accepts
