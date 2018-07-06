@@ -136,7 +136,7 @@ class LivermoreSphere():
                 enumerate(allresp)))
         spec_resp = allresp[corr_names[response]]
         # print(spec_resp)
-        print(list(spec_resp['results']['score_res'][0].keys()))
+        # print(list(spec_resp['results']['score_res'][0].keys()))
         self.spectrum = spec_resp['results']['score_res'][0]['spectrum_res']
 
 
@@ -335,12 +335,12 @@ class MCNPSphere():
             for line in fil:
                 elts = line.split()
                 if line.startswith('tally') and tally.count(int(elts[1])) != 0:
-                    print(tally, "line:", elts)
-                    print(tally.count(int(elts[1])))
+                    # print(tally, "line:", elts)
+                    # print(tally.count(int(elts[1])))
                     ftally = True
                     ltally = int(elts[1])
                 elif ftally and not line.startswith(' ') and len(elts) == 2:
-                    print("2 elts in line:", elts)
+                    # print("2 elts in line:", elts)
                     if not elts[1].isdigit() or int(elts[1]) < 1:
                         continue
                     if elts[0][0] not in ('e', 't', 'u'):
@@ -1041,15 +1041,15 @@ class Comparison():
                 LOGGER.warning("[94mSample %s no available[0m", sname)
                 continue
             simres = self.simu_res[sname]
-            print("simres:", simres)
+            # print("simres:", simres)
             # print(responses[sname][0])
             # for elt, resp_args in responses[sname][1].items():
             for resp in responses[sname]:
-                print(resp)
-                print(responses[sname][resp].items())
+                # print(resp)
+                # print(responses[sname][resp].items())
                 for elt, resp_args in responses[sname][resp].items():
                     ewidth = resp_args.pop('ewidth', 1)
-                    print(elt, resp_args)
+                    # print(elt, resp_args)
                     if elt == 'air':
                         # simres.air.use_response(responses[sname][0])
                         simres.air.use_response(responses[sname])
@@ -1061,7 +1061,7 @@ class Comparison():
                                   .ravel())
                         resp_args.setdefault('fmt', '-')
                         resp_args.setdefault('label', sname)
-                        print(ebins.shape, spectrum.shape)
+                        # print(ebins.shape, spectrum.shape)
                         if ewidth == 'integ':
                             integ = np.sum(spectrum)*0.1
                             ewidth = 1/integ
@@ -1078,10 +1078,10 @@ class Comparison():
                             (simres.sphere.spectrum['spectrum']['score']
                              * simres.sphere.spectrum['spectrum']['sigma'] / 100)
                             .ravel())
-                        print("T4 n bins =", spectrum.shape)
+                        # print("T4 n bins =", spectrum.shape)
                         resp_args.setdefault('fmt', '-')
                         resp_args.setdefault('label', sname)
-                        print(ebins.shape, spectrum.shape, mebins[:10])
+                        # print(ebins.shape, spectrum.shape, mebins[:10])
                         if ewidth == 'integ':
                             integ = np.sum(spectrum)*0.1
                             ewidth = 1/integ
@@ -1091,6 +1091,9 @@ class Comparison():
                         if ratio and [x for x in ratio if sname in x]:
                             rspectrum[sname] = np.copy(spectrum[1:]*ewidth)
                             rebins = np.copy(mebins[1:])
+                        print("[94mIntegral T4", sname, "=",
+                              np.sum(spectrum*ewidth), "[0m")
+                        print("[35mBin 10 =", (spectrum*ewidth)[10], "[0m")
                     else:
                         print("2 allowed keys: air and sphere")
                     if print_file and sname in print_file:
@@ -1132,8 +1135,12 @@ class Comparison():
                                        self.mcnp_res[melt].histo[tally][ubin].vals*ewidth,
                                        self.mcnp_res[melt].histo[tally][ubin].sigma*ewidth,
                                        **mcnp_args)
+                    print("[94mIntegral MCNP (tally:", tally, ") =",
+                          np.sum(self.mcnp_res[melt].histo[tally][ubin].vals*ewidth), "[0m")
                 if ratio and [x for x in ratio if melt in x]:
                     rspectrum[melt] = self.mcnp_res[melt].histo[tally][ubin].vals[2:]*ewidth
+                print("[35mBin 10 =",
+                      (self.mcnp_res[melt].histo[tally][ubin].vals*ewidth)[10], "[0m")
         if ratio:
             for rat in ratio:
                 print(rat)
