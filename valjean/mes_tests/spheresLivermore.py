@@ -169,7 +169,8 @@ class SpherePlot():
         norm_spec = spectrum['score']/normalization['score'].ravel()[norm_bin]
         norm_spec_sig = spectrum['sigma']*norm_spec/100.
         # removing first and last bins as irrelevant here
-        return Histo(self.sphere.spectrum['tbins'][1:-1]*1e9,
+        shift = 100 if self.sphere.spectrum['tbins'][2]*1e9 > 200 else 0
+        return Histo(self.sphere.spectrum['tbins'][1:-1]*1e9-shift,
                      norm_spec.ravel()[1:-1],
                      norm_spec_sig.ravel()[1:-1])
 
@@ -335,12 +336,9 @@ class MCNPSphere():
             for line in fil:
                 elts = line.split()
                 if line.startswith('tally') and tally.count(int(elts[1])) != 0:
-                    # print(tally, "line:", elts)
-                    # print(tally.count(int(elts[1])))
                     ftally = True
                     ltally = int(elts[1])
                 elif ftally and not line.startswith(' ') and len(elts) == 2:
-                    # print("2 elts in line:", elts)
                     if not elts[1].isdigit() or int(elts[1]) < 1:
                         continue
                     if elts[0][0] not in ('e', 't', 'u'):
@@ -357,7 +355,6 @@ class MCNPSphere():
                                    len(bins), len(counts), nb_bins)
                     self.finish_tally(ltally, bins, counts)
                     bins, counts = {}, []
-                    # break
                 elif bins_block and ftally:
                     bins[bins_block] += [float(x) for x in elts]
                 elif vals_block:
@@ -379,18 +376,15 @@ class MCNPSphere():
                 print("Double differential distributions are not taken into"
                       " account for the moment")
                 return
-        print(nbinste)
         bins_array = np.array(bins[dims[0]])
         # convert shakes in ns !!!
         if dims[0][0] == 't':
-            print(bins_array.shape)
             bins_array *= 10
         sigma = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 != 0])
         counts = np.array(
             [x for ind, x in enumerate(counts) if ind % 2 == 0])
         sigma = sigma*counts
-        print(sigma.shape)
         ubins = [bins[x] for x in bins if 'u' in x]
         udim = 1 if len(ubins) == 0 else len(ubins[0]) + 1
         self.integral[tally] = []
@@ -476,8 +470,6 @@ class MonacoSphere():
                 self.vals = np.flip(self.vals, axis=0)
                 self.errors = np.flip(self.errors, axis=0)  # cannot be one edge
             if self.bins[1] == self.bins[2]:
-                # print(self.bins[::2], self.bins[1::2],
-                #       (self.bins[1::2]+self.bins[::2])/2)
                 self.bins = (self.bins[1::2]+self.bins[::2])/2
                 self.vals = self.vals[::2]
                 self.errors = self.errors[::2]
@@ -501,7 +493,7 @@ class CompPlot():
         #                        .format(elt=self.charac[0].capitalize(),
         #                                mfp=self.charac[1],
         #                                deg=self.charac[2]))
-        # self.splt[0].set_ylabel("Neutron count rate [1/(ns.source)]", labelpad=40)
+        # self.splt[0].set_ylabel("N cnt rate [1/(ns.source)]", labelpad=40)
         self.splt[0].set_ylabel("Neutron count rate [1/(ns.source)]")
         self.splt[0].set_ylim(ymin=2e-4)
         self.splt[1].set_ylim(ymin=0.4, ymax=2.5)
@@ -512,15 +504,8 @@ class CompPlot():
         # self.splt[1].set_yticks([0.4, 1, 2], minor=True)
         self.splt[1].set_yticklabels(["0.4", "1", "2"])
         self.splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
-        # self.splt[1].yaxis.set_major_locator(plt.NullLocator())
-        # self.splt[1].set_yticks([0.4, 1, 2])
-        # self.splt[1].set_yticklabels(["0.4", "1", "2"])
-        # self.splt[1].yaxis.set_major_locator(plt.MaxNLocator(nbins=1))
-        # self.splt[1].yaxis.set_major_locator(plt.MaxNLocator(1))
         self.splt[1].set_xlabel("Time [ns]")
         self.splt[1].set_ylabel("C/E")
-        # self.splt[1].locator_params(axis='y', nbins=2)
-        # print("labels %s", str([x for x in self.splt[1].get_yminorticklabels()]))
         self.splt[0].legend(self.legend['curves'], self.legend['labels'],
                             markerscale=2)  #, fontsize=12
         # self.splt[1].legend(loc='lower right')
@@ -706,9 +691,6 @@ class Comparison():
             mtbins = self.mcnp_res[sname].histo[tally][ubin].tbins - 1
             mcnp_vals = np.copy(self.mcnp_res[sname].histo[tally][ubin].vals)
             mcnp_sigma = np.copy(self.mcnp_res[sname].histo[tally][ubin].sigma)
-            print(mcnp_vals.shape)
-            print(mtbins.shape)
-            print(mcnp_sigma.shape)
             # isinstance only works the first time with autoreload
             # if isinstance(self.mcnp_res[sname], MCNPrenormalizedSphere):
             if hasattr(self.mcnp_res[sname], 'sphere'):
@@ -716,7 +698,6 @@ class Comparison():
                 mcnp_vals /= Comparison.NORM_FACTOR
                 mcnp_sigma /= Comparison.NORM_FACTOR
             mcnp_args = mcnp[sname] if isinstance(mcnp, dict) else {}
-            print(mcnp_args)
             mcnp_args.setdefault('c', 'c')
             mcnp_args.setdefault('label', "MCNP")
             mcnp_args.setdefault('slab', "MCNP")
@@ -1041,17 +1022,10 @@ class Comparison():
                 LOGGER.warning("[94mSample %s no available[0m", sname)
                 continue
             simres = self.simu_res[sname]
-            # print("simres:", simres)
-            # print(responses[sname][0])
-            # for elt, resp_args in responses[sname][1].items():
             for resp in responses[sname]:
-                # print(resp)
-                # print(responses[sname][resp].items())
                 for elt, resp_args in responses[sname][resp].items():
                     ewidth = resp_args.pop('ewidth', 1)
-                    # print(elt, resp_args)
                     if elt == 'air':
-                        # simres.air.use_response(responses[sname][0])
                         simres.air.use_response(responses[sname])
                         spectrum = simres.air.spectrum['spectrum']['score'].ravel()
                         ebins = simres.air.spectrum['ebins'].ravel()
@@ -1061,14 +1035,12 @@ class Comparison():
                                   .ravel())
                         resp_args.setdefault('fmt', '-')
                         resp_args.setdefault('label', sname)
-                        # print(ebins.shape, spectrum.shape)
                         if ewidth == 'integ':
                             integ = np.sum(spectrum)*0.1
                             ewidth = 1/integ
                             main_splt.errorbar(mebins, spectrum*ewidth, yerr=errors,
                                                **resp_args)
                     elif elt == 'sphere':
-                        # simres.sphere.use_response(responses[sname][0])
                         simres.sphere.use_response(resp)
                         spectrum = (simres.sphere.spectrum['spectrum']['score']
                                     .ravel())
@@ -1078,10 +1050,8 @@ class Comparison():
                             (simres.sphere.spectrum['spectrum']['score']
                              * simres.sphere.spectrum['spectrum']['sigma'] / 100)
                             .ravel())
-                        # print("T4 n bins =", spectrum.shape)
                         resp_args.setdefault('fmt', '-')
                         resp_args.setdefault('label', sname)
-                        # print(ebins.shape, spectrum.shape, mebins[:10])
                         if ewidth == 'integ':
                             integ = np.sum(spectrum)*0.1
                             ewidth = 1/integ
@@ -1109,8 +1079,6 @@ class Comparison():
                 if ewidth == 'integ':
                     integ = np.sum(self.monaco_res[melt].vals)*0.1
                     ewidth = 1/integ
-                print(self.monaco_res[melt].bins.shape,
-                      self.monaco_res[melt].bins[:10])
                 main_splt.errorbar(self.monaco_res[melt].bins,
                                    self.monaco_res[melt].vals*ewidth,
                                    self.monaco_res[melt].errors*ewidth,
@@ -1118,7 +1086,6 @@ class Comparison():
                 if ratio and [x for x in ratio if melt in x]:
                     rspectrum[melt] = self.monaco_res[melt].vals*ewidth
         if mcnp:
-            print("Found MCNP")
             for melt, mcontent in mcnp.items():
                 if melt not in self.mcnp_res:
                     continue
@@ -1143,10 +1110,8 @@ class Comparison():
                       (self.mcnp_res[melt].histo[tally][ubin].vals*ewidth)[10], "[0m")
         if ratio:
             for rat in ratio:
-                print(rat)
+                if len(rat) < 2: continue
                 ratio_args = rat[2] if len(rat) > 2 else {}
-                print(ratio_args)
-                print(list(rspectrum.keys()))
                 splt[1].plot(rebins, rspectrum[rat[0]]/rspectrum[rat[1]],
                              **ratio_args)
                 splt[1].axhline(y=1, ls='--', lw=0.5, color='grey')
@@ -1155,8 +1120,8 @@ class Comparison():
                 # splt[1].set_yticklabels([], minor=True)
                 # splt[1].set_yticks([0.4, 1, 2])
                 # splt[1].set_yticklabels(["0.4", "1", "2"])
-                # splt[1].legend()
-        main_splt.legend(fontsize=10)
+                # splt[1].legend(fontsize=10)
+        main_splt.legend()
         if save_file:
             for sfile in save_file:
                 plt.savefig(sfile)
