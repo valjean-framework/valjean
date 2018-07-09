@@ -12,7 +12,7 @@ T4resp30deg = 'neutron_response_30deg'
 T4resp30degInt = 'neutron_response_integral_30deg'
 
 # odir = 'final_plots_v6'
-odir = 'test_correction'
+odir = 'final_plots_corr'
 
 comp = Comparison()
 
@@ -81,28 +81,45 @@ comp.set_monaco_files([
     ('Be_monaco_30', 'Monaco/R2/be/finalPaper/neutronR1.out')])
 
 comp.set_mcnp_files([
-    ('Conc_mcnp', join(MCNP, 'concrete/llnl_conc_wphotons_f2m'), True, (205, 2)),
+    ('Conc_mcnp', join(MCNP, 'concrete/llnl_conc_wphotons_nbinsm'), True, (205, 2)),
+    ('Conc_mcnp_noimp', join(MCNP, 'concrete/llnl_conc_wphotons_nbins_noimpm'), True, (205, 2)),
     ('Fe_mcnp', join(MCNP, 'iron/llnl_iron_wphotonsm'), True, (205, 2)),
-    ('Be_mcnp', join(MCNP, 'beryllium/llnl_berl_wphotonsm'), True, (205, 2)),
+    ('Fe_mcnp_noimp', join(MCNP, 'iron/llnl_iron_wphotons_noimpm'), True, (205, 2)),
+    ('Be_mcnp', join(MCNP, 'beryllium/llnl_berl_f2_wphotonsm'), True, (205, 2)),
     ('C_mcnp', join(MCNP, 'carbon/llnl_carbon_wphotonsm'), True, (205, 2)),
     ('N_mcnp', join(MCNP, 'nitrogen/llnl_nitro_wphotonsm'), True, (205, 2)),
 ])
 
+# comp.set_t4_files([
+#     ("Conc_ceav5", join(T4CEAV5, "prob111_concrete_fine_RPSD_SPHAIR.d.res")),
+#     ('Conc_endf', join(T4ENDF, "prob111_concrete_fine_RPSD_SPHAIR.d.res")),
+#     ("Be_ceav5", join(T4CEAV5, "prob100_fine_RPSD_SPHAIR.d.res")),
+#     ("Be_endf", join(T4ENDF, "prob100_fine_RPSD_SPHAIR.d.res")),
+#     ("C_ceav5", join(T4CEAV5, "prob102_carboneNat2.9_fine_RPSD_SPHAIR.d.res")),
+#     ("C_endf", join(T4ENDF, "prob102_carboneNat2.9_fine_RPSD_SPHAIR.d.res")),
+#     ("Fe_ceav5", join(T4CEAV5, "prob107_fe0p9_fine_RPSD_SPHAIR.d.res")),
+#     ("Fe_endf", join(T4ENDF, "prob107_fe0p9_fine_RPSD_SPHAIR.d.res")),
+#     ("N_ceav5", join(T4CEAV5, "prob103_nitrogen3.1_fine_RPSD_SPHAIR.d.res")),
+#     ("N_endf", join(T4ENDF, "prob103_nitrogen3.1_fine_RPSD_SPHAIR.d.res")),
+#     # ("Fe_ceav5_leak", join(T4CEAV5, "prob107_fe0p9_fine_all_SPHAIR.d.res")),
+#     # ("Fe_endf_leak", join(T4ENDF, "prob107_fe0p9_fine_all_SPHAIR.d.res")),
+# ])
 comp.set_t4_files([
-    ("Conc_ceav5", join(T4CEAV5, "prob111_concrete_fine_RPSD_SPHAIR.d.res")),
-    ('Conc_endf', join(T4ENDF, "prob111_concrete_fine_RPSD_SPHAIR.d.res")),
-    ("Be_ceav5", join(T4CEAV5, "prob100_fine_RPSD_SPHAIR.d.res")),
-    ("Be_endf", join(T4ENDF, "prob100_fine_RPSD_SPHAIR.d.res")),
-    ("C_ceav5", join(T4CEAV5, "prob102_carboneNat2.9_fine_RPSD_SPHAIR.d.res")),
-    ("C_endf", join(T4ENDF, "prob102_carboneNat2.9_fine_RPSD_SPHAIR.d.res")),
-    ("Fe_ceav5", join(T4CEAV5, "prob107_fe0p9_fine_RPSD_SPHAIR.d.res")),
-    ("Fe_endf", join(T4ENDF, "prob107_fe0p9_fine_RPSD_SPHAIR.d.res")),
-    ("N_ceav5", join(T4CEAV5, "prob103_nitrogen3.1_fine_RPSD_SPHAIR.d.res")),
-    ("N_endf", join(T4ENDF, "prob103_nitrogen3.1_fine_RPSD_SPHAIR.d.res")),
+    ("Conc_ceav5", join(T4CEAV5, "prob111_concrete_fine_timeShifted_SPHAIR.d.res")),
+    ('Conc_endf', join(T4ENDF, "prob111_concrete_fine_timeShifted_SPHAIR.d.res")),
+    ("Be_ceav5", join(T4CEAV5, "prob100_fine_timeShifted_SPHAIR.d.res")),
+    ("Be_endf", join(T4ENDF, "prob100_fine_timeShifted_SPHAIR.d.res")),
+    ("C_ceav5", join(T4CEAV5, "prob102_carboneNat2.9_fine_timeShifted_SPHAIR.d.res")),
+    ("C_endf", join(T4ENDF, "prob102_carboneNat2.9_fine_timeShifted_SPHAIR.d.res")),
+    ("Fe_ceav5", join(T4CEAV5, "prob107_fe0p9_fine_timeShifted_SPHAIR.d.res")),
+    ("Fe_endf", join(T4ENDF, "prob107_fe0p9_fine_timeShifted_SPHAIR.d.res")),
+    ("N_ceav5", join(T4CEAV5, "prob103_nitrogen3.1_fine_timeShifted_SPHAIR.d.res")),
+    ("N_endf", join(T4ENDF, "prob103_nitrogen3.1_fine_timeShifted_SPHAIR.d.res")),
     # ("Fe_ceav5_leak", join(T4CEAV5, "prob107_fe0p9_fine_all_SPHAIR.d.res")),
     # ("Fe_endf_leak", join(T4ENDF, "prob107_fe0p9_fine_all_SPHAIR.d.res")),
 ])
 
+# normalisation a l'air et a la largeur du bin en energie (*0.1)
 def normalisation(aire):
     norm = aire*1.329903e-4*0.1
     return 1/norm
@@ -135,7 +152,7 @@ spheresDict = {
         'resp_angle': '30deg',
         'monaco_neutrons': 'N_monaco_30',
         'monaco_photons': 'N_monaco_photons',
-        'mcnp': 'N_mcnp',
+        # 'mcnp': 'N_mcnp',
         'file_neutrons': join(odir, 'N_3.1_30deg'),
         'file_photons': [join(odir, 'N_3.1_photons.png')]},
     'C_30': {
@@ -146,19 +163,19 @@ spheresDict = {
         'resp_angle': '30deg',
         'monaco_neutrons': 'C_monaco_30',
         'monaco_photons': 'C_monaco_photons',
-        'mcnp': 'C_mcnp',
+        # 'mcnp': 'C_mcnp',
         'file_neutrons': join(odir, 'C_2.9_30deg'),
         'file_photons': [join(odir, 'C_2.9_photons.png')]},
-    # 'C_120': {
-    #     'exp': ('CARBON', '2.9', '120'),
-    #     'ceav': 'C_ceav5',
-    #     'endf': 'C_endf',
-    #     'norm': Norm_C,
-    #     'resp_angle': '120deg',
-    #     'monaco_neutrons': 'C_monaco_120',
-    #     'monaco_photons': 'C_monaco_photons',
-    #     'file_neutrons': join(odir, 'C_2.9_120deg'),
-    #     'file_photons': [join(odir, 'C_2.9_photons.png')]},
+    'C_120': {
+        'exp': ('CARBON', '2.9', '120'),
+        'ceav': 'C_ceav5',
+        'endf': 'C_endf',
+        'norm': Norm_C,
+        'resp_angle': '120deg',
+        'monaco_neutrons': 'C_monaco_120',
+        'monaco_photons': 'C_monaco_photons',
+        'file_neutrons': join(odir, 'C_2.9_120deg'),
+        'file_photons': [join(odir, 'C_2.9_photons_120.png')]},
     'Fe_30': {
         'exp': ('IRON', '0.9', '30'),
         'ceav': 'Fe_ceav5',
@@ -167,19 +184,30 @@ spheresDict = {
         'resp_angle': '30deg',
         'monaco_neutrons': 'Fe_monaco_30',
         'monaco_photons': 'Fe_monaco_photons',
-        'mcnp': 'Fe_mcnp',
+        # 'mcnp': 'Fe_mcnp',
         'file_neutrons': join(odir, 'Fe_0.9_30deg'),
         'file_photons': [join(odir, 'Fe_0.9_photons.png')]},
-    # 'Fe_120': {
-    #     'exp': ('IRON', '0.9', '120'),
+    'Fe_120': {
+        'exp': ('IRON', '0.9', '120'),
+        'ceav': 'Fe_ceav5',
+        'endf': 'Fe_endf',
+        'norm': Norm_Fe,
+        'resp_angle': '120deg',
+        'monaco_neutrons': 'Fe_monaco_120',
+        'monaco_photons': 'Fe_monaco_photons',
+        'file_neutrons': join(odir, 'Fe_0.9_120deg'),
+        'file_photons': [join(odir, 'Fe_0.9_photons_120.png')]},
+    # 'Fe_30_noimp': {
+    #     'exp': ('IRON', '0.9', '30'),
     #     'ceav': 'Fe_ceav5',
     #     'endf': 'Fe_endf',
     #     'norm': Norm_Fe,
-    #     'resp_angle': '120deg',
-    #     'monaco_neutrons': 'Fe_monaco_120',
+    #     'resp_angle': '30deg',
+    #     'monaco_neutrons': 'Fe_monaco_30',
     #     'monaco_photons': 'Fe_monaco_photons',
-    #     'file_neutrons': join(odir, 'Fe_0.9_120deg'),
-    #     'file_photons': [join(odir, 'Fe_0.9_photons.png')]},
+    #     'mcnp': 'Fe_mcnp_noimp',
+    #     'file_neutrons': join(odir, 'Fe_0.9_30deg_noimp'),
+    #     'file_photons': [join(odir, 'Fe_0.9_photons_noimp.png')]},
     'Be_30': {
         'exp': ('BERYLLIUM', '0.8', '30'),
         'ceav': 'Be_ceav5',
@@ -188,12 +216,9 @@ spheresDict = {
         'resp_angle': '30deg',
         'monaco_neutrons': 'Be_monaco_30',
         'monaco_photons': 'Be_monaco_photons',
-        'mcnp': 'Be_mcnp',
+        # 'mcnp': 'Be_mcnp',
         'file_neutrons': join(odir, 'Be_0.8_30deg'),
-        'file_photons': [join(odir, 'Be_0.8_photons.png'),
-                         # join(odir, 'Be_0.8_photons.pdf'),
-                         # join(odir, 'Be_0.8_photons.svg')
-        ]},
+        'file_photons': [join(odir, 'Be_0.8_photons.png')]},
     'Conc_120': {
         'exp': ('CONCRETE', '2.0', '120'),
         'ceav': 'Conc_ceav5',
@@ -202,15 +227,28 @@ spheresDict = {
         'resp_angle': '120deg',
         'monaco_neutrons': 'Conc_monaco_120',
         'monaco_photons': 'Conc_monaco_photons',
-        'mcnp': 'Conc_mcnp',
+        # 'mcnp': 'Conc_mcnp',
         'file_neutrons': join(odir, 'Conc_2.0_120deg'),
-        'file_photons': [join(odir, 'Conc_2.0_photons.png')]}
-        # 'file_photons': [join(odir, 'Conc_2.0_photons.pdf'),
-        #                  join(odir, 'Conc_2.0_photons.png'),
-        #                  join(odir, 'Conc_2.0_photons.svg')]}
+        'file_photons': [join(odir, 'Conc_2.0_photons.png')]},
+    # 'Conc_120_noimp': {
+    #     'exp': ('CONCRETE', '2.0', '120'),
+    #     'ceav': 'Conc_ceav5',
+    #     'endf': 'Conc_endf',
+    #     'norm': Norm_Conc,
+    #     'resp_angle': '120deg',
+    #     'monaco_neutrons': 'Conc_monaco_120',
+    #     'monaco_photons': 'Conc_monaco_photons',
+    #     # 'mcnp': 'Conc_mcnp_noimp',
+    #     'file_neutrons': join(odir, 'Conc_2.0_120deg_noimp'),
+    #     'file_photons': [join(odir, 'Conc_2.0_photons_noimp.png')]}
 }
 
 for key, sphere in spheresDict.items():
+    # in the loop due to pop (of ewidth) -> precaution
+    mcnp_n_style =  {'c': 'C3', 'label': 'MCNP', 'drawstyle': 'steps-mid'}
+    mcnp_p_tal2 = {'c': 'C3', 'label': 'MCNP', 'drawstyle': 'steps-mid',
+                   'ls': '-', 'tally': 2, 'ewidth': 10}
+
     print(sphere)
     print(sphere['exp'])
     t4_ordDict = OrderedDict()
@@ -224,6 +262,10 @@ for key, sphere in spheresDict.items():
         {'sphere': {'label': 'T4, ENDF/BVII.1',
                     'c': 'C2', 'drawstyle': 'steps-mid',
                     'ls': '-', 'ewidth': sphere['norm']}}}
+    mcnp_p_plot = {sphere['mcnp']: [mcnp_p_tal2]} if 'mcnp' in sphere else {}
+    mcnp_p_ratio = (sphere['mcnp'], sphere['endf'],
+                    {'c': 'C3', 'label': 'MCNP, ENDF / T4, ENDF',
+                     'drawstyle': 'steps-mid'}) if 'mcnp' in sphere else ()
     comp.compare_photons(
         sphere['exp'],
         t4_ordDict,
@@ -231,18 +273,14 @@ for key, sphere in spheresDict.items():
             'c': 'C1',
             'label': 'MONACO, ENDF/BVII.1',
             'ls': '-', 'ewidth': 10, 'drawstyle': 'steps-mid'}},
-        mcnp={sphere['mcnp']: [{'c': 'C3', 'label': 'MCNP'
-                                , 'drawstyle': 'steps-mid', 'ls': '-',
-                                'tally': 2, 'ewidth': 10}]},
+        mcnp=mcnp_p_plot,
         ratio=[(sphere['monaco_photons'], sphere['endf'],
                 {'c': 'C1', 'label': 'MONACO, ENDF / T4, ENDF',
                  'drawstyle': 'steps-mid'}),
                (sphere['ceav'], sphere['endf'],
                 {'c': 'C0', 'label': 'T4, JEFF / T4, ENDF',
                  'drawstyle': 'steps-mid'}),
-               (sphere['mcnp'], sphere['endf'],
-                {'c': 'C3', 'label': 'MCNP, ENDF / T4, ENDF',
-                 'drawstyle': 'steps-mid'})],
+               mcnp_p_ratio],
         save_file=sphere['file_photons'])
 
     t4_ordDict_n = OrderedDict()
@@ -258,6 +296,7 @@ for key, sphere in spheresDict.items():
         {'fmt': '-', 'label': 'T4, ENDF/BVII.1',
          'c': 'C2', 'slab': 'endf',
          'drawstyle': 'steps-mid'}]
+    mcnp_plot = {sphere['mcnp']: mcnp_n_style} if 'mcnp' in sphere else {}
     for ext in extensions:
         comp.compare_plots(
             sphere['exp'],
@@ -266,8 +305,7 @@ for key, sphere in spheresDict.items():
                                                 'label': 'MONACO ENDF/BVII.1',
                                                 'fmt': '-',
                                                 'drawstyle': 'steps-mid'}},
-            mcnp={sphere['mcnp']: {'c': 'C3', 'label': 'MCNP',
-                                   'drawstyle': 'steps-mid'}},
+            mcnp=mcnp_plot,
             ratios={'T4, ENDF/exp': ['endf', 'exp',
                                      {'c': 'C2',
                                       'drawstyle': 'steps-mid'}],
@@ -282,62 +320,64 @@ for key, sphere in spheresDict.items():
                                         'drawstyle': 'steps-mid'}]},
             save_file=sphere['file_neutrons']+ext)
 
-fe_ordered_120 = OrderedDict()
-fe_ordered_120["Fe_ceav5"] = ['neutron_response_120deg',
-                              'neutron_response_integral_120deg',
-                              {'fmt': '-', 'label': 'T4, JEFF-3.1.1', 'c': 'C0',
-                               'slab': 'ceav5', 'drawstyle': 'steps-mid'}]
-fe_ordered_120["Fe_endf"] = ['neutron_response_120deg',
-                             'neutron_response_integral_120deg',
-                             {'fmt': '-', 'label': 'T4, ENDF/BVII.1', 'c': 'C2',
-                              'slab': 'endf', 'drawstyle': 'steps-mid'}]
-fe_ordered_120["Fe_ceav5_leak"] = ['neutron_response_120deg',
-                                   'neutron_response_integral_120deg',
-                                   {'fmt': '-', 'label': 'T4, JEFF-3.1.1, leak',
-                                    'c': 'C3', 'slab': 'ceav5_leak',
-                                    'drawstyle': 'steps-mid'}]
-fe_ordered_120["Fe_endf_leak"] = ['neutron_response_120deg',
+
+if "Fe_ceav5_leak" in comp.simu_res:
+    fe_ordered_120 = OrderedDict()
+    fe_ordered_120["Fe_ceav5"] = ['neutron_response_120deg',
                                   'neutron_response_integral_120deg',
-                                  {'fmt': '-', 'label': 'T4, ENDF/BVII.1, leak',
-                                   'c': 'C4', 'slab': 'endf_leak',
-                                   'drawstyle': 'steps-mid'}]
+                                  {'fmt': '-', 'label': 'T4, JEFF-3.1.1', 'c': 'C0',
+                                   'slab': 'ceav5', 'drawstyle': 'steps-mid'}]
+    fe_ordered_120["Fe_endf"] = ['neutron_response_120deg',
+                                 'neutron_response_integral_120deg',
+                                 {'fmt': '-', 'label': 'T4, ENDF/BVII.1', 'c': 'C2',
+                                  'slab': 'endf', 'drawstyle': 'steps-mid'}]
+    fe_ordered_120["Fe_ceav5_leak"] = ['neutron_response_120deg',
+                                       'neutron_response_integral_120deg',
+                                       {'fmt': '-', 'label': 'T4, JEFF-3.1.1, leak',
+                                        'c': 'C3', 'slab': 'ceav5_leak',
+                                        'drawstyle': 'steps-mid'}]
+    fe_ordered_120["Fe_endf_leak"] = ['neutron_response_120deg',
+                                      'neutron_response_integral_120deg',
+                                      {'fmt': '-', 'label': 'T4, ENDF/BVII.1, leak',
+                                       'c': 'C4', 'slab': 'endf_leak',
+                                       'drawstyle': 'steps-mid'}]
 
 
-fe_ordered_30 = OrderedDict()
-fe_ordered_30["Fe_ceav5"] = ['neutron_response_30deg',
-                             'neutron_response_integral_30deg',
-                             {'fmt': '-', 'label': 'T4, JEFF-3.1.1', 'c': 'C0',
-                              'slab': 'ceav5', 'drawstyle': 'steps-mid'}]
-fe_ordered_30["Fe_endf"] = ['neutron_response_30deg',
-                            'neutron_response_integral_30deg',
-                            {'fmt': '-', 'label': 'T4, ENDF/BVII.1', 'c': 'C2',
-                             'slab': 'endf', 'drawstyle': 'steps-mid'}]
-fe_ordered_30["Fe_ceav5_leak"] = ['neutron_response_30deg',
-                                  'neutron_response_integral_30deg',
-                                  {'fmt': '-', 'label': 'T4, JEFF-3.1.1, leak',
-                                   'c': 'C3', 'slab': 'ceav5_leak',
-                                   'drawstyle': 'steps-mid'}]
-fe_ordered_30["Fe_endf_leak"] = ['neutron_response_30deg',
+    fe_ordered_30 = OrderedDict()
+    fe_ordered_30["Fe_ceav5"] = ['neutron_response_30deg',
                                  'neutron_response_integral_30deg',
-                                 {'fmt': '-', 'label': 'T4, ENDF/BVII.1, leak',
-                                  'c': 'C4', 'slab': 'endf_leak',
-                                  'drawstyle': 'steps-mid'}]
+                                 {'fmt': '-', 'label': 'T4, JEFF-3.1.1', 'c': 'C0',
+                                  'slab': 'ceav5', 'drawstyle': 'steps-mid'}]
+    fe_ordered_30["Fe_endf"] = ['neutron_response_30deg',
+                                'neutron_response_integral_30deg',
+                                {'fmt': '-', 'label': 'T4, ENDF/BVII.1', 'c': 'C2',
+                                 'slab': 'endf', 'drawstyle': 'steps-mid'}]
+    fe_ordered_30["Fe_ceav5_leak"] = ['neutron_response_30deg',
+                                      'neutron_response_integral_30deg',
+                                      {'fmt': '-', 'label': 'T4, JEFF-3.1.1, leak',
+                                       'c': 'C3', 'slab': 'ceav5_leak',
+                                       'drawstyle': 'steps-mid'}]
+    fe_ordered_30["Fe_endf_leak"] = ['neutron_response_30deg',
+                                     'neutron_response_integral_30deg',
+                                     {'fmt': '-', 'label': 'T4, ENDF/BVII.1, leak',
+                                      'c': 'C4', 'slab': 'endf_leak',
+                                      'drawstyle': 'steps-mid'}]
 
-fe_ratios={'T4, ENDF/exp': ['endf', 'exp',
-                            {'c': 'C2','drawstyle': 'steps-mid'}],
-           "T4, JEFF/exp": ["ceav5", 'exp',
-                            {'c': 'C0', 'drawstyle': 'steps-mid'}],
-           'T4, ENDF, leakage/exp': ['endf_leak', 'exp',
-                                     {'c': 'C4', 'drawstyle': 'steps-mid'}],
-           'T4, JEFF, leakage/exp': ["ceav5_leak", 'exp',
-                                     {'c': 'C3', 'drawstyle': 'steps-mid'}]}
+    fe_ratios={'T4, ENDF/exp': ['endf', 'exp',
+                                {'c': 'C2','drawstyle': 'steps-mid'}],
+               "T4, JEFF/exp": ["ceav5", 'exp',
+                                {'c': 'C0', 'drawstyle': 'steps-mid'}],
+               'T4, ENDF, leakage/exp': ['endf_leak', 'exp',
+                                         {'c': 'C4', 'drawstyle': 'steps-mid'}],
+               'T4, JEFF, leakage/exp': ["ceav5_leak", 'exp',
+                                         {'c': 'C3', 'drawstyle': 'steps-mid'}]}
 
-for ext in extensions:
-    comp.compare_plots(('IRON', '0.9', '120'),
-                       fe_ordered_120,
-                       ratios=fe_ratios,
-                       save_file=join(odir, "Fe_0.9_120deg_collimators"+ext))
-    comp.compare_plots(('IRON', '0.9', '30'),
-                       fe_ordered_30,
-                       ratios=fe_ratios,
-                       save_file=join(odir, "Fe_0.9_30deg_collimators"+ext))
+    for ext in extensions:
+        comp.compare_plots(('IRON', '0.9', '120'),
+                           fe_ordered_120,
+                           ratios=fe_ratios,
+                           save_file=join(odir, "Fe_0.9_120deg_collimators"+ext))
+        comp.compare_plots(('IRON', '0.9', '30'),
+                           fe_ordered_30,
+                           ratios=fe_ratios,
+                           save_file=join(odir, "Fe_0.9_30deg_collimators"+ext))
