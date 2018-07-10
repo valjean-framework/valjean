@@ -86,19 +86,40 @@ It also provides some additional convenience methods:
     >>> print(config.get('core', 'extra-option'))
     definitely!
 
+.. todo::
+
+    Document section families/section IDs.
+
 
 Option handlers
 ---------------
 
-.. todo:: Write documentation about option handlers.
+The methods described so far are actually implemented in the
+:class:`BaseConfig` class, from which :class:`Config` inherits.  In addition,
+:class:`Config` features an extensible mechanism to attach complex logic to
+configuration queries. For instance, it is possible to implement a fallback
+mechanism stipulating that if you look up option `eggs` and it is missing, the
+value of option `spam` will be returned instead.
 
-.. todo:: Document the :class:`BaseConfig`/:class:`Config` split.
+The mechanisms are implemented by `option handlers`. An option handler is a
+callable class with an :meth:`accepts` method; :meth:`accepts` takes a section
+family, a section ID and an option name as arguments and must return `True` if
+it is willing to handle the query. If so, the handler will be called with all
+the relevant context information and must return whatever value is appropriate,
+along with any dependencies incurred.
+
+.. todo::
+
+    Refactor dependencies outside handlers?
+
+The :mod:`.config_handlers` module documents the signatures and the contracts
+of the handler methods, and also provides a few useful handler definitions.
 
 
 Automatic dependency discovery
 ------------------------------
 
-.. todo:: Document it.
+.. todo:: Document it. Perhaps refactor it somewhere else?
 '''
 
 from configparser import (ConfigParser, ExtendedInterpolation, _UNSET,
@@ -108,6 +129,8 @@ import os
 import re
 
 from . import LOGGER
+from .config_handlers import (LookupOtherHandler, LookupSectionFromOptHandler,
+                              PathHandler, trigger)
 
 
 class BaseConfig:
@@ -243,7 +266,7 @@ class BaseConfig:
                             fallback=fallback)
         elif len(args) > 3 or len(args) < 2:
             raise ValueError('Wrong number of arguments to get(); expected 2 '
-                             'or 3')
+                             'or 3, got ' + str(len(args)))
         section = args[0]
         option = args[1]
         xsection = self._sectionxform(section)
@@ -252,7 +275,7 @@ class BaseConfig:
             val = self._conf.get(xsection, option, raw=raw, vars=vars)
             LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
             return val
-        except NoOptionError:
+        except (NoOptionError, NoSectionError):
             if fallback is not _UNSET:
                 LOGGER.debug('get(%r, %r) falls back to %r', xsection, option,
                              fallback)
@@ -269,7 +292,7 @@ class BaseConfig:
             return
         elif len(args) > 4 or len(args) < 3:
             raise ValueError('Wrong number of arguments to get(); expected 2 '
-                             'or 3')
+                             'or 3, got ' + str(len(args)))
         section = args[0]
         option = args[1]
         value = args[2]
@@ -388,37 +411,8 @@ class BaseConfig:
         return repr(self._conf)
 
 
-
-
-def on(family=None, section_id=None, option=None):
-    if family is None and section_id is None and option is None:
-        return lambda x: True
-    elif family is None and section_id is None:
-        def accepts(_1, _2, opt, *, capture=option):
-            return opt == capture
-    elif family is None and option is None:
-        def accepts(_1, sec_id, _2, *, capture=section_id):
-            return sec_id == capture
-    elif section_id is None and option is None:
-        def accepts(fam, _1, _2, *, capture=family):
-            return fam == capture
-    elif family is None:
-        def accepts(_, sec_id, opt, *, capture=(section_id, option)):
-            return (sec_id, opt) == capture
-    elif section_id is None:
-        def accepts(fam, _, opt, *, capture=(family, option)):
-            return (fam, opt) == capture
-    elif option is None:
-        def accepts(fam, sec_id, _, *, capture=(family, section_id)):
-            return (fam, sec_id) == capture
-    else:
-        def accepts(fam, sec_id, opt, capture=(family, section_id, option)):
-            return (fam, sec_id, opt) == capture
-    return accepts
-
-
 class Config(BaseConfig):
-    '''The real configuration class for :mod:`valjean`. It derives from
+    '''The configuration class for :mod:`valjean`. It derives from
     :class:`BaseConfig` and extends it by providing the possibility to define
     handlers for special options that are invoked on lookup failure.
     '''
@@ -490,7 +484,7 @@ class Config(BaseConfig):
                             fallback=fallback)
         elif len(args) > 3 or len(args) < 2:
             raise ValueError('Wrong number of arguments to get(); expected 2 '
-                             'or 3')
+                             'or 3, got ' + str(len(args)))
         section = args[0]
         option = args[1]
         xsection = self._sectionxform(section)
@@ -501,17 +495,20 @@ class Config(BaseConfig):
             return val
         except (NoOptionError, NoSectionError):
             split = self.split_section(xsection)
-            if len(split) > 1:
-                for handler in self._handlers:
-                    if handler.accepts(split[0], split[1], option):
-                        LOGGER.debug('treating option %s in section %s as special',
-                                     xsection, option)
-                        val, deps = handler(self, xsection, split, option, raw,
-                                            vars, fallback)
-                        self._deps.update(deps)
-                        LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
-                        LOGGER.debug('deps = %r', deps)
-                        return val
+            if len(split) == 1:
+                family, sec_id = '', split[0]
+            else:
+                family, sec_id = split
+            for handler in self._handlers:
+                if handler.accepts(family, sec_id, option):
+                    LOGGER.debug('handler triggers on %s/%s:%s',
+                                 family, sec_id, option)
+                    val, deps = handler(self, xsection, split, option, raw,
+                                        vars, fallback)
+                    self._deps.update(deps)
+                    LOGGER.debug('get(%r, %r) = %r', xsection, option, val)
+                    LOGGER.debug('deps = %r', deps)
+                    return val
             if fallback is not _UNSET:
                 LOGGER.debug('get(%r, %r) falls back to %r', xsection, option,
                              fallback)
@@ -537,259 +534,40 @@ class Config(BaseConfig):
         '''
         self._handlers.append(handler)
 
-    def has_option_handler(self, sec_family, option):
-        '''Check if an option handler is installed for given section family and
-        option name.'''
-        return any(h.accepts((sec_family, '') , option) for h in self._handlers)
+    def has_option_handler(self, family=None, section_id=None, option=None):
+        '''Check if an option handler is installed for given section family,
+        section ID and option name.'''
+        return any(h.accepts(family, section_id, option)
+                   for h in self._handlers)
 
-    def get_option_handler(self, sec_family, option):
+    def get_option_handler(self, family=None, section_id=None, option=None):
         '''Return the option handler for given section family and option
         name.'''
-        return next(h for h in self._handlers if h.accepts((sec_family, '') , option))
-
-    class Handler:
-        def __init__(self, accepts):
-            self._accepts = accepts
-
-        def accepts(self, *args):
-            return self._accepts(*args)
-
-    class LookupOtherHandler(Handler):
-        '''Handle missing options by looking up alternate options.
-
-        This handler can be used to look up different options in other sections
-        on failure. The result of the lookup can then be combined with the
-        section name and the option name by specifying a `finalizer`, which
-        must be a callable accepting three parameters:
-
-          * the result of the alternate lookup;
-          * the ``(section_name, section_id)`` pair for the original section;
-          * the name of the original option.
-
-        The `raw`, `vars` and `fallback` parameters to :meth:`Config.get()`
-        will be passed through to the lookup of the alternate option.
-        '''
-
-        def __init__(self, accepts, other_sec=None, other_opt=None,
-                     finalizer=None):
-            '''Instantiate an option handler.
-
-            :param other_sec: Name of the alternate section where the lookup
-                              will be done, or `None` to use the same section.
-            :type other_sec: str or None
-            :param other_opt: Name of the alternate option to look up, or
-                              `None` to use the same option name.
-            :type other_opt: str or None
-            :param finalizer: A callable that will be passed three arguments:
-                              1) the result of the alternate lookup, 2) the
-                              ``(section_name, section_id)`` pair for the
-                              original section, and 3) the name of the original
-                              option. It should return the final value of the
-                              handler. If finalizer is `None`, the value for
-                              the alternate look-up will be returned as-is.
-            '''
-            super().__init__(accepts)
-            self.other_sec = other_sec
-            self.other_opt = other_opt
-            self.finalizer = finalizer
-
-        # pylint: disable=too-many-arguments
-        def __call__(self, config, sec, split, opt, raw, vars_, fallback):
-            '''Look up `other_opt` (defaults to `opt`) in `other_sec` (defaults
-            to `sec`), and apply `finalizer` to the result.
-            '''
-            lookup_opt = opt if self.other_opt is None else self.other_opt
-            if self.other_sec:
-                lookup_sec = self.other_sec
-                deps = [self.other_sec]
-            else:
-                lookup_sec = sec
-                deps = []
-            val = config.get(lookup_sec, lookup_opt, raw=raw, vars=vars_,
-                             fallback=fallback)
-            if self.finalizer is not None:
-                return self.finalizer(val, split, opt), deps
-            return val, deps
-
-    class LookupSectionFromOptHandler(Handler):
-        '''Handle missing options by looking up options in sections defined by
-        other options.
-
-        This handler can be used to provide default values to missing options
-        based on the values of other options in sections specified in the
-        configuration file.
-
-.. doctest:: LookupSectionFromOptHandler
-   :hide:
-
-            >>> config_str = """[executable/dog_kennel]
-            ... args = ${arg1} ${arg2}
-            ... arg1 = mattress
-            ...
-            ... [run/paper_bag]
-            ... executable = dog_kennel
-            ... arg2 = paper_bag
-            ...
-            ... [run/chest]
-            ... executable = dog_kennel
-            ... arg1 = sing
-            ... arg2 = chest"""
-            >>> with open('config_file', 'w') as fconf:
-            ...     print(config_str, file=fconf)
-
-        Let's make an example, so it will hopefully be clearer. Consider the
-        following configuration:
-
-            >>> print(config_str)
-            [executable/dog_kennel]
-            args = ${arg1} ${arg2}
-            arg1 = mattress
-            <BLANKLINE>
-            [run/paper_bag]
-            executable = dog_kennel
-            arg2 = paper_bag
-            <BLANKLINE>
-            [run/chest]
-            executable = dog_kennel
-            arg1 = sing
-            arg2 = chest
-
-        Assume we install the following option handler for `args` in the `run`
-        sections::
-
-            >>> config = Config(paths=['config_file'], handlers=[])
-            >>> config.add_option_handler(
-            ...   ['run'],
-            ...   'args',
-            ...   Config.LookupSectionFromOptHandler('executable')
-            ...   )
-
-        This means that the handler will fire only in sections of the `run`
-        family.  Now let us look up `args` in the different sections::
-
-            >>> config.get('executable', 'dog_kennel', 'args', raw=True)
-            '${arg1} ${arg2}'
-
-        The handler does not fire here because we are asking for the `args`
-        option of the ``executable/dog_kennel`` section, which does not belong
-        to the `run` family. Additionally, since ``raw=True`` was specified,
-        the lookup result is not interpolated and we obtain ``${arg1}
-        ${arg2}``. Suppressing ``raw=True`` results in an exception:
-
-            >>> config.get('executable', 'dog_kennel', 'args')
-            Traceback (most recent call last):
-                [...]
-            configparser.InterpolationMissingOptionError: ...
-
-        Without ``raw=True``, the configuration tries to interpolate `arg2` and
-        fails, because this option is not defined in ``executable/dog_kennel``.
-        Now consider the following:
-
-            >>> config.get('run', 'paper_bag', 'args', raw=True)
-            '${arg1} ${arg2}'
-
-        Here the handler fires because the `args` option is not explicitly
-        present in the ``run/paper_bag`` section. The handler looks up the
-        `executable` option (which yields ``dog_kennel``) and queries
-        ``executable/dog_kennel`` for the `args` parameter. Thus, we get the
-        same (uninterpolated) result as before.
-
-        If we activate interpolation (``raw=False``)
-
-            >>> config.get('run', 'paper_bag', 'args')
-            'mattress paper_bag'
-
-        we see that the query now succeeds (compare to the lookup of `args`
-        from ``executable/dog_kennel`` above).  The ``${arg1}`` option is
-        interpolated from the ``executable/dog_kennel`` section, but
-        ``${arg2}`` is interpolated from ``run/paper_bag``.
-
-            >>> config.get('run', 'chest', 'args')
-            'sing chest'
-
-        From the ``run/chest`` section, interpolation also works. However, note
-        that here ``${arg1}`` has been overridden by the value specified in
-        ``run/chest``. This makes it possible to specify default option values
-        in the base section (``executable/dog_kennel`` in our example) and
-        override them in later sections (``run/chest``).
-        '''
-
-        def __init__(self, accepts, opt, finalizer=None):
-            '''Instantiate an option handler.
-
-            :param applies: a callable that decides
-            :param str opt: Name of an option that indicates in which section
-                            the lookup should be performed. The option name is
-                            taken to be the section family, and the option
-                            value is taken to be the section ID.
-            :param finalizer: A callable; see
-                              :meth:`.LookupOtherHandler.__init__()`.
-            '''
-            super().__init__(accepts)
-            self.opt = opt
-            self.finalizer = finalizer
-
-        # pylint: disable=too-many-arguments
-        def __call__(self, config, sec, split, opt, raw, vars_, fallback):
-            from collections import ChainMap
-            try:
-                sec_id = config.get(sec, self.opt, raw=False)
-            except NoOptionError:
-                deps = []
-                return fallback, deps
-
-            # pylint: disable=protected-access
-            chain = ChainMap(config._conf[sec])
-            if vars_ is not None:
-                chain.maps.append(vars_)
-            val = config.get(self.opt, sec_id, opt, vars=chain, raw=raw)
-            if self.finalizer is not None:
-                return self.finalizer(val, split, opt), deps
-            deps = ['{}/{}'.format(self.opt, sec_id)]
-            return val, deps
-
-    class PathHandler(Handler):
-        '''Handle the 'path' option for executable/run sections.
-
-        This handler specifies the logic to extract the path of an executable
-        for a section of the `executable` family.  If the `path` option is not
-        explicitly specified, we first look for `from-build` (which must be the
-        name of a section of the `build` family) and `relative-path` (which
-        must be a relative path). The path to the executable is constructed by
-        concatenating the build directory of `from-build` with `relative-path`.
-        '''
-
-        def __init__(self, accepts):
-            super().__init__(accepts)
-
-        # pylint: disable=too-many-arguments
-        @staticmethod
-        def __call__(config, sec, _1, _2, raw, vars_, fallback):
-            try:
-                path = config.get(sec, 'relative-path', raw=raw, vars=vars_)
-                if os.path.isabs(path):
-                    raise ValueError("'relative-path' in section {} "
-                                     "cannot be an absolute path"
-                                     .format(sec))
-                from_build = config.get(sec, 'from-build', raw=raw, vars=vars_)
-                build_dir = config.get('build', from_build, 'build-dir',
-                                       raw=raw, vars=vars_)
-                deps = ['build/{}'.format(from_build)]
-                return os.path.join(build_dir, path), deps
-            except NoOptionError:
-                deps = []
-                return fallback, deps
+        return next(h for h in self._handlers
+                    if h.accepts(family, section_id, option))
 
     #: Default option handlers
     DEFAULT_HANDLERS = (
-        LookupSectionFromOptHandler(on(family='run', option='args'), 'executable'),
-        LookupSectionFromOptHandler(on(family='executable', option='build-dir'), 'from-build'),
-        PathHandler(on(family='executable', option='path')),
-        LookupSectionFromOptHandler(on(family='run', option='path'), 'executable'),
-        LookupOtherHandler(on(family='checkout', option='checkout-dir'),
+        LookupSectionFromOptHandler(
+            trigger(family='run', option='args'),
+            'executable'
+            ),
+        LookupSectionFromOptHandler(
+            trigger(family='executable', option='build-dir'),
+            'from-build'
+            ),
+        PathHandler('executable'),
+        LookupSectionFromOptHandler(
+            trigger(family='run', option='path'), 'executable'
+            ),
+        LookupOtherHandler(
+            trigger(family='checkout', option='checkout-dir'),
             other_opt='checkout-root',
-            finalizer=lambda val, split, opt: os.path.join(val, split[1])),
-        LookupOtherHandler(on(family='build', option='build-dir'),
+            finalizer=lambda val, split, opt: os.path.join(val, split[1])
+            ),
+        LookupOtherHandler(
+            trigger(family='build', option='build-dir'),
             other_opt='build-root',
-            finalizer=lambda val, split, _: os.path.join(val, split[1]))
+            finalizer=lambda val, split, _: os.path.join(val, split[1])
+            )
     )

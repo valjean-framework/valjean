@@ -223,7 +223,7 @@ def test_handlers_exist():
                      PARTIAL_HANDLERS.items())
     for family, opts in handlers:
         for opt in opts:
-            assert conf.has_option_handler(family, opt)
+            assert conf.has_option_handler(family=family, option=opt)
 
 
 @given(conf=config_with_sections(STANDARD_SECS))
@@ -243,10 +243,10 @@ def test_lookup_other():
     conf = Config(paths=[])
     conf.add_section('checkout/spam')
     conf.add_section('build/spam')
-    assert conf.has_option_handler('checkout', 'checkout-dir')
+    assert conf.has_option_handler(family='checkout', option='checkout-dir')
     assert (conf.get('checkout', 'spam', 'checkout-dir', raw=True) ==
             os.path.join('${work-dir}/checkout', 'spam'))
-    assert conf.has_option_handler('build', 'build-dir')
+    assert conf.has_option_handler(family='build', option='build-dir')
     assert (conf.get('build', 'spam', 'build-dir', raw=True) ==
             os.path.join('${work-dir}/build', 'spam'))
 
