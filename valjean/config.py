@@ -200,25 +200,30 @@ class BaseConfig:
         new.merge(mapping)
         return new
 
-    @staticmethod
-    def _sectionxform(section):
+    @classmethod
+    def split_section(cls, section):
+        '''Split section name into a ``(family, id)`` tuple.'''
+        return section.split('/', maxsplit=1)
+
+    @classmethod
+    def normalize_section(cls, section):
         '''Normalize a section name by removing repeated spaces.'''
-        sec_split = section.split('/', maxsplit=1)
+        sec_split = cls.split_section(section)
         return '/'.join(' '.join(w.split()) for w in sec_split)
 
     def add_section(self, section):
         '''Add a configuration section.'''
-        xsection = self._sectionxform(section)
+        xsection = self.normalize_section(section)
         self._conf.add_section(xsection)
 
     def remove_section(self, section):
         '''Remove a configuration section.'''
-        xsection = self._sectionxform(section)
+        xsection = self.normalize_section(section)
         self._conf.remove_section(xsection)
 
     def has_section(self, section):
         '''Check if a configuration section exists.'''
-        xsection = self._sectionxform(section)
+        xsection = self.normalize_section(section)
         return self._conf.has_section(xsection)
 
     def sections(self):
@@ -227,12 +232,12 @@ class BaseConfig:
 
     def remove_option(self, section, option):
         '''Remove an option from a section.'''
-        xsection = self._sectionxform(section)
+        xsection = self.normalize_section(section)
         self._conf.remove_option(xsection, option)
 
     def has_option(self, section, option):
         '''Check if a configuration option exists.'''
-        xsection = self._sectionxform(section)
+        xsection = self.normalize_section(section)
         return self._conf.has_option(xsection, option)
 
     # pylint: disable=redefined-builtin
@@ -269,7 +274,7 @@ class BaseConfig:
                              'or 3, got ' + str(len(args)))
         section = args[0]
         option = args[1]
-        xsection = self._sectionxform(section)
+        xsection = self.normalize_section(section)
 
         try:
             val = self._conf.get(xsection, option, raw=raw, vars=vars)
@@ -296,7 +301,7 @@ class BaseConfig:
         section = args[0]
         option = args[1]
         value = args[2]
-        xsection = self._sectionxform(section)
+        xsection = self.normalize_section(section)
         LOGGER.debug('params: %s %s %s %s', section, xsection, option, value)
         LOGGER.debug('set(%r, %r, %r)', xsection, option, value)
         self._conf.set(xsection, option, value)
@@ -370,11 +375,6 @@ class BaseConfig:
         except StopIteration:
             raise NoSectionError('No section from family {}'
                                  .format(sec_family))
-
-    @staticmethod
-    def split_section(section):
-        '''Split section name into a ``(family, id)`` tuple.'''
-        return section.split('/', maxsplit=1)
 
     def __add__(self, other):
         '''Merge two configurations, return the result as a new object.'''
@@ -487,7 +487,7 @@ class Config(BaseConfig):
                              'or 3, got ' + str(len(args)))
         section = args[0]
         option = args[1]
-        xsection = self._sectionxform(section)
+        xsection = self.normalize_section(section)
 
         try:
             val = self._conf.get(xsection, option, raw=raw, vars=vars)
