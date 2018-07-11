@@ -240,6 +240,8 @@ def test_handlers_exist():
 def test_get_handler_with_fallback(conf):
     '''Test that options with handlers override fallback values.'''
     for sec in conf.sections():
+        if sec == 'core':
+            continue
         sec_family, _ = conf.split_section(sec)
         for opt in TOTAL_HANDLERS[sec_family]:
             val = conf.get(sec, opt, fallback=None)
@@ -376,7 +378,7 @@ def test_msh_handles_missing(conf, sec_name):
 def test_msh_not_handles_existing(conf):
     ''':class:`AddMissingSectionHandler` does not accept queries about existing
     sections.'''
-    first_sec = next(conf.sections())
+    first_sec = next(sec for sec in conf.sections() if sec != 'core')
     family, sec_id = conf.split_section(first_sec)
     assert not AddMissingSectionHandler.accepts(conf, family, sec_id, None)
 

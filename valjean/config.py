@@ -162,12 +162,12 @@ class BaseConfig:
         self._conf = ConfigParser(interpolation=ExtendedInterpolation(),
                                   delimiters=('=',),
                                   comment_prefixes=('#',),
-                                  empty_lines_in_values=False,
-                                  default_section='core')
+                                  empty_lines_in_values=False)
         # skip leading and trailing spaces in section names
         self._conf.SECTCRE = re.compile(r"\[ *(?P<header>[^]]+?) *\]")
 
         # Set some default options
+        self.add_section('core')
         self.set('core', 'work-dir', os.path.realpath(os.getcwd()))
         self.set('core', 'log-root', '${work-dir}/log')
         self.set('core', 'checkout-root', '${work-dir}/checkout')
@@ -179,10 +179,11 @@ class BaseConfig:
         if paths is None:
             paths = self.DEFAULT_CONFIG_FILES
 
-        other_conf = ConfigParser(default_section='core')
+        other_conf = ConfigParser()
         other_conf.read([os.path.expanduser(p) for p in paths])
         for sec_name, _ in other_conf.items():
-            if sec_name != self._conf.default_section:
+            if (not self.has_section(sec_name)
+                    and sec_name != self._conf.default_section):
                 self.add_section(sec_name)
             for opt, val in other_conf.items(sec_name, raw=True):
                 self.set(sec_name, opt, val)
@@ -590,6 +591,7 @@ class Config(BaseConfig):
             )),
         (50, LookupOtherHandler(
             trigger(family='checkout', option='checkout-dir'),
+            other_sec='core',
             other_opt='checkout-root',
             finalizer=lambda val, split, _: os.path.join(val, split[1])
             )),
@@ -599,6 +601,7 @@ class Config(BaseConfig):
             )),
         (50, LookupOtherHandler(
             trigger(family='build', option='build-dir'),
+            other_sec='core',
             other_opt='build-root',
             finalizer=lambda val, split, _: os.path.join(val, split[1])
             )),
