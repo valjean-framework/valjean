@@ -521,7 +521,7 @@ class Config(BaseConfig):
     def get_deps(self):
         '''Return the dependencies induced by all the queries since the last
         call to :meth:`~.clear_deps()`.'''
-        return self._deps
+        return self._deps.copy()
 
     def clear_deps(self):
         '''Clear the cached dependencies.'''
