@@ -404,13 +404,15 @@ class BaseConfig:
         return self._conf == other._conf  # pylint: disable=protected-access
 
     def __str__(self):
+        from itertools import chain
+        all_secs = chain(self.sections(), [self._conf.default_section])
         return ('\n'.join('[{}]\n'.format(sec) + '\n'
                           .join('{} = {}'.format(key, val)
-                                for key, val in proxy.items())
-                          for sec, proxy in self.items(raw=True)))
+                                for key, val in self.items(sec, raw=True))
+                          for sec in all_secs))
 
     def __repr__(self):
-        return repr(self._conf)
+        return 'BaseConfig({})'.format(self.as_dict())
 
 
 class Config(BaseConfig):
@@ -544,6 +546,9 @@ class Config(BaseConfig):
         name.'''
         return next(h for h in self._handlers
                     if h.accepts(family, section_id, option))
+
+    def __repr__(self):
+        return 'Config({})'.format(self.as_dict())
 
     #: Default option handlers
     DEFAULT_HANDLERS = (
