@@ -899,8 +899,10 @@ def keff_best_estimation(draw, n_estim):
     if n_estim > 3:
         estimators.append("MACRO KCOLL")
         if n_estim > 4:
-            estimators.append(draw(text(alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
-                                        min_size=3, max_size=8)).strip())
+            estimators.append(' '.join(draw(
+                lists(elements=text(alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                                    min_size=3, max_size=8),
+                      min_size=1, max_size=3))))
     disc_batchs = draw(lists(elements=integers(1, 20),
                              min_size=n_estim, max_size=n_estim))
     keffs = draw(lists(elements=floats(0.9, 1.1),
@@ -942,7 +944,6 @@ def bekeff_t4_output(be_keff):
                      .format(bestim['bestkeffres']['sigma%'])
                      + "\n\n\n")
     return ''.join(t4out)
-
 
 @given(keff_res=keff_best_estimation(5))
 def test_parse_best_keff_roundtrip(keff_res):
