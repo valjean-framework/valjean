@@ -16,6 +16,7 @@ module :mod:`common <valjean.eponine.common>`.
 '''
 
 import logging
+from collections import OrderedDict
 import numpy as np
 from .. import common
 
@@ -253,9 +254,8 @@ def to_dict(toks):
     return res
 
 
-
 def make_choice(ldict, flag, value):
-    choices = {'index': 0, 'resp_function':1, 'score_name': 2}
+    choices = {'index': 0, 'resp_function': 1, 'score_name': 2}
     res = [ldict[ind] for ind in ldict if ind[choices[flag]] == value]
     print("[94mNombre de resultats correspondants:", len(res), "[0m")
     # return res[0]
@@ -276,6 +276,7 @@ def yet_another_choice(ldict, **kwargs):
     #     print(key, "(", type(key), "):", value)
     mesres = []
     choices = {'index': 0, 'resp_function':1, 'score_name': 2}
+    # use dict.get() instead of these awful lines
     for ind in ldict:
         lind, lrfunc, lsname = ind
         if 'index' in kwargs and kwargs['index'] != lind:
@@ -305,14 +306,24 @@ def to_list(toks):
     return res
 
 
-resp_type_dict = {'score_res': to_list,
+RESP_TYPE_DICT = {'score_res': to_list,
                   'ifp_res': to_dict}
 
+
 def resp_tuple(toks):
+    '''Convert unique key dictionary ``{key: val}`` in tuple ``(key, val)``.
+
+    This case is used for responses, type of the response is then the first
+    element of the tuple, its content the second.
+
+    :param toks: `pyparsing` element
+    :type toks: |parseres|
+    :returns: python dict corresponding to input `pyparsing` response result
+    '''
     mydict = toks[0].asDict()
     # print(mydict['results'])
     # Solution with tuple constructed before
-    ttuple = tuple((key, resp_type_dict[key](val)) if not isinstance(val, dict)
+    ttuple = tuple((key, RESP_TYPE_DICT[key](val)) if not isinstance(val, dict)
                    else (key, val)
                    for key, val in toks[0]['results'].items())
     # print(ttuple)
@@ -330,8 +341,19 @@ def resp_tuple(toks):
     # print(mydict['results'])
     return mydict
 
+
 def resp_dict(toks):
-    test4 = dict(map(
+    '''Convert responses list in a dictionary with tuple keys constructed as:
+    ``(num, response_function, score_name)``.
+
+    If no score name is given, the third element is set to ``None``.
+    The output dict is unordered.
+
+    :param toks: `pyparsing` element
+    :type toks: |parseres|
+    :returns: python dict corresponding to input `pyparsing` response result
+    '''
+    rdict = OrderedDict(map(
         lambda xy: ((xy[0] + 1,
                      xy[1]['response_description']['resp_function'],
                      (xy[1]['response_description']['score_name']
@@ -339,60 +361,28 @@ def resp_dict(toks):
                       else None)),
                     xy[1]),
         enumerate(toks['list_responses'])))
-    # resp1 = yet_another_choice(test4,
-    #                            score_name="neutron_response_integral_30deg")
-    # resp2 = yet_another_choice(test4, resp_function="REACTION")
-    # resp3 = yet_another_choice(test4,
-    #                            resp_function="REACTION",
-    #                            score_name="neutron_response_integral_30deg")
-    # resp4 = yet_another_choice(test4, index=1)
-    # lscoresnames = list(map(lambda x:
-    #                         (x['response_description']['score_name']
-    #                          if 'score_name' in x['response_description']
-    #                          else None),
-    #                         toks['list_responses']))
-    # lscoresnames = list(filter(None.__ne__, lscoresnames))
-    # for resp in test4:
-    #     # print(resp)
-    #     print("resp keys:", list(test4[resp].keys()))
-    #     print("type resp =", type(test4[resp]))
-    #     print("type obj results:", type(test4[resp]['results']))
-    #     # print(list(test4[resp]['results'].keys()))
-    #     print(test4[resp]['results'])
-        # lkeys = test4[resp]['results'][0]
-        # print("[33mType de result:", lkeys, "[0m")
-        # # if len(lkeys) != 1:
-        # #     print("Number of keys is not 1: to be checked...")
-        # #     print(lkeys)
-        # print("Nb res =", len(test4[resp]['results'][1]),
-        #       "type:", type(test4[resp]['results'][1]))
-        # print("values:")
-        # print(test4[resp]['results'].values())
-        # print(list(test4[resp]['results'].values()))
-        # NOT WORKING! THIS IS NOT A DICT !!!
-        # print(dict(test4[resp]['results'].values()))
-    return test4
+    return rdict
+
 
 def group_to_dict(toks):
-    # print("\033[1;36m", toks, "\033[0m")
-    # print(toks.asDict())
-    # print(toks[0].asDict())
+    '''Transform a named group in a dictionary with a single key, this name.
+
+    This method also takes into account internal dict that should be part of
+    the main one, like in integrated_res case when units is required and score
+    has no unit.
+
+    :param toks: `pyparsing` element
+    :type toks: |parseres|
+    :returns: python dict corresponding to input `pyparsing` named group
+    '''
     assert len(toks) == 1
     key = list(toks.keys())[0]
     tmpdict = toks.asDict()
-    # print(tmpdict)
-    # print("LOOP")
     for elt in toks[0]:
-        # print(elt)
         if isinstance(elt, dict):
-            # print("un dictionnaire dans l'elt")
             tmpdict[key].update(elt)
-    # print("END OF LOOP")
-    # print(tmpdict)
     return tmpdict[key]
 
-def print_tmp2(toks):
-    print("dans print_tmp2")
 
 def print_array(array):
     '''Print :obj:`numpy.ndarray` in condensed format.

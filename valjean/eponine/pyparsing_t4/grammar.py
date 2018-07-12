@@ -667,10 +667,10 @@ _sensibtomaxval = Group(Suppress(_sensibtomaxval_kw)
                         + Optional(_rejection))('sensibility_max_val')
 _vov = (_vovnostar | _vovstar + _sensibtomaxval)
 # best result
-_bestres = Group(Suppress(_bestresdiscbatchs_kw) + _inums + Suppress("batches")
-                 + _minus_line
-                 + _numusedbatch + _fnums('score') + _fnums('sigma')
-                ).setParseAction(trans.group_to_dict)('bestresult')
+_bres = (Group(Suppress(_bestresdiscbatchs_kw) + _inums + Suppress("batches")
+               + _minus_line
+               + _numusedbatch + _fnums('score') + _fnums('sigma'))
+         .setParseAction(trans.group_to_dict)('bestresult'))
 
 
 integratedres = (Group(Optional(Suppress(_integratedres_kw))
@@ -678,7 +678,7 @@ integratedres = (Group(Optional(Suppress(_integratedres_kw))
                        + _numusedbatch
                        + _integratedres
                        + Optional(_vov)
-                       + Optional(_bestres)))('integrated_res')
+                       + Optional(_bres)))('integrated_res')
 
 genericscoreblock = (Group(Optional(Suppress(_integratedres_kw))
                            + ((_numusedbatch
@@ -1125,8 +1125,6 @@ response = Group(_star_line
                  + respintro
                  + _star_line
                  + responseblock).setParseAction(trans.resp_tuple)
-                 # + responseblock.setParseAction(trans.resp_tuple)('results'))
-                 # + Group(responseblock.setParseAction(trans.resp_tuple))('results'))
 
 listresponses = (Group(OneOrMore(response)).setParseAction(trans.resp_dict)
                  ('list_responses'))
