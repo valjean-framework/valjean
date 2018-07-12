@@ -990,16 +990,17 @@ _sensitivity = (_sensitivityorder
                 + OneOrMore(Group(_sensitivity_type('type')
                                   + OneOrMore(_sensitivity_res)('res')))
                 ('sensit_res'))('sensitivity')
-ifpres = Group(Suppress(_integratedres_kw)
-               + _numusedbatch
-               + Group(_nuclfamorder
-                       | _nucleiorder
-                       | _familyorder
-                       | _perturborder
-                       | _ifpstat
-                       | _sensitivity)
-               .setParseAction(trans.convert_generic_ifp)('ifp_scores')
-               + Optional(_unitsres))('ifp_res')
+ifpres = (Group(Suppress(_integratedres_kw)
+                + _numusedbatch
+                + Group(_nuclfamorder
+                        | _nucleiorder
+                        | _familyorder
+                        | _perturborder
+                        | _ifpstat
+                        | _sensitivity)
+                .setParseAction(trans.convert_generic_ifp)
+                + Optional(_unitsres))
+          .setParseAction(trans.group_to_dict)('ifp_res'))
 
 
 def _rename_norm_kw():
@@ -1101,7 +1102,7 @@ contribpartblock = (Group(Suppress(_nbcontribpart_kw)
 
 
 # Score block
-scoreblock = OneOrMore((Group(scoredesc
+scoreblock = (OneOrMore(Group(scoredesc
                               + (OneOrMore(spectrumblock
                                            | meshblock
                                            | vovspectrumblock
@@ -1111,7 +1112,8 @@ scoreblock = OneOrMore((Group(scoredesc
                                            | uncertblock
                                            | uncertintegblock
                                            | gbblock)))
-                        .setParseAction(trans.convert_score)))('score_res')
+                        .setParseAction(trans.convert_score))
+               )('score_res').setParseAction(trans.to_list)
 
 # Response block
 responseblock = Group(keffblock

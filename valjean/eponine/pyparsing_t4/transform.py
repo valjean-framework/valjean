@@ -16,7 +16,6 @@ module :mod:`common <valjean.eponine.common>`.
 '''
 
 import logging
-from collections import OrderedDict
 import numpy as np
 from .. import common
 
@@ -144,10 +143,11 @@ def convert_generic_ifp(toks):
        <valjean.eponine.common.convert_generic_ifp>`
        and more generally :mod:`common <valjean.eponine.common>`
     '''
-    rtoks = toks['ifp_scores']
+    rtoks = toks[0]
     if 'sensit_res' in rtoks.keys():
         return common.convert_sensitivities(rtoks['sensit_res'])
     elif len(list(rtoks.keys())) == 1:
+        print(list(rtoks.keys())[0])
         return common.convert_generic_ifp(rtoks, list(rtoks.keys())[0])
     raise ValueError("more than one key available, what should we do ?")
 
@@ -302,8 +302,21 @@ def to_list(toks):
     :type toks: |parseres|
     :returns: python list corresponding to input `pyparsing` list
     '''
+    print("to_list:", toks)
     res = toks.asList()
-    return res
+    print("\x1b[32m", type(res))
+    # print("\x1b[94m", res, '\x1b[0m')
+    print(len(toks), "\x1b[0m")
+    print(len(toks[0]))
+    # for itk, tks in enumerate(toks):
+    #     print("tok", itk, tks)
+    res.append(5)
+    # print(res)
+    res2 = []
+    for tk in toks:
+        res2.append(tk)
+    print(type(res2))
+    return res2
 
 
 RESP_TYPE_DICT = {'score_res': to_list,
@@ -320,19 +333,28 @@ def resp_tuple(toks):
     :type toks: |parseres|
     :returns: python dict corresponding to input `pyparsing` response result
     '''
+    assert len(toks[0]['results'].asDict()) == 1, \
+       "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
+    print("len(pyparsingRes):", len(toks[0]['results']))
+    # print(toks[0]['results'])
+    print("len(dict):", len(toks[0]['results'].asDict()))
+    key = list(toks[0]['results'].keys())[0]
+    val = list(toks[0]['results'].values())[0]
+    print("\x1b[36m", key, type(val), "\x1b[0m")
+    # print("val =", val)
     mydict = toks[0].asDict()
     # print(mydict['results'])
     # Solution with tuple constructed before
-    ttuple = tuple((key, RESP_TYPE_DICT[key](val)) if not isinstance(val, dict)
+    ttuple = tuple((key, RESP_TYPE_DICT[key](val)) if not isinstance(val, (list, dict))
                    else (key, val)
                    for key, val in toks[0]['results'].items())
     # print(ttuple)
     mydict['results'] = ttuple[0]
-    # Solution with assert and local variables
-    # assert len(toks[0]['results'].asDict()) == 1, \
-    #    "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
+    # # Solution with assert and local variables
     # key = list(toks[0]['results'].keys())[0]
     # val = list(toks[0]['results'].values())[0]
+    # print(key, type(val))
+    # print("val =", val)
     # mydict['results'] = (key,
     #                      resp_type_dict[key](val) if not isinstance(val, dict)
     #                      else val)
@@ -353,7 +375,7 @@ def resp_dict(toks):
     :type toks: |parseres|
     :returns: python dict corresponding to input `pyparsing` response result
     '''
-    rdict = OrderedDict(map(
+    rdict = dict(map(
         lambda xy: ((xy[0] + 1,
                      xy[1]['response_description']['resp_function'],
                      (xy[1]['response_description']['score_name']
@@ -378,9 +400,15 @@ def group_to_dict(toks):
     assert len(toks) == 1
     key = list(toks.keys())[0]
     tmpdict = toks.asDict()
+    skeys = set(tmpdict[key].keys())
+    print(skeys)
+    print(tmpdict)
     for elt in toks[0]:
         if isinstance(elt, dict):
+            sekeys = set(elt.keys())
+            print(sekeys)
             tmpdict[key].update(elt)
+    print(list(tmpdict[key].keys()))
     return tmpdict[key]
 
 
