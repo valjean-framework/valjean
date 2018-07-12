@@ -2,4 +2,4 @@
 suite, even if it is not installed.
 '''
 
-import valjean  # noqa: F401, pylint: disable=unused-import
+import valjean  # pylint: disable=unused-import

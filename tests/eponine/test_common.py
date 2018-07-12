@@ -10,7 +10,7 @@ from hypothesis.strategies import (integers, lists, composite, tuples,
                                    floats, nothing, booleans, just, text)
 from hypothesis.extra.numpy import arrays
 
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 # pylint: disable=no-value-for-parameter

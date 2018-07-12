@@ -13,7 +13,7 @@ from glob import glob
 import ast
 import pytest
 import valjean.eponine.parse_t4 as ep
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from ..context import valjean  # pylint: disable=unused-import
 # pylint: disable=redefined-outer-name
 
 MONO = "MONO"

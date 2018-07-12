@@ -4,7 +4,7 @@ These tests should cover most of functionalities of :mod:`~.scan_t4` and main
 ones for :mod:`~.parse_t4`.
 '''
 
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 import numpy as np

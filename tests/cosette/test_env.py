@@ -5,79 +5,15 @@
 
 import tempfile
 
-import pytest
 from hypothesis import given, event
-from hypothesis.strategies import (text, lists, integers, dictionaries,
-                                   sampled_from, composite, one_of, just, data)
+from hypothesis.strategies import data, sampled_from
 
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from .conftest import envs, env_keys
+from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 from valjean.cosette.env import Env
-from valjean.cosette.task import Task, TaskStatus
-
-
-###########################
-#  hypothesis strategies  #
-###########################
-
-class DoNothingTask(Task):
-    '''A task that does nothing.'''
-
-    def do(self, _):
-        '''What it says on the tin!'''
-        pass
-
-
-def env_names():
-    '''Strategy to generate names for :class:`~.Env`.'''
-    return text(min_size=1)
-
-
-@composite
-def env_keys(draw, from_keys=None, **kwargs):
-    '''Generate keys for the :class:`~.Env` dictionary.'''
-    # strategies to construct keys, values and status
-    # sample the dictionary keys if necessary
-    if from_keys is None:
-        keys = draw(lists(env_names(), unique=True, **kwargs))
-    else:
-        keys = draw(lists(sampled_from(from_keys), unique=True, **kwargs))
-    return keys
-
-
-@composite
-def envs(draw, keys=env_keys()):
-    '''Generate an environment with some random information.'''
-    # sample the dictionary keys
-    the_keys = draw(keys)
-
-    # strategies to construct keys, values and status
-    values_strat = dictionaries(keys=env_names(), values=integers())
-    status_strat = one_of(sampled_from(TaskStatus), just(TaskStatus.DONE))
-
-    # sample the values and the status
-    n_keys = len(the_keys)
-    updates = draw(lists(values_strat, min_size=n_keys, max_size=n_keys))
-    statuses = draw(lists(status_strat, min_size=n_keys, max_size=n_keys))
-
-    # build the environment dictionary
-    an_env = Env()
-    for key, update, status in zip(the_keys, updates, statuses):
-        update['status'] = status
-        an_env[key] = update
-
-    return an_env
-
-
-#####################
-#  pytest fixtures  #
-#####################
-
-@pytest.fixture(scope='function', params=['json', 'pickle'])
-def persistence_format(request):
-    '''Yield all the available persistence formats.'''
-    return request.param
+from valjean.cosette.task import TaskStatus
 
 
 #############

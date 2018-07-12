@@ -1,6 +1,6 @@
 '''Tests for the :mod:`~.using` module.'''
 
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 from valjean.eponine.using import using

@@ -4,21 +4,12 @@
 
 import pytest
 from hypothesis import given, note, assume, event
-from hypothesis.strategies import (text, composite, lists, tuples, integers,
-                                   one_of)
+from hypothesis.strategies import text, lists, tuples, integers, one_of
 
-from .context import valjean  # noqa: F401, pylint: disable=unused-import
+from .context import valjean  # pylint: disable=unused-import
 # pylint: disable=wrong-import-order
 from valjean.priority_set import PrioritySet
-
-
-@composite
-def priority_sets(draw, elements=text(), min_size=None, max_size=None):
-    '''Strategy to generate :class:`PrioritySet` objects.'''
-    items = draw(lists(tuples(integers(), elements),
-                       min_size=min_size, max_size=max_size))
-    prs = PrioritySet(items)
-    return prs
+from .conftest import priority_sets
 
 
 @given(items=lists(tuples(integers(), text())))
@@ -28,7 +19,7 @@ def test_prs_sorted(items):
     for item in items:
         prs.add(*item)
 
-    sorted_items = list(map(lambda x: x[1], sorted(items, key=lambda y: y[0])))
+    sorted_items = list(x[1] for x in sorted(items, key=lambda y: y[0]))
     note('sorted_items: {}'.format(sorted_items))
     note('priority list: {}'.format(prs))
     assert sorted_items == list(prs)

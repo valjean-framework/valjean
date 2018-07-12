@@ -6,10 +6,10 @@ import numpy as np
 from hypothesis import given, note
 from hypothesis.strategies import data
 
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from ..context import valjean  # pylint: disable=unused-import
 from valjean.gavroche import test
 
-from .fixtures import repeat, coords_lists, items, perturb, perturbed_items
+from .conftest import repeat, coords_lists, items, perturb, perturbed_items
 
 
 @given(coords_list=coords_lists())

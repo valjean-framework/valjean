@@ -4,82 +4,17 @@
 '''Tests for the :mod:`~.scheduler` module.'''
 
 from hypothesis import given, settings, note, event
-from hypothesis.strategies import lists, floats, integers, composite
+from hypothesis.strategies import integers
 import pytest
 
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from .conftest import (graphs, failing_tasks, delay_tasks, FailingTask,
+                       make_graph)
+from ..context import valjean  # pylint: disable=unused-import
 # pylint: disable=wrong-import-order
 from valjean import LOGGER
-from valjean.cosette.depgraph import DepGraph
 from valjean.cosette.scheduler import (Scheduler, QueueScheduling,
                                        SchedulerError)
-from valjean.cosette.task import TaskStatus, DelayTask, Task
-
-
-###########################
-#  Hypothesis strategies  #
-###########################
-
-@composite
-def graphs(draw, task_strategy, dep_frac=0.0):
-    '''Composite Hypothesis strategy to generate a :class:`.DepGraph`.
-
-    :param task_strategy: A hypothesis strategy that generates tasks.
-    '''
-    tasks = draw(task_strategy)
-    n_tasks = len(tasks)
-    randoms = draw(lists(floats(min_value=0.0, max_value=1.0),
-                         min_size=n_tasks, max_size=n_tasks))
-    return make_graph(tasks, randoms, dep_frac)
-
-
-# pylint: disable=too-many-arguments
-@composite
-def delay_tasks(draw, min_duration=1e-15, max_duration=1e-5,
-                min_size=None, max_size=None):
-    '''Composite Hypothesis strategy to generate a list of delay tasks.'''
-    durations = draw(
-        lists(floats(min_value=min_duration, max_value=max_duration),
-              min_size=min_size, max_size=max_size)
-        )
-
-    tasks = [DelayTask(str(i), dur) for i, dur in enumerate(durations)]
-    return tasks
-
-
-@composite
-def failing_tasks(draw, min_size=1, max_size=20):
-    '''Composite Hypothesis strategy to generate a list of failing tasks.'''
-    n_tasks = draw(integers(min_value=min_size, max_value=max_size))
-    tasks = [FailingTask('FailingTask {}'.format(i)) for i in range(n_tasks)]
-    return tasks
-
-
-######################
-#  helper functions  #
-######################
-
-def make_graph(tasks, randoms, dep_frac):
-    '''Create a :class:`.DepGraph` from a list of tasks and a list of random
-    values.'''
-    task_deps = {}
-    all_tasks = []
-    for task, random in zip(tasks, randoms):
-        if dep_frac > 0.0:
-            dependees = [t for t in all_tasks if random < dep_frac]
-            task_deps[task] = dependees
-        else:
-            task_deps[task] = []
-        all_tasks.append(task)
-    graph = DepGraph.from_dependency_dictionary(task_deps)
-    return graph
-
-
-class FailingTask(Task):
-    '''A failing task.'''
-    def do(self, env):
-        '''Raise an exception.'''
-        raise Exception
+from valjean.cosette.task import TaskStatus
 
 
 def run(graph, n_workers):

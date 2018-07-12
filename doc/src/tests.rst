@@ -7,11 +7,30 @@ pytest configuration
 .. automodule:: conftest
    :undoc-members:
 
+
+
+Tests for the :mod:`~valjean` modules
+-------------------------------------
+
 Tests for the :mod:`~valjean.config` package
---------------------------------------------
+````````````````````````````````````````````
 
 .. automodule:: tests.test_config
    :undoc-members:
+
+Tests for the :mod:`~valjean.priority_set` package
+``````````````````````````````````````````````````
+
+.. automodule:: tests.test_priority_set
+   :undoc-members:
+
+Fixtures for the :mod:`~valjean` module
+```````````````````````````````````````
+
+.. automodule:: tests.fixtures
+   :undoc-members:
+
+
 
 Tests for the :mod:`~.cosette` package
 --------------------------------------
@@ -44,6 +63,12 @@ Tests for the :mod:`~.code` module
 ``````````````````````````````````
 
 .. automodule:: tests.cosette.test_code
+   :undoc-members:
+
+Fixtures for the :mod:`~.cosette` package
+`````````````````````````````````````````
+
+.. automodule:: tests.cosette.fixtures
    :undoc-members:
 
 Tests for the :mod:`~.eponine` package

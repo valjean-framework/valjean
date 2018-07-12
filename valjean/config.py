@@ -182,8 +182,8 @@ class BaseConfig:
         other_conf = ConfigParser()
         other_conf.read([os.path.expanduser(p) for p in paths])
         for sec_name, _ in other_conf.items():
-            if (not self.has_section(sec_name)
-                    and sec_name != self._conf.default_section):
+            if (not self.has_section(sec_name) and
+                    sec_name != self._conf.default_section):
                 self.add_section(sec_name)
             for opt, val in other_conf.items(sec_name, raw=True):
                 self.set(sec_name, opt, val)
@@ -581,28 +581,28 @@ class Config(BaseConfig):
         (50, LookupSectionFromOptHandler(
             trigger(family='build', option='source-dir'),
             'checkout'
-            )),
+        )),
         (50, LookupSectionFromOptHandler(
             trigger(family='run', option='args'),
             'executable'
-            )),
+        )),
         (50, LookupSectionFromOptHandler(
             trigger(family='run', option='path'), 'executable'
-            )),
+        )),
         (50, LookupOtherHandler(
             trigger(family='checkout', option='checkout-dir'),
             other_sec='core',
             other_opt='checkout-root',
             finalizer=lambda val, split, _: os.path.join(val, split[1])
-            )),
+        )),
         (50, LookupOtherHandler(
             trigger(family='checkout', option='source-dir'),
             other_opt='checkout-dir'
-            )),
+        )),
         (50, LookupOtherHandler(
             trigger(family='build', option='build-dir'),
             other_sec='core',
             other_opt='build-root',
             finalizer=lambda val, split, _: os.path.join(val, split[1])
-            )),
+        )),
     )

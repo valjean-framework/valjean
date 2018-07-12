@@ -4,20 +4,11 @@
 '''Tests for the :mod:`.rlist` module.'''
 
 from hypothesis import given, note
-from hypothesis.strategies import (integers, lists, composite, sampled_from,
+from hypothesis.strategies import (integers, sampled_from,
                                    data)
 
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
-
-# pylint: disable=wrong-import-order
-from valjean.cosette import rlist
-
-
-@composite
-def reversible_list(draw, elements=integers(0, 10), **kwargs):
-    '''Composite Hypothesis strategy to generate RLists.'''
-    lst = draw(lists(elements, **kwargs))
-    return rlist.RList(lst)
+from .conftest import reversible_lists
+from ..context import valjean  # pylint: disable=unused-import
 
 
 def check_revlist_invariant(rlst):
@@ -26,7 +17,7 @@ def check_revlist_invariant(rlst):
         assert i in rlst.indices(item)
 
 
-@given(rlst=reversible_list(), sampler=data())
+@given(rlst=reversible_lists(), sampler=data())
 def test_swap_indices(rlst, sampler):
     '''Test that swapping two elements does not violate any invariant.'''
     n_elems = len(rlst)
@@ -41,7 +32,7 @@ def test_swap_indices(rlst, sampler):
     assert len(rlst) == len(rlst_swapped)
 
 
-@given(rlst=reversible_list(), new=integers(0, 10), sampler=data())
+@given(rlst=reversible_lists(), new=integers(0, 10), sampler=data())
 def test_insert(rlst, new, sampler):
     '''Test that inserting an element does not violate any invariant.'''
     n_elems = len(rlst)
@@ -56,7 +47,7 @@ def test_insert(rlst, new, sampler):
     assert len(rlst_inserted) == len(rlst) + 1
 
 
-@given(rlst=reversible_list(min_size=1), sampler=data())
+@given(rlst=reversible_lists(min_size=1), sampler=data())
 def test_delete(rlst, sampler):
     '''Test that deleting an element does not violate any invariant.'''
     n_elems = len(rlst)
@@ -70,7 +61,7 @@ def test_delete(rlst, sampler):
     assert len(rlst_deleted) == len(rlst) - 1
 
 
-@given(rlst=reversible_list(min_size=1), new=integers(0, 10), sampler=data())
+@given(rlst=reversible_lists(min_size=1), new=integers(0, 10), sampler=data())
 def test_setitem(rlst, new, sampler):
     '''Test that updating an element does not violate any invariant.'''
     n_elems = len(rlst)

@@ -4,41 +4,15 @@
 '''Tests for the :mod:`.depgraph` module.'''
 
 from hypothesis import given, note, assume, event, settings
-from hypothesis.strategies import (integers, sets, text, lists, composite,
-                                   sampled_from, booleans)
+from hypothesis.strategies import text, booleans, integers
 import pytest
 
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 from valjean.cosette import depgraph
+from .conftest import dep_dicts, depgraphs
 
-
-# pylint: disable=too-many-arguments
-@composite
-def dep_dicts(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
-              **kwargs):
-    '''Composite Hypothesis strategy to generate acyclic dependency
-    dictionaries.'''
-    keys = draw(lists(elements, unique=True, **kwargs).map(sorted))
-    dag = {}
-    for i, key in enumerate(keys):
-        vals = draw(sets(sampled_from(keys[i+1:]),
-                         min_size=min_deps,
-                         max_size=max_deps))
-        dag[key] = vals
-    return dag
-
-
-# pylint: disable=too-many-arguments
-@composite
-def depgraphs(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
-              **kwargs):
-    '''Composite Hypothesis strategy to generate acyclic DepGraph objects.'''
-    dag = draw(dep_dicts(elements,
-                         min_deps=min_deps, max_deps=max_deps,
-                         **kwargs))
-    return depgraph.DepGraph.from_dependency_dictionary(dag)
 
 ######################
 #  helper functions  #

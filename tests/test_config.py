@@ -2,7 +2,6 @@
 
 '''Tests for the :mod:`~.valjean.config` module.'''
 
-from string import ascii_lowercase
 from configparser import (DuplicateSectionError, NoOptionError, NoSectionError,
                           InterpolationMissingOptionError)
 from collections import Counter, defaultdict
@@ -11,82 +10,17 @@ import os
 
 import pytest
 from hypothesis import given, note, settings, event, assume, HealthCheck
-from hypothesis.strategies import (text, dictionaries, composite, sampled_from,
-                                   lists, one_of, none)
+from hypothesis.strategies import one_of, none
 
-from .context import valjean  # noqa: F401, pylint: disable=unused-import
+from .context import valjean  # pylint: disable=unused-import
 # pylint: disable=wrong-import-order
 from valjean import LOGGER
+from valjean.config_handlers import AddMissingSectionHandler, trigger
 from valjean.config import BaseConfig, Config
-from valjean.config_handlers import (AddMissingSectionHandler, trigger)
 
-
-ID_CHARS = ascii_lowercase
-
-# normalized IDs are stripped lowercase strings
-IDS = text(ID_CHARS, min_size=1).map(lambda s: s.strip())
-
-STANDARD_SECS = ['build/{}', 'checkout/{}', 'executable/{}', 'run/{}',
-                 'other/{}']
-
-
-###########################
-#  Hypothesis strategies  #
-###########################
-
-@composite
-def sec_names(draw, sec_ids, with_slash=None):
-    '''Hypothesis strategy to generate section names, with or without slash
-    separator.'''
-    if with_slash is None:
-        min_size = 1
-        max_size = 2
-    elif with_slash:
-        min_size = max_size = 2
-    else:
-        min_size = max_size = 1
-    sec = draw(lists(sec_ids, min_size=min_size, max_size=max_size))
-    return '/'.join(sec)
-
-
-@composite
-def baseconfig(draw, keys=IDS, vals=IDS, sec_names=sec_names(IDS),
-               min_size=None):
-    '''Composite Hypothesis strategy to generate BaseConfig objects.'''
-    secs = dictionaries(keys, vals)
-    as_dict = draw(dictionaries(sec_names, secs, min_size=min_size))
-    conf = BaseConfig.from_mapping(as_dict)
-    return conf
-
-
-@composite
-def config(draw, keys=IDS, vals=IDS, sec_names=sec_names(IDS), min_size=None):
-    '''Composite Hypothesis strategy to generate Config objects.'''
-    baseconf = draw(baseconfig(keys, vals, sec_names, min_size=min_size))
-    conf = Config.from_mapping(baseconf)
-    return conf
-
-
-@composite
-def config_with_sections(draw, section_templates):
-    '''Composite Hypothesis strategy to generate Config objects with sections
-    following the given templates.'''
-    sec_ids = draw(lists(IDS, min_size=1))
-    sec_names = []
-    for sec_id in sec_ids:
-        sec_family = draw(sampled_from(section_templates))
-        sec_names.append(sec_family.format(sec_id))
-    return draw(config(sec_names=sampled_from(sec_names)))
-
-
-#####################
-#  pytest fixtures  #
-#####################
-
-@pytest.fixture(scope='function')
-def empty_config():
-    '''Return an empty :class:`~.Config` object.'''
-    return Config([])
+# pylint: disable=unused-import
+from .conftest import (IDS, STANDARD_SECS, baseconfig, config,
+                       config_with_sections, spaces, section_names)
 
 
 ###########
@@ -164,10 +98,10 @@ def test_split_section_by_family(conf):
     event('sections with a family: {}'.format(n_sections - no_family))
 
     for family, count in family_counter.items():
-        assert (len(list(conf.sections_by_family(family)))
-                == count)
-    assert (len(list(conf.sections()))
-            == sum(family_counter.values()) + no_family)
+        assert (len(list(conf.sections_by_family(family))) ==
+                count)
+    assert (len(list(conf.sections())) ==
+            sum(family_counter.values()) + no_family)
 
 
 @given(sec=IDS, opt=IDS, val=IDS)
@@ -215,12 +149,10 @@ def test_read_config_file(tmpdir):
 
 TOTAL_HANDLERS = defaultdict(tuple, {
     'build': ('build-dir',),
-    'checkout': ('checkout-dir',)
-    })
+    'checkout': ('checkout-dir',)})
 
 PARTIAL_HANDLERS = defaultdict(tuple, {
-    'run': ('args',)
-    })
+    'run': ('args',)})
 
 
 def test_handlers_exist():
@@ -290,8 +222,8 @@ def test_compare_wrong_type_raises(empty_config):
 
 @settings(deadline=None)
 @given(conf=baseconfig(),
-       spaces_before=text([' ']), spaces_in1=text([' ']),
-       spaces_in2=text([' ']), spaces_after=text([' ']))
+       spaces_before=spaces(), spaces_in1=spaces(),
+       spaces_in2=spaces(), spaces_after=spaces())
 def test_duplicate_sections(conf, spaces_before, spaces_in1, spaces_in2,
                             spaces_after):
     '''Test that section names which differ only in the amount of
@@ -364,7 +296,7 @@ def test_trigger(family, section_id, option):
     assert accepts(None, family, section_id, option)
 
 
-@given(conf=config(), sec_name=sec_names(IDS, with_slash=True))
+@given(conf=config(), sec_name=section_names(IDS, with_slash=True))
 def test_msh_handles_missing(conf, sec_name):
     ''':class:`AddMissingSectionHandler` accepts queries about missing
     sections.'''
@@ -373,7 +305,7 @@ def test_msh_handles_missing(conf, sec_name):
     assert AddMissingSectionHandler.accepts(conf, family, sec_id, None)
 
 
-@given(conf=config(sec_names=sec_names(IDS, with_slash=True), min_size=1))
+@given(conf=config(sec_names=section_names(IDS, with_slash=True), min_size=1))
 def test_msh_not_handles_existing(conf):
     ''':class:`AddMissingSectionHandler` does not accept queries about existing
     sections.'''

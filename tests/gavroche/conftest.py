@@ -7,7 +7,7 @@ from hypothesis.strategies import (lists, floats, composite, sampled_from,
                                    just, booleans, integers)
 from hypothesis.extra.numpy import arrays, array_shapes, floating_dtypes
 
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from ..context import valjean  # pylint: disable=unused-import
 from valjean.gavroche import test
 
 
