@@ -12,7 +12,7 @@ module :mod:`common <valjean.eponine.common>`.
 
 .. note::
 
-    This module  is not standalone, needs a `pyparsing` result in input.
+    This module is not standalone, needs a `pyparsing` result in input.
 '''
 
 import logging
@@ -459,6 +459,9 @@ def print_list(liste, depth=0):
 
 def print_customised_response(res, depth=0):
     '''Print response (in list_responses)
+    Rigid structure as it is supposed to be fixed: one response contains 2 keys,
+    ``'response_description'`` and ``'results'``. This is made explicit in the
+    printing code.
 
     :param res: response part of the output dictionary
     :param int depth: level of prints
@@ -466,18 +469,25 @@ def print_customised_response(res, depth=0):
     '''
     if depth > MAX_DEPTH:
         return
-    for ires in res:
-        print("[1;35m", ires, "[0;36m(", type(res[ires]), ")[0m")
-        if not isinstance(res[ires], (list, dict)):
-            # print("[38;5;209m", ires, ":  [0m", end="")
-            if isinstance(res[ires], np.ndarray):
-                print_array(res[ires])
-            else:
-                print(res[ires])
-        elif isinstance(res[ires], list):
-            print_list(res[ires], depth)
+    assert 'results' in res.keys() and 'response_description' in res.keys()
+    # First print the description of the response
+    print("\x1b[1;35m", 'response_description',
+          "\x1b[0;36m(", type(res['response_description']), ")\x1b[0m")
+    print_dict(res['response_description'], depth)
+    # Then print the results
+    print("\x1b[1;35m", 'results',
+          "\x1b[0;36m(", type(res['results']), ")\x1b[0m",
+          "-> \x1b[1m", res['results'][0], "\x1b[0m")
+    rres = res['results'][1]
+    if not isinstance(rres, (list, dict)):
+        if isinstance(rres, np.ndarray):
+            print_array(rres)
         else:
-            print_dict(res[ires], depth)
+            print(rres)
+    elif isinstance(rres, list):
+        print_list(rres, depth)
+    else:
+        print_dict(rres, depth)
 
 
 def print_result(toks):
@@ -508,7 +518,7 @@ def print_result(toks):
                     print_list(res[key], depth)
                 elif key == 'list_responses':
                     print("Number of responses:", len(res[key]))
-                    for iresp, resp in enumerate(res[key]):
+                    for iresp, resp in res[key].items():
                         depth += 1
                         print("RESPONSE", iresp)
                         print_customised_response(resp, depth)
