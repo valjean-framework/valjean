@@ -1127,8 +1127,7 @@ response = Group(_star_line
                  + _star_line
                  + responseblock).setParseAction(trans.resp_tuple)
 
-listresponses = (Group(OneOrMore(response)).setParseAction(trans.resp_dict)
-                 ('list_responses'))
+listresponses = Group(OneOrMore(response))('list_responses')
 
 perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
 

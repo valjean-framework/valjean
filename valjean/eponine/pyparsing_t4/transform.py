@@ -21,7 +21,7 @@ from .. import common
 
 
 LOGGER = logging.getLogger('valjean')
-MAX_DEPTH = 5
+MAX_DEPTH = 0
 
 
 def convert_spectrum(toks, colnames):
@@ -295,10 +295,14 @@ def yet_another_choice(ldict, **kwargs):
 
 
 def resp_tuple(toks):
-    '''Convert unique key dictionary ``{key: val}`` in tuple ``(key, val)``.
+    '''Convert unique key dictionary ``{key: val}`` into tuple ``(key, val)``.
 
     This case is used for responses, type of the response is then the first
     element of the tuple, its content the second.
+
+    The input is the whole response, i.e. the results and the response
+    description. This second part is not "touched" here, only copied in the new
+    dictionary.
 
     :param toks: `pyparsing` element
     :type toks: |parseres|
@@ -306,8 +310,8 @@ def resp_tuple(toks):
     '''
     assert len(toks[0]['results'].asDict()) == 1, \
         "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
-    key = list(toks[0]['results'].keys())[0]
-    val = list(toks[0]['results'].values())[0]
+    res = toks[0]['results']
+    key, val = next(res.items())
     assert isinstance(val, dict) or val.asList()
     mydict = toks[0].asDict()
     # Solution with tuple constructed before
@@ -323,30 +327,9 @@ def resp_tuple(toks):
     return mydict
 
 
-def resp_dict(toks):
-    '''Convert responses list in a dictionary with tuple keys constructed as:
-    ``(num, response_function, score_name)``.
-
-    If no score name is given, the third element is set to ``None``.
-    The output dict is unordered.
-
-    :param toks: `pyparsing` element
-    :type toks: |parseres|
-    :returns: python dict corresponding to input `pyparsing` response result
-    '''
-    rdict = dict(map(
-        lambda xy: ((xy[0] + 1,
-                     xy[1]['response_description']['resp_function'],
-                     (xy[1]['response_description']['score_name']
-                      if 'score_name' in xy[1]['response_description']
-                      else None)),
-                    xy[1]),
-        enumerate(toks['list_responses'])))
-    return rdict
-
-
 def group_to_dict(toks):
-    '''Transform a named group in a dictionary with a single key, this name.
+    '''Transform a named group in a dictionary with a single key (removes
+    duplicated levels).
 
     This method also takes into account internal dict that should be part of
     the main one, like in integrated_res case when units is required and score
@@ -357,7 +340,7 @@ def group_to_dict(toks):
     :returns: python dict corresponding to input `pyparsing` named group
     '''
     assert len(toks) == 1
-    key = list(toks.keys())[0]
+    key = next(toks.keys())
     tmpdict = toks.asDict()
     for elt in toks[0]:
         if isinstance(elt, dict):
@@ -519,7 +502,7 @@ def print_result(toks):
                 lstr.append(print_list(res[key], depth))
             elif key == 'list_responses':
                 lstr.append("Number of responses: {0}\n".format(len(res[key])))
-                for iresp, resp in sorted(res[key].items()):
+                for iresp, resp in enumerate(res[key]):
                     depth += 1
                     lstr.append("\nRESPONSE {0}\n".format(iresp))
                     lstr.append(print_customised_response(resp, depth))
