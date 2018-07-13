@@ -13,6 +13,21 @@ module :mod:`common <valjean.eponine.common>`.
 .. note::
 
     This module is not standalone, needs a `pyparsing` result in input.
+
+.. todo::
+
+    * The printing methods could be part of an independent module, or, even
+      better ?, use pprint with a subclass of PrettyPrinter for the arrays
+      (squeezing).
+    * Use ``'\\n'`` in the join
+    * Change names to ``BLABLA_to_str`` as strings are returned (not print
+      anymore)
+    * Think about colors...
+
+.. todo::
+
+    Remove the "choice" functions...
+
 '''
 
 import logging
@@ -146,7 +161,7 @@ def convert_generic_ifp(toks):
     rtoks = toks[0]
     if 'sensit_res' in rtoks.keys():
         return common.convert_sensitivities(rtoks['sensit_res'])
-    elif len(list(rtoks.keys())) == 1:
+    if len(list(rtoks.keys())) == 1:
         return common.convert_generic_ifp(rtoks, list(rtoks.keys())[0])
     raise ValueError("more than one key available, what should we do ?")
 
@@ -274,7 +289,7 @@ def yet_another_choice(ldict, **kwargs):
     # for key, value in kwargs.items():
     #     print(key, "(", type(key), "):", value)
     mesres = []
-    choices = {'index': 0, 'resp_function':1, 'score_name': 2}
+    choices = {'index': 0, 'resp_function': 1, 'score_name': 2}
     # use dict.get() instead of these awful lines
     for ind in ldict:
         lind, lrfunc, lsname = ind
@@ -374,7 +389,7 @@ def print_according_type(res, depth=0):
     :const MAX_DEPTH: maximum of prints level
     '''
     if depth > MAX_DEPTH:
-        return
+        return None
     lstr = []
     if isinstance(res, dict):
         lstr.append(print_dict(res, depth+1))
@@ -399,7 +414,7 @@ def print_dict(diction, depth=0):
     lstr.append("\x1b[{0}mKeys = {1}\x1b[0m\n"
                 .format(printedepth, list(diction.keys())))
     if depth > MAX_DEPTH:
-        return
+        return None
     for key in diction:
         spaces = "  "*depth
         lstr.append("\x1b[94m{0}{1}\x1b[0m ".format(spaces, key))
@@ -422,13 +437,10 @@ def print_list(liste, depth=0):
     for elt in liste:
         if isinstance(elt, (dict, list, np.ndarray)):
             if depth > MAX_DEPTH:
-                return
-            else:
-                lstr.append(print_according_type(elt, depth))
-        else:
-            lstr.append("{0}\n".format(liste))
-            # print(liste)
-            break
+                return None
+            lstr.append(print_according_type(elt, depth))
+        lstr.append("{0}\n".format(liste))
+        break
     return ''.join(lstr)
 
 
@@ -443,7 +455,7 @@ def print_customised_response(res, depth=0):
     :const MAX_DEPTH: maximum of prints level
     '''
     if depth > MAX_DEPTH:
-        return
+        return None
     assert 'results' in res.keys() and 'response_description' in res.keys()
     lstr = []
     # First print the description of the response
