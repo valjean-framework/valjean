@@ -675,10 +675,12 @@ _bres = (Group(Suppress(_bestresdiscbatchs_kw) + _inums + Suppress("batches")
 
 integratedres = (Group(Optional(Suppress(_integratedres_kw))
                        + Optional(_numdiscbatch)
-                       + _numusedbatch
-                       + _integratedres
-                       + Optional(_vov)
-                       + Optional(_bres)))('integrated_res')
+                       + ((_numusedbatch
+                           + _integratedres
+                           + Optional(_vov)
+                           + Optional(_bres))
+                          | _notconverged_kw('not_converged')
+                          ))('integrated_res'))
 
 genericscoreblock = (Group(Optional(Suppress(_integratedres_kw))
                            + ((_numusedbatch
