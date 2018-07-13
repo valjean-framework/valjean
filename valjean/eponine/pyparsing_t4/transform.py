@@ -21,7 +21,7 @@ from .. import common
 
 
 LOGGER = logging.getLogger('valjean')
-MAX_DEPTH = 0
+MAX_DEPTH = 5
 
 
 def convert_spectrum(toks, colnames):
@@ -286,7 +286,7 @@ def yet_another_choice(ldict, **kwargs):
             continue
         mesres.append(ind)
     # print("index to be screen:", list(kwargs.keys()))
-    ttuple = tuple(kwargs.values())
+    # ttuple = tuple(kwargs.values())
     # print(ttuple)
     # print("NUMBER OF KEPT INDICES:", len(mesres))
     # print("KEPT INDICES:", mesres)
@@ -305,7 +305,7 @@ def resp_tuple(toks):
     :returns: python dict corresponding to input `pyparsing` response result
     '''
     assert len(toks[0]['results'].asDict()) == 1, \
-       "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
+        "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
     key = list(toks[0]['results'].keys())[0]
     val = list(toks[0]['results'].values())[0]
     assert isinstance(val, dict) or val.asList()
@@ -370,14 +370,16 @@ def print_array(array):
 
     :param numpy.ndarray array: array to print
     '''
+    lstr = []
     if array.shape != ():
-        print(type(array))
-        print("shape:", array.shape)
-        print("squeezed:", np.squeeze(array))
+        lstr.append("{0}\n".format(type(array)))
+        lstr.append("shape: {0}\n".format(array.shape))
+        lstr.append("squeezed: {0}\n".format(np.squeeze(array)))
         if array.dtype.names:
-            print("dtype:", array.dtype)
+            lstr.append("dtype: {0}\n".format(array.dtype))
     else:
-        print(array, array.dtype)
+        lstr.append("{0}, dtype: {1}\n".format(array, array.dtype))
+    return ''.join(lstr)
 
 
 def print_according_type(res, depth=0):
@@ -390,14 +392,16 @@ def print_according_type(res, depth=0):
     '''
     if depth > MAX_DEPTH:
         return
+    lstr = []
     if isinstance(res, dict):
-        print_dict(res, depth+1)
+        lstr.append(print_dict(res, depth+1))
     elif isinstance(res, list):
-        print_list(res, depth+1)
+        lstr.append(print_list(res, depth+1))
     elif isinstance(res, np.ndarray):
-        print_array(res)
+        lstr.append(print_array(res))
     else:
-        print(res)
+        lstr.append(print(res))
+    return ''.join(lstr)
 
 
 def print_dict(diction, depth=0):
@@ -407,16 +411,20 @@ def print_dict(diction, depth=0):
     :param int depth: level of prints
     :const MAX_DEPTH: maximum of prints level
     '''
+    lstr = []
     printedepth = "3"+str(depth) if depth < 8 else "9"+str(depth-7)
-    print("["+str(printedepth)+"mKeys =", list(diction.keys()), "[0m")
+    lstr.append("\x1b[{0}mKeys = {1}\x1b[0m\n"
+                .format(printedepth, list(diction.keys())))
     if depth > MAX_DEPTH:
         return
     for key in diction:
-        print("[94m", "  "*depth, key, ":[0m", end=" ")
+        spaces = "  "*depth
+        lstr.append("\x1b[94m{0}{1}\x1b[0m ".format(spaces, key))
         if isinstance(diction[key], (dict, list, np.ndarray)):
-            print_according_type(diction[key], depth)
+            lstr.append(print_according_type(diction[key], depth))
         else:
-            print(diction[key])
+            lstr.append("{0}\n".format(diction[key]))
+    return ''.join(lstr)
 
 
 def print_list(liste, depth=0):
@@ -426,23 +434,26 @@ def print_list(liste, depth=0):
     :param int depth: level of prints
     :const MAX_DEPTH: maximum of prints level
     '''
-    print("list of", len(liste), "elements -> ", end="")
+    lstr = []
+    lstr.append("list of {0} elements -> ".format(len(liste)))
     for elt in liste:
         if isinstance(elt, (dict, list, np.ndarray)):
             if depth > MAX_DEPTH:
                 return
             else:
-                print_according_type(elt, depth)
+                lstr.append(print_according_type(elt, depth))
         else:
-            print(liste)
+            lstr.append("{0}\n".format(liste))
+            # print(liste)
             break
+    return ''.join(lstr)
 
 
 def print_customised_response(res, depth=0):
     '''Print response (in list_responses)
-    Rigid structure as it is supposed to be fixed: one response contains 2 keys,
-    ``'response_description'`` and ``'results'``. This is made explicit in the
-    printing code.
+    Rigid structure as it is supposed to be fixed:
+    one response contains 2 keys, ``'response_description'`` and ``'results'``.
+    This is made explicit in the printing code.
 
     :param res: response part of the output dictionary
     :param int depth: level of prints
@@ -451,24 +462,27 @@ def print_customised_response(res, depth=0):
     if depth > MAX_DEPTH:
         return
     assert 'results' in res.keys() and 'response_description' in res.keys()
+    lstr = []
     # First print the description of the response
-    print("\x1b[1;35m", 'response_description',
-          "\x1b[0;36m(", type(res['response_description']), ")\x1b[0m")
-    print_dict(res['response_description'], depth)
+    lstr.append("\x1b[1;35m'response_description' \x1b[0;36m({0})\x1b[0m\n"
+                .format(type(res['response_description'])))
+    lstr.append(print_dict(res['response_description'], depth))
     # Then print the results
-    print("\x1b[1;35m", 'results',
-          "\x1b[0;36m(", type(res['results']), ")\x1b[0m",
-          "-> \x1b[1m", res['results'][0], "\x1b[0m")
+    lstr.append("\x1b[1;35m'results' \x1b[0;36m({0})\x1b[0m"
+                " -> \x1b[1m{1}\x1b[0m\n"
+                .format(type(res['results']), res['results'][0]))
     rres = res['results'][1]
     if not isinstance(rres, (list, dict)):
         if isinstance(rres, np.ndarray):
-            print_array(rres)
+            lstr.append(print_array(rres))
         else:
+            lstr.append("{0}\n".format(rres))
             print(rres)
     elif isinstance(rres, list):
-        print_list(rres, depth)
+        lstr.append(print_list(rres, depth))
     else:
-        print_dict(rres, depth)
+        lstr.append(print_dict(rres, depth))
+    return ''.join(lstr)
 
 
 def print_result(toks):
@@ -484,35 +498,44 @@ def print_result(toks):
     '''
     depth = 0
     LOGGER.info("Nbre de resultats: %d", len(toks))
-    if LOGGER.isEnabledFor(logging.DEBUG):
-        for res in toks:
+    if not LOGGER.isEnabledFor(logging.DEBUG):
+        return
+    lstr = []
+    lstr.append("\n\x1b[1m--------------------- "
+                "Structured parsed result"
+                " ----------------------\x1b[0m\n")
+    for res in toks:
+        depth += 1
+        if depth > MAX_DEPTH:
+            break
+        lstr.append("\n\x1b[1;3{0}mKeys: {1}\x1b[0m\n"
+                    .format(depth, sorted(list(res.keys()))))
+        for key in sorted(res):
             depth += 1
             if depth > MAX_DEPTH:
                 break
-            print("[1;3"+str(depth)+"mClefs:", list(res.keys()), "[0m")
-            for key in res:
+            lstr.append("\n\x1b[3{0}m{1}\x1b[0m ".format(depth, key))
+            if key == 'default_keffs':
+                lstr.append(print_list(res[key], depth))
+            elif key == 'list_responses':
+                lstr.append("Number of responses: {0}\n".format(len(res[key])))
+                for iresp, resp in sorted(res[key].items()):
+                    depth += 1
+                    lstr.append("\nRESPONSE {0}\n".format(iresp))
+                    lstr.append(print_customised_response(resp, depth))
+                    depth -= 1
+            elif key == 'ifp_adjoint_crit_edition':
                 depth += 1
-                if depth > MAX_DEPTH:
-                    break
-                print("[3"+str(depth)+"m", key, "[0m", end="")
-                if key == 'default_keffs':
-                    print_list(res[key], depth)
-                elif key == 'list_responses':
-                    print("Number of responses:", len(res[key]))
-                    for iresp, resp in res[key].items():
-                        depth += 1
-                        print("RESPONSE", iresp)
-                        print_customised_response(resp, depth)
-                        depth -= 1
-                elif key == 'ifp_adjoint_crit_edition':
-                    depth += 1
-                    print_according_type(res[key], depth)
-                    depth -= 1
-                elif key == 'perturbation':
-                    depth += 1
-                    print_according_type(res[key], depth)
-                    depth -= 1
-                else:
-                    print(res[key])
+                lstr.append(print_according_type(res[key], depth))
                 depth -= 1
+            elif key == 'perturbation':
+                depth += 1
+                lstr.append(print_according_type(res[key], depth))
+                depth -= 1
+            else:
+                lstr.append("{0}\n".format(res[key]))
             depth -= 1
+        depth -= 1
+    lstr.append("\x1b[1m------------------------------------------------------"
+                "\x1b[0m\n")
+    LOGGER.debug(''.join(lstr))
