@@ -864,7 +864,7 @@ def test_parse_keffs_roundtrip(corrmat, keffmat, sigmat, combination):
     sigmat += sigmat.T
     # Then test...
     keff_t4_out = keff_t4_genoutput(keffmat, sigmat, corrmat, combination)
-    keffres = pygram.responseblock.parseString(keff_t4_out)
+    keffres = pygram.keffblock.parseString(keff_t4_out)
     assert keffres
     assert list(keffres.keys()) == ['keff_res']
     assert (sorted(list(keffres['keff_res'].keys()))

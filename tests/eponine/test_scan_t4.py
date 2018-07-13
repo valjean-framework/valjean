@@ -98,7 +98,8 @@ def test_gauss_spectrum(datadir):
     assert t4_res.scan_res.get_last_edited_batch_number() == 400
     resp0 = t4_res.result[-1]['list_responses'][0]
     assert resp0['response_description']['resp_function'] == "COURANT"
-    assert resp0['results']['score_res'][0]['scoring_mode'] == "SCORE_SURF"
+    assert resp0['results'][0] == 'score_res'
+    assert resp0['results'][1][0]['scoring_mode'] == "SCORE_SURF"
 
 
 def test_tungstene_file(datadir):
@@ -116,7 +117,8 @@ def test_tungstene_file(datadir):
     assert len(t4_res.result[-1]['list_responses']) == 1
     resp0 = t4_res.result[-1]['list_responses'][0]
     assert resp0['response_description']['particle'] == "PHOTON"
-    assert resp0['results']['score_res'][0]['scoring_mode'] == "SCORE_TRACK"
+    assert resp0['results'][0] == 'score_res'
+    assert resp0['results'][1][0]['scoring_mode'] == "SCORE_TRACK"
 
 
 # def test_petit_coeur_para():
@@ -174,7 +176,8 @@ def test_debug_entropy(datadir):
     assert len(t4_res.scan_res) == 10
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 1
-    res0 = t4_res.result[-1]['list_responses'][0]['results']['score_res'][0]
+    assert t4_res.result[-1]['list_responses'][0]['results'][0] == 'score_res'
+    res0 = t4_res.result[-1]['list_responses'][0]['results'][1][0]
     scorecontent = ['scoring_mode', 'scoring_zone',
                     'mesh_res', 'boltzmann_entropy', 'shannon_entropy',
                     'spectrum_res', 'integrated_res']
@@ -200,8 +203,10 @@ def test_entropy(datadir):
     for ind, ires in enumerate(lastres):
         assert ires['response_description']['resp_function'] == resp_func[ind]
     firstres = t4_res.result[0]['list_responses']
-    assert 'not_converged' in firstres[1]['results']['keff_res']
-    keffs_checks(lastres[1]['results']['keff_res'])
+    assert firstres[1]['results'][0] == 'keff_res'
+    assert 'not_converged' in firstres[1]['results'][1]
+    assert lastres[1]['results'][0] == 'keff_res'
+    keffs_checks(lastres[1]['results'][1])
 
 
 def test_verbose_entropy(datadir, caplog, monkeypatch):
@@ -231,7 +236,8 @@ def test_ifp(datadir):
     last_resp = t4_res.result[-1]['list_responses'][-1]
     assert (last_resp['response_description']['resp_function']
             == "IFP ADJOINT WEIGHTED ROSSI ALPHA")
-    assert last_resp['results']['ifp_res']['used_batch'] == 81
+    assert last_resp['results'][0] == 'ifp_res'
+    assert last_resp['results'][1]['used_batch'] == 81
 
 
 def test_kij(datadir):
@@ -297,9 +303,12 @@ def test_pertu(datadir):
             == ['edition_batch_number', 'list_responses', 'mean_weigt_leak',
                 'perturbation', 'simulation_time', 'source_intensity'])
     pertu0 = t4_res.result[-1]['perturbation'][0]
-    assert sorted(list(pertu0.keys())) == ['perturbation_desc', 'response']
-    assert sorted(list(pertu0['response'].keys())) == ['response_description',
-                                                       'results']
+    assert sorted(list(pertu0.keys())) == ['list_responses',
+                                           'perturbation_desc']
+    assert len(pertu0['list_responses']) == 1
+    lresp0 = pertu0['list_responses'][0]
+    assert sorted(list(lresp0.keys())) == ['response_description', 'results']
+    assert lresp0['results'][0] == 'score_res'
 
 
 def test_vov(datadir):
