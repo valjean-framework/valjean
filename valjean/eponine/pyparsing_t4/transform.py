@@ -147,7 +147,6 @@ def convert_generic_ifp(toks):
     if 'sensit_res' in rtoks.keys():
         return common.convert_sensitivities(rtoks['sensit_res'])
     elif len(list(rtoks.keys())) == 1:
-        print(list(rtoks.keys())[0])
         return common.convert_generic_ifp(rtoks, list(rtoks.keys())[0])
     raise ValueError("more than one key available, what should we do ?")
 
@@ -295,34 +294,6 @@ def yet_another_choice(ldict, **kwargs):
     return mesres
 
 
-def to_list(toks):
-    '''Convert to list result of `pyparsing`.
-
-    :param toks: `pyparsing` element
-    :type toks: |parseres|
-    :returns: python list corresponding to input `pyparsing` list
-    '''
-    print("to_list:", toks)
-    res = toks.asList()
-    print("\x1b[32m", type(res))
-    # print("\x1b[94m", res, '\x1b[0m')
-    print(len(toks), "\x1b[0m")
-    print(len(toks[0]))
-    # for itk, tks in enumerate(toks):
-    #     print("tok", itk, tks)
-    res.append(5)
-    # print(res)
-    res2 = []
-    for tk in toks:
-        res2.append(tk)
-    print(type(res2))
-    return res2
-
-
-RESP_TYPE_DICT = {'score_res': to_list,
-                  'ifp_res': to_dict}
-
-
 def resp_tuple(toks):
     '''Convert unique key dictionary ``{key: val}`` in tuple ``(key, val)``.
 
@@ -335,32 +306,20 @@ def resp_tuple(toks):
     '''
     assert len(toks[0]['results'].asDict()) == 1, \
        "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
-    print("len(pyparsingRes):", len(toks[0]['results']))
-    # print(toks[0]['results'])
-    print("len(dict):", len(toks[0]['results'].asDict()))
     key = list(toks[0]['results'].keys())[0]
     val = list(toks[0]['results'].values())[0]
-    print("\x1b[36m", key, type(val), "\x1b[0m")
-    # print("val =", val)
+    assert isinstance(val, dict) or val.asList()
     mydict = toks[0].asDict()
-    # print(mydict['results'])
     # Solution with tuple constructed before
-    ttuple = tuple((key, RESP_TYPE_DICT[key](val)) if not isinstance(val, (list, dict))
-                   else (key, val)
-                   for key, val in toks[0]['results'].items())
-    # print(ttuple)
-    mydict['results'] = ttuple[0]
-    # # Solution with assert and local variables
-    # key = list(toks[0]['results'].keys())[0]
-    # val = list(toks[0]['results'].values())[0]
-    # print(key, type(val))
-    # print("val =", val)
-    # mydict['results'] = (key,
-    #                      resp_type_dict[key](val) if not isinstance(val, dict)
-    #                      else val)
-    # print("[33mtype de results apres test3:",
-    #      type(mydict['results']), "[0m")
-    # print(mydict['results'])
+    # ttuple = tuple((key, val) if isinstance(val, dict)
+    #                else (key, val.asList())
+    #                for key, val in toks[0]['results'].items())
+    # not working correctly as 'score_res' still a ParseResult, not giving a
+    # real list if asList is not used
+    # ttuple = tuple((key, val) for key, val in toks[0]['results'].items())
+    # mydict['results'] = ttuple[0]
+    mydict['results'] = (key, val if isinstance(val, dict) else val.asList())
+    # Explicit solution with local variables
     return mydict
 
 
@@ -400,15 +359,9 @@ def group_to_dict(toks):
     assert len(toks) == 1
     key = list(toks.keys())[0]
     tmpdict = toks.asDict()
-    skeys = set(tmpdict[key].keys())
-    print(skeys)
-    print(tmpdict)
     for elt in toks[0]:
         if isinstance(elt, dict):
-            sekeys = set(elt.keys())
-            print(sekeys)
             tmpdict[key].update(elt)
-    print(list(tmpdict[key].keys()))
     return tmpdict[key]
 
 

@@ -1102,18 +1102,17 @@ contribpartblock = (Group(Suppress(_nbcontribpart_kw)
 
 
 # Score block
-scoreblock = (OneOrMore(Group(scoredesc
-                              + (OneOrMore(spectrumblock
-                                           | meshblock
-                                           | vovspectrumblock
-                                           | entropy
-                                           | medfile
-                                           | integratedres
-                                           | uncertblock
-                                           | uncertintegblock
-                                           | gbblock)))
-                        .setParseAction(trans.convert_score))
-               )('score_res').setParseAction(trans.to_list)
+scoreblock = OneOrMore(Group(scoredesc
+                             + (OneOrMore(spectrumblock
+                                          | meshblock
+                                          | vovspectrumblock
+                                          | entropy
+                                          | medfile
+                                          | integratedres
+                                          | uncertblock
+                                          | uncertintegblock
+                                          | gbblock)))
+                       .setParseAction(trans.convert_score))('score_res')
 
 # Response block
 responseblock = Group(keffblock
@@ -1140,17 +1139,9 @@ perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
 
 # replace group by real dict, need to check if fine or not (risk: list needed)
 mygram = (OneOrMore((intro
-                     # + (listresponses | ifpadjointcriticality)
-                     # + ZeroOrMore(defkeffblock | contribpartblock
-                     #              | perturbation | OneOrMore(runtime)))
                      + OneOrMore(listresponses | ifpadjointcriticality
                                  | defkeffblock | contribpartblock
                                  | perturbation | OneOrMore(runtime)))
-                    # + (listresponses | ifpadjointcriticality)
-                    # + Optional(defkeffblock)
-                    # + Optional(contribpartblock)
-                    # + Optional(perturbation)
-                    # + Optional(OneOrMore(runtime)))
                     .setParseAction(trans.to_dict))
           .setParseAction(trans.print_result)
           | intro + OneOrMore(runtime))
