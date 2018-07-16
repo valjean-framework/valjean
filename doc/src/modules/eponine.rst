@@ -20,3 +20,5 @@ eponine — ExPloratiON et INtErfaçage
    eponine/common
    eponine/pyparsing_t4
    eponine/using
+   eponine/accessor
+   eponine/dataset

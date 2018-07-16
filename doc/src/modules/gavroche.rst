@@ -1,5 +1,5 @@
-gavroche — ???
-==============
+gavroche — Gestion AVancée de Routines et Oracles en CHaînE (nom temporaire)
+============================================================================
 
 .. figure:: ../images/gavroche.jpg
    :align: center
