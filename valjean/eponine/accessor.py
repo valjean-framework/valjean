@@ -11,7 +11,7 @@ LOGGER = logging.getLogger('valjean')
 PP = pprint.PrettyPrinter(indent=4, depth=1)
 
 
-def convert_spectrum_as_dataset(spec_res):
+def convert_spectrum_as_dataset(spec_res, res_type):
     '''Conversion of spectrum in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
     '''
@@ -20,10 +20,10 @@ def convert_spectrum_as_dataset(spec_res):
         spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] / 100)
     bins = {key.replace('bins', ''): val
             for key, val in spec_res.items() if "bins" in key}
-    return Dataset(dsspec, bins, 'spectrum', '')
+    return Dataset(dsspec, bins, res_type, '')
 
 
-def convert_mesh_as_dataset(mesh_res):
+def convert_mesh_as_dataset(mesh_res, res_type):
     '''Conversion of mesh in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
     '''
@@ -33,7 +33,7 @@ def convert_mesh_as_dataset(mesh_res):
         mesh_res['mesh']['sigma'] * mesh_res['mesh']['tally'] / 100)
     bins = {key.replace('bins', ''): val
             for key, val in mesh_res.items() if "bins" in key}
-    return Dataset(dsmesh, bins, 'mesh', '')
+    return Dataset(dsmesh, bins, res_type, '')
 
 
 def convert_intres_as_dataset(result, res_type):
@@ -224,5 +224,8 @@ class Accessor:
             # autre possibilite: kwargs, verification que res_type et zone sont
             # presents
             score = self.get_score(response)
-            return CONVERT_IN_DATASET[res_type](score[zone][res_type])
+            if res_type not in score[zone]:
+                print(list(score[zone].keys()))
+                return None
+            return CONVERT_IN_DATASET[res_type](score[zone][res_type], res_type)
         return self.get_generic_score(response)
