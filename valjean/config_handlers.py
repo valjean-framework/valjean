@@ -43,14 +43,13 @@ methods:
     are accumulated by :class:`.Config` and can later be consulted
     (:meth:`.Config.get_deps`).
 
+.. doctest:: config_handlers
+   :hide:
+
 As an example, here is a handler that turns all unsuccessful lookups of the
 `'eggs'` option into lookups of `'spam'`:
 
-.. testsetup:: config_handlers
-
-    from valjean.config_handlers import trigger
-
-.. doctest:: config_handlers
+    >>> from valjean.config_handlers import trigger
 
     >>> from configparser import NoOptionError
     >>> from valjean.config import BaseConfig, Config
@@ -72,8 +71,6 @@ As an example, here is a handler that turns all unsuccessful lookups of the
 
 Now we construct a :class:`.Config` object and we attach the handler to it:
 
-.. doctest:: config_handlers
-
     >>> conf = Config(paths=[], handlers=[])
     >>> conf.add_section('has_eggs')
     >>> conf.set('has_eggs', 'eggs', 'EGGS')
@@ -84,8 +81,6 @@ Now we construct a :class:`.Config` object and we attach the handler to it:
     >>> conf.add_option_handler(EggsHandler())
 
 and here we see the handler in action:
-
-.. doctest:: config_handlers
 
     >>> conf.get('has_eggs', 'eggs')
     'EGGS'
@@ -188,36 +183,58 @@ class LookupSectionFromOptHandler(Handler):
     based on the values of other options in sections specified in the
     configuration file.
 
+    .. doctest:: config_handlers_lookupsection
+        :hide:
+
+        >>> from valjean.config import Config
+        >>> from valjean.config_handlers import (LookupSectionFromOptHandler,
+        ...                                      trigger)
+        >>> config_string= """[executable/dog_kennel]
+        ... args = ${arg1} ${arg2}
+        ... arg1 = mattress
+        ...
+        ... [run/paper_bag]
+        ... executable = dog_kennel
+        ... arg2 = paper_bag
+        ...
+        ... [run/chest]
+        ... executable = dog_kennel
+        ... arg1 = sing
+        ... arg2 = chest"""
+        >>> with open('file.cfg', 'w') as fout:
+        ...     print(config_string, file=fout)
+        >>> config = Config(paths=['file.cfg'], handlers=[])
+
     Let's make an example, so it will hopefully be clearer. Consider the
-    following configuration::
+    following configuration:
 
+        >>> print(config_string)
         [executable/dog_kennel]
-        args = ${arg1} {arg2}
+        args = ${arg1} ${arg2}
         arg1 = mattress
-
+        <BLANKLINE>
         [run/paper_bag]
         executable = dog_kennel
         arg2 = paper_bag
-
+        <BLANKLINE>
         [run/chest]
         executable = dog_kennel
         arg1 = sing
         arg2 = chest
 
     Assume we install the following option handler for `args` in the `run`
-    sections::
+    sections:
 
-        Config.add_option_handler(
-            ['run'],
-            'args',
-            Config.LookupSectionFromOptHandler('executable')
-            )
+        >>> config.add_option_handler(
+        ...   LookupSectionFromOptHandler(trigger(family='run', option='args'),
+        ...                               'executable')
+        ...   )
 
     This means that the handler will fire only in sections of the `run`
-    family.  Now let us look up `args` in the different sections::
+    family.  Now let us look up `args` in the different sections:
 
         >>> config.get('executable', 'dog_kennel', 'args', raw=True)
-        ${arg1} ${arg2}
+        '${arg1} ${arg2}'
 
     The handler does not fire here because we are asking for the `args`
     option of the ``executable/dog_kennel`` section, which does not belong
@@ -225,15 +242,20 @@ class LookupSectionFromOptHandler(Handler):
     the lookup result is not interpolated and we obtain ``${arg1}
     ${arg2}``. Suppressing ``raw=True`` results in an exception:
 
-        >>> config.get('executable', 'dog_kennel', 'args')
-        # throws InterpolationMissingOptionError
+        >>> config.get('executable',
+        ...            'dog_kennel',
+        ...            'args')  # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+            ...
+        configparser.InterpolationMissingOptionError: Bad value substitution:
+            ...
 
     Without ``raw=True``, the configuration tries to interpolate `arg2` and
     fails, because this option is not defined in ``executable/dog_kennel``.
     Now consider the following:
 
         >>> config.get('run', 'paper_bag', 'args', raw=True)
-        ${arg1} ${arg2}
+        '${arg1} ${arg2}'
 
     Here the handler fires because the `args` option is not explicitly
     present in the ``run/paper_bag`` section. The handler looks up the
@@ -244,7 +266,7 @@ class LookupSectionFromOptHandler(Handler):
     If we activate interpolation (``raw=False``)
 
         >>> config.get('run', 'paper_bag', 'args')
-        mattress paper_bag
+        'mattress paper_bag'
 
     we see that the query now succeeds (compare to the lookup of `args`
     from ``executable/dog_kennel`` above).  The ``${arg1}`` option is
@@ -252,7 +274,7 @@ class LookupSectionFromOptHandler(Handler):
     ``${arg2}`` is interpolated from ``run/paper_bag``.
 
         >>> config.get('run', 'chest', 'args')
-        sing chest
+        'sing chest'
 
     From the ``run/chest`` section, interpolation also works. However, note
     that here ``${arg1}`` has been overridden by the value specified in
@@ -264,13 +286,13 @@ class LookupSectionFromOptHandler(Handler):
     def __init__(self, accepts, opt, finalizer=None):
         '''Instantiate an option handler.
 
-        :param applies: a callable that decides
+        :param accepts: a :func:`trigger`
         :param str opt: Name of an option that indicates in which section
                         the lookup should be performed. The option name is
                         taken to be the section family, and the option
                         value is taken to be the section ID.
         :param finalizer: A callable; see
-                            :meth:`.LookupOtherHandler.__init__()`.
+                          :meth:`.LookupOtherHandler.__init__()`.
         '''
         super().__init__(accepts)
         self.opt = opt
@@ -341,19 +363,17 @@ def trigger(family=None, section_id=None, option=None):
 
     Examples:
 
-    .. doctest:: config_handlers
-
+        >>> from valjean.config import Config
         >>> family_foo = trigger(family='foo')
-        >>> dummy = Config()
-        >>> family_foo(dummy, 'foo', 'some_id', 'some_opt')
+        >>> family_foo('foo', 'some_id', 'some_opt')
         True
-        >>> family_foo(dummy, 'bar', 'some_id', 'some_opt')
+        >>> family_foo('bar', 'some_id', 'some_opt')
         False
 
         >>> family_foo_option_frob = trigger(family='foo', option='frob')
-        >>> family_foo_option_frob(dummy, 'foo', 'some_id', 'some_opt')
+        >>> family_foo_option_frob('foo', 'some_id', 'some_opt')
         False
-        >>> family_foo_option_frob(dummy, 'foo', 'some_id', 'frob')
+        >>> family_foo_option_frob('foo', 'some_id', 'frob')
         True
 
     :param family: a section family.
