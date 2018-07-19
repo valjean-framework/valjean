@@ -517,6 +517,8 @@ specified):
 
 import logging
 from abc import ABC, abstractmethod
+from collections import OrderedDict
+import pprint
 import numpy as np
 
 
@@ -529,6 +531,7 @@ if 'profile' not in globals()['__builtins__']:
 
 
 LOGGER = logging.getLogger('valjean')
+PP = pprint.PrettyPrinter(indent=4, depth=2)
 ITYPE = np.int32
 FTYPE = np.float32  # pylint: disable=E1101
 
@@ -1204,6 +1207,7 @@ def convert_generic_ifp(res, loctype):
     ``{nucleus_1: {family_1: array, family_2: array, }, nucleus_2: {}, }``
     '''
     dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
+    keys = ('score', 'sigma')
     mydict = {}
     for ires in res[loctype]:
         find = ires[0]
@@ -1211,12 +1215,14 @@ def convert_generic_ifp(res, loctype):
             mydict[find] = "No result available"
             continue
         if isinstance(ires[1], FTYPE):
-            mydict[find] = np.array(tuple(ires[1:]), dtype=dtype)
+            # mydict[find] = np.array(tuple(ires[1:]), dtype=dtype)
+            mydict[find] = dict(zip(keys, tuple(ires[1:])))
         else:
             mydict[find] = {}
             for iires in ires[1:]:
                 lind = iires[0]
-                mydict[find][lind] = np.array(tuple(iires[1:]), dtype=dtype)
+                # mydict[find][lind] = np.array(tuple(iires[1:]), dtype=dtype)
+                mydict[find][lind] = dict(zip(keys, tuple(iires[1:])))
     index = loctype.split('_')[2:]
     return {'index': index, 'scores': mydict}
 
@@ -1349,6 +1355,16 @@ def add_last_sensitivities_bins(data, bins):
             bins['einc'].append(data[-1]['energy_incident'][1])
 
 
+def flip_sensitivities_bins(array, bins):
+    '''Flip bins for sensitivities spectrum, like in usual spectrum cases.'''
+    LOGGER.debug("In flip_sensitivities_bins")
+    key_iaxis = [('einc', 0), ('e', 1), ('mu', 2)]
+    for key, iaxis in key_iaxis:
+        if len(bins.get(key)) > 1 and bins[key][0] > bins[key][1]:
+            bins[key] = np.flip(bins[key], 0)
+            array[:] = np.flip(array, axis=iaxis)
+
+
 def fill_sensitivities_arrays(data):
     '''Build array and bins for sensitivities.
 
@@ -1366,7 +1382,7 @@ def fill_sensitivities_arrays(data):
         nbeinc = 1
     nbebins = len(data[-1]['values'])
     # initialisation et remplissage
-    bins = {'einc': [], 'e': [], 'mu': []}
+    bins = OrderedDict([('einc', []), ('e', []), ('mu', [])])
     array = np.empty((nbeinc, nbebins, nbcos), dtype)
     ibin = [0, 0, 0]
     for ind, vals in enumerate(data):
@@ -1386,6 +1402,7 @@ def fill_sensitivities_arrays(data):
             ibin[1] = ienergy
             array[tuple(ibin)] = np.array(tuple(ivals[2:]), dtype=dtype)
     add_last_sensitivities_bins(data, bins)
+    flip_sensitivities_bins(array, bins)
     return array, bins
 
 
@@ -1398,20 +1415,26 @@ def convert_sensitivities(res):
     The dictionary contains a structured array of 3 dimensions: incident
     energy ``'einc'``, exiting energy ``'e'`` and direction cosine ``'mu'``.
     The dtype is ``('score', 'sigma')``.
+
+    Bins are filled in an :obj:`OrderedDict` always containing the 3 keys
+    ``'einc', 'e', 'mu'`` in the order of the bins in the :obj:`numpy.ndarray`.
     '''
-    thedict = {}
-    for ires in res:
+    lres = res['sensit_res']
+    thelist = []
+    for ires in lres:
         itype = ''.join(ires['type'])
-        thedict[itype] = {}
         for iindex in ires['res']:
             array, bins = fill_sensitivities_arrays(iindex['vals'])
-            icharac = tuple(iindex['charac'])
-            thedict[itype][icharac] = {
+            datadict = {
                 'energy_integrated': iindex['energy_integrated'].asDict(),
                 'array': array,
-                'ebins': np.array(bins['e'])}
-            if bins['mu']:
-                thedict[itype][icharac]['mubins'] = np.array(bins['mu'])
-            if bins['einc']:
-                thedict[itype][icharac]['eincbins'] = np.array(bins['einc'])
-    return thedict
+                'bins': bins,
+                'used_batch': res['used_batch']}
+            if 'units' in res:
+                datadict['units'] = res['units'][0]
+            resdict = iindex['charac'].asDict()
+            resdict['type'] = itype
+            resdict['data'] = datadict
+            thelist.append(resdict)
+    # PP.pprint(thelist)
+    return thelist

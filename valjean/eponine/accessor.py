@@ -5,13 +5,14 @@ codes.
 
 import logging
 import pprint
+from collections import defaultdict, namedtuple
 from valjean.eponine.dataset import Dataset
 
 LOGGER = logging.getLogger('valjean')
 PP = pprint.PrettyPrinter(indent=4, depth=1)
 
 
-def convert_spectrum_as_dataset(spec_res, res_type):
+def convert_spectrum_as_dataset(spec_res, res_type='spectrum_res'):
     '''Conversion of spectrum in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
     '''
@@ -23,7 +24,7 @@ def convert_spectrum_as_dataset(spec_res, res_type):
     return Dataset(dsspec, bins, res_type, '')
 
 
-def convert_mesh_as_dataset(mesh_res, res_type):
+def convert_mesh_as_dataset(mesh_res, res_type='mesh_res'):
     '''Conversion of mesh in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
     '''
@@ -41,6 +42,10 @@ def convert_intres_as_dataset(result, res_type):
     <valjean.eponine.dataset.Dataset>`.
     '''
     print("\x1b[35m", result, "\x1b[0m")
+    print(type(result))  #, result.shape, result.ndim, result.dtype)
+    # print(result['score'], type(result['score']), type(result['sigma']),
+        # type(result['score']*result['sigma']))
+    # print(result["score"][:])
     dsintres = Dataset.Data(result['score'],
                             result['sigma'] * result['score'] / 100)
     return Dataset(dsintres, {}, res_type, '')
@@ -77,8 +82,31 @@ def convert_keff_comb_in_dataset(result):
     '''Conversion of keff combination in dataset.'''
     kcomb = result['full_comb_estimation']
     dskeff = Dataset.Data(kcomb['keff'],
-                          kcomb['sigma']*kcomb['keff']/100)
+                          kcomb['sigma'] * kcomb['keff'] / 100)
     return Dataset(dskeff, {}, 'keff_combination', '')
+
+
+def convert_ifp_in_dataset(result):
+    '''Convert IFP in dataset...'''
+    print(type(result))
+    if not isinstance(result, dict):
+        print("\x1b[1;31mISSUE !!!\x1b[0m")
+        return None
+    if 'score' not in result:
+        tres = {k: convert_ifp_in_dataset(v) for k, v in result.items()}
+        # for res in result.values():
+        #     convert_ifp_in_dataset(res)
+        return tres
+    print("\x1b[1;38mFound np.ndarray !!!\x1b[0m")
+    return convert_intres_as_dataset(result, 'ifp')
+
+def convert_data_in_dataset(data, data_type):
+    '''Convert data in dataset. OK for IFP sensitivities for the moment.'''
+    dset = Dataset.Data(
+        data[data_type]['score'],
+        data[data_type]['sigma'] * data[data_type]['score'] / 100)
+    return Dataset(dset, data['bins'], data_type, '',
+                   unit=data.get('units', '')['uscore'])
 
 
 CONVERT_IN_DATASET = {
@@ -88,6 +116,51 @@ CONVERT_IN_DATASET = {
     'boltzmann_entropy': convert_entropy_as_dataset,
     'integrated_res': convert_intres_as_dataset
 }
+
+
+class Index:
+    '''Class to index various T4 responses.'''
+
+    def __init__(self, lcases, keys=None):
+        self.resp = lcases
+        self.data = []
+        # keys or kwargs... if possible
+        self.keys = (keys if keys is not None
+                     else [k for k in lcases[0].keys() if k != 'data'])
+        LOGGER.debug("In Index, keys: %s", str(self.keys))
+        # self.dsets = {k: {} for k in lcases[0].keys() if k != 'data'}
+        self.dsets = {k: defaultdict(set)
+                      for k in lcases[0].keys() if k != 'data'}
+        # print(self.dsets)
+        LOGGER.debug("nb cases = %d", len(lcases))
+        for iind, icase in enumerate(lcases):
+            self.data.append(icase['data'])
+            for key in self.dsets:
+                self.dsets[key][icase[key]].add(iind)
+        # PP.pprint(self.dsets)
+
+    def get_by(self, data_type='energy_integrated', komd=False, **kwargs):
+        '''Accessor to choose required result.
+
+        ``komd`` stands for "keep other meta data".
+        '''
+        LOGGER.debug(">>>>>>> get_by <<<<<<<<<<<<<<")
+        LOGGER.debug("kwargs = %s", str(kwargs))
+        if kwargs is None:
+            return self.data
+        dataid = set(range(len(self.data)))
+        for kwd in kwargs:
+            dataid = dataid & self.dsets[kwd][kwargs[kwd]]
+        ldata = [{'data': convert_data_in_dataset(self.data[i], data_type)}
+                 for i in dataid]
+        LOGGER.debug("keepOtherMetaData = %s", str(komd))
+        if komd:
+            for iid, i in enumerate(dataid):
+                omd = {k: self.resp[i][k]
+                       for k in self.keys if k not in kwargs}
+                ldata[iid].update(omd)
+        LOGGER.debug(">>>>>>> end get_by <<<<<<<<<<<<<<")
+        return [namedtuple('ifp_tuple', idat.keys())(**idat) for idat in ldata]
 
 
 class Accessor:
@@ -104,6 +177,8 @@ class Accessor:
         tdict = dict(map(
             lambda xy: (xy[1]['response_description'].get(keyword), xy[1]),
             enumerate(self.parsed_res['list_responses'])))
+        if None in tdict:
+            tdict.pop(None)
         if len(tdict) < len(self.parsed_res['list_responses']):
             LOGGER.warning("Some responses are missing from dictionary,"
                            " probably due to identical %s", keyword)
@@ -113,22 +188,22 @@ class Accessor:
         '''Order responses by score name.'''
         print(list(self.parsed_res.keys()))
         tdict = self._by_response_description('score_name')
-        PP.pprint(tdict)
+        # PP.pprint(tdict)
         self.ordered_res = tdict
 
     def by_response_function(self):
         '''Order responses by response function.'''
         tdict = self._by_response_description('resp_function')
-        print("\x1b[34m")
-        PP.pprint(tdict)
-        print("\x1b[0m")
+        # print("\x1b[34m")
+        # PP.pprint(tdict)
+        # print("\x1b[0m")
         self.ordered_res = tdict
 
     def by_response_index(self):
         '''Order responses by index.'''
         assert 'list_responses' in self.parsed_res.keys()
         self.ordered_res = dict(enumerate(self.parsed_res['list_responses']))
-        PP.pprint(self.ordered_res)
+        # PP.pprint(self.ordered_res)
 
     def get_score(self, response):
         '''Get score result from given response.'''
@@ -202,21 +277,78 @@ class Accessor:
         print("no kwargs required, returning default result")
         return keffres
 
+    def dict_filter(self, ldict, lkeys):
+        '''Dictionary filtration.'''
+        print("\x1b[32m>>>>>>>> dict_filter >>>>>>>>>>>\x1b[0m")
+        print(lkeys)
+        if not lkeys:
+            print("Nothing to do, will return the dict as it is")
+            # return ldict
+            print("\x1b[92m<<<<<<<< dict_filter <<<<<<<<<<<\x1b[0m")
+            return ldict
+        if lkeys[0] is None:
+            for key, val in ldict.items():
+                print('\x1b[94m', key, ': self.dict_filter(', val, ', ',
+                      lkeys[1:], ')\x1b[0m')
+            tdict = {k: self.dict_filter(v, lkeys[1:])
+                     for k, v in ldict.items()}
+            print("\x1b[35m", tdict, "\x1b[0m")
+            # print("TEST atdict")
+            # atdict = self.dict_filter(ldict, lkeys[1:])
+            # print(atdict)
+            return tdict
+        print("IN THE ELSE")
+        print(ldict[lkeys[0]])
+        print("tdict")
+        tdict = {lkeys[0]: self.dict_filter(ldict[lkeys[0]], lkeys[1:])}
+        print("tlist")
+        tlist = self.dict_filter(ldict[lkeys[0]], lkeys[1:])
+        print("\x1b[33m", tdict, "\x1b[0m")
+        print("\x1b[93m", tlist, "\x1b[0m")
+        print("\x1b[32m<<<<<<<< dict_filter <<<<<<<<<<<\x1b[0m")
+        return tlist
+
     def get_ifp(self, response, **kwargs):
         '''Get IFP results.'''
+        print(self.ordered_res[response]['results'][0])
         assert self.ordered_res[response]['results'][0] == 'ifp_res'
         print(kwargs)
         ifpres = self.ordered_res[response]['results'][1]
+        print(list(ifpres.keys()))
+        ifpscores = ifpres['scores'].copy()
+        lnames = [kwargs.get(name) for name in ifpres['index']]
+        print(ifpres["index"])
+        print(lnames)
         print(ifpres)
         if not kwargs:
             print("no kwargs required, will return dict of all scores")
-            return ifpres['scores']
-        if 'nucleus' in kwargs and ifpres['index'] == ['nucleus']:
-            print("will return required nucleus if exists")
-            return convert_intres_as_dataset(
-                ifpres['scores'][kwargs['nucleus']], 'ifp_'+kwargs['nucleus'])
-        print("keyword arguments not already taken into account")
-        return None
+            print(convert_ifp_in_dataset(ifpres['scores']))
+            return convert_ifp_in_dataset(ifpres['scores'])
+        return convert_ifp_in_dataset(self.dict_filter(ifpscores, lnames))
+        # ndict = self.dict_filter(ifpscores, lnames)
+        # print("ndict =", ndict)
+        # if 'nucleus' in kwargs and ifpres['index'] == ['nucleus']:
+        #     print("will return required nucleus if exists")
+        #     return convert_intres_as_dataset(
+        #        ifpres['scores'][kwargs['nucleus']], 'ifp_'+kwargs['nucleus'])
+        # print("keyword arguments not already taken into account")
+        # return None
+
+    def get_sensitivity(self, response, **kwargs):
+        '''Get IFP results.'''
+        LOGGER.debug(">>>>>>>>>>>>> get_sensitivity <<<<<<<<<<<<<<<<<")
+        assert self.ordered_res[response]['results'][0] == 'sensitivity_res'
+        LOGGER.debug("kargs = %s", str(kwargs))
+        ifpres = self.ordered_res[response]['results'][1]
+        tindex = Index(ifpres)
+        if not kwargs:
+            sdata = tindex.get_by(nucleus='U235', subtype="DELAYED FISSION_NU",
+                                  data_type='energy_integrated')
+        else:
+            sdata = tindex.get_by(**kwargs)
+        LOGGER.debug(">>>>>>>>>>>> end get_sensitivity <<<<<<<<<<<<<<")
+        return sdata
+
 
     def get_from_response(self, response, res_type, zone=0):
         '''Generic method to get response.'''
@@ -227,5 +359,6 @@ class Accessor:
             if res_type not in score[zone]:
                 print(list(score[zone].keys()))
                 return None
-            return CONVERT_IN_DATASET[res_type](score[zone][res_type], res_type)
+            return CONVERT_IN_DATASET[res_type](score[zone][res_type],
+                                                res_type)
         return self.get_generic_score(response)

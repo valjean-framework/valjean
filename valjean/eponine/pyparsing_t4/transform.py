@@ -144,9 +144,16 @@ def convert_score(toks):
     return res
 
 
+def fake_print(toks):
+    print("\x1b[1;35mFOUND THE POINT\x1b[0m")
+
+
 def convert_generic_ifp(toks):
     '''Convert IFP output in :obj:`numpy` object using
     :mod:`common <valjean.eponine.common>`.
+
+    This method does not take into account sensitivities calculated via the IFP
+    method.
 
     :param toks: IFP result
     :type toks: |parseres|
@@ -158,9 +165,9 @@ def convert_generic_ifp(toks):
        <valjean.eponine.common.convert_generic_ifp>`
        and more generally :mod:`common <valjean.eponine.common>`
     '''
+    print("IN GENERIC_IFP")
     rtoks = toks[0]
-    if 'sensit_res' in rtoks.keys():
-        return common.convert_sensitivities(rtoks['sensit_res'])
+    print("\x1b[1;35m", list(rtoks.keys()), len(rtoks), "\x1b[0m")
     if len(list(rtoks.keys())) == 1:
         return common.convert_generic_ifp(rtoks, list(rtoks.keys())[0])
     raise ValueError("more than one key available, what should we do ?")
@@ -251,9 +258,9 @@ def convert_sensitivities(toks):
     :mod:`common <valjean.eponine.common>`..
 
     :param toks: `pyparsing` element
-    :returns: python dictionary corresponding to input `pyparsing` dictionary
+    :returns: python list corresponding to input `pyparsing` list
     '''
-    sensitivity = common.convert_sensitivities(toks['sensit_res'])
+    sensitivity = common.convert_sensitivities(toks[0])
     return sensitivity
 
 

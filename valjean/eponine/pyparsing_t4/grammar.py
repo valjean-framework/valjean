@@ -963,7 +963,7 @@ _ifpstat = (Suppress(_ifpcvgstat_kw)
 _sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
                      + OneOrMore(Word(alphas + '_,()'),
                                  stopOn=_sensitivityindexorder_kw)
-                     .setParseAction(''.join)
+                     .setParseAction(' '.join)
                      + Suppress(_sensitivityindexorder_kw))
 _sensitivity_type = (OneOrMore(Word(alphas.upper()), stopOn=_sensitivity_kw)
                      .setParseAction(' '.join)
@@ -971,7 +971,7 @@ _sensitivity_type = (OneOrMore(Word(alphas.upper()), stopOn=_sensitivity_kw)
 _sensitivity_index = Group(Suppress("i =") + _inums('index') + Suppress(';')
                            + Suppress("NUCLEUS :") + Word(alphanums)('nucleus')
                            + Suppress(',') + Suppress("TYPE :")
-                           + Word(alphanums.upper() + '_() ')('type'))
+                           + Word(alphanums.upper() + '_() ')('subtype'))
 _sensitivity_dircos = Group(Suppress(_sensitivity_dircos_kw)
                             + _fnums*2)('direction_cosine')
 _sensitivity_energyinc = Group(Suppress(_sensitivity_incenergy_kw)
@@ -988,18 +988,21 @@ _sensitivity_res = Group(_sensitivity_index('charac')
                              + OneOrMore(_sensitivity_vals)('values'))))
                          ('vals')
                          + _sensitivity_energyint('energy_integrated'))
-_sensitivity = (_sensitivityorder
-                + OneOrMore(Group(_sensitivity_type('type')
-                                  + OneOrMore(_sensitivity_res)('res')))
-                ('sensit_res'))('sensitivity')
+_sensitivity = (Suppress(_sensitivityorder)
+                + (OneOrMore(Group(_sensitivity_type('type')
+                                   + OneOrMore(_sensitivity_res)('res')))))
+sensitivityres = Group(Group(_numusedbatch
+                             + Group(_sensitivity)('sensit_res')
+                             + Optional(_unitsres)('units'))
+                       .setParseAction(trans.convert_sensitivities)
+                       )('sensitivity_res')
 ifpres = (Group(Suppress(_integratedres_kw)
                 + _numusedbatch
                 + Group(_nuclfamorder
                         | _nucleiorder
                         | _familyorder
                         | _perturborder
-                        | _ifpstat
-                        | _sensitivity)
+                        | _ifpstat)
                 .setParseAction(trans.convert_generic_ifp)
                 + Optional(_unitsres))
           .setParseAction(trans.group_to_dict)('ifp_res'))
@@ -1121,6 +1124,7 @@ responseblock = Group(keffblock
                       | kijres
                       | kijsources
                       | ifpres
+                      | sensitivityres
                       | genericscoreblock
                       | scoreblock)('results')
 
