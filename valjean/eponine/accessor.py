@@ -42,9 +42,9 @@ def convert_intres_as_dataset(result, res_type):
     <valjean.eponine.dataset.Dataset>`.
     '''
     print("\x1b[35m", result, "\x1b[0m")
-    print(type(result))  #, result.shape, result.ndim, result.dtype)
+    print(type(result))  # , result.shape, result.ndim, result.dtype)
     # print(result['score'], type(result['score']), type(result['sigma']),
-        # type(result['score']*result['sigma']))
+    #       type(result['score']*result['sigma']))
     # print(result["score"][:])
     dsintres = Dataset.Data(result['score'],
                             result['sigma'] * result['score'] / 100)
@@ -100,6 +100,7 @@ def convert_ifp_in_dataset(result):
     print("\x1b[1;38mFound np.ndarray !!!\x1b[0m")
     return convert_intres_as_dataset(result, 'ifp')
 
+
 def convert_data_in_dataset(data, data_type):
     '''Convert data in dataset. OK for IFP sensitivities for the moment.'''
     dset = Dataset.Data(
@@ -123,42 +124,36 @@ class Index:
 
     def __init__(self, lcases, keys=None):
         self.resp = lcases
-        self.data = []
         # keys or kwargs... if possible
-        self.keys = (keys if keys is not None
-                     else [k for k in lcases[0].keys() if k != 'data'])
-        LOGGER.debug("In Index, keys: %s", str(self.keys))
-        # self.dsets = {k: {} for k in lcases[0].keys() if k != 'data'}
+        # self.keys = (keys if keys is not None
+        # else [k for k in lcases[0].keys() if k != 'data'])
+        # LOGGER.debug("In Index, keys: %s", str(self.keys))
         self.dsets = {k: defaultdict(set)
                       for k in lcases[0].keys() if k != 'data'}
-        # print(self.dsets)
         LOGGER.debug("nb cases = %d", len(lcases))
         for iind, icase in enumerate(lcases):
-            self.data.append(icase['data'])
             for key in self.dsets:
                 self.dsets[key][icase[key]].add(iind)
-        # PP.pprint(self.dsets)
 
-    def get_by(self, data_type='energy_integrated', komd=False, **kwargs):
+    def get_by(self, data_type='energy_integrated', okomd=False, **kwargs):
         '''Accessor to choose required result.
 
         ``komd`` stands for "keep other meta data".
         '''
         LOGGER.debug(">>>>>>> get_by <<<<<<<<<<<<<<")
         LOGGER.debug("kwargs = %s", str(kwargs))
-        if kwargs is None:
-            return self.data
-        dataid = set(range(len(self.data)))
+        LOGGER.debug("onlyKeepOtherMetaData = %s", str(okomd))
+        if kwargs is None and data_type == 'all':
+            return self.resp
+        dataid = set(range(len(self.resp)))
         for kwd in kwargs:
             dataid = dataid & self.dsets[kwd][kwargs[kwd]]
-        ldata = [{'data': convert_data_in_dataset(self.data[i], data_type)}
-                 for i in dataid]
-        LOGGER.debug("keepOtherMetaData = %s", str(komd))
-        if komd:
-            for iid, i in enumerate(dataid):
-                omd = {k: self.resp[i][k]
-                       for k in self.keys if k not in kwargs}
-                ldata[iid].update(omd)
+        ldata = ([{k: v for k, v in self.resp[i].items()} for i in dataid]
+                 if not okomd
+                 else [{k: v for k, v in self.resp[i].items()
+                        if k not in kwargs} for i in dataid])
+        for dat in ldata:
+            dat['data'] = convert_data_in_dataset(dat['data'], data_type)
         LOGGER.debug(">>>>>>> end get_by <<<<<<<<<<<<<<")
         return [namedtuple('ifp_tuple', idat.keys())(**idat) for idat in ldata]
 
@@ -348,7 +343,6 @@ class Accessor:
             sdata = tindex.get_by(**kwargs)
         LOGGER.debug(">>>>>>>>>>>> end get_sensitivity <<<<<<<<<<<<<<")
         return sdata
-
 
     def get_from_response(self, response, res_type, zone=0):
         '''Generic method to get response.'''
