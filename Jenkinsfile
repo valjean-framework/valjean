@@ -1,26 +1,18 @@
 def notifyTuleap(boolean success) {
-  String statusTag = "F"
+  String statusTag = "failure"
   if (success) {
-    statusTag = "S"
+    statusTag = "success"
   }
-  def git_url = sh([script: "cd ${SRC} && git config remote.origin.url", returnStdout: true]).trim()
-  if (git_url.contains("dm232107")) {
-    REPO_ID=705  // DM's sandbox
-  } else if (git_url.contains("el220326")) {
-    REPO_ID=712  // ELM's sandbox
-  } else {
-    REPO_ID=704  // central repository
-  }
-  
-  echo "Associating ${git_url} to Tuleap repository ID ${REPO_ID}"
+  REPO_ID=704  // central repository
   withCredentials([string(credentialsId: "ci-token-${REPO_ID}", variable: 'token')]) {
     sh """
        cd ${SRC}
        rev="\$(git rev-parse HEAD)"
-       curl -k "https://codev-tuleap.intra.cea.fr/api/git/${REPO_ID}/build_status" \
+       curl -k "https://codev-tuleap.intra.cea.fr/api/git/${REPO_ID}/statuses/\$rev" \
+       -X POST \
        -H 'Content-Type: application/json' \
        -H 'Accept: application/json' \
-       --data-binary "{ \\"status\\": \\"$statusTag\\", \\"branch\\": \\"\$BRANCH_NAME\\", \\"commit_reference\\": \\"\$rev\\", \\"token\\": \\"$token\\"}"
+       --data-binary "{ \\"state\\": \\"$statusTag\\", \\"token\\": \\"$token\\"}"
        """
   }
 }
