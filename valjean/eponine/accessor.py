@@ -21,7 +21,7 @@ def convert_spectrum_as_dataset(spec_res, res_type='spectrum_res'):
         spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] / 100)
     bins = {key.replace('bins', ''): val
             for key, val in spec_res.items() if "bins" in key}
-    return Dataset(dsspec, bins, res_type, '')
+    return Dataset(dsspec, bins, res_type)
 
 
 def convert_mesh_as_dataset(mesh_res, res_type='mesh_res'):
@@ -34,7 +34,7 @@ def convert_mesh_as_dataset(mesh_res, res_type='mesh_res'):
         mesh_res['mesh']['sigma'] * mesh_res['mesh']['tally'] / 100)
     bins = {key.replace('bins', ''): val
             for key, val in mesh_res.items() if "bins" in key}
-    return Dataset(dsmesh, bins, res_type, '')
+    return Dataset(dsmesh, bins, res_type)
 
 
 def convert_intres_as_dataset(result, res_type):
@@ -48,7 +48,7 @@ def convert_intres_as_dataset(result, res_type):
     # print(result["score"][:])
     dsintres = Dataset.Data(result['score'],
                             result['sigma'] * result['score'] / 100)
-    return Dataset(dsintres, {}, res_type, '')
+    return Dataset(dsintres, {}, res_type)
 
 
 def convert_entropy_as_dataset(result, res_type):
@@ -63,7 +63,7 @@ def convert_entropy_as_dataset(result, res_type):
     '''
     print("\x1b[35m", result, "\x1b[0m")
     dsentrop = Dataset.Data(result, 0)
-    return Dataset(dsentrop, {}, res_type, '')
+    return Dataset(dsentrop, {}, res_type)
 
 
 def convert_keff_in_dataset(result, estimator):
@@ -75,7 +75,7 @@ def convert_keff_in_dataset(result, estimator):
         result['keff_matrix'][id_estim][id_estim],
         (result['sigma_matrix'][id_estim][id_estim]
          * result['keff_matrix'][id_estim][id_estim] / 100))
-    return Dataset(dskeff, {}, 'keff_'+estimator, '')
+    return Dataset(dskeff, {}, 'keff_'+estimator)
 
 
 def convert_keff_comb_in_dataset(result):
@@ -83,7 +83,7 @@ def convert_keff_comb_in_dataset(result):
     kcomb = result['full_comb_estimation']
     dskeff = Dataset.Data(kcomb['keff'],
                           kcomb['sigma'] * kcomb['keff'] / 100)
-    return Dataset(dskeff, {}, 'keff_combination', '')
+    return Dataset(dskeff, {}, 'keff_combination')
 
 
 def convert_ifp_in_dataset(result):
@@ -106,7 +106,7 @@ def convert_data_in_dataset(data, data_type):
     dset = Dataset.Data(
         data[data_type]['score'],
         data[data_type]['sigma'] * data[data_type]['score'] / 100)
-    return Dataset(dset, data['bins'], data_type, '',
+    return Dataset(dset, data['bins'], data_type,
                    unit=data.get('units', '')['uscore'])
 
 
