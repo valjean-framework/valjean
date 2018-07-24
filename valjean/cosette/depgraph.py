@@ -512,7 +512,9 @@ class DepGraph:
             for val in vals:
                 inv_edges.setdefault(val, []).append(key)
 
-        return DepGraph(self._nodes, inv_edges)
+        inverted = DepGraph(self._nodes, inv_edges)
+        LOGGER.debug('inverted graph: %s', inverted)
+        return inverted
 
     def topological_sort(self):
         '''Perform a topological sort of the graph.
@@ -576,17 +578,19 @@ class DepGraph:
         :param bool recurse: If true, return indirect dependencies as well.
         :returns: A list containing the dependencies of `node`.
         '''
-
-        from itertools import chain
-        result = list(
-            map(lambda i: self._nodes[i], self._edges[self._nodes.index(node)])
-            )
-        LOGGER.debug('dependencies: %s -> %s', node, result)
-        if recurse:
-            sub_deps = chain.from_iterable(self.dependencies(d, recurse)
-                                           for d in result)
-            return list(frozenset(sub_deps) | frozenset(result))
-        return result
+        queue = [self._nodes.index(node)]
+        seen = set()
+        deps = set()
+        while queue:
+            next_node = queue.pop()
+            seen.add(next_node)
+            result = self._edges[next_node]
+            LOGGER.debug('dependencies: %s -> %s', next_node, result)
+            deps.update(result)
+            if not recurse:
+                break
+            queue.extend(n for n in result if n not in seen)
+        return [self._nodes[i] for i in deps]
 
     __getitem__ = dependencies
 

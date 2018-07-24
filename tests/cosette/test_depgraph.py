@@ -100,9 +100,8 @@ def do_test_topological_sort(graph):
     seen = set()
     for item in sorted_list:
         dependencies = graph.dependencies(item)
-        success = all(x in seen for x in dependencies)
-        if not success:
-            assert False
+        note('dependencies: {}'.format(dependencies))
+        assert all(list(x in seen for x in dependencies))
         seen.add(item)
 
 
