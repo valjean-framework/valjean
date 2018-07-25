@@ -9,7 +9,7 @@ from collections import defaultdict, namedtuple
 from valjean.eponine.dataset import Dataset
 
 LOGGER = logging.getLogger('valjean')
-PP = pprint.PrettyPrinter(indent=4, depth=1)
+PP = pprint.PrettyPrinter(indent=4, depth=2)
 
 
 def convert_spectrum_as_dataset(spec_res, res_type='spectrum_res'):
@@ -135,6 +135,7 @@ class Index:
             for key in self.dsets:
                 self.dsets[key][icase[key]].add(iind)
 
+
     def get_by(self, data_type='energy_integrated', okomd=False, **kwargs):
         '''Accessor to choose required result.
 
@@ -158,6 +159,104 @@ class Index:
         return [namedtuple('ifp_tuple', idat.keys())(**idat) for idat in ldata]
 
 
+class IndexResponse:
+    '''Class to index T4 responses.'''
+
+    def __init__(self, lcases, keys=None):
+        print("\x1b[35m>>>>>>>> Index.__init__ <<<<<<<<<<<<\x1b[0m")
+        self.resp = lcases
+        # keys or kwargs... if possible
+        # self.keys = (keys if keys is not None
+        # else [k for k in lcases[0].keys() if k != 'data'])
+        # LOGGER.debug("In Index, keys: %s", str(self.keys))
+        # if k not in ('data', 'results')
+        print(list(lcases[0].keys()))
+        # self.dsets = {k: defaultdict(set)
+        #               for k in lcases[0].keys() if k != 'results'}
+        self.dsets = {k: defaultdict(set)
+                      for icase in lcases
+                      for k in icase.keys() if k != 'results'}
+        print("\x1b[91mself.dsets =", self.dsets, "\x1b[0m")
+        LOGGER.debug("nb cases = %d", len(lcases))
+        for iind, icase in enumerate(lcases):
+            # print(type(icase))
+            # print(list(icase.keys()))
+            # if 'compo_details' in icase:
+            #     print("compo_details:", icase['compo_details'])
+            # print('type result:', type(icase['results']))
+            # print(icase['results'][0])
+            # print('type du vrai resultat', type(icase['results'][1]))
+            # if isinstance(icase['results'][1], dict):
+            #     print("clefs du res:", list(icase['results'][1].keys()))
+            # else:
+            #     print("clefs de la liste de res",
+            #           list(icase['results'][1][0].keys()))
+            for key in self.dsets:
+                if key not in icase:
+                    continue
+                # print("\x1b[35mkey =", key, "\x1b[0m")
+                # # self.dsets[key][icase[key]].add(iind)
+                # print(key, "in dsets:", key in self.dsets)
+                # print(key, "in icase:", key in icase)
+                # print(type(self.dsets[key]))
+                # print(list(self.dsets[key].keys()))
+                # print("contenu:", self.dsets[key])
+                # print("contenu icase:", icase[key])
+                # print(type(icase[key]))
+                if isinstance(icase[key], list):
+                    # print(tuple(icase[key]))
+                    # print(len(icase[key]))
+                    if isinstance(icase[key][0], dict):
+                        theobject = []
+                        for kcase in icase[key]:
+                            # if isinstance(kcase, dict):
+                            theobject.append(tuple((k, v) for k, v in kcase.items()))
+                        theobject = tuple(theobject)
+                    else:
+                        # print(type(icase[key]))
+                        theobject = ': '.join(icase[key])
+                    # print("\x1b[36m", theobject, "\x1b[0m")
+                    self.dsets[key][theobject].add(iind)
+                else:
+                    self.dsets[key][icase[key]].add(iind)
+                # print("\x1b[35mEnd of key", key, ":", self.dsets, "\x1b[0m")
+            # for key in icase:
+            #     if key == 'results': continue
+            #     self.dsets[key][icase[key]].add(iind)
+        print("\x1b[35m>>>>>>>> END Index.__init__ <<<<<<<<<<<<\x1b[0m")
+
+
+    def get_by(self, **kwargs):
+        '''Accessor to choose required result.
+
+        ``komd`` stands for "keep other meta data".
+        '''
+        LOGGER.debug(">>>>>>> get_by <<<<<<<<<<<<<<")
+        LOGGER.debug("kwargs = %s", str(kwargs))
+        if kwargs is None:
+            return self.resp
+        dataid = set(range(len(self.resp)))
+        for kwd in kwargs:
+            dataid = dataid & self.dsets[kwd][kwargs[kwd]]
+        ldata = ([{k: v for k, v in self.resp[i].items()} for i in dataid])
+        # for dat in ldata:
+        #     dat['data'] = convert_data_in_dataset(dat['data'], data_type)
+        LOGGER.debug(">>>>>>> end get_by <<<<<<<<<<<<<<")
+        # return [namedtuple('resp_tuple', idat.keys())(**idat) for idat in ldata]
+        return ldata
+
+
+class IndexScore:
+    '''Class to index T4 scores.'''
+    def __init__(self, lcases):
+        self.scores = lcases
+        for icase in lcases:
+            print(list(icase.keys()))
+            print(icase['scoring_zone'])
+        # self.sets = {k: defaultdict(set)
+        #              for k in lcases[0].keys() if k != 'data'}
+
+
 class Accessor:
     '''Class to access T4 results in a friendly way.
     parsed_res = only one batch
@@ -166,6 +265,14 @@ class Accessor:
     def __init__(self, tparsed_res):
         self.parsed_res = tparsed_res
         self.ordered_res = None
+        self.index = None
+        if 'list_responses' in self.parsed_res.keys():
+            lresp = self.parsed_res['list_responses']
+            print('nbre de responses =', len(lresp), "type =", type(lresp))
+            print(list(lresp[0].keys()))
+            # PP.pprint(lresp)
+            self.index = IndexResponse(lresp)
+            print("\x1b[33m", self.index.dsets, "\x1b[0m")
 
     def _by_response_description(self, keyword):
         assert 'list_responses' in self.parsed_res.keys()

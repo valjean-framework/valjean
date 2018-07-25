@@ -97,7 +97,7 @@ def test_gauss_spectrum(datadir):
         assert batch == 200*(len(t4_res.scan_res)-rbatch)
     assert t4_res.scan_res.get_last_edited_batch_number() == 400
     resp0 = t4_res.result[-1]['list_responses'][0]
-    assert resp0['response_description']['resp_function'] == "COURANT"
+    assert resp0['resp_function'] == "COURANT"
     assert resp0['results'][0] == 'score_res'
     assert resp0['results'][1][0]['scoring_mode'] == "SCORE_SURF"
 
@@ -116,7 +116,7 @@ def test_tungstene_file(datadir):
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 1
     resp0 = t4_res.result[-1]['list_responses'][0]
-    assert resp0['response_description']['particle'] == "PHOTON"
+    assert resp0['particle'] == "PHOTON"
     assert resp0['results'][0] == 'score_res'
     assert resp0['results'][1][0]['scoring_mode'] == "SCORE_TRACK"
 
@@ -157,7 +157,7 @@ def test_tt_simple_packet20_para(datadir):
     assert len(t4_res.scan_res) == 1
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 4
-    resp2desc = t4_res.result[-1]['list_responses'][2]['response_description']
+    resp2desc = t4_res.result[-1]['list_responses'][2]
     assert resp2desc['compo_details'][0]['reaction_on_nucleus'] == "U235"
     assert resp2desc['compo_details'][0]['temperature'] == 300
     assert resp2desc['compo_details'][0]['composition'] == "COMBUSTIBLE"
@@ -201,7 +201,7 @@ def test_entropy(datadir):
     lastres = t4_res.result[-1]['list_responses']
     resp_func = ['REACTION', 'KEFFS']
     for ind, ires in enumerate(lastres):
-        assert ires['response_description']['resp_function'] == resp_func[ind]
+        assert ires['resp_function'] == resp_func[ind]
     firstres = t4_res.result[0]['list_responses']
     assert firstres[1]['results'][0] == 'keff_res'
     assert 'not_converged' in firstres[1]['results'][1]
@@ -234,8 +234,7 @@ def test_ifp(datadir):
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 20
     last_resp = t4_res.result[-1]['list_responses'][-1]
-    assert (last_resp['response_description']['resp_function']
-            == "IFP ADJOINT WEIGHTED ROSSI ALPHA")
+    assert last_resp['resp_function'] == "IFP ADJOINT WEIGHTED ROSSI ALPHA"
     assert last_resp['results'][0] == 'ifp_res'
     assert last_resp['results'][1]['used_batch'] == 81
 
@@ -253,11 +252,9 @@ def test_kij(datadir):
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 16
     resp_list = t4_res.result[-1]['list_responses']
-    assert (resp_list[13]['response_description']['resp_function']
-            == "KIJ_MATRIX")
-    assert (resp_list[14]['response_description']['resp_function']
-            == "KIJ_SOURCES")
-    assert resp_list[15]['response_description']['resp_function'] == "KEFFS"
+    assert resp_list[13]['resp_function'] == "KIJ_MATRIX"
+    assert resp_list[14]['resp_function'] == "KIJ_SOURCES"
+    assert resp_list[15]['resp_function'] == "KEFFS"
 
 
 def test_green_bands(datadir):
@@ -307,7 +304,7 @@ def test_pertu(datadir):
                                            'perturbation_desc']
     assert len(pertu0['list_responses']) == 1
     lresp0 = pertu0['list_responses'][0]
-    assert sorted(list(lresp0.keys())) == ['response_description', 'results']
+    # assert sorted(list(lresp0.keys())) == ['response_description', 'results']
     assert lresp0['results'][0] == 'score_res'
 
 

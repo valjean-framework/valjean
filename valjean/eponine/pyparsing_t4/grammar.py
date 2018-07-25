@@ -478,6 +478,8 @@ _reaction = (Suppress(_reaction_kw)
              .setParseAction('_'.join)('reaction'))
 
 
+# Goal: when more than one reaction are required, keep characteristics grouped
+# by particle, reaction, etc.
 def _next_compos(toks):
     if toks.getName() == 'reaction_on_nucleus':
         detail = _temperature | _composition | _concentration | _reaction
@@ -540,7 +542,8 @@ respcarac = (_particle
              | _fxptcontrib
              | _spectrumresp)
 
-respintro = Group(respdesc + ZeroOrMore(respcarac))('response_description')
+# respintro = Group(respdesc + ZeroOrMore(respcarac))('response_description')
+respintro = respdesc + ZeroOrMore(respcarac)
 
 # Responses themselves
 # Score description (not needed for KEFF)

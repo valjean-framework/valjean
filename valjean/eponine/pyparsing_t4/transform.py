@@ -336,6 +336,11 @@ def resp_tuple(toks):
     res = toks[0]['results']
     key, val = next(res.items())
     assert isinstance(val, dict) or val.asList()
+    print("Clefs du dico =", list(toks[0].asDict().keys()))
+    if 'response_description' in toks[0]:
+        print(type(toks[0]['response_description']))
+        print(type(toks[0].asDict()['response_description']))
+        print(toks[0]['response_description'].asDict())
     mydict = toks[0].asDict()
     # Solution with tuple constructed before
     # ttuple = tuple((key, val) if isinstance(val, dict)
@@ -346,6 +351,12 @@ def resp_tuple(toks):
     # ttuple = tuple((key, val) for key, val in toks[0]['results'].items())
     # mydict['results'] = ttuple[0]
     mydict['results'] = (key, val if isinstance(val, dict) else val.asList())
+    if 'response_description' in toks[0]:
+        odict = toks[0]['response_description'].asDict()
+        odict['results'] = (key, val
+                            if isinstance(val, dict) else val.asList())
+        print("\x1b[94m", list(odict.keys()), "\x1b[0m")
+    print("Clefs dans mydict =", list(mydict.keys()))
     # Explicit solution with local variables
     return mydict
 
@@ -456,6 +467,7 @@ def print_customised_response(res, depth=0):
     '''Print response (in list_responses)
     Rigid structure as it is supposed to be fixed:
     one response contains 2 keys, ``'response_description'`` and ``'results'``.
+    NOT ANYMORE, TO BE UPDATED.
     This is made explicit in the printing code.
 
     :param res: response part of the output dictionary
@@ -464,12 +476,12 @@ def print_customised_response(res, depth=0):
     '''
     if depth > MAX_DEPTH:
         return None
-    assert 'results' in res.keys() and 'response_description' in res.keys()
+    assert 'results' in res.keys()
     lstr = []
     # First print the description of the response
-    lstr.append("\x1b[1;35m'response_description' \x1b[0;36m({0})\x1b[0m\n"
-                .format(type(res['response_description'])))
-    lstr.append(print_dict(res['response_description'], depth))
+    lstr.append("\x1b[1;35m'response description'\x1b[0m\n")
+    lstr.append(print_dict({k: v for k, v in res.items() if k != 'results'},
+                           depth))
     # Then print the results
     lstr.append("\x1b[1;35m'results' \x1b[0;36m({0})\x1b[0m"
                 " -> \x1b[1m{1}\x1b[0m\n"
