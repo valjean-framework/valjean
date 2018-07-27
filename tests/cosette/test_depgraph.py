@@ -11,7 +11,7 @@ import pytest
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
-import valjean.cosette.depgraph as depgraph
+from valjean.cosette import depgraph
 
 
 # pylint: disable=too-many-arguments
@@ -206,7 +206,7 @@ def test_isomorphism_wrong_type(graph):
 @given(graph=depgraphs())
 def test_subgraph_self(graph):
     '''Test that <= is reflexive.'''
-    assert graph <= graph
+    assert graph <= graph   # pylint: disable=comparison-with-itself
 
 
 @given(graph=depgraphs())

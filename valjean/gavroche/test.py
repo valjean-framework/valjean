@@ -97,7 +97,7 @@ class Item:
             raise ValueError(msg)
         for coord, axis_len in zip(coords, shape):
             n_coords = len(coord)
-            if axis_len != n_coords and axis_len + 1 != n_coords:
+            if n_coords not in (axis_len, axis_len + 1):
                 msg = ('{} coordinates expected, {} found'
                        .format(axis_len + 1, n_coords))
                 raise ValueError(msg)

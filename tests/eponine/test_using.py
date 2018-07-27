@@ -42,6 +42,7 @@ def test_using_data_deps():
     assert hasattr(with_kwargs, 'using_dict')
     assert 'param' in with_kwargs.using_dict
     func, args, kwargs = with_kwargs.using_dict['param']
+    # pylint: disable=comparison-with-callable
     assert func == check_kwargs_return_42
     assert args == ('task_name',)
     assert kwargs == {'task': 'task_name'}
@@ -72,6 +73,7 @@ def test_using_data_deps_loop():
         assert hasattr(test, 'using_dict')
         assert 'param' in test.using_dict
         func, args, kwargs = test.using_dict['param']
+        # pylint: disable=comparison-with-callable
         assert func == check_kwargs_return_42
         assert args == (a_task,)
         assert kwargs == {'task': a_task}

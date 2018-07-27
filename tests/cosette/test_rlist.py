@@ -10,7 +10,7 @@ from hypothesis.strategies import (integers, lists, composite, sampled_from,
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
-import valjean.cosette.rlist as rlist
+from valjean.cosette import rlist
 
 
 @composite

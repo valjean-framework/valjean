@@ -945,6 +945,7 @@ def bekeff_t4_output(be_keff):
                      + "\n\n\n")
     return ''.join(t4out)
 
+
 @given(keff_res=keff_best_estimation(5))
 def test_parse_best_keff_roundtrip(keff_res):
     r'''Test printing k\ :sub:`eff` best estimation and optionally k\ :sub:`ij`
@@ -1202,6 +1203,7 @@ def extract_list_from_keff_res(keff_res, key):
     return list(map(lambda x: x[key], keff_res))
 
 
+@settings(deadline=None)
 @given(kij_res=kij_results(5), keff_res=keff_best_estimation(3))
 def test_parse_kij_roundtrip(kij_res, keff_res):
     r'''Test printing k\ :sub:`ij` results as Tripoli-4 output from random

@@ -432,16 +432,16 @@ class Scan(Mapping):
                                "!= required number of batchs %d[0m",
                                last_batch, self.reqbatchs)
             return self._collres[last_batch]
-        else:
-            try:
-                return self._collres[batch_number]
-            except KeyError:  # as err:
-                message = ("Wrong batch number required, {} doesn't exist, "
-                           "please change it to an existing one"
-                           .format(batch_number))
-                LOGGER.error("[1;31m%s[0m", message)
-                raise
-                # raise type(err)(message).with_traceback(sys.exc_info()[2])
+
+        try:
+            return self._collres[batch_number]
+        except KeyError:  # as err:
+            message = ("Wrong batch number required, {} doesn't exist, "
+                       "please change it to an existing one"
+                       .format(batch_number))
+            LOGGER.error("[1;31m%s[0m", message)
+            raise
+            # raise type(err)(message).with_traceback(sys.exc_info()[2])
 
     def __iter__(self):
         '''Iteration over the collection of results, on the keys to match

@@ -428,7 +428,7 @@ class BuildTask(ShellTask):
                     keywords.append(attr_name)
             unformatted_script = '\n'.join([self._CMAKE_TEMPLATE,
                                             build_commands])
-        elif build_system == 'autoconf' or build_system == 'configure':
+        elif build_system in ('autoconf', 'configure'):
             raise NotImplementedError('configure build not implemented yet')
         else:
             raise ValueError('unrecognized build system: {}'

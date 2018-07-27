@@ -268,7 +268,7 @@ def to_dict(toks):
     return res
 
 
-def make_choice(ldict, flag, value):
+def _make_choice(ldict, flag, value):
     choices = {'index': 0, 'resp_function': 1, 'score_name': 2}
     res = [ldict[ind] for ind in ldict if ind[choices[flag]] == value]
     print("[94mNombre de resultats correspondants:", len(res), "[0m")
@@ -279,17 +279,18 @@ def make_choice(ldict, flag, value):
     return res
 
 
-def other_choice(ldict, index=None, resp_function=None, score_name=None):
+# pylint: disable=unused-argument
+def _other_choice(ldict, index=None, resp_function=None, score_name=None):
     ind = (index, resp_function, score_name)
     print(ind)
 
 
-def yet_another_choice(ldict, **kwargs):
+def _yet_another_choice(ldict, **kwargs):
     # print(kwargs)
     # for key, value in kwargs.items():
     #     print(key, "(", type(key), "):", value)
     mesres = []
-    choices = {'index': 0, 'resp_function': 1, 'score_name': 2}
+    # choices = {'index': 0, 'resp_function': 1, 'score_name': 2}
     # use dict.get() instead of these awful lines
     for ind in ldict:
         lind, lrfunc, lsname = ind

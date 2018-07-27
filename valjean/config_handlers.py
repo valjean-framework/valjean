@@ -316,9 +316,9 @@ class LookupSectionFromOptHandler(Handler):
         if vars_ is not None:
             chain.maps.append(vars_)
         val = config.get(self.opt, sec_id, opt, vars=chain, raw=raw)
+        deps = ['{}/{}'.format(self.opt, sec_id)]
         if self.finalizer is not None:
             return self.finalizer(val, split, opt), deps
-        deps = ['{}/{}'.format(self.opt, sec_id)]
         return val, deps
 
 

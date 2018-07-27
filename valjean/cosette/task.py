@@ -85,10 +85,9 @@ def _q(arg):
     import shlex
     if isinstance(arg, str):
         return shlex.quote(arg)
-    elif isinstance(arg, list):
+    if isinstance(arg, list):
         return ' '.join(map(_q, arg))
-    else:
-        raise ValueError('argument must be a string or a list of strings')
+    raise ValueError('argument must be a string or a list of strings')
 
 
 class TaskError(Exception):

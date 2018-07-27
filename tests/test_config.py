@@ -18,8 +18,7 @@ from .context import valjean  # noqa: F401, pylint: disable=unused-import
 # pylint: disable=wrong-import-order
 from valjean import LOGGER
 from valjean.config import BaseConfig, Config
-from valjean.config_handlers import (DefineHandler, AddMissingSectionHandler,
-                                     trigger)
+from valjean.config_handlers import (AddMissingSectionHandler, trigger)
 
 
 ID_CHARS = ascii_lowercase
@@ -108,7 +107,7 @@ def test_as_dict_roundtrip(conf):
 def test_equality_reflective(conf):
     '''Test that the == operator is reflective.'''
     note(conf.as_dict())
-    assert conf == conf
+    assert conf == conf  # pylint: disable=comparison-with-itself
 
 
 @settings(deadline=None)

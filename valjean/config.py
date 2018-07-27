@@ -273,7 +273,7 @@ class BaseConfig:
         if len(args) == 3:
             return self.get('/'.join(args[0:2]), args[2], raw=raw, vars=vars,
                             fallback=fallback)
-        elif len(args) > 3 or len(args) < 2:
+        if len(args) > 3 or len(args) < 2:
             raise ValueError('Wrong number of arguments to get(); expected 2 '
                              'or 3, got ' + str(len(args)))
         section = args[0]
@@ -299,7 +299,7 @@ class BaseConfig:
             LOGGER.debug('set() called with 4 args, desugaring to 3')
             self.set('/'.join(args[0:2]), args[2], args[3])
             return
-        elif len(args) > 4 or len(args) < 3:
+        if len(args) > 4 or len(args) < 3:
             raise ValueError('Wrong number of arguments to get(); expected 2 '
                              'or 3, got ' + str(len(args)))
         section = args[0]
@@ -509,7 +509,7 @@ class Config(BaseConfig):
         if len(args) == 3:
             return self.get('/'.join(args[0:2]), args[2], raw=raw, vars=vars,
                             fallback=fallback)
-        elif len(args) > 3 or len(args) < 2:
+        if len(args) > 3 or len(args) < 2:
             raise ValueError('Wrong number of arguments to get(); expected 2 '
                              'or 3, got ' + str(len(args)))
         section = args[0]

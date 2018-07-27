@@ -7,7 +7,7 @@ from hypothesis import given, note
 from hypothesis.strategies import data
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
-import valjean.gavroche.test as test
+from valjean.gavroche import test
 
 from .fixtures import repeat, coords_lists, items, perturb, perturbed_items
 

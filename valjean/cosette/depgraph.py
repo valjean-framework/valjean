@@ -453,7 +453,7 @@ class DepGraph:
         def _swapper(k):
             if k == i:
                 return last
-            elif k == last:
+            if k == last:
                 return i
             return k
         for k, vals in self._edges.items():

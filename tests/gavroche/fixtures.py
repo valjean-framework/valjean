@@ -8,7 +8,7 @@ from hypothesis.strategies import (lists, floats, composite, sampled_from,
 from hypothesis.extra.numpy import arrays, array_shapes, floating_dtypes
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
-import valjean.gavroche.test as test
+from valjean.gavroche import test
 
 
 def finite(dtype):

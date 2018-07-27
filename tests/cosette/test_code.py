@@ -13,7 +13,7 @@ import pytest
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
-import valjean.cosette.code as code
+from valjean.cosette import code
 from valjean.config import Config
 from valjean.cosette.task import TaskStatus
 from valjean.cosette.env import Env
@@ -303,13 +303,13 @@ def git_cmake_config(simple_git_config, simple_cmake_config, with_source_dir):
 
 
 @pytest.fixture(scope='function', params=['svn', 'cvs', 'copy'])
-def failing_vcs(request):
+def notimpl_vcs(request):
     '''Return the unimplemented version-control systems.'''
     return request.param
 
 
 @pytest.fixture(scope='function', params=['autoconf', 'configure'])
-def failing_build(request):
+def notimpl_build(request):
     '''Return the unimplemented build systems.'''
     return request.param
 
@@ -435,11 +435,11 @@ def test_missing_checkout_section(simple_git_config):
         code.CheckoutTask.from_config(name, simple_git_config)
 
 
-def test_notimpl_checkout(simple_git_config, failing_vcs):
+def test_notimpl_checkout(simple_git_config, notimpl_vcs):
     '''Test that unimplemented VCSs raise an error.'''
     # extract the section name and the task name
     sec_name, name = simple_git_config.section_by_family('checkout')
-    simple_git_config.set(sec_name, 'vcs', failing_vcs)
+    simple_git_config.set(sec_name, 'vcs', notimpl_vcs)
     with pytest.raises(NotImplementedError):
         code.CheckoutTask.from_config(name, simple_git_config)
 
@@ -467,11 +467,11 @@ def missing_build_section(simple_cmake_config):
     code.BuildTask.from_config(name, simple_cmake_config)
 
 
-def test_notimpl_build(simple_cmake_config, failing_build):
+def test_notimpl_build(simple_cmake_config, notimpl_build):
     '''Test that unimplemented build systems raise an error.'''
     # extract the section name and the task name
     sec_name, name = simple_cmake_config.section_by_family('build')
-    simple_cmake_config.set(sec_name, 'build-system', failing_build)
+    simple_cmake_config.set(sec_name, 'build-system', notimpl_build)
     with pytest.raises(NotImplementedError):
         code.BuildTask.from_config(name, simple_cmake_config)
 

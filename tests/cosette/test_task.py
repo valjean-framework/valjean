@@ -5,7 +5,7 @@
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
-import valjean.cosette.task as task
+from valjean.cosette import task
 from valjean.cosette.task import TaskStatus
 
 
