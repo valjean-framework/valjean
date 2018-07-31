@@ -114,6 +114,20 @@ def convert_green_bands(toks):
     return cgb
 
 
+def convert_scoring_zone_id(toks):
+    '''Convert scoring zone id (volume numbers, cells, points, etc) in generic
+    python objects (list, dict, tuple).
+    '''
+    if isinstance(toks, (np.generic, str)):
+        return toks
+    if toks.asList():
+        cv_toks = common.convert_list_to_tuple(toks.asList())
+        return cv_toks
+    LOGGER.warning("Simili failure, should have left the function before")
+    return toks
+
+
+
 def convert_score(toks):
     '''Convert score to :obj:`numpy` and python objects.
     Calls various conversion functions depending on input key (mesh, spectrum,
@@ -133,12 +147,11 @@ def convert_score(toks):
             elif 'spectrum_res' in key:
                 res[key] = convert_spectrum(score[key], key)
             elif 'integrated_res' in key:
-                # print("\033[35m", score[key], "\033[0m")
                 res[key] = score[key].asDict()
             elif key == 'greenband_res':
                 res[key] = convert_green_bands(score[key])
-            elif key == "scoring_zone":
-                res['scoring_zone'] = score[key].asDict()
+            elif key == 'scoring_zone_id':
+                res['scoring_zone_id'] = convert_scoring_zone_id(score[key])
             else:
                 res[key] = score[key]
     return res
@@ -165,9 +178,7 @@ def convert_generic_ifp(toks):
        <valjean.eponine.common.convert_generic_ifp>`
        and more generally :mod:`common <valjean.eponine.common>`
     '''
-    print("IN GENERIC_IFP")
     rtoks = toks[0]
-    print("\x1b[1;35m", list(rtoks.keys()), len(rtoks), "\x1b[0m")
     if len(list(rtoks.keys())) == 1:
         return common.convert_generic_ifp(rtoks, list(rtoks.keys())[0])
     raise ValueError("more than one key available, what should we do ?")
@@ -336,7 +347,7 @@ def resp_tuple(toks):
     res = toks[0]['results']
     key, val = next(res.items())
     assert isinstance(val, dict) or val.asList()
-    print("Clefs du dico =", list(toks[0].asDict().keys()))
+    # print("Clefs du dico =", list(toks[0].asDict().keys()))
     if 'response_description' in toks[0]:
         print(type(toks[0]['response_description']))
         print(type(toks[0].asDict()['response_description']))
@@ -356,7 +367,7 @@ def resp_tuple(toks):
         odict['results'] = (key, val
                             if isinstance(val, dict) else val.asList())
         print("\x1b[94m", list(odict.keys()), "\x1b[0m")
-    print("Clefs dans mydict =", list(mydict.keys()))
+    # print("Clefs dans mydict =", list(mydict.keys()))
     # Explicit solution with local variables
     return mydict
 

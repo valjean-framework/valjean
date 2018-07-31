@@ -252,9 +252,45 @@ class IndexScore:
         self.scores = lcases
         for icase in lcases:
             print(list(icase.keys()))
-            print(icase['scoring_zone'])
-        # self.sets = {k: defaultdict(set)
+            if 'data' in icase:
+                print(list(icase['data'].keys()))
+        #     for iicase in icase:
+        #         if '_res' not in iicase:
+        #             print(iicase, ':', icase[iicase], type(icase[iicase]))
+        self.dsets = {k: defaultdict(set)
+                      for icase in lcases
+                      for k in icase.keys() if '_res' not in k}
+        # print(self.dsets)
+        # # self.sets = {k: defaultdict(set)
         #              for k in lcases[0].keys() if k != 'data'}
+        for iind, icase in enumerate(lcases):
+            for key in self.dsets:
+                if key not in icase:
+                    continue
+                # print(icase[key], type(icase[key]))
+                # tdic = {'bla': 1, 'ble': 2}
+                # ttupl = (('bla', 1), ('ble', 2))
+                self.dsets[key][icase[key]].add(iind)
+                # self.dsets[key][ttupl].add(iind)
+        # print(self.dsets)
+
+    def get_by(self, **kwargs):
+        '''Return required score, defined by kwargs.'''
+        LOGGER.debug(">>>>>>>>> IndexScore get_by <<<<<<<<<<<<<<")
+        LOGGER.debug("kwargs = %s", str(kwargs))
+        if kwargs is None:
+            return self.scores
+        dataid = set(range(len(self.scores)))
+        if not set(self.dsets.keys()) >= set(kwargs.keys()):
+            print("Probably an issue in kwargs, possible ones are",
+                  list(self.dsets.keys()))
+            return None
+        for kwd in kwargs:
+            dataid = dataid & self.dsets[kwd][kwargs[kwd]]
+        ldata = ([{k: v for k, v in self.scores[i].items()} for i in dataid])
+        LOGGER.debug(">>>>>>>>>> end IndexScore get_by <<<<<<<<<<<<<<")
+        # return [namedtuple('resp_tuple', idat.keys())(**idat) for idat in ldata]
+        return ldata
 
 
 class Accessor:

@@ -1438,3 +1438,20 @@ def convert_sensitivities(res):
             thelist.append(resdict)
     # PP.pprint(thelist)
     return thelist
+
+
+def convert_list_to_tuple(liste):
+    '''Convert nested list to nested tuple (to get imutable object).
+
+    If list is not nested just convert it to tuple.
+
+    :param liste: result as a liste
+    :return: (nested) tuple
+    '''
+    if any(isinstance(n, list) for n in liste):
+        return tuple(convert_list_to_tuple(n) if isinstance(n, (list, dict))
+                     else n for n in liste)
+    if any(isinstance(n, dict) for n in liste):
+        LOGGER.warning("a dict in the list, please, do somthing")
+        return None
+    return tuple(liste)

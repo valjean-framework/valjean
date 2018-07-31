@@ -178,10 +178,10 @@ def test_debug_entropy(datadir):
     assert len(t4_res.result[-1]['list_responses']) == 1
     assert t4_res.result[-1]['list_responses'][0]['results'][0] == 'score_res'
     res0 = t4_res.result[-1]['list_responses'][0]['results'][1][0]
-    scorecontent = ['scoring_mode', 'scoring_zone',
-                    'mesh_res', 'boltzmann_entropy', 'shannon_entropy',
+    scorecontent = ['scoring_mode', 'scoring_zone_type',
+                    'mesh_res', 'boltzmann_entropy_res', 'shannon_entropy_res',
                     'spectrum_res', 'integrated_res']
-    assert "{0:6e}".format(res0['boltzmann_entropy']) == "8.342621e-01"
+    assert "{0:6e}".format(res0['boltzmann_entropy_res']) == "8.342621e-01"
     assert sorted(list(res0.keys())) == sorted(scorecontent)
 
 

@@ -17,7 +17,7 @@ from ..context import valjean  # pylint: disable=unused-import
 # pylint: disable=redefined-outer-name
 
 from valjean.eponine.common import (MeshDictBuilder, SpectrumDictBuilder,
-                                    FTYPE)
+                                    FTYPE, convert_list_to_tuple)
 import valjean.eponine.pyparsing_t4.grammar as pygram
 from valjean import LOGGER
 
@@ -361,7 +361,7 @@ def test_parse_mesh_roundtrip(array_bins):
     note('mesh output:\n' + mesh_t4_out)
     pres = pygram.scoreblock.parseString(mesh_t4_out)
     assert pres
-    keys = ['integrated_res', 'mesh_res', 'scoring_mode', 'scoring_zone']
+    keys = ['integrated_res', 'mesh_res', 'scoring_mode', 'scoring_zone_type']
     if 'integrated' in larray and array.shape[4] == 1:
         assert sorted(list(pres[0].keys())) == keys
     else:
@@ -612,7 +612,8 @@ def test_parse_spectrum_roundtrip(array_bins, units):
     spectrum_t4out = spectrum_t4_output(larray, bins, units)
     pres = pygram.scoreblock.parseString(spectrum_t4out)
     assert pres
-    keys = ['integrated_res', 'scoring_mode', 'scoring_zone', 'spectrum_res']
+    keys = ['integrated_res', 'scoring_mode', 'scoring_zone_id',
+            'scoring_zone_type', 'spectrum_res']
     if 'integrated' in larray and array.shape[4] == 1:
         assert sorted(list(pres[0].keys())) == keys
     else:
@@ -794,7 +795,8 @@ def test_parse_greenbands_roundtrip(array_bins, disc_batch):
     assert pres
     assert len(pres) == 1
     assert (sorted(list(pres[0].keys()))
-            == ['greenband_res', 'scoring_mode', 'scoring_zone'])
+            == ['greenband_res', 'scoring_mode', 'scoring_zone_id',
+                'scoring_zone_type'])
     gbres = pres[0]['greenband_res']
     assert (sorted(list(gbres.keys()))
             == ['disc_batch', 'ebins', 'sebins', 'vals'])
@@ -1264,3 +1266,29 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
     keys = [tkey for tkey in list(kijdict.keys()) if tkey != 'estimator']
     for key in keys:
         assert np.allclose(pres[0][-1][key], kijdict[key])
+
+
+@composite
+def nested_list(draw):
+    '''Generate a list of integers, possibly nested.'''
+    tlist = draw(
+        lists(integers(0, 100)
+              | lists(integers(0, 100)
+                      | lists(integers(0, 100), min_size=1, max_size=3)
+                      , min_size=1, max_size=5)
+              , min_size=1, max_size=5))
+    return tlist
+
+
+def tuple_to_list(ltuple):
+    '''Quick function to go back to list. Bad point: this one is also tested.
+    '''
+    return list(tuple_to_list(n) if isinstance(n, tuple) else n
+                for n in ltuple)
+
+@given(tlist=nested_list())
+def test_list_to_tuple(tlist):
+    '''Test conversion of list to tuple.'''
+    tuplist = convert_list_to_tuple(tlist)
+    ltupl = tuple_to_list(tuplist)
+    assert ltupl == tlist

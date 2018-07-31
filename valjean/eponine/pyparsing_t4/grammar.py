@@ -549,84 +549,83 @@ respintro = respdesc + ZeroOrMore(respcarac)
 # Score description (not needed for KEFF)
 scoremode = Suppress(_scoremode_kw + ':') + Word(alphas+'_')('scoring_mode')
 # scoring zones
-_score_mesh = (_scoremesh_kw('zone_type')
+_score_mesh = (_scoremesh_kw('scoring_zone_type')
                + Suppress(':')
-               + Group(Word(alphas)
-                       + Word(alphas)
-                       + Word(alphas+'() '))('column_names')
+               + Suppress(Word(alphas)
+                          + Word(alphas)
+                          + Word(alphas+'() '))
                + Optional(Suppress("(in")
                           + Word(alphanums+'.^-+')('unit')
                           + Suppress(')')))
-_score_allgeom = _scoreallgeom_kw('zone_type')
-_score_allsources = _scoreallsources_kw('zone_type')
-_score_vol = (_scorevol_kw('zone_type')
+_score_allgeom = _scoreallgeom_kw('scoring_zone_type')
+_score_allsources = _scoreallsources_kw('scoring_zone_type')
+_score_vol = (_scorevol_kw('scoring_zone_type')
               + Suppress(_scorevolvol_kw + ':')
-              + _inums('volume_number')
+              + _inums('scoring_zone_id')
               + Suppress(_scorevolume_kw + ':')
-              + _fnums('total_volume_cm3'))
-_score_vol_sum = ((_scorevolsum_kw('zone_type')
+              + _fnums('scoring_zone_volsurf'))
+_score_vol_sum = ((_scorevolsum_kw('scoring_zone_type')
                    + Suppress(_scorevolsumvol_kw + ':')
                    + Group(_inums
                            + ZeroOrMore(Suppress('+') + _inums))
-                   ('volumes_numbers')
+                   ('scoring_zone_id')
                    + Suppress(_scorevolumesum_kw + ':')
-                   + _fnums('total_volume_cm3')))
-_score_surf = (_scoresurf_kw('zone_type')
+                   + _fnums('scoring_zone_volsurf')))
+_score_surf = (_scoresurf_kw('scoring_zone_type')
                + Suppress(_scoresurfvol_kw + ':')
                + (Group(_inums + Suppress(',') + _inums)
                   | Group(Word(alphanums+'/_') + Suppress(',')
                           + Word(alphanums+'/_')))
-               ('volumes_numbers')
+               ('scoring_zone_id')
                + Optional(Suppress(_scoresurface_kw + ':')
-                          + _fnums('total_surface_cm2')))
-_score_surf_sum = (_scoresurfsum_kw('zone_type')
+                          + _fnums('scoring_zone_volsurf')))
+_score_surf_sum = (_scoresurfsum_kw('scoring_zone_type')
                    + Suppress(_scoresurfsumfront_kw + ':')
                    + OneOrMore(Group(Suppress('(')
                                      + _inums + Suppress(',')
                                      + _inums + Suppress(')')
                                      + Optional(Suppress('+'))))
-                   ('frontiers_numbers')
+                   ('scoring_zone_id')
                    + Suppress(_scoresurfacesum_kw + ':')
-                   + _fnums('total_surface_cm2'))
-_score_point = (_scorepoint_kw('zone_type')
+                   + _fnums('scoring_zone_volsurf'))
+_score_point = (_scorepoint_kw('scoring_zone_type')
                 + Suppress(':')
                 + Group(_fnums + Suppress(',')
                         + _fnums + Suppress(',')
-                        + _fnums)('point_coordinates'))
-_cellelt = (Group(Suppress('(') + _inums('vol_num')
-                  + Suppress(',') + _inums('depth')
+                        + _fnums)('scoring_zone_id'))
+_cellelt = (Group(Suppress('(') + _inums
+                  + Suppress(',') + _inums
                   + OneOrMore(
                       Group(Suppress(',') + _inums
                             + Suppress(',') + _inums
-                            + Suppress(',') + _inums))('cells')
+                            + Suppress(',') + _inums))
                   + Suppress(')')))
-_score_cell = (_scorecell_kw('zone_type')
+_score_cell = (_scorecell_kw('scoring_zone_type')
                + Suppress(_scorecelldet_kw)
                + Group(_cellelt
                        + ZeroOrMore(Suppress('+') + _cellelt))
-               ('cell_details'))
-_maillelt = (Suppress(_scoremaillevol_kw + ':') + _inums('vol_num')
-             + Suppress(_scoremailledepth_kw + ':') + _inums('depth')
+               ('scoring_zone_id'))
+_maillelt = (Suppress(_scoremaillevol_kw + ':') + _inums
+             + Suppress(_scoremailledepth_kw + ':') + _inums
              + Suppress(_scoremaillecell_kw + ':')
              + OneOrMore(
                  Group(Suppress('(') + _inums
                        + Suppress(',') + _inums
-                       + Suppress(',') + _inums + Suppress(')')))('cells'))
-_score_maille = (_scoremaille_kw('zone_type')
-                 + Group(_maillelt)('cell_details'))
-scorezone = (Group(Suppress(_scorezone_kw+':') +
-                   (_score_mesh
-                    | _score_allgeom
-                    | _score_allsources
-                    | _score_vol
-                    | _score_surf
-                    | _score_surf_sum
-                    | _score_vol_sum
-                    | _score_point
-                    | _score_cell
-                    | _score_maille
-                    | LineEnd()))
-             ('scoring_zone'))
+                       + Suppress(',') + _inums + Suppress(')'))))
+_score_maille = (_scoremaille_kw('scoring_zone_type')
+                 + Group(_maillelt)('scoring_zone_id'))
+scorezone = (Suppress(_scorezone_kw+':') +
+             (_score_mesh
+              | _score_allgeom
+              | _score_allsources
+              | _score_vol
+              | _score_surf
+              | _score_surf_sum
+              | _score_vol_sum
+              | _score_point
+              | _score_cell
+              | _score_maille
+              | LineEnd()))
 # scoring description = scoring mode + scoring zone
 scoredesc = scoremode + scorezone
 
@@ -910,14 +909,14 @@ defkeffblock = Group(_bestresblock + Optional(_kijkeffblock))('default_keffs')
 
 # MED files
 medfile = (Suppress(_creationmedfile_kw + ':')
-           + Word(alphanums+'/_.')('med_file')
+           + Word(alphanums+'/_.')('med_file_res')
            + Suppress(_medmeshid_kw + Word(alphanums+'_.')))
 
 
 # Entropy
 _boltzmannentropy = (Suppress(_boltzmannentropy_kw)
-                     + _fnums('boltzmann_entropy'))
-_shannonentropy = Suppress(_shannonentropy_kw) + _fnums('shannon_entropy')
+                     + _fnums('boltzmann_entropy_res'))
+_shannonentropy = Suppress(_shannonentropy_kw) + _fnums('shannon_entropy_res')
 entropy = _boltzmannentropy + _shannonentropy
 
 
