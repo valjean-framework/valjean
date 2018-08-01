@@ -71,8 +71,8 @@ Order should always be that one.
 The result for each bin ``(s0, s1, s2, e, t, mu, phi)`` is filled in a
 `numpy structured array`_ whose :obj:`numpy.dtype` can be:
 
-* meshes: normally ``'tally'`` and ``'sigma'`` where *sigma* is in % and
-  *tally* in its unit (not necessarly precised in the listing)
+* meshes: normally ``'score'`` and ``'sigma'`` where *sigma* is in % and
+  *score* in its unit (not necessarly precised in the listing)
 * default spectrum: ``'score'``, ``'sigma'``, ``'score/lethargy'`` where
   *sigma* is in %, *score* and *score/lethargy* in the unit of the score (not
   necessarly precised in the listing)
@@ -100,7 +100,7 @@ virtual): :meth:`~DictBuilder.fill_arrays_and_bins` and
 :class:`MeshDictBuilder` for mesh and :class:`SpectrumDictBuilder` for
 spectrum.
 
-Initialization is done giving names of the columns (``'tally'`` and ``'sigma'``
+Initialization is done giving names of the columns (``'score'`` and ``'sigma'``
 for mesh for example) and the list of number of bins. The length of this list
 should be 7 as we have 7 dimensison.
 
@@ -111,12 +111,13 @@ should be 7 as we have 7 dimensison.
        [...]
    TypeError: Can't instantiate abstract class DictBuilder with ...
    >>> mdb = MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
+   >>> mdb = MeshDictBuilder(['score', 'sigma'], [1,2,3,4,5,6,7])
    >>> sdb = SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'],
    ...                           [1,2,3,4,5,6,7])
 
 Errors are raised if the dimension is not correct.
 
-   >>> mdb = MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6])
+   >>> mdb = MeshDictBuilder(['score', 'sigma'], [1,2,3,4,5,6])
    Traceback (most recent call last):
        ...
    AssertionError
@@ -155,7 +156,7 @@ dictionary keys may be needed:
       (facultative)
 
     A mesh line in the list under ``'mesh_vals'`` key is constructed as a list
-    of ``[[s0, s1, s2], tally, sigma]``. In ``'mesh_energyrange'``, energy
+    of ``[[s0, s1, s2], score, sigma]``. In ``'mesh_energyrange'``, energy
     range is given as ``['unit', e1, e2]``.
 
   * ``'time_step'``: if a time splitting is available
@@ -209,7 +210,7 @@ mesh
    Default keys are:
 
    * ``'mesh'``: 7-dimensions `numpy structured array`_ with :obj:`numpy.dtype`
-     ``('tally', 'sigma')``
+     ``('score', 'sigma')``
    * ``'ebins'``: :obj:`numpy.ndarray` of edges of energy bins
    * ``'eunit'``: energy unit
 
@@ -218,13 +219,17 @@ mesh
    * ``'tbins'``: :obj:`numpy.ndarray` of edges of time bins (if
      ``'time_step'`` available)
    * ``'mesh_energyintegrated'``: 7-dimensions `numpy structured array`_ with
-     dtype ``('tally', 'sigma')`` and list of number of bins (``lnbins``) is
+     dtype ``('score', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[n_s0, n_s1, n_s2, 1, n_t, 1, 1]``
    * ``'integrated_res'``: 7-dimensions `numpy structured array`_ with
-     dtype ``('tally', 'sigma')`` and list of number of bins (``lnbins``) is
+     dtype ``('score', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[1, 1, 1, 1, n_t, 1, 1]``
    * ``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
      also given
+
+   Remark: :obj:`numpy.dtype` was previously ``('tally', 'sigma')`` for mesh
+   instead of ``('score', 'sigma')`` now. This update has been driven by
+   homogeneisation.
 
 .. _eponine-spectrum-res:
 
@@ -564,7 +569,7 @@ class DictBuilder(ABC):
         '''Initialization of DictBuilder.
 
         :param list(str) colnames: name of the columns/results
-           (e.g. ``'tally'`` and ``'sigma'`` for mesh, or
+           (e.g. ``'score'`` and ``'sigma'`` for mesh, or
            ``'score'``, ``'sigma'``, ``'score/lethargy'`` for spectrum)
         :param list(int) lnbins: number of bins for each dimension
         '''
@@ -674,7 +679,6 @@ class DictBuilder(ABC):
         '''
         LOGGER.debug("In DictBuilder.flip_bins")
         key_axis = [(d, a) for a, d in enumerate(list(self.bins.keys()))]
-        print(key_axis)
         for key, axis in key_axis:
             bins = self.bins[key]
             if len(bins) > 1 and bins[0] > bins[1]:
@@ -704,7 +708,7 @@ class MeshDictBuilder(DictBuilder):
         '''Fill mesh array.
 
         :param list meshvals: mesh data for a given energy bin
-                         ``[[[s0, s1, s2], tally, sigma],...]``
+                         ``[[[s0, s1, s2], score, sigma],...]``
         :param name: name of the array to be filled ('default',
                      'eintegrated_mesh') for the moment
         :type name: string
@@ -913,7 +917,7 @@ def _get_number_of_space_bins(meshvals):
     in the listing does not necessarly match a completed mesh dimension.
 
     :param list meshvals: list of meshes, with mesh
-                          ``[[s0, s1, s2] tally sigma]``
+                          ``[[s0, s1, s2] score sigma]``
                           s0, s1 and s2 being the space coordinates
     :returns: 3 integers in following order
 
@@ -973,15 +977,15 @@ def convert_mesh(meshres):
     :returns: python dictonary with keys
 
         * ``'mesh'``: numpy structured array of dimension 7
-          ``v[s0, s1 ,s2, E, t, mu, phi] = ('tally', 'sigma')``
+          ``v[s0, s1 ,s2, E, t, mu, phi] = ('score', 'sigma')``
         * ``'eunit'``: energy unit
         * ``'ebins'``: energy bin edges (size = number of bins + 1)
         * ``'tbins'``: time binning if time grid required
         * ``'eintegrated_mesh'``: 7-dimensions numpy structured array
-          ``v[s0,s1,s2,E,t,mu,phi] = ('tally', 'sigma')``
+          ``v[s0,s1,s2,E,t,mu,phi] = ('score', 'sigma')``
           corresponding to mesh integrated on energy (facultative)
         * ``'integrated_res'``: 7 dimensions numpy structured array
-          ``v[s0,s1,s2,E,t,mu,phi] = (tally, sigma)``
+          ``v[s0,s1,s2,E,t,mu,phi] = (score, sigma)``
           corresponding to mesh integrated over energy and space;
           *facultative*, available when time grid is required (so
           corresponds to integrated results splitted in time)
@@ -1002,11 +1006,11 @@ def convert_mesh(meshres):
     LOGGER.debug("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
                  "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
     # up to now no mesh splitted in mu or phi angle seen, update easy now
-    vals = MeshDictBuilder(['tally', 'sigma'],
+    vals = MeshDictBuilder(['score', 'sigma'],
                            [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
     # mesh integrated on energy (normally the last mesh)
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
-        vals.add_array('eintegrated_mesh', ['tally', 'sigma'],
+        vals.add_array('eintegrated_mesh', ['score', 'sigma'],
                        [ns0bins, ns1bins, ns2bins, 1, ntbins, 1, 1])
     # integrated result (space and energy)
     if 'integrated_res' in meshres[0]:

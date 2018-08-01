@@ -115,7 +115,7 @@ def bins(draw, elements=floats(0, 10), nbins=1, reverse=booleans()):
 
 
 @given(array_bins=array_and_bins(
-    dtype=np.dtype([('tally', np.float), ('sigma', np.float)]),
+    dtype=np.dtype([('score', np.float), ('sigma', np.float)]),
     max_dim=(3, 3, 3, 5, 5, 1, 1),
     elements=tuples(floats(0, 1), floats(5, 20))))
 def test_flip_mesh(array_bins):
@@ -141,7 +141,7 @@ def test_flip_mesh(array_bins):
         lambda i: (i[0], 1 if len(i[1]) > 1 and i[1][1] > i[1][0] else -1),
         lbins.items()))
 
-    mesh = MeshDictBuilder(['tally', 'sigma'], array.shape)
+    mesh = MeshDictBuilder(['score', 'sigma'], array.shape)
     mesh.bins['e'] = lbins['e']
     mesh.bins['t'] = lbins['t']
     mesh.arrays = dict(larray)
@@ -187,8 +187,10 @@ def test_flip_spectrum(array_bins):
         lbins.items()))
 
     spectrum = SpectrumDictBuilder(array.dtype.names, array.shape)
-    spectrum.bins = {'e': lbins['e'], 't': lbins['t'], 'mu': lbins['mu'],
-                     'phi': lbins['phi']}
+    # spectrum.bins = {'e': lbins['e'], 't': lbins['t'], 'mu': lbins['mu'],
+    #                  'phi': lbins['phi']}
+    for dim in lbins:
+        spectrum.bins[dim] = lbins[dim]
     spectrum.arrays = dict(larray)
     spectrum.flip_bins()
 
@@ -237,7 +239,7 @@ def mesh_str(mesh, ebin, tbin):
                 index = (is0, is1, is2, ebin, tbin, 0, 0)
                 t4out.append("\t({0},{1},{2})\t\t{3:.6e}\t{4:.6e}\n"
                              .format(is0, is1, is2,
-                                     mesh[index]['tally'],
+                                     mesh[index]['score'],
                                      mesh[index]['sigma']))
     return ''.join(t4out)
 
@@ -330,7 +332,7 @@ def make_mesh_t4_output(meshes, ebins, tbins):
 
 @settings(deadline=None)
 @given(array_bins=array_and_bins(
-    dtype=np.dtype([('tally', FTYPE), ('sigma', FTYPE)]),
+    dtype=np.dtype([('score', FTYPE), ('sigma', FTYPE)]),
     max_dim=(3, 3, 3, 3, 3, 1, 1),
     elements=tuples(floats(0, 1), floats(0, 100)),
     reverse=just(False)))
@@ -346,7 +348,7 @@ def test_parse_mesh_roundtrip(array_bins):
     MeshDictBuilder object should be build to flip the arrays):
 
     * Equality of dtypes and shapes in all cases
-    * Equality of ``'tally'`` and ``'sigma'`` arrays considered roundings.
+    * Equality of ``'score'`` and ``'sigma'`` arrays considered roundings.
 
     .. note::
 
@@ -377,18 +379,18 @@ def test_parse_mesh_roundtrip(array_bins):
     if 'integrated' in larray:
         if array.shape[4] == 1:
             assert np.isclose(pres[0]['integrated_res']['score'],
-                              larray['integrated'][:]['tally'])
+                              larray['integrated'][:]['score'])
             assert np.isclose(pres[0]['integrated_res']['sigma'],
                               larray['integrated'][:]['sigma'])
         else:
             assert 'integrated_res' in list(parsed_mesh.keys())
-            assert np.allclose(larray['integrated'][:]['tally'],
+            assert np.allclose(larray['integrated'][:]['score'],
                                parsed_mesh['integrated_res']['score'])
             assert np.allclose(larray['integrated'][:]['sigma'],
                                parsed_mesh['integrated_res']['sigma'])
     if 'energy_integrated' in larray:
         assert 'eintegrated_mesh' in list(parsed_mesh.keys())
-        for key in ['tally', 'sigma']:
+        for key in ['score', 'sigma']:
             assert np.allclose(larray['energy_integrated'][:][key],
                                parsed_mesh['eintegrated_mesh'][key])
 

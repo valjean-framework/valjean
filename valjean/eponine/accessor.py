@@ -19,11 +19,8 @@ def convert_spectrum_as_dataset(spec_res, res_type='spectrum_res'):
     dsspec = Dataset.Data(
         spec_res['spectrum']['score'],
         spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] / 100)
-    bins = {key.replace('bins', ''): val
-            for key, val in spec_res.items() if "bins" in key and len(key) > 4}
-    obins = spec_res.get('bins')
-    print("\x1b[1;34mOBINS =", obins, "\x1b[0m")
-    return Dataset(dsspec, obins, res_type)
+    bins = spec_res.get('bins')
+    return Dataset(dsspec, bins, res_type)
 
 
 def convert_mesh_as_dataset(mesh_res, res_type='mesh_res'):
@@ -32,13 +29,10 @@ def convert_mesh_as_dataset(mesh_res, res_type='mesh_res'):
     '''
     print(mesh_res['mesh'].dtype)
     dsmesh = Dataset.Data(
-        mesh_res['mesh']['tally'],
-        mesh_res['mesh']['sigma'] * mesh_res['mesh']['tally'] / 100)
-    bins = {key.replace('bins', ''): val
-            for key, val in mesh_res.items() if "bins" in key and len(key) > 4}
-    obins = mesh_res.get('bins')
-    print("\x1b[1;34mOBINS =", obins, "\x1b[0m")
-    return Dataset(dsmesh, obins, res_type)
+        mesh_res['mesh']['score'],
+        mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] / 100)
+    bins = mesh_res.get('bins')
+    return Dataset(dsmesh, bins, res_type)
 
 
 def convert_intres_as_dataset(result, res_type):
