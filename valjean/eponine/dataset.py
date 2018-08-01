@@ -39,6 +39,22 @@ class Dataset:
             "Dataset name: {0}, value: {1:6e}, error: {2:6e}, unit: '{3}'\n"
             .format(self.name, self.data.value, self.data.error, self.unit))
 
+    def squeeze(self):
+        '''Squeeze dataset: remove useless dimensions.
+
+        Squeeze is based on the shape and on the bins dim ??? To confirm...
+        First squeeze bins, then arrays.
+        Edges, if only one bin are not kept. Example: spectrum with one bin in
+        energy (quite common)
+        '''
+        shape = self.value.shape
+        key_axis = {a: k for a, k in enumerate(list(self.bins.keys()))}
+        lbins = self.bins.copy()
+        for axis, dim in enumerate(shape):
+            if dim < 2:
+                lbins.pop(key_axis[axis])
+        ldata = Dataset.Data(self.value.squeeze(), self.error.squeeze())
+        return Dataset(ldata, lbins, self.name + '_squeezed', self.unit)
 
 def relatively_equal(ds1, ds2, tolerance=1e-5):
     '''First esquisse of test of dataset comparison.'''

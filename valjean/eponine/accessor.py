@@ -20,8 +20,10 @@ def convert_spectrum_as_dataset(spec_res, res_type='spectrum_res'):
         spec_res['spectrum']['score'],
         spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] / 100)
     bins = {key.replace('bins', ''): val
-            for key, val in spec_res.items() if "bins" in key}
-    return Dataset(dsspec, bins, res_type)
+            for key, val in spec_res.items() if "bins" in key and len(key) > 4}
+    obins = spec_res.get('bins')
+    print("\x1b[1;34mOBINS =", obins, "\x1b[0m")
+    return Dataset(dsspec, obins, res_type)
 
 
 def convert_mesh_as_dataset(mesh_res, res_type='mesh_res'):
@@ -33,8 +35,10 @@ def convert_mesh_as_dataset(mesh_res, res_type='mesh_res'):
         mesh_res['mesh']['tally'],
         mesh_res['mesh']['sigma'] * mesh_res['mesh']['tally'] / 100)
     bins = {key.replace('bins', ''): val
-            for key, val in mesh_res.items() if "bins" in key}
-    return Dataset(dsmesh, bins, res_type)
+            for key, val in mesh_res.items() if "bins" in key and len(key) > 4}
+    obins = mesh_res.get('bins')
+    print("\x1b[1;34mOBINS =", obins, "\x1b[0m")
+    return Dataset(dsmesh, obins, res_type)
 
 
 def convert_intres_as_dataset(result, res_type):
@@ -117,6 +121,13 @@ CONVERT_IN_DATASET = {
     'boltzmann_entropy': convert_entropy_as_dataset,
     'integrated_res': convert_intres_as_dataset
 }
+
+def convert_data(data, data_type):
+    if data_type not in data:
+        LOGGER.warning("%s not found in data", data_type)
+        return None
+    return CONVERT_IN_DATASET.get(data_type, convert_data_in_dataset)(
+        data[data_type], data_type)
 
 
 class Index:
@@ -272,7 +283,7 @@ class IndexScore:
                 # ttupl = (('bla', 1), ('ble', 2))
                 self.dsets[key][icase[key]].add(iind)
                 # self.dsets[key][ttupl].add(iind)
-        # print(self.dsets)
+        print(self.dsets)
 
     def get_by(self, **kwargs):
         '''Return required score, defined by kwargs.'''

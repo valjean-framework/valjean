@@ -577,7 +577,9 @@ class DictBuilder(ABC):
             LOGGER.error("Number of bins should be 7 (3 space dimensions, "
                          "1 energy, 1 time, 2 direction angles)")
             raise AssertionError
-        self.bins = {'e': [], 't': [], 'mu': [], 'phi': []}
+        self.bins = OrderedDict([('s0', []), ('s1', []), ('s2', []),
+                                 ('e', []), ('t', []),
+                                 ('mu', []), ('phi', [])])
         dtype = np.dtype({'names': colnames,
                           'formats': [FTYPE]*len(colnames)})
         self.arrays = {'default': np.empty((lnbins), dtype=dtype)}
@@ -671,11 +673,14 @@ class DictBuilder(ABC):
         ('e' → 3, 't' → 4, 'mu' → 5, 'phi' → 6)
         '''
         LOGGER.debug("In DictBuilder.flip_bins")
-        key_axis = [('e', 3), ('t', 4), ('mu', 5), ('phi', 6)]
+        key_axis = [(d, a) for a, d in enumerate(list(self.bins.keys()))]
+        print(key_axis)
         for key, axis in key_axis:
             bins = self.bins[key]
             if len(bins) > 1 and bins[0] > bins[1]:
                 self._flip_bins_for_dim(key, axis)
+            else:
+                self.bins[key] = np.array(self.bins[key])
 
     @abstractmethod
     def fill_arrays_and_bins(self, data):
@@ -887,6 +892,7 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
     convspec = {'disc_batch': spectrum[0]['disc_batch'],
                 'ebins': np.array(vals.bins['e']),
                 'spectrum': vals.arrays['default']}
+    convspec['bins'] = vals.bins
     if 'time_step' in spectrum[0]:
         convspec['tbins'] = np.array(vals.bins['t'])
     if 'mu_angle_zone' in spectrum[0]:
@@ -1014,6 +1020,7 @@ def convert_mesh(meshres):
     convmesh = {'eunit': meshres[0]['meshes'][0]['mesh_energyrange'][0],
                 'ebins': np.array(vals.bins['e']),
                 'mesh': vals.arrays['default']}
+    convmesh['bins'] = vals.bins
     if 'time_step' in meshres[0]:
         convmesh['tbins'] = np.array(vals.bins['t'])
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
