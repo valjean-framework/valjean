@@ -141,6 +141,10 @@ def convert_score(toks):
     LOGGER.debug("Keys in score: %s", str(list(toks.keys())))
     res = {}
     for score in toks:
+        if 'mesh_res' in score and 'unit' in score:
+            unit = score.pop('unit')
+            for mesh in score['mesh_res']:
+                mesh['unit'] = unit
         for key in score.keys():
             if key == 'mesh_res':
                 res['mesh_res'] = convert_mesh(score['mesh_res'])

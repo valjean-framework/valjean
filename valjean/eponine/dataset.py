@@ -36,8 +36,10 @@ class Dataset:
                             self.data.value.squeeze(),
                             self.data.error.squeeze(), self.bins, self.unit))
         return (
-            "Dataset name: {0}, value: {1:6e}, error: {2:6e}, unit: '{3}'\n"
-            .format(self.name, self.data.value, self.data.error, self.unit))
+            "Dataset name: {0}, value: {1:6e}, error: {2:6e}, unit: '{3}', "
+            "bins: {4}\n"
+            .format(self.name, self.data.value, self.data.error, self.unit,
+                    self.bins))
 
     def squeeze(self):
         '''Squeeze dataset: remove useless dimensions.

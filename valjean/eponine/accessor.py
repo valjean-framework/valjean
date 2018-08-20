@@ -5,48 +5,57 @@ codes.
 
 import logging
 import pprint
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, OrderedDict
 from valjean.eponine.dataset import Dataset
 
 LOGGER = logging.getLogger('valjean')
 PP = pprint.PrettyPrinter(indent=4, depth=2)
 
 
-def convert_spectrum_as_dataset(spec_res, res_type='spectrum_res'):
+def convert_spectrum_as_dataset(fspec_res, res_type='spectrum_res'):
     '''Conversion of spectrum in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
     '''
+    spec_res = fspec_res[res_type]
     dsspec = Dataset.Data(
         spec_res['spectrum']['score'],
         spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] / 100)
     bins = spec_res.get('bins')
-    return Dataset(dsspec, bins, res_type)
+    return Dataset(dsspec, bins, res_type, unit=spec_res['units']['score'])
 
 
-def convert_mesh_as_dataset(mesh_res, res_type='mesh_res'):
+def convert_mesh_as_dataset(fmesh_res, res_type='mesh_res'):
     '''Conversion of mesh in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
     '''
+    mesh_res = fmesh_res[res_type]
     print(mesh_res['mesh'].dtype)
     dsmesh = Dataset.Data(
         mesh_res['mesh']['score'],
         mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] / 100)
     bins = mesh_res.get('bins')
-    return Dataset(dsmesh, bins, res_type)
+    return Dataset(dsmesh, bins, res_type, unit=mesh_res['units']['score'])
 
 
 def convert_intres_as_dataset(result, res_type):
     '''Conversion of integrated result (or generic score) in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
+
+    Bins: only possible bin is energy as energy integrated results.
+    If other dimensions are not squeezed it is a spectrum so not treated by
+    this function.
     '''
-    print("\x1b[35m", result, "\x1b[0m")
-    print(type(result))  # , result.shape, result.ndim, result.dtype)
-    # print(result['score'], type(result['score']), type(result['sigma']),
-    #       type(result['score']*result['sigma']))
-    # print(result["score"][:])
-    dsintres = Dataset.Data(result['score'],
-                            result['sigma'] * result['score'] / 100)
-    return Dataset(dsintres, {}, res_type)
+    intres = result[res_type] if res_type in result else result
+    dsintres = Dataset.Data(intres['score'],
+                            intres['sigma'] * intres['score'] / 100)
+    unit = intres.get('uscore', 'unknown')
+    bins = OrderedDict()
+    if 'spectrum_res' in result:
+        if unit == 'unknown':
+            unit = result['spectrum_res']['units']['score']
+        ebins = result['spectrum_res']['bins']['e']
+        bins = OrderedDict([('e', ebins[::ebins.shape[0]-1])])
+    return Dataset(dsintres, bins, res_type, unit=unit)
 
 
 def convert_entropy_as_dataset(result, res_type):
@@ -101,11 +110,15 @@ def convert_ifp_in_dataset(result):
 
 def convert_data_in_dataset(data, data_type):
     '''Convert data in dataset. OK for IFP sensitivities for the moment.'''
+    if data_type not in data:
+        LOGGER.warning("Key %s not found in data", data_type)
+        return None
     dset = Dataset.Data(
         data[data_type]['score'],
         data[data_type]['sigma'] * data[data_type]['score'] / 100)
+    # units and uscore used in sensitivities (calling default res)
     return Dataset(dset, data['bins'], data_type,
-                   unit=data.get('units', '')['uscore'])
+                   unit=data.get('units', {}).get('score', 'unknown'))
 
 
 CONVERT_IN_DATASET = {
@@ -117,11 +130,12 @@ CONVERT_IN_DATASET = {
 }
 
 def convert_data(data, data_type):
+    '''Test for data conversion using dict or default.'''
     if data_type not in data:
         LOGGER.warning("%s not found in data", data_type)
         return None
     return CONVERT_IN_DATASET.get(data_type, convert_data_in_dataset)(
-        data[data_type], data_type)
+        data, data_type)
 
 
 class Index:
@@ -240,10 +254,12 @@ class IndexResponse:
         LOGGER.debug("kwargs = %s", str(kwargs))
         if kwargs is None:
             return self.resp
+        if 'index' in kwargs:
+            return [self.resp[kwargs['index']]]
         dataid = set(range(len(self.resp)))
         for kwd in kwargs:
             dataid = dataid & self.dsets[kwd][kwargs[kwd]]
-        ldata = ([{k: v for k, v in self.resp[i].items()} for i in dataid])
+        ldata = [{k: v for k, v in self.resp[i].items()} for i in dataid]
         # for dat in ldata:
         #     dat['data'] = convert_data_in_dataset(dat['data'], data_type)
         LOGGER.debug(">>>>>>> end get_by <<<<<<<<<<<<<<")

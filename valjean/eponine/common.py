@@ -585,6 +585,9 @@ class DictBuilder(ABC):
         self.bins = OrderedDict([('s0', []), ('s1', []), ('s2', []),
                                  ('e', []), ('t', []),
                                  ('mu', []), ('phi', [])])
+        self.units = {'s0': 'cm', 's1': 'unknown', 's2': 'unknown',
+                      'e': 'MeV', 't': 's', 'mu': '', 'phi': 'rad',
+                      'score': 'unknown', 'sigma': '%'}
         dtype = np.dtype({'names': colnames,
                           'formats': [FTYPE]*len(colnames)})
         self.arrays = {'default': np.empty((lnbins), dtype=dtype)}
@@ -897,6 +900,11 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
                 'ebins': np.array(vals.bins['e']),
                 'spectrum': vals.arrays['default']}
     convspec['bins'] = vals.bins
+    convspec['units'] = vals.units
+    if 'units' in spectrum[0]:
+        convspec['units']['e'] = spectrum[0]['units'][0]
+        convspec['units']['score'] = spectrum[0]['units'][1]
+        convspec['units']['sigma'] = spectrum[0]['units'][2]
     if 'time_step' in spectrum[0]:
         convspec['tbins'] = np.array(vals.bins['t'])
     if 'mu_angle_zone' in spectrum[0]:
@@ -1025,6 +1033,9 @@ def convert_mesh(meshres):
                 'ebins': np.array(vals.bins['e']),
                 'mesh': vals.arrays['default']}
     convmesh['bins'] = vals.bins
+    convmesh['units'] = vals.units
+    if 'unit' in meshres[0]:
+        convmesh['units']['score'] = meshres[0]['unit']
     if 'time_step' in meshres[0]:
         convmesh['tbins'] = np.array(vals.bins['t'])
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
