@@ -32,6 +32,7 @@ module :mod:`common <valjean.eponine.common>`.
 
 import logging
 import numpy as np
+from collections import namedtuple
 from .. import common
 
 
@@ -365,7 +366,9 @@ def resp_tuple(toks):
     # real list if asList is not used
     # ttuple = tuple((key, val) for key, val in toks[0]['results'].items())
     # mydict['results'] = ttuple[0]
-    mydict['results'] = (key, val if isinstance(val, dict) else val.asList())
+    Response = namedtuple('Response', ['type', 'data'])
+    mydict['results'] = Response(*(key, val if isinstance(val, dict)
+                                   else val.asList()))
     if 'response_description' in toks[0]:
         odict = toks[0]['response_description'].asDict()
         odict['results'] = (key, val

@@ -129,6 +129,7 @@ CONVERT_IN_DATASET = {
     'integrated_res': convert_intres_as_dataset
 }
 
+
 def convert_data(data, data_type):
     '''Test for data conversion using dict or default.'''
     if data_type not in data:
@@ -136,6 +137,24 @@ def convert_data(data, data_type):
         return None
     return CONVERT_IN_DATASET.get(data_type, convert_data_in_dataset)(
         data, data_type)
+
+
+def merge_defaultdict(defd1, defd2):
+    '''Function to merge 2 dict of defaultdict(set).
+
+    .. todo::
+
+        Think about doing a class for these containers with at least this
+        method.
+    '''
+    mdefd = defd1.copy()
+    for key1, val1 in defd2.items():
+        if key1 in mdefd:
+            for key2, val2 in val1.items():
+                mdefd[key1][key2] |= val2
+        else:
+            mdefd[key1] = val1
+    return mdefd
 
 
 class Index:
@@ -153,7 +172,6 @@ class Index:
         for iind, icase in enumerate(lcases):
             for key in self.dsets:
                 self.dsets[key][icase[key]].add(iind)
-
 
     def get_by(self, data_type='energy_integrated', okomd=False, **kwargs):
         '''Accessor to choose required result.
@@ -181,69 +199,49 @@ class Index:
 class IndexResponse:
     '''Class to index T4 responses.'''
 
-    def __init__(self, lcases, keys=None):
+    def __init__(self, lcases, merge_scores=False):
         print("\x1b[35m>>>>>>>> Index.__init__ <<<<<<<<<<<<\x1b[0m")
         self.resp = lcases
-        # keys or kwargs... if possible
-        # self.keys = (keys if keys is not None
-        # else [k for k in lcases[0].keys() if k != 'data'])
-        # LOGGER.debug("In Index, keys: %s", str(self.keys))
-        # if k not in ('data', 'results')
         print(list(lcases[0].keys()))
-        # self.dsets = {k: defaultdict(set)
-        #               for k in lcases[0].keys() if k != 'results'}
         self.dsets = {k: defaultdict(set)
                       for icase in lcases
                       for k in icase.keys() if k != 'results'}
         print("\x1b[91mself.dsets =", self.dsets, "\x1b[0m")
         LOGGER.debug("nb cases = %d", len(lcases))
         for iind, icase in enumerate(lcases):
-            # print(type(icase))
-            # print(list(icase.keys()))
-            # if 'compo_details' in icase:
-            #     print("compo_details:", icase['compo_details'])
-            # print('type result:', type(icase['results']))
-            # print(icase['results'][0])
-            # print('type du vrai resultat', type(icase['results'][1]))
-            # if isinstance(icase['results'][1], dict):
-            #     print("clefs du res:", list(icase['results'][1].keys()))
-            # else:
-            #     print("clefs de la liste de res",
-            #           list(icase['results'][1][0].keys()))
+            print("Response:", icase['resp_function'])
+            if isinstance(icase['results'].data, dict):
+                print("clefs du res:", list(icase['results'].data.keys()))
+            else:
+                print("clefs de la liste de res",
+                      list(icase['results'].data[0].keys()))
             for key in self.dsets:
                 if key not in icase:
                     continue
-                # print("\x1b[35mkey =", key, "\x1b[0m")
-                # # self.dsets[key][icase[key]].add(iind)
-                # print(key, "in dsets:", key in self.dsets)
-                # print(key, "in icase:", key in icase)
-                # print(type(self.dsets[key]))
-                # print(list(self.dsets[key].keys()))
-                # print("contenu:", self.dsets[key])
-                # print("contenu icase:", icase[key])
-                # print(type(icase[key]))
                 if isinstance(icase[key], list):
-                    # print(tuple(icase[key]))
-                    # print(len(icase[key]))
                     if isinstance(icase[key][0], dict):
                         theobject = []
                         for kcase in icase[key]:
-                            # if isinstance(kcase, dict):
-                            theobject.append(tuple((k, v) for k, v in kcase.items()))
+                            theobject.append(
+                                tuple((k, v) for k, v in kcase.items()))
                         theobject = tuple(theobject)
                     else:
-                        # print(type(icase[key]))
                         theobject = ': '.join(icase[key])
-                    # print("\x1b[36m", theobject, "\x1b[0m")
+                    print("\x1b[36m", theobject, "\x1b[0m")
                     self.dsets[key][theobject].add(iind)
                 else:
                     self.dsets[key][icase[key]].add(iind)
-                # print("\x1b[35mEnd of key", key, ":", self.dsets, "\x1b[0m")
-            # for key in icase:
-            #     if key == 'results': continue
-            #     self.dsets[key][icase[key]].add(iind)
+            # Test results
+            if merge_scores:
+                indscore = (IndexScore(icase['results'].data, iind).dsets
+                            if icase['results'].type == 'score_res'
+                            else {})
+                self.dsets = merge_defaultdict(self.dsets, indscore)
+        print(self.dsets)
         print("\x1b[35m>>>>>>>> END Index.__init__ <<<<<<<<<<<<\x1b[0m")
 
+    def __len__(self):
+        return len(self.resp)
 
     def get_by(self, **kwargs):
         '''Accessor to choose required result.
@@ -263,36 +261,54 @@ class IndexResponse:
         # for dat in ldata:
         #     dat['data'] = convert_data_in_dataset(dat['data'], data_type)
         LOGGER.debug(">>>>>>> end get_by <<<<<<<<<<<<<<")
-        # return [namedtuple('resp_tuple', idat.keys())(**idat) for idat in ldata]
+        # return [namedtuple('resp_tuple', idat.keys())(**idat)
+        #         for idat in ldata]
         return ldata
+
+    def get_index_by(self, **kwargs):
+        '''Accessor to choose required result.
+
+        ``komd`` stands for "keep other meta data".
+        :return: IndexResponse
+        '''
+        LOGGER.debug(">>>>>>> get_by <<<<<<<<<<<<<<")
+        LOGGER.debug("kwargs = %s", str(kwargs))
+        if kwargs is None:
+            return self.resp
+        if 'index' in kwargs:
+            return [self.resp[kwargs['index']]]
+        dataid = set(range(len(self.resp)))
+        for kwd in kwargs:
+            dataid = dataid & self.dsets[kwd][kwargs[kwd]]
+        ldata = [{k: v for k, v in self.resp[i].items()} for i in dataid]
+        # for dat in ldata:
+        #     dat['data'] = convert_data_in_dataset(dat['data'], data_type)
+        LOGGER.debug(">>>>>>> end get_by <<<<<<<<<<<<<<")
+        # return [namedtuple('resp_tuple', idat.keys())(**idat)
+        #         for idat in ldata]
+        return IndexResponse(ldata)
 
 
 class IndexScore:
     '''Class to index T4 scores.'''
-    def __init__(self, lcases):
+    def __init__(self, lcases, respid=None):
         self.scores = lcases
+        print("\x1b[1;31mrespid=", respid, "\x1b[0m")
         for icase in lcases:
             print(list(icase.keys()))
             if 'data' in icase:
                 print(list(icase['data'].keys()))
-        #     for iicase in icase:
-        #         if '_res' not in iicase:
-        #             print(iicase, ':', icase[iicase], type(icase[iicase]))
         self.dsets = {k: defaultdict(set)
                       for icase in lcases
                       for k in icase.keys() if '_res' not in k}
-        # print(self.dsets)
-        # # self.sets = {k: defaultdict(set)
-        #              for k in lcases[0].keys() if k != 'data'}
         for iind, icase in enumerate(lcases):
             for key in self.dsets:
                 if key not in icase:
                     continue
-                # print(icase[key], type(icase[key]))
-                # tdic = {'bla': 1, 'ble': 2}
-                # ttupl = (('bla', 1), ('ble', 2))
-                self.dsets[key][icase[key]].add(iind)
-                # self.dsets[key][ttupl].add(iind)
+                if respid is not None:
+                    self.dsets[key][icase[key]].add((respid, iind))
+                else:
+                    self.dsets[key][icase[key]].add(iind)
         print(self.dsets)
 
     def get_by(self, **kwargs):
@@ -310,7 +326,8 @@ class IndexScore:
             dataid = dataid & self.dsets[kwd][kwargs[kwd]]
         ldata = ([{k: v for k, v in self.scores[i].items()} for i in dataid])
         LOGGER.debug(">>>>>>>>>> end IndexScore get_by <<<<<<<<<<<<<<")
-        # return [namedtuple('resp_tuple', idat.keys())(**idat) for idat in ldata]
+        # return [namedtuple('resp_tuple', idat.keys())(**idat)
+        #         for idat in ldata]
         return ldata
 
 
@@ -319,7 +336,7 @@ class Accessor:
     parsed_res = only one batch
     '''
 
-    def __init__(self, tparsed_res):
+    def __init__(self, tparsed_res, merge_score=False):
         self.parsed_res = tparsed_res
         self.ordered_res = None
         self.index = None
@@ -328,7 +345,7 @@ class Accessor:
             print('nbre de responses =', len(lresp), "type =", type(lresp))
             print(list(lresp[0].keys()))
             # PP.pprint(lresp)
-            self.index = IndexResponse(lresp)
+            self.index = IndexResponse(lresp, merge_score)
             print("\x1b[33m", self.index.dsets, "\x1b[0m")
 
     def _by_response_description(self, keyword):
