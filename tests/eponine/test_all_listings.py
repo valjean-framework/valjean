@@ -10,7 +10,6 @@
 
 import os
 from glob import glob
-import ast
 import pytest
 import valjean.eponine.parse_t4 as ep
 from ..context import valjean  # pylint: disable=unused-import
@@ -81,7 +80,7 @@ def qualtrip(request):
 def qualtrip_exclude(request):
     '''Fixture to exclude test on some patterns from qualtrip with pytest.
 
-    Synthax: ``--qualtrip-exclude='["spam", "egg"]'``
+    Synthax: ``--qualtrip-exclude=spam,egg``
     '''
     return request.config.getoption('--qualtrip-exclude')
 
@@ -90,7 +89,7 @@ def qualtrip_exclude(request):
 def qualtrip_match(request):
     '''Fixture to select patterns to test from qualtrip with pytest.
 
-    Synthax: ``--qualtrip-match='["bacon"]'``
+    Synthax: ``--qualtrip-match=bacon``
     '''
     return request.config.getoption('--qualtrip-match')
 
@@ -104,17 +103,18 @@ def folder(qualtrip, qualtrip_exclude, qualtrip_match, request):
     Restriction are done using
     :py:func:`~.qualtrip_exclude` and :py:func:`~.qualtrip_match` fixtures
     respectively called by ``--qualtrip-exclude=`` and ``--qualtrip-match=``
-    command line options.
+    command line options. These options work like a 'OR': if more than one
+    argument are given, it needs to exclude or match with at least one.
     '''
     if not qualtrip:
         pytest.skip('A "qualtrip" folder is need to run this test, '
                     'please specify it thanks to --qualtrip= option')
     folder = request.param
     if qualtrip_exclude:
-        if any(pat in folder for pat in ast.literal_eval(qualtrip_exclude)):
+        if any(pat in folder for pat in qualtrip_exclude.split(',')):
             pytest.skip(str(qualtrip_exclude)+" excluded")
     if qualtrip_match:
-        if not any(pat in folder for pat in ast.literal_eval(qualtrip_match)):
+        if not any(pat in folder for pat in qualtrip_match.split(',')):
             pytest.skip("No matching with "+str(qualtrip_match)+" found")
     return os.path.join(qualtrip, folder, OUTPUTS)
 
