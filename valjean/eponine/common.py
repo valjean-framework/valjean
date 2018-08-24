@@ -1228,7 +1228,7 @@ def convert_generic_ifp(res, loctype):
     Examples: if ``'index': ['nucleus', 'family']``, scores will be ordered as
     ``{nucleus_1: {family_1: array, family_2: array, }, nucleus_2: {}, }``
     '''
-    dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
+    # dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
     keys = ('score', 'sigma')
     mydict = {}
     for ires in res[loctype]:

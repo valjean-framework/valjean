@@ -1276,9 +1276,9 @@ def nested_list(draw):
     tlist = draw(
         lists(integers(0, 100)
               | lists(integers(0, 100)
-                      | lists(integers(0, 100), min_size=1, max_size=3)
-                      , min_size=1, max_size=5)
-              , min_size=1, max_size=5))
+                      | lists(integers(0, 100), min_size=1, max_size=3),
+                      min_size=1, max_size=5),
+              min_size=1, max_size=5))
     return tlist
 
 
@@ -1287,6 +1287,7 @@ def tuple_to_list(ltuple):
     '''
     return list(tuple_to_list(n) if isinstance(n, tuple) else n
                 for n in ltuple)
+
 
 @given(tlist=nested_list())
 def test_list_to_tuple(tlist):

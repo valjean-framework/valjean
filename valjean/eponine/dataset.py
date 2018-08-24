@@ -58,6 +58,7 @@ class Dataset:
         ldata = Dataset.Data(self.value.squeeze(), self.error.squeeze())
         return Dataset(ldata, lbins, self.name + '_squeezed', self.unit)
 
+
 def relatively_equal(ds1, ds2, tolerance=1e-5):
     '''First esquisse of test of dataset comparison.'''
     return np.allclose(ds1.data.value, ds2.data.value, rtol=tolerance)

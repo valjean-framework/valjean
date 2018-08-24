@@ -30,9 +30,9 @@ module :mod:`common <valjean.eponine.common>`.
 
 '''
 
+from collections import namedtuple
 import logging
 import numpy as np
-from collections import namedtuple
 from .. import common
 
 
@@ -128,7 +128,6 @@ def convert_scoring_zone_id(toks):
     return toks
 
 
-
 def convert_score(toks):
     '''Convert score to :obj:`numpy` and python objects.
     Calls various conversion functions depending on input key (mesh, spectrum,
@@ -162,7 +161,7 @@ def convert_score(toks):
     return res
 
 
-def fake_print(toks):
+def _fake_print():
     print("\x1b[1;35mFOUND THE POINT\x1b[0m")
 
 

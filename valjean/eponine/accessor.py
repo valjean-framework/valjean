@@ -160,7 +160,7 @@ def merge_defaultdict(defd1, defd2):
 class Index:
     '''Class to index various T4 responses.'''
 
-    def __init__(self, lcases, keys=None):
+    def __init__(self, lcases):
         self.resp = lcases
         # keys or kwargs... if possible
         # self.keys = (keys if keys is not None
