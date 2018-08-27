@@ -7,9 +7,11 @@ import logging
 import pprint
 from collections import defaultdict, namedtuple, OrderedDict
 from valjean.eponine.dataset import Dataset
+from sys import getsizeof
 
 LOGGER = logging.getLogger('valjean')
 PP = pprint.PrettyPrinter(indent=4, depth=2)
+Response = namedtuple('Response', ['type', 'data'])
 
 
 def convert_spectrum_as_dataset(fspec_res, res_type='spectrum_res'):
@@ -157,178 +159,149 @@ def merge_defaultdict(defd1, defd2):
     return mdefd
 
 
-class Index:
-    '''Class to index various T4 responses.'''
+class DataResponses:
+    '''Class to represent data from responses, that will be re-modeled in
+    Accessor, with better seperation between Data and Metadata.'''
+
+    def __init__(self, data):
+        self.nested = data
+        self.flat = []
+        self.n2f = {}
+        self.flatten()
+
+    def flatten(self):
+        '''Method to flatten the list of responses, including scores.'''
+        for iresp, resp in enumerate(self.nested):
+            if resp['results'].type != 'score_res':
+                self.flat.append(resp)
+                self.n2f[iresp] = len(self.flat) - 1
+                continue
+            rmd = {k: v for k, v in resp.items() if k != 'results'}
+            for isc, score in enumerate(resp['results'].data):
+                smd = {k: v for k, v in score.items() if '_res' not in k}
+                smd.update(rmd)
+                smd['results'] = Response(
+                    resp['results'].type,
+                    {k: v for k, v in score.items() if '_res' in k})
+                self.flat.append(smd)
+                self.n2f[(iresp, isc)] = len(self.flat) - 1
+
+    def nested_indices(self, flat_indices):
+        '''Get the indices in nested list corresponding to indices in flat
+        list.
+        '''
+        print(flat_indices)
+        print(self.n2f)
+        sub_n2f = [k[0] if isinstance(k, tuple) else k
+                   for k, v in self.n2f.items() if v in flat_indices]
+        return sub_n2f
+
+    def flat_indices(self, nested_index):
+        '''Get flat indices from nested ones: return all flat indices for a
+        given response for example.
+        '''
+        flat_ind = {v for k, v in self.n2f.items()
+                    if nested_index in [k if isinstance(k, int) else k[0]]}
+        print("flat indices:", flat_ind)
+        return flat_ind
+
+
+class IndexResponses:
+    '''Class to index T4 responses, or flat ones, or nested ones. If responses
+    are nested scores won't be flatten, this is just index. It should still be
+    possible to flatten them afterwards.
+    '''
 
     def __init__(self, lcases):
-        self.resp = lcases
-        # keys or kwargs... if possible
-        # self.keys = (keys if keys is not None
-        # else [k for k in lcases[0].keys() if k != 'data'])
-        # LOGGER.debug("In Index, keys: %s", str(self.keys))
-        self.dsets = {k: defaultdict(set)
-                      for k in lcases[0].keys() if k != 'data'}
-        LOGGER.debug("nb cases = %d", len(lcases))
-        for iind, icase in enumerate(lcases):
-            for key in self.dsets:
-                self.dsets[key][icase[key]].add(iind)
-
-    def get_by(self, data_type='energy_integrated', okomd=False, **kwargs):
-        '''Accessor to choose required result.
-
-        ``komd`` stands for "keep other meta data".
-        '''
-        LOGGER.debug(">>>>>>> get_by <<<<<<<<<<<<<<")
-        LOGGER.debug("kwargs = %s", str(kwargs))
-        LOGGER.debug("onlyKeepOtherMetaData = %s", str(okomd))
-        if kwargs is None and data_type == 'all':
-            return self.resp
-        dataid = set(range(len(self.resp)))
-        for kwd in kwargs:
-            dataid = dataid & self.dsets[kwd][kwargs[kwd]]
-        ldata = ([{k: v for k, v in self.resp[i].items()} for i in dataid]
-                 if not okomd
-                 else [{k: v for k, v in self.resp[i].items()
-                        if k not in kwargs} for i in dataid])
-        for dat in ldata:
-            dat['data'] = convert_data_in_dataset(dat['data'], data_type)
-        LOGGER.debug(">>>>>>> end get_by <<<<<<<<<<<<<<")
-        return [namedtuple('ifp_tuple', idat.keys())(**idat) for idat in ldata]
-
-
-class IndexResponse:
-    '''Class to index T4 responses.'''
-
-    def __init__(self, lcases, merge_scores=False):
-        print("\x1b[35m>>>>>>>> Index.__init__ <<<<<<<<<<<<\x1b[0m")
-        self.resp = lcases
+        print("\x1b[35m>>>>>>>> IndexResponses.__init__ <<<<<<<<<<\x1b[0m")
+        self.ids = set(range(len(lcases)))
+        print("mem lcases:", id(lcases), "lcases:", id(lcases))
+        print("taille lcases:", getsizeof(lcases), "lcases:", getsizeof(lcases))
         print(list(lcases[0].keys()))
         self.dsets = {k: defaultdict(set)
                       for icase in lcases
                       for k in icase.keys() if k != 'results'}
         print("\x1b[91mself.dsets =", self.dsets, "\x1b[0m")
         LOGGER.debug("nb cases = %d", len(lcases))
-        for iind, icase in enumerate(lcases):
-            print("Response:", icase['resp_function'])
-            if isinstance(icase['results'].data, dict):
-                print("clefs du res:", list(icase['results'].data.keys()))
-            else:
-                print("clefs de la liste de res",
-                      list(icase['results'].data[0].keys()))
+        self._build_index(lcases)
+        print(self.dsets)
+        print("\x1b[35m>>>>>>>> END IndexResponses.__init__ <<<<<<<<<<\x1b[0m")
+
+    def _build_index(self, responses):
+        '''Build index from all responses in the list.
+
+        Keys of the sets are keywords used to describe the responses and/or the
+        scores (if flat case).
+        One special case has to be quoted: the 'compo_details' characteristic
+        is in the parsed result a list of dictionaries as it can involve more
+        than one nucleus or more than one reaction for example. To deal with
+        that special case a tuple is built from the list of dict. Sadly it will
+        probably be difficult to use. Advice: set the reaction name or the
+        nucleus name in the score name.
+        '''
+        for iresp, resp in enumerate(responses):
+            LOGGER.warning("Response: %s", resp['resp_function'])
             for key in self.dsets:
-                if key not in icase:
+                if key not in resp:
                     continue
-                if isinstance(icase[key], list):
-                    if isinstance(icase[key][0], dict):
+                if not isinstance(resp[key], list):
+                    self.dsets[key][resp[key]].add(iresp)
+                else:
+                    if isinstance(resp[key][0], dict):
                         theobject = []
-                        for kcase in icase[key]:
+                        for kcase in resp[key]:
                             theobject.append(
                                 tuple((k, v) for k, v in kcase.items()))
                         theobject = tuple(theobject)
                     else:
-                        theobject = ': '.join(icase[key])
-                    print("\x1b[36m", theobject, "\x1b[0m")
-                    self.dsets[key][theobject].add(iind)
-                else:
-                    self.dsets[key][icase[key]].add(iind)
-            # Test results
-            if merge_scores:
-                indscore = (IndexScore(icase['results'].data, iind).dsets
-                            if icase['results'].type == 'score_res'
-                            else {})
-                self.dsets = merge_defaultdict(self.dsets, indscore)
-        print(self.dsets)
-        print("\x1b[35m>>>>>>>> END Index.__init__ <<<<<<<<<<<<\x1b[0m")
+                        # MACROSCOPIC RATE for ex
+                        theobject = ': '.join(resp[key])
+                    LOGGER.debug(theobject)
+                    self.dsets[key][theobject].add(iresp)
 
     def __len__(self):
-        return len(self.resp)
+        return len(self.ids)
 
-    def get_by(self, **kwargs):
-        '''Accessor to choose required result.
+    def select_by(self, **kwargs):
+        '''Selection of responses indices according to kwargs criteria.
 
-        ``komd`` stands for "keep other meta data".
+        This selection can only be applied on `int` indices and not on `tuple`
+        ones, i.e. it has to be applied on a flat collection.
         '''
-        LOGGER.debug(">>>>>>> get_by <<<<<<<<<<<<<<")
-        LOGGER.debug("kwargs = %s", str(kwargs))
-        if kwargs is None:
-            return self.resp
-        if 'index' in kwargs:
-            return [self.resp[kwargs['index']]]
-        dataid = set(range(len(self.resp)))
+        respids = self.ids  # voir si la copie est necessaire
         for kwd in kwargs:
-            dataid = dataid & self.dsets[kwd][kwargs[kwd]]
-        ldata = [{k: v for k, v in self.resp[i].items()} for i in dataid]
-        # for dat in ldata:
-        #     dat['data'] = convert_data_in_dataset(dat['data'], data_type)
-        LOGGER.debug(">>>>>>> end get_by <<<<<<<<<<<<<<")
-        # return [namedtuple('resp_tuple', idat.keys())(**idat)
-        #         for idat in ldata]
-        return ldata
+            if kwd not in self.dsets:
+                LOGGER.warning("%s not a valid key. Possible ones are %s",
+                               kwd, list(self.dsets.keys()))
+                return set()
+            if kwargs[kwd] not in self.dsets[kwd]:
+                LOGGER.warning("%s is not a valid %s", kwargs[kwd], kwd)
+                return set()
+            respids = respids & self.dsets[kwd][kwargs[kwd]]
+        if not respids:
+            LOGGER.warning("Wrong selection, response might be not present. "
+                           "Also check if requirements are consistant.")
+            return set()
+        return respids
 
-    def get_index_by(self, **kwargs):
-        '''Accessor to choose required result.
-
-        ``komd`` stands for "keep other meta data".
-        :return: IndexResponse
+    def strip_index(self, setids):
+        '''Get a sub index containing only the relevant keywords for the
+        required subset of ids.
         '''
-        LOGGER.debug(">>>>>>> get_by <<<<<<<<<<<<<<")
-        LOGGER.debug("kwargs = %s", str(kwargs))
-        if kwargs is None:
-            return self.resp
-        if 'index' in kwargs:
-            return [self.resp[kwargs['index']]]
-        dataid = set(range(len(self.resp)))
-        for kwd in kwargs:
-            dataid = dataid & self.dsets[kwd][kwargs[kwd]]
-        ldata = [{k: v for k, v in self.resp[i].items()} for i in dataid]
-        # for dat in ldata:
-        #     dat['data'] = convert_data_in_dataset(dat['data'], data_type)
-        LOGGER.debug(">>>>>>> end get_by <<<<<<<<<<<<<<")
-        # return [namedtuple('resp_tuple', idat.keys())(**idat)
-        #         for idat in ldata]
-        return IndexResponse(ldata)
+        if not setids:
+            return {}
+        tmpdict = {k: defaultdict(set) for k in self.dsets}
+        for cat in self.dsets:
+            for kwd, kset in self.dsets[cat].items():
+                tmpset = kset & setids
+                if tmpset:
+                    tmpdict[cat][kwd] = tmpset
+        return {k: v for k, v in tmpdict.items() if v}
 
-
-class IndexScore:
-    '''Class to index T4 scores.'''
-    def __init__(self, lcases, respid=None):
-        self.scores = lcases
-        print("\x1b[1;31mrespid=", respid, "\x1b[0m")
-        for icase in lcases:
-            print(list(icase.keys()))
-            if 'data' in icase:
-                print(list(icase['data'].keys()))
-        self.dsets = {k: defaultdict(set)
-                      for icase in lcases
-                      for k in icase.keys() if '_res' not in k}
-        for iind, icase in enumerate(lcases):
-            for key in self.dsets:
-                if key not in icase:
-                    continue
-                if respid is not None:
-                    self.dsets[key][icase[key]].add((respid, iind))
-                else:
-                    self.dsets[key][icase[key]].add(iind)
-        print(self.dsets)
-
-    def get_by(self, **kwargs):
-        '''Return required score, defined by kwargs.'''
-        LOGGER.debug(">>>>>>>>> IndexScore get_by <<<<<<<<<<<<<<")
-        LOGGER.debug("kwargs = %s", str(kwargs))
-        if kwargs is None:
-            return self.scores
-        dataid = set(range(len(self.scores)))
-        if not set(self.dsets.keys()) >= set(kwargs.keys()):
-            print("Probably an issue in kwargs, possible ones are",
-                  list(self.dsets.keys()))
-            return None
-        for kwd in kwargs:
-            dataid = dataid & self.dsets[kwd][kwargs[kwd]]
-        ldata = ([{k: v for k, v in self.scores[i].items()} for i in dataid])
-        LOGGER.debug(">>>>>>>>>> end IndexScore get_by <<<<<<<<<<<<<<")
-        # return [namedtuple('resp_tuple', idat.keys())(**idat)
-        #         for idat in ldata]
-        return ldata
+    def get_subindex_from(self, **kwargs):
+        '''Get subindex from kwargs.'''
+        subset = self.select_by(**kwargs)
+        return self.strip_index(subset)
 
 
 class Accessor:
@@ -336,17 +309,61 @@ class Accessor:
     parsed_res = only one batch
     '''
 
-    def __init__(self, tparsed_res, merge_score=False):
+    def __init__(self, tparsed_res):  # , merge_score=False):
         self.parsed_res = tparsed_res
-        self.ordered_res = None
-        self.index = None
+        self.responses = None
+        self.indflat = None
+        self.indnest = None
         if 'list_responses' in self.parsed_res.keys():
             lresp = self.parsed_res['list_responses']
             print('nbre de responses =', len(lresp), "type =", type(lresp))
             print(list(lresp[0].keys()))
-            # PP.pprint(lresp)
-            self.index = IndexResponse(lresp, merge_score)
-            print("\x1b[33m", self.index.dsets, "\x1b[0m")
+            self.responses = DataResponses(lresp)
+            print(id(self.responses.nested))
+            print(self.responses.n2f)
+            print("\x1b[1mESSAIS\x1b[0m")
+            print("-> index from flat:")
+            self.indflat = IndexResponses(self.responses.flat)
+            print(len(self.indflat))
+            print("-> index from nested:")
+            self.indnest = IndexResponses(self.responses.nested)
+            print(len(self.indnest))
+            print("\x1b[1m----------------------\x1b[0m")
+
+    # questions on the name of that method: what is the more explicit ?
+    # get_by (but what ?), get_response_by (but we can get a score even by
+    # scoring zone), get_score_by ?, get_result_by ?, select_by ?
+    # CAUTION: this method can fail if 'list_responses' does not exist in the
+    # parsed result
+    def get_by(self, **kwargs):
+        '''Selection method based on kwargs corresponding to responses / scores
+        characteristics (resp_function, score_name, scoring_zone_id, etc).
+
+        Its returns or an element or a sublist of the flatten response list.
+        If no kwarg is given it will return the full flat list. To get it in
+        its nested shape, use ``MY_ACCESSOR.responses.nested``.
+        '''
+        if kwargs is None:
+            return self.responses.flat
+        if 'index' in kwargs:
+            index = kwargs.pop('index')
+            return self.get_from_nested_index(index, **kwargs)
+        subids = self.indflat.select_by(**kwargs)
+        resps = [self.responses.flat[i] for i in subids]
+        return resps[0] if len(resps) == 1 else resps
+
+    def get_from_nested_index(self, index, **kwargs):
+        '''Get response from nested index, other keyword arguments allowed.'''
+        if isinstance(index, tuple):
+            res = (self.responses.flat[self.responses.n2f[index]]
+                   if index in self.responses.n2f else [])
+        else:
+            find = self.responses.flat_indices(index)
+            if kwargs:
+                subids = self.indflat.select_by(**kwargs)
+                find &= subids
+            res = [self.responses.flat[i] for i in find]
+        return res[0] if len(res) == 1 else res
 
     def _by_response_description(self, keyword):
         assert 'list_responses' in self.parsed_res.keys()
@@ -516,12 +533,13 @@ class Accessor:
         assert self.ordered_res[response]['results'][0] == 'sensitivity_res'
         LOGGER.debug("kargs = %s", str(kwargs))
         ifpres = self.ordered_res[response]['results'][1]
-        tindex = Index(ifpres)
-        if not kwargs:
-            sdata = tindex.get_by(nucleus='U235', subtype="DELAYED FISSION_NU",
-                                  data_type='energy_integrated')
-        else:
-            sdata = tindex.get_by(**kwargs)
+        sdata = None
+        # tindex = Index(ifpres)
+        # if not kwargs:
+        #     sdata = tindex.get_by(nucleus='U235', subtype="DELAYED FISSION_NU",
+        #                           data_type='energy_integrated')
+        # else:
+        #     sdata = tindex.get_by(**kwargs)
         LOGGER.debug(">>>>>>>>>>>> end get_sensitivity <<<<<<<<<<<<<<")
         return sdata
 
