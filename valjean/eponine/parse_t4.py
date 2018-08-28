@@ -25,7 +25,7 @@ from valjean.eponine import scan_t4
 LOGGER = logging.getLogger('valjean')
 
 # in Eponine, profile is a key of globals
-if 'profile' not in globals().keys():
+if 'profile' not in globals()['__builtins__']:
     def profile(fprof):
         '''To profile memory usage.'''
         return fprof
@@ -64,6 +64,7 @@ class T4Parser():
         self.para = True if "PARA" in jddname or "task" in jddname else False
 
     @classmethod
+    @profile
     def parse_jdd(cls, jdd, batch):
         '''
         Constructor for T4Parser for "default" cases: no mesh limit. Scanning
