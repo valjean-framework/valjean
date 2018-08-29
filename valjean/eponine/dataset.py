@@ -6,7 +6,7 @@ import numpy as np
 
 
 class Dataset:
-    '''Common class for all codes
+    '''Common class for all codes TO BECOME BareDataset ?
     '''
 
     Data = namedtuple('Data', ['value', 'error'])
@@ -15,7 +15,8 @@ class Dataset:
         # data = namedTuple, values, errors
         # name = spectrum, mesh, integrated_res, etc.
         # self.value et self.data.value pointent bien au meme endroit...
-        assert isinstance(data, Dataset.Data)
+        print("\x1b[35mInit Dataset", type(data), "\x1b[0m")
+        # assert isinstance(data, Dataset.Data)
         assert isinstance(bins, dict)
         self.data = data
         self.bins = bins
@@ -27,19 +28,27 @@ class Dataset:
     def __repr__(self):
         if isinstance(self.data.value, np.ndarray):
             print(type(self.data.value), type(self.data.error))
-            return ("Dataset name: {0}, with shape {1},\n"
-                    "        value: {2},\n"
-                    "        error: {3},\n"
-                    "        bins: {4}\n"
-                    "        unit: '{5}'\n"
-                    .format(self.name, self.data.value.shape,
+            return ("class: {0}\n"
+                    "        name: {1}, with shape {2},\n"
+                    "        value: {3},\n"
+                    "        error: {4},\n"
+                    "        bins: {5}\n"
+                    "        unit: '{6}'\n"
+                    .format(self.__class__,
+                            self.name, self.data.value.shape,
                             self.data.value.squeeze(),
                             self.data.error.squeeze(), self.bins, self.unit))
         return (
-            "Dataset name: {0}, value: {1:6e}, error: {2:6e}, unit: '{3}', "
-            "bins: {4}\n"
-            .format(self.name, self.data.value, self.data.error, self.unit,
-                    self.bins))
+            "class: {0}\n"
+            "name: {1}, value: {2:6e}, error: {3:6e}, unit: '{4}', bins: {5}\n"
+            .format(self.__class__, self.name, self.data.value,
+                    self.data.error, self.unit, self.bins))
+
+    def __dict__(self):
+        return {'data': self.data,
+                'bins': self.bins,
+                'name': self.name,
+                'unit': self.unit}
 
     def squeeze(self):
         '''Squeeze dataset: remove useless dimensions.
