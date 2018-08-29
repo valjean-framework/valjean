@@ -1456,7 +1456,7 @@ def convert_sensitivities(res):
                 datadict['units'] = res['units'][0]
             resdict = iindex['charac'].asDict()
             resdict['type'] = itype
-            resdict['data'] = datadict
+            resdict['sensitivity_spectrum_res'] = datadict
             thelist.append(resdict)
     # PP.pprint(thelist)
     return thelist

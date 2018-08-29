@@ -172,7 +172,7 @@ class DataResponses:
     def flatten(self):
         '''Method to flatten the list of responses, including scores.'''
         for iresp, resp in enumerate(self.nested):
-            if resp['results'].type != 'score_res':
+            if resp['results'].type not in ('score_res', 'sensitivity_res'):
                 self.flat.append(resp)
                 self.n2f[iresp] = len(self.flat) - 1
                 continue
