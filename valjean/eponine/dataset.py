@@ -15,9 +15,12 @@ class Dataset:
         # data = namedTuple, values, errors
         # name = spectrum, mesh, integrated_res, etc.
         # self.value et self.data.value pointent bien au meme endroit...
+        # possibilite d'ajouter un check sur le bins eux-memes (N+1 bin par elt
+        # shape)
         print("\x1b[35mInit Dataset", type(data), "\x1b[0m")
         # assert isinstance(data, Dataset.Data)
         assert isinstance(bins, dict)
+        assert len(bins) == data.value.ndim or not bins
         self.data = data
         self.bins = bins
         self.name = name

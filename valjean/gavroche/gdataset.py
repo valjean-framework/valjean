@@ -129,7 +129,8 @@ class GDataset(Dataset):
 
     def _get_bins_slice(self, kbin, index):
         if index.stop is not None:
-            tmpind = slice(index.start, index.stop+1, index.step)
+            stop = index.stop+1 if index.stop > 0 else index.stop
+            tmpind = slice(index.start, stop, index.step)
             return self.bins[kbin][tmpind]
         return self.bins[kbin][index]
 
