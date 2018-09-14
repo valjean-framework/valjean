@@ -43,7 +43,7 @@ def test_as_dict_roundtrip(conf):
 def test_equality_reflective(conf):
     '''Test that the == operator is reflective.'''
     note(conf.as_dict())
-    assert conf == conf  # pylint: disable=comparison-with-itself
+    assert conf == conf
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,),

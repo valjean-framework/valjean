@@ -8,7 +8,7 @@ import tempfile
 from hypothesis import given, event, settings, HealthCheck
 from hypothesis.strategies import data, sampled_from
 
-from .conftest import envs, env_keys
+from .conftest import envs
 from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order

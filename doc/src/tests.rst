@@ -27,7 +27,7 @@ Tests for the :mod:`~valjean.priority_set` package
 Fixtures for the :mod:`~valjean` module
 ```````````````````````````````````````
 
-.. automodule:: tests.fixtures
+.. automodule:: tests.conftest
    :undoc-members:
 
 
@@ -68,7 +68,7 @@ Tests for the :mod:`~.code` module
 Fixtures for the :mod:`~.cosette` package
 `````````````````````````````````````````
 
-.. automodule:: tests.cosette.fixtures
+.. automodule:: tests.cosette.conftest
    :undoc-members:
 
 Tests for the :mod:`~.eponine` package
@@ -105,12 +105,6 @@ Tests for the :mod:`~.using` module
 
 Tests for the :mod:`~valjean.gavroche` package
 ----------------------------------------------
-
-Fixtures
-````````
-
-.. automodule:: tests.gavroche.fixtures
-
 
 Tests for the :mod:`~.harvest` module
 `````````````````````````````````````

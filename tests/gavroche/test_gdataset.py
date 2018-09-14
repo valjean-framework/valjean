@@ -6,12 +6,13 @@ Most of them are silly tests for the moment...
 # pylint: disable=no-value-for-parameter
 
 import numpy as np
-from hypothesis import given, note
+from hypothesis import given, note, reproduce_failure
 from hypothesis.strategies import data, floats, one_of
 
 from valjean.gavroche import gdataset as gd
 
-from .conftest import gdatasets, repeat, slice_tuples, multiple_gdatasets
+from ..eponine.conftest import repeat, slice_tuples
+from .conftest import gdatasets, multiple_gdatasets
 
 
 @given(gds=repeat(gdatasets(), min_size=2, max_size=2))
@@ -26,8 +27,8 @@ def test_addition(gds):
 
 
 @given(gds=repeat(gdatasets(), min_size=2, max_size=2))
-def test_substraction(gds):
-    '''Test substraction of datasets.'''
+def test_subtraction(gds):
+    '''Test subtraction of datasets.'''
     assert gd.same_coords(gds[0], gds[1])
     sgds = gds[0] - gds[1]
     assert gd.same_coords(gds[0], sgds)
@@ -161,7 +162,7 @@ def test_product_associativity(gds):
 @given(gds=gdatasets())
 def test_sum_identity(gds):
     '''Test identity for addition: a + 0 = a.'''
-    gdsid = gd.GDataset(np.zeros(gds.value.shape), np.zeros(gds.error.shape),
+    gdsid = gd.GDataset(np.zeros_like(gds.value), np.zeros_like(gds.error),
                         bins=gds.bins.copy())
     gds_gdsid = gds + gdsid
     assert gd.same_coords(gds_gdsid, gds)
@@ -225,7 +226,7 @@ def test_quotient_identity(gds):
     assert np.allclose(gds_gdsid.error, gds.error)
 
 
-@given(gds=multiple_gdatasets(elts=floats(-1e5, 1e5), size=3))
+@given(gds=multiple_gdatasets(size=3))
 def test_left_distributivity(gds):
     '''Test left distributivity between addition and multiplication:
     a * (b + c) == a * b + a * c.
@@ -247,7 +248,7 @@ def test_left_distributivity(gds):
     assert np.allclose(gds_d.value, gds_c.value, rtol=1e-3, atol=1e-5)
 
 
-@given(gds=multiple_gdatasets(elts=floats(-1e5, 1e5), size=3))
+@given(gds=multiple_gdatasets(size=3))
 def test_right_distributivity(gds):
     '''Test right distributivity between addition and multiplication:
     (a + b) * c == a * c + b * c.
@@ -269,7 +270,7 @@ def test_right_distributivity(gds):
     assert np.allclose(gds_d.value, gds_c.value, rtol=1e-3, atol=1e-5)
 
 
-@given(gds=multiple_gdatasets(elts=floats(-1e5, 1e5), size=3))
+@given(gds=multiple_gdatasets(size=3))
 def test_inverse_add(gds):
     '''Test inverse of addition: (a + b) - b == a.
 
@@ -284,7 +285,7 @@ def test_inverse_add(gds):
 
 
 @given(gds=multiple_gdatasets(
-    elts=one_of(floats(1e-5, 1e5), floats(-1e5, -1e-5)), size=2))
+    elements=one_of(floats(1e-5, 1e5), floats(-1e5, -1e-5)), size=2))
 def test_inverse_mult(gds):
     '''Test inverse of multiplication: (a * b) / b == a.
 

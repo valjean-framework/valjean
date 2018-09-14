@@ -48,7 +48,7 @@ from parsing):
 
     >>> from valjean.eponine.dataset import Dataset
     >>> ds = Dataset(np.arange(3), np.array([1]*3), name='ds')
-    >>> gds = GDataset(ds)
+    >>> gds = GDataset.from_dataset(ds)
     >>> ds.__class__
     <class 'valjean.eponine.dataset.Dataset'>
     >>> gds.__class__
@@ -533,34 +533,17 @@ LOGGER = logging.getLogger('valjean')
 
 
 class GDataset(Dataset):
-    '''Sub-class to extend :class:`Dataset <valjean.eponine.dataset.Dataset>`
-    (in eponine).
-    '''
+    '''A :class:`~eponine.Dataset` with mathematical operations.'''
 
-    # works but looks useless
-    # def __new__(cls, obj):
-    #     instance = super(GDataset, cls).__new__(cls)
-    #     return instance
+    @classmethod
+    def from_dataset(cls, dataset):
+        '''Construct a :class:`GDataset` from an instance of a
+        :class:`~eponine.Dataset`.'''
+        return cls(value=dataset.value, error=dataset.error,
+                   bins=dataset.bins, name=dataset.name)
 
     def __init__(self, *args, **kwargs):
-        if len(args) == 1:
-            super().__init__(**args[0].__dict__())
-        else:
-            # if kwargs:
-            super().__init__(*args, **kwargs)
-            # else:
-            #     super().__init__(*args)
-
-    # def __init__(self, obds):
-    #     print("\x1b[36m", type(obds), "\x1b[0m")
-    #     super().__init__(**obds.__dict__())
-
-    # def __repr__(self):
-    #     return super().__repr__()
-
-    # def __setattr__(self, name, value):
-    #     print("in __setattr__, name:", name, "value:", value)
-    #     return super().__setattr__(name, value)
+        super().__init__(*args, **kwargs)
 
     def _check_datasets_consistency(self, other, operation=""):
         if other.value.shape != self.value.shape:

@@ -173,12 +173,6 @@ class Dataset:
             .format(self.__class__, type(self.value), self.name,
                     self.value, self.error, self.bins))
 
-    def __dict__(self):
-        return {'value': self.value,
-                'error': self.error,
-                'bins': self.bins,
-                'name': self.name}
-
     def squeeze(self, name=None):
         '''Squeeze dataset: remove useless dimensions.
 
@@ -197,6 +191,19 @@ class Dataset:
                               self.error.squeeze(),
                               bins=lbins,
                               name=self.name if name is None else name)
+
+    @property
+    def shape(self):
+        '''Return the data shape, as a read-only property.'''
+        return self.value.shape
+
+    def copy(self):
+        '''Return a deep copy of `self`.'''
+        new_bins = self.bins.copy()
+        new_value = self.value.copy()
+        new_error = self.error.copy()
+        return self.__class__(new_value, new_error,
+                              bins=new_bins, name=self.name)
 
 
 def relatively_equal(ds1, ds2, tolerance=1e-5):
