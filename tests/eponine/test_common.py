@@ -6,8 +6,8 @@ building output objects (typically from :mod:`numpy`).
 
 import numpy as np
 from hypothesis import given, note, settings, assume
-from hypothesis.strategies import (integers, lists, composite, tuples,
-                                   floats, nothing, booleans, just, text)
+from hypothesis.strategies import (integers, lists, composite, tuples, text,
+                                   floats, nothing, booleans, just, recursive)
 from hypothesis.extra.numpy import arrays
 
 from ..context import valjean  # pylint: disable=unused-import
@@ -1271,15 +1271,16 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
 
 
 @composite
-def nested_list(draw):
+def non_empty_lists(draw, elts, **kwargs):
+    '''Generate lists with at least one element'''
+    return draw(lists(elts, min_size=1, **kwargs))
+
+
+@composite
+def nested_lists(draw):
     '''Generate a list of integers, possibly nested.'''
-    tlist = draw(
-        lists(integers(0, 100)
-              | lists(integers(0, 100)
-                      | lists(integers(0, 100), min_size=1, max_size=3),
-                      min_size=1, max_size=5),
-              min_size=1, max_size=5))
-    return tlist
+    return draw(non_empty_lists(
+        recursive(integers(0, 100), non_empty_lists, max_leaves=5)))
 
 
 def tuple_to_list(ltuple):
@@ -1289,7 +1290,7 @@ def tuple_to_list(ltuple):
                 for n in ltuple)
 
 
-@given(tlist=nested_list())
+@given(tlist=nested_lists())
 def test_list_to_tuple(tlist):
     '''Test conversion of list to tuple.'''
     tuplist = convert_list_to_tuple(tlist)

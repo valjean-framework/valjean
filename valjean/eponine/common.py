@@ -227,9 +227,6 @@ mesh
    * ``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
      also given
 
-   Remark: :obj:`numpy.dtype` was previously ``('tally', 'sigma')`` for mesh
-   instead of ``('score', 'sigma')`` now. This update has been driven by
-   homogeneisation.
 
 .. _eponine-spectrum-res:
 
@@ -681,7 +678,7 @@ class DictBuilder(ABC):
         ('e' → 3, 't' → 4, 'mu' → 5, 'phi' → 6)
         '''
         LOGGER.debug("In DictBuilder.flip_bins")
-        key_axis = [(d, a) for a, d in enumerate(list(self.bins.keys()))]
+        key_axis = [(d, a) for a, d in enumerate(self.bins)]
         for key, axis in key_axis:
             bins = self.bins[key]
             if len(bins) > 1 and bins[0] > bins[1]:
@@ -1276,7 +1273,7 @@ def convert_kij_result(res):
 
       {'used_batch': int, 'kijmkeff_res': float, 'kijdomratio': float,
       'kij_eigenval': numpy.array, 'kij_eigenvec': numpy.array,
-      'kij_matrix': numpy.matrix}
+      'kij_matrix': numpy.array}
 
     For more details see :ref:`eponine-kij-result`.
     '''
@@ -1287,7 +1284,7 @@ def convert_kij_result(res):
     # eigen vectors
     egvecs = np.array(res['kij_eigenvec'])
     # kij matrix
-    kijmat = np.matrix(res['kij_matrix'])
+    kijmat = np.array(res['kij_matrix'])
     return {'used_batch': res['used_batch'],
             'kijmkeff_res': res['kijmkeff_res'][0],
             'kijdomratio': res['kijmkeff_res'][1],
@@ -1312,9 +1309,9 @@ def convert_kij_keff(res):
         'spacebins': numpy.array of int with shape (nbins,) or (nbins, 3), the
                      latter case corresponding to space mesh,
         'eigenvector': numpy.array,
-        'keff_KIJ_matrix': numpy.matrix,
-        'keff_StdDev_matrix': numpy matrix,
-        'keff_sensibility_matrix': numpy.matrix}
+        'keff_KIJ_matrix': numpy.array,
+        'keff_StdDev_matrix': numpy array,
+        'keff_sensibility_matrix': numpy.array}
 
     Keys ``'nbins'`` and ``'spacebins'`` are facultative.
 
@@ -1349,9 +1346,9 @@ def convert_kij_keff(res):
             'nbins': nbins,
             'spacebins': spacebins,
             'eigenvector': egvec,
-            'keff_KIJ_matrix': np.matrix(kijmat),
-            'keff_StdDev_matrix': np.matrix(stddevmat),
-            'keff_sensibility_matrix': np.matrix(sensibmat)}
+            'keff_KIJ_matrix': np.array(kijmat),
+            'keff_StdDev_matrix': np.array(stddevmat),
+            'keff_sensibility_matrix': np.array(sensibmat)}
 
 
 def add_last_sensitivities_bins(data, bins):
@@ -1470,10 +1467,9 @@ def convert_list_to_tuple(liste):
     :param liste: result as a liste
     :return: (nested) tuple
     '''
+    assert not any(isinstance(n, dict) for n in liste), \
+        "No dict expected in that list, please do something"
     if any(isinstance(n, list) for n in liste):
-        return tuple(convert_list_to_tuple(n) if isinstance(n, (list, dict))
+        return tuple(convert_list_to_tuple(n) if isinstance(n, list)
                      else n for n in liste)
-    if any(isinstance(n, dict) for n in liste):
-        LOGGER.warning("a dict in the list, please, do somthing")
-        return None
     return tuple(liste)

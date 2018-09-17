@@ -116,15 +116,16 @@ def convert_green_bands(toks):
 
 
 def convert_scoring_zone_id(toks):
-    '''Convert scoring zone id (volume numbers, cells, points, etc) in generic
-    python objects (list, dict, tuple).
+    '''Convert scoring zone id (volume numbers, cells, points, etc) into native
+    python objects (str, tuple, numpy object).
     '''
     if isinstance(toks, (np.generic, str)):
         return toks
     if toks.asList():
         cv_toks = common.convert_list_to_tuple(toks.asList())
         return cv_toks
-    LOGGER.warning("Simili failure, should have left the function before")
+    LOGGER.warning("convert_scoring_zone_id, should have left the function "
+                   "before (input objects: str, list or numpy object)")
     return toks
 
 

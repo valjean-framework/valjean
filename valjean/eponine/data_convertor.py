@@ -1,6 +1,10 @@
+'''This module converts Tripoli-4 data from parsing in standard datasets (or
+input to standard dataset or gdatasets).
+'''
+
 import logging
-from valjean.eponine.dataset import Dataset
 from collections import OrderedDict
+from valjean.eponine.dataset import Dataset
 
 LOGGER = logging.getLogger('valjean')
 
@@ -12,7 +16,7 @@ def convert_spectrum_as_dataset(fspec_res, res_type='spectrum_res'):
     spec_res = fspec_res[res_type]
     dsspec = Dataset.Data(
         spec_res['spectrum']['score'].copy(),
-        spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] / 100)
+        spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] * 0.01)
     bins = spec_res.get('bins')
     return Dataset(dsspec, bins, res_type, unit=spec_res['units']['score'])
 
@@ -25,7 +29,7 @@ def convert_mesh_as_dataset(fmesh_res, res_type='mesh_res'):
     print(mesh_res['mesh'].dtype)
     dsmesh = Dataset.Data(
         mesh_res['mesh']['score'].copy(),
-        mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] / 100)
+        mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] * 0.01)
     bins = mesh_res.get('bins')
     return Dataset(dsmesh, bins, res_type, unit=mesh_res['units']['score'])
 
@@ -40,7 +44,7 @@ def convert_intres_as_dataset(result, res_type):
     '''
     intres = result[res_type] if res_type in result else result
     dsintres = Dataset.Data(intres['score'].copy(),
-                            intres['sigma'] * intres['score'] / 100)
+                            intres['sigma'] * intres['score'] * 0.01)
     unit = intres.get('uscore', 'unknown')
     bins = OrderedDict()
     if 'spectrum_res' in result:
@@ -74,7 +78,7 @@ def convert_keff_in_dataset(result, estimator):
     dskeff = Dataset.Data(
         result['keff_matrix'][id_estim][id_estim],
         (result['sigma_matrix'][id_estim][id_estim]
-         * result['keff_matrix'][id_estim][id_estim] / 100))
+         * result['keff_matrix'][id_estim][id_estim] * 0.01))
     return Dataset(dskeff, {}, 'keff_'+estimator)
 
 
@@ -82,7 +86,7 @@ def convert_keff_comb_in_dataset(result):
     '''Conversion of keff combination in dataset.'''
     kcomb = result['full_comb_estimation']
     dskeff = Dataset.Data(kcomb['keff'].copy(),
-                          kcomb['sigma'] * kcomb['keff'] / 100)
+                          kcomb['sigma'] * kcomb['keff'] * 0.01)
     return Dataset(dskeff, {}, 'keff_combination')
 
 
@@ -108,7 +112,7 @@ def convert_data_in_dataset(data, data_type):
         return None
     dset = Dataset.Data(
         data[data_type]['score'].copy(),
-        data[data_type]['sigma'] * data[data_type]['score'] / 100)
+        data[data_type]['sigma'] * data[data_type]['score'] * 0.01)
     # units and uscore used in sensitivities (calling default res)
     return Dataset(dset, data['bins'], data_type,
                    unit=data.get('units', {}).get('score', 'unknown'))
