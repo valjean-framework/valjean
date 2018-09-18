@@ -1,13 +1,48 @@
 '''Module to access Tripoli-4 parsed results and convert them in standard
 :class:`Dataset <valjean.eponine.dataset.Dataset>`, easily comparable to other
 codes.
+
+How to flatten a nested structure of lists and dicts ?
+------------------------------------------------------
+
+:class:`DataResponses` is used to flatten the nested result from parsing.
+Various possibilities exist. Some functions also allow to calculate the
+deepness of the structure. Per default the deepness will be calculated on lists
+of dicts.
+
+    >>> from valjean.eponine import accessor as acc
+    >>> myex1 = [{'k1': 0, 'k2': [0, 1]}, {'k3': 8, 'k1': 5}]
+    >>> print(acc.DataResponses.nested_lod_deepness(myex1))
+    1
+    >>> myex2 = [{'l1': 'ab', 'l2': 4, 'l3': [{'l11': 0, 'l12': [0, 1, 2]}],
+    ...           'l4': 'RYUT'}, {'l1': 'fzg', 'l2': 8}]
+    >>> print(acc.DataResponses.nested_lod_deepness(myex2))
+    2
+    >>> myex3 = [{'m1': 4, 'm2': 'ffgo',
+    ...           'm3': [{'m11': 'geig', 'm12': 5,
+    ...                   'm13': [{'m21': 'fkj', 'm23': [9, 6]}, {'m21': 'e'}],
+    ...                   'm14': [0, 2, 4]}]}, {'m1': 7, 'm2': 'dhng'}]
+    >>> print(acc.DataResponses.nested_lod_deepness(myex3))
+    3
+    >>> myex4 = [{'m1': 4, 'm2': 'ffgo',
+    ...           'm3': [{'m11': 'geig', 'm12': 5,
+    ...                   'm13': [{'m21': 'fkj', 'm23': [9, 6]}, {'m21': 'e'}],
+    ...                   'm14': [0, 2, 4]}]},
+    ...          {'m1': 7, 'm2': 'dhng',
+    ...           'm3': [{'m14': [5, 7, 9],
+    ...                   'm13': [{'m21': 'ofhidf', 'm22': 10}]}]}]
+    >>> print(acc.DataResponses.nested_lod_deepness(myex4))
+    3
+    >>> myex5 = [{'bla': {'aff': 4, 'sgdg': 'dfsf'}, 'fge': ['gr', 'gsg']}]
+    >>> print(acc.DataResponses.nested_lod_deepness(myex5))
+    1
 '''
 
 import logging
 import pprint
-from collections import defaultdict, namedtuple, OrderedDict
-import valjean.eponine.data_convertor as dcv
+from collections import defaultdict, namedtuple, OrderedDict, Sequence, Mapping
 from sys import getsizeof
+import valjean.eponine.data_convertor as dcv
 
 LOGGER = logging.getLogger('valjean')
 PP = pprint.PrettyPrinter(indent=4, depth=2)
@@ -40,7 +75,37 @@ class DataResponses:
         self.nested = data
         self.flat = []
         self.n2f = {}
-        self.flatten()
+        print("DANS DATA_RESPONSES")
+        self.nested_to_flat(self.flatten_with_flag, stopflag='_res')
+        print("FLATTEN DONE")
+        # self.flatten()
+
+    @classmethod
+    def nested_to_flat(cls, meth, **kwargs):
+        '''Test of generic method to flatten nested structure.'''
+        LOGGER.warning("Will transform nested data in flat ones using %s",
+                       '.'.join([cls.__name__, meth.__name__]))
+        return meth(**kwargs)
+
+    def flatten_with_flag(self, stopflag=""):
+        '''Method to flatten the list of responses, including scores.'''
+        for iresp, resp in enumerate(self.nested):
+            if resp['results'].type not in ('score_res', 'sensitivity_res'):
+                self.flat.append(resp)
+                self.n2f[iresp] = len(self.flat) - 1
+                continue
+            rmd = {k: v for k, v in resp.items() if k != 'results'}
+            print(type(resp['results'].data))
+            for isc, score in enumerate(resp['results'].data):
+                print("keys:", list(score.keys()))
+                smd = {k: v for k, v in score.items() if stopflag not in k}
+                smd.update(rmd)
+                print("smd =", smd)
+                smd['results'] = Response(
+                    resp['results'].type,
+                    {k: v for k, v in score.items() if stopflag in k})
+                self.flat.append(smd)
+                self.n2f[(iresp, isc)] = len(self.flat) - 1
 
     def flatten(self):
         '''Method to flatten the list of responses, including scores.'''
@@ -50,9 +115,12 @@ class DataResponses:
                 self.n2f[iresp] = len(self.flat) - 1
                 continue
             rmd = {k: v for k, v in resp.items() if k != 'results'}
+            print(type(resp['results'].data))
             for isc, score in enumerate(resp['results'].data):
+                print("keys:", list(score.keys()))
                 smd = {k: v for k, v in score.items() if '_res' not in k}
                 smd.update(rmd)
+                print("smd =", smd)
                 smd['results'] = Response(
                     resp['results'].type,
                     {k: v for k, v in score.items() if '_res' in k})
@@ -77,6 +145,88 @@ class DataResponses:
                     if nested_index in [k if isinstance(k, int) else k[0]]}
         print("flat indices:", flat_ind)
         return flat_ind
+
+    @classmethod
+    def nested_list_deepness(cls, nested, deep=0):
+        '''Calculate deepness of nested structure.'''
+        if not isinstance(nested, Sequence) or isinstance(nested, str):
+            return deep
+        deep += 1
+        deep += max([cls.nested_list_deepness(x) for x in nested])
+        return deep
+
+    @classmethod
+    def dict_in_list(cls, struct):
+        '''Return ``True`` if there is a dictionary in a list. External
+        object has to be a list.
+
+            >>> from valjean.eponine.accessor import DataResponses as dr
+            >>> dr.dict_in_list([0, 1])
+            False
+            >>> dr.dict_in_list({'a': 0, 'gre': [0, 7]})
+            False
+            >>> dr.dict_in_list([{'a': 'blzz', 'b': 0}])
+            True
+        '''
+        if ((isinstance(struct, Sequence)
+             and any(isinstance(x, Mapping) for x in struct))):
+            return True
+        return False
+
+    @classmethod
+    def nested_lod_deepness(cls, nested):
+        '''Calculate deepness of nested structure.'''
+        LOGGER.debug("in nested_lod_deepness")
+        deep = 0
+        if cls.dict_in_list(nested):
+            deep += 1
+            sdicts = [x for y in nested for x in y.values()
+                      if isinstance(y, Mapping) and cls.dict_in_list(x)]
+            if sdicts:
+                ideep = [cls.nested_lod_deepness(x) for x in sdicts]
+                deep += max(ideep)
+        return deep
+
+    @classmethod
+    def flatten_nlod(cls, nested, level=None, prev_md=None, prev_key=""):
+        '''md = metadata'''
+        flat = []
+        n2f = {}
+        print(prev_md)
+        print(nested)
+        for ielt, elt in enumerate(nested):
+            llev = level.copy() if level else []
+            llev.append(ielt)
+            if not any(cls.dict_in_list(x) for x    in elt.values()):
+                       # if isinstance(x, Mapping)):
+                lelt = {'_'.join([prev_key, k])if prev_key else k : v
+                        for k, v in elt.items()}
+                if prev_md:
+                    lelt.update(prev_md)
+                flat.append(lelt)
+                n2f[tuple(llev)] = len(flat) -1
+            else:
+                print("\x1b[94mdict in list:", elt, "\x1b[0m")
+                # for k, v in elt.items():
+                #     print(k, '->', cls.dict_in_list(v), 'for v=', v)
+                rmd = {k: v for k, v in elt.items() if not cls.dict_in_list(v)}
+                ndata = {k: v for k, v in elt.items() if cls.dict_in_list(v)}
+                print("rmd =", rmd)
+                print("ndata =", ndata)
+                for key, dat in ndata.items():
+                    tflat, tn2f = cls.flatten_nlod(dat, llev, rmd, key)
+                    print('flat =', tflat)
+                    print("n2f =", tn2f)
+                    flat.extend(tflat)
+                    n2f.update(tn2f)
+                # print(list(ndata), [ndata])
+                # tflat, tn2f = cls.flatten_nlod(ndata, llev, rmd)
+                # print("flat =", tflat)
+                # flat.append(tflat)
+                # n2f.update(tn2f)
+            print("\x1b[34mFLAT=", flat, "\x1b[0m")
+            print("N2F =", n2f)
+        return flat, n2f
 
 
 class IndexResponses:
@@ -223,7 +373,7 @@ class Accessor:
             return self.get_from_nested_index(index, **kwargs)
         subids = self.indflat.select_by(**kwargs)
         resps = [self.responses.flat[i] for i in subids]
-        return resps[0] if len(resps) == 1 else resps
+        return resps
 
     def get_from_nested_index(self, index, **kwargs):
         '''Get response from nested index, other keyword arguments allowed.'''
@@ -236,7 +386,7 @@ class Accessor:
                 subids = self.indflat.select_by(**kwargs)
                 find &= subids
             res = [self.responses.flat[i] for i in find]
-        return res[0] if len(res) == 1 else res
+        return res
 
     def _by_response_description(self, keyword):
         assert 'list_responses' in self.parsed_res.keys()
