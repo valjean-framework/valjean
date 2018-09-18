@@ -4,6 +4,7 @@ input to standard dataset or gdatasets).
 
 import logging
 from collections import OrderedDict
+import numpy as np
 from valjean.eponine.dataset import Dataset
 
 LOGGER = logging.getLogger('valjean')
@@ -14,11 +15,11 @@ def convert_spectrum_as_dataset(fspec_res, res_type='spectrum_res'):
     <valjean.eponine.dataset.Dataset>`.
     '''
     spec_res = fspec_res[res_type]
-    dsspec = Dataset.Data(
-        spec_res['spectrum']['score'].copy(),
-        spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] * 0.01)
     bins = spec_res.get('bins')
-    return Dataset(dsspec, bins, res_type, unit=spec_res['units']['score'])
+    return Dataset(
+        spec_res['spectrum']['score'].copy(),
+        spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] * 0.01,
+        bins, res_type)
 
 
 def convert_mesh_as_dataset(fmesh_res, res_type='mesh_res'):
@@ -27,11 +28,11 @@ def convert_mesh_as_dataset(fmesh_res, res_type='mesh_res'):
     '''
     mesh_res = fmesh_res[res_type]
     print(mesh_res['mesh'].dtype)
-    dsmesh = Dataset.Data(
-        mesh_res['mesh']['score'].copy(),
-        mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] * 0.01)
     bins = mesh_res.get('bins')
-    return Dataset(dsmesh, bins, res_type, unit=mesh_res['units']['score'])
+    return Dataset(
+        mesh_res['mesh']['score'].copy(),
+        mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] * 0.01,
+        bins, res_type)
 
 
 def convert_intres_as_dataset(result, res_type):
@@ -42,17 +43,19 @@ def convert_intres_as_dataset(result, res_type):
     If other dimensions are not squeezed it is a spectrum so not treated by
     this function.
     '''
+    LOGGER.debug("In convert_intres_as_dataset")
     intres = result[res_type] if res_type in result else result
-    dsintres = Dataset.Data(intres['score'].copy(),
-                            intres['sigma'] * intres['score'] * 0.01)
-    unit = intres.get('uscore', 'unknown')
     bins = OrderedDict()
     if 'spectrum_res' in result:
-        if unit == 'unknown':
-            unit = result['spectrum_res']['units']['score']
         ebins = result['spectrum_res']['bins']['e']
-        bins = OrderedDict([('e', ebins[::ebins.shape[0]-1])])
-    return Dataset(dsintres, bins, res_type, unit=unit)
+        # bins = OrderedDict([('e', ebins[::ebins.shape[0]-1])])
+        bins['e'] = ebins[::ebins.shape[0]-1]
+        return Dataset(np.array([intres['score']]),
+                       np.array([intres['sigma']]),
+                       bins, res_type)
+    return Dataset(intres['score'].copy(),
+                   intres['sigma'] * intres['score'] * 0.01,
+                   bins, res_type)
 
 
 def convert_entropy_as_dataset(result, res_type):
@@ -66,8 +69,7 @@ def convert_entropy_as_dataset(result, res_type):
 
     '''
     print("\x1b[35m", result, "\x1b[0m")
-    dsentrop = Dataset.Data(result, 0)
-    return Dataset(dsentrop, {}, res_type)
+    return Dataset(result, 0, OrderedDict(), res_type)
 
 
 def convert_keff_in_dataset(result, estimator):
@@ -75,19 +77,18 @@ def convert_keff_in_dataset(result, estimator):
     id_estim = result['estimators'].index(estimator)
     print("estimator index =", id_estim)
     print("essai keff =", result['keff_matrix'][id_estim][id_estim])
-    dskeff = Dataset.Data(
-        result['keff_matrix'][id_estim][id_estim],
-        (result['sigma_matrix'][id_estim][id_estim]
-         * result['keff_matrix'][id_estim][id_estim] * 0.01))
-    return Dataset(dskeff, {}, 'keff_'+estimator)
+    return Dataset(result['keff_matrix'][id_estim][id_estim],
+                   (result['sigma_matrix'][id_estim][id_estim]
+                    * result['keff_matrix'][id_estim][id_estim] * 0.01),
+                   OrderedDict(), 'keff_'+estimator)
 
 
 def convert_keff_comb_in_dataset(result):
     '''Conversion of keff combination in dataset.'''
     kcomb = result['full_comb_estimation']
-    dskeff = Dataset.Data(kcomb['keff'].copy(),
-                          kcomb['sigma'] * kcomb['keff'] * 0.01)
-    return Dataset(dskeff, {}, 'keff_combination')
+    return Dataset(kcomb['keff'].copy(),
+                   kcomb['sigma'] * kcomb['keff'] * 0.01,
+                   OrderedDict(), 'keff_combination')
 
 
 def convert_ifp_in_dataset(result):
@@ -107,15 +108,14 @@ def convert_ifp_in_dataset(result):
 
 def convert_data_in_dataset(data, data_type):
     '''Convert data in dataset. OK for IFP sensitivities for the moment.'''
+    LOGGER.debug("In convert_data_in_dataset")
     if data_type not in data:
         LOGGER.warning("Key %s not found in data", data_type)
         return None
-    dset = Dataset.Data(
-        data[data_type]['score'].copy(),
-        data[data_type]['sigma'] * data[data_type]['score'] * 0.01)
-    # units and uscore used in sensitivities (calling default res)
-    return Dataset(dset, data['bins'], data_type,
-                   unit=data.get('units', {}).get('score', 'unknown'))
+    # uscore used in sensitivities (calling default res)
+    return Dataset(data[data_type]['score'].copy(),
+                   data[data_type]['sigma'] * data[data_type]['score'] * 0.01,
+                   data['bins'], data_type)
 
 
 CONVERT_IN_DATASET = {
@@ -128,8 +128,13 @@ CONVERT_IN_DATASET = {
 
 
 def convert_data(data, data_type):
-    '''Test for data conversion using dict or default.'''
-    if data_type not in data:
+    '''Test for data conversion using dict or default.
+
+    An exception for integrated_res is for the moment needed as they can come
+    from spectrum res or generic scores but are treated a bit differently.
+    To be homogenized.
+    '''
+    if data_type != 'integrated_res' and data_type not in data:
         LOGGER.warning("%s not found in data", data_type)
         return None
     return CONVERT_IN_DATASET.get(data_type, convert_data_in_dataset)(
