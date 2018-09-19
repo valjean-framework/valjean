@@ -106,7 +106,7 @@ class Test(ABC):
 
     def __init__(self, *, name, description=''):
         '''Initialize the :class:`~.Test` object with a name, a description of
-        the test (can be long) and the test type (equality, Student, χ², etc.).
+        the test (may be long) and the test type (equality, Student, χ², etc.).
 
         The test is actually performed in the :meth:`evaluate` method, which is
         abstract in the base class and must be implemented by sub-classes.
@@ -116,8 +116,6 @@ class Test(ABC):
         :param str description: description of the test exepcted with context,
                                 this string will typically end up in the test
                                 report.
-        :param str ttype: generic type of the test, given by the Test class of
-                          the chosen test
         '''
         self.name = name
         self.description = description
@@ -207,7 +205,7 @@ class TestEqual(Test):
         return TestResultEqual(self, equal)
 
 
-class TestResultApproxEqual(TestResult):
+class TestResultApproxEqual(TestResultEqual):
     '''Result from :class:`TestApproxEqual`.'''
 
     def __init__(self, test, approx_equal):

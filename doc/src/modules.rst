@@ -8,3 +8,4 @@ Package API
    modules/cosette
    modules/eponine
    modules/gavroche
+   modules/javert

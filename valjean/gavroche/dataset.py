@@ -567,7 +567,7 @@ class Dataset(BaseDataset):
                    bins=dataset.bins, name=dataset.name)
 
     def _check_datasets_consistency(self, other, operation=""):
-        if other.value.shape != self.value.shape:
+        if other.shape != self.shape:
             raise ValueError("Datasets to {} do not have same shape"
                              .format(operation))
         if other.bins != OrderedDict():
@@ -643,7 +643,7 @@ class Dataset(BaseDataset):
     def _get_bins_items(self, index):
         nbins = self.bins.copy()
         slices = index if isinstance(index, tuple) else (index,)
-        for ind, kbin, dim in zip(slices, self.bins, self.value.shape):
+        for ind, kbin, dim in zip(slices, self.bins, self.shape):
             bindex = (ind if len(self.bins[kbin]) == dim
                       else self._get_bins_slice(ind))
             nbins[kbin] = self.bins[kbin][bindex]
@@ -669,14 +669,14 @@ class Dataset(BaseDataset):
         value = self.value[index]
         error = self.error[index]
         bins = self._get_bins_items(index)
-        LOGGER.debug("Shape: %s -> %s", self.value.shape, value.shape)
+        LOGGER.debug("Shape: %s -> %s", self.shape, value.shape)
         LOGGER.debug("Bins:%s -> %s", self.bins, bins)
         return Dataset(value, error, bins=bins, name=self.name)
 
 
 def consistent_datasets(gds1, gds2):
     '''Return `True` if datasets are consistent = same shape.'''
-    return gds1.value.shape == gds2.value.shape
+    return gds1.shape == gds2.shape
 
 
 def same_coords(ds1, ds2, *, rtol=1e-5, atol=1e-8):

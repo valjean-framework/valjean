@@ -35,7 +35,8 @@ setup(name=name,
       tests_require=test_deps,
       extras_require={
           'dev': dev_deps,
-          'graphviz': graphviz_deps
+          'graphviz': graphviz_deps,
+          'rstcheck': ['rstcheck']
           },
       command_options={
           'build_sphinx': {

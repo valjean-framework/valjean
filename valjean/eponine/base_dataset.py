@@ -183,10 +183,9 @@ class BaseDataset:
         Edges, if only one bin are not kept. Example: spectrum with one bin in
         energy (quite common)
         '''
-        shape = self.value.shape
         key_axis = {i: k for i, k in enumerate(self.bins)}
         lbins = self.bins.copy()
-        for axis, dim in enumerate(shape):
+        for axis, dim in enumerate(self.shape):
             if dim < 2:
                 lbins.pop(key_axis[axis])
         return self.__class__(self.value.squeeze(),
