@@ -1,6 +1,8 @@
 '''Extension of class eponine.dataset.Dataset in other to perform simple
 calculations and usual operations on datasets ``(+, -, *, /, [])``.
 
+All operations conserve the name of the initial dataset.
+
 .. todo::
 
     Real documentation, implementation of tests in this documentation and tests
@@ -26,10 +28,10 @@ class GDataset(Dataset):
             print("\x1b[36m", type(*args), type(args[0]), "\x1b[0m")
             super().__init__(**args[0].__dict__())
         else:
-            if kwargs:
-                super().__init__(**kwargs)
-            else:
-                super().__init__(*args)
+            # if kwargs:
+            super().__init__(*args, **kwargs)
+            # else:
+            #     super().__init__(*args)
 
     # def __init__(self, obds):
     #     print("\x1b[36m", type(obds), "\x1b[0m")
@@ -45,13 +47,12 @@ class GDataset(Dataset):
     #     return super().__setattr__(name, value)
 
     def __add__(self, other):
-        LOGGER.warning("in %s.__add__", self.__class__.__name__)
-        print(type(other))
+        LOGGER.debug("in %s.__add__", self.__class__.__name__)
         if not isinstance(other, (int, float, np.ndarray, Dataset)):
             raise TypeError("Only int and float accepted for the moment")
         if not isinstance(other, Dataset):
             return GDataset(self.value + other, self.error,
-                            self.bins, self.name+'_add')
+                            bins=self.bins, name=self.name)
         try:
             assert (
                 self.bins == other.bins
@@ -61,17 +62,16 @@ class GDataset(Dataset):
                                  " or the same bins")
         value = self.value + other.value
         error = np.sqrt(self.error**2 + other.error**2)
-        return GDataset(value, error, self.bins,
-                        '+'.join([self.name, other.name]))
+        return GDataset(value, error, bins=self.bins, name=self.name)
 
     def __sub__(self, other):
-        LOGGER.warning("in %s.__sub__", self.__class__.__name__)
+        LOGGER.debug("in %s.__sub__", self.__class__.__name__)
         if not isinstance(other, (int, float, np.ndarray, Dataset)):
             raise TypeError("Int, float, np.array and Dataset "
                             "accepted for the moment")
         if not isinstance(other, Dataset):
             return GDataset(self.value - other, self.error,
-                            self.bins, self.name+'_sub')
+                            bins=self.bins, name=self.name)
         try:
             assert (
                 self.bins == other.bins
@@ -81,42 +81,32 @@ class GDataset(Dataset):
                                  " or the same bins")
         value = self.value - other.value
         error = np.sqrt(self.error**2 + other.error**2)
-        return GDataset(value, error, self.bins,
-                        '-'.join([self.name, other.name]))
+        return GDataset(value, error, bins=self.bins, name=self.name)
 
     def __mul__(self, other):
-        LOGGER.warning("in %s.__mul__", self.__class__.__name__)
+        LOGGER.debug("in %s.__mul__", self.__class__.__name__)
         if not isinstance(other, Dataset):
             return GDataset(
                 self.value * other, self.error * other,
-                self.bins, self.name+'_mul')
+                bins=self.bins, name=self.name)
         value = self.value * other.value
-        # error = np.sqrt(self.error**2 / self.value**2
-        #                 +  other.error**2 / other.value**2)
-        error = np.sqrt(
-            np.divide(self.error, self.value,
-                      out=np.zeros_like(self.value), where=self.value != 0)**2
-            + np.divide(other.error, other.value,
-                        out=np.zeros_like(other.value),
-                        where=other.value != 0)**2) * value
-        return GDataset(value, error, self.bins,
-                        '*'.join([self.name, other.name]))
+        error = np.sqrt((self.error / self.value)**2
+                        + (other.error / other.value)**2)
+        return GDataset(value, error, bins=self.bins, name=self.name)
 
     def __truediv__(self, other):
         LOGGER.warning("in %s.__truediv__", self.__class__.__name__)
         if not isinstance(other, Dataset):
             return GDataset(
                 self.value / other, self.error / other,
-                self.bins, self.name+'_div')
+                bins=self.bins, name=self.name)
         value = self.value / other.value
-        error = np.sqrt(
-            np.divide(self.error, self.value,
-                      out=np.zeros_like(self.value), where=self.value != 0)**2
-            + np.divide(other.error, other.value,
-                        out=np.zeros_like(other.value),
-                        where=other.value != 0)**2) * value
-        return GDataset(value, error, self.bins,
-                        '/'.join([self.name, other.name]))
+        # RunningWarning can be ignored thanks to the commented line.
+        # 'log' can be used instead of 'ignore' but did not work.
+        # with np.errstate(divide='divide', invalid='ignore'):
+        error = np.sqrt((self.error / self.value)**2
+                        + (other.error / other.value)**2)
+        return GDataset(value, error, bins=self.bins, name=self.name)
 
     def _get_bins_item(self, kbin, index):
         tmpind = slice(index, index+2)
@@ -147,7 +137,7 @@ class GDataset(Dataset):
         return nbins
 
     def __getitem__(self, index):
-        LOGGER.debug("in %s.__getitem__ with index=%s of type %s",
+        LOGGER.warning("in %s.__getitem__ with index=%s of type %s",
                      self.__class__.__name__, index, type(index))
         if index is Ellipsis or (isinstance(index, tuple)
                                  and any(ind is Ellipsis for ind in index)):
@@ -158,5 +148,4 @@ class GDataset(Dataset):
         bins = self._get_bins_items(index)
         LOGGER.debug("Shape: %s -> %s", self.value.shape, value.shape)
         LOGGER.debug("Bins:%s -> %s", self.bins, bins)
-        return GDataset(value, error, bins,
-                        self.name+'_sliced')
+        return GDataset(value, error, bins=bins, name=self.name)

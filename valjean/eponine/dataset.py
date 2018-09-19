@@ -18,7 +18,7 @@ class Dataset:
         Think about units. Possibility: using a units package from scipy.
     '''
 
-    def __init__(self, value, error, bins, name=''):
+    def __init__(self, value, error, *, bins=OrderedDict(), name=''):
         # data = namedTuple, values, errors
         # name = spectrum, mesh, integrated_res, etc.
         # self.value et self.data.value pointent bien au meme endroit...
@@ -33,6 +33,8 @@ class Dataset:
         # last or foressen for scalar as ndim == 0
         # assert (len(bins) == value.ndim or not bins
         #         or (value.ndim == 0 and len(bins) == 1))
+        assert value.shape == error.shape, \
+            "Value and error do not have the same shape"
         assert len(bins) == value.ndim or not bins
         self.value = value
         self.error = error
@@ -41,21 +43,20 @@ class Dataset:
 
     def __repr__(self):
         if isinstance(self.value, np.ndarray):
-            print(type(self.value), type(self.error))
-            return ("class: {0}\n"
-                    "        name: {1}, with shape {2},\n"
-                    "        value: {3},\n"
-                    "        error: {4},\n"
-                    "        bins: {5}\n"
-                    .format(self.__class__,
+            return ("class: {0}, data type: {1}\n"
+                    "        name: {2}, with shape {3},\n"
+                    "        value: {4},\n"
+                    "        error: {5},\n"
+                    "        bins: {6}\n"
+                    .format(self.__class__, type(self.value),
                             self.name, self.value.shape,
                             self.value.squeeze(),
                             self.error.squeeze(), self.bins))
         return (
-            "class: {0}\n"
-            "name: {1}, value: {2:6e}, error: {3:6e}, bins: {4}\n"
-            .format(self.__class__, self.name, self.value,
-                    self.error, self.bins))
+            "class: {0}, data type: {1}\n"
+            "name: {2}, value: {3:6e}, error: {4:6e}, bins: {5}\n"
+            .format(self.__class__, type(self.value), self.name,
+                    self.value, self.error, self.bins))
 
     def __dict__(self):
         return {'value': self.value,
@@ -72,13 +73,13 @@ class Dataset:
         energy (quite common)
         '''
         shape = self.value.shape
-        key_axis = {a: k for a, k in enumerate(list(self.bins.keys()))}
+        key_axis = {i: k for i, k in enumerate(self.bins)}
         lbins = self.bins.copy()
         for axis, dim in enumerate(shape):
             if dim < 2:
                 lbins.pop(key_axis[axis])
         return self.__class__(self.value.squeeze(), self.error.squeeze(),
-                              lbins, self.name)
+                              bins=lbins, name=self.name)
 
 
 def relatively_equal(ds1, ds2, tolerance=1e-5):

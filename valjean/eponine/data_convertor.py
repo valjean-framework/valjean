@@ -19,7 +19,7 @@ def convert_spectrum_as_dataset(fspec_res, res_type='spectrum_res'):
     return Dataset(
         spec_res['spectrum']['score'].copy(),
         spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] * 0.01,
-        bins, res_type)
+        bins=bins, name=res_type)
 
 
 def convert_mesh_as_dataset(fmesh_res, res_type='mesh_res'):
@@ -32,7 +32,7 @@ def convert_mesh_as_dataset(fmesh_res, res_type='mesh_res'):
     return Dataset(
         mesh_res['mesh']['score'].copy(),
         mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] * 0.01,
-        bins, res_type)
+        bins=bins, name=res_type)
 
 
 def convert_intres_as_dataset(result, res_type):
@@ -52,10 +52,10 @@ def convert_intres_as_dataset(result, res_type):
         bins['e'] = ebins[::ebins.shape[0]-1]
         return Dataset(np.array([intres['score']]),
                        np.array([intres['sigma']]),
-                       bins, res_type)
+                       bins=bins, name=res_type)
     return Dataset(intres['score'].copy(),
                    intres['sigma'] * intres['score'] * 0.01,
-                   bins, res_type)
+                   bins=bins, name=res_type)
 
 
 def convert_entropy_as_dataset(result, res_type):
@@ -69,7 +69,7 @@ def convert_entropy_as_dataset(result, res_type):
 
     '''
     print("\x1b[35m", result, "\x1b[0m")
-    return Dataset(result, 0, OrderedDict(), res_type)
+    return Dataset(result, 0, name=res_type)
 
 
 def convert_keff_in_dataset(result, estimator):
@@ -80,7 +80,7 @@ def convert_keff_in_dataset(result, estimator):
     return Dataset(result['keff_matrix'][id_estim][id_estim],
                    (result['sigma_matrix'][id_estim][id_estim]
                     * result['keff_matrix'][id_estim][id_estim] * 0.01),
-                   OrderedDict(), 'keff_'+estimator)
+                   name='keff_'+estimator)
 
 
 def convert_keff_comb_in_dataset(result):
@@ -88,7 +88,7 @@ def convert_keff_comb_in_dataset(result):
     kcomb = result['full_comb_estimation']
     return Dataset(kcomb['keff'].copy(),
                    kcomb['sigma'] * kcomb['keff'] * 0.01,
-                   OrderedDict(), 'keff_combination')
+                   name='keff_combination')
 
 
 def convert_ifp_in_dataset(result):
@@ -115,7 +115,7 @@ def convert_data_in_dataset(data, data_type):
     # uscore used in sensitivities (calling default res)
     return Dataset(data[data_type]['score'].copy(),
                    data[data_type]['sigma'] * data[data_type]['score'] * 0.01,
-                   data['bins'], data_type)
+                   bins=data['bins'], name=data_type)
 
 
 CONVERT_IN_DATASET = {
