@@ -106,12 +106,12 @@ should be 7 as we have 7 dimensison.
 
    >>> from valjean.eponine.common import (DictBuilder, MeshDictBuilder,
    ...                                     SpectrumDictBuilder)
-   >>> db = DictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
+   >>> db = DictBuilder(['score', 'sigma'], [1,2,3,4,5,6,7])
    Traceback (most recent call last):
        [...]
    TypeError: Can't instantiate abstract class DictBuilder with ...
-   >>> mdb = MeshDictBuilder(['tally', 'sigma'], [1,2,3,4,5,6,7])
    >>> mdb = MeshDictBuilder(['score', 'sigma'], [1,2,3,4,5,6,7])
+   >>> mdb = MeshDictBuilder(['result', 'sigma'], [1,2,3,4,5,6,7])
    >>> sdb = SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'],
    ...                           [1,2,3,4,5,6,7])
 
@@ -595,7 +595,7 @@ class DictBuilder(ABC):
 
         :param str name: name of the new array (integrated_res, etc.)
         :type name: str
-        :param colnames: list of the columns names (score, sigma, tally, etc.)
+        :param colnames: list of the columns names (score, sigma, etc.)
         :type colnames: tuple(str)
         :param lnbins: number of bins in each dimension
         :type lnbins: list(int)

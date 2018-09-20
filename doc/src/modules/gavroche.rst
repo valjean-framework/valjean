@@ -16,3 +16,4 @@ gavroche — Gestion AVancée de Routines et Oracles en CHaînE (nom temporaire)
 
    gavroche/harvest
    gavroche/test
+   gavroche/gdataset

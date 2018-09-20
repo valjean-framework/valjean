@@ -47,7 +47,7 @@ class Dataset:
                     "        name: {2}, with shape {3},\n"
                     "        value: {4},\n"
                     "        error: {5},\n"
-                    "        bins: {6}\n"
+                    "        bins: {6}"
                     .format(self.__class__, type(self.value),
                             self.name, self.value.shape,
                             self.value.squeeze(),
