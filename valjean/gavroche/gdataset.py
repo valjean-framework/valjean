@@ -11,6 +11,7 @@ All operations conserve the name of the initial dataset.
 import logging
 import numpy as np
 from valjean.eponine.dataset import Dataset
+from collections import OrderedDict
 
 LOGGER = logging.getLogger('valjean')
 
@@ -46,6 +47,16 @@ class GDataset(Dataset):
     #     print("in __setattr__, name:", name, "value:", value)
     #     return super().__setattr__(name, value)
 
+    def _check_datasets_consistency(self, other, operation=""):
+        assert (other.value.shape == self.value.shape
+                and (other.bins == OrderedDict()
+                     or all((s == o
+                             and np.allclose(self.bins[s], other.bins[o]))
+                            for s, o in zip(self.bins, other.bins)))), \
+            ("Datasets to {} do not have same dimensions or the same bins"
+             .format(operation))
+
+
     def __add__(self, other):
         LOGGER.debug("in %s.__add__", self.__class__.__name__)
         if not isinstance(other, (int, float, np.ndarray, Dataset)):
@@ -53,13 +64,7 @@ class GDataset(Dataset):
         if not isinstance(other, Dataset):
             return GDataset(self.value + other, self.error,
                             bins=self.bins, name=self.name)
-        try:
-            assert (
-                self.bins == other.bins
-                or (other.bins == {} and other.value.size == self.value.size))
-        except AssertionError:
-            raise AssertionError("Datasets to add do not have same dimensions"
-                                 " or the same bins")
+        self._check_datasets_consistency(other, "add")
         value = self.value + other.value
         error = np.sqrt(self.error**2 + other.error**2)
         return GDataset(value, error, bins=self.bins, name=self.name)
@@ -72,13 +77,7 @@ class GDataset(Dataset):
         if not isinstance(other, Dataset):
             return GDataset(self.value - other, self.error,
                             bins=self.bins, name=self.name)
-        try:
-            assert (
-                self.bins == other.bins
-                or (other.bins == {} and other.value.size == self.value.size))
-        except AssertionError:
-            raise AssertionError("Datasets to add do not have same dimensions"
-                                 " or the same bins")
+        self._check_datasets_consistency(other, "substract")
         value = self.value - other.value
         error = np.sqrt(self.error**2 + other.error**2)
         return GDataset(value, error, bins=self.bins, name=self.name)
@@ -89,6 +88,7 @@ class GDataset(Dataset):
             return GDataset(
                 self.value * other, self.error * other,
                 bins=self.bins, name=self.name)
+        self._check_datasets_consistency(other, "multiply")
         value = self.value * other.value
         error = np.sqrt((self.error / self.value)**2
                         + (other.error / other.value)**2)
@@ -100,6 +100,7 @@ class GDataset(Dataset):
             return GDataset(
                 self.value / other, self.error / other,
                 bins=self.bins, name=self.name)
+        self._check_datasets_consistency(other, "divide")
         value = self.value / other.value
         # RunningWarning can be ignored thanks to the commented line.
         # 'log' can be used instead of 'ignore' but did not work.
@@ -121,28 +122,26 @@ class GDataset(Dataset):
 
     def _get_bins_items(self, index):
         nbins = self.bins.copy()
-        for ibin, kbin in enumerate(self.bins.keys()):
-            if isinstance(index, int):
-                nbins.pop(kbin)
-                return nbins
-            if isinstance(index, slice):
-                nbins[kbin] = self._get_bins_slice(kbin, index)
-                return nbins
-            if ibin >= len(index):
-                return nbins
-            if isinstance(index[ibin], slice):
-                nbins[kbin] = self._get_bins_slice(kbin, index[ibin])
-            else:
-                nbins.pop(kbin)
+        slices = index if isinstance(index, tuple) else (index,)
+        for ind, kbin in zip(slices, self.bins):
+            nbins[kbin] = self._get_bins_slice(kbin, ind)
         return nbins
 
     def __getitem__(self, index):
-        LOGGER.warning("in %s.__getitem__ with index=%s of type %s",
+        LOGGER.debug("in %s.__getitem__ with index=%s of type %s",
                      self.__class__.__name__, index, type(index))
-        if index is Ellipsis or (isinstance(index, tuple)
-                                 and any(ind is Ellipsis for ind in index)):
-            LOGGER.warning("Ellipsis in index to skipped -> return None")
-            return None
+        assert isinstance(self.value, np.ndarray), \
+            "[] (__getitem__) can only be applied on numpu.ndarrays"
+        assert (isinstance(index, slice)
+                or (isinstance(index, tuple)
+                    and all(isinstance(i, slice) for i in index))), \
+            "Index can only be a slice or a tuple of slices"
+        assert ((isinstance(index, tuple) and self.value.ndim == len(index))
+                or (isinstance(index, slice) and self.value.ndim == 1)), \
+            "len(index) should have the same dimension as the value " \
+            "numpy.ndarray, i.e. (# ',' = dim-1). ':' can be used for a "\
+            "slice (dimension) not affected by the selection. " \
+            "If dim(value) == 1 a slice can be required."
         value = self.value[index]
         error = self.error[index]
         bins = self._get_bins_items(index)
