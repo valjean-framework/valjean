@@ -15,6 +15,7 @@ cosette — COnStruction et ExécuTion de TâchEs
    :caption: Submodules
 
    cosette/task
+   cosette/pythontask
    cosette/rlist
    cosette/depgraph
    cosette/env

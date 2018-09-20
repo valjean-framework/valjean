@@ -1,0 +1,253 @@
+# -*- coding: utf-8 -*-
+'''This module implements a task class called :class:`PythonTask`, which is
+able to execute arbitrary Python code (in the form of a function call) when
+requested to do so. This is extra useful because functions wrapped in
+:class:`PythonTask` can receive the scheduling environment as an additional
+parameter, which makes it possible to write code that depends on the results of
+previous tasks.
+
+:class:`PythonTask` objects
+---------------------------
+
+Creating a :class:`PythonTask` is very simple. Let us define a function that
+returns a constant value:
+
+    >>> def func():
+    ...   return 42
+
+We can wrap the function in a :class:`PythonTask` as follows:
+
+    >>> task = PythonTask('answer', func)  # 'answer' is the task name
+
+We can then execute the task by passing an empty environment (dictionary) to
+the :meth:`~Task.do` method:
+
+    >>> task.do({})
+    ({'answer': {'result': 42}}, <TaskStatus.DONE: ...>)
+
+As usual, :meth`~Task.do` returns a tuple consisting of a return value and a
+task status.
+
+.. todo::
+
+    For the moment, executing a :class:`PythonTask` will always result in a
+    status `~Task.TaskStatus.DONE`. Exceptions are not caught at the level of
+    the task (they should be caught by the scheduler, though). It may be useful
+    to generalize this behaviour.
+
+Calling a function without any arguments is not very restrictive per se.
+Say you want to call a function of two arguments:
+
+    >>> def add(x, y):
+    ...   return x + y
+
+If you have your arguments lying around at the time you construct your task,
+then you may do something like
+
+    >>> x, y = 5, 3
+    >>> task_add = PythonTask('add', lambda: add(x, y))
+    >>> task_add.do({})
+    ({'add': {'result': 8}}, <TaskStatus.DONE: ...>)
+
+Essentially, you construct a trampoline: the lambda takes no arguments, but it
+captures `x` and `y` from the surrounding scope and passes them to the
+:func:`add` function. This works, but due to the way Python handles captured
+variables, it may bring a few surprises:
+
+    >>> x, y = 5, 3
+    >>> task_add = PythonTask('add', lambda: add(x, y))
+    >>> x, y = 1, 2
+    >>> task_add.do({})  # this still returns 8, right?
+    ({'add': {'result': 3}}, <TaskStatus.DONE: ...>)
+    >>> # WAT
+
+So, unless you know what you are doing, it is better to avoid this surprising
+behaviour and use the `args` argument to :class:`PythonTask`:
+
+    >>> x, y = 5, 3
+    >>> task_add = PythonTask('add', add, args=(x, y))
+    >>> task_add.do({})
+    ({'add': {'result': 8}}, <TaskStatus.DONE: ...>)
+
+There is also a `kwargs` argument that can be used to pass keyword arguments:
+
+    >>> task_add = PythonTask('add', add, kwargs={'x': x, 'y': y})
+    >>> task_add.do({})
+    ({'add': {'result': 8}}, <TaskStatus.DONE: ...>)
+
+
+Passing arguments via the environment
+-------------------------------------
+
+Sometimes your function requires some arguments, but the arguments themselves
+are not available (e.g. they haven't been computed yet) by the time you create
+your :class:`PythonTask`. For this purpose, :class:`PythonTask` provides an
+additional feature that allows the called function to query the task
+environment and retrieve any additional information from there.
+
+The mechanism is simple: the environment is passed to the wrapped function as a
+keyword argument. The keyword can be specified by the user using the
+`env_kwarg` argument to the :class:`PythonTask` constructor.
+
+As a simple example, consider the following function:
+
+    >>> def goodnight(*, some_dict):
+    ...   number = some_dict['number']
+    ...   return 'Goodnight, ' + ('ding'*number)
+
+You can wrap it in a :class:`PythonTask` as follows:
+
+    >>> task_gnight = PythonTask('goodnight', goodnight, env_kwarg='some_dict')
+
+and this is how it works:
+
+    >>> env = {'number': 8}
+    >>> task_gnight.do(env)
+    ({'goodnight': {'result': \
+'Goodnight, dingdingdingdingdingdingdingding'}}, <TaskStatus.DONE: ...>)
+
+Passing arguments via the environment: a more complex example
+-------------------------------------------------------------
+
+As an illustration of a more complex scenario, we will now implement a set of
+:class:`PythonTask` objects to calculate the Pascal's triangle. In plain
+Python, the code to print all the rows up to the n-th would look something like
+this:
+
+    >>> import numpy as np
+    >>> def pascal(n):
+    ...   res = np.zeros((n, n), dtype=np.int)
+    ...   res[:, 0] = 1
+    ...   res[0, :] = 1
+    ...   for i in range(2, n):
+    ...     for j in range(1, i):
+    ...       res[i-j, j] = res[i-j-1, j] + res[i-j, j-1]
+    ...   return res
+    >>> direct_pascal = pascal(8)
+    >>> print(direct_pascal)
+    [[ 1  1  1  1  1  1  1  1]
+     [ 1  2  3  4  5  6  7  0]
+     [ 1  3  6 10 15 21  0  0]
+     [ 1  4 10 20 35  0  0  0]
+     [ 1  5 15 35  0  0  0  0]
+     [ 1  6 21  0  0  0  0  0]
+     [ 1  7  0  0  0  0  0  0]
+     [ 1  0  0  0  0  0  0  0]]
+
+The logic is that each matrix element (except for those in the first
+row/column) is the sum of the element above and the element on the left.
+
+In order to compute Pascal's triangle using :class:`PythonTask` objects, we
+first need to decide on a strategy. We decide to use a :class:`PythonTask` per
+matrix element. We also have to choose a strategy for naming the tasks, because
+the content of the environment is indexed by the task name. So we decide to
+call ``'(i, j)'`` the task that computes element `(i, j)`.
+
+Armed with these conventions, we can write the function that computes element
+`(i, j)`:
+
+    >>> def compute(i, j, *, env):
+    ...   if i == 0 or j == 0:
+    ...     return 1
+    ...   left = str((i-1, j))
+    ...   above = str((i, j-1))
+    ...   left_result = env[left]['result']
+    ...   above_result = env[above]['result']
+    ...   return left_result + above_result
+
+Now we construct the tasks and assemble them into a dependency dictionary:
+
+    >>> deps = {}
+    >>> name_to_task = {}
+    >>> n = 8
+    >>> for k in range(n):
+    ...   # k is the index of the row in the triange
+    ...   # i and j index the matrix element, so k = i + j
+    ...   for i in range(k+1):
+    ...     j = k - i
+    ...     task_name = str((i, j))
+    ...     task = PythonTask(task_name, compute, args=(i, j), env_kwarg='env')
+    ...     name_to_task[task_name] = task
+    ...     deps[task] = set()
+    ...     if i > 0:
+    ...       index_left = str((i-1, j))
+    ...       deps[task].add(name_to_task[index_left])
+    ...     if j > 0:
+    ...       index_above = str((i, j-1))
+    ...       deps[task].add(name_to_task[index_above])
+
+We can then import :class:`~.DepGraph` and :class:`~.Scheduler` and execute the
+dependency graph:
+
+    >>> from valjean.cosette.depgraph import DepGraph
+    >>> graph = DepGraph.from_dependency_dictionary(deps)
+    >>> from valjean.cosette.scheduler import Scheduler
+    >>> scheduler = Scheduler(graph)
+    >>> final_env = scheduler.schedule()
+
+And now we can extract the results from the final environment:
+
+    >>> pythontask_pascal = np.zeros_like(direct_pascal)
+    >>> for k in range(n):
+    ...   for i in range(k+1):
+    ...     j = k - i
+    ...     task_name = str((i, j))
+    ...     pythontask_pascal[i, j] = final_env[task_name]['result']
+    >>> print(pythontask_pascal)
+    [[ 1  1  1  1  1  1  1  1]
+     [ 1  2  3  4  5  6  7  0]
+     [ 1  3  6 10 15 21  0  0]
+     [ 1  4 10 20 35  0  0  0]
+     [ 1  5 15 35  0  0  0  0]
+     [ 1  6 21  0  0  0  0  0]
+     [ 1  7  0  0  0  0  0  0]
+     [ 1  0  0  0  0  0  0  0]]
+    >>> np.all(pythontask_pascal == direct_pascal)
+    True
+'''
+
+from .task import Task, TaskStatus
+from .. import LOGGER
+
+
+class PythonTask(Task):
+    '''Task that executes specified Python code. TODO: expand, explain how the
+    environment is threaded into the task.'''
+
+    def __init__(self, name, func, *, args=None, kwargs=None,
+                 env_kwarg=None):
+        '''Initialize the task with a function, a tuple of arguments and a
+        dictionary of kwargs.
+
+        :param name str: The name of the task.
+        :param func function: A function to be executed.
+        :param args tuple: A tuple of positional arguments to `func`, or `None`
+                           if none are required.
+        :param kwargs dict: A dictionary of keyword arguments to `func`, or
+                            `None` if none are required.
+        :param env_kwarg str: The name of the keyword argument that will be
+                              used to pass the environment to the function, or
+                              `None` if the environment should not be passed.
+        '''
+        import copy
+        super().__init__(name)
+        self.func = func
+        self.args = copy.deepcopy(args) if args is not None else ()
+        self.kwargs = copy.deepcopy(kwargs) if kwargs is not None else {}
+        self.env_kwarg = env_kwarg
+
+    def do(self, env):
+        '''Execute the function.
+
+        :param env: The environment. It will be passed to the executed function
+                    as the `env_kwarg` keyword, if specified.
+        '''
+        from types import MappingProxyType
+        LOGGER.info('PythonTask %s executing', self.name)
+        if self.env_kwarg is not None:
+            # wrap the environment in MappingProxyType, so that self.func
+            # cannot modify it
+            self.kwargs[self.env_kwarg] = MappingProxyType(env)
+        ret_val = self.func(*self.args, **self.kwargs)
+        env_up = {self.name: {'result': ret_val}}
+        return env_up, TaskStatus.DONE
