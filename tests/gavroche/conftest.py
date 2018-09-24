@@ -4,11 +4,16 @@
 import numpy as np
 from hypothesis import note
 from hypothesis.strategies import (lists, floats, composite, sampled_from,
-                                   just, booleans, integers)
+                                   just, booleans, integers, text, none,
+                                   one_of)
 from hypothesis.extra.numpy import arrays, array_shapes, floating_dtypes
+from collections import OrderedDict
 
 from ..context import valjean  # pylint: disable=unused-import
-from valjean.gavroche import test
+from valjean.gavroche import test, gdataset
+
+
+DEF_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
 
 def finite(dtype):
@@ -62,6 +67,79 @@ def items(draw):
     note('data shape: {}'.format(data.shape))
     note('coords: {}'.format(coords))
     return test.Item.make(coords, data)
+
+
+def cnames():
+    '''Strategy fro generating names for coordinates.'''
+    return text(alphabet=DEF_ALPHABET, min_size=1, max_size=5)
+
+
+@composite
+def coord_odicts(draw, shape, dtype=None, edges=True):
+    '''Strategy for generating OrderedDict of bins.'''
+    if dtype is None:
+        a_dtype = draw(floating_dtypes(sizes=(32, 64)))
+    else:
+        a_dtype = draw(dtype)
+    a_edges = draw(edges)
+    coord_odict = OrderedDict()
+    coord_names = draw(lists(elements=cnames(), min_size=len(shape),
+                             max_size=len(shape), unique=True))
+    for nbins, name in zip(shape, coord_names):
+        n_elems = nbins if not a_edges else nbins+1
+        coord_odict[name] = np.sort(draw(arrays(a_dtype, n_elems,
+                                                elements=finite(a_dtype),
+                                                unique=True)))
+    return coord_odict
+
+
+@composite
+def gdatasets(draw, *, shape=None, coords=None):
+    '''Strategy for generating :class:`~.gdataset.dataset` objects.'''
+    dtype = draw(floating_dtypes(sizes=(32, 64)))
+    if shape is None:
+        a_shape = array_shapes(max_dims=3)  # was 7
+    else:
+        a_shape = shape
+    # finite(dtype))) -> numbers too close to limit, especially for product
+    values = draw(arrays(dtype, a_shape, elements=floats(-1e-8, 1e8)))
+    rel_err = draw(arrays(dtype, values.shape,
+                          elements=floats(min_value=0., max_value=1.)))
+    errors = np.abs(values) * rel_err
+    if coords is None:
+        wcoord = draw(booleans())
+        a_coords = (draw(coord_odicts(values.shape, just(dtype), booleans()))
+                    if wcoord else OrderedDict())
+    else:
+        a_coords = coords
+    return gdataset.GDataset(values, errors, bins=a_coords)
+
+
+@composite
+def slices(draw, size):
+    '''Strategy for generating slices.'''
+    if size == 1:
+        return slice(None, None, None)
+    start = draw(one_of(none(), integers(1, size-1)))
+    end = draw(
+        one_of(none(),
+               integers(1 if start is None else start, size),
+               integers(-(size-start) if start is not None else -size, -1)))
+    if start == size:
+        end = None
+    step = draw(none())
+    return slice(start, end, step)
+
+
+@composite
+def slice_tuples(draw, shape):
+    '''Strategy for generating tuples of slices corresponding of dataset
+    shapes.
+    '''
+    if all(x == 1 for x in shape):
+        return tuple([slice(None, None, None)]*len(shape))
+    sltup = tuple(draw(slices(x)) for x in shape)
+    return sltup
 
 
 @composite

@@ -495,7 +495,6 @@ class GDataset(Dataset):
             ("Datasets to {} do not have same dimensions or the same bins"
              .format(operation))
 
-
     def __add__(self, other):
         LOGGER.debug("in %s.__add__", self.__class__.__name__)
         if not isinstance(other, (int, float, np.ndarray, Dataset)):
@@ -548,22 +547,21 @@ class GDataset(Dataset):
                                 + (other.error / other.value)**2)
         return GDataset(value, error, bins=self.bins, name=self.name)
 
-    def _get_bins_item(self, kbin, index):
-        tmpind = slice(index, index+2)
-        return self.bins[kbin][tmpind]
-
-    def _get_bins_slice(self, kbin, index):
+    @staticmethod
+    def _get_bins_slice(index):
         if index.stop is not None:
             stop = index.stop+1 if index.stop > 0 else index.stop
             tmpind = slice(index.start, stop, index.step)
-            return self.bins[kbin][tmpind]
-        return self.bins[kbin][index]
+            return tmpind
+        return index
 
     def _get_bins_items(self, index):
         nbins = self.bins.copy()
         slices = index if isinstance(index, tuple) else (index,)
-        for ind, kbin in zip(slices, self.bins):
-            nbins[kbin] = self._get_bins_slice(kbin, ind)
+        for ind, kbin, dim in zip(slices, self.bins, self.value.shape):
+            bindex = (ind if len(self.bins[kbin]) == dim
+                      else self._get_bins_slice(ind))
+            nbins[kbin] = self.bins[kbin][bindex]
         return nbins
 
     def __getitem__(self, index):
@@ -587,3 +585,28 @@ class GDataset(Dataset):
         LOGGER.debug("Shape: %s -> %s", self.value.shape, value.shape)
         LOGGER.debug("Bins:%s -> %s", self.bins, bins)
         return GDataset(value, error, bins=bins, name=self.name)
+
+
+def consistent_datasets(gds1, gds2):
+    '''Return `True` if datasets are consistent = same shape.'''
+    return gds1.value.shape == gds2.value.shape
+
+
+def same_coords(ds1, ds2, *, rtol=1e-5, atol=1e-8):
+    '''Return `True` if coordinates (bins) are compatible.
+
+    :param ds1: the first array of coordinate arrays.
+    :param ds2: the second array of coordinate arrays.
+    :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
+    :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
+
+    Comparison on keys and values.
+    '''
+    if not consistent_datasets(ds1, ds2):
+        return False
+    if len(ds1.bins) != len(ds2.bins):
+        return False
+    return all(
+        (s == o
+         and np.allclose(ds1.bins[s], ds2.bins[o], rtol=rtol, atol=atol))
+        for s, o in zip(ds1.bins, ds2.bins))
