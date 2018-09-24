@@ -134,7 +134,7 @@ Example of addition or substraction of another :class:`GDataset`
 ````````````````````````````````````````````````````````````````
 
     >>> gd2 = GDataset(np.arange(20, 30).reshape(2, 5),
-    ...                np.arange(0.01, 0.11, 0.01).reshape(2, 5),
+    ...                np.arange(2., 7., 0.5).reshape(2, 5),
     ...                bins=bins, name='gd2')
     >>> gd1 + gd2
     class: <class 'valjean.gavroche.gdataset.GDataset'>, data type: \
@@ -142,8 +142,8 @@ Example of addition or substraction of another :class:`GDataset`
             name: gd1, with shape (2, 5),
             value: [[20 22 24 26 28]
      [30 32 34 36 38]],
-            error: [[0.10049876 0.10198039 0.10440307 0.1077033  0.1118034 ]
-     [0.11661904 0.12206556 0.12806248 0.13453624 0.14142136]],
+            error: [[2.00249844 2.5019992  3.0016662  3.50142828 4.0012498 ]
+     [4.50111097 5.0009999  5.50090902 6.00083328 6.50076919]],
             bins: OrderedDict([('e', array([1, 2, 3])), ('t', \
 array([0, 1, 2, 3, 4]))])
 
@@ -301,8 +301,9 @@ Example of multiplication or division of another :class:`GDataset`
             name: gd1, with shape (2, 5),
             value: [[  0  21  44  69  96]
      [125 156 189 224 261]],
-            error: [[       inf 0.10000454 0.05001859 0.03337867 0.02508666]
-     [0.02014349 0.01688272 0.01458975 0.01290665 0.01163389]],
+            error: [[        nan  3.26496554  6.39061812 10.74895344 \
+16.17899873]
+     [22.63846285 30.11245589 38.5945592  48.08159731 58.57183624]],
             bins: OrderedDict([('e', array([1, 2, 3])), ('t', \
 array([0, 1, 2, 3, 4]))])
 
@@ -312,13 +313,14 @@ array([0, 1, 2, 3, 4]))])
             name: gd1, with shape (2, 5),
             value: [[0.         0.04761905 0.09090909 0.13043478 0.16666667]
      [0.2        0.23076923 0.25925926 0.28571429 0.31034483]],
-            error: [[       inf 0.10000454 0.05001859 0.03337867 0.02508666]
-     [0.02014349 0.01688272 0.01458975 0.01290665 0.01163389]],
+            error: [[       nan 0.00740355 0.01320376 0.02031938 0.02808854]
+     [0.03622154 0.04454505 0.05294178 0.06132857 0.06964547]],
             bins: OrderedDict([('e', array([1, 2, 3])), ('t', \
 array([0, 1, 2, 3, 4]))])
 
 In both cases the error is calulated considering both datasets are independent,
-so quadratically (e = sqrt((gd1.e/gd1.v)**2 + (gd2.e/gd2.v)**2)).
+so quadratically :math:`e = v*\\sqrt{{(\\frac{gd_1.e}{gd_1.v})}^2 +
+{(\\frac{gd_2.e}{gd_2.v})}^2}`.
 
 The same restictions on bins as for addition and substraction are set for
 multiplication and division, same ``AssertError`` are raised, see
@@ -527,8 +529,8 @@ class GDataset(Dataset):
                 bins=self.bins, name=self.name)
         self._check_datasets_consistency(other, "multiply")
         value = self.value * other.value
-        error = np.sqrt((self.error / self.value)**2
-                        + (other.error / other.value)**2)
+        error = value * np.sqrt((self.error / self.value)**2
+                                + (other.error / other.value)**2)
         return GDataset(value, error, bins=self.bins, name=self.name)
 
     def __truediv__(self, other):
@@ -542,8 +544,8 @@ class GDataset(Dataset):
         # RunningWarning can be ignored thanks to the commented line.
         # 'log' can be used instead of 'ignore' but did not work.
         # with np.errstate(divide='divide', invalid='ignore'):
-        error = np.sqrt((self.error / self.value)**2
-                        + (other.error / other.value)**2)
+        error = value * np.sqrt((self.error / self.value)**2
+                                + (other.error / other.value)**2)
         return GDataset(value, error, bins=self.bins, name=self.name)
 
     def _get_bins_item(self, kbin, index):
