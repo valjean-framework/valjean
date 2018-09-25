@@ -27,6 +27,7 @@ from .conftest import (IDS, STANDARD_SECS, baseconfig, config,
 #  tests  #
 ###########
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=baseconfig())
 def test_as_dict_roundtrip(conf):
     '''Test roundtrip with the as_dict method.'''
@@ -37,6 +38,7 @@ def test_as_dict_roundtrip(conf):
     assert conf == reconf
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=baseconfig())
 def test_equality_reflective(conf):
     '''Test that the == operator is reflective.'''
@@ -44,13 +46,15 @@ def test_equality_reflective(conf):
     assert conf == conf  # pylint: disable=comparison-with-itself
 
 
-@settings(deadline=None)
+@settings(suppress_health_check=(HealthCheck.too_slow,),
+          deadline=None)
 @given(conf=baseconfig())
 def test_merge_with_self(conf):
     '''Test that merging with `self` results in the identity.'''
     assert conf + conf == conf
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=baseconfig())
 def test_merge_with_empty(conf):
     '''Test that merging with the empty configuration is the identity.'''
@@ -78,6 +82,7 @@ def test_merge_all_sections(conf1, conf2):
     assert conf1 == conf_merge
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=baseconfig())
 def test_split_section_by_family(conf):
     '''Test that :meth:`~.BaseConfig.sections_by_family` does not skip any
@@ -123,6 +128,7 @@ def test_set_in_section_with_slash(sec_fam, sec_id, opt, val):
     assert val == conf.get(sec_fam, sec_id, opt, raw=True)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=baseconfig(), opt=IDS)
 def test_get_with_fallback(conf, opt):
     '''Test that fallback values work for normal options.'''
@@ -167,6 +173,7 @@ def test_handlers_exist():
             assert conf.has_option_handler(family=family, option=opt)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=config_with_sections(STANDARD_SECS))
 def test_get_handler_with_fallback(conf):
     '''Test that options with handlers override fallback values.'''
@@ -220,7 +227,8 @@ def test_compare_wrong_type_raises(empty_config):
     assert not empty_config == 'Romani ite domum'
 
 
-@settings(deadline=None)
+@settings(suppress_health_check=(HealthCheck.too_slow,),
+          deadline=None)
 @given(conf=baseconfig(),
        spaces_before=spaces(), spaces_in1=spaces(),
        spaces_in2=spaces(), spaces_after=spaces())
@@ -262,6 +270,7 @@ def test_set_wrong_arg_number(empty_config):
         empty_config.set('first', 'second', 'third', 'fourth', 'fifth')
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=baseconfig(), opt=IDS)
 def test_get_missing_no_fallback(conf, opt):
     '''Test that get raises on missing options without fallback.'''
@@ -271,6 +280,7 @@ def test_get_missing_no_fallback(conf, opt):
             conf.get(sec, opt)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=baseconfig(), missing=IDS)
 def test_missing_section_by_family(conf, missing):
     '''Test that get raises on missing options without fallback.'''
@@ -305,6 +315,7 @@ def test_msh_handles_missing(conf, sec_name):
     assert AddMissingSectionHandler.accepts(conf, family, sec_id, None)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=config(sec_names=section_names(IDS, with_slash=True), min_size=1))
 def test_msh_not_handles_existing(conf):
     ''':class:`AddMissingSectionHandler` does not accept queries about existing

@@ -5,7 +5,7 @@
 
 import tempfile
 
-from hypothesis import given, event
+from hypothesis import given, event, settings, HealthCheck
 from hypothesis.strategies import data, sampled_from
 
 from .conftest import envs, env_keys
@@ -42,6 +42,7 @@ def test_persistence_roundtrip(env, persistence_format):
     assert env == re_env
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(env=envs(), data=data())
 def test_updates(env, data):
     '''Test environment updates.'''
@@ -84,6 +85,7 @@ def test_updates(env, data):
                count_sub_update / (count_sub_update + count_sub_no_update))
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(env=envs(), data=data())
 def test_merge_done_tasks(env, data):
     '''Test merging two environments.'''
