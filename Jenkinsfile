@@ -24,7 +24,7 @@ pipeline {
     timeout(time: 1, unit: 'HOURS')
   }
 
-  agent any
+  agent { label 'valjean' }
 
   environment {
     projectName = 'valjean'
@@ -46,8 +46,8 @@ pipeline {
         sh """
         python3 -m venv "${VENV}"
         source "${VENV}/bin/activate"
-        pip install --upgrade pip
-        pip install ${SRC}[dev]
+        python3 -m pip install --upgrade pip
+        python3 -m pip install ${SRC}[dev]
         """
       }
     }
