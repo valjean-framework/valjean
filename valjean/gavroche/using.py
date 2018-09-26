@@ -15,7 +15,7 @@ Let us assume that Alice, a :program:`valjean` user, wants to check if the
 strings contained in files :file:`spam.txt` and :file:`eggs.txt` have the same
 length. Alice writes the following simplified test function:
 
-    >>> from valjean.eponine.using import using
+    >>> from valjean.gavroche.using import using
     >>> def compare_strlen_generic(x, y):
     ...     print('OK' if len(x) == len(y) else 'KO')
 

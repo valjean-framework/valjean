@@ -3,7 +3,7 @@
 from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
-from valjean.eponine.using import using
+from valjean.gavroche.using import using
 from valjean import LOGGER
 
 
