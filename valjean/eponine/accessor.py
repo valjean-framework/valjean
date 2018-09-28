@@ -40,8 +40,7 @@ of dicts.
 
 import logging
 import pprint
-from collections import defaultdict, namedtuple, OrderedDict, Sequence, Mapping
-from sys import getsizeof
+from collections import defaultdict, namedtuple, Sequence, Mapping
 import valjean.eponine.data_convertor as dcv
 
 LOGGER = logging.getLogger('valjean')
@@ -75,32 +74,32 @@ class DataResponses:
         self.nested = data
         self.flat = []
         self.n2f = {}
-        print("DANS DATA_RESPONSES")
+        LOGGER.debug("DANS DATA_RESPONSES")
         self.nested_to_flat(self.flatten_with_flag, stopflag='_res')
-        print("FLATTEN DONE")
+        LOGGER.debug("FLATTEN DONE")
         # self.flatten()
 
     @classmethod
     def nested_to_flat(cls, meth, **kwargs):
         '''Test of generic method to flatten nested structure.'''
-        LOGGER.warning("Will transform nested data in flat ones using %s",
-                       '.'.join([cls.__name__, meth.__name__]))
+        LOGGER.debug("Will transform nested data in flat ones using %s",
+                     '.'.join([cls.__name__, meth.__name__]))
         return meth(**kwargs)
 
     def flatten_with_flag(self, stopflag=""):
         '''Method to flatten the list of responses, including scores.'''
         for iresp, resp in enumerate(self.nested):
-            if resp['results'].type not in ('score_res', 'sensitivity_res'):
+            if not self.dict_in_list(resp['results'].data):
                 self.flat.append(resp)
                 self.n2f[iresp] = len(self.flat) - 1
                 continue
             rmd = {k: v for k, v in resp.items() if k != 'results'}
-            print(type(resp['results'].data))
+            LOGGER.debug(type(resp['results'].data))
             for isc, score in enumerate(resp['results'].data):
-                print("keys:", list(score.keys()))
+                LOGGER.debug("keys: %s", list(score.keys()))
                 smd = {k: v for k, v in score.items() if stopflag not in k}
                 smd.update(rmd)
-                print("smd =", smd)
+                LOGGER.debug("smd = %s", smd)
                 smd['results'] = Response(
                     resp['results'].type,
                     {k: v for k, v in score.items() if stopflag in k})
@@ -115,12 +114,12 @@ class DataResponses:
                 self.n2f[iresp] = len(self.flat) - 1
                 continue
             rmd = {k: v for k, v in resp.items() if k != 'results'}
-            print(type(resp['results'].data))
+            LOGGER.debug(type(resp['results'].data))
             for isc, score in enumerate(resp['results'].data):
-                print("keys:", list(score.keys()))
+                LOGGER.debug("keys: %s", list(score.keys()))
                 smd = {k: v for k, v in score.items() if '_res' not in k}
                 smd.update(rmd)
-                print("smd =", smd)
+                LOGGER.debug("smd = %s", smd)
                 smd['results'] = Response(
                     resp['results'].type,
                     {k: v for k, v in score.items() if '_res' in k})
@@ -131,8 +130,8 @@ class DataResponses:
         '''Get the indices in nested list corresponding to indices in flat
         list.
         '''
-        print(flat_indices)
-        print(self.n2f)
+        LOGGER.debug(flat_indices)
+        LOGGER.debug(self.n2f)
         sub_n2f = [k[0] if isinstance(k, tuple) else k
                    for k, v in self.n2f.items() if v in flat_indices]
         return sub_n2f
@@ -143,7 +142,7 @@ class DataResponses:
         '''
         flat_ind = {v for k, v in self.n2f.items()
                     if nested_index in [k if isinstance(k, int) else k[0]]}
-        print("flat indices:", flat_ind)
+        LOGGER.debug("flat indices: %s", flat_ind)
         return flat_ind
 
     @classmethod
@@ -188,44 +187,69 @@ class DataResponses:
         return deep
 
     @classmethod
+    def nested_keys(cls, nested):
+        '''Return list of list of all keys.'''
+        lkeys = []
+        if cls.dict_in_list(nested):
+            for elt in nested:
+                tmpkeys = [x for x in elt if '_res' not in x]
+                sdicts = [y for y in elt.values()
+                          if isinstance(elt, Mapping) and cls.dict_in_list(y)]
+                if sdicts:
+                    assert len(sdicts) == 1
+                sdkeys = cls.nested_keys(sdicts[0]) if sdicts else []
+                if not sdkeys:
+                    lkeys.append(tmpkeys)
+                else:
+                    for sdk in sdkeys:
+                        lkeys.append(tmpkeys + sdk)
+        return lkeys
+
+    @classmethod
     def flatten_nlod(cls, nested, level=None, prev_md=None, prev_key=""):
         '''md = metadata'''
         flat = []
         n2f = {}
-        print(prev_md)
-        print(nested)
         for ielt, elt in enumerate(nested):
             llev = level.copy() if level else []
             llev.append(ielt)
-            if not any(cls.dict_in_list(x) for x    in elt.values()):
-                       # if isinstance(x, Mapping)):
-                lelt = {'_'.join([prev_key, k])if prev_key else k : v
+            if not any(cls.dict_in_list(x) for x in elt.values()):
+                # if isinstance(x, Mapping)):
+                lelt = {'_'.join([prev_key, k])if prev_key else k: v
                         for k, v in elt.items()}
                 if prev_md:
                     lelt.update(prev_md)
                 flat.append(lelt)
-                n2f[tuple(llev)] = len(flat) -1
+                n2f[tuple(llev)] = len(flat) - 1
             else:
-                print("\x1b[94mdict in list:", elt, "\x1b[0m")
-                # for k, v in elt.items():
-                #     print(k, '->', cls.dict_in_list(v), 'for v=', v)
                 rmd = {k: v for k, v in elt.items() if not cls.dict_in_list(v)}
                 ndata = {k: v for k, v in elt.items() if cls.dict_in_list(v)}
-                print("rmd =", rmd)
-                print("ndata =", ndata)
                 for key, dat in ndata.items():
                     tflat, tn2f = cls.flatten_nlod(dat, llev, rmd, key)
-                    print('flat =', tflat)
-                    print("n2f =", tn2f)
                     flat.extend(tflat)
                     n2f.update(tn2f)
-                # print(list(ndata), [ndata])
-                # tflat, tn2f = cls.flatten_nlod(ndata, llev, rmd)
-                # print("flat =", tflat)
-                # flat.append(tflat)
-                # n2f.update(tn2f)
-            print("\x1b[34mFLAT=", flat, "\x1b[0m")
-            print("N2F =", n2f)
+        return flat, n2f
+
+    @classmethod
+    def flatten_res_dict(cls, nested, dataflag=""):
+        '''Method to flatten the list of responses, including scores.'''
+        flat = []
+        n2f = {}
+        for iresp, resp in enumerate(nested):
+            if not cls.dict_in_list(resp['results']):
+                flat.append(resp)
+                n2f[iresp] = len(flat) - 1
+                continue
+            rmd = {k: v for k, v in resp.items() if k != 'results'}
+            for isc, score in enumerate(resp['results']):
+                # print("keys:", list(score.keys()))
+                smd = {k: v for k, v in score.items() if dataflag not in k}
+                smd.update(rmd)
+                # print("smd =", smd)
+                smd['results'] = {k: v for k, v in score.items()
+                                  if dataflag in k}
+                flat.append(smd)
+                n2f[(iresp, isc)] = len(flat) - 1
         return flat, n2f
 
 
@@ -236,19 +260,18 @@ class IndexResponses:
     '''
 
     def __init__(self, lcases):
-        print("\x1b[35m>>>>>>>> IndexResponses.__init__ <<<<<<<<<<\x1b[0m")
+        LOGGER.debug("\x1b[35m>>>>>> IndexResponses.__init__ <<<<<<<<\x1b[0m")
         self.ids = set(range(len(lcases)))
-        print("mem lcases:", id(lcases), "lcases:", id(lcases))
-        print("taille lcases:", getsizeof(lcases), "lcases:", getsizeof(lcases))
-        print(list(lcases[0].keys()))
+        LOGGER.debug("mem lcases: %d, lcases: %d", id(lcases), id(lcases))
+        LOGGER.debug(list(lcases[0].keys()))
         self.dsets = {k: defaultdict(set)
                       for icase in lcases
                       for k in icase.keys() if k != 'results'}
-        print("\x1b[91mself.dsets =", self.dsets, "\x1b[0m")
+        LOGGER.debug("\x1b[91mself.dsets = %s\x1b[0m", self.dsets)
         LOGGER.debug("nb cases = %d", len(lcases))
         self._build_index(lcases)
-        print(self.dsets)
-        print("\x1b[35m>>>>>>>> END IndexResponses.__init__ <<<<<<<<<<\x1b[0m")
+        LOGGER.debug(self.dsets)
+        LOGGER.debug("\x1b[35m>>>>> END IndexResponses.__init__ <<<<<<\x1b[0m")
 
     def _build_index(self, responses):
         '''Build index from all responses in the list.
@@ -263,7 +286,7 @@ class IndexResponses:
         nucleus name in the score name.
         '''
         for iresp, resp in enumerate(responses):
-            LOGGER.warning("Response: %s", resp['resp_function'])
+            LOGGER.debug("Response: %s", resp['resp_function'])
             for key in self.dsets:
                 if key not in resp:
                     continue
@@ -339,19 +362,20 @@ class Accessor:
         self.indnest = None
         if 'list_responses' in self.parsed_res.keys():
             lresp = self.parsed_res['list_responses']
-            print('nbre de responses =', len(lresp), "type =", type(lresp))
-            print(list(lresp[0].keys()))
+            LOGGER.debug('nbre de responses = %d, type = %s',
+                         len(lresp), type(lresp))
+            LOGGER.debug(list(lresp[0].keys()))
             self.responses = DataResponses(lresp)
-            print(id(self.responses.nested))
-            print(self.responses.n2f)
-            print("\x1b[1mESSAIS\x1b[0m")
-            print("-> index from flat:")
+            LOGGER.debug(id(self.responses.nested))
+            LOGGER.debug(self.responses.n2f)
+            LOGGER.debug("\x1b[1mESSAIS\x1b[0m")
+            LOGGER.debug("-> index from flat:")
             self.indflat = IndexResponses(self.responses.flat)
-            print(len(self.indflat))
-            print("-> index from nested:")
+            LOGGER.debug(len(self.indflat))
+            LOGGER.debug("-> index from nested:")
             self.indnest = IndexResponses(self.responses.nested)
-            print(len(self.indnest))
-            print("\x1b[1m----------------------\x1b[0m")
+            LOGGER.debug(len(self.indnest))
+            LOGGER.debug("\x1b[1m----------------------\x1b[0m")
 
     # questions on the name of that method: what is the more explicit ?
     # get_by (but what ?), get_response_by (but we can get a score even by
