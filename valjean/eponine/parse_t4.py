@@ -61,11 +61,11 @@ class T4Parser():
         self.end_flag = ""
         self.scan_res = None
         self.result = None
-        self.para = True if "PARA" in jddname or "task" in jddname else False
+        self.para = "PARA" in jddname or "th_task" in jddname
 
     @classmethod
     @profile
-    def parse_jdd(cls, jdd, batch):
+    def parse_jdd(cls, jdd, batch=-1):
         '''
         Constructor for T4Parser for "default" cases: no mesh limit. Scanning
         and parsing are automatically done.
@@ -197,11 +197,14 @@ class T4Parser():
           ``"exploitation time"`` is checked
         * else ``"simulation time"`` is checked
         '''
-        return ((self.para and 'elapsed time' in self.scan_res.times
-                 and 'simulation time' in self.scan_res.times)
-                or (not self.para
-                    and ('simulation time' in self.scan_res.times
-                         or 'exploitation time' in self.scan_res.times)))
+        result = ((self.para and 'elapsed time' in self.scan_res.times
+                   and 'simulation time' in self.scan_res.times)
+                  or (not self.para
+                      and ('simulation time' in self.scan_res.times
+                           or 'exploitation time' in self.scan_res.times)))
+        LOGGER.debug('scan_res.times: %s', self.scan_res.times)
+        LOGGER.debug('check_t4_times() returns: %s', result)
+        return result
 
     def print_t4_times(self):
         '''Print time characteristics of the Tripoli-4 result considered.
@@ -244,7 +247,3 @@ def main(myjdd="", batch_num=-1, mesh_lim=None, end_flag=""):
             t4_res.print_t4_times()
         return t4_res.check_t4_times()
     return None
-
-
-if __name__ == "__main__":
-    main()

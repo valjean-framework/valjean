@@ -215,7 +215,7 @@ class PythonTask(Task):
     environment is threaded into the task.'''
 
     def __init__(self, name, func, *, args=None, kwargs=None,
-                 env_kwarg=None):
+                 env_kwarg=None, deps=None):
         '''Initialize the task with a function, a tuple of arguments and a
         dictionary of kwargs.
 
@@ -228,9 +228,13 @@ class PythonTask(Task):
         :param env_kwarg str: The name of the keyword argument that will be
                               used to pass the environment to the function, or
                               `None` if the environment should not be passed.
+        :param deps: If this task depends on other tasks (and valjean cannot
+                     automatically discover this), pass them (as a list) to the
+                     `deps` parameter.
+        :type deps: None or list of :class:`~.Task` objects.
         '''
         import copy
-        super().__init__(name)
+        super().__init__(name=name, deps=deps)
         self.func = func
         self.args = copy.deepcopy(args) if args is not None else ()
         self.kwargs = copy.deepcopy(kwargs) if kwargs is not None else {}
