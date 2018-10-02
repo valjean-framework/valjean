@@ -30,7 +30,6 @@ module :mod:`common <valjean.eponine.common>`.
 
 '''
 
-from collections import namedtuple
 import logging
 import numpy as np
 from .. import common
@@ -38,6 +37,25 @@ from .. import common
 
 LOGGER = logging.getLogger('valjean')
 MAX_DEPTH = 0
+
+
+def compose2(f, g):  # pylint: disable=invalid-name
+    '''Functions composition (2 functions), like fog in mathematics.
+
+    :params func f: last function to compose, takes result from g as arguments
+    :params func g: first function to apply
+    :returns: composition of the 2 functions (func)
+    '''
+    return lambda *a, **kw: f(g(*a, **kw))
+
+
+def compose(*fs):
+    '''General composition in case more than 2 functions are needed.
+    For example for fogoh(x) = f(g(h(x))).
+    Takes as many functions as needed as argument.
+    '''
+    from functools import reduce
+    return reduce(compose2, fs)
 
 
 def convert_spectrum(toks, colnames):
@@ -162,8 +180,11 @@ def convert_score(toks):
     return res
 
 
-def _fake_print():
+def _fake_print(toks):
     print("\x1b[1;35mFOUND THE POINT\x1b[0m")
+    # print(toks)
+    print("List:", toks.asList())
+    print("Dict:", toks.asDict())
 
 
 def convert_generic_ifp(toks):
@@ -291,92 +312,151 @@ def to_dict(toks):
     return res
 
 
-def _make_choice(ldict, flag, value):
-    choices = {'index': 0, 'resp_function': 1, 'score_name': 2}
-    res = [ldict[ind] for ind in ldict if ind[choices[flag]] == value]
-    print("[94mNombre de resultats correspondants:", len(res), "[0m")
-    # return res[0]
-    if len(res) > 1:
-        print("More than one result matching your selection, "
-              "return only the first one (but how are they ordered ?)")
-    return res
+def lod_to_dot(toks):
+    '''List of dictionaries to dictionary of tuples.
+    This function is dedicated to cases where all the dictionaries (or close)
+    in the list have the same keys.
+
+        >>> from pprint import pprint
+        >>> from pyparsing import OneOrMore, Group, Word, nums
+        >>> menu = OneOrMore(Group(Word(nums)('egg') + ','
+        ...                   + Word(nums)('bacon') + ','
+        ...                   + Word(nums)('spam')))
+        >>> lod = menu.parseString('1,2,0 2,0,1 0,3,1')
+        >>> dot = lod_to_dot(lod)
+        >>> pprint(dot)  # doctest: +NORMALIZE_WHITESPACE
+        {'bacon': ('2', '0', '3'), 'egg': ('1', '2', '0'), \
+'spam': ('0', '1', '1')}
+
+        >>> lod = [{'egg': 1, 'bacon': 2, 'spam': 0},
+        ...        {'egg': 2, 'bacon': 0, 'spam': 1},
+        ...        {'egg': 0, 'bacon': 3, 'spam': 1}]
+        >>> dot = lod_to_dot(lod)
+        >>> pprint(dot)  # doctest: +NORMALIZE_WHITESPACE
+        {'bacon': (2, 0, 3), 'egg': (1, 2, 0), 'spam': (0, 1, 1)}
+
+        >>> lod = [{'egg': 1, 'bacon': 2, 'spam': 0}]
+        >>> dot = lod_to_dot(lod)
+        >>> pprint(dot)  # doctest: +NORMALIZE_WHITESPACE
+        {'bacon': (2,), 'egg': (1,), 'spam': (0,)}
+
+    We always get a tuple as value of the keys, even in case of a single
+    element.
+    '''
+    LOGGER.debug("In lod_of_dot")
+    ldict = {}
+    for elt in toks:
+        # to be able to test the method (= allow toks is aleady a dict and not
+        # a pyparsing.ParseResut)
+        edict = elt if isinstance(elt, dict) else elt.asDict()
+        for key, val in edict.items():
+            ldict.setdefault(key, []).append(val)
+    ldict = {k: tuple(v) for k, v in ldict.items()}
+    return ldict
 
 
-# pylint: disable=unused-argument
-def _other_choice(ldict, index=None, resp_function=None, score_name=None):
-    ind = (index, resp_function, score_name)
-    print(ind)
+def finalize_response_dict(s, loc, toks):
+    # pylint: disable=invalid-name, unused-argument
+    '''Finalize the dictionary of response.
 
-
-def _yet_another_choice(ldict, **kwargs):
-    # print(kwargs)
-    # for key, value in kwargs.items():
-    #     print(key, "(", type(key), "):", value)
-    mesres = []
-    # choices = {'index': 0, 'resp_function': 1, 'score_name': 2}
-    # use dict.get() instead of these awful lines
-    for ind in ldict:
-        lind, lrfunc, lsname = ind
-        if 'index' in kwargs and kwargs['index'] != lind:
-            continue
-        if 'resp_function' in kwargs and kwargs['resp_function'] != lrfunc:
-            continue
-        if 'score_name' in kwargs and kwargs['score_name'] != lsname:
-            continue
-        mesres.append(ind)
-    # print("index to be screen:", list(kwargs.keys()))
-    # ttuple = tuple(kwargs.values())
-    # print(ttuple)
-    # print("NUMBER OF KEPT INDICES:", len(mesres))
-    # print("KEPT INDICES:", mesres)
-    # res = [ldict[ind] for ind in ldict if ind[choices[flag]] == value]
-    return mesres
-
-
-def resp_tuple(toks):
-    '''Convert unique key dictionary ``{key: val}`` into tuple ``(key, val)``.
-
-    This case is used for responses, type of the response is then the first
-    element of the tuple, its content the second.
+    Extract the real response results from pyparsing structure and set it under
+    the `results` key. The previous unique key of the dictionary under the
+    `results` key is stored under the `result_type` key.
 
     The input is the whole response, i.e. the results and the response
-    description. This second part is not "touched" here, only copied in the new
-    dictionary.
+    description. This second part is not "modified" here, only copied in the
+    new dictionary, at the exception of the metadata stored under the
+    `compos_details` key. In that case the dictionary stored under the
+    `compos_details` key is moved to the upper level, i.e. in the response
+    dictionary. As a consequence, the `compos_details` key  disappears.
 
     :param toks: `pyparsing` element
     :type toks: |parseres|
     :returns: python dict corresponding to input `pyparsing` response result
     '''
+    LOGGER.debug("In finalize_response_dict")
     assert len(toks[0]['results'].asDict()) == 1, \
         "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
     res = toks[0]['results']
     key, val = next(res.items())
     assert isinstance(val, dict) or val.asList()
-    # print("Clefs du dico =", list(toks[0].asDict().keys()))
-    if 'response_description' in toks[0]:
-        print(type(toks[0]['response_description']))
-        print(type(toks[0].asDict()['response_description']))
-        print(toks[0]['response_description'].asDict())
     mydict = toks[0].asDict()
-    # Solution with tuple constructed before
-    # ttuple = tuple((key, val) if isinstance(val, dict)
-    #                else (key, val.asList())
-    #                for key, val in toks[0]['results'].items())
-    # not working correctly as 'score_res' still a ParseResult, not giving a
-    # real list if asList is not used
-    # ttuple = tuple((key, val) for key, val in toks[0]['results'].items())
-    # mydict['results'] = ttuple[0]
-    Response = namedtuple('Response', ['type', 'data'])
-    mydict['results'] = Response(*(key, val if isinstance(val, dict)
-                                   else val.asList()))
-    if 'response_description' in toks[0]:
-        odict = toks[0]['response_description'].asDict()
-        odict['results'] = (key, val
-                            if isinstance(val, dict) else val.asList())
-        print("\x1b[94m", list(odict.keys()), "\x1b[0m")
-    # print("Clefs dans mydict =", list(mydict.keys()))
-    # Explicit solution with local variables
+    mydict['results'] = val if isinstance(val, dict) else val.asList()
+    mydict['response_type'] = key
+    mydict.update(mydict.pop('compos_details', {}))
+    LOGGER.debug("Final response metadata: %s",
+                 {k: v for k, v in mydict.items() if k != 'results'})
     return mydict
+
+
+def extract_all_metadata(list_of_dicts):
+    '''Extract metadata from nested lists of dictionaries.
+    The metadata to be extracted are here in the second level of list of
+    dictionaries, i.e. in ``[{'bla': X, 'results': [{'data1_res': D1,
+    'data2_res': D2, 'md1': MD1, 'md2': MD2}, {'data1_res': D3, 'md1': MD1,
+    'md3': MD3}]}]`` in order to obtain
+    ``[{'bla': X, 'md1': MD1, 'md2': MD2, 'results': {'data1_res': D1,
+    'data2_res': D2}, {'bla': X, 'md1': MD1, 'md3': MD3, 'results':
+    {'data1_res': D3}}]}]``.
+
+    :params list(dict) list_of_dicts: list of dictionaries
+    :returns: list(dict) with no list of dict under 'results' key
+    '''
+    return [x for dict_ in list_of_dicts for x in extract_metadata(dict_)]
+
+
+def extract_metadata(ldict):
+    '''Extract metadata from a list of dictionaries to put it in the
+    surrounding dictionary.
+
+    :params dict ldict: dictionary corresponding to a response
+    :returns: list of dictionaries (list(dict))
+    '''
+    LOGGER.debug("In extract_metadata")
+    lscores = []
+    assert 'results' in ldict
+    if isinstance(ldict['results'], dict):
+        return [ldict]
+    res = ldict.pop('results')
+    assert isinstance(res, list)
+    for score in res:
+        ndict = ldict.copy()
+        res_dict = {}
+        for k, val in score.items():
+            if k.endswith('_res'):
+                # these are the real data (the juice)
+                res_dict[k] = val
+            else:
+                # these are metadata
+                assert k not in ndict
+                ndict[k] = val
+        ndict['results'] = res_dict
+        lscores.append(ndict)
+    return lscores
+
+
+def index_elements(key):
+    '''Add an item `key` in dictionary corresponding to index in the list
+    containing the dictionary.
+
+    :params str key: name of the index
+    :returns: function that really insert the index in the dict contained in a
+      list
+
+    >>> from pprint import pprint
+    >>> lod = [{'a': 1, 'b': 5}, {'c': -3}, {'d': 4, 'e': 6, 'f': 8}]
+    >>> func1 = index_elements('index')
+    >>> nlod = func1('', 0, lod)
+    >>> pprint(nlod)  # doctest: +NORMALIZE_WHITESPACE
+    [{'a': 1, 'b': 5, 'index': 0}, {'c': -3, 'index': 1}, \
+{'d': 4, 'e': 6, 'f': 8, 'index': 2}]
+    '''
+    # pylint: disable=invalid-name, unused-argument
+    def index_with_key(s, loc, list_of_dicts, *, key_name=key):
+        for i, elem in enumerate(list_of_dicts):
+            elem[key_name] = i
+        return list_of_dicts
+    return index_with_key
 
 
 def group_to_dict(toks):

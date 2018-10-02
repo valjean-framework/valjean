@@ -89,13 +89,14 @@ class DataResponses:
     def flatten_with_flag(self, stopflag=""):
         '''Method to flatten the list of responses, including scores.'''
         for iresp, resp in enumerate(self.nested):
-            if not self.dict_in_list(resp['results'].data):
+            LOGGER.debug("Keys in list_responses = %s", list(resp.keys()))
+            if not self.dict_in_list(resp['results']):
                 self.flat.append(resp)
                 self.n2f[iresp] = len(self.flat) - 1
                 continue
             rmd = {k: v for k, v in resp.items() if k != 'results'}
-            LOGGER.debug(type(resp['results'].data))
-            for isc, score in enumerate(resp['results'].data):
+            LOGGER.debug(type(resp['results']))
+            for isc, score in enumerate(resp['results']):
                 LOGGER.debug("keys: %s", list(score.keys()))
                 smd = {k: v for k, v in score.items() if stopflag not in k}
                 smd.update(rmd)
@@ -109,13 +110,13 @@ class DataResponses:
     def flatten(self):
         '''Method to flatten the list of responses, including scores.'''
         for iresp, resp in enumerate(self.nested):
-            if resp['results'].type not in ('score_res', 'sensitivity_res'):
+            if resp['response_type'] not in ('score_res', 'sensitivity_res'):
                 self.flat.append(resp)
                 self.n2f[iresp] = len(self.flat) - 1
                 continue
             rmd = {k: v for k, v in resp.items() if k != 'results'}
-            LOGGER.debug(type(resp['results'].data))
-            for isc, score in enumerate(resp['results'].data):
+            LOGGER.debug(type(resp['results']))
+            for isc, score in enumerate(resp['results']):
                 LOGGER.debug("keys: %s", list(score.keys()))
                 smd = {k: v for k, v in score.items() if '_res' not in k}
                 smd.update(rmd)

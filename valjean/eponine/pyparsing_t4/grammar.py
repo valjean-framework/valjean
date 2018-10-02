@@ -186,6 +186,7 @@ from pyparsing import (Word, Keyword, White, alphas, alphanums,
                        tokenMap)
 from pyparsing import pyparsing_common as pyparscom
 from . import transform as trans
+from .transform import compose2
 
 
 LOGGER = logging.getLogger('valjean')
@@ -506,7 +507,8 @@ _compoptions = (_reactiononnucl
                 | _concentration
                 | _reaction).setParseAction(_next_compos)
 _compodetails << Group(_compoptions + _otherdetails)  # pylint: disable=W0106
-_nuclflags = Group(OneOrMore(_compodetails))('compo_details')
+_nuclflags = (OneOrMore(_compodetails).setParseAction(trans.lod_to_dot)
+              ('compos_details'))
 
 
 # other response characteristics
@@ -542,7 +544,6 @@ respcarac = (_particle
              | _fxptcontrib
              | _spectrumresp)
 
-# respintro = Group(respdesc + ZeroOrMore(respcarac))('response_description')
 respintro = respdesc + ZeroOrMore(respcarac)
 
 # Responses themselves
@@ -1109,17 +1110,19 @@ contribpartblock = (Group(Suppress(_nbcontribpart_kw)
 
 
 # Score block
-scoreblock = OneOrMore(Group(scoredesc
-                             + (OneOrMore(spectrumblock
-                                          | meshblock
-                                          | vovspectrumblock
-                                          | entropy
-                                          | medfile
-                                          | integratedres
-                                          | uncertblock
-                                          | uncertintegblock
-                                          | gbblock)))
-                       .setParseAction(trans.convert_score))('score_res')
+scoreres = Group(scoredesc
+                 + (OneOrMore(spectrumblock
+                              | meshblock
+                              | vovspectrumblock
+                              | entropy
+                              | medfile
+                              | integratedres
+                              | uncertblock
+                              | uncertintegblock
+                              | gbblock))).setParseAction(trans.convert_score)
+scoreblock = (OneOrMore(scoreres)
+              .setParseAction(trans.index_elements('score_index'))
+              ('score_res'))
 
 # Response block
 responseblock = Group(keffblock
@@ -1130,12 +1133,15 @@ responseblock = Group(keffblock
                       | genericscoreblock
                       | scoreblock)('results')
 
-response = Group(_star_line
-                 + respintro
-                 + _star_line
-                 + responseblock).setParseAction(trans.resp_tuple)
+response = (Group(_star_line
+                  + respintro
+                  + _star_line
+                  + responseblock)
+            .setParseAction(trans.finalize_response_dict))
 
-listresponses = Group(OneOrMore(response))('list_responses')
+listresponses = Group(OneOrMore(response).setParseAction(
+    compose2(trans.extract_all_metadata,
+             trans.index_elements('response_index'))))('list_responses')
 
 perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
 
