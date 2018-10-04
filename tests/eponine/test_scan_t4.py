@@ -91,6 +91,7 @@ def test_gauss_spectrum(datadir):
     assert len(t4_res.scan_res) == 2
     assert len(t4_res.result) == 2
     assert len(t4_res.result[-1]['list_responses']) == 6
+    assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 5
     for ibatch, batch in enumerate(t4_res.scan_res):
         assert batch == 200*(ibatch+1)
     for rbatch, batch in enumerate(reversed(t4_res.scan_res)):
@@ -98,8 +99,10 @@ def test_gauss_spectrum(datadir):
     assert t4_res.scan_res.get_last_edited_batch_number() == 400
     resp0 = t4_res.result[-1]['list_responses'][0]
     assert resp0['resp_function'] == "COURANT"
-    assert resp0['results'][0] == 'score_res'
-    assert resp0['results'][1][0]['scoring_mode'] == "SCORE_SURF"
+    assert resp0['response_type'] == 'score_res'
+    assert resp0['scoring_mode'] == "SCORE_SURF"
+    assert all(x in resp0['results']
+               for x in ('spectrum_res', 'integrated_res'))
 
 
 def test_tungstene_file(datadir):
@@ -117,8 +120,9 @@ def test_tungstene_file(datadir):
     assert len(t4_res.result[-1]['list_responses']) == 1
     resp0 = t4_res.result[-1]['list_responses'][0]
     assert resp0['particle'] == "PHOTON"
-    assert resp0['results'][0] == 'score_res'
-    assert resp0['results'][1][0]['scoring_mode'] == "SCORE_TRACK"
+    assert resp0['response_type'] == 'score_res'
+    assert resp0['scoring_mode'] == "SCORE_TRACK"
+    assert 'mesh_res' in resp0['results']
 
 
 # def test_petit_coeur_para():
@@ -156,11 +160,16 @@ def test_tt_simple_packet20_para(datadir):
     assert t4_res.scan_res.times['elapsed time'] == 250
     assert len(t4_res.scan_res) == 1
     assert len(t4_res.result) == 1
-    assert len(t4_res.result[-1]['list_responses']) == 4
-    resp2desc = t4_res.result[-1]['list_responses'][2]
-    assert resp2desc['compo_details'][0]['reaction_on_nucleus'] == "U235"
-    assert resp2desc['compo_details'][0]['temperature'] == 300
-    assert resp2desc['compo_details'][0]['composition'] == "COMBUSTIBLE"
+    assert len(t4_res.result[-1]['list_responses']) == 7
+    assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 3
+    assert t4_res.result[-1]['list_responses'][-1]['resp_function'] == 'KEFFS'
+    assert ['score_index' in x
+            for x in t4_res.result[-1]['list_responses']].count(True) == 6
+    resp5 = t4_res.result[-1]['list_responses'][4]
+    assert resp5['resp_function'] == 'REACTION'
+    assert resp5['reaction_on_nucleus'] == ("U235",)
+    assert resp5['temperature'] == (300,)
+    assert resp5['composition'] == ("COMBUSTIBLE",)
 
 
 def test_debug_entropy(datadir):
@@ -176,10 +185,10 @@ def test_debug_entropy(datadir):
     assert len(t4_res.scan_res) == 10
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 1
-    assert t4_res.result[-1]['list_responses'][0]['results'][0] == 'score_res'
-    res0 = t4_res.result[-1]['list_responses'][0]['results'][1][0]
-    scorecontent = ['scoring_mode', 'scoring_zone_type',
-                    'mesh_res', 'boltzmann_entropy_res', 'shannon_entropy_res',
+    resp0 = t4_res.result[-1]['list_responses'][0]
+    assert resp0['response_type'] == 'score_res'
+    res0 = resp0['results']
+    scorecontent = ['mesh_res', 'boltzmann_entropy_res', 'shannon_entropy_res',
                     'spectrum_res', 'integrated_res']
     assert "{0:6e}".format(res0['boltzmann_entropy_res']) == "8.342621e-01"
     assert sorted(list(res0.keys())) == sorted(scorecontent)
@@ -203,10 +212,10 @@ def test_entropy(datadir):
     for ind, ires in enumerate(lastres):
         assert ires['resp_function'] == resp_func[ind]
     firstres = t4_res.result[0]['list_responses']
-    assert firstres[1]['results'][0] == 'keff_res'
-    assert 'not_converged' in firstres[1]['results'][1]
-    assert lastres[1]['results'][0] == 'keff_res'
-    keffs_checks(lastres[1]['results'][1])
+    assert firstres[1]['response_type'] == 'keff_res'
+    assert 'not_converged' in firstres[1]['results']
+    assert lastres[1]['response_type'] == 'keff_res'
+    keffs_checks(lastres[1]['results'])
 
 
 def test_verbose_entropy(datadir, caplog, monkeypatch):
@@ -235,8 +244,8 @@ def test_ifp(datadir):
     assert len(t4_res.result[-1]['list_responses']) == 20
     last_resp = t4_res.result[-1]['list_responses'][-1]
     assert last_resp['resp_function'] == "IFP ADJOINT WEIGHTED ROSSI ALPHA"
-    assert last_resp['results'][0] == 'ifp_res'
-    assert last_resp['results'][1]['used_batch'] == 81
+    assert last_resp['response_type'] == 'ifp_res'
+    assert last_resp['results']['used_batch'] == 81
 
 
 def test_kij(datadir):
@@ -281,7 +290,11 @@ def test_tt_simple_packet20_mono(datadir):
     assert t4_res.scan_res.times['simulation time'] == 217
     assert t4_res.scan_res.times['initialization time'] == 3
     assert len(t4_res.scan_res) == 2
-    assert len(t4_res.result[-1]['list_responses']) == 4
+    assert len(t4_res.result[-1]['list_responses']) == 7
+    assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 3
+    assert t4_res.result[-1]['list_responses'][-1]['resp_function'] == 'KEFFS'
+    assert ['score_index' in x
+            for x in t4_res.result[-1]['list_responses']].count(True) == 6
 
 
 def test_pertu(datadir):
@@ -295,17 +308,19 @@ def test_pertu(datadir):
     assert t4_res.scan_res.times['simulation time'] == 27
     assert t4_res.scan_res.times['initialization time'] == 0
     assert len(t4_res.scan_res) == 1
-    assert len(t4_res.result[-1]['list_responses']) == 1
     assert (sorted(list(t4_res.result[-1].keys()))
             == ['edition_batch_number', 'list_responses', 'mean_weigt_leak',
                 'perturbation', 'simulation_time', 'source_intensity'])
+    assert len(t4_res.result[-1]['list_responses']) == 3
+    assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 0
+    assert len(t4_res.result[-1]['perturbation']) == 1
     pertu0 = t4_res.result[-1]['perturbation'][0]
     assert sorted(list(pertu0.keys())) == ['list_responses',
                                            'perturbation_desc']
-    assert len(pertu0['list_responses']) == 1
-    lresp0 = pertu0['list_responses'][0]
-    # assert sorted(list(lresp0.keys())) == ['response_description', 'results']
-    assert lresp0['results'][0] == 'score_res'
+    assert len(pertu0['list_responses']) == 3
+    assert pertu0['list_responses'][-1]['response_index'] == 0
+    assert pertu0['list_responses'][-1]['score_index'] == 2
+    assert pertu0['list_responses'][0]['response_type'] == 'score_res'
 
 
 def test_vov(datadir):
@@ -317,4 +332,8 @@ def test_vov(datadir):
     assert t4_res.scan_res.times['simulation time'] == 33
     assert t4_res.scan_res.times['initialization time'] == 6
     assert len(t4_res.scan_res) == 2
-    assert len(t4_res.result[-1]['list_responses']) == 2
+    list_resp = t4_res.result[-1]['list_responses']
+    assert len(list_resp) == 8
+    assert list_resp[-1]['response_index'] == 1
+    assert list_resp[-1]['score_index'] == 2
+    assert list_resp[0]['scoring_zone_type'] == 'Point'

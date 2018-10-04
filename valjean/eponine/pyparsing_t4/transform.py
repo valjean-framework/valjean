@@ -583,8 +583,8 @@ def print_customised_response(res, depth=0):
     # Then print the results
     lstr.append("\x1b[1;35m'results' \x1b[0;36m({0})\x1b[0m"
                 " -> \x1b[1m{1}\x1b[0m\n"
-                .format(type(res['results']), res['results'][0]))
-    rres = res['results'][1]
+                .format(type(res['results']), res['response_type']))
+    rres = res['results']
     if not isinstance(rres, (list, dict)):
         if isinstance(rres, np.ndarray):
             lstr.append(print_array(rres))

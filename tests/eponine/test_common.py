@@ -393,6 +393,13 @@ def test_parse_mesh_roundtrip(array_bins):
         for key in ['score', 'sigma']:
             assert np.allclose(larray['energy_integrated'][:][key],
                                parsed_mesh['eintegrated_mesh'][key])
+    pres2 = pygram.listscoreblock.parseString(mesh_t4_out)
+    pres2d = pres2.asDict()
+    keys.insert(2, 'score_index')
+    if 'integrated' in larray and array.shape[4] == 1:
+        assert sorted(list(pres2d['score_res'][0].keys())) == keys
+    else:
+        assert sorted(list(pres2d['score_res'][0].keys())) == keys[1:]
 
 
 def score_str():

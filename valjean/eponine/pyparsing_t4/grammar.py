@@ -120,7 +120,9 @@ Response are constructed as:
 * responses themselves, using parser :parsing_var:`responseblock`, are various:
 
   * responses including *score* description, all included in the
-    :parsing_var:`scoreblock` parser (more than one can be present):
+    :parsing_var:`scoreblock` parser. More than one can be present, they are
+    grouped in the :parsing_var:`listscoreblock` parser.
+    :parsing_var:`scoreblock` parser contains:
 
     * score description (parser :parsing_var:`scoredesc`) contains the score
       mode (``'TRACK'``, ``'SURF'`` or ``'COLL'``) and the score zone
@@ -1110,19 +1112,19 @@ contribpartblock = (Group(Suppress(_nbcontribpart_kw)
 
 
 # Score block
-scoreres = Group(scoredesc
-                 + (OneOrMore(spectrumblock
-                              | meshblock
-                              | vovspectrumblock
-                              | entropy
-                              | medfile
-                              | integratedres
-                              | uncertblock
-                              | uncertintegblock
-                              | gbblock))).setParseAction(trans.convert_score)
-scoreblock = (OneOrMore(scoreres)
-              .setParseAction(trans.index_elements('score_index'))
-              ('score_res'))
+scoreblock = Group(
+    scoredesc + (OneOrMore(spectrumblock
+                           | meshblock
+                           | vovspectrumblock
+                           | entropy
+                           | medfile
+                           | integratedres
+                           | uncertblock
+                           | uncertintegblock
+                           | gbblock))).setParseAction(trans.convert_score)
+listscoreblock = (Group(OneOrMore(scoreblock)
+                        .setParseAction(trans.index_elements('score_index')))
+                  ('score_res'))
 
 # Response block
 responseblock = Group(keffblock
@@ -1131,7 +1133,7 @@ responseblock = Group(keffblock
                       | ifpres
                       | sensitivityres
                       | genericscoreblock
-                      | scoreblock)('results')
+                      | listscoreblock)('results')
 
 response = (Group(_star_line
                   + respintro
