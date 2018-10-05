@@ -139,12 +139,19 @@ def convert_scoring_zone_id(toks):
     '''
     if isinstance(toks, (np.generic, str)):
         return toks
-    if toks.asList():
-        cv_toks = common.convert_list_to_tuple(toks.asList())
-        return cv_toks
-    LOGGER.warning("convert_scoring_zone_id, should have left the function "
-                   "before (input objects: str, list or numpy object)")
-    return toks
+    cv_toks = common.convert_list_to_tuple(toks.asList())
+    return cv_toks
+
+
+def convert_list_to_tuple(toks):
+    '''Convert list from pyparsing to tuple.
+
+    This function is only used to transform the parseResult in standard python
+    list and send it to convert_list_to_tuple in
+    :mod:`common <valjean.eponine.common>`.
+    '''
+    cv_toks = common.convert_list_to_tuple(toks.asList())
+    return cv_toks
 
 
 def convert_score(toks):
@@ -187,26 +194,26 @@ def _fake_print(toks):
     print("Dict:", toks.asDict())
 
 
-def convert_generic_ifp(toks):
-    '''Convert IFP output in :obj:`numpy` object using
+def convert_generic_adjoint(toks):
+    '''Convert adjoint output in :obj:`numpy` object using
     :mod:`common <valjean.eponine.common>`.
 
     This method does not take into account sensitivities calculated via the IFP
     method.
 
-    :param toks: IFP result
+    :param toks: Adjoint result (got thanks to IFP or Wielandt method)
     :type toks: |parseres|
     :returns: `numpy structured array`_ (dimension 1)
 
     .. seealso::
 
-       :func:`common.convert_generic_ifp
-       <valjean.eponine.common.convert_generic_ifp>`
+       :func:`common.convert_generic_adjoint
+       <valjean.eponine.common.convert_generic_adjoint>`
        and more generally :mod:`common <valjean.eponine.common>`
     '''
     rtoks = toks[0]
     if len(list(rtoks.keys())) == 1:
-        return common.convert_generic_ifp(rtoks, list(rtoks.keys())[0])
+        return common.convert_generic_adjoint(rtoks, list(rtoks.keys())[0])
     raise ValueError("more than one key available, what should we do ?")
 
 

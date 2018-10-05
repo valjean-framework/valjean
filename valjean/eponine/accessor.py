@@ -289,22 +289,8 @@ class IndexResponses:
         for iresp, resp in enumerate(responses):
             LOGGER.debug("Response: %s", resp['resp_function'])
             for key in self.dsets:
-                if key not in resp:
-                    continue
-                if not isinstance(resp[key], list):
+                if key in resp:
                     self.dsets[key][resp[key]].add(iresp)
-                else:
-                    if isinstance(resp[key][0], dict):
-                        theobject = []
-                        for kcase in resp[key]:
-                            theobject.append(
-                                tuple((k, v) for k, v in kcase.items()))
-                        theobject = tuple(theobject)
-                    else:
-                        # MACROSCOPIC RATE for ex
-                        theobject = ': '.join(resp[key])
-                    LOGGER.debug(theobject)
-                    self.dsets[key][theobject].add(iresp)
 
     def __len__(self):
         return len(self.ids)
@@ -358,6 +344,7 @@ class Accessor:
 
     def __init__(self, tparsed_res):  # , merge_score=False):
         self.parsed_res = tparsed_res
+        # LOGGER.warning("PARSING RESULT: %s", tparsed_res)
         self.responses = None
         self.indflat = None
         self.indnest = None

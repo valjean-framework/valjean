@@ -244,7 +244,7 @@ def test_ifp(datadir):
     assert len(t4_res.result[-1]['list_responses']) == 20
     last_resp = t4_res.result[-1]['list_responses'][-1]
     assert last_resp['resp_function'] == "IFP ADJOINT WEIGHTED ROSSI ALPHA"
-    assert last_resp['response_type'] == 'ifp_res'
+    assert last_resp['response_type'] == 'adjoint_res'
     assert last_resp['results']['used_batch'] == 81
 
 

@@ -150,11 +150,12 @@ Response are constructed as:
   * |kij| results: matrix, eigenvalues, eigenvectors (parser
     :parsing_var:`kijres`)
   * |kij| sources (parser :parsing_var:`kijsources`)
-  * IFP related results (parser :parsing_var:`ifpres`): scores ordered by
-    precursors and families, by perturbation index, by cycle length or
+  * Adjoint related results (parser :parsing_var:`adjointres`): scores ordered
+    by precursors and families, by perturbation index, by cycle length or
     sensitivities (this last case is represented in a 3 dimensions
     :obj:`numpy.ndarray`, incident energy, energy ("leaving neutron"),
-    direction cosine (µ))
+    direction cosine (µ)). For the moment this is only for IFP method , in
+    close future also for Wielandt method
   * default result integrated over energy where no scoring mode and zone are
     precised (parser :parsing_var:`defintegratedres`)
   * perturbation results (parser :parsing_var:`perturbation`)
@@ -178,6 +179,17 @@ level as the response block. These parsers and the associated dictionary key
   presented like a usual response (spectrum, mesh, etc. depending on required
   score), key ``'perturbation'``
 * :parsing_var:`runtime`: simulation, exploitation or elapsed time.
+
+
+.. todo::
+
+    Adjoint results: for the moment only IFP is really parsed. Grammar has
+    already more or less adapted to welcome Wielandt method that will have the
+    same kind of outputs (renaming as adjoint_res for example). No key is set
+    for the moment to specify the method, it can be obtained from the response
+    function itself. Adjoint criticality editions are only done for IFP, this
+    may change when the same will be available for Wielandt. Some renaming can
+    also be needed.
 
 '''
 
@@ -369,10 +381,12 @@ _kijkeffmat_kw = Keyword("K-IJ MATRIX :")
 _kijkeffstddevmat_kw = Keyword("STANDARD DEVIATION MATRIX :")
 _kijkeffsensibilitymat_kw = Keyword("SENSIBILITY MATRIX :")
 
-# IFP results
+# Adjoint results (IFP for the moment)
+# if IFP is changed to Wielandt in _cvgstat_kw when using Wielandt method this
+# is the way to get the method name
 # convergence statistics
-_ifpcvgstat_kw = Keyword("Scores for IFP convergence statistics are ordered "
-                         "from cycle length L = 1 to L = MAX:")
+_cvgstat_kw = Keyword("Scores for IFP convergence statistics are ordered "
+                      "from cycle length L = 1 to L = MAX:")
 # IFP adjoint criticality edition
 _ifpadjcriticality_kw = Keyword("IFP_ADJOINT_CRITICALITY EDITION")
 _ifpadjcyclelength_kw = Keyword("IFP CYCLE LENGTH =")
@@ -517,22 +531,28 @@ _nuclflags = (OneOrMore(_compodetails).setParseAction(trans.lod_to_dot)
 _dpatype = (Suppress(_dpatype_kw)
             + OneOrMore(Word(alphas+'-,'), stopOn=LineEnd())
             .setParseAction(' '.join)('dpa_type'))
-_required = Group(Suppress(_required_kw)
-                  + OneOrMore(Word(alphas)).setParseAction(' '.join)
-                  + Suppress(':')
-                  + OneOrMore(Word(alphanums+'()'), stopOn=LineEnd())
-                  .setParseAction(' '.join))('required')
+_required = (Suppress(_required_kw)
+             + OneOrMore(Word(alphanums+'():'), stopOn=LineEnd())
+             .setParseAction(' '.join)('required'))
 _mode = Suppress(_mode_kw) + Word(alphas)('mode')
 _inducedbyint = (Suppress(_inducedbyint_kw)
-                 + Group(OneOrMore(_inums))('induced_by_interation'))
+                 + Group(OneOrMore(_inums))
+                 .setParseAction(trans.convert_list_to_tuple)
+                 ('induced_by_interation'))
 _notinducedbyint = (Suppress("NOT" + _inducedbyint_kw)
-                    + Group(OneOrMore(_inums))('NOT_induced_by_interation'))
+                    + Group(OneOrMore(_inums))
+                    .setParseAction(trans.convert_list_to_tuple)
+                    ('NOT_induced_by_interation'))
 _fxptcontrib = (OneOrMore(Word(alphas+'()'),
                           stopOn=_fxptcontrib_kw).setParseAction(' '.join)
-                + Suppress(_fxptcontrib_kw))('fxpt_contribution')
+                ('fxpt_contribution')
+                + Suppress(_fxptcontrib_kw))
 _spectrumresp = Suppress(_spectrumresp_kw + ':') + Word(alphas)('spectrum')
 _filters = (Suppress(_filters_kw + ':')
-            + Group(OneOrMore(_inums))('filter_volumes'))
+            + Group(OneOrMore(_inums))
+            .setParseAction(trans.convert_list_to_tuple)
+            ('filter_volumes'))
+
 
 respcarac = (_particle
              | _incparticle
@@ -960,10 +980,10 @@ _nuclfamorder = (Suppress(_nucleifamilyorder_kw)
 _scoreperpertuind = Group(Suppress("i =") + _inums + _generic_score)
 _perturborder = (Suppress(_perturborder_kw)
                  + ZeroOrMore(_scoreperpertuind)('score_per_perturbation'))
-# IFP convergence statistics
-_ifpline = Group(Suppress("L =") + _inums + _generic_score)
-_ifpstat = (Suppress(_ifpcvgstat_kw)
-            + ZeroOrMore(_ifpline)('score_per_length'))
+# Convergence statistics
+_cvgline = Group(Suppress("L =") + _inums + _generic_score)
+_cvgstat = (Suppress(_cvgstat_kw)
+            + ZeroOrMore(_cvgline)('score_per_length'))
 # sensitivities
 _sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
                      + OneOrMore(Word(alphas + '_,()'),
@@ -973,10 +993,11 @@ _sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
 _sensitivity_type = (OneOrMore(Word(alphas.upper()), stopOn=_sensitivity_kw)
                      .setParseAction(' '.join)
                      + Suppress(_sensitivity_kw))('typeI')
-_sensitivity_index = Group(Suppress("i =") + _inums('index') + Suppress(';')
-                           + Suppress("NUCLEUS :") + Word(alphanums)('nucleus')
-                           + Suppress(',') + Suppress("TYPE :")
-                           + Word(alphanums.upper() + '_() ')('subtype'))
+_sensitivity_index = Group(
+    Suppress("i =") + _inums('sensitivity_index') + Suppress(';')
+    + Suppress("NUCLEUS :") + Word(alphanums + '_')('sensitivity_nucleus')
+    + Suppress(',') + Suppress("TYPE :")
+    + Word(alphanums.upper() + '_() ')('sensitivity_reaction'))
 _sensitivity_dircos = Group(Suppress(_sensitivity_dircos_kw)
                             + _fnums*2)('direction_cosine')
 _sensitivity_energyinc = Group(Suppress(_sensitivity_incenergy_kw)
@@ -994,23 +1015,24 @@ _sensitivity_res = Group(_sensitivity_index('charac')
                          ('vals')
                          + _sensitivity_energyint('energy_integrated'))
 _sensitivity = (Suppress(_sensitivityorder)
-                + (OneOrMore(Group(_sensitivity_type('type')
+                + (OneOrMore(Group(_sensitivity_type('sensitivity_type')
                                    + OneOrMore(_sensitivity_res)('res')))))
-sensitivityres = Group(Group(_numusedbatch
+sensitivityres = Group(Group(Optional(Suppress(_integratedres_kw))
+                             + _numusedbatch
                              + Group(_sensitivity)('sensit_res')
                              + Optional(_unitsres)('units'))
                        .setParseAction(trans.convert_sensitivities)
                        )('sensitivity_res')
-ifpres = (Group(Suppress(_integratedres_kw)
-                + _numusedbatch
-                + Group(_nuclfamorder
-                        | _nucleiorder
-                        | _familyorder
-                        | _perturborder
-                        | _ifpstat)
-                .setParseAction(trans.convert_generic_ifp)
-                + Optional(_unitsres))
-          .setParseAction(trans.group_to_dict)('ifp_res'))
+adjointres = (Group(Suppress(_integratedres_kw)
+                    + _numusedbatch
+                    + Group(_nuclfamorder
+                            | _nucleiorder
+                            | _familyorder
+                            | _perturborder
+                            | _cvgstat)
+                    .setParseAction(trans.convert_generic_adjoint)
+                    + Optional(_unitsres))
+              .setParseAction(trans.group_to_dict)('adjoint_res'))
 
 
 def _rename_norm_kw():
@@ -1130,7 +1152,7 @@ listscoreblock = (Group(OneOrMore(scoreblock)
 responseblock = Group(keffblock
                       | kijres
                       | kijsources
-                      | ifpres
+                      | adjointres
                       | sensitivityres
                       | genericscoreblock
                       | listscoreblock)('results')

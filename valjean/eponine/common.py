@@ -1210,10 +1210,11 @@ def convert_green_bands(gbs):  # pylint: disable=R0914
             'disc_batch': spectrum['disc_batch']}
 
 
-def convert_generic_ifp(res, loctype):
-    '''Convert IFP results in association of dictionaries and numpy array.
+def convert_generic_adjoint(res, loctype):
+    '''Convert adjoint results in association of dictionaries and numpy array.
 
-    :param list res: IFP result to be converted
+    :param list res: Adjoint result got thanks to IFP or Wielandt methodto be
+      converted
     :returns: dict of
 
       * index: list of keys used to identify dictionary order
@@ -1441,7 +1442,7 @@ def convert_sensitivities(res):
     lres = res['sensit_res']
     thelist = []
     for ires in lres:
-        itype = ''.join(ires['type'])
+        itype = ''.join(ires['sensitivity_type'])
         for iindex in ires['res']:
             array, bins = fill_sensitivities_arrays(iindex['vals'])
             datadict = {
@@ -1452,7 +1453,7 @@ def convert_sensitivities(res):
             if 'units' in res:
                 datadict['units'] = res['units'][0]
             resdict = iindex['charac'].asDict()
-            resdict['type'] = itype
+            resdict['sensitivity_type'] = itype
             resdict['sensitivity_spectrum_res'] = datadict
             thelist.append(resdict)
     # PP.pprint(thelist)
