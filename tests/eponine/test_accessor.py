@@ -26,18 +26,21 @@ def non_empty_dicts(draw, elts):
         keys=text(alphabet=DEF_ALPHABET, min_size=1, max_size=10),
         values=one_of(integers(0, 10),
                       text(alphabet=DEF_ALPHABET, min_size=1),
-                      lists(elements=integers(0, 10), min_size=1, max_size=5),
                       elts),
         min_size=1, max_size=5))
 
 
 @composite
-def results_dicts(draw, elts):
+def results_dicts(draw):
     '''Strategy for generating results dictionaries = containing ``'results'``
     key.
     '''
     # template = {'results': draw(lists(integers(0, 10)))}
-    template = {'results': lists_of_dicts(elts)}
+    template = {'results': dictionaries(
+        keys=text(alphabet=DEF_ALPHABET, min_size=1, max_size=10),
+        values=one_of(integers(0, 10),
+                      lists(elements=integers(0, 10), min_size=1, max_size=5),
+                      text(alphabet=DEF_ALPHABET, min_size=1)))}
     return draw(fixed_dictionaries(template))
 
 
@@ -157,6 +160,22 @@ def dict_from_keys(draw, keys_gen, elts):
 
 
 @composite
+def responses_nested_dicts(draw):
+    '''Strategy for generating dictionaries from keys, including results one.
+    '''
+    lkeys = draw(dict_keys())
+    dict_struct = {k: one_of(integers(0, 10),
+                             text(alphabet=DEF_ALPHABET, min_size=1),
+                             lists(elements=integers(0, 10), min_size=1,
+                                   max_size=5))
+                      if k != 'results'
+                      else non_empty_dicts(lists(elements=integers(0, 10),
+                                                 min_size=1, max_size=5))
+                   for k in lkeys}
+    return draw(fixed_dictionaries(dict_struct))
+
+
+@composite
 def nested_results(draw):
     '''Strategy for generating nested lists of dictionaries with results.'''
     # return draw(lists_of_dicts(
@@ -201,3 +220,68 @@ def test_resp_namedtuples(rnt):
     '''Fake test for namedtuples.'''
     # print(rnt)
     assert rnt
+
+
+@composite
+def variable_tuples(draw):
+    '''Strategy for generating tuples of integers of variable size.'''
+    llist = draw(lists(integers(0, 10), min_size=1, max_size=6))
+    return tuple(llist)
+
+
+@composite
+def metadata_dicts(draw):
+    '''Strategy for generating metadata dictionaries.'''
+    mdd = draw(non_empty_dicts(variable_tuples()))
+    return mdd
+
+
+@composite
+def data_dicts(draw):
+    '''Strategy for generating data dictionaries.'''
+    datad = draw(non_empty_dicts(lists(integers(0, 10),
+                                       min_size=1, max_size=10)))
+    return {'results': datad}
+
+
+@composite
+def response_dicts(draw, fmdd=None):
+    '''Strategy for generating dictionaries corresponding to a response.
+
+    Metadata and data dictionaries are concatenated. Some fixed metadata can be
+    added to test the addition in set.
+    '''
+    mdd = draw(metadata_dicts())
+    respd = draw(data_dicts())
+    respd.update(mdd)
+    if fmdd:
+        respd.update(fmdd)
+    return respd
+
+
+@composite
+def responses_lists(draw):
+    '''Strategy for generating lists of responses. Some fixed metadata can be
+    generated at that step and send to the next ones.
+    '''
+    same_md_keys = draw(booleans())
+    if same_md_keys:
+        fmdd = draw(metadata_dicts())
+        return draw(lists(response_dicts(fmdd), min_size=1, max_size=10))
+    return draw(lists(response_dicts(), min_size=1, max_size=10))
+
+
+@given(respl=responses_lists())
+def test_build_index(respl):
+    '''Test the building of index from responses generated thanks to
+    hypothesis.
+    '''
+    lrb = acc.ResponsesBook(respl)
+    note(sorted([y for x in respl for y in x if y != 'results']))
+    note(sorted(lrb.index.keys()))
+    assert (sorted(set((y for x in respl for y in x if y != 'results')))
+            == sorted(lrb.index.keys()))
+    assert any([k1 in respl[ind] for k1, y in lrb.index.items()
+                for k, v in y.items() for ind in v])
+    assert all([respl[ind][k1] == k for k1, y in lrb.index.items()
+                for k, v in y.items() for ind in v if k1 in respl[ind]])

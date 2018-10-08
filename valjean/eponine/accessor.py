@@ -163,9 +163,9 @@ class DataResponses:
             >>> from valjean.eponine.accessor import DataResponses as dr
             >>> dr.dict_in_list([0, 1])
             False
-            >>> dr.dict_in_list({'a': 0, 'gre': [0, 7]})
+            >>> dr.dict_in_list({'spam': 0, 'egg': [0, 7]})
             False
-            >>> dr.dict_in_list([{'a': 'blzz', 'b': 0}])
+            >>> dr.dict_in_list([{'bacon': 'meat', 'egg': 0}])
             True
         '''
         if ((isinstance(struct, Sequence)
@@ -287,7 +287,7 @@ class IndexResponses:
         nucleus name in the score name.
         '''
         for iresp, resp in enumerate(responses):
-            LOGGER.debug("Response: %s", resp['resp_function'])
+            LOGGER.debug("Response %d: %s", iresp, resp['resp_function'])
             for key in self.dsets:
                 if key in resp:
                     self.dsets[key][resp[key]].add(iresp)
@@ -337,6 +337,41 @@ class IndexResponses:
         return self.strip_index(subset)
 
 
+class ResponsesBook:
+    """Class to perform selections on results.
+
+    This class is based on two objects:
+
+      * the responses, as a list of dictionaries (containing data and metadata)
+      * an index based on responses allowing easy selections on each metadata.
+
+    """
+
+    def __init__(self, resp):
+        self.responses = resp
+        self.index = self.build_index2()
+        LOGGER.warning("Index: %s", self.index)
+
+    def build_index(self):
+        dsets = {k: defaultdict(set) for iresp in self.responses
+                 for k in iresp if k != 'results'}
+        for iresp, resp in enumerate(self.responses):
+            LOGGER.debug("Response %d: %s", iresp, resp['resp_function'])
+            for key in dsets:
+                if key in resp:
+                    dsets[key][resp[key]].add(iresp)
+        return dsets
+
+    def build_index2(self):
+        dsets = {}
+        for iresp, resp in enumerate(self.responses):
+            for key in resp:
+                if key != 'results':
+                    (dsets.setdefault(key, {})
+                     .setdefault(resp[key], set([iresp])).add(iresp))
+        return dsets
+
+
 class Accessor:
     '''Class to access T4 results in a friendly way.
     parsed_res = only one batch
@@ -345,25 +380,30 @@ class Accessor:
     def __init__(self, tparsed_res):  # , merge_score=False):
         self.parsed_res = tparsed_res
         # LOGGER.warning("PARSING RESULT: %s", tparsed_res)
-        self.responses = None
-        self.indflat = None
-        self.indnest = None
-        if 'list_responses' in self.parsed_res.keys():
-            lresp = self.parsed_res['list_responses']
-            LOGGER.debug('nbre de responses = %d, type = %s',
-                         len(lresp), type(lresp))
-            LOGGER.debug(list(lresp[0].keys()))
-            self.responses = DataResponses(lresp)
-            LOGGER.debug(id(self.responses.nested))
-            LOGGER.debug(self.responses.n2f)
-            LOGGER.debug("\x1b[1mESSAIS\x1b[0m")
-            LOGGER.debug("-> index from flat:")
-            self.indflat = IndexResponses(self.responses.flat)
-            LOGGER.debug(len(self.indflat))
-            LOGGER.debug("-> index from nested:")
-            self.indnest = IndexResponses(self.responses.nested)
-            LOGGER.debug(len(self.indnest))
-            LOGGER.debug("\x1b[1m----------------------\x1b[0m")
+        self.resp_book = (ResponsesBook(self.parsed_res['list_responses'])
+                          if 'list_responses' in self.parsed_res
+                          else None)
+        if self.resp_book:
+            print("RESP_BOOK done")
+        # self.responses = None
+        # self.indflat = None
+        # self.indnest = None
+        # if 'list_responses' in self.parsed_res.keys():
+        #     lresp = self.parsed_res['list_responses']
+        #     LOGGER.debug('nbre de responses = %d, type = %s',
+        #                  len(lresp), type(lresp))
+        #     LOGGER.debug(list(lresp[0].keys()))
+        #     self.responses = DataResponses(lresp)
+        #     LOGGER.debug(id(self.responses.nested))
+        #     LOGGER.debug(self.responses.n2f)
+        #     LOGGER.debug("\x1b[1mESSAIS\x1b[0m")
+        #     LOGGER.debug("-> index from flat:")
+        #     self.indflat = IndexResponses(self.responses.flat)
+        #     LOGGER.debug(len(self.indflat))
+        #     LOGGER.debug("-> index from nested:")
+        #     self.indnest = IndexResponses(self.responses.nested)
+        #     LOGGER.debug(len(self.indnest))
+        #     LOGGER.debug("\x1b[1m----------------------\x1b[0m")
 
     # questions on the name of that method: what is the more explicit ?
     # get_by (but what ?), get_response_by (but we can get a score even by
