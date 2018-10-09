@@ -4,14 +4,17 @@ from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 from valjean import LOGGER
+from ..conftest import foreach_data
 from valjean.cosette.task import TaskStatus
 from valjean.eponine.parse_t4 import T4Parser
 from valjean.eponine.parse_t4_task import ParseT4Task
 
-def do_test_parse_t4_task(file_path):
-    '''Test that ParseT4Task does its job.'''
-    run_name = file_path.purebasename
-    output_file = str(file_path)
+
+@foreach_data(datafile=lambda path: str(path).endswith('.res.ceav5'))
+def test_parse_t4_task(datafile):
+    '''Worker for test_parse_t4_task on a specific file path.'''
+    run_name = datafile.purebasename
+    output_file = str(datafile)
     LOGGER.debug('*** New file: testing %s (file %s)', run_name, output_file)
     env = {'run/' + run_name: {'output_file': output_file}}
     task = ParseT4Task(run_name)
@@ -23,9 +26,3 @@ def do_test_parse_t4_task(file_path):
     parser = env_task['result']
     assert isinstance(parser, T4Parser)
     assert parser.check_t4_times()
-
-def test_parse_t4_task(datadir):
-    '''Test that ParseT4Task does its job.'''
-    for file_name in datadir.visit():
-        if file_name.isfile() and file_name.basename.endswith('.res.ceav5'):
-            do_test_parse_t4_task(file_name)

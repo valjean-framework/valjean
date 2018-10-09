@@ -30,7 +30,7 @@ class ParseT4Task(PythonTask):
         :param deps: If this task depends on other tasks (and valjean cannot
                      automatically discover this), pass them (as a list)
                      of strings) to the `deps` parameter.
-        :type deps: None or list
+        :type deps: None or list of task names (`str`)
         '''
 
         def parse_run_from_env(parse_name, run_name, *, env):
