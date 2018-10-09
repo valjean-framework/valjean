@@ -467,7 +467,6 @@ class Scan(Mapping):
     @profile
     def get_all_batch_results(self):
         '''Return all batchs results in one string, to be parsed in once.'''
-        print("joining all res")
         return ''.join(self._collres.values())
 
     def print_statistics(self):
