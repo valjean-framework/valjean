@@ -18,8 +18,8 @@ import time
 import logging
 from pyparsing import ParseException
 
-import valjean.eponine.pyparsing_t4.grammar as pygram
-from valjean.eponine import scan_t4
+from .pyparsing_t4 import grammar as pygram
+from . import scan_t4
 
 
 LOGGER = logging.getLogger('valjean')

@@ -130,7 +130,7 @@ Keyword arguments show up in the third element of the `using_dict` value:
 
 from functools import wraps
 
-from valjean import LOGGER
+from .. import LOGGER
 
 
 def using(name, func, *args, **kwargs):
