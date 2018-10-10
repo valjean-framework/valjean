@@ -2,6 +2,7 @@
 
 
 from ..common import Command
+from ...cosette.code import BuildTask
 
 
 class BuildCommand(Command):
@@ -9,6 +10,6 @@ class BuildCommand(Command):
 
     NAME = 'build'
 
-    FAMILY = 'build'
+    PRIORITY = BuildTask.PRIORITY
 
     HELP = 'build code'

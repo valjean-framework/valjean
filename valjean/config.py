@@ -32,11 +32,11 @@ list:
 
     >>> config = Config(paths=[])
 
-By default, :class:`Config` objects come with a ``'core'`` configuration
+By default, :class:`Config` objects come with a ``'path'`` configuration
 section, which may be used to set default values for any configuration option.
 A few options are set from the beginning:
 
-    >>> for opt, val in config.items('core', raw=True):
+    >>> for opt, val in config.items('path', raw=True):
     ...     print('{} = {}'.format(opt, val))
     work-dir = ...
     log-root = ${work-dir}/log
@@ -48,12 +48,12 @@ A few options are set from the beginning:
 
 The :class:`Config` class provides getters and setters:
 
-    >>> print(config.get('core', 'build-root'))
+    >>> print(config.get('path', 'build-root'))
     /.../build
 
     # value interpolation is possible
-    >>> config.set('core', 'log-root', '${work-dir}/log_dir')
-    >>> print(config.get('core', 'log-root'))
+    >>> config.set('path', 'log-root', '${work-dir}/log_dir')
+    >>> print(config.get('path', 'log-root'))
     /.../log_dir
 
 It also provides some additional convenience methods:
@@ -65,23 +65,23 @@ It also provides some additional convenience methods:
     >>> for sec_name, section in config.as_dict(raw=True).items():
     ...   for option, value in section.items():
     ...     print('{}/{}: {}'.format(sec_name, option, value))
-    core/work-dir: /...
-    core/log-root: ${work-dir}/log_dir
-    core/checkout-root: ${work-dir}/checkout
-    core/build-root: ${work-dir}/build
-    core/run-root: ${work-dir}/run
-    core/test-root: ${work-dir}/test
-    core/report-root: ${work-dir}/report
+    path/work-dir: /...
+    path/log-root: ${work-dir}/log_dir
+    path/checkout-root: ${work-dir}/checkout
+    path/build-root: ${work-dir}/build
+    path/run-root: ${work-dir}/run
+    path/test-root: ${work-dir}/test
+    path/report-root: ${work-dir}/report
 
     # merge two configuration objects; options from the second
     # configuration override those from the first one
     >>> other_config = Config(paths=[])
-    >>> other_config.set('core', 'report-root', '${work-dir}/html')
-    >>> other_config.set('core', 'extra-option', 'definitely!')
+    >>> other_config.set('path', 'report-root', '${work-dir}/html')
+    >>> other_config.set('path', 'extra-option', 'definitely!')
     >>> config += other_config
-    >>> print(config.get('core', 'report-root'))
+    >>> print(config.get('path', 'report-root'))
     /.../html
-    >>> print(config.get('core', 'extra-option'))
+    >>> print(config.get('path', 'extra-option'))
     definitely!
 
 .. todo::
@@ -162,24 +162,24 @@ class BaseConfig:
         self._conf = ConfigParser(interpolation=ExtendedInterpolation(),
                                   delimiters=('=',),
                                   comment_prefixes=('#',),
-                                  empty_lines_in_values=False)
+                                  empty_lines_in_values=False,
+                                  default_section='path')
         # skip leading and trailing spaces in section names
         self._conf.SECTCRE = re.compile(r"\[ *(?P<header>[^]]+?) *\]")
 
         # Set some default options
-        self.add_section('core')
-        self.set('core', 'work-dir', os.path.realpath(os.getcwd()))
-        self.set('core', 'log-root', '${work-dir}/log')
-        self.set('core', 'checkout-root', '${work-dir}/checkout')
-        self.set('core', 'build-root', '${work-dir}/build')
-        self.set('core', 'run-root', '${work-dir}/run')
-        self.set('core', 'test-root', '${work-dir}/test')
-        self.set('core', 'report-root', '${work-dir}/report')
+        self.set('path', 'work-dir', os.path.realpath(os.getcwd()))
+        self.set('path', 'log-root', '${work-dir}/log')
+        self.set('path', 'checkout-root', '${work-dir}/checkout')
+        self.set('path', 'build-root', '${work-dir}/build')
+        self.set('path', 'run-root', '${work-dir}/run')
+        self.set('path', 'test-root', '${work-dir}/test')
+        self.set('path', 'report-root', '${work-dir}/report')
 
         if paths is None:
             paths = self.DEFAULT_CONFIG_FILES
 
-        other_conf = ConfigParser()
+        other_conf = ConfigParser(default_section='path')
         other_conf.read([os.path.expanduser(p) for p in paths])
         for sec_name, _ in other_conf.items():
             if (not self.has_section(sec_name) and
@@ -231,7 +231,7 @@ class BaseConfig:
         return self._conf.has_section(xsection)
 
     def sections(self):
-        '''Yield the configuration sections, excluding ``'core'``.'''
+        '''Yield the configuration sections, excluding ``'path'``.'''
         yield from self._conf.sections()
 
     def remove_option(self, section, option):
@@ -591,7 +591,7 @@ class Config(BaseConfig):
         )),
         (50, LookupOtherHandler(
             trigger(family='checkout', option='checkout-dir'),
-            other_sec='core',
+            other_sec='path',
             other_opt='checkout-root',
             finalizer=lambda val, split, _: os.path.join(val, split[1])
         )),
@@ -601,7 +601,7 @@ class Config(BaseConfig):
         )),
         (50, LookupOtherHandler(
             trigger(family='build', option='build-dir'),
-            other_sec='core',
+            other_sec='path',
             other_opt='build-root',
             finalizer=lambda val, split, _: os.path.join(val, split[1])
         )),

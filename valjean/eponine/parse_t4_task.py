@@ -1,6 +1,7 @@
 '''Tasks for parsing the TRIPOLI-4 output files. '''
 
 from .. import LOGGER
+from ..cosette.task import TaskStatus
 from ..cosette.pythontask import PythonTask
 from .parse_t4 import T4Parser
 
@@ -16,16 +17,14 @@ class ParseT4Task(PythonTask):
     and :class:`~cosette.Scheduler`).
     '''
 
-    def __init__(self, from_run, *, deps=None):
+    def __init__(self, name, from_run, *, deps=None):
         '''Create a :class:`ParseT4Task` from the name of a TRIPOLI-4 run.
 
         The `from_run` argument is the name of a TRIPOLI-4 run. When
         :class:`ParseT4Task` is scheduled for execution, it will search the
-        environment for the output file of a task called ``'run/' + from_run``.
+        environment for the output file of a task called ``'from_run``.
 
-        The name of this task will be automatically set to
-        ``'parse/' + from_run``.
-
+        :param name str: The name of this task.
         :param from_run str: The name of a TRIPOLI-4 run.
         :param deps: If this task depends on other tasks (and valjean cannot
                      automatically discover this), pass them (as a list)
@@ -49,9 +48,9 @@ class ParseT4Task(PythonTask):
                              'ParseT4Task %s, but I could not find them',
                              run_name, parse_name)
                 raise
-            return T4Parser.parse_jdd(output_file)
+            parse_result = T4Parser.parse_jdd(output_file)
+            env_up = {parse_name: {'result': parse_result}}
+            return env_up, TaskStatus.DONE
 
-        parse_name = 'parse/' + from_run
-        run_name = 'run/' + from_run
-        super().__init__(parse_name, parse_run_from_env, deps=deps,
-                         args=(parse_name, run_name), env_kwarg='env')
+        super().__init__(name, parse_run_from_env, deps=deps,
+                         args=(name, from_run), env_kwarg='env')

@@ -242,7 +242,8 @@ feel the need to refactor some of your tests.
 import logging
 from pathlib import Path
 
-from valjean import LOGGER
+from .. import LOGGER
+from ..dyn_import import dyn_import
 
 
 def harvest(file_name, *, test_regex=None):
@@ -259,7 +260,7 @@ def harvest(file_name, *, test_regex=None):
     regex = 'test_.*' if test_regex is None else test_regex
     compiled = re.compile(regex)
     LOGGER.debug('filtering tests with regex: %s', compiled)
-    module = load_module(file_name)
+    module = dyn_import(file_name)
     tests = {
         name: obj
         for name, obj in vars(module).items()
@@ -334,45 +335,6 @@ def _walk_dir(dir_name, file_regex, recurse):
 
     yield from (path for path in paths
                 if path.is_file() and re.match(compiled, path.name))
-
-
-def split_module_path(file_name):
-    '''Split a path to a Python module into a path and a module name.
-
-    :param path: A path to a Python file.
-    :type path: str or path-like object
-    :returns: a `(path, name)` tuple.
-    '''
-    LOGGER.debug("module_from_name(path='%s')", file_name)
-    path = Path(str(file_name)).resolve()
-    return str(path.parent), path.stem
-
-
-def load_module(file_name):
-    '''Load a Python module from the given file name.
-
-    Note that this function adds the path to :file:`file_name` to ``sys.path``,
-    so that local imports in :file:`file_name` work as expected.
-
-    :param str file_name: the name of the file containing the module.
-    :returns: the loaded module.
-    '''
-    from importlib import import_module, invalidate_caches
-    import sys
-    LOGGER.debug("load_module(file_name='%s')", file_name)
-    sfile_name = str(file_name)
-    module_path, module_name = split_module_path(sfile_name)
-    LOGGER.debug("module_path, name: %s, %s", module_path, module_name)
-
-    # If the module path is not in sys.path, add it.  Ugh, O(n) algorithm here.
-    # OTOH, sys.path should never grow terribly large...
-    if module_path not in sys.path:
-        sys.path.append(module_path)
-    else:
-        # necessary, otherwise new modules will not be seen
-        invalidate_caches()
-    module = import_module(module_name)
-    return module
 
 
 def export(name=None):

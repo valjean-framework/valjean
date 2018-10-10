@@ -2,6 +2,7 @@
 
 
 from ..common import Command
+from ...cosette.run import RunTask
 
 
 class RunCommand(Command):
@@ -9,6 +10,6 @@ class RunCommand(Command):
 
     NAME = 'run'
 
-    FAMILY = None
+    PRIORITY = RunTask.PRIORITY
 
     HELP = 'run a task'

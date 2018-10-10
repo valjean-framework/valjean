@@ -17,7 +17,7 @@ tasks handy, you can generate an :class:`Env` object from them using the
     >>> from valjean.cosette.task import Task
     >>> class DoNothing(Task):
     ...     '''We need a subclass because Task is abstract.'''
-    ...     def do(env):
+    ...     def do(self, env, config):
     ...         pass
     >>> tasks = [DoNothing(str(i)) for i in range(10)]
     >>> env = Env.from_tasks(tasks)

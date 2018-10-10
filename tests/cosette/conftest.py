@@ -90,6 +90,7 @@ def setup_project(project_dir):
 
     :param str project_dir: the path to an existing directory.
     '''
+    LOGGER.debug('Setting up a git/CMake project in %s', project_dir)
     LOGGER.debug('HAS_GIT: %s', HAS_GIT)
     LOGGER.debug('HAS_CMAKE: %s', HAS_CMAKE)
 
@@ -112,195 +113,49 @@ def setup_project(project_dir):
                stdout=DEVNULL, stderr=DEVNULL)
 
 
-#################################
-#  fixtures for Config objects  #
-#################################
+#########################################
+#  fixtures for CheckoutTask/BuildTask  #
+#########################################
+
+@pytest.fixture(scope='session')
+def project(tmpdir_factory):
+    '''Set up a git project with a CMake file.'''
+    project_path = tmpdir_factory.mktemp('project')
+    project_dir = str(project_path)
+    setup_project(project_dir)
+    project_path.chmod(500, rec=True)
+    yield project_dir
+    project_path.chmod(700, rec=True)
+
 
 # git-related fixtures
 
-@pytest.fixture(scope='function', params=['master', None])
+@pytest.fixture(scope='function', params=['master', None],
+                ids=['master', 'no ref'])
 def git_ref(request):
     '''Return possible values of the `ref` option for git checkout.'''
     return request.param
 
 
-@pytest.fixture(scope='function', params=['--depth 1', None])
+@pytest.fixture(scope='function', params=[['--depth', '1'], None],
+                ids=['depth=1', 'no flags'])
 def git_flags(request):
     '''Return possible values of the `flags` option for git checkout.'''
     return request.param
 
 
-@pytest.fixture(scope='function', params=['git', None])
-def git_vcs(request):
-    '''Return possible values of the `vcs` option for git checkout.'''
-    return request.param
-
-
 @pytest.fixture(scope='function')
-def git_params(git_ref, git_flags, git_vcs):
-    '''Collect the git-related fixtures in a tuple.'''
-    return git_ref, git_flags, git_vcs
-
-
-@pytest.fixture(scope='function', params=[True, False])
-def checkout_core(request):
-    '''Controls whether the checkout dir should be implicitly specified (in the
-    core section) in generated config files.'''
-    return request.param
-
-
-def make_git_config(task_name, project_dir, log_dir, checkout_dir,
-                    checkout_core, **kwargs):
-    '''Set up a Config object for git repository testing.'''
-    config = Config()
-    config.set('core', 'log-root', log_dir)
-    sec_name = 'checkout/' + task_name
-    config.add_section(sec_name)
-    config.set(sec_name, 'repository', project_dir)
-    if checkout_core:
-        config.set('core', 'checkout-root', checkout_dir)
-    else:
-        config.set(sec_name, 'checkout-dir', checkout_dir)
-    git_vcs = kwargs.get('git_vcs', None)
-    if git_vcs is not None:
-        config.set(sec_name, 'vcs', git_vcs)
-    git_ref = kwargs.get('git_ref', None)
-    if git_ref is not None:
-        config.set(sec_name, 'ref', git_ref)
-    git_flags = kwargs.get('git_flags', None)
-    if git_flags is not None:
-        config.set(sec_name, 'flags', git_flags)
-    return config
-
-
-@pytest.fixture(scope='function')
-def git_config(task_name, tmpdir_factory, checkout_core, git_params):
-    '''Create a full configuration object for git checkout testing.'''
-    git_ref, git_flags, git_vcs = git_params
-    project_dir = str(tmpdir_factory.mktemp('project'))
+def config_paths(tmpdir_factory):
+    '''Create a configuration object with the path options set to temporary
+    directories.'''
     log_dir = str(tmpdir_factory.mktemp('log'))
     checkout_dir = str(tmpdir_factory.mktemp('checkout'))
-    setup_project(project_dir)
-    return make_git_config(task_name, project_dir, log_dir, checkout_dir,
-                           checkout_core, git_ref=git_ref, git_flags=git_flags,
-                           git_vcs=git_vcs)
-
-
-@pytest.fixture(scope='function')
-def simple_git_config(task_name, tmpdir_factory, checkout_core):
-    '''Create a simplified configuration object for git checkout testing.'''
-    project_dir = str(tmpdir_factory.mktemp('project'))
-    log_dir = str(tmpdir_factory.mktemp('log'))
-    checkout_dir = str(tmpdir_factory.mktemp('checkout'))
-    setup_project(project_dir)
-    return make_git_config(task_name, project_dir, log_dir, checkout_dir,
-                           checkout_core)
-
-
-# cmake-related fixtures
-
-@pytest.fixture(scope='function', params=['-DCMAKE_BUILD_TYPE=Debug', None])
-def cmake_conf_flags(request):
-    '''Return possible values of the configuration flags for CMake builds.'''
-    return request.param
-
-
-@pytest.fixture(scope='function', params=['-- -j1', None])
-def cmake_build_flags(request):
-    '''Return possible values of the build flags for CMake builds.'''
-    return request.param
-
-
-@pytest.fixture(scope='function', params=['test_exe all', 'test_exe', None])
-def cmake_targets(request):
-    '''Return possible values of the target option for CMake builds.'''
-    return request.param
-
-
-@pytest.fixture(scope='function')
-def cmake_params(cmake_conf_flags, cmake_build_flags, cmake_targets):
-    '''Collect the cmake-related fixtures in a tuple.'''
-    return cmake_conf_flags, cmake_build_flags, cmake_targets
-
-
-@pytest.fixture(scope='function', params=[True, False])
-def build_core(request):
-    '''Controls whether the build dir should be implicitly specified (in the
-    core section) in generated config files.'''
-    return request.param
-
-
-def make_cmake_config(task_name, project_dir, log_dir, build_dir, build_core,
-                      **kwargs):
-    '''Set up a Config object for CMake build testing.'''
-    config = Config()
-    config.set('core', 'log-root', log_dir)
-    sec_name = 'build/' + task_name
-    config.add_section(sec_name)
-    config.set(sec_name, 'source-dir', project_dir)
-    if build_core:
-        config.set('core', 'build-root', build_dir)
-    else:
-        config.set(sec_name, 'build-dir', build_dir)
-    cmake_conf_flags = kwargs.get('cmake_conf_flags', None)
-    if cmake_conf_flags is not None:
-        config.set(sec_name, 'configure-flags', cmake_conf_flags)
-    cmake_build_flags = kwargs.get('cmake_build_flags', None)
-    if cmake_build_flags is not None:
-        config.set(sec_name, 'build-flags', cmake_build_flags)
-    cmake_targets = kwargs.get('cmake_targets', None)
-    if cmake_targets is not None:
-        config.set(sec_name, 'build-targets', cmake_targets)
+    build_dir = str(tmpdir_factory.mktemp('build'))
+    config = Config(paths=[])
+    config.set('path', 'log-root', log_dir)
+    config.set('path', 'checkout-root', checkout_dir)
+    config.set('path', 'build-root', build_dir)
     return config
-
-
-@pytest.fixture(scope='function')
-def cmake_config(task_name, tmpdir_factory, build_core, cmake_params):
-    '''Set up a full Config object for CMake build testing.'''
-    cmake_conf_flags, cmake_build_flags, cmake_targets = cmake_params
-    project_dir = str(tmpdir_factory.mktemp('project'))
-    log_dir = str(tmpdir_factory.mktemp('log'))
-    build_dir = str(tmpdir_factory.mktemp('build'))
-    setup_project(project_dir)
-    return make_cmake_config(task_name, project_dir, log_dir, build_dir,
-                             build_core, cmake_conf_flags=cmake_conf_flags,
-                             cmake_build_flags=cmake_build_flags,
-                             cmake_targets=cmake_targets)
-
-
-@pytest.fixture(scope='function')
-def simple_cmake_config(task_name, tmpdir_factory, build_core):
-    '''Set up a simplified Config object for CMake build testing.'''
-    project_dir = str(tmpdir_factory.mktemp('project'))
-    log_dir = str(tmpdir_factory.mktemp('log'))
-    build_dir = str(tmpdir_factory.mktemp('build'))
-    setup_project(project_dir)
-    return make_cmake_config(task_name, project_dir, log_dir, build_dir,
-                             build_core)
-
-
-@pytest.fixture(scope='function', params=[True, False])
-def with_source_dir(request):
-    '''Return the unimplemented version-control systems.'''
-    return request.param
-
-
-@pytest.fixture(scope='function')
-def git_cmake_config(simple_git_config, simple_cmake_config, with_source_dir):
-    '''Set up a Config object for combined git checkout/CMake build testing.'''
-    sec_name, _ = simple_cmake_config.section_by_family('build')
-    simple_git_config.merge_section(simple_cmake_config, sec_name)
-
-    if not with_source_dir:
-        sec_name, _ = simple_git_config.section_by_family('build')
-        _, name = simple_git_config.section_by_family('checkout')
-        LOGGER.debug('modifying sections %s and %s',
-                     sec_name, name)
-        simple_git_config.remove_option(sec_name, 'source-dir')
-        simple_git_config.set(sec_name, 'checkout', name)
-
-    LOGGER.debug('git_cmake_config: %s', simple_git_config)
-    return simple_git_config
 
 
 @pytest.fixture(scope='function', params=['svn', 'cvs', 'copy'])
@@ -309,11 +164,39 @@ def notimpl_vcs(request):
     return request.param
 
 
+# cmake-related fixtures
+
+@pytest.fixture(scope='function', params=[['-DCMAKE_BUILD_TYPE=Debug'], None],
+                ids=['with configure flags', 'without configure flags'])
+def cmake_configure_flags(request):
+    '''Return possible values of the configuration flags for CMake builds.'''
+    return request.param
+
+
+@pytest.fixture(scope='function', params=[['--', '-j1'], None],
+                ids=['with build flags', 'without build flags'])
+def cmake_build_flags(request):
+    '''Return possible values of the build flags for CMake builds.'''
+    return request.param
+
+
+@pytest.fixture(scope='function', params=[['test_exe', 'all'], ['test_exe'],
+                                          None],
+                ids=['two targets', 'one target', 'no target'])
+def cmake_targets(request):
+    '''Return possible values of the target option for CMake builds.'''
+    return request.param
+
+
 @pytest.fixture(scope='function', params=['autoconf', 'configure'])
 def notimpl_build(request):
     '''Return the unimplemented build systems.'''
     return request.param
 
+
+#######################
+#  depgraph fixtures  #
+#######################
 
 # pylint: disable=too-many-arguments
 @composite
@@ -330,10 +213,6 @@ def dep_dicts(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
         dag[key] = vals
     return dag
 
-
-#######################
-#  depgraph fixtures  #
-#######################
 
 # pylint: disable=too-many-arguments
 @composite
@@ -353,7 +232,7 @@ def depgraphs(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
 class DoNothingTask(Task):
     '''A task that does nothing.'''
 
-    def do(self, _):
+    def do(self, env, config):
         '''What it says on the tin!'''
         pass
 
@@ -440,7 +319,7 @@ def make_graph(tasks, randoms, dep_frac):
 
 class FailingTask(Task):
     '''A failing task.'''
-    def do(self, env):
+    def do(self, env, config):
         '''Raise an exception.'''
         raise Exception
 

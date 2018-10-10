@@ -309,12 +309,14 @@ class LookupSectionFromOptHandler(Handler):
 
     # pylint: disable=too-many-arguments
     def __call__(self, config, sec, split, opt, raw, vars_, fallback):
+        LOGGER.debug('Looking up %r from [%s]', self.opt, sec)
         sec_id = config.get(sec, self.opt, raw=False)
 
         # pylint: disable=protected-access
         chain = ChainMap(config._conf[sec])
         if vars_ is not None:
             chain.maps.append(vars_)
+        LOGGER.debug('Looking up %r from [%s/%s]', opt, self.opt, sec_id)
         val = config.get(self.opt, sec_id, opt, vars=chain, raw=raw)
         deps = ['{}/{}'.format(self.opt, sec_id)]
         if self.finalizer is not None:

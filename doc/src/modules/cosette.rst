@@ -16,8 +16,9 @@ cosette — COnStruction et ExécuTion de TâchEs
 
    cosette/task
    cosette/pythontask
-   cosette/rlist
+   cosette/run
+   cosette/code
    cosette/depgraph
+   cosette/rlist
    cosette/env
    cosette/scheduler
-   cosette/code

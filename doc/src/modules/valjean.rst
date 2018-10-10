@@ -17,3 +17,4 @@ valjean — VALidation, Journal d'Évolution et ANalyse
    valjean/config
    valjean/config_handlers
    valjean/priority_set
+   valjean/load

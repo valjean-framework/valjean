@@ -2,6 +2,7 @@
 
 
 from ..common import Command
+from ...cosette.code import CheckoutTask
 
 
 class CheckoutCommand(Command):
@@ -9,7 +10,7 @@ class CheckoutCommand(Command):
 
     NAME = 'checkout'
 
-    FAMILY = 'checkout'
+    PRIORITY = CheckoutTask.PRIORITY
 
     HELP = 'checkout code'
 

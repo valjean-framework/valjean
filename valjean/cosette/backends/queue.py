@@ -74,7 +74,7 @@ class QueueScheduling:
 
         return tasks_left
 
-    def execute_tasks(self, tasks, graph, env):
+    def execute_tasks(self, *, tasks, graph, env, config):
         '''Execute the tasks.
 
         :param tasks: Iterable over tasks to be executed, possibly sorted
@@ -83,6 +83,8 @@ class QueueScheduling:
         :param DepGraph graph: Dependency graph for the tasks.
         :param env: An initial environment for the scheduled tasks.
         :type env: Env
+        :param env: The configuration object (for things like paths, etc.).
+        :type env: Config
         '''
 
         threads = []
@@ -95,7 +97,8 @@ class QueueScheduling:
         # spawn workers
         LOGGER.debug('master: spawning %s workers...', self.n_workers)
         for _ in range(self.n_workers):
-            thread = QueueScheduling.WorkerThread(self.queue, env, cond_var)
+            thread = QueueScheduling.WorkerThread(self.queue, env, config,
+                                                  cond_var)
             thread.start()
             threads.append(thread)
 
@@ -132,16 +135,18 @@ class QueueScheduling:
         (i.e. executes) tasks passed to it through the queue.
         '''
 
-        def __init__(self, queue, env, cond_var):
+        def __init__(self, queue, env, config, cond_var):
             '''Initialize the thread.
 
             :param queue: The producer-consumer task queue.
             :param env: The execution environment for the tasks.
+            :param config: The configuration for the tasks.
             :param cond_var: A condition variable to notify when we are
                              finished running a task
             '''
             super().__init__()
             self.queue = queue
+            self.config = config
             self.env = env
             self.cond_var = cond_var
 
@@ -160,7 +165,7 @@ class QueueScheduling:
                 self.env.set_pending(task)
 
                 try:
-                    env_update, status = task.do(self.env)
+                    env_update, status = task.do(self.env, self.config)
                 except Exception as ex:  # pylint: disable=broad-except
                     LOGGER.exception('task %s on worker %s failed: %s',
                                      task, self.name, ex)
@@ -170,6 +175,8 @@ class QueueScheduling:
                 else:
                     LOGGER.debug('worker %s: task %s completed '
                                  'with status %s', self.name, task, status)
+                    LOGGER.info('task %s completed with status %s',
+                                task, status)
                     LOGGER.debug('worker %s: proposed environment update: %s',
                                  self.name, env_update)
                     self.env.set_status(task, status)

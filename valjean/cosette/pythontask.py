@@ -19,21 +19,22 @@ We can wrap the function in a :class:`PythonTask` as follows:
 
     >>> task = PythonTask('answer', func)  # 'answer' is the task name
 
-We can then execute the task by passing an empty environment (dictionary) to
-the :meth:`~Task.do` method:
+We can then execute the task by passing an empty environment (dictionary) and
+an empty :class:`~.Config` to the :meth:`PythonTask.do` method:
 
-    >>> task.do({})
-    ({'answer': {'result': 42}}, <TaskStatus.DONE: ...>)
+    >>> task.do(env={}, config=None)
+    42
 
-As usual, :meth`~Task.do` returns a tuple consisting of a return value and a
-task status.
+Note that, contrary to e.g. :meth:`.run.RunTask.do`, :meth:`PythonTask.do`
+simply returns the result of the wrapped function. For the sake of
+illustration, our function returns an integer; however, if you want to use
+:class:`PythonTask` in a :class:`~.DepGraph`, your wrapped function will need
+to return an `(env_up, status)` pair, like the other tasks.
 
-.. todo::
+.. note::
 
-    For the moment, executing a :class:`PythonTask` will always result in a
-    status `~Task.TaskStatus.DONE`. Exceptions are not caught at the level of
-    the task (they should be caught by the scheduler, though). It may be useful
-    to generalize this behaviour.
+    Exceptions raised by the wrapped function are not caught by the task (they
+    should be caught by the scheduler, though).
 
 Calling a function without any arguments is not very restrictive per se.
 Say you want to call a function of two arguments:
@@ -46,8 +47,8 @@ then you may do something like
 
     >>> x, y = 5, 3
     >>> task_add = PythonTask('add', lambda: add(x, y))
-    >>> task_add.do({})
-    ({'add': {'result': 8}}, <TaskStatus.DONE: ...>)
+    >>> task_add.do(env={}, config=None)
+    8
 
 Essentially, you construct a trampoline: the lambda takes no arguments, but it
 captures `x` and `y` from the surrounding scope and passes them to the
@@ -57,8 +58,8 @@ variables, it may bring a few surprises:
     >>> x, y = 5, 3
     >>> task_add = PythonTask('add', lambda: add(x, y))
     >>> x, y = 1, 2
-    >>> task_add.do({})  # this still returns 8, right?
-    ({'add': {'result': 3}}, <TaskStatus.DONE: ...>)
+    >>> task_add.do(env={}, config=None)  # this still returns 8, right?
+    3
     >>> # WAT
 
 So, unless you know what you are doing, it is better to avoid this surprising
@@ -66,14 +67,14 @@ behaviour and use the `args` argument to :class:`PythonTask`:
 
     >>> x, y = 5, 3
     >>> task_add = PythonTask('add', add, args=(x, y))
-    >>> task_add.do({})
-    ({'add': {'result': 8}}, <TaskStatus.DONE: ...>)
+    >>> task_add.do(env={}, config=None)
+    8
 
 There is also a `kwargs` argument that can be used to pass keyword arguments:
 
     >>> task_add = PythonTask('add', add, kwargs={'x': x, 'y': y})
-    >>> task_add.do({})
-    ({'add': {'result': 8}}, <TaskStatus.DONE: ...>)
+    >>> task_add.do(env={}, config=None)
+    8
 
 
 Passing arguments via the environment
@@ -102,9 +103,8 @@ You can wrap it in a :class:`PythonTask` as follows:
 and this is how it works:
 
     >>> env = {'number': 8}
-    >>> task_gnight.do(env)
-    ({'goodnight': {'result': \
-'Goodnight, dingdingdingdingdingdingdingding'}}, <TaskStatus.DONE: ...>)
+    >>> task_gnight.do(env, config=None)
+    'Goodnight, dingdingdingdingdingdingdingding'
 
 Passing arguments via the environment: a more complex example
 -------------------------------------------------------------
@@ -146,16 +146,21 @@ call ``'(i, j)'`` the task that computes element `(i, j)`.
 Armed with these conventions, we can write the function that computes element
 `(i, j)`:
 
-    >>> def compute(i, j, *, env):
+    >>> from valjean.cosette.task import TaskStatus
+    >>> def compute(name, i, j, *, env):
     ...   if i == 0 or j == 0:
-    ...     return 1
+    ...     env_up = {name: {'result': 1}}
+    ...     return env_up, TaskStatus.DONE
     ...   left = str((i-1, j))
     ...   above = str((i, j-1))
     ...   left_result = env[left]['result']
     ...   above_result = env[above]['result']
-    ...   return left_result + above_result
+    ...   result = left_result + above_result
+    ...   env_up = {name: {'result': result}}
+    ...   return env_up, TaskStatus.DONE
 
-Now we construct the tasks and assemble them into a dependency dictionary:
+Note that we have to return an environment update and a status.  Now we
+construct the tasks and assemble them into a dependency dictionary:
 
     >>> deps = {}
     >>> name_to_task = {}
@@ -166,7 +171,8 @@ Now we construct the tasks and assemble them into a dependency dictionary:
     ...   for i in range(k+1):
     ...     j = k - i
     ...     task_name = str((i, j))
-    ...     task = PythonTask(task_name, compute, args=(i, j), env_kwarg='env')
+    ...     task = PythonTask(task_name, compute, args=(task_name, i, j),
+    ...                       env_kwarg='env')
     ...     name_to_task[task_name] = task
     ...     deps[task] = set()
     ...     if i > 0:
@@ -204,18 +210,40 @@ And now we can extract the results from the final environment:
      [ 1  0  0  0  0  0  0  0]]
     >>> np.all(pythontask_pascal == direct_pascal)
     True
+
+Passing arguments via the configuration
+---------------------------------------
+
+The function wrapped in a :class:`PythonTask` can also inspect the global
+`valjean` configuration object. This may be useful to retrieve global settings
+for paths, for instance. Like the environment, you can specify that the
+configuration should be passed to the wrapped function as a keyword argument.
+The keyword is specified by the `config_kwarg` parameter to the
+:class:`PythonTask` constructor. For example:
+
+    >>> from valjean.config import Config
+    >>> def print_checkout_dir(*, config):
+    ...     print(config.get('path', 'checkout-root'))
+    >>> task = PythonTask('work-dir', print_checkout_dir,
+    ...                   config_kwarg='config')
+    >>> config = Config([])
+    >>> task.do(env={}, config=config)
+    /.../checkout
+
+
+Module API
+----------
 '''
 
-from .task import Task, TaskStatus
+from .task import Task
 from .. import LOGGER
 
 
 class PythonTask(Task):
-    '''Task that executes specified Python code. TODO: expand, explain how the
-    environment is threaded into the task.'''
+    '''Task that executes specified Python code.'''
 
     def __init__(self, name, func, *, args=None, kwargs=None,
-                 env_kwarg=None, deps=None):
+                 env_kwarg=None, config_kwarg=None, deps=None):
         '''Initialize the task with a function, a tuple of arguments and a
         dictionary of kwargs.
 
@@ -228,6 +256,9 @@ class PythonTask(Task):
         :param env_kwarg str: The name of the keyword argument that will be
                               used to pass the environment to the function, or
                               `None` if the environment should not be passed.
+        :param config_kwarg str: The name of the keyword argument that will be
+                                 used to pass the config to the function, or
+                                 `None` if the config should not be passed.
         :param deps: If this task depends on other tasks (and valjean cannot
                      automatically discover this), pass them (as a list) to the
                      `deps` parameter.
@@ -239,19 +270,22 @@ class PythonTask(Task):
         self.args = copy.deepcopy(args) if args is not None else ()
         self.kwargs = copy.deepcopy(kwargs) if kwargs is not None else {}
         self.env_kwarg = env_kwarg
+        self.config_kwarg = config_kwarg
 
-    def do(self, env):
+    def do(self, env, config):
         '''Execute the function.
 
         :param env: The environment. It will be passed to the executed function
                     as the `env_kwarg` keyword, if specified.
+        :param config: The config. It will be passed to the executed function
+                       as the `config_kwarg` keyword, if specified.
         '''
         from types import MappingProxyType
-        LOGGER.info('PythonTask %s executing', self.name)
+        LOGGER.info('PythonTask %s runs', self.name)
         if self.env_kwarg is not None:
             # wrap the environment in MappingProxyType, so that self.func
             # cannot modify it
             self.kwargs[self.env_kwarg] = MappingProxyType(env)
-        ret_val = self.func(*self.args, **self.kwargs)
-        env_up = {self.name: {'result': ret_val}}
-        return env_up, TaskStatus.DONE
+        if self.config_kwarg is not None:
+            self.kwargs[self.config_kwarg] = config
+        return self.func(*self.args, **self.kwargs)

@@ -76,7 +76,7 @@ class Scheduler:
         else:
             self.backend = backend
 
-    def schedule(self, env=None):
+    def schedule(self, *, config=None, env=None):
         '''Schedule the tasks!
 
         :param Env env: An initial environment for the scheduled tasks. This
@@ -89,5 +89,6 @@ class Scheduler:
         LOGGER.debug('for graph %s', self.depgraph)
         if env is None:
             env = Env.from_graph(self.depgraph)
-        self.backend.execute_tasks(self.sorted_list, self.depgraph, env)
+        self.backend.execute_tasks(tasks=self.sorted_list, graph=self.depgraph,
+                                   env=env, config=config)
         return env

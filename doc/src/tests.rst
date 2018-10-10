@@ -35,12 +35,6 @@ Fixtures for the :mod:`~valjean` module
 Tests for the :mod:`~.cosette` package
 --------------------------------------
 
-Tests for the :mod:`~.task` module
-``````````````````````````````````
-
-.. automodule:: tests.cosette.test_task
-   :undoc-members:
-
 Tests for the :mod:`~.rlist` module
 ```````````````````````````````````
 
