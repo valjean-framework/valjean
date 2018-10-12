@@ -107,12 +107,10 @@ def process_options(args):
 
     # verbosity
     if args.verbose is not None:
-        if args.verbose == 1:
-            log_level = logging.INFO
-        elif args.verbose > 1:
+        if args.verbose >= 1:
             log_level = logging.DEBUG
     else:
-        log_level = logging.WARNING
+        log_level = logging.INFO
     LOGGER.setLevel(log_level)
     for handler in LOGGER.handlers:
         handler.setLevel(log_level)

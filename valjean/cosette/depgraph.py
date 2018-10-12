@@ -421,7 +421,7 @@ class DepGraph:
         '''
 
         if node in self:
-            LOGGER.info('Node %s already belongs to the graph', node)
+            LOGGER.debug('Node %s already belongs to the graph', node)
             return self
 
         new_index = len(self._nodes)

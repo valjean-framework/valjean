@@ -105,5 +105,5 @@ def schedule(graph, *,
     else:
         LOGGER.debug('skipping environment serialization')
 
-    LOGGER.info(new_env)
+    LOGGER.debug('resulting environment: %s', new_env)
     return new_env

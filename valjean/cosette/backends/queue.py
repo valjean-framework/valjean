@@ -42,6 +42,9 @@ class QueueScheduling:
 
             # skip failed/notrun/completed tasks
             if not env.is_waiting(task):
+                if env.is_done(task):
+                    LOGGER.info("task %s is already done and won't be rerun",
+                                task)
                 LOGGER.debug('master: task %s removed from queue', task)
                 continue
 
@@ -160,6 +163,7 @@ class QueueScheduling:
                     LOGGER.debug('worker %s: exiting', self.name)
                     break
                 LOGGER.debug('worker %s: got task %s', self.name, task)
+                LOGGER.info('task %s starts', task)
 
                 # we start to work on the task
                 self.env.set_pending(task)
