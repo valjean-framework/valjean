@@ -8,10 +8,10 @@ import pytest
 
 from ..context import valjean  # pylint: disable=unused-import
 # pylint: disable=wrong-import-order
-from valjean.cosette import code
-from valjean.cosette.task import TaskStatus
-from valjean.cosette.env import Env
 from valjean import LOGGER
+from valjean.cosette.task import TaskStatus
+from valjean.cosette.code import CheckoutTask, BuildTask
+from valjean.cosette.env import Env
 
 
 from .conftest import CMAKELISTS, requires_git, requires_cmake
@@ -25,8 +25,8 @@ from .conftest import CMAKELISTS, requires_git, requires_cmake
 def do_git_checkout(name, config, project, *, env=None, ref, flags):
     '''Actually perform the git checkout.'''
     # create the task and run it
-    task = code.CheckoutTask(name=name, repository=project, ref=ref,
-                             flags=flags)
+    task = CheckoutTask(name=name, repository=project, ref=ref,
+                        flags=flags)
     if env is None:
         env = Env()
     env_up, status = task.do(env, config)
@@ -46,7 +46,7 @@ def do_git_checkout(name, config, project, *, env=None, ref, flags):
         assert content == CMAKELISTS
     except AssertionError:
         with open(env_up[name]['checkout_log']) as c_f:
-            code.LOGGER.debug('checkout_log:\n%s', c_f.read())
+            LOGGER.debug('checkout_log:\n%s', c_f.read())
         raise
 
     env.apply(env_up)
@@ -57,10 +57,10 @@ def do_cmake_build(name, config, source, *, env=None, configure_flags,
                    build_flags, targets):
     '''Actually perform the CMake build.'''
     # create the task and run it
-    task = code.BuildTask(name, source,
-                          configure_flags=configure_flags,
-                          build_flags=build_flags,
-                          targets=targets)
+    task = BuildTask(name, source,
+                     configure_flags=configure_flags,
+                     build_flags=build_flags,
+                     targets=targets)
 
     if env is None:
         env = Env()
@@ -75,7 +75,7 @@ def do_cmake_build(name, config, source, *, env=None, configure_flags,
         assert os.path.samefile(build_log_dir, log_root)
     except AssertionError:
         with open(env_up[name]['build_log']) as build_f:
-            code.LOGGER.debug('build_log:\n%s', build_f.read())
+            LOGGER.debug('build_log:\n%s', build_f.read())
         raise
 
     build_dir = env_up[name]['build_dir']
@@ -137,23 +137,23 @@ def test_git_checkout_cmake_build(task_name, config_paths, project):
 def test_notimpl_checkout(project, notimpl_vcs):
     '''Test that unimplemented VCSs raise an error.'''
     with pytest.raises(NotImplementedError):
-        code.CheckoutTask('checkout', repository=project, vcs=notimpl_vcs)
+        CheckoutTask('checkout', repository=project, vcs=notimpl_vcs)
 
 
 def test_unknown_checkout(project):
     '''Test that an unknown VCS raises an error.'''
     with pytest.raises(ValueError):
-        code.CheckoutTask('checkout', repository=project, vcs='antani')
+        CheckoutTask('checkout', repository=project, vcs='antani')
 
 
 def test_notimpl_build(project, notimpl_build):
     '''Test that unimplemented build systems raise an error.'''
     with pytest.raises(NotImplementedError):
-        code.BuildTask('build', project, build_system=notimpl_build)
+        BuildTask('build', project, build_system=notimpl_build)
 
 
 def test_unknown_build(project):
     '''Test that an unknown build system raises an error.'''
     # extract the section name and the task name
     with pytest.raises(ValueError):
-        code.BuildTask('build', project, build_system='antani')
+        BuildTask('build', project, build_system='antani')
