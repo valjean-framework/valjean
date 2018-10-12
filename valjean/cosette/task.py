@@ -49,6 +49,11 @@ class Task(ABC):
         self.name = name
         self.depends_on = set()
         if deps is not None:
+            errmsg = ('The `deps` task argument must '
+                      'be either a list of tasks or None')
+            if not (isinstance(deps, list) and
+                    all(isinstance(l, Task) for l in deps)):
+                raise ValueError(errmsg)
             self.depends_on.update(deps)
 
     @abstractmethod
