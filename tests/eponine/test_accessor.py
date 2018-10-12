@@ -49,7 +49,7 @@ def metadata_dicts(draw):
 def data_dicts(draw):
     '''Strategy for generating data dictionaries.'''
     datad = draw(non_empty_dicts(lists(integers(0, 10),
-                                       min_size=1, max_size=10)))
+                                       min_size=1, max_size=6)))
     return {'results': datad}
 
 
@@ -76,8 +76,8 @@ def responses_lists(draw):
     same_md_keys = draw(booleans())
     if same_md_keys:
         fmdd = draw(metadata_dicts())
-        return draw(lists(response_dicts(fmdd), min_size=1, max_size=10))
-    return draw(lists(response_dicts(), min_size=1, max_size=10))
+        return draw(lists(response_dicts(fmdd), min_size=1, max_size=6))
+    return draw(lists(response_dicts(), min_size=1, max_size=6))
 
 
 @given(respl=responses_lists())
