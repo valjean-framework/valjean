@@ -204,14 +204,14 @@ class Env(dict):
         import pickle
         import json
         if fmt == 'json':
-            serializer = json
+            serializer = lambda file_: json.dump(self, file_, indent=2)
             mode = 'w'
         else:
-            serializer = pickle
+            serializer = lambda file_: pickle.dump(self, file_)
             mode = 'wb'
         try:
             with open(path, mode) as output_file:
-                serializer.dump(self, output_file)
+                serializer(output_file)
         except IOError as error:
             LOGGER.error("cannot write %s environment to file '%s'.\n"
                          "Error message: %s", fmt, path, error.strerror)
