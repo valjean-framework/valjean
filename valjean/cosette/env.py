@@ -184,8 +184,12 @@ class Env(dict):
             with open(path, mode) as input_file:
                 deser = serializer.load(input_file)
         except IOError as error:
-            LOGGER.warning("cannot load %s environment from file '%s'. "
-                           "Error message: %s", fmt, path, error.strerror)
+            if error.errno == 2:
+                LOGGER.info("environment file '%s' is missing, starting "
+                            "with an empty environment", path)
+            else:
+                LOGGER.warning("cannot load %s environment from file '%s'. "
+                               "Error message: %s", fmt, path, error.strerror)
             return None
         if fmt == 'json':
             return cls(deser)
