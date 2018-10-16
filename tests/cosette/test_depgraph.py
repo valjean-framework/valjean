@@ -180,6 +180,7 @@ def test_isomorphism_wrong_type(graph):
 @given(graph=depgraphs())
 def test_subgraph_self(graph):
     '''Test that <= is reflexive.'''
+    # pylint: disable=comparison-with-itself
     assert graph <= graph
 
 
