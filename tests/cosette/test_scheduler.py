@@ -50,11 +50,10 @@ def test_dep_tasks(graph, n_workers):
     run(graph, n_workers)
 
 
-@given(graph=graphs(task_strategy=delay_tasks(min_duration=0.1,
-                                              max_duration=1.0),
+@given(graph=graphs(task_strategy=delay_tasks(min_duration=0,
+                                              max_duration=1e-2),
                     dep_frac=0.1),
        n_workers=integers(min_value=0, max_value=6))
-@settings(max_examples=5, deadline=10000)
 def test_few_dep_tasks_few_workers(graph, n_workers):
     '''Test scheduling of few dependent tasks with few workers.'''
     run(graph, n_workers)
