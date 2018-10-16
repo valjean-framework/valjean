@@ -91,6 +91,12 @@ Tests for the :mod:`~.scan_t4` and :mod:`~.parse_t4` modules
 .. automodule:: tests.eponine.test_all_listings
 
 
+Tests for the :mod:`~.accessor` module
+``````````````````````````````````````
+
+.. automodule:: tests.eponine.test_accessor
+
+
 Tests for the :mod:`~.using` module
 ```````````````````````````````````
 

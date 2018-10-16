@@ -40,104 +40,136 @@ here stored as a list of dictinaries. It commands the index (building and
 selections). Examples are shown below.
 
 
+.. _accessor-example:
+
 Building the responses book
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    >>> from valjean.eponine.accessor import ResponsesBook
-    >>> from pprint import pprint
-    >>> commands = [
-    ... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
-    ...  'results': {'ingredients_res': ['egg', 'bacon']}},
-    ... {'resp_function': 'menu2', 'consumer': 'John',
-    ...  'results': [{'ingredients_res': ['egg', 'spam']},
-    ...              {'ingredients_res': ['tomato', 'spam', 'bacon']}]},
-    ... {'resp_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
-    ...  'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},
-    ... {'resp_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
-    ...  'results': {'ingredients_res': ['sausage'],
-    ...              'side_res': 'baked beans'}},
-    ... {'resp_function': 'royal_menu', 'consumer': 'Michael',
-    ...  'drink': 'brandy', 'dessert': 3,
-    ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
-    >>> com_rb = ResponsesBook(commands)
-    >>> print(com_rb.index)  # doctest: +NORMALIZE_WHITESPACE
-    {'consumer': {'Eric': {3}, 'Graham': {2}, 'John': {1}, 'Michael': {4},\
- 'Terry': {0}}, 'dessert': {3: {4}}, 'drink': {'beer': {0, 3}, 'brandy': {4},\
- 'coffee': {2}}, 'resp_function': {'menu1': {0, 2}, 'menu2': {1},\
- 'menu3': {3}, 'royal_menu': {4}}}
+Let's consider a bunch of friends going to the restaurant and ordering their
+menus. For each of them the waiter has to remember their name, under
+``'consumer'``, their choice of menu under ``'resp_function'``, their drink,
+what they precisely order as dish under ``'results'`` and optionally the number
+corresponding to their choice of dessert. He will represent these orders as a
+list of orders, one order being a dictionary.
 
-Various methods are available to select responses, depending on requirements:
+>>> from valjean.eponine.accessor import ResponsesBook
+>>> from pprint import pprint
+>>> orders = [
+... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
+...  'results': {'ingredients_res': ['egg', 'bacon']}},
+... {'resp_function': 'menu2', 'consumer': 'John',
+...  'results': [{'ingredients_res': ['egg', 'spam']},
+...              {'ingredients_res': ['tomato', 'spam', 'bacon']}]},
+... {'resp_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
+...  'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},
+... {'resp_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
+...  'results': {'ingredients_res': ['sausage'],
+...              'side_res': 'baked beans'}},
+... {'resp_function': 'royal_menu', 'consumer': 'Michael',
+...  'drink': 'brandy', 'dessert': 3,
+...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
+>>> com_rb = ResponsesBook(orders)
+>>> print(com_rb)
+ResponsesBook object -> Number of responses: 5, data key: 'results', \
+available metadata keys: ['consumer', 'dessert', 'drink', 'resp_function']
 
-  * get the index of the response:
 
-  >>> ind = com_rb.select_index_by(resp_function='menu1')
-  >>> print(ind)  # doctest: +NORMALIZE_WHITESPACE
-  {'consumer': {'Graham': {2}, 'Terry': {0}}, \
-'drink': {'beer': {0}, 'coffee': {2}}, 'resp_function': {'menu1': {0, 2}}}
-
-  * get the response index in the list:
-
-  >>> ind = com_rb.select_responses_id_by(drink='coffee')
-  >>> pprint(ind)
-  {2}
-
-  * get the response:
-
-  >>> resp = com_rb.select_responses_by(consumer='John')
-  >>> pprint(resp)  # doctest: +NORMALIZE_WHITESPACE
-  [{'consumer': 'John', 'resp_function': 'menu2', \
-'results': [{'ingredients_res': ['egg', 'spam']}, \
-{'ingredients_res': ['tomato', 'spam', 'bacon']}]}]
+Various methods are available to select one order, depending on requirements:
 
   * get a new ResponsesBook:
 
-  >>> sel_rb = com_rb.select_by(resp_function='menu1', drink='beer')
-  >>> print(sel_rb.index)  # doctest: +NORMALIZE_WHITESPACE
-  {'consumer': {'Terry': {0}}, 'drink': {'beer': {0}}, \
+    >>> sel_rb = com_rb.filter_by(resp_function='menu1', drink='beer')
+    >>> # LEAVE OR NOT ?
+    >>> print(sel_rb.index)  # doctest: +NORMALIZE_WHITESPACE
+    {'consumer': {'Terry': {0}}, 'drink': {'beer': {0}}, \
 'resp_function': {'menu1': {0}}}
-  >>> pprint(sel_rb.responses)  # doctest: +NORMALIZE_WHITESPACE
-  [{'consumer': 'Terry',  'drink': 'beer', 'resp_function': 'menu1', \
+    >>> pprint(sel_rb.responses)  # doctest: +NORMALIZE_WHITESPACE
+    [{'consumer': 'Terry',  'drink': 'beer', 'resp_function': 'menu1', \
 'results': {'ingredients_res': ['egg', 'bacon']}}]
 
-  * if the required key doesn't exist a warning is sent:
+    * check if a key is present or not:
 
-  >>> sel_rb = com_rb.select_by(quantity=5)
-  >>> # prints  WARNING     accessor: quantity not a valid key. Possible ones \
-are ['consumer', 'dessert', 'drink', 'resp_function']
-  >>> print(com_rb.index)
-  {'consumer': {'Eric': {3}, 'Graham': {2}, 'John': {1}, 'Michael': {4}, \
-'Terry': {0}}, 'dessert': {3: {4}}, 'drink': {'beer': {0, 3}, 'brandy': {4}, \
-'coffee': {2}}, 'resp_function': {'menu1': {0, 2}, 'menu2': {1}, 'menu3': {3},\
- 'royal_menu': {4}}}
+    >>> 'drink' in sel_rb
+    True
+    >>> 'dessert' in sel_rb
+    False
+    >>> 'dessert' in com_rb
+    True
+
+    The ``'dessert'`` key has been removed from the ResponsesBook issued from
+    the selection while it is still present in the original one.
+
+  * get the available keys (sorted to be able to test them in the doctest, else
+    list is enough):
+
+    >>> sorted(sel_rb.keys())
+    ['consumer', 'drink', 'resp_function']
+    >>> sorted(com_rb.keys())
+    ['consumer', 'dessert', 'drink', 'resp_function']
+
+  * if the required key doesn't exist a warning is emitted:
+
+    >>> sel_rb = com_rb.filter_by(quantity=5)
+    >>> # prints  WARNING     accessor: quantity not a valid key. Possible \
+ones are ['consumer', 'dessert', 'drink', 'resp_function']
+    >>> 'quantity' in com_rb
+    False
 
   * if the value corresponding to the key doesn't exist another warning is
-        reached:
+    emitted:
 
-  >>> sel_rb = com_rb.select_by(drink='wine')
-  >>> # prints  WARNING     accessor: wine is not a valid drink
+    >>> sel_rb = com_rb.filter_by(drink='wine')
+    >>> # prints  WARNING     accessor: wine is not a valid drink
 
-  * selection using squeeze:
+  * to know the available values corresponding to the keys (without the
+    corresponding responses indexes):
 
-  >>> resp = com_rb.select_by_with_squeeze(consumer='Graham', squeeze=True)
-  >>> pprint(resp)  # doctest: +NORMALIZE_WHITESPACE
-  {'consumer': 'Graham', 'drink': 'coffee', 'resp_function': 'menu1', \
+    >>> sorted(com_rb.available_values('drink'))
+    ['beer', 'brandy', 'coffee']
+
+  * if the key doesn't exist an 'empty generator' is emitted:
+
+    >>> sorted(com_rb.available_values('quantity'))
+    []
+
+  * to directly get the responses corresponding to the selection, use the
+    method :func:`ResponsesBook.select_by`
+
+    >>> sel_rb = com_rb.select_by(consumer='Graham')
+    >>> type(sel_rb)
+    <class 'list'>
+    >>> len(sel_rb)
+    1
+    >>> pprint(sel_rb)  # doctest: +NORMALIZE_WHITESPACE
+    [{'consumer': 'Graham', 'drink': 'coffee', 'resp_function': 'menu1', \
+'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}]
+
+  * this also work when more than one response corresponds to the selection:
+
+    >>> sel_rb = com_rb.select_by(drink='beer')
+    >>> pprint(sel_rb)  # doctest: +NORMALIZE_WHITESPACE
+    [{'consumer': 'Terry', 'drink': 'beer', 'resp_function': 'menu1', \
+'results': {'ingredients_res': ['egg', 'bacon']}}, \
+{'consumer': 'Eric', 'drink': 'beer', 'resp_function': 'menu3', \
+'results': {'ingredients_res': ['sausage'], 'side_res': 'baked beans'}}]
+    >>> len(sel_rb)
+    2
+
+  * a *squeeze* option is also available to directly get the response (and not
+    a list of responses) when **only one** response corresponds to the
+    selection (its default is at False):
+
+    >>> resp = com_rb.select_by(consumer='Graham', squeeze=True)
+    >>> pprint(resp)  # doctest: +NORMALIZE_WHITESPACE
+    {'consumer': 'Graham', 'drink': 'coffee', 'resp_function': 'menu1', \
 'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}
 
   * squeeze is not possible if more than one result corresponds to the
     required selection
 
-  >>> resps = com_rb.select_by_with_squeeze(drink='beer', squeeze=True)
-  >>> # prints  WARNING     accessor: Squeeze cannot be applied, more than one\
- response correspond to your choice
-
-  but you can still get them thanks to:
-
-  >>> sel_rb = com_rb.select_responses_by(drink='beer')
-  >>> pprint(sel_rb)  # doctest: +NORMALIZE_WHITESPACE
-  [{'consumer': 'Terry', 'drink': 'beer', 'resp_function': 'menu1', \
-'results': {'ingredients_res': ['egg', 'bacon']}}, \
-{'consumer': 'Eric', 'drink': 'beer', 'resp_function': 'menu3', \
-'results': {'ingredients_res': ['sausage'], 'side_res': 'baked beans'}}]
+    >>> resps = com_rb.select_by(drink='beer', squeeze=True)
+    >>> # prints  WARNING     accessor: Squeeze cannot be applied, more than \
+one response correspond to your choice
 
 
 :class:`Accessor`
@@ -150,13 +182,13 @@ required to parse more than one batch you'll need to access them thanks to a
 loop over the list of batches. Accessor also allows simplified access to other
 data like simulation time or number of batch.
 
-For example, let's consider a parsing results that contains the ``commands``
+For example, let's consider a parsing results that contains the ``orders``
 list of dictionaries used above as example for :class:`ResponsesBook`. It will
 now be stored under the key ``'list_responses'`` and additional items will be
 added to that dictionary for it to look like a default parsing results one.
 
 >>> from valjean.eponine.accessor import Accessor
->>> pres = {'edition_batch_number': 42, 'list_responses': commands}
+>>> pres = {'edition_batch_number': 42, 'list_responses': orders}
 >>> pprint(pres)  # doctest: +NORMALIZE_WHITESPACE
 {'edition_batch_number': 42, 'list_responses':\
  [{'consumer': 'Terry', 'drink': 'beer', 'resp_function': 'menu1', \
@@ -215,7 +247,7 @@ Did not found a responses book
 
 import logging
 import pprint
-from collections import defaultdict, Mapping
+from collections import defaultdict, Mapping, Container
 
 
 LOGGER = logging.getLogger('valjean')
@@ -239,6 +271,49 @@ class Index(Mapping):
 
     Default structure of Index is a ``defaultdict(defaultdict(set))``.
     This class was derived mainly for printing purposes.
+
+    Quick example of index (menu for 4 persons, one has no drink):
+
+    >>> from valjean.eponine.accessor import Index
+    >>> myindex = Index()
+    >>> myindex.index['drink']['beer'] = {1, 4}
+    >>> myindex.index['drink']['wine'] = {2}
+    >>> myindex.index['menu']['spam'] = {1, 3}
+    >>> myindex.index['menu']['egg'] = {2}
+    >>> myindex.index['menu']['bacon'] = {4}
+    >>> print(myindex)
+    {'drink': {'beer': {1, 4}, 'wine': {2}}, \
+'menu': {'bacon': {4}, 'egg': {2}, 'spam': {1, 3}}}
+    >>> 'drink' in myindex
+    True
+    >>> 'consumer' in myindex
+    False
+    >>> len(myindex)
+    2
+    >>> for k in sorted(myindex):
+    ...    print(k, sorted(myindex[k].keys()))
+    drink ['beer', 'wine']
+    menu ['bacon', 'egg', 'spam']
+
+    The :func:`strip` method allows to get a sub-Index from a given set of ids
+    (int), removing the useless keys:
+
+    >>> print(myindex.strip({2}))
+    {'drink': {'wine': {2}}, 'menu': {'egg': {2}}}
+    >>> print(myindex.strip({1, 4}))
+    {'drink': {'beer': {1, 4}}, 'menu': {'bacon': {4}, 'spam': {1}}}
+    >>> print(myindex.strip({3}))
+    {'menu': {'spam': {3}}}
+
+    The key ``'drink'`` has been removed from the last index as 2 did not
+    required it.
+
+    To see the internal structure of the Index, use the :func:`__repr__`
+    method like in:
+
+    >>> "{0!r}".format(myindex)
+    "defaultdict(<function Index.__init__.<locals>.<lambda> at ...>, \
+{...: defaultdict(<class 'set'>, {...}), ...})"
     '''
 
     def __init__(self):
@@ -257,6 +332,9 @@ class Index(Mapping):
                 lstr.append(', ')
         lstr.append('}')
         return ''.join(lstr)
+
+    def __repr__(self):
+        return self.index.__repr__()
 
     def __getitem__(self, item):
         LOGGER.debug("inside __getitem__")
@@ -288,12 +366,13 @@ class Index(Mapping):
         return lind
 
 
-class ResponsesBook:
+class ResponsesBook(Container):
     '''Class to perform selections on results.
 
     This class is based on two objects:
 
       * the responses, as a list of dictionaries (containing data and metadata)
+      * the key corresponding to data in the dictionary (default='results')
       * an index based on responses allowing easy selections on each metadata.
 
     Initialization parameters:
@@ -301,14 +380,71 @@ class ResponsesBook:
     :param list(dict) resp: list of responses
     :param str data_key: key in list of responses corresponding to results or
       data, that should not be used in index (as always present and mandatory)
+
+
+    Examples on development / debugging methods:
+
+    Let's use the example detailled above in
+    :ref:`module introduction <accessor-example>`:
+
+    >>> from valjean.eponine.accessor import ResponsesBook
+    >>> orders = [
+    ... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
+    ...  'results': {'ingredients_res': ['egg', 'bacon']}},
+    ... {'resp_function': 'menu2', 'consumer': 'John',
+    ...  'results': [{'ingredients_res': ['egg', 'spam']},
+    ...              {'ingredients_res': ['tomato', 'spam', 'bacon']}]},
+    ... {'resp_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
+    ...  'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},
+    ... {'resp_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
+    ...  'results': {'ingredients_res': ['sausage'],
+    ...              'side_res': 'baked beans'}},
+    ... {'resp_function': 'royal_menu', 'consumer': 'Michael',
+    ...  'drink': 'brandy', 'dessert': 3,
+    ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
+    >>> com_rb = ResponsesBook(orders)
+
+    * possibility to get the response index directly (internally used method):
+
+      >>> ind = com_rb._filter_resp_id_by(drink='coffee')
+      >>> print(ind)
+      {2}
+
+    * possibility to get the index of the response stripped without rebuilding
+      the full ResponsesBook:
+
+      >>> ind = com_rb._filter_index_by(resp_function='menu1')
+      >>> print(ind)  # doctest: +NORMALIZE_WHITESPACE
+      {'consumer': {'Graham': {2}, 'Terry': {0}}, \
+'drink': {'beer': {0}, 'coffee': {2}}, 'resp_function': {'menu1': {0, 2}}}
+
+      The 'dessert' key has been stripped from the index:
+
+      >>> 'dessert' in ind
+      False
+
+    Debug print is available thanks to :func:`__repr__`:
+
+    >>> small_order = [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}]
+    >>> so_rb = ResponsesBook(small_order)
+    >>> "{0!r}".format(so_rb)
+    "<class 'valjean.eponine.accessor.ResponsesBook'>, \
+(Responses: ..., Index: ...)"
+    >>> # prints in some order (for responses and index dicts)
+    >>> # "<class 'valjean.eponine.accessor.ResponsesBook'>,
+    >>> # (Responses: [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}],
+    >>> # Index: defaultdict(<function Index.__init__.<locals>.<lambda> at ...>
+    >>> # {'drink': defaultdict(<class 'set'>, {'beer': {0}}),
+    >>> # , 'dessert': defaultdict(<class 'set'>, {1: {0}})}))"
     '''
 
     def __init__(self, resp, data_key='results'):
         self.responses = resp
-        self.index = self.build_index(data_key)
+        self.data_key = data_key
+        self.index = self._build_index()
         LOGGER.debug("Index: %s", self.index)
 
-    def build_index(self, data_key='results'):
+    def _build_index(self):
         '''Build index from all responses in the list.
 
         Keys of the sets are keywords used to describe the responses and/or the
@@ -321,11 +457,44 @@ class ResponsesBook:
         index = Index()
         for iresp, resp in enumerate(self.responses):
             for key in resp:
-                if key != data_key:
+                if key != self.data_key:
                     index[key][resp[key]].add(iresp)
         return index
 
-    def select_responses_id_by(self, **kwargs):
+    def __contains__(self, key):
+        if key in self.index:
+            return True
+        return False
+
+    def keys(self):
+        '''Get the available keys in the index (so in the responses list). As
+        usual it returns a generator.
+        '''
+        return self.index.keys()
+
+    def available_values(self, key):
+        '''Get the available keys in the *second* level, i.e. under the given
+        external one.
+
+        :param string key: 'external' key (from outer defaultdict)
+        :returns: generator with corresponding keys (or empty one)
+        '''
+        if key in self:
+            yield from self.index[key].keys()
+        else:
+            yield from ()
+
+    def __str__(self):
+        return ("{0} object -> Number of responses: {1}, "
+                "data key: {2!r}, available metadata keys: {3}"
+                .format(self.__class__.__name__, len(self.responses),
+                        self.data_key, sorted(self.keys())))
+
+    def __repr__(self):
+        return ("{0}, (Responses: {1!r}, Index: {2!r})"
+                .format(self.__class__, self.responses, self.index))
+
+    def _filter_resp_id_by(self, **kwargs):
         '''Selection of responses indices according to kwargs criteria.
 
         :param \\**\\kwargs: keyword arguments to specify the required
@@ -336,7 +505,7 @@ class ResponsesBook:
         for kwd in kwargs:
             if kwd not in self.index:
                 LOGGER.warning("%s not a valid key. Possible ones are %s",
-                               kwd, sorted(list(self.index.keys())))
+                               kwd, sorted(self.keys()))
                 return set()
             if kwargs[kwd] not in self.index[kwd]:
                 LOGGER.warning("%s is not a valid %s", kwargs[kwd], kwd)
@@ -348,7 +517,7 @@ class ResponsesBook:
             return set()
         return respids
 
-    def select_index_by(self, **kwargs):
+    def _filter_index_by(self, **kwargs):
         '''Get index corresponding to selection given thanks to keyword
         arguments.
 
@@ -356,21 +525,10 @@ class ResponsesBook:
           response. More than one are allowed.
         :returns: :class:`Index` (stripped from useless keys)
         '''
-        respids = self.select_responses_id_by(**kwargs)
+        respids = self._filter_resp_id_by(**kwargs)
         return self.index.strip(respids)
 
-    def select_responses_by(self, **kwargs):
-        '''Get response corresponding to selection given thanks to keyword
-        arguments.
-
-        :param \\**\\kwargs: keyword arguments to specify the required
-          response. More than one are allowed.
-        :returns: list of responses (dict) corresponding to the selection
-        '''
-        respids = self.select_responses_id_by(**kwargs)
-        return [self.responses[i] for i in respids]
-
-    def select_by(self, **kwargs):
+    def filter_by(self, **kwargs):
         '''Get a ResponsesBook corresponding to selection from keyword
         arguments.
 
@@ -380,16 +538,14 @@ class ResponsesBook:
           corresponding to the selection)
         '''
         LOGGER.debug("in select_by, kwargs=%s", kwargs)
-        respids = self.select_responses_id_by(**kwargs)
+        respids = self._filter_resp_id_by(**kwargs)
         lresp = [self.responses[i] for i in respids]
         sub_rb = ResponsesBook(lresp)
         return sub_rb
 
-    def select_by_with_squeeze(self, *, squeeze=False, **kwargs):
+    def select_by(self, *, squeeze=False, **kwargs):
         '''Get a ResponsesBook corresponding to selection from keyword
         arguments.
-
-        PAS CONVAINCUE DE CE QUE L'ON VEUT...
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.
@@ -397,9 +553,8 @@ class ResponsesBook:
         :returns: first element of the list of responses if only one,
           else subset in :class:`ResponsesBook` format
         '''
-        respids = self.select_responses_id_by(**kwargs)
+        respids = self._filter_resp_id_by(**kwargs)
         lresp = [self.responses[i] for i in respids]
-        sub_rb = ResponsesBook(lresp)
         if squeeze:
             if not lresp:
                 LOGGER.warning("No response corresponding to the selection.")
@@ -409,7 +564,7 @@ class ResponsesBook:
                                "response correspond to your choice")
                 return None
             return lresp[0]
-        return sub_rb
+        return lresp
 
 
 class Accessor:
@@ -438,7 +593,7 @@ class Accessor:
         :returns: :class:`ResponsesBook` (subset of the default one,
           corresponding to the selection)
         '''
-        return self.resp_book.select_by(**kwargs)
+        return self.resp_book.filter_by(**kwargs)
 
     def simulation_time(self):
         '''Return simulation time.'''
