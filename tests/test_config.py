@@ -307,6 +307,7 @@ def test_trigger(family, section_id, option):
     assert accepts(None, family, section_id, option)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=config(), sec_name=section_names(IDS, with_slash=True))
 def test_msh_handles_missing(conf, sec_name):
     ''':class:`AddMissingSectionHandler` accepts queries about missing
