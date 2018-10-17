@@ -215,7 +215,7 @@ class T4Parser():
 def main(myjdd="", batch_num=-1, mesh_lim=None, end_flag=""):
     '''Main function in order to test parsing directly from this module.
 
-    :param string myjdd: path to the T4 input
+    :param str myjdd: path to the T4 input
     :param int batch_number: batch number to parse
     :param int mesh_lim: number of lines of mesh to read
                          (if required, else None)

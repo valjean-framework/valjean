@@ -146,12 +146,9 @@ class BatchResultScanner:
     def add_meshline(self, line):
         '''Add mesh line to result if stop mesh is not reached.
 
-        :param count_excess: counter for mesh lines excess
-        :type count_excess: int
-        :param result: batch result
-        :type result: list(string)
-        :param line: mesh line
-        :type line: string
+        :param int count_excess: counter for mesh lines excess
+        :param list(str) result: batch result
+        :param str line: mesh line
         '''
         if self.nb_mesh_lines > self.mesh_limit and self.mesh_limit != -1:
             if self.nb_mesh_lines == self.mesh_limit+1:
@@ -167,8 +164,7 @@ class BatchResultScanner:
         '''Scan line to build batch result: mainly deals with mesh
         specificities and store line.
 
-        :param line: last line to be taken into account
-        :type line: string
+        :param str line: last line to be taken into account
         '''
         if self.in_mesh:
             if "(" in line and ")" in line and "," in line:
@@ -250,7 +246,7 @@ class Scan(Mapping):
     :ivar fname: name of the file that will be scanned
     :ivar int reqbatchs: number of batchs required (read from file fname)
     :ivar bool normalend: presence of "NORMAL COMPLETION"
-    :ivar list(string) end_flags: possible end flags to stop the saving of
+    :ivar list(str) end_flags: possible end flags to stop the saving of
       results
     :ivar int mesh_limit: maximum lines of mesh to be stored
     :ivar bool para: True is PARALLEL mode, else False
@@ -261,7 +257,7 @@ class Scan(Mapping):
       ``'simulation time'`` or ``'exploitation time'``. ``'elapsed time'`` only
       appears in listings from parallel jobs.
     :vartype times: :obj:`collections.OrderedDict`
-    :ivar string last_generator_state: keep the random generator state (not
+    :ivar str last_generator_state: keep the random generator state (not
       included in the result as given after `endflag`)
     '''
 
@@ -280,7 +276,7 @@ class Scan(Mapping):
 
         Members needed at initialization:
 
-        :param string fname: name of the input file
+        :param str fname: name of the input file
         :param int mesh_lim: limit on number of lines to read in meshes outputs
                       (can be really long).
 
@@ -290,8 +286,7 @@ class Scan(Mapping):
                         parsing would fail)
 
         :param bool para: run in mono-processor or parallel mode
-        :param end_flag: end flag of the results block in Tripoli-4 listing
-        :type end_flag: string
+        :param str end_flag: end flag of the results block in Tripoli-4 listing
         '''
         self.fname = fname
         self.reqbatchs = -1

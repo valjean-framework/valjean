@@ -9,8 +9,8 @@ This module is composed of 3 classes:
     classes;
   * :class:`ResponsesBook` that stores the list of dictionaries and builds an
     :class:`Index` to facilitate selections;
-  * :class:`Index` based on :class:`defaultdict` to perform selections on the
-    list of dictionaries
+  * :class:`Index` based on :class:`collections.defaultdict` to perform
+    selections on the list of dictionaries
 
 
 The classes :class:`Index` and :class:`ResponsesBook` are meant to be general
@@ -476,7 +476,7 @@ class ResponsesBook(Container):
         '''Get the available keys in the *second* level, i.e. under the given
         external one.
 
-        :param string key: 'external' key (from outer defaultdict)
+        :param str key: 'external' key (from outer defaultdict)
         :returns: generator with corresponding keys (or empty one)
         '''
         if key in self:
@@ -499,7 +499,8 @@ class ResponsesBook(Container):
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.
-        :returns: :class:`set(int)`
+        :return: set of ids
+        :rtype: set(int)
         '''
         respids = set(range(len(self.responses)))
         for kwd in kwargs:

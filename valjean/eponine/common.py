@@ -616,13 +616,10 @@ class DictBuilder(ABC):
         '''Add last bin for the dimension dim. Depending on order of the bins
         the last one will be inserted as first bin or added as last bin.
 
-        :param data: mesh or spectrum results
-        :type data: list
-        :param dim: dimension where the bin will be added (t, mu, phi)
-        :type dim: string
-        :param lastbin: index of the bin in mesh or spectrum containing the
+        :param list data: mesh or spectrum results
+        :param str dim: dimension where the bin will be added (t, mu, phi)
+        :param int lastbin: index of the bin in mesh or spectrum containing the
                          missing edge of the bins
-        :type lastbin: int
         '''
         LOGGER.debug("Adding last bin for dim %s, flag = %s",
                      dim, DictBuilder.VAR_FLAG[dim])
@@ -635,8 +632,7 @@ class DictBuilder(ABC):
         '''Add last bins in energy, time, mu and phi direction angles.
         Based on keywords presence in data.
 
-        :param data: mesh or spectrum results
-        :type data: list
+        :param list data: mesh or spectrum results
         '''
         self._add_last_energy_bin(data)
         nphibins = len(self.bins['phi']) if self.bins['phi'] else 1
@@ -652,11 +648,9 @@ class DictBuilder(ABC):
     def _flip_bins_for_dim(self, dim, axis):
         '''Flip bins for dimension dim.
 
-        :param dim: dimension ('e', 't', 'mu', 'phi')
-        :type dim: string
-        :param axis: axis of the dimension
+        :param str dim: dimension ('e', 't', 'mu', 'phi')
+        :param int axis: axis of the dimension
                      ('e' -> 3, 't' -> 4, 'mu' -> 5, 'phi' -> 6)
-        :type axis: int
         '''
         LOGGER.debug("Bins %s avant flip: %s", dim, str(self.bins[dim]))
         self.bins[dim] = np.flip(self.bins[dim], 0)
@@ -690,8 +684,7 @@ class DictBuilder(ABC):
     def fill_arrays_and_bins(self, data):
         '''Fill arrays and bins for spectrum or mesh data.
 
-        :param data: mesh or spectrum results
-        :type data: list
+        :param list data: mesh or spectrum results
         '''
         pass
 
@@ -709,9 +702,8 @@ class MeshDictBuilder(DictBuilder):
 
         :param list meshvals: mesh data for a given energy bin
                          ``[[[s0, s1, s2], score, sigma],...]``
-        :param name: name of the array to be filled ('default',
+        :param str name: name of the array to be filled ('default',
                      'eintegrated_mesh') for the moment
-        :type name: string
         :param int ebin: energy bin to fill in the array
         '''
         for smesh in meshvals:
@@ -1436,8 +1428,9 @@ def convert_sensitivities(res):
     energy ``'einc'``, exiting energy ``'e'`` and direction cosine ``'mu'``.
     The dtype is ``('score', 'sigma')``.
 
-    Bins are filled in an :obj:`OrderedDict` always containing the 3 keys
-    ``'einc', 'e', 'mu'`` in the order of the bins in the :obj:`numpy.ndarray`.
+    Bins are filled in an :class:`collections.OrderedDict` always containing
+    the 3 keys ``'einc', 'e', 'mu'`` in the order of the bins in the
+    :obj:`numpy.ndarray`.
     '''
     lres = res['sensit_res']
     thelist = []
