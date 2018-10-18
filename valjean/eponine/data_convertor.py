@@ -10,7 +10,7 @@ from valjean.eponine.dataset import Dataset
 LOGGER = logging.getLogger('valjean')
 
 
-def convert_spectrum_as_dataset(fspec_res, res_type='spectrum_res'):
+def spectrum(fspec_res, res_type='spectrum_res'):
     '''Conversion of spectrum in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
     '''
@@ -22,7 +22,7 @@ def convert_spectrum_as_dataset(fspec_res, res_type='spectrum_res'):
         bins=bins, name=res_type)
 
 
-def convert_mesh_as_dataset(fmesh_res, res_type='mesh_res'):
+def mesh(fmesh_res, res_type='mesh_res'):
     '''Conversion of mesh in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
     '''
@@ -35,15 +35,15 @@ def convert_mesh_as_dataset(fmesh_res, res_type='mesh_res'):
         bins=bins, name=res_type)
 
 
-def convert_intres_as_dataset(result, res_type):
-    '''Conversion of integrated result (or generic score) in :class:`Dataset
-    <valjean.eponine.dataset.Dataset>`.
+def integrated_result(result, res_type):
+    '''Conversion of generic score (or energy integrated result) in
+    :class:`Dataset <valjean.eponine.dataset.Dataset>`.
 
     Bins: only possible bin is energy as energy integrated results.
     If other dimensions are not squeezed it is a spectrum so not treated by
     this function.
     '''
-    LOGGER.debug("In convert_intres_as_dataset")
+    LOGGER.debug("In integrated_result")
     intres = result[res_type] if res_type in result else result
     bins = OrderedDict()
     if 'spectrum_res' in result:
@@ -58,7 +58,7 @@ def convert_intres_as_dataset(result, res_type):
                    bins=bins, name=res_type)
 
 
-def convert_entropy_as_dataset(result, res_type):
+def entropy(result, res_type):
     '''Conversion of entropy in :class:`Dataset
     <valjean.eponine.dataset.Dataset>`.
 
@@ -72,7 +72,7 @@ def convert_entropy_as_dataset(result, res_type):
     return Dataset(result, 0, name=res_type)
 
 
-def convert_keff_in_dataset(result, estimator):
+def keff(result, estimator):
     '''Conversion of keff in :class:`Dataset`.'''
     id_estim = result['estimators'].index(estimator)
     print("estimator index =", id_estim)
@@ -83,7 +83,7 @@ def convert_keff_in_dataset(result, estimator):
                    name='keff_'+estimator)
 
 
-def convert_keff_comb_in_dataset(result):
+def keff_combination(result):
     '''Conversion of keff combination in dataset.'''
     kcomb = result['full_comb_estimation']
     return Dataset(kcomb['keff'].copy(),
@@ -91,19 +91,19 @@ def convert_keff_comb_in_dataset(result):
                    name='keff_combination')
 
 
-def convert_ifp_in_dataset(result):
+def adjoint_result(result):
     '''Convert IFP in dataset...'''
     print(type(result))
     if not isinstance(result, dict):
         print("\x1b[1;31mISSUE !!!\x1b[0m")
         return None
     if 'score' not in result:
-        tres = {k: convert_ifp_in_dataset(v) for k, v in result.items()}
+        tres = {k: adjoint_result(v) for k, v in result.items()}
         # for res in result.values():
         #     convert_ifp_in_dataset(res)
         return tres
     print("\x1b[1;38mFound np.ndarray !!!\x1b[0m")
-    return convert_intres_as_dataset(result, 'ifp')
+    return integrated_result(result, 'ifp')
 
 
 def convert_data_in_dataset(data, data_type):
@@ -119,11 +119,11 @@ def convert_data_in_dataset(data, data_type):
 
 
 CONVERT_IN_DATASET = {
-    'spectrum_res': convert_spectrum_as_dataset,
-    'mesh_res': convert_mesh_as_dataset,
-    'shannon_entropy': convert_entropy_as_dataset,
-    'boltzmann_entropy': convert_entropy_as_dataset,
-    'integrated_res': convert_intres_as_dataset
+    'spectrum_res': spectrum,
+    'mesh_res': mesh,
+    'shannon_entropy': entropy,
+    'boltzmann_entropy': entropy,
+    'integrated_res': integrated_result
 }
 
 

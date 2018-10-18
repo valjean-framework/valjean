@@ -592,7 +592,7 @@ class Accessor:
         :returns: :class:`ResponsesBook` (subset of the default one,
           corresponding to the selection)
         '''
-        return self.resp_book.filter_by(**kwargs)
+        return self.resp_book.select_by(**kwargs)
 
     def simulation_time(self):
         '''Return simulation time.'''
