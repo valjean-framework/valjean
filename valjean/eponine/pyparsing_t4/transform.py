@@ -187,7 +187,7 @@ def convert_score(toks):
     return res
 
 
-def _fake_print(toks):
+def _debug_print(toks):
     print("\x1b[1;35mFOUND THE POINT\x1b[0m")
     # print(toks)
     print("List:", toks.asList())
@@ -492,6 +492,7 @@ def print_array(array):
 
     :param numpy.ndarray array: array to print
     '''
+    np.set_printoptions(precision=6, suppress=True)
     lstr = []
     if array.shape != ():
         lstr.append("{0}\n".format(type(array)))
@@ -500,7 +501,7 @@ def print_array(array):
         if array.dtype.names:
             lstr.append("dtype: {0}\n".format(array.dtype))
     else:
-        lstr.append("{0}, dtype: {1}\n".format(array, array.dtype))
+        lstr.append("{0!s}, dtype: {1}\n".format(array, array.dtype))
     return ''.join(lstr)
 
 
@@ -513,16 +514,16 @@ def print_according_type(res, depth=0):
     :const MAX_DEPTH: maximum of prints level
     '''
     if depth > MAX_DEPTH:
-        return None
+        return "\x1b[1;31mMAX_DEPTH = {} reached\x1b[0m\n".format(MAX_DEPTH)
     lstr = []
     if isinstance(res, dict):
         lstr.append(print_dict(res, depth+1))
     elif isinstance(res, list):
         lstr.append(print_list(res, depth+1))
-    elif isinstance(res, np.ndarray):
+    elif isinstance(res, (np.ndarray, np.generic)):
         lstr.append(print_array(res))
     else:
-        lstr.append(print(res))
+        lstr.append("{!s}".format(res))
     return ''.join(lstr)
 
 
@@ -536,13 +537,13 @@ def print_dict(diction, depth=0):
     lstr = []
     printedepth = "3"+str(depth) if depth < 8 else "9"+str(depth-7)
     lstr.append("\x1b[{0}mKeys = {1}\x1b[0m\n"
-                .format(printedepth, list(diction.keys())))
+                .format(printedepth, sorted(diction.keys())))
     if depth > MAX_DEPTH:
-        return None
-    for key in diction:
+        return "\x1b[1;31mMAX_DEPTH = {} reached\x1b[0m\n".format(MAX_DEPTH)
+    for key in sorted(diction):
         spaces = "  "*depth
         lstr.append("\x1b[94m{0}{1}\x1b[0m ".format(spaces, key))
-        if isinstance(diction[key], (dict, list, np.ndarray)):
+        if isinstance(diction[key], (dict, list, np.ndarray, np.generic)):
             lstr.append(print_according_type(diction[key], depth))
         else:
             lstr.append("{0}\n".format(diction[key]))
@@ -558,21 +559,24 @@ def print_list(liste, depth=0):
     '''
     lstr = []
     lstr.append("list of {0} elements -> ".format(len(liste)))
-    for elt in liste:
-        if isinstance(elt, (dict, list, np.ndarray)):
-            if depth > MAX_DEPTH:
-                return None
+    if not liste:
+        return "\n"
+    if isinstance(liste[0], (dict, list, np.ndarray)):
+        if depth > MAX_DEPTH:
+            return ("\x1b[1;31mMAX_DEPTH = {} reached\x1b[0m\n"
+                    .format(MAX_DEPTH))
+        for elt in liste:
             lstr.append(print_according_type(elt, depth))
-        lstr.append("{0}\n".format(liste))
-        break
+    else:
+        lstr.append("{}\n".format(liste))
     return ''.join(lstr)
 
 
 def print_customised_response(res, depth=0):
     '''Print response (in list_responses)
-    Rigid structure as it is supposed to be fixed:
-    one response contains 2 keys, ``'response_description'`` and ``'results'``.
-    NOT ANYMORE, TO BE UPDATED.
+    Rigid structure as it is supposed to contain only 2 kinds of "data":
+    the results or realy data under the key ``'results'`` and the associated
+    metadata under all the other keys (can be numerous):
     This is made explicit in the printing code.
 
     :param res: response part of the output dictionary
@@ -580,11 +584,11 @@ def print_customised_response(res, depth=0):
     :const MAX_DEPTH: maximum of prints level
     '''
     if depth > MAX_DEPTH:
-        return None
+        return "MAX_DEPTH = {} reached\n".format(MAX_DEPTH)
     assert 'results' in res.keys()
     lstr = []
-    # First print the description of the response
-    lstr.append("\x1b[1;35m'response description'\x1b[0m\n")
+    # First print the metadata (in alphabetic order)
+    lstr.append("\x1b[1;35m'response metadata'\x1b[0m\n")
     lstr.append(print_dict({k: v for k, v in res.items() if k != 'results'},
                            depth))
     # Then print the results
@@ -628,32 +632,22 @@ def print_result(toks):
         depth += 1
         if depth > MAX_DEPTH:
             break
-        lstr.append("\n\x1b[1;3{0}mKeys: {1}\x1b[0m\n"
+        lstr.append("\n\x1b[3{0}mKeys: {1}\x1b[0m\n"
                     .format(depth, sorted(list(res.keys()))))
         for key in sorted(res):
             depth += 1
             if depth > MAX_DEPTH:
                 break
             lstr.append("\n\x1b[3{0}m{1}\x1b[0m ".format(depth, key))
-            if key == 'default_keffs':
-                lstr.append(print_list(res[key], depth))
-            elif key == 'list_responses':
+            if key == 'list_responses':
                 lstr.append("Number of responses: {0}\n".format(len(res[key])))
                 for iresp, resp in enumerate(res[key]):
                     depth += 1
                     lstr.append("\nRESPONSE {0}\n".format(iresp))
                     lstr.append(print_customised_response(resp, depth))
                     depth -= 1
-            elif key == 'ifp_adjoint_crit_edition':
-                depth += 1
-                lstr.append(print_according_type(res[key], depth))
-                depth -= 1
-            elif key == 'perturbation':
-                depth += 1
-                lstr.append(print_according_type(res[key], depth))
-                depth -= 1
             else:
-                lstr.append("{0}\n".format(res[key]))
+                lstr.append(print_according_type(res[key], depth))
             depth -= 1
         depth -= 1
     lstr.append("\x1b[1m------------------------------------------------------"

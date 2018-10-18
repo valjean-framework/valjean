@@ -337,7 +337,6 @@ class Index(Mapping):
         return self.index.__repr__()
 
     def __getitem__(self, item):
-        LOGGER.debug("inside __getitem__")
         return self.index.__getitem__(item)
 
     def __len__(self):
@@ -347,7 +346,6 @@ class Index(Mapping):
         return iter(self.index)
 
     def __contains__(self, key):
-        LOGGER.debug("in __contains__")
         return self.index.__contains__(key)
 
     def strip(self, ids):

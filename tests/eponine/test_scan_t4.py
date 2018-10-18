@@ -10,7 +10,6 @@ from ..context import valjean  # pylint: disable=unused-import
 import numpy as np
 import logging
 from valjean.eponine.parse_t4 import T4Parser
-from valjean.eponine.pyparsing_t4 import transform
 
 
 def keffs_checks(keff_res):
@@ -223,13 +222,14 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     in same jdd), but long.
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
+    monkeypatch.setattr("valjean.eponine.pyparsing_t4.transform.MAX_DEPTH", 6)
     t4_res = T4Parser.parse_jdd_with_mesh_lim(
         str(datadir/"entropy.d.res.ceav5"), -1, 10)
     assert t4_res
     assert t4_res.scan_res.normalend
-    monkeypatch.setattr("valjean.eponine.pyparsing_t4.transform.MAX_DEPTH", 6)
-    transform.print_result(t4_res.result)
-
+    with open(str(datadir/"entropy_debug.log"), 'r') as ifile:
+        for line in ifile:
+            assert line in caplog.text, "Line %s not found in caplog:"%line
 
 def test_ifp(datadir):
     '''Use Tripoli-4 result from GODIVA_ifp_statistics.d to test IFP parsing.
