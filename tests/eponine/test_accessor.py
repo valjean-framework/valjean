@@ -242,12 +242,12 @@ def test_strip_index(sampler):
     esd, sids = empty_sets_and_ids(index)
     note(sids)
     if esd:
-        striped_index = index.strip(sids)
+        striped_index = index.keep_only(sids)
         sesd, _ = empty_sets_and_ids(striped_index)
         assert not sesd
     if len(sids) > 2:
         poped_id = sampler.draw(sampled_from(list(sids)))
         sids.remove(poped_id)
-        striped_index = index.strip(sids)
+        striped_index = index.keep_only(sids)
         sesd, ssids = empty_sets_and_ids(striped_index)
         assert poped_id not in ssids

@@ -79,10 +79,6 @@ Various methods are available to select one order, depending on requirements:
   * get a new ResponsesBook:
 
     >>> sel_rb = com_rb.filter_by(resp_function='menu1', drink='beer')
-    >>> # LEAVE OR NOT ?
-    >>> print(sel_rb.index)  # doctest: +NORMALIZE_WHITESPACE
-    {'consumer': {'Terry': {0}}, 'drink': {'beer': {0}}, \
-'resp_function': {'menu1': {0}}}
     >>> pprint(sel_rb.responses)  # doctest: +NORMALIZE_WHITESPACE
     [{'consumer': 'Terry',  'drink': 'beer', 'resp_function': 'menu1', \
 'results': {'ingredients_res': ['egg', 'bacon']}}]
@@ -210,16 +206,14 @@ Construction accessor and responses book:
 >>> if t4acc.resp_book:
 ...    print("Found a responses book")
 Found a responses book
->>> print(t4acc.resp_book.index)  # doctest: +NORMALIZE_WHITESPACE
-{'consumer': {'Eric': {3}, 'Graham': {2}, 'John': {1}, 'Michael': {4},\
- 'Terry': {0}}, 'dessert': {3: {4}}, 'drink': {'beer': {0, 3}, 'brandy': {4},\
- 'coffee': {2}}, 'resp_function': {'menu1': {0, 2}, 'menu2': {1},\
- 'menu3': {3}, 'royal_menu': {4}}}
+>>> print(t4acc.resp_book)
+ResponsesBook object -> Number of responses: 5, data key: 'results', \
+available metadata keys: ['consumer', 'dessert', 'drink', 'resp_function']
 
 Examples of use:
 
 >>> menu_with_dessert = t4acc.get_by(dessert=3)
->>> pprint(menu_with_dessert.responses)  # doctest: +NORMALIZE_WHITESPACE
+>>> pprint(menu_with_dessert)  # doctest: +NORMALIZE_WHITESPACE
 [{'consumer': 'Michael', 'dessert': 3, 'drink': 'brandy',\
  'resp_function': 'royal_menu', 'results': {'dish_res': ['lobster thermidor',\
  'Mornay sauce']}}]
@@ -272,7 +266,8 @@ class Index(Mapping):
     Default structure of Index is a ``defaultdict(defaultdict(set))``.
     This class was derived mainly for printing purposes.
 
-    Quick example of index (menu for 4 persons, one has no drink):
+    Quick example of index (menu for 4 persons, identified by numbers, one has
+    no drink):
 
     >>> from valjean.eponine.accessor import Index
     >>> myindex = Index()
@@ -281,9 +276,9 @@ class Index(Mapping):
     >>> myindex.index['menu']['spam'] = {1, 3}
     >>> myindex.index['menu']['egg'] = {2}
     >>> myindex.index['menu']['bacon'] = {4}
-    >>> print(myindex)
-    {'drink': {'beer': {1, 4}, 'wine': {2}}, \
-'menu': {'bacon': {4}, 'egg': {2}, 'spam': {1, 3}}}
+    >>> myindex.dump(sort=True)
+    "{'drink': {'beer': {1, 4}, 'wine': {2}}, \
+'menu': {'bacon': {4}, 'egg': {2}, 'spam': {1, 3}}}"
     >>> 'drink' in myindex
     True
     >>> 'consumer' in myindex
@@ -295,15 +290,29 @@ class Index(Mapping):
     drink ['beer', 'wine']
     menu ['bacon', 'egg', 'spam']
 
-    The :func:`strip` method allows to get a sub-Index from a given set of ids
-    (int), removing the useless keys:
+    The :func:`keep_only` method allows to get a sub-Index from a given set of
+    ids (int), removing all keys not involved in the corresponding ids:
 
-    >>> print(myindex.strip({2}))
-    {'drink': {'wine': {2}}, 'menu': {'egg': {2}}}
-    >>> print(myindex.strip({1, 4}))
-    {'drink': {'beer': {1, 4}}, 'menu': {'bacon': {4}, 'spam': {1}}}
-    >>> print(myindex.strip({3}))
-    {'menu': {'spam': {3}}}
+    >>> myindex.keep_only({2}).dump(sort=True)
+    "{'drink': {'wine': {2}}, 'menu': {'egg': {2}}}"
+    >>> menu_clients14 = myindex.keep_only({1, 4})
+    >>> sorted(menu_clients14.keys()) == ['drink', 'menu']
+    True
+    >>> list(menu_clients14['drink'].keys()) == ['beer']
+    True
+    >>> list(menu_clients14['drink'].values()) == [{1, 4}]
+    True
+    >>> sorted(menu_clients14['menu'].keys()) == ['bacon', 'spam']
+    True
+    >>> menu_clients14['menu']['spam'] == {1}
+    True
+    >>> 3 in menu_clients14['menu']['spam']
+    False
+    >>> menu_client3 = myindex.keep_only({3})
+    >>> list(menu_client3.keys()) == ['menu']
+    True
+    >>> 'drink' in menu_client3
+    False
 
     The key ``'drink'`` has been removed from the last index as 2 did not
     required it.
@@ -314,6 +323,13 @@ class Index(Mapping):
     >>> "{0!r}".format(myindex)
     "defaultdict(<function Index.__init__.<locals>.<lambda> at ...>, \
 {...: defaultdict(<class 'set'>, {...}), ...})"
+
+    The :func:`__str__` method can also be used (default call in ``print()``),
+    it looks like standard dictionary (``{ ... }`` instead of
+    ``defaultdict(...)``) but keys are not ordered:
+
+    >>> print(myindex)
+    {...: {...: {...}...}}
     '''
 
     def __init__(self):
@@ -321,9 +337,9 @@ class Index(Mapping):
 
     def __str__(self):
         lstr = ["{"]
-        for i, (key, dset) in enumerate(sorted(self.index.items())):
+        for i, (key, dset) in enumerate(list(self.index.items())):
             lstr.append('{0!r}: {{'.format(key))
-            for j, (dkey, ind) in enumerate(sorted(dset.items(), key=str)):
+            for j, (dkey, ind) in enumerate(list(dset.items())):
                 lstr.append('{0!r}: {1!r}'.format(dkey, ind))
                 if j < len(dset) - 1:
                     lstr.append(', ')
@@ -348,7 +364,7 @@ class Index(Mapping):
     def __contains__(self, key):
         return self.index.__contains__(key)
 
-    def strip(self, ids):
+    def keep_only(self, ids):
         '''Get an :class:`Index` containing only the relevant keywords for the
         required set of ids.
         '''
@@ -362,6 +378,28 @@ class Index(Mapping):
                 if tmpset:
                     lind[key][kwd] = tmpset
         return lind
+
+    def dump(self, *, sort=False):
+        '''Dump the Index.
+
+        If ``sorted == False`` (default case), returns :func:`__str__` result,
+        else returns sorted Index (alphabetic order for keys).
+        '''
+        if sort:
+            lstr = ["{"]
+            for i, (key, dset) in enumerate(sorted(self.index.items())):
+                lstr.append('{0!r}: {{'.format(key))
+                for j, (dkey, ind) in enumerate(sorted(dset.items(), key=str)):
+                    lstr.append('{0!r}: {1!r}'.format(dkey, ind))
+                    if j < len(dset) - 1:
+                        lstr.append(', ')
+                lstr.append('}')
+                if i < len(self.index) - 1:
+                    lstr.append(', ')
+            lstr.append('}')
+            return ''.join(lstr)
+        return str(self)
+
 
 
 class ResponsesBook(Container):
@@ -402,9 +440,11 @@ class ResponsesBook(Container):
     ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
     >>> com_rb = ResponsesBook(orders)
 
-    * possibility to get the response index directly (internally used method):
+    * possibility to get the response id directly (internally used method):
 
       >>> ind = com_rb._filter_resp_id_by(drink='coffee')
+      >>> isinstance(ind, set)
+      True
       >>> print(ind)
       {2}
 
@@ -412,9 +452,11 @@ class ResponsesBook(Container):
       the full ResponsesBook:
 
       >>> ind = com_rb._filter_index_by(resp_function='menu1')
-      >>> print(ind)  # doctest: +NORMALIZE_WHITESPACE
-      {'consumer': {'Graham': {2}, 'Terry': {0}}, \
-'drink': {'beer': {0}, 'coffee': {2}}, 'resp_function': {'menu1': {0, 2}}}
+      >>> isinstance(ind, Index)
+      True
+      >>> ind.dump(sort=True)  # doctest: +NORMALIZE_WHITESPACE
+      "{'consumer': {'Graham': {2}, 'Terry': {0}}, \
+'drink': {'beer': {0}, 'coffee': {2}}, 'resp_function': {'menu1': {0, 2}}}"
 
       The 'dessert' key has been stripped from the index:
 
@@ -525,7 +567,7 @@ class ResponsesBook(Container):
         :returns: :class:`Index` (stripped from useless keys)
         '''
         respids = self._filter_resp_id_by(**kwargs)
-        return self.index.strip(respids)
+        return self.index.keep_only(respids)
 
     def filter_by(self, **kwargs):
         '''Get a ResponsesBook corresponding to selection from keyword
