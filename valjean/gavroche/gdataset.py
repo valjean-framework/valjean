@@ -66,16 +66,16 @@ Standard operations are available for :class:`GDataset`, inherited from
 :class:`Dataset`. Examples of their use are given, including failing cases.
 Some are used in various methods but shown only once.
 
-Addition and substraction
+Addition and subtraction
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-Addition and substraction are possible between a :class:`GDataset` and a scalar
+Addition and subtraction are possible between a :class:`GDataset` and a scalar
 (:obj:`numpy.generic`), a :obj:`numpy.ndarray` and another :class:`GDataset`.
-The operator to use for addition is ``+`` and for substraction ``-``.
+The operator to use for addition is ``+`` and for subtraction ``-``.
 
-Retrictions in addition or substraction with a :obj:`numpy.ndarray` are handled
+Retrictions in addition or subtraction with a :obj:`numpy.ndarray` are handled
 by `Numpy`.
 
-The addition or substraction f 2 :class:`GDataset` can be done if
+The addition or subtraction f 2 :class:`GDataset` can be done if
 * both values have the same shape
 * bins conditions:
 
@@ -101,7 +101,7 @@ array([0, 1, 2, 3, 4]))])
 
 As expected it 'only' acts on the value, error and bins are unchanged.
 
-Example of substraction of a :obj:`numpy.ndarray`
+Example of subtraction of a :obj:`numpy.ndarray`
 `````````````````````````````````````````````````
 
     >>> a = np.array([100]*10).reshape(2, 5)
@@ -130,7 +130,7 @@ If the shapes are not the same `Numpy` raises an exception.
 
 .. _addition_gdataset:
 
-Example of addition or substraction of another :class:`GDataset`
+Example of addition or subtraction of another :class:`GDataset`
 ````````````````````````````````````````````````````````````````
 
     >>> gd2 = GDataset(np.arange(20, 30).reshape(2, 5),
@@ -181,9 +181,8 @@ Like in `Numpy` array addition, values need to have the same shape:
     >>> gd4 = GDataset(np.arange(5), np.array([0.01]*5), name='gd4')
     >>> gd1 + gd4
     Traceback (most recent call last):
-        ...
-    AssertionError: Datasets to add do not have same dimensions or the same \
-bins
+        [...]
+    ValueError: Datasets to add do not have same shape
 
 If bins are given, they need to have the same keys and the same values
 (approximately if float values).
@@ -195,8 +194,7 @@ If bins are given, they need to have the same keys and the same values
     >>> gd1 + gd5
     Traceback (most recent call last):
         [...]
-    AssertionError: Datasets to add do not have same dimensions or the same \
-bins
+    ValueError: Datasets to add do not have same bins names
 
     >>> bins6 = OrderedDict([('e', np.array([1, 2, 30])), ('t', np.arange(5))])
     >>> gd6 = GDataset(np.arange(0, -10, -1).reshape(2, 5),
@@ -205,8 +203,7 @@ bins
     >>> gd1 - gd6
     Traceback (most recent call last):
         [...]
-    AssertionError: Datasets to substract do not have same dimensions or the \
-same bins
+    ValueError: Datasets to subtract do not seem to have the same bins
 
 
 Multiplication and division
@@ -280,7 +277,7 @@ If the :obj:`numpy.ndarray`: contains ``0``, ``nan`` or ``inf``, `Numpy` deals
 with them. It sends a RunningWarning about the division by zero.
 
     >>> c = np.array([[2., 3., np.nan, 4., 0.], [1., np.inf, 5., 10., 0.]])
-    >>> gd1 / c
+    >>> gd1 / c  # doctest: +SKIP
     class: <class 'valjean.gavroche.gdataset.GDataset'>, data type: \
 <class 'numpy.ndarray'>
             name: gd1, with shape (2, 5),
@@ -295,7 +292,7 @@ array([0, 1, 2, 3, 4]))])
 Example of multiplication or division of another :class:`GDataset`
 ``````````````````````````````````````````````````````````````````
 
-    >>> gd1 * gd2
+    >>> gd1 * gd2  # doctest: +SKIP
     class: <class 'valjean.gavroche.gdataset.GDataset'>, data type: \
 <class 'numpy.ndarray'>
             name: gd1, with shape (2, 5),
@@ -307,7 +304,7 @@ Example of multiplication or division of another :class:`GDataset`
             bins: OrderedDict([('e', array([1, 2, 3])), ('t', \
 array([0, 1, 2, 3, 4]))])
 
-    >>> gd1 / gd2
+    >>> gd1 / gd2  # doctest: +SKIP
     class: <class 'valjean.gavroche.gdataset.GDataset'>, data type: \
 <class 'numpy.ndarray'>
             name: gd1, with shape (2, 5),
@@ -322,7 +319,7 @@ In both cases the error is calulated considering both datasets are independent,
 so quadratically :math:`e = v*\\sqrt{{(\\frac{gd_1.e}{gd_1.v})}^2 +
 {(\\frac{gd_2.e}{gd_2.v})}^2}`.
 
-The same restictions on bins as for addition and substraction are set for
+The same restictions on bins as for addition and subtraction are set for
 multiplication and division, same ``AssertError`` are raised, see
 :ref:`addition_gdataset`.
 
@@ -393,7 +390,7 @@ to avoid confusions. Assertion errors are raised if called.
     >>> gd1[1]
     Traceback (most recent call last):
         [...]
-    AssertionError: Index can only be a slice or a tuple of slices
+    TypeError: Index can only be a slice or a tuple of slices
 
     >>> bins2 = OrderedDict([('e', np.arange(4)), ('t', np.arange(3)),
     ...                      ('mu', np.arange(3)), ('phi', np.arange(5))])
@@ -403,7 +400,7 @@ to avoid confusions. Assertion errors are raised if called.
     >>> print(gd6[1:, ..., :-1])
     Traceback (most recent call last):
         [...]
-    AssertionError: Index can only be a slice or a tuple of slices
+    TypeError: Index can only be a slice or a tuple of slices
 
 To avoid this ellipsis use ``:`` for the untouched dimensions. Number of ','
 has to be dimension -1.
@@ -428,7 +425,7 @@ energy and direction angles.
     >>> print(gd6[:, 1, :, :])
     Traceback (most recent call last):
         [...]
-    AssertionError: Index can only be a slice or a tuple of slices
+    TypeError: Index can only be a slice or a tuple of slices
 
 This is failing as an index had been required. Instead build the corresponding
 slice:
@@ -445,6 +442,15 @@ slice:
       [0.5 0.5 0.5 0.5]]],
             bins: OrderedDict([('e', array([0, 1, 2, 3])), ('t', \
 array([1, 2])), ('mu', array([0, 1, 2])), ('phi', array([0, 1, 2, 3, 4]))])
+
+Slicing can also only be applied on :obj:`numpy.ndarray`, not on
+:obj:`numpy.generic`:
+
+    >>> gd7 = GDataset(np.int32(100), np.int32(1))
+    >>> gd7[0:1]
+    Traceback (most recent call last):
+        [...]
+    TypeError: [] (__getitem__) can only be applied on numpy.ndarrays
 
 Bins are changed accordingly.
 '''
@@ -487,18 +493,30 @@ class GDataset(Dataset):
     #     return super().__setattr__(name, value)
 
     def _check_datasets_consistency(self, other, operation=""):
-        assert (other.value.shape == self.value.shape
-                and (other.bins == OrderedDict()
-                     or all((s == o
-                             and np.allclose(self.bins[s], other.bins[o]))
-                            for s, o in zip(self.bins, other.bins)))), \
-            ("Datasets to {} do not have same dimensions or the same bins"
-             .format(operation))
+        if other.value.shape != self.value.shape:
+            raise ValueError("Datasets to {} do not have same shape"
+                             .format(operation))
+        if other.bins != OrderedDict():
+            if any((s != o) for s, o in zip(self.bins, other.bins)):
+                raise ValueError("Datasets to {} do not have same bins names"
+                                 .format(operation))
+            if not all(np.allclose(self.bins[s], other.bins[o])
+                       for s, o in zip(self.bins, other.bins)):
+                raise ValueError("Datasets to {} do not seem to have the same "
+                                 "bins".format(operation))
+        # assert (other.value.shape == self.value.shape
+        #         and (other.bins == OrderedDict()
+        #              or all((s == o
+        #                      and np.allclose(self.bins[s], other.bins[o]))
+        #                     for s, o in zip(self.bins, other.bins)))), \
+        #     ("Datasets to {} do not have same dimensions or the same bins"
+        #      .format(operation))
 
     def __add__(self, other):
         LOGGER.debug("in %s.__add__", self.__class__.__name__)
         if not isinstance(other, (int, float, np.ndarray, Dataset)):
-            raise TypeError("Only int and float accepted for the moment")
+            raise TypeError("Int, float, np.array and Dataset"
+                            "accepted for the moment")
         if not isinstance(other, Dataset):
             return GDataset(self.value + other, self.error,
                             bins=self.bins, name=self.name)
@@ -515,7 +533,7 @@ class GDataset(Dataset):
         if not isinstance(other, Dataset):
             return GDataset(self.value - other, self.error,
                             bins=self.bins, name=self.name)
-        self._check_datasets_consistency(other, "substract")
+        self._check_datasets_consistency(other, "subtract")
         value = self.value - other.value
         error = np.sqrt(self.error**2 + other.error**2)
         return GDataset(value, error, bins=self.bins, name=self.name)
@@ -567,18 +585,20 @@ class GDataset(Dataset):
     def __getitem__(self, index):
         LOGGER.debug("in %s.__getitem__ with index=%s of type %s",
                      self.__class__.__name__, index, type(index))
-        assert isinstance(self.value, np.ndarray), \
-            "[] (__getitem__) can only be applied on numpu.ndarrays"
-        assert (isinstance(index, slice)
+        if not isinstance(self.value, np.ndarray):
+            raise TypeError("[] (__getitem__) can only be applied "
+                            "on numpy.ndarrays")
+        if not (isinstance(index, slice)
                 or (isinstance(index, tuple)
-                    and all(isinstance(i, slice) for i in index))), \
-            "Index can only be a slice or a tuple of slices"
-        assert ((isinstance(index, tuple) and self.value.ndim == len(index))
-                or (isinstance(index, slice) and self.value.ndim == 1)), \
-            "len(index) should have the same dimension as the value " \
-            "numpy.ndarray, i.e. (# ',' = dim-1). ':' can be used for a "\
-            "slice (dimension) not affected by the selection. " \
-            "If dim(value) == 1 a slice can be required."
+                    and all(isinstance(i, slice) for i in index))):
+            raise TypeError("Index can only be a slice or a tuple of slices")
+        if ((isinstance(index, tuple) and self.value.ndim != len(index))
+            or (isinstance(index, slice) and self.value.ndim == 1)):
+            raise ValueError("len(index) should have the same dimension as "
+                             "the value numpy.ndarray, i.e. (# ',' = dim-1).\n"
+                             "':' can be used for a slice (dimension) not "
+                             "affected by the selection.\n"
+                             "If dim(value) == 1 a slice can be required.")
         value = self.value[index]
         error = self.error[index]
         bins = self._get_bins_items(index)
