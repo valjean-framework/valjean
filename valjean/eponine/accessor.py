@@ -367,6 +367,10 @@ class Index(Mapping):
     def keep_only(self, ids):
         '''Get an :class:`Index` containing only the relevant keywords for the
         required set of ids.
+
+        :param set(int) ids: index corresponding to the required elements of
+          the list of responses
+        :returns: Index only containing the keys involved in the ids
         '''
         assert isinstance(ids, set)
         lind = Index()
@@ -382,7 +386,7 @@ class Index(Mapping):
     def dump(self, *, sort=False):
         '''Dump the Index.
 
-        If ``sorted == False`` (default case), returns :func:`__str__` result,
+        If ``sort == False`` (default case), returns :func:`__str__` result,
         else returns sorted Index (alphabetic order for keys).
         '''
         if sort:
