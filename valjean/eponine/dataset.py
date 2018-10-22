@@ -73,6 +73,32 @@ True
 True
 >>> nsds.bins == sds.bins
 True
+
+Errors are emitted if the arguments do not have the expected type or if the
+shapes or dimensions are not consistent:
+
+>>> tds = Dataset([1, 2, 3], [0.5, 0.5, 0.5])
+Traceback (most recent call last):
+        [...]
+TypeError: value does not have the expected type (numpy.ndarray or \
+numpy.generic = scalar)
+
+>>> tds = Dataset(np.arange(6).reshape(2, 3), np.arange(6).reshape(3, 2))
+Traceback (most recent call last):
+        [...]
+ValueError: Value and error do not have the same shape
+
+>>> tds = Dataset(np.arange(6).reshape(2, 3), np.array([0.5]*6).reshape(2, 3),
+...               bins={'spam': [1, 2], 'egg': [1, 2, 3]})
+Traceback (most recent call last):
+        [...]
+TypeError: bins should be an OrderedDict
+
+>>> tds = Dataset(np.arange(6).reshape(2, 3), np.array([0.5]*6).reshape(2, 3),
+...               bins=OrderedDict([('spam', [1, 2])]))
+Traceback (most recent call last):
+        [...]
+ValueError: Number of bins do not correspond to dimension of value
 '''
 
 import logging
@@ -110,15 +136,20 @@ class Dataset:
 
         For the moment, N+1 values in the arrays corresponding to bins edges.
         '''
-        assert isinstance(value, (np.ndarray, np.generic))
-        assert isinstance(bins, OrderedDict)
+        if not isinstance(value, (np.ndarray, np.generic)):
+            raise TypeError("value does not have the expected type "
+                            "(numpy.ndarray or numpy.generic = scalar)")
+        if not isinstance(bins, OrderedDict):
+            raise TypeError("bins should be an OrderedDict")
         LOGGER.debug("Number of dimensions from bins: %s", len(bins))
         LOGGER.debug("Type of value: %s", type(value))
         LOGGER.debug("Value charac: ndim = %s, shape = %s, size = %s",
                      value.ndim, value.shape, value.size)
-        assert value.shape == error.shape, \
-            "Value and error do not have the same shape"
-        assert len(bins) == value.ndim or not bins
+        if value.shape != error.shape:
+            raise ValueError("Value and error do not have the same shape")
+        if bins and len(bins) != value.ndim:
+            raise ValueError("Number of bins do not correspond to dimension "
+                             "of value")
         self.value = value
         self.error = error
         self.bins = bins
