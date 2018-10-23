@@ -598,7 +598,7 @@ class GDataset(Dataset):
                 bins=self.bins, name=self.name)
         self._check_datasets_consistency(other, "divide")
         value = self.value / other.value
-        # RunningWarning can be ignored thanks to the commented line.
+        # RuntimeWarning can be ignored thanks to the commented line.
         # 'log' can be used instead of 'ignore' but did not work.
         # with np.errstate(divide='divide', invalid='ignore'):
         error = value * np.sqrt((self.error / self.value)**2

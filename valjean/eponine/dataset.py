@@ -122,7 +122,7 @@ class Dataset:
         How to deal with bins of N values (= center of bins)
     '''
 
-    def __init__(self, value, error, *, bins=OrderedDict(), name=''):
+    def __init__(self, value, error, *, bins=None, name=''):
         '''Dataset class initialization.
 
         :param value: array of N dimensions representing the values
@@ -139,20 +139,21 @@ class Dataset:
         if not isinstance(value, (np.ndarray, np.generic)):
             raise TypeError("value does not have the expected type "
                             "(numpy.ndarray or numpy.generic = scalar)")
-        if not isinstance(bins, OrderedDict):
-            raise TypeError("bins should be an OrderedDict")
-        LOGGER.debug("Number of dimensions from bins: %s", len(bins))
         LOGGER.debug("Type of value: %s", type(value))
         LOGGER.debug("Value charac: ndim = %s, shape = %s, size = %s",
                      value.ndim, value.shape, value.size)
         if value.shape != error.shape:
             raise ValueError("Value and error do not have the same shape")
-        if bins and len(bins) != value.ndim:
-            raise ValueError("Number of bins do not correspond to dimension "
-                             "of value")
+        if bins is not None:
+            if not isinstance(bins, OrderedDict):
+                raise TypeError("bins should be an OrderedDict")
+            LOGGER.debug("Number of dimensions from bins: %s", len(bins))
+            if bins and len(bins) != value.ndim:
+                raise ValueError("Number of bins do not correspond to "
+                                 "dimension of value")
         self.value = value
         self.error = error
-        self.bins = bins
+        self.bins = bins if bins is not None else OrderedDict()
         self.name = name
 
     def __repr__(self):
