@@ -405,7 +405,6 @@ class Index(Mapping):
         return str(self)
 
 
-
 class ResponsesBook(Container):
     '''Class to perform selections on results.
 
