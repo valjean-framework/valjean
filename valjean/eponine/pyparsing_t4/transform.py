@@ -498,12 +498,14 @@ def print_array(array):
         lstr.append("shape: {0}\n".format(array.shape))
         lstr.append("squeezed: {0}\n".format(
             np.array2string(np.squeeze(array), precision=6,
-                            suppress_small=True)))
+                            suppress_small=True,
+                            formatter={'float_kind': '{:.6e}'.format})))
         if array.dtype.names:
             lstr.append("dtype: {0}\n".format(array.dtype))
     else:
         lstr.append("{0}, dtype: {1}\n".format(
-            np.array2string(array, precision=6, suppress_small=True),
+            np.array2string(array, precision=6, suppress_small=True,
+                            formatter={'float_kind': '{:.6e}'.format}),
             array.dtype))
     return ''.join(lstr)
 

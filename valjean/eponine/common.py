@@ -1,7 +1,7 @@
 # pylint: disable=anomalous-backslash-in-string
 # pylint: disable=too-many-lines
 '''This module provides generic functions to convert parsing outputs to
-`numpy` objects.
+`NumPy` objects.
 
 Inputs (outputs from parsers) should be python lists or dictionary,
 dictionary keys should be the same in all parsers...
@@ -25,7 +25,7 @@ Goal
 ----
 
 Parsing results are normally stored as lists and dictionaries but it could be
-easier to use other objects, as `numpy` arrays. In our context these objects
+easier to use other objects, as `NumPy` arrays. In our context these objects
 are used to represent
 
 * spectrum results, i.e. tables splitted at least in energy, sometimes with
@@ -38,7 +38,7 @@ are used to represent
 * IFP results
 * k\ :sub:`ij` results (matrices, eigenvectors and eigenvalues)
 
-`Numpy` objects are useful for future calculations or plotting for example.
+`NumPy` objects are useful for future calculations or plotting for example.
 
 
 Spectrum and meshes
@@ -54,7 +54,7 @@ Generalities
 
 Spectrum and meshes results use a common representation build using
 :class:`DictBuilder`. This common representation is a **7-dimension structured
-array** from `numpy`, see `doc`_ or `numpy structured array`_.
+array** from `NumPy`, see `doc`_ or `numpy structured array`_.
 
 Dimensions are given in :data:`DictBuilder.VARS`:
 
@@ -198,7 +198,7 @@ Result and use in global code
 
 In the framework, :class:`MeshDictBuilder` and :class:`SpectrumDictBuilder` are
 called in :meth:`convert_mesh` and :meth:`convert_spectrum`, themselves from
-transformation modules (transforming parsing result in `numpy`/`python`
+transformation modules (transforming parsing result in `NumPy`/`python`
 containers. Theses methods then returns dictionaries containing the
 :obj:`numpy.ndarray` and other results.
 
@@ -266,7 +266,7 @@ spectrum
 |keff| results
 --------------
 
-Only |keff| as generic response are converted in *numpy* objects; historical
+Only |keff| as generic response are converted in *NumPy* objects; historical
 |keff| block is stored in a dictionary (see
 :mod:`grammar <valjean.eponine.pyparsing_t4.grammar>`).
 
@@ -354,11 +354,11 @@ dictionary is built with the following elements:
 * ``'used_batch'``: number of batchs used
 * ``'full_comb_estimation'``: full combination result (|keff| and σ in %), like
   in :ref:`eponine-keff-matrix`
-* ``'res_per_estimator'``: dictionary with estimator as keyand `numpy
+* ``'res_per_estimator'``: dictionary with estimator as key and `numpy
   structured array`_ with ``dtype = ('keff', 'sigma')`` as value
 * ``'correlation_matrix'``: dictionary with tuple as key and `numpy structured
   array`_ as value, ``('estimator1', 'estimator2'):
-  numpy.array('correlations', 'combined values', 'combined sigma%')``
+  :obj:`numpy.ndarray`('correlations', 'combined values', 'combined sigma%')``
 
 In correlation matrix diagoanl is set to 1 and not converged values (str) are
 set to `numpy.nan`. If the full combination did not converged hte string is
@@ -587,7 +587,7 @@ class DictBuilder(ABC):
                       'score': 'unknown', 'sigma': '%'}
         dtype = np.dtype({'names': colnames,
                           'formats': [FTYPE]*len(colnames)})
-        self.arrays = {'default': np.empty((lnbins), dtype=dtype)}
+        self.arrays = {'default': np.full((lnbins), np.nan, dtype=dtype)}
         LOGGER.debug("bins: %s", str(self.bins))
 
     def add_array(self, name, colnames, lnbins):
@@ -602,7 +602,7 @@ class DictBuilder(ABC):
         '''
         dtype = np.dtype({'names': colnames,
                           'formats': [FTYPE]*len(colnames)})
-        self.arrays[name] = np.empty((lnbins), dtype=dtype)
+        self.arrays[name] = np.full((lnbins), np.nan, dtype=dtype)
 
     @abstractmethod
     def _add_last_energy_bin(self, data):
@@ -849,7 +849,7 @@ def _get_number_of_bins(spectrum):
 
 @profile
 def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
-    '''Convert spectrum results in 7D numpy structured array.
+    '''Convert spectrum results in 7D NumPy structured array.
 
     :param list spectrum: list of spectra.
      Accepts time and (direction) angular grids.
@@ -857,15 +857,15 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
       Default = ``['score', 'sigma', 'score/lethargy']``
     :returns: dictionary with keys and elements
 
-      * ``'spectrum'``: 7 dimensions numpy structured array with related
-        binnings as numpy arrays
+      * ``'spectrum'``: 7 dimensions NumPy structured array with related
+        binnings as NumPy arrays
         ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma', 'score/lethargy')``
       * ``'disc_batchs'``: number of discarded batchs for the score
       * ``'ebins'``: energy binning
       * ``'tbins'``: time binning if time grid required
       * ``'mubins'``: mu binning if mu grid required
       * ``'phibins'``: phi binning if phi grid required
-      * ``'integrated_res'``: 7 dimensions numpy structured array
+      * ``'integrated_res'``: 7 dimensions NumPy structured array
         ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma')``;
         facultative, seen when time required alone and sometimes
         when neither time nor mu nor phi are required
@@ -965,7 +965,7 @@ def get_energy_bins(meshes):
 
 @profile
 def convert_mesh(meshres):
-    '''Convert mesh in 7-dimensions numpy array.
+    '''Convert mesh in 7-dimensions NumPy array.
 
     :param list meshres: Mesh result constructed as:
       ``[{'time_step': [], 'meshes': [], 'integrated_res': {}}, {}]``,
@@ -973,15 +973,15 @@ def convert_mesh(meshres):
 
     :returns: python dictonary with keys
 
-        * ``'mesh'``: numpy structured array of dimension 7
+        * ``'mesh'``: NumPy structured array of dimension 7
           ``v[s0, s1 ,s2, E, t, mu, phi] = ('score', 'sigma')``
         * ``'eunit'``: energy unit
         * ``'ebins'``: energy bin edges (size = number of bins + 1)
         * ``'tbins'``: time binning if time grid required
-        * ``'eintegrated_mesh'``: 7-dimensions numpy structured array
+        * ``'eintegrated_mesh'``: 7-dimensions NumPy structured array
           ``v[s0,s1,s2,E,t,mu,phi] = ('score', 'sigma')``
           corresponding to mesh integrated on energy (facultative)
-        * ``'integrated_res'``: 7 dimensions numpy structured array
+        * ``'integrated_res'``: 7 dimensions NumPy structured array
           ``v[s0,s1,s2,E,t,mu,phi] = (score, sigma)``
           corresponding to mesh integrated over energy and space;
           *facultative*, available when time grid is required (so
@@ -1036,10 +1036,10 @@ def convert_mesh(meshres):
 
 
 def convert_integrated_result(result):
-    '''Convert the energy integrated result in numpy structured array
+    '''Convert the energy integrated result in NumPy structured array
 
     :param list result: integrated results
-    :returns: numpy structured array with (score, sigma)
+    :returns: NumPy structured array with (score, sigma)
     '''
     LOGGER.debug("[38;5;37m%s[0m", str(result))
     dtir = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
@@ -1048,7 +1048,7 @@ def convert_integrated_result(result):
 
 @profile
 def convert_keff_with_matrix(res):
-    '''Convert |keff| results in numpy matrices.
+    '''Convert |keff| results in NumPy matrices.
 
     :param dict res: |keff| results
     :returns: dict filled as:
@@ -1056,8 +1056,10 @@ def convert_keff_with_matrix(res):
     ::
 
         {'used_batch': int, 'estimators': [str],
-         'full_comb_estimation': numpy.array, 'keff_matrix': numpy.array,
-         'correlation_matrix': numpy.array, 'sigma_matrix': numpy.array}
+         'full_comb_estimation': numpy.array,
+         'keff_matrix': numpy.array,
+         'correlation_matrix': numpy.array,
+         'sigma_matrix': numpy.array}
 
     '''
     # not converged cases a tester...
@@ -1072,9 +1074,9 @@ def convert_keff_with_matrix(res):
                    else res['full_comb_estimation'][0])
     keffnames = list(zip(*res['res_per_estimator']))[0]
     nbkeff = len(res['res_per_estimator'])
-    keffmat = np.empty([nbkeff, nbkeff])
+    keffmat = np.full([nbkeff, nbkeff], np.nan)
     corrmat = np.identity(nbkeff)
-    sigmat = np.empty([nbkeff, nbkeff])
+    sigmat = np.full([nbkeff, nbkeff], np.nan)
     for ikeff, keffname in enumerate(keffnames):
         keffmat[ikeff, ikeff] = res['res_per_estimator'][ikeff][1]
         sigmat[ikeff, ikeff] = res['res_per_estimator'][ikeff][2]
@@ -1104,7 +1106,7 @@ def convert_keff_with_matrix(res):
 
 
 def convert_keff(res):
-    '''Convert |keff| results in dictionary containing numpy objects.
+    '''Convert |keff| results in dictionary containing NumPy objects.
 
     :param dict res: keff results
     :returns: dict containing
@@ -1149,12 +1151,12 @@ def convert_keff(res):
 
 # 17 locals in convert_green_bands instead 15, but helps reading of the method
 def convert_green_bands(gbs):  # pylint: disable=R0914
-    '''Convert Green bands results in numpy structured array.
+    '''Convert Green bands results in NumPy structured array.
 
     :param list gbs: Green bands individually stored as dictionaries
     :returns: dict similar to spectum one
-      :code:`{'used_batch': int, 'vals': numpy.array, 'ebins': numpy.array,
-      'sebins': numpy.array}`
+      :code:`{'used_batch': int, 'vals': numpy.array,
+      'ebins': numpy.array, 'sebins': numpy.array}`
     '''
     lastsource = gbs[-1]['gb_step_res'][-1]['gb_source']
     hassourcetab = True if len(lastsource) > 1 else False
@@ -1166,10 +1168,10 @@ def convert_green_bands(gbs):  # pylint: disable=R0914
              lastsource[1][1]+1 if hassourcetab else 1,  # number of v bins
              lastsource[1][2]+1 if hassourcetab else 1,  # number of w bins
              len(spectrum['spectrum_vals']))  # number of energy bins
-    vals = np.empty(index,
-                    dtype=np.dtype([('score', FTYPE),
-                                    ('sigma', FTYPE),
-                                    ('score/lethargy', FTYPE)]))
+    vals = np.full(index, np.nan,
+                   dtype=np.dtype([('score', FTYPE),
+                                   ('sigma', FTYPE),
+                                   ('score/lethargy', FTYPE)]))
     # Loop over results to fill them in numpy array
     for ist, gbstep in enumerate(gbs):
         istep = gbstep['gb_step_desc'][0]
@@ -1203,7 +1205,7 @@ def convert_green_bands(gbs):  # pylint: disable=R0914
 
 
 def convert_generic_adjoint(res, loctype):
-    '''Convert adjoint results in association of dictionaries and numpy array.
+    '''Convert adjoint results in association of dictionaries and NumPy array.
 
     :param list res: Adjoint result got thanks to IFP or Wielandt methodto be
       converted
@@ -1241,10 +1243,11 @@ def convert_generic_adjoint(res, loctype):
 
 def convert_kij_sources(res):
     '''Convert |kij| sources result in python dictionary in which |kij| sources
-    values are converted in a numpy array.
+    values are converted in a NumPy array.
 
     :param dict res: |kij| sources
-    :returns: same dictionary with numpy.array for |kij| sources values
+    :returns: same dictionary with :obj:`numpy.ndarray` for |kij| sources
+      values
     '''
     kijs = {}
     for key in res:
@@ -1256,7 +1259,7 @@ def convert_kij_sources(res):
 
 
 def convert_kij_result(res):
-    '''Convert |kij| result in numpy objects and return a dictionary.
+    '''Convert |kij| result in NumPy objects and return a dictionary.
 
     :param dict res: |kij| result with keys ``'used_batch'``,
       ``'kij_eigenval'``, ``'kij_eigenvec'``, ``'kij_matrix'``
@@ -1287,11 +1290,11 @@ def convert_kij_result(res):
 
 
 def convert_kij_keff(res):
-    '''Convert matrices in numpy array or matrix when estimating |keff| from
+    '''Convert matrices in NumPy array or matrix when estimating |keff| from
     |kij|
 
     :param dict res: |kij| result from |keff| result block
-    :returns: dictionary containing `numpy` arrays:
+    :returns: dictionary containing `NumPy` arrays:
 
     ::
 
@@ -1300,10 +1303,10 @@ def convert_kij_keff(res):
         'kij-keff': float,
         'nbins': int,
         'spacebins': numpy.array of int with shape (nbins,) or (nbins, 3), the
-                     latter case corresponding to space mesh,
+            latter case corresponding to space mesh,
         'eigenvector': numpy.array,
         'keff_KIJ_matrix': numpy.array,
-        'keff_StdDev_matrix': numpy array,
+        'keff_StdDev_matrix': numpy.array,
         'keff_sensibility_matrix': numpy.array}
 
     Keys ``'nbins'`` and ``'spacebins'`` are facultative.
@@ -1324,13 +1327,13 @@ def convert_kij_keff(res):
         LOGGER.warning("[31mStrange: not the same number of space bins and "
                        "eigenvectors[0m")
     # Fill the 3 matrices
-    kijmat = np.empty([nbins, nbins])
+    kijmat = np.full([nbins, nbins], np.nan)
     for irow, row in enumerate(res['keff_KIJ_matrix'][1:]):
         kijmat[irow] = np.array(tuple(row[1:]))
-    stddevmat = np.empty([nbins, nbins])
+    stddevmat = np.full([nbins, nbins], np.nan)
     for irow, row in enumerate(res['keff_StdDev_matrix'][1:]):
         stddevmat[irow] = np.array(tuple(row[1:]))
-    sensibmat = np.empty([nbins, nbins])
+    sensibmat = np.full([nbins, nbins], np.nan)
     for irow, row in enumerate(res['keff_sensibility_matrix'][1:]):
         sensibmat[irow] = np.array(tuple(row[1:]))
     return {'estimator': res['estimator'],
@@ -1395,7 +1398,7 @@ def fill_sensitivities_arrays(data):
     nbebins = len(data[-1]['values'])
     # initialisation et remplissage
     bins = OrderedDict([('einc', []), ('e', []), ('mu', [])])
-    array = np.empty((nbeinc, nbebins, nbcos), dtype)
+    array = np.full((nbeinc, nbebins, nbcos), np.nan, dtype)
     ibin = [0, 0, 0]
     for ind, vals in enumerate(data):
         if 'direction_cosine' in vals:
