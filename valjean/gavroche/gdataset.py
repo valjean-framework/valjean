@@ -6,8 +6,7 @@ All operations conserve the name of the initial dataset.
 
 .. todo::
 
-    Real documentation, implementation of tests in this documentation and tests
-    for pytest using hypothesis.
+    Adding comparisons to gdataset.
 
 .. _numpy indexing:
    https://docs.scipy.org/doc/numpy/user/basics.indexing.html
@@ -76,7 +75,7 @@ Addition and subtraction are possible between a :class:`GDataset` and a scalar
 The operator to use for addition is ``+`` and for subtraction ``-``.
 
 Restrictions in addition or subtraction with a :obj:`numpy.ndarray` are handled
-by `Numpy`.
+by `NumPy`.
 
 The addition or subtraction f 2 :class:`GDataset` can be done if
 
@@ -132,7 +131,7 @@ Example of subtraction of a :obj:`numpy.ndarray`
 (10,) 
 
 
-If the shapes are not the same `Numpy` raises an exception (and gd1pb is not
+If the shapes are not the same `NumPy` raises an exception (and gd1pb is not
 defined).
 
 
@@ -179,7 +178,7 @@ Datasets without binning can also be added:
 
 Bins of the dataset on the left are kept.
 
-Like in `Numpy` array addition, values need to have the same shape:
+Like in `NumPy` array addition, values need to have the same shape:
 
     >>> gd4 = GDataset(np.arange(5), np.array([0.01]*5), name='gd4')
     >>> "shape gd1 {0}, gd4 {1} -> comp = {2}".format(
@@ -231,7 +230,7 @@ scalar (:obj:`numpy.generic`), a :obj:`numpy.ndarray` and another
 The operator to use for multiplication is ``*`` and for division ``/``.
 
 Restrictions in multiplication and division with a :obj:`numpy.ndarray` are
-handled by `Numpy`.
+handled by `NumPy`.
 
 The multiplication or division of 2 :class:`GDataset` can be done if
 
@@ -242,8 +241,8 @@ The multiplication or division of 2 :class:`GDataset` can be done if
     * OR bins are approximately the same, i.e. have the same keys and bins
       values are within 1e-5 tolerance (default from :func:`numpy.allclose`)
 
-Division by zero, nan or inf are handled by `Numpy` and return a
-RuntimeWarning from `Numpy` (only in the zero case).
+Division by zero, nan or inf are handled by `NumPy` and return a
+RuntimeWarning from `NumPy` (only in the zero case).
 
 
 Example multiplication of a scalar value
@@ -288,9 +287,9 @@ Example of division of a :obj:`numpy.ndarray`
 (10,) 
 
 
-If the shapes are not the same `Numpy` raises an exception.
+If the shapes are not the same `NumPy` raises an exception.
 
-If the :obj:`numpy.ndarray`: contains ``0``, ``nan`` or ``inf``, `Numpy` deals
+If the :obj:`numpy.ndarray`: contains ``0``, ``nan`` or ``inf``, `NumPy` deals
 with them. It sends a RunningWarning about the division by zero.
 
     >>> c = np.array([[2., 3., np.nan, 4., 0.], [1., np.inf, 5., 10., 0.]])
@@ -358,8 +357,8 @@ given index is not possible (for dimensions consistency reasons). Requiring a
 given index can then be done using a slice.
 
 
-Example 1: removing first and last bin in time on ``gd1``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Getting a subset of the :class:`GDataset`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Time is the second dimension, to remove first and last bins the usual slice is
 ``[1:-1]``, the first dimension, energy, is conserved, so its slice is ``[:]``.
@@ -386,12 +385,12 @@ The slice to apply is then ``[:, 1:-1]``.
 Slicing is also applied on bins.
 
 
-Example 2: removing first and last bin in energy on ``gd1``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. warning::
+    Requiring a slice when there are not enough elements on the dimension give
+    empty arrays.
 
-Following the same logic the slice is ``[1:-1, :]``, but the issue is that
-``gd1`` has only 2 bins in energy, so removing first and second should give an
-empty GDataset.
+    For example: removing first and last bin in energy on ``gd1``. The slice is
+    ``[1:-1, :]`` in that case, but ``gd1`` has only 2 bins in energy.
 
     >>> gd1slefl = gd1[1:-1, :]
     >>> gd1slefl.value.shape == (0, 5)
@@ -407,37 +406,30 @@ empty GDataset.
     >>> np.array_equal(gd1slefl.bins['e'], [2])
     True
 
-This is what we obtain. Note that in this case, as bins are in reality the
-edges of the bins we have N+1 values in the bins compared to the value/error
-where we have N values. Slicing then give one value in energy bins, so unusable
-here (it would be if we have values and centers of bins instead of edges of
-bins).
+    Note that in this case, as bins are in reality the edges of the bins, so we
+    have N+1 values in the bins compared to the value/error where we have N
+    values. Slicing then give one value in energy bins, so unusable here (it
+    would be empty if we have values and centers of bins instead of edges of
+    bins).
 
 
-Example 3: GDataset does not support indexing and ellipsis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+All dimensions have to be present in the slice
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Index and ellipsis are other slicing possibilities on :obj:`numpy.ndarray` (see
-`numpy indexing_` for current version of `Numpy`), but they are disabled here
-to avoid confusions. Assertion errors are raised if called.
+Use ``:`` for the untouched dimensions. Number of ``,`` has to be dimension -1.
 
-    >>> gd1[1]
-    Traceback (most recent call last):
-        [...]
-    TypeError: Index can only be a slice or a tuple of slices
+Let's consider a new GDataset, with 4 dimensions:
 
     >>> bins2 = OrderedDict([('e', np.arange(4)), ('t', np.arange(3)),
     ...                      ('mu', np.arange(3)), ('phi', np.arange(5))])
     >>> gd6 = GDataset(np.arange(48).reshape(3, 2, 2, 4),
     ...                np.array([0.5]*48).reshape(3, 2, 2, 4),
     ...                bins=bins2, name='gd6')
-    >>> gd6e = gd6[1:, ..., :-1]
-    Traceback (most recent call last):
-        [...]
-    TypeError: Index can only be a slice or a tuple of slices
+    >>> gd6.value.ndim == 4
+    True
 
-To avoid this ellipsis use ``:`` for the untouched dimensions. Number of ','
-has to be dimension -1.
+To remove first bin on energy dimension and last bin on phi dimension, the
+slice to be used is: ``[1:, :, :, :-1]``.
 
     >>> gd6_1 = gd6[1:, :, :, :-1]
     >>> gd6_1.__class__
@@ -464,17 +456,8 @@ has to be dimension -1.
     >>> np.array_equal(gd6_1.bins['phi'], gd6.bins['phi'][:-1])
     True
 
-To get the GDataset on one index (or one bins), index won't be possible. For
-example, with ``gd6``, we want the second bin in time keeping all bins in
-energy and direction angles.
-
-    >>> gd6_2e = gd6[:, 1, :, :]
-    Traceback (most recent call last):
-        [...]
-    TypeError: Index can only be a slice or a tuple of slices
-
-This fails as an index had been required. Instead build the corresponding
-slice:
+If we only want the second bin in time keeping all bins in energy and direction
+angles, the slice is ``[:, 1:2, :, :]``.
 
     >>> gd6_2 = gd6[:, 1:2, :, :]
     >>> gd6_2.value.shape == (3, 1, 2, 4)
@@ -493,8 +476,43 @@ slice:
 
 Bins are changed accordingly.
 
-Slicing can also only be applied on :obj:`numpy.ndarray`, not on
-:obj:`numpy.generic`:
+
+.. warning::
+    Comparison to `NumPy`: index and ellipsis are other slicing possibilities
+    on :obj:`numpy.ndarray` (see `numpy indexing`_ for current version of
+    `NumPy`), but they are disabled here to avoid confusions. Errors are raised
+    if required.
+
+    >>> gd1[1]
+    Traceback (most recent call last):
+        [...]
+    TypeError: Index can only be a slice or a tuple of slices
+
+    >>> gd6_2e = gd6[:, 1, :, :]
+    Traceback (most recent call last):
+        [...]
+    TypeError: Index can only be a slice or a tuple of slices
+
+    >>> gd6e = gd6[1:, ..., :-1]
+    Traceback (most recent call last):
+        [...]
+    TypeError: Index can only be a slice or a tuple of slices
+
+    It also need to have the same dimension as the value:
+
+    >>> gd6_2e = gd6[:, 1:2]
+    Traceback (most recent call last):
+        [...]
+    ValueError: len(index) should have the same dimension as the value \
+numpy.ndarray, i.e. (# ',' = dim-1).
+    ':' can be used for a slice (dimension) not affected by the selection.
+    If dim(value) == 1 a slice can be required.
+
+
+
+.. warning::
+    Slicing can also only be applied on :obj:`numpy.ndarray`, not on
+    :obj:`numpy.generic`:
 
     >>> gd7 = GDataset(np.int32(100), np.int32(1))
     >>> gd7[0:1]
@@ -586,8 +604,8 @@ class GDataset(Dataset):
                 bins=self.bins, name=self.name)
         self._check_datasets_consistency(other, "multiply")
         value = self.value * other.value
-        error = value * np.sqrt((self.error / self.value)**2
-                                + (other.error / other.value)**2)
+        error = np.sqrt((self.error * other.value)**2
+                        + (other.error * self.value)**2)
         return GDataset(value, error, bins=self.bins, name=self.name)
 
     def __truediv__(self, other):
@@ -601,8 +619,8 @@ class GDataset(Dataset):
         # RuntimeWarning can be ignored thanks to the commented line.
         # 'log' can be used instead of 'ignore' but did not work.
         # with np.errstate(divide='divide', invalid='ignore'):
-        error = value * np.sqrt((self.error / self.value)**2
-                                + (other.error / other.value)**2)
+        error = np.sqrt((self.error / other.value)**2
+                        + (self.value * other.error / other.value**2)**2)
         return GDataset(value, error, bins=self.bins, name=self.name)
 
     @staticmethod

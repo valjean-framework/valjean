@@ -94,25 +94,36 @@ def coord_odicts(draw, shape, dtype=None, edges=True):
 
 
 @composite
-def gdatasets(draw, *, shape=None, coords=None):
+def gdatasets(draw, *, elts=floats(-1e5, 1e5), shape=None, coords=None):
     '''Strategy for generating :class:`~.gdataset.dataset` objects.'''
-    dtype = draw(floating_dtypes(sizes=(32, 64)))
     if shape is None:
         a_shape = array_shapes(max_dims=3)  # was 7
     else:
         a_shape = shape
-    # finite(dtype))) -> numbers too close to limit, especially for product
-    values = draw(arrays(dtype, a_shape, elements=floats(-1e-8, 1e8)))
-    rel_err = draw(arrays(dtype, values.shape,
+    values = draw(arrays(np.float64, a_shape, elements=elts))
+    rel_err = draw(arrays(np.float64, values.shape,
                           elements=floats(min_value=0., max_value=1.)))
     errors = np.abs(values) * rel_err
     if coords is None:
         wcoord = draw(booleans())
-        a_coords = (draw(coord_odicts(values.shape, just(dtype), booleans()))
+        a_coords = (draw(coord_odicts(values.shape, just(np.float64),
+                                      booleans()))
                     if wcoord else OrderedDict())
     else:
         a_coords = coords
     return gdataset.GDataset(values, errors, bins=a_coords)
+
+
+@composite
+def multiple_gdatasets(draw, size, elts=floats(-1e5, 1e5)):
+    '''Strategy for generating multiple gdatasets with the same shape and bins.
+    '''
+    gds = draw(gdatasets())
+    mult_gds = [gds]
+    for _ in range(1, size):  # elt 0 is gds
+        mult_gds.append(draw(gdatasets(elts=elts, shape=gds.value.shape,
+                                       coords=gds.bins)))
+    return mult_gds
 
 
 @composite
