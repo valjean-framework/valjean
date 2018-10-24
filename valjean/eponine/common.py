@@ -534,8 +534,8 @@ if 'profile' not in globals()['__builtins__']:
 
 LOGGER = logging.getLogger('valjean')
 PP = pprint.PrettyPrinter(indent=4, depth=2)
-ITYPE = np.int32
-FTYPE = np.float32  # pylint: disable=E1101
+ITYPE = np.int64
+FTYPE = np.float64
 
 
 class DictBuilder(ABC):
