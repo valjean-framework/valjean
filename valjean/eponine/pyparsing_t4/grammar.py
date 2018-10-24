@@ -3,7 +3,7 @@
 r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
 .. _pyparsing_wiki: http://pyparsing.wikispaces.com/
-.. _pyparsing_pip: https://pypi.python.org/pypi/pyparsing/2.2.0
+.. _pyparsing_pip: https://pypi.python.org/pypi/pyparsing/2.2.0/
 .. |keff| replace:: k\ :sub:`eff`
 .. |kij| replace:: k\ :sub:`ij`
 .. role :: parsing_var(literal)
@@ -190,6 +190,11 @@ level as the response block. These parsers and the associated dictionary key
     function itself. Adjoint criticality editions are only done for IFP, this
     may change when the same will be available for Wielandt. Some renaming can
     also be needed.
+
+
+.. warning::
+
+    The link `pyparsing_wiki`_ is now broken as the website has closed...
 
 '''
 
@@ -637,18 +642,18 @@ _maillelt = (Suppress(_scoremaillevol_kw + ':') + _inums
                        + Suppress(',') + _inums + Suppress(')'))))
 _score_maille = (_scoremaille_kw('scoring_zone_type')
                  + Group(_maillelt)('scoring_zone_id'))
-scorezone = (Suppress(_scorezone_kw+':') +
-             (_score_mesh
-              | _score_allgeom
-              | _score_allsources
-              | _score_vol
-              | _score_surf
-              | _score_surf_sum
-              | _score_vol_sum
-              | _score_point
-              | _score_cell
-              | _score_maille
-              | LineEnd()))
+scorezone = (Suppress(_scorezone_kw+':')
+             + (_score_mesh
+                | _score_allgeom
+                | _score_allsources
+                | _score_vol
+                | _score_surf
+                | _score_surf_sum
+                | _score_vol_sum
+                | _score_point
+                | _score_cell
+                | _score_maille
+                | LineEnd()))
 # scoring description = scoring mode + scoring zone
 scoredesc = scoremode + scorezone
 

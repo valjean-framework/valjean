@@ -1,6 +1,7 @@
 # pylint: disable=trailing-whitespace
-'''Extension of class eponine.dataset.Dataset in other to perform simple
-calculations and usual operations on datasets ``(+, -, *, /, [])``.
+'''Extension of class :class:`Dataset <valjean.eponine.dataset.Dataset>` in
+other to perform simple calculations and usual operations on datasets
+``(+, -, *, /, [])``.
 
 All operations conserve the name of the initial dataset.
 
@@ -15,8 +16,8 @@ All operations conserve the name of the initial dataset.
 Creation of a :class:`GDataset`
 -------------------------------
 
-GDatasets can be created from :class:`Dataset` or directly from their
-arguments.
+GDatasets can be created from :class:`Dataset
+<valjean.eponine.dataset.Dataset>` or directly from their arguments.
 
     >>> from collections import OrderedDict
     >>> from valjean.gavroche.gdataset import GDataset
@@ -42,7 +43,8 @@ From the default arguments:
     >>> np.array_equal(bins['t'], [0, 1, 2, 3, 4])
     True
 
-From a :class:`Dataset` (usually obtained from parsing):
+From a :class:`Dataset <valjean.eponine.dataset.Dataset>` (usually obtained
+from parsing):
 
     >>> from valjean.eponine.dataset import Dataset
     >>> ds = Dataset(np.arange(3), np.array([1]*3), name='ds')
@@ -65,8 +67,9 @@ Operations available on GDatasets
 ---------------------------------
 
 Standard operations are available for :class:`GDataset`, inherited from
-:class:`Dataset`. Examples of their use are given, including failing cases.
-Some are used in various methods but shown only once.
+:class:`Dataset <valjean.eponine.dataset.Dataset>`. Examples of their use are
+given, including failing cases. Some are used in various methods but shown only
+once.
 
 Addition and subtraction
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -530,7 +533,9 @@ LOGGER = logging.getLogger('valjean')
 
 
 class GDataset(Dataset):
-    '''Sub-class to extend Dataset (in eponine).'''
+    '''Sub-class to extend :class:`Dataset <valjean.eponine.dataset.Dataset>`
+    (in eponine).
+    '''
 
     # works but looks useless
     # def __new__(cls, obj):

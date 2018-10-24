@@ -1,6 +1,6 @@
 # pylint: disable=anomalous-backslash-in-string
 # pylint: disable=too-many-lines
-'''This module provides generic functions to convert parsing outputs to
+r'''This module provides generic functions to convert parsing outputs to
 `NumPy` objects.
 
 Inputs (outputs from parsers) should be python lists or dictionary,
@@ -358,7 +358,7 @@ dictionary is built with the following elements:
   structured array`_ with ``dtype = ('keff', 'sigma')`` as value
 * ``'correlation_matrix'``: dictionary with tuple as key and `numpy structured
   array`_ as value, ``('estimator1', 'estimator2'):
-  :obj:`numpy.ndarray`('correlations', 'combined values', 'combined sigma%')``
+  numpy.array('correlations', 'combined values', 'combined sigma%')``
 
 In correlation matrix diagoanl is set to 1 and not converged values (str) are
 set to `numpy.nan`. If the full combination did not converged hte string is
@@ -508,13 +508,10 @@ specified):
 
         - ``'sigma2(means)'``: variance of means or σ\ :sup:`2` of means
         - ``'mean(sigma_n2)'``: mean of variances, with variance = v\ :sub:`n`
-        - ``'sigma(sigma_n2)'``: σ(variances) = :math:`\\sqrt{v(v_n)}`
+        - ``'sigma(sigma_n2)'``: σ(variances) = :math:`\sqrt{v(v_n)}`
         - ``'fisher test'``: this is an estimator more than a test
         - Variance, or sigma_n2 is given by:
-          :math:`v_n = \\frac{\\sum^n_i{(x_i -m)^2}}{n(n-1)}`
-
-
-
+          :math:`v_n = \frac{\sum^n_i{(x_i -m)^2}}{n(n-1)}`
 '''
 
 import logging

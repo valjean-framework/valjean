@@ -5,7 +5,7 @@ pyparsing_t4 – Pyparsing parser for TRIPOLI-4
    :undoc-members:
 
 .. _pyparsing: https://pythonhosted.org/pyparsing/
-      
+
 Module using the `pyparsing`_ package to parse Tripoli-4 output listings.
 
 Only the results part of the output listings are parsed, as strings. This module
