@@ -25,7 +25,7 @@ def main(argv=None):
     LOGGER.info('run starts...')
     if hasattr(args, 'func'):
         # collect stuff from valjean.py
-        job_file = 'job.py'
+        job_file = config.get('path', 'job-file')
         priority = getattr(args.func.__self__, 'PRIORITY', None)
         collected_tasks = _collect_tasks(priority, job_file)
         args.func(args, collected_tasks, config)
@@ -43,8 +43,7 @@ def _collect_tasks(priority, job_file):
         LOGGER.fatal('Cannot find job file %s', job_file)
         sys.exit(1)
 
-    collected_tasks = [obj for _, obj in module.__dict__.items()
-                       if isinstance(obj, Task)
+    collected_tasks = [obj for obj in module.job()
                        if priority is None or obj.PRIORITY <= priority]
     LOGGER.debug('collected tasks: %s', collected_tasks)
     return collected_tasks

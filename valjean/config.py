@@ -38,13 +38,14 @@ A few options are set from the beginning:
 
     >>> for opt, val in config.items('path', raw=True):
     ...     print('{} = {}'.format(opt, val))
-    work-dir = ...
+    work-dir = /...
     log-root = ${work-dir}/log
     checkout-root = ${work-dir}/checkout
     build-root = ${work-dir}/build
     run-root = ${work-dir}/run
     test-root = ${work-dir}/test
     report-root = ${work-dir}/report
+    job-file = ${work-dir}/job.py
 
 The :class:`Config` class provides getters and setters:
 
@@ -64,14 +65,15 @@ It also provides some additional convenience methods:
     # the as_dict method actually returns an OrderedDict
     >>> for sec_name, section in config.as_dict(raw=True).items():
     ...   for option, value in section.items():
-    ...     print('{}/{}: {}'.format(sec_name, option, value))
-    path/work-dir: /...
-    path/log-root: ${work-dir}/log_dir
-    path/checkout-root: ${work-dir}/checkout
-    path/build-root: ${work-dir}/build
-    path/run-root: ${work-dir}/run
-    path/test-root: ${work-dir}/test
-    path/report-root: ${work-dir}/report
+    ...     print('{}.{}: {}'.format(sec_name, option, value))
+    path.work-dir: /...
+    path.log-root: ${work-dir}/log_dir
+    path.checkout-root: ${work-dir}/checkout
+    path.build-root: ${work-dir}/build
+    path.run-root: ${work-dir}/run
+    path.test-root: ${work-dir}/test
+    path.report-root: ${work-dir}/report
+    path.job-file: ${work-dir}/job.py
 
     # merge two configuration objects; options from the second
     # configuration override those from the first one
@@ -175,6 +177,7 @@ class BaseConfig:
         self.set('path', 'run-root', '${work-dir}/run')
         self.set('path', 'test-root', '${work-dir}/test')
         self.set('path', 'report-root', '${work-dir}/report')
+        self.set('path', 'job-file', '${work-dir}/job.py')
 
         if paths is None:
             paths = self.DEFAULT_CONFIG_FILES
