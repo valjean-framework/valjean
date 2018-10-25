@@ -115,7 +115,7 @@ def bins(draw, elements=floats(0, 10), nbins=1, reverse=booleans()):
 
 
 @given(array_bins=array_and_bins(
-    dtype=np.dtype([('score', np.float), ('sigma', np.float)]),
+    dtype=np.dtype([('score', FTYPE), ('sigma', FTYPE)]),
     max_dim=(3, 3, 3, 5, 5, 1, 1),
     elements=tuples(floats(0, 1), floats(5, 20))))
 def test_flip_mesh(array_bins):
@@ -144,7 +144,7 @@ def test_flip_mesh(array_bins):
     mesh = MeshDictBuilder(['score', 'sigma'], array.shape)
     mesh.bins['e'] = lbins['e']
     mesh.bins['t'] = lbins['t']
-    mesh.arrays = dict(larray)
+    mesh.arrays = {k: v.copy() for k, v in larray.items()}
     mesh.flip_bins()
     assert np.all(np.diff(mesh.bins['e']) > 0.0)
     assert np.all(np.diff(mesh.bins['t']) > 0.0)
@@ -163,11 +163,12 @@ def test_flip_mesh(array_bins):
                                       mesh.arrays['integrated'][comp])
 
 
+
 @given(array_bins=array_and_bins(
-    dtype=np.dtype([('score', np.float), ('sigma', np.float),
-                    ('score/lethargy', np.float)]),
+    dtype=np.dtype([('score', FTYPE), ('sigma', FTYPE),
+                    ('score/lethargy', FTYPE)]),
     max_dim=(1, 1, 1, 5, 5, 3, 3),
-    elements=tuples(floats(0, 1), floats(5, 20), floats(0, 1))))
+    elements=tuples(floats(0, 1), floats(5, 20), floats(30, 100))))
 def test_flip_spectrum(array_bins):
     '''Test flipping spectrum.
 
@@ -187,16 +188,18 @@ def test_flip_spectrum(array_bins):
         lbins.items()))
 
     spectrum = SpectrumDictBuilder(array.dtype.names, array.shape)
-    # spectrum.bins = {'e': lbins['e'], 't': lbins['t'], 'mu': lbins['mu'],
-    #                  'phi': lbins['phi']}
+    note("bins to flip: {}".format(incr))
     for dim in lbins:
         spectrum.bins[dim] = lbins[dim]
-    spectrum.arrays = dict(larray)
+    note("larray: {}".format(hex(id(larray))))
+    spectrum.arrays = {k: v.copy() for k, v in larray.items()}
     spectrum.flip_bins()
-
+    note("apres flip id = {0}, {1}".format(hex(id(spectrum.bins)),
+                                           spectrum.bins))
     for var in ['e', 't', 'mu', 'phi']:
         assert np.all(np.diff(spectrum.bins[var]) > 0.0)
 
+    note("KEYS IN larray: {}".format(list(larray.keys())))
     for comp in array.dtype.names:
         assert np.array_equal(
             array[comp],
@@ -204,11 +207,25 @@ def test_flip_spectrum(array_bins):
             [:, :, :, ::incr['e'], ::incr['t'], ::incr['mu'], ::incr['phi']])
         if 'integrated' in larray:
             if array.shape[4] > 1:
+                note("dans le if avec un flip")
+                note("larray[{0}] = {1}".format(comp,
+                                                larray['integrated'][comp]))
+                note("spectrum['integrated'][{0}][::::incr::] = {1} {2}"
+                     .format(comp,
+                             spectrum.arrays['integrated'][comp]
+                             [:, :, :, :, ::incr['t'], :, :],
+                             hex(id(spectrum.arrays['integrated'][comp]
+                                    [:, :, :, :, ::incr['t'], :, :]))))
+                note("spectrum['integrated'][{0}] = {1} {2}"
+                     .format(comp,
+                             spectrum.arrays['integrated'][comp],
+                             hex(id(spectrum.arrays['integrated'][comp]))))
                 assert np.array_equal(
                     larray['integrated'][comp],
                     spectrum.arrays['integrated'][comp]
                     [:, :, :, :, ::incr['t'], :, :])
             else:
+                note("DANS LE ELSE")
                 assert np.array_equal(larray['integrated'][comp],
                                       spectrum.arrays['integrated'][comp])
 
