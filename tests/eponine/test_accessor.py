@@ -229,9 +229,9 @@ def test_strip_index(sampler):
 
     The first step is the removal of these empty sets (and associated
     keys) from the index. If some are present, the
-    :func:`strip <valjean.eponine.accessor.Index.strip>` is used to remove
-    them, rerun the :func:`empty_sets_and_ids` allows to check that no empty
-    sets subsists.
+    :func:`keep_only <valjean.eponine.accessor.Index.keep_only>` is used to
+    remove them, rerun the :func:`empty_sets_and_ids` allows to check that no
+    empty sets subsists.
 
     If at least 2 indexes are available in the set, one is poped randomly (and
     known), then it is stripped from the index. The test checks that the poped

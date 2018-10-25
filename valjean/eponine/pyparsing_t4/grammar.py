@@ -2,15 +2,13 @@
 # pylint: disable=invalid-name
 r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
-.. _pyparsing_wiki: http://pyparsing.wikispaces.com/
-.. _pyparsing_pip: https://pypi.python.org/pypi/pyparsing/2.2.0/
+.. _pyparsing_pip: https://pypi.org/pypi/pyparsing/2.2.0/
 .. |keff| replace:: k\ :sub:`eff`
 .. |kij| replace:: k\ :sub:`ij`
 .. role :: parsing_var(literal)
 
 Documentation on the ``pyparsing`` package can be found in `pyparsing`_
-documentation linked to `pyparsing_pip`_ and on `pyparsing_wiki`_ with
-examples.
+documentation linked to `pyparsing_pip`_.
 
 Transformation from ``pyparsing.ParseResults`` to more standard python objects,
 including :obj:`numpy` arrays, is done with :mod:`~.transform`, calling
@@ -190,11 +188,6 @@ level as the response block. These parsers and the associated dictionary key
     function itself. Adjoint criticality editions are only done for IFP, this
     may change when the same will be available for Wielandt. Some renaming can
     also be needed.
-
-
-.. warning::
-
-    The link `pyparsing_wiki`_ is now broken as the website has closed...
 
 '''
 

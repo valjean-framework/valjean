@@ -60,21 +60,22 @@ def array_and_bins(draw, dtype,
 
     :param numpy.dtype dtype: dtype of the future array
     :param tuple max_dim: maximum shape of the future array
-    :param hypothesis.strategies.tuples elements: edges of random floats
-      corresponding to :obj:`numpy.dtype`
-    :param hypothesis.strategies.booleans reverse: random order of bins
+    :param elements: edges of random floats corresponding to :obj:`numpy.dtype`
+    :type elements: :obj:`hypothesis.strategies.tuples`
+    :param reverse: random order of bins
+    :type reverse: :obj:`hypothesis.strategies.booleans`
     :returns: :obj:`numpy.ndarray` and :obj:`dict` of bins with keys
        ``['e', 't', 'mu', 'phi']``
     '''
     shape = draw(shapes(max_dim))
     array = draw(arrays(dtype=dtype, shape=shape, elements=elements,
                         fill=nothing()))
-    the_bins = {'e':   draw(bins(elements=floats(0, 20), nbins=shape[3],
-                                 reverse=reverse)),
-                't':   draw(bins(elements=floats(0, 10), nbins=shape[4],
-                                 reverse=reverse)),
-                'mu':  draw(bins(elements=floats(-1., 1.), nbins=shape[5],
-                                 reverse=reverse)),
+    the_bins = {'e': draw(bins(elements=floats(0, 20), nbins=shape[3],
+                               reverse=reverse)),
+                't': draw(bins(elements=floats(0, 10), nbins=shape[4],
+                               reverse=reverse)),
+                'mu': draw(bins(elements=floats(-1., 1.), nbins=shape[5],
+                                reverse=reverse)),
                 'phi': draw(bins(elements=floats(0, 2*np.pi), nbins=shape[6],
                                  reverse=reverse))}
     larray = {}
@@ -161,7 +162,6 @@ def test_flip_mesh(array_bins):
             else:
                 assert np.array_equal(larray['integrated'][comp],
                                       mesh.arrays['integrated'][comp])
-
 
 
 @given(array_bins=array_and_bins(
