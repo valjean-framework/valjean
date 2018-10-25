@@ -5,7 +5,7 @@ building output objects (typically from :mod:`numpy`).
 '''
 
 import numpy as np
-from hypothesis import given, note, settings, assume
+from hypothesis import given, note, settings, assume, event
 from hypothesis.strategies import (integers, lists, composite, tuples, text,
                                    floats, nothing, booleans, just, recursive)
 from hypothesis.extra.numpy import arrays
@@ -30,23 +30,6 @@ def shapes(draw, max_sides=(3, 3, 3, 5, 5, 1, 1)):
     '''
     mytuple = draw(tuples(*map(lambda i: integers(1, i), max_sides)))
     return mytuple
-
-
-def integrated_array(array, axis=None):
-    '''Get structured array summed on the given axis.
-    '''
-    quantity = array.dtype.names[0]
-    nshape = ([x if ix not in axis else 1 for ix, x in enumerate(array.shape)]
-              if axis else (1,)*7)
-    sumarr = np.empty(nshape, dtype=array.dtype)
-    sumarr[quantity] = array[quantity].sum(axis, keepdims=True)
-    sumarr['sigma'] = np.sum((array['sigma']*array[quantity]/100.)**2,
-                             axis, keepdims=True)
-    tmpqty = np.copy(sumarr[quantity])
-    tmpqty[tmpqty == 0] = -100
-    sumarr['sigma'] = np.sqrt(sumarr['sigma'])/tmpqty*100
-    sumarr['sigma'][sumarr['sigma'] <= 0] = 100
-    return sumarr
 
 
 @composite
@@ -83,12 +66,21 @@ def array_and_bins(draw, dtype,
 
     if shape[5] == shape[6] == 1:
         if draw(integrated):
+            event("with integrated array")
             if shape[4] != 1:
-                larray['integrated'] = integrated_array(array, (0, 1, 2, 3))
+                event("with integration in time bins")
+                larray['integrated'] = draw(arrays(
+                    dtype=dtype, shape=(1,)*4 + (shape[4],) + (1,)*2,
+                    elements=elements, fill=nothing()))
             else:
-                larray['integrated'] = integrated_array(array)
+                larray['integrated'] = draw(arrays(
+                    dtype=dtype, shape=(1,)*7, elements=elements,
+                    fill=nothing()))
                 if shape[:3] != (1, 1, 1) and draw(booleans()):
-                    larray['energy_integrated'] = integrated_array(array, (3,))
+                    event("integration in energy in space bins")
+                    larray['energy_integrated'] = draw(arrays(
+                        dtype=dtype, shape=shape[:3] + (1,)*4,
+                        elements=elements, fill=nothing()))
     return larray, the_bins
 
 
@@ -145,7 +137,7 @@ def test_flip_mesh(array_bins):
     mesh = MeshDictBuilder(['score', 'sigma'], array.shape)
     mesh.bins['e'] = lbins['e']
     mesh.bins['t'] = lbins['t']
-    mesh.arrays = {k: v.copy() for k, v in larray.items()}
+    mesh.arrays = larray.copy()
     mesh.flip_bins()
     assert np.all(np.diff(mesh.bins['e']) > 0.0)
     assert np.all(np.diff(mesh.bins['t']) > 0.0)
@@ -192,7 +184,7 @@ def test_flip_spectrum(array_bins):
     for dim in lbins:
         spectrum.bins[dim] = lbins[dim]
     note("larray: {}".format(hex(id(larray))))
-    spectrum.arrays = {k: v.copy() for k, v in larray.items()}
+    spectrum.arrays = larray.copy()
     spectrum.flip_bins()
     note("apres flip id = {0}, {1}".format(hex(id(spectrum.bins)),
                                            spectrum.bins))
