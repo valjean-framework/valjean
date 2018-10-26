@@ -27,14 +27,14 @@ def main(argv=None):
         # collect stuff from valjean.py
         job_file = config.get('path', 'job-file')
         priority = getattr(args.func.__self__, 'PRIORITY', None)
-        collected_tasks = _collect_tasks(priority, job_file)
+        collected_tasks = _collect_tasks(priority, job_file, args.job_args)
         args.func(args, collected_tasks, config)
     else:
         parser.print_help()
     LOGGER.info('...finished!')
 
 
-def _collect_tasks(priority, job_file):
+def _collect_tasks(priority, job_file, job_args):
     from ..dyn_import import dyn_import
     try:
         module = dyn_import(job_file)
@@ -42,8 +42,14 @@ def _collect_tasks(priority, job_file):
         LOGGER.fatal('Cannot find job file %s', job_file)
         sys.exit(1)
 
-    collected_tasks = [obj for obj in module.job()
-                       if priority is None or obj.PRIORITY <= priority]
+    try:
+        collected_tasks = [obj for obj in module.job(*job_args)
+                           if priority is None or obj.PRIORITY <= priority]
+    except TypeError as err:
+        err.args = (''.join((err.args[0],
+                             '\nPerhaps you need to pass more/less -a/--args '
+                             'options to valjean?')),)
+        raise
     LOGGER.debug('collected tasks: %s', collected_tasks)
     return collected_tasks
 
@@ -63,6 +69,10 @@ def make_parser():
                         help='use the specified configuration file; '
                         'may be specified multiple times')
     parser.add_argument('-l', '--log', help='path to the log file')
+    parser.add_argument('-a', '--args', action='append',
+                        default=[], dest='job_args',
+                        help='arguments that will be passed to the job() '
+                        'function; may be specified multiple times')
     parser.add_argument('--env-path', action='store', default='valjean.env',
                         help='path to the file containing the persistent '
                         'environment (default: valjean.env)')
