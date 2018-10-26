@@ -88,7 +88,7 @@ def schedule(graph, *,
     env = Env.from_graph(graph)
 
     if env_path is not None and 'r' in env_mode:
-        LOGGER.info('deserializing %s environment from file %s',
+        LOGGER.info('attempting to deserialize %s environment from file %s',
                     env_format, env_path)
         persistent_env = Env.from_file(env_path, env_format)
         if persistent_env is not None:

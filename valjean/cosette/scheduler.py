@@ -85,10 +85,11 @@ class Scheduler:
         :returns: The modified environment.
         '''
 
-        LOGGER.info('scheduling tasks')
-        LOGGER.debug('for graph %s', self.depgraph)
         if env is None:
             env = Env.from_graph(self.depgraph)
+        LOGGER.info('scheduling tasks')
+        LOGGER.debug('for graph %s', self.depgraph)
+        LOGGER.debug('with env %s', env)
         self.backend.execute_tasks(tasks=self.sorted_list, graph=self.depgraph,
                                    env=env, config=config)
         return env

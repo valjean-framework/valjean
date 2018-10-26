@@ -191,6 +191,10 @@ class Env(dict):
                 LOGGER.warning("cannot load %s environment from file '%s'. "
                                "Error message: %s", fmt, path, error.strerror)
             return None
+        except ValueError as error:
+            LOGGER.warning("cannot load %s environment from file '%s'. "
+                           "Error message: %s", fmt, path, error)
+            return None
         if fmt == 'json':
             return cls(deser)
         return deser
