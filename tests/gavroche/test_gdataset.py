@@ -6,7 +6,7 @@ Most of them are silly tests for the moment...
 # pylint: disable=no-value-for-parameter
 
 import numpy as np
-from hypothesis import given, note, reproduce_failure
+from hypothesis import given, note
 from hypothesis.strategies import data, floats, one_of
 
 from valjean.gavroche import gdataset as gd

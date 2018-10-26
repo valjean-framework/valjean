@@ -16,6 +16,12 @@ All operations conserve the name of the initial dataset.
 Creation of a :class:`GDataset`
 -------------------------------
 
+.. doctest:: gdataset
+    :hide:
+
+    >>> # noqa: W291
+
+
 GDatasets can be created from :class:`Dataset
 <valjean.eponine.dataset.Dataset>` or directly from their arguments.
 

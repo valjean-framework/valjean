@@ -18,12 +18,6 @@ Tests for the :mod:`~valjean.config` package
 .. automodule:: tests.test_config
    :undoc-members:
 
-Tests for the :mod:`~valjean.priority_set` package
-``````````````````````````````````````````````````
-
-.. automodule:: tests.test_priority_set
-   :undoc-members:
-
 Fixtures for the :mod:`~valjean` module
 ```````````````````````````````````````
 

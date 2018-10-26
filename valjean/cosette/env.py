@@ -204,10 +204,12 @@ class Env(dict):
         import pickle
         import json
         if fmt == 'json':
-            serializer = lambda file_: json.dump(self, file_, indent=2)
+            def serializer(file_):
+                json.dump(self, file_, indent=2)
             mode = 'w'
         else:
-            serializer = lambda file_: pickle.dump(self, file_)
+            def serializer(file_):
+                pickle.dump(self, file_)
             mode = 'wb'
         try:
             with open(path, mode) as output_file:
@@ -225,8 +227,7 @@ class Env(dict):
             if name in names:
                 raise EnvError(
                     'task names must be unique; {} appears more than once'
-                    .format(name)
-                    )
+                    .format(name))
             names.add(name)
 
     def merge_done_tasks(self, other):

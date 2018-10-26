@@ -1,15 +1,14 @@
+# pylint: disable=no-value-for-parameter
 '''Fixtures for the :mod:`~.valjean` tests.'''
 
 from string import ascii_lowercase
 
 import pytest
-from hypothesis.strategies import (text, dictionaries, composite, sampled_from,
-                                   lists, tuples, integers)
+from hypothesis.strategies import text, dictionaries, composite, lists
 
 from .context import valjean  # pylint: disable=unused-import
 # pylint: disable=wrong-import-order
-from valjean.config import BaseConfig, Config
-from valjean.priority_set import PrioritySet
+from valjean.config import Config
 
 ID_CHARS = ascii_lowercase
 
@@ -24,66 +23,54 @@ STANDARD_SECS = ['build/{}', 'checkout/{}', 'executable/{}', 'run/{}',
 #  Hypothesis strategies  #
 ###########################
 
+def intercalate_strings(list1, list2):
+    '''Build a string by intercalating strings from `list1` and `list2`.
+
+    Returns a string by concatenating alternatively strings from `list1` and
+    `list2`.  For instance:
+
+        >>> list1 = ['a', 'b', 'c']
+        >>> list2 = ['A', 'B']
+        >>> intercalate_strings(list1, list2)
+        'aAbBc'
+
+    `list1` and `list2` must respect the following invariant::
+
+        len(list1) == len(list2) + 1
+
+    :param list1: a list of strings.
+    :type list1: list of str
+    :paral list2: a list of strings.
+    :type list1: list of str
+    '''
+    intercalated = ''.join(''.join((s1, s2)) for s1, s2 in zip(list1, list2))
+    return ''.join((intercalated, list1[-1]))
+
+
 @composite
-def section_names(draw, sec_ids, with_slash=None):
+def section_names(draw, sec_ids):
     '''Hypothesis strategy to generate section names, with or without slash
     separator.'''
-    if with_slash is None:
-        min_size = 1
-        max_size = 2
-    elif with_slash:
-        min_size = max_size = 2
-    else:
-        min_size = max_size = 1
-    sec = draw(lists(sec_ids, min_size=min_size, max_size=max_size))
-    return '/'.join(sec)
+    words = draw(lists(sec_ids, min_size=1))
+    n_blanks = len(words) + 1
+    blanks = draw(lists(spaces(), min_size=n_blanks, max_size=n_blanks))
+    return intercalate_strings(blanks, words)
 
 
-# pylint: disable=no-value-for-parameter
 @composite
-def baseconfig(draw, keys=IDS, vals=IDS, sec_names=section_names(IDS),
-               min_size=None):
-    '''Composite Hypothesis strategy to generate BaseConfig objects.'''
+def configs(draw, keys=IDS, vals=IDS, sec_names=section_names(IDS),
+            min_size=None):
+    '''Composite Hypothesis strategy to generate Config objects.'''
     secs = dictionaries(keys, vals)
     as_dict = draw(dictionaries(sec_names, secs, min_size=min_size))
-    conf = BaseConfig.from_mapping(as_dict)
+    conf = Config.from_mapping(as_dict)
     return conf
 
 
 @composite
-def config(draw, keys=IDS, vals=IDS, sec_names=section_names(IDS),
-           min_size=None):
-    '''Composite Hypothesis strategy to generate Config objects.'''
-    baseconf = draw(baseconfig(keys, vals, sec_names, min_size=min_size))
-    conf = Config.from_mapping(baseconf)
-    return conf
-
-
-@composite
-def config_with_sections(draw, section_templates):
-    '''Composite Hypothesis strategy to generate Config objects with sections
-    following the given templates.'''
-    sec_ids = draw(lists(IDS, min_size=1))
-    sec_names = []
-    for sec_id in sec_ids:
-        sec_family = draw(sampled_from(section_templates))
-        sec_names.append(sec_family.format(sec_id))
-    return draw(config(sec_names=sampled_from(sec_names)))
-
-
-@composite
-def spaces(draw):
+def spaces(draw, min_size=None, max_size=None):
     '''Generate strings of spaces.'''
-    return draw(text(' '))
-
-
-@composite
-def priority_sets(draw, elements=text(), min_size=None, max_size=None):
-    '''Strategy to generate :class:`PrioritySet` objects.'''
-    items = draw(lists(tuples(integers(), elements),
-                       min_size=min_size, max_size=max_size))
-    prs = PrioritySet(items)
-    return prs
+    return draw(text(' ', min_size=min_size, max_size=max_size))
 
 
 #####################

@@ -15,6 +15,4 @@ valjean — VALidation, Journal d'Évolution et ANalyse
    :caption: Submodules
 
    valjean/config
-   valjean/config_handlers
-   valjean/priority_set
    valjean/load

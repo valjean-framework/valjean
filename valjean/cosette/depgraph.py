@@ -286,10 +286,8 @@ class DepGraph:
         '''Generate a :class:`DepGraph` from a dependency dictionary.'''
 
         # the list of the graph nodes
-        nodes = list(
-            set(dependencies.keys())
-            | set(v for vs in dependencies.values() for v in vs)
-            )
+        nodes = list(set(dependencies.keys()) |
+                     set(v for vs in dependencies.values() for v in vs))
 
         # translate the dependency dictionary elements to indices
         edges = {}
@@ -346,9 +344,8 @@ class DepGraph:
         return str(assoc_list)
 
     def __repr__(self):
-        return 'DepGraph(nodes={nodes}, edges={edges})'.format(
-            nodes=repr(self._nodes), edges=repr(self._edges)
-            )
+        return ('DepGraph(nodes={nodes}, edges={edges})'
+                .format(nodes=repr(self._nodes), edges=repr(self._edges)))
 
     def __iter__(self):
         for i, node in enumerate(self._nodes):

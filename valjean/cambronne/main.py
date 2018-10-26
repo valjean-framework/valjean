@@ -36,7 +36,6 @@ def main(argv=None):
 
 def _collect_tasks(priority, job_file):
     from ..dyn_import import dyn_import
-    from ..cosette.task import Task
     try:
         module = dyn_import(job_file)
     except FileNotFoundError:
