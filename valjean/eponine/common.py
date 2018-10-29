@@ -883,20 +883,13 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
     vals.flip_bins()
     # Build dictionary to be returned
     convspec = {'disc_batch': spectrum[0]['disc_batch'],
-                'ebins': np.array(vals.bins['e']),
-                'spectrum': vals.arrays['default']}
-    convspec['bins'] = vals.bins
-    convspec['units'] = vals.units
+                'spectrum': vals.arrays['default'],
+                'bins': vals.bins,
+                'units': vals.units}
     if 'units' in spectrum[0]:
         convspec['units']['e'] = spectrum[0]['units'][0]
         convspec['units']['score'] = spectrum[0]['units'][1]
         convspec['units']['sigma'] = spectrum[0]['units'][2]
-    if 'time_step' in spectrum[0]:
-        convspec['tbins'] = np.array(vals.bins['t'])
-    if 'mu_angle_zone' in spectrum[0]:
-        convspec['mubins'] = np.array(vals.bins['mu'])
-    if 'phi_angle_zone' in spectrum[0]:
-        convspec['phibins'] = np.array(vals.bins['phi'])
     if 'integrated_res' in spectrum[0]:
         convspec['integrated_res'] = vals.arrays['integrated_res']
         convspec['used_batch'] = spectrum[0]['integrated_res']['used_batch']
@@ -1015,15 +1008,11 @@ def convert_mesh(meshres):
     vals.add_last_bins(meshres)
     vals.flip_bins()
     # build dictionary to be returned
-    convmesh = {'eunit': meshres[0]['meshes'][0]['mesh_energyrange'][0],
-                'ebins': np.array(vals.bins['e']),
-                'mesh': vals.arrays['default']}
-    convmesh['bins'] = vals.bins
-    convmesh['units'] = vals.units
+    convmesh = {'mesh': vals.arrays['default'],
+                'bins': vals.bins,
+                'units': vals.units}
     if 'unit' in meshres[0]:
         convmesh['units']['score'] = meshres[0]['unit']
-    if 'time_step' in meshres[0]:
-        convmesh['tbins'] = np.array(vals.bins['t'])
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
         convmesh['eintegrated_mesh'] = vals.arrays['eintegrated_mesh']
     if 'integrated_res' in meshres[0]:
