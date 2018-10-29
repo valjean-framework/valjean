@@ -613,14 +613,19 @@ class ResponsesBook(Container):
 
 class Accessor:
     '''Class to access T4 results in a friendly way.
-    parsed_res = only one batch
 
-    :param list(dict) tparsed_res: result from parsing (for the moment not the
-      result from scan, so some things might be missing like initialization
-      time)
+    This class contains two members:
+
+        * parsed_res = result from parsing for only one batch
+        * ResponseBook corresponding to the list of responses if it exists
     '''
 
     def __init__(self, tparsed_res):  # , merge_score=False):
+        '''
+        :param list(dict) tparsed_res: result from parsing (for the moment not
+        the result from scan, so some things might be missing like
+        initialization time)
+        '''
         self.parsed_res = tparsed_res
         self.resp_book = (ResponsesBook(self.parsed_res['list_responses'])
                           if 'list_responses' in self.parsed_res
