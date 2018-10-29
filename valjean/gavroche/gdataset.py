@@ -517,14 +517,31 @@ numpy.ndarray, i.e. (# ',' = dim-1).
     ':' can be used for a slice (dimension) not affected by the selection.
     If dim(value) == 1 a slice can be required.
 
+    A single slice is only possible for arrays for dimension 1:
 
+    >>> gd6_2f = gd6[1:2]
+    Traceback (most recent call last):
+        [...]
+    ValueError: len(index) should have the same dimension as the value \
+numpy.ndarray, i.e. (# ',' = dim-1).
+    ':' can be used for a slice (dimension) not affected by the selection.
+    If dim(value) == 1 a slice can be required.
+
+    >>> gd7 = GDataset(np.arange(48), np.array([1]*48))
+    >>> gd7.value.ndim == 1
+    True
+    >>> gd7.shape == (48,)
+    True
+    >>> gd7_extract = gd7[20:24]
+    >>> np.array_equal(gd7_extract.value, [20, 21, 22, 23])
+    True
 
 .. warning::
     Slicing can also only be applied on :obj:`numpy.ndarray`, not on
     :obj:`numpy.generic`:
 
-    >>> gd7 = GDataset(np.int32(100), np.int32(1))
-    >>> gd7[0:1]
+    >>> gd8 = GDataset(np.int32(100), np.int32(1))
+    >>> gd8[0:1]
     Traceback (most recent call last):
         [...]
     TypeError: [] (__getitem__) can only be applied on numpy.ndarrays
@@ -645,7 +662,7 @@ class GDataset(Dataset):
                     and all(isinstance(i, slice) for i in index))):
             raise TypeError("Index can only be a slice or a tuple of slices")
         if ((isinstance(index, tuple) and self.value.ndim != len(index))
-                or (isinstance(index, slice) and self.value.ndim == 1)):
+                or (isinstance(index, slice) and self.value.ndim != 1)):
             raise ValueError("len(index) should have the same dimension as "
                              "the value numpy.ndarray, i.e. (# ',' = dim-1).\n"
                              "':' can be used for a slice (dimension) not "
