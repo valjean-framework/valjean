@@ -2,7 +2,7 @@ Testing
 =======
 
 .. _pytest: https://docs.pytest.org/en/latest
-.. _pytest-doc: http://pytest-cov.readthedocs.io/en/latest/
+.. _pytest-doc: https://pytest-cov.readthedocs.io/en/latest/
 
 .. highlight:: bash
 

@@ -2,7 +2,7 @@ Building the documentation
 ==========================
 
 .. highlight:: bash
-.. _sphinx: http://www.sphinx-doc.org/en/stable
+.. _sphinx: https://www.sphinx-doc.org/en/stable/
 
 :mod:`valjean` uses the `sphinx`_ package for its own documentation.
 Before building the documentation, you will need to install :mod:`valjean`, as

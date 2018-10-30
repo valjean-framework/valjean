@@ -162,12 +162,12 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
-    'sphinx': ('http://www.sphinx-doc.org/en/stable/', None),
+    'sphinx': ('https://www.sphinx-doc.org/en/stable/', None),
     'pytest': ('https://docs.pytest.org/en/latest/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'hypothesis': ('https://hypothesis.readthedocs.io/en/latest/', None),
     'virtualenvwrapper': (
-        ('http://virtualenvwrapper.readthedocs.io/en/latest/', None)),
+        ('https://virtualenvwrapper.readthedocs.io/en/latest/', None)),
     'setuptools': ('https://setuptools.readthedocs.io/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None)}
 

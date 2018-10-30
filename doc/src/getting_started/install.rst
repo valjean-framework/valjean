@@ -3,8 +3,8 @@
 Installing :mod:`valjean`
 =========================
 
-.. _virtualenvwrapper: http://virtualenvwrapper.readthedocs.io/en/latest
-.. _sphinx: http://www.sphinx-doc.org/en/stable
+.. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.io/en/latest
+.. _sphinx: https://www.sphinx-doc.org/en/stable/
 .. _pyparsing: https://pythonhosted.org/pyparsing
 .. _pip: https://pip.pypa.io/en/stable
 
