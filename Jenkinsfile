@@ -120,6 +120,14 @@ pipeline {
       archiveArtifacts artifacts: "**/sphinx-html.out", fingerprint: true
       archiveArtifacts artifacts: "**/sphinx-linkcheck.out", fingerprint: true
       archiveArtifacts artifacts: "**/pytest.out", fingerprint: true
+      publishHTML (target: [
+                   allowMissing: false,
+                   alwaysLinkToLastBuild: false,
+                   keepAll: true,
+                   reportDir: "${SRC}/doc/build/html",
+                   reportFiles: 'index.html',
+                   reportName: "Sphinx documentation"
+      ])
       junit "**/pytest.xml"
     }
     cleanup {
