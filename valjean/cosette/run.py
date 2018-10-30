@@ -46,7 +46,7 @@ you expect:
    >>> print_stdout(env_update, 'want')
    We want...  && echo a shrubbery!
 
-Indeed, :class:`RunTask` ran :prog:`echo` only once.  If you need to execute
+Indeed, :class:`RunTask` ran :command:`echo` only once.  If you need to execute
 several commands, you can wrap them in a shell script and execute it.
 Alternatively, you can directly invoke the :class:`RunTask` constructor:
 
