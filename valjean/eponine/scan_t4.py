@@ -98,10 +98,7 @@ from collections import OrderedDict
 import logging
 
 
-LOGGER = logging.getLogger('valjean')
-
-
-LOGGER.info("sys.argv: %s", str(sys.argv))
+from .. import LOGGER
 
 
 # get profile from globals (cleaner)
