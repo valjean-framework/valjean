@@ -92,10 +92,8 @@ Memory profiling is available using memory_profiler::
 
 '''
 
-import sys
 from collections.abc import Mapping
 from collections import OrderedDict
-import logging
 
 
 from .. import LOGGER
