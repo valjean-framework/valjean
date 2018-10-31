@@ -149,8 +149,8 @@ defined).
 Example of addition or subtraction of another :class:`GDataset`
 ```````````````````````````````````````````````````````````````
 
-    >>> gd2 = GDataset(np.arange(20, 30).reshape(2, 5),
-    ...                np.array([0.4]*10).reshape(2, 5),
+    >>> gd2 = GDataset(value=np.arange(20, 30).reshape(2, 5),
+    ...                error=np.array([0.4]*10).reshape(2, 5),
     ...                bins=bins, name='gd2')
     >>> gd1.bins == gd2.bins
     True
@@ -170,8 +170,8 @@ quadratically (:math:`e = \\sqrt{gd1.e^2 + gd2.e^2}`).
 
 Datasets without binning can also be added:
 
-    >>> gd3 = GDataset(np.arange(200, 300, 10).reshape(2, 5),
-    ...                np.array([0.4]*10).reshape(2, 5), name='gd3')
+    >>> gd3 = GDataset(value=np.arange(200, 300, 10).reshape(2, 5),
+    ...                error=np.array([0.4]*10).reshape(2, 5), name='gd3')
     >>> gd3.bins
     OrderedDict()
     >>> gd1p3 = gd1 + gd3
@@ -527,11 +527,11 @@ numpy.ndarray, i.e. (# ',' = dim-1).
     ':' can be used for a slice (dimension) not affected by the selection.
     If dim(value) == 1 a slice can be required.
 
-    >>> gd7 = GDataset(np.arange(48), np.array([1]*48))
-    >>> gd7.value.ndim == 1
-    True
-    >>> gd7.shape == (48,)
-    True
+    >>> gd7 = GDataset(value=np.arange(48), error=np.array([1]*48))
+    >>> gd7.ndim
+    1
+    >>> gd7.shape
+    (48,)
     >>> gd7_extract = gd7[20:24]
     >>> np.array_equal(gd7_extract.value, [20, 21, 22, 23])
     True
@@ -540,7 +540,7 @@ numpy.ndarray, i.e. (# ',' = dim-1).
     Slicing can also only be applied on :obj:`numpy.ndarray`, not on
     :obj:`numpy.generic`:
 
-    >>> gd8 = GDataset(np.int32(100), np.int32(1))
+    >>> gd8 = GDataset(value=np.int32(100), error=np.int32(1))
     >>> gd8[0:1]
     Traceback (most recent call last):
         [...]
@@ -564,9 +564,6 @@ class GDataset(Dataset):
         :class:`~eponine.Dataset`.'''
         return cls(value=dataset.value, error=dataset.error,
                    bins=dataset.bins, name=dataset.name)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def _check_datasets_consistency(self, other, operation=""):
         if other.value.shape != self.value.shape:

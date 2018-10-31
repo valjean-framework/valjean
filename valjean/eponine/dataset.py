@@ -44,12 +44,12 @@ True
 >>> np.array_equal(ds.value, np.array([[[[0, 1, 2]], [[3, 4, 5]]]]))
 True
 >>> sds = ds.squeeze()
->>> sds.value.ndim == 2
-True
+>>> sds.ndim
+2
 >>> len(sds.bins) == 2
 True
->>> sds.value.shape == (2, 3)
-True
+>>> sds.shape
+(2, 3)
 >>> list(len(x)-1 for x in sds.bins.values())  # edges of bins, so N+1
 [2, 3]
 >>> list(sds.bins.keys()) == ['egg', 'spam']
@@ -196,6 +196,11 @@ class Dataset:
     def shape(self):
         '''Return the data shape, as a read-only property.'''
         return self.value.shape
+
+    @property
+    def ndim(self):
+        '''Return the data dimension, as a read-only property.'''
+        return self.value.ndim
 
     def copy(self):
         '''Return a deep copy of `self`.'''
