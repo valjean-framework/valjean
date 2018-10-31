@@ -610,10 +610,10 @@ class DepGraph:
         gviz = [r'digraph {']
         for key, vals in self._edges.items():
             from_node = str(self._nodes[key])
-            gviz.append(from_node + ';')
+            gviz.append('"' + from_node + '";')
             for val in vals:
                 to_node = str(self._nodes[val])
-                gviz.append(from_node + ' -> ' + to_node)
+                gviz.append('"' + from_node + '" -> "' + to_node + '"')
         gviz.append(r'}')
         gviz.append('')
         return '\n'.join(gviz)

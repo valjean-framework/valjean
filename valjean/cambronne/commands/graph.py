@@ -30,7 +30,7 @@ class GraphCommand(Command):
                     import pydot
                 except ImportError:
                     LOGGER.critical('you need to install pydot to use the '
-                                    '--display option.')
+                                    '--output option.')
                     raise
                 graph_pydot = pydot.graph_from_dot_data(graph_str)[0]
                 low_ext = ext[1:].lower()
