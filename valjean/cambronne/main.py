@@ -43,8 +43,7 @@ def _collect_tasks(priority, job_file, job_args):
         sys.exit(1)
 
     try:
-        collected_tasks = [obj for obj in module.job(*job_args)
-                           if priority is None or obj.PRIORITY <= priority]
+        job_tasks = module.job(*job_args)
     except TypeError as err:
         if str(err).startswith('job()'):
             import inspect
@@ -54,8 +53,31 @@ def _collect_tasks(priority, job_file, job_args):
                        'option(s)'.format(n_args))
             err = TypeError(new_msg)
         raise err
+    LOGGER.debug('job tasks: %s', job_tasks)
+
+    all_tasks = tasks_and_dependencies(job_tasks)
+    LOGGER.debug('all tasks: %s', all_tasks)
+    collected_tasks = [obj for obj in all_tasks
+                       if priority is None or obj.PRIORITY <= priority]
     LOGGER.debug('collected tasks: %s', collected_tasks)
     return collected_tasks
+
+
+def tasks_and_dependencies(tasks):
+    '''Return the tasks along with all their dependencies.
+
+    :param list tasks: A list of tasks.
+    :returns: The list of tasks, their dependencies, the dependencies of their
+              dependencies and so on.
+    '''
+    queue = tasks
+    all_tasks = tasks.copy()
+    while queue:
+        deps = [dep for task in queue for dep in task.depends_on
+                if task.depends_on is not None]
+        all_tasks.extend(deps)
+        queue = deps
+    return all_tasks
 
 
 def make_parser():
