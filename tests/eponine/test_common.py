@@ -378,9 +378,9 @@ def test_parse_mesh_roundtrip(array_bins):
     else:
         assert sorted(list(pres[0].keys())) == keys[1:]
     parsed_mesh = pres[0]['mesh_res']
-    assert np.allclose(parsed_mesh['ebins'], lbins['e'])
+    assert np.allclose(parsed_mesh['bins']['e'], lbins['e'])
     if len(lbins['t']) > 2:
-        assert np.allclose(parsed_mesh['tbins'], lbins['t'])
+        assert np.allclose(parsed_mesh['bins']['t'], lbins['t'])
     assert array.dtype == parsed_mesh['mesh'].dtype
     assert array.shape == parsed_mesh['mesh'].shape
     for comp in array.dtype.names:

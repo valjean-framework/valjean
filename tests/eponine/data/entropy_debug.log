@@ -63,7 +63,7 @@ RESPONSE 0
 [94m        score[0m 3.536549e-01, dtype: float64
 [94m        sigma[0m 7.371170e-01, dtype: float64
 [94m        used_batch[0m 9, dtype: int64
-[94m      mesh_res[0m [34mKeys = ['bins', 'ebins', 'eunit', 'mesh', 'units'][0m
+[94m      mesh_res[0m [34mKeys = ['bins', 'mesh', 'units'][0m
 [94m        bins[0m [35mKeys = ['e', 'mu', 'phi', 's0', 's1', 's2', 't'][0m
 [94m          e[0m <class 'numpy.ndarray'>
 shape: (2,)
@@ -86,10 +86,6 @@ squeezed: []
 [94m          t[0m <class 'numpy.ndarray'>
 shape: (0,)
 squeezed: []
-[94m        ebins[0m <class 'numpy.ndarray'>
-shape: (2,)
-squeezed: [1.000000e-11 2.000000e+01]
-[94m        eunit[0m MeV
 [94m        mesh[0m <class 'numpy.ndarray'>
 shape: (4, 3, 1, 1, 1, 1, 1)
 squeezed: [[(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
@@ -111,7 +107,7 @@ dtype: [('score', '<f8'), ('sigma', '<f8')]
 [94m          sigma[0m %
 [94m          t[0m s
 [94m      shannon_entropy_res[0m 9.047529e-01, dtype: float64
-[94m      spectrum_res[0m [34mKeys = ['bins', 'disc_batch', 'ebins', 'spectrum', 'units'][0m
+[94m      spectrum_res[0m [34mKeys = ['bins', 'disc_batch', 'spectrum', 'units'][0m
 [94m        bins[0m [35mKeys = ['e', 'mu', 'phi', 's0', 's1', 's2', 't'][0m
 [94m          e[0m <class 'numpy.ndarray'>
 shape: (2,)
@@ -135,9 +131,6 @@ squeezed: []
 shape: (0,)
 squeezed: []
 [94m        disc_batch[0m 1, dtype: int64
-[94m        ebins[0m <class 'numpy.ndarray'>
-shape: (2,)
-squeezed: [1.000000e-11 2.000000e+01]
 [94m        spectrum[0m <class 'numpy.ndarray'>
 shape: (1, 1, 1, 1, 1, 1, 1)
 squeezed: (0.000000e+00, 0.000000e+00, 0.000000e+00)
