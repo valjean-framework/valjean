@@ -75,6 +75,7 @@ class T4Parser():
                           (*default*), 0 = all of them, X > 0 = batch X to be
                           parsed)
         '''
+        LOGGER.info("Parsing %s (batch %d)", jdd, batch)
         start_time = time.time()
         parser = cls(jdd, batch)
         try:
