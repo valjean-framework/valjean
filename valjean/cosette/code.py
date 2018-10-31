@@ -153,7 +153,7 @@ class CheckoutTask(PythonTask):
         self.checkout_log = 'checkout_' + self.sanitized_name + '.log'
 
         if vcs == 'git':
-            self.repository = os.path.abspath(os.path.expanduser(repository))
+            self.repository = repository
             self.flags = flags
             self.ref = ref if ref is not None else 'master'
 

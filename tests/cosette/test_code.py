@@ -90,26 +90,26 @@ def do_cmake_build(name, config, source, *, env=None, configure_flags,
 
 
 @requires_git
-def test_git_checkout(task_name, config_paths, project, git_ref, git_flags):
+def test_git_checkout(task_name, config_tmp, project, git_ref, git_flags):
     '''Test that git checkout works from a generated configuration.
 
     .. todo::
        Add some checks on the return values of :func:`do_git_checkout`.
     '''
-    do_git_checkout(task_name, config_paths, project,
+    do_git_checkout(task_name, config_tmp, str(project),
                     ref=git_ref, flags=git_flags)
 
 
 # pylint: disable=too-many-arguments
 @requires_cmake
-def test_cmake_build(task_name, config_paths, project, cmake_configure_flags,
+def test_cmake_build(task_name, config_tmp, project, cmake_configure_flags,
                      cmake_build_flags, cmake_targets):
     '''Test that CMake build works from a generated configuration.
 
     .. todo::
        Add some checks on the return values of :func:`do_cmake_build`.
     '''
-    do_cmake_build(task_name, config_paths, project,
+    do_cmake_build(task_name, config_tmp, str(project),
                    configure_flags=cmake_configure_flags,
                    build_flags=cmake_build_flags,
                    targets=cmake_targets)
@@ -117,16 +117,16 @@ def test_cmake_build(task_name, config_paths, project, cmake_configure_flags,
 
 @requires_git
 @requires_cmake
-def test_git_checkout_cmake_build(task_name, config_paths, project):
+def test_git_checkout_cmake_build(task_name, config_tmp, project):
     '''Test a git checkout followed by a CMake build.
 
     .. todo::
        Add some checks on the return values of :func:`do_cmake_build`.
     '''
     # extract the section name and the task name
-    task, env = do_git_checkout(task_name, config_paths, project,
+    task, env = do_git_checkout(task_name, config_tmp, str(project),
                                 ref=None, flags=None)
-    do_cmake_build(task_name, config_paths, task, env=env,
+    do_cmake_build(task_name, config_tmp, task, env=env,
                    configure_flags=None, build_flags=None, targets=None)
 
 
@@ -137,23 +137,23 @@ def test_git_checkout_cmake_build(task_name, config_paths, project):
 def test_notimpl_checkout(project, notimpl_vcs):
     '''Test that unimplemented VCSs raise an error.'''
     with pytest.raises(NotImplementedError):
-        CheckoutTask('checkout', repository=project, vcs=notimpl_vcs)
+        CheckoutTask('checkout', repository=str(project), vcs=notimpl_vcs)
 
 
 def test_unknown_checkout(project):
     '''Test that an unknown VCS raises an error.'''
     with pytest.raises(ValueError):
-        CheckoutTask('checkout', repository=project, vcs='antani')
+        CheckoutTask('checkout', repository=str(project), vcs='antani')
 
 
 def test_notimpl_build(project, notimpl_build):
     '''Test that unimplemented build systems raise an error.'''
     with pytest.raises(NotImplementedError):
-        BuildTask('build', project, build_system=notimpl_build)
+        BuildTask('build', str(project), build_system=notimpl_build)
 
 
 def test_unknown_build(project):
     '''Test that an unknown build system raises an error.'''
     # extract the section name and the task name
     with pytest.raises(ValueError):
-        BuildTask('build', project, build_system='antani')
+        BuildTask('build', str(project), build_system='antani')

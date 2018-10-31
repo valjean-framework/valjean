@@ -1,7 +1,7 @@
 '''Fixtures for the :mod:`~.valjean.cosette` tests.'''
 # pylint: disable=redefined-outer-name
 
-import os
+import sys
 import re
 from subprocess import check_call, check_output, DEVNULL, CalledProcessError
 
@@ -64,52 +64,64 @@ requires_git, _ = make_skip_marker(CheckoutTask.GIT,
                                    r'^git version (.*)$')
 HAS_GIT = not requires_git.args[0]
 
-CMAKELISTS = r'''project(TestCodeTasks C)
-cmake_minimum_required(VERSION ''' + _CMAKE_VERSION + ''')
-set(SOURCE_FILENAME "${PROJECT_BINARY_DIR}/test.c")
-file(WRITE "${SOURCE_FILENAME}" "int main() { return 0; }")
-add_executable(test_exe "${SOURCE_FILENAME}")
-'''
-
 
 @pytest.fixture(scope='function', params=['test', 'test with space'])
 def task_name(request):
     '''Return possible names for tasks.'''
     return request.param
 
+
 #####################################
 #  fixture for project generation  ##
 #####################################
 
+CMAKELISTS = r'''project(TestCodeTasks C)
+cmake_minimum_required(VERSION ''' + _CMAKE_VERSION + ''')
+set(SOURCE_FILENAME "${PROJECT_BINARY_DIR}/test.c")
+file(WRITE "${SOURCE_FILENAME}" "int main(){return 0;}")
+add_executable(test_exe "${SOURCE_FILENAME}")
+'''
 
-def setup_project(project_dir):
+
+def setup_project(project_path):
     '''Set up a minimalist project for testing in the given directory.
 
     The project consists of a git repository containing a simple
     `CMakelists.txt` file.
 
-    :param str project_dir: the path to an existing directory.
+    :param str project_path: the path to an existing directory (as a
+                             :mod:`py.path` object).
     '''
-    LOGGER.debug('Setting up a git/CMake project in %s', project_dir)
+    LOGGER.debug('Setting up a git/CMake project in %s', project_path)
     LOGGER.debug('HAS_GIT: %s', HAS_GIT)
     LOGGER.debug('HAS_CMAKE: %s', HAS_CMAKE)
 
-    filename = os.path.join(project_dir, 'CMakeLists.txt')
-
-    with open(filename, 'w') as cmakelists_file:
+    filename = project_path / 'CMakeLists.txt'
+    with filename.open('w') as cmakelists_file:
         cmakelists_file.write(CMAKELISTS)
 
+    make_git_repo(project_path)
+
+
+def make_git_repo(path):
+    '''Turn path into a git repository.
+
+    This function adds to the git repository all the files that are contained
+    in `path`.
+    '''
     if not HAS_GIT:
         return
-
-    check_call([CheckoutTask.GIT, 'init', project_dir],
+    path_str = str(path)
+    filenames = path.listdir()
+    check_call([CheckoutTask.GIT, 'init', path_str],
                stdout=DEVNULL, stderr=DEVNULL)
-    git_dir = os.path.join(project_dir, '.git')
+    git_dir = str(path / '.git')
+    for filename in filenames:
+        check_call([CheckoutTask.GIT, '--git-dir', git_dir,
+                    '--work-tree', path_str, 'add', str(filename)],
+                   stdout=DEVNULL, stderr=DEVNULL)
     check_call([CheckoutTask.GIT, '--git-dir', git_dir,
-                '--work-tree', project_dir, 'add', filename],
-               stdout=DEVNULL, stderr=DEVNULL)
-    check_call([CheckoutTask.GIT, '--git-dir', git_dir,
-                '--work-tree', project_dir, 'commit', '-m', 'Test commit'],
+                '--work-tree', path_str, 'commit', '-m', 'Test commit'],
                stdout=DEVNULL, stderr=DEVNULL)
 
 
@@ -121,11 +133,11 @@ def setup_project(project_dir):
 def project(tmpdir_factory):
     '''Set up a git project with a CMake file.'''
     project_path = tmpdir_factory.mktemp('project')
-    project_dir = str(project_path)
-    setup_project(project_dir)
-    project_path.chmod(500, rec=True)
-    yield project_dir
-    project_path.chmod(700, rec=True)
+    project_path.chmod(0o700)
+    setup_project(project_path)
+    project_path.chmod(0o500, rec=True)
+    yield project_path
+    project_path.chmod(0o700, rec=True)
 
 
 # git-related fixtures
@@ -145,16 +157,18 @@ def git_flags(request):
 
 
 @pytest.fixture(scope='function')
-def config_paths(tmpdir_factory):
+def config_tmp(tmpdir_factory):
     '''Create a configuration object with the path options set to temporary
     directories.'''
     log_dir = str(tmpdir_factory.mktemp('log'))
     checkout_dir = str(tmpdir_factory.mktemp('checkout'))
     build_dir = str(tmpdir_factory.mktemp('build'))
+    run_dir = str(tmpdir_factory.mktemp('run'))
     config = Config(paths=[])
     config.set('path', 'log-root', log_dir)
     config.set('path', 'checkout-root', checkout_dir)
     config.set('path', 'build-root', build_dir)
+    config.set('path', 'run-root', run_dir)
     return config
 
 
@@ -192,6 +206,71 @@ def cmake_targets(request):
 def notimpl_build(request):
     '''Return the unimplemented build systems.'''
     return request.param
+
+
+#########################################
+#  fixtures for RunTask/RunTaskFactory  #
+#########################################
+
+@pytest.fixture(scope='session',
+                params=('', 'subdir'),
+                ids=('without relative_path', 'with relative_path'))
+def subdir(request):
+    '''Return a name for a subdirectory, or an empty string for no subdir.
+
+    This fixture is used to parametrize the :class:`~.RunFactory` tests.
+    '''
+    return request.param
+
+
+@pytest.fixture(scope='session')
+def git_myecho_repo(tmpdir_factory, subdir):
+    '''Set up a git project with a trivial Python echo script.'''
+    import py
+    project_path = tmpdir_factory.mktemp('project')
+    project_path.chmod(0o700)
+    myecho_dir = project_path / subdir
+    myecho_dir.ensure(dir=True)
+    myecho = myecho_dir / 'myecho'
+    echo = py.path.local('/bin/echo')
+    echo.copy(myecho, mode=True)
+    make_git_repo(project_path)
+    project_path.chmod(0o500, rec=True)
+    yield project_path
+    project_path.chmod(0o700, rec=True)
+
+
+CECHO_CMAKE = r'''project(CEcho C)
+cmake_minimum_required(VERSION ''' + _CMAKE_VERSION + ''')
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${{PROJECT_BINARY_DIR}}/{}")
+add_executable(cecho "${{PROJECT_SOURCE_DIR}}/cecho.c")
+'''
+CECHO_C = r'''#include <stdio.h>
+int main(int argc, char **argv)
+{
+  int i;
+  for(i=1; i<argc-1; ++i) {
+    printf("%s ", argv[i]);
+  }
+  printf("%s\n", argv[argc-1]);
+  return 0;
+}
+'''
+
+
+@pytest.fixture(scope='session')
+def cmake_echo(tmpdir_factory, subdir):
+    '''Set up a CMake project with a CMake file.'''
+    project_path = tmpdir_factory.mktemp('project')
+    project_path.chmod(0o700)
+    cmakelists = project_path / 'CMakeLists.txt'
+    cmakelists.ensure(file=True).write(CECHO_CMAKE.format(subdir))
+    cecho = project_path / 'cecho.c'
+    cecho.ensure(file=True).write(CECHO_C)
+    make_git_repo(project_path)
+    project_path.chmod(0o500, rec=True)
+    yield project_path
+    project_path.chmod(0o700, rec=True)
 
 
 #######################

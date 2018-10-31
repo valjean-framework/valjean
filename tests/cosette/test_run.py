@@ -3,28 +3,118 @@
 '''Tests for the :mod:`~cosette.run` module.'''
 
 from pathlib import Path
-
-from ..context import valjean  # pylint: disable=unused-import
+import pytest
 
 # pylint: disable=wrong-import-order
-from valjean.config import Config
+from .conftest import requires_git, requires_cmake
+from ..context import valjean  # pylint: disable=unused-import
+from valjean import LOGGER
 from valjean.cosette.task import TaskStatus
-from valjean.cosette.run import RunTask
+from valjean.cosette.code import CheckoutTask, BuildTask
+from valjean.cosette.run import RunTask, RunTaskFactory
 
 
-def test_echo(tmpdir):
-    '''Test :class:`~.RunTask` with a simple echo command.'''
-    config = Config([])
-    config.set('path', 'run-root', str(tmpdir))
+#: Some text used in the tests
+TEXT = '''Une araignée sur le plancher se tricotait des bottes
+Dans un flacon un limaçon enfilait sa culotte
+J'ai vu dans le ciel une mouche à miel pinçant sa guitare
+Des rats tout confus sonner l'angélus au son d'la fanfare
+'''
 
-    runtask = RunTask('echo', [['echo', 'test']])
-    env_up, status = runtask.do(dict(), config)
+
+def do_test_task(task, env, config):
+    '''Run the task with the given config, check the status and return codes
+    and return stdout and stderr as strings.'''
+    env_up, status = task.do(env=env, config=config)
     assert status == TaskStatus.DONE
-    assert env_up['echo']['return_codes'] == [0]
-    stdout = Path(env_up['echo']['stdout'])
-    stderr = Path(env_up['echo']['stderr'])
-    stdout.relative_to(str(tmpdir))  # raises ValueError if impossible
-    stderr.relative_to(str(tmpdir))  # raises ValueError if impossible
+    assert env_up[task.name]['return_codes'] == [0]
+    stdout = Path(env_up[task.name]['stdout'])
+    stderr = Path(env_up[task.name]['stderr'])
+    run_dir = config.get('path', 'run-root')
+    stdout.relative_to(str(run_dir))  # raises ValueError if impossible
+    stderr.relative_to(str(run_dir))  # raises ValueError if impossible
     with stdout.open() as f_out:
-        content = f_out.read()
-        assert content == 'test\n'
+        stdout_content = f_out.read()
+    with stderr.open() as f_out:
+        stderr_content = f_out.read()
+    return stdout_content, stderr_content
+
+
+def test_echo(config_tmp):
+    '''Test :class:`~.RunTask` with a simple echo command.'''
+    runtask = RunTask.from_cli('echo', ['echo', TEXT])
+    stdout, stderr = do_test_task(runtask, {}, config_tmp)
+    assert stdout == TEXT + '\n'
+    assert stderr == '$ echo ' + TEXT + '\n'
+
+
+@requires_git
+def test_factory_checkout(git_myecho_repo, config_tmp, subdir):
+    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
+    objects from a :class:`CheckoutTask`.
+    '''
+    checkout = CheckoutTask('checkout_myecho',
+                            repository=str(git_myecho_repo))
+    myecho_path = str(Path(subdir) / 'myecho')
+    factory = RunTaskFactory.from_checkout(checkout, relative_path=myecho_path)
+    env = {}
+    env_up, status = checkout.do(env=env, config=config_tmp)
+    assert status == TaskStatus.DONE
+    env.update(env_up)
+    LOGGER.debug('env after checkout: %s', env)
+    task = factory.make(name='task', extra_args=(TEXT,))
+    stdout, _ = do_test_task(task, env, config_tmp)
+    assert stdout == TEXT + '\n'
+
+
+@requires_cmake
+def test_factory_build(cmake_echo, config_tmp, subdir):
+    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
+    objects from a :class:`BuildTask`.
+    '''
+    build = BuildTask('build_echo', source=str(cmake_echo))
+    cecho_path = str(Path(subdir) / 'cecho')
+    factory = RunTaskFactory.from_build(build, relative_path=cecho_path)
+    env = {}
+    env_up, status = build.do(env=env, config=config_tmp)
+    assert status == TaskStatus.DONE
+    env.update(env_up)
+    LOGGER.debug('env after build: %s', env)
+    task = factory.make(name='task', extra_args=(TEXT,))
+    stdout, _ = do_test_task(task, env, config_tmp)
+    assert stdout == TEXT + '\n'
+
+
+def test_factory_exe(config_tmp):
+    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
+    objects from an existing executable.
+    '''
+    factory = RunTaskFactory.from_executable('/bin/echo')
+    task = factory.make(name='task',
+                        extra_args=(TEXT,))
+    stdout, stderr = do_test_task(task, {}, config_tmp)
+    assert stdout == TEXT + '\n'
+    assert stderr == '$ /bin/echo ' + TEXT + '\n'
+
+
+def test_factory_exe_args(config_tmp):
+    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
+    objects from an existing executable.
+    '''
+    factory = RunTaskFactory.from_executable('/bin/echo',
+                                             default_args=['{text}'])
+    task = factory.make(name='task', text=TEXT)
+    stdout, stderr = do_test_task(task, {}, config_tmp)
+    assert stdout == TEXT + '\n'
+    assert stderr == '$ /bin/echo ' + TEXT + '\n'
+
+
+def test_factory_exe_raise_missing(config_tmp):
+    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
+    objects from an existing executable.
+    '''
+    factory = RunTaskFactory.from_executable('/bin/echo',
+                                             default_args=['{text}'])
+    task = factory.make(name='task')  # key 'text' intentionally omitted
+    with pytest.raises(KeyError):
+        do_test_task(task, {}, config_tmp)
