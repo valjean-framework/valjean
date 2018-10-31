@@ -46,10 +46,14 @@ def _collect_tasks(priority, job_file, job_args):
         collected_tasks = [obj for obj in module.job(*job_args)
                            if priority is None or obj.PRIORITY <= priority]
     except TypeError as err:
-        err.args = (''.join((err.args[0],
-                             '\nPerhaps you need to pass more/less -a/--args '
-                             'options to valjean?')),)
-        raise
+        if str(err).startswith('job()'):
+            import inspect
+            signature = inspect.getfullargspec(module.job)
+            n_args = len(signature.args)
+            new_msg = ('This valjean job expects exactly {} -a/--args '
+                       'option(s)'.format(n_args))
+            err = TypeError(new_msg)
+        raise err
     LOGGER.debug('collected tasks: %s', collected_tasks)
     return collected_tasks
 
