@@ -515,7 +515,7 @@ Bins are changed accordingly.
     ValueError: len(index) should have the same dimension as the value \
 numpy.ndarray, i.e. (# ',' = dim-1).
     ':' can be used for a slice (dimension) not affected by the selection.
-    If dim(value) == 1 a slice can be required.
+    Slicing is only possible if ndim == 1
 
     A single slice is only possible for arrays for dimension 1:
 
@@ -525,7 +525,7 @@ numpy.ndarray, i.e. (# ',' = dim-1).
     ValueError: len(index) should have the same dimension as the value \
 numpy.ndarray, i.e. (# ',' = dim-1).
     ':' can be used for a slice (dimension) not affected by the selection.
-    If dim(value) == 1 a slice can be required.
+    Slicing is only possible if ndim == 1
 
     >>> gd7 = GDataset(value=np.arange(48), error=np.array([1]*48))
     >>> gd7.ndim
@@ -664,7 +664,7 @@ class GDataset(Dataset):
                              "the value numpy.ndarray, i.e. (# ',' = dim-1).\n"
                              "':' can be used for a slice (dimension) not "
                              "affected by the selection.\n"
-                             "If dim(value) == 1 a slice can be required.")
+                             "Slicing is only possible if ndim == 1")
         value = self.value[index]
         error = self.error[index]
         bins = self._get_bins_items(index)
