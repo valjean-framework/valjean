@@ -109,7 +109,7 @@ def make_parser():
                         help='do not write the environment to the path '
                         'specified by --env_path at the end of the run')
     parser.add_argument('--env-format', action='store',
-                        choices=('json', 'pickle'), default='json',
+                        choices=('pickle',), default='pickle',
                         help='environment persistency format')
 
     # here come the subcommands

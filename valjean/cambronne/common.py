@@ -62,14 +62,14 @@ def build_graph(tasks):
 
 
 def schedule(graph, *,
-             env_path=None, env_format='json', env_mode='rw', config=None):
+             env_path=None, env_format='pickle', env_mode='rw', config=None):
     '''Schedule a graph for execution.
 
     The additional parameters control the behaviour of the scheduler with
     respect to persistent execution environments. If `env_mode` contains
     ``'w'``, the environment will be written to the file specified by
     `env_path` at the end of the run, in the format specified by `env_format`
-    (either ``'json'`` or ``'pickle'``).
+    (only ``'pickle'`` is supported at the moment).
 
     Also, if `env_mode` contains ``'r'``, the environment will be read from
     `env_path` at the beginning of the run.
@@ -79,8 +79,8 @@ def schedule(graph, *,
     :param env_path: Path to the serialized environment. If `None`, no
                      serialization/de-serialzation will take place.
     :type env_path: str or None
-    :param str env_format: Environment serialization format (``'json'``,
-                            ``'pickle'``).
+    :param str env_format: Environment serialization format (only ``'pickle'``
+                           is supported at the moment).
     :param str env_mode: Possible values: ``'r'`` (read-only), ``'w'``
                          (write-only), ``'rw'`` (read and write).
     '''

@@ -358,7 +358,7 @@ def envs(draw, keys=env_keys()):
     return an_env
 
 
-@pytest.fixture(scope='function', params=['json', 'pickle'])
+@pytest.fixture(scope='function', params=['pickle'])
 def persistence_format(request):
     '''Yield all the available persistence formats.'''
     return request.param

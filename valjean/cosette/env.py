@@ -169,20 +169,17 @@ class Env(dict):
         '''Deserialize an :class:`Env` object from a file.
 
         :param str path: Path to the file.
-        :param str fmt: Serialization format (``'json'``, ``'pickle'``).
+        :param str fmt: Serialization format (only ``'pickle'`` is supported
+                        for the moment).
         :returns: The deserialized object.
         '''
         import pickle
-        import json
-        if fmt == 'json':
-            serializer = json
-            mode = 'r'
-        else:
-            serializer = pickle
-            mode = 'rb'
+        def deserializer(file_):
+            return pickle.load(file_)
+        mode = 'rb'
         try:
             with open(path, mode) as input_file:
-                deser = serializer.load(input_file)
+                deser = deserializer(input_file)
         except IOError as error:
             if error.errno == 2:
                 LOGGER.info("environment file '%s' is missing, starting "
@@ -195,26 +192,20 @@ class Env(dict):
             LOGGER.warning("cannot load %s environment from file '%s'. "
                            "Error message: %s", fmt, path, error)
             return None
-        if fmt == 'json':
-            return cls(deser)
         return deser
 
     def to_file(self, path, fmt):
         '''Serialize an :class:`Env` object to a file.
 
         :param str path: Path to the file.
-        :param str fmt: Serialization format (``'json'``, ``'pickle'``).
+        :param str fmt: Serialization format (only ``'pickle'`` is supported
+                        for the moment).
         '''
         import pickle
-        import json
-        if fmt == 'json':
-            def serializer(file_):
-                json.dump(self, file_, indent=2)
-            mode = 'w'
-        else:
-            def serializer(file_):
-                pickle.dump(self, file_)
-            mode = 'wb'
+        import numpy as np
+        def serializer(file_):
+            pickle.dump(self, file_)
+        mode = 'wb'
         try:
             with open(path, mode) as output_file:
                 serializer(output_file)
