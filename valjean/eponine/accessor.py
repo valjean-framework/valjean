@@ -25,7 +25,7 @@ This class is based on an inheritance from :class:`collections.abc.Mapping`
 from :mod:`collections`. It implements a ``defaultdict(defaultdict(set))`` from
 :class:`collections.defaultdict`.
 
-:class:`set` contains `int` that correspond to the index of the dictionary in
+:class:`set` contains `int` that corresponds to the index of the dictionary in
 the list of dictionaries.
 
 :class:`Index` is not supposed to be used standalone, but called from
@@ -165,7 +165,7 @@ ones are ['consumer', 'dessert', 'drink', 'resp_function']
 
     >>> resps = com_rb.select_by(drink='beer', squeeze=True)
     >>> # prints  WARNING     accessor: Squeeze cannot be applied, more than \
-one response correspond to your choice
+one response corresponds to your choice
 
 
 :class:`Accessor`
@@ -605,7 +605,7 @@ class ResponsesBook(Container):
                 return None
             if len(lresp) > 1:
                 LOGGER.warning("Squeeze cannot be applied, more than one "
-                               "response correspond to your choice")
+                               "response corresponds to your choice")
                 return None
             return lresp[0]
         return lresp
