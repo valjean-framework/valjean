@@ -161,7 +161,7 @@ class T4Parser():
             str_to_parse = self.scan_res[self.batch_number]
         # now parse the results string
         try:
-            self.result = pygram.mygram.parseString(str_to_parse)
+            self.result = pygram.mygram.parseString(str_to_parse).asList()
         except ParseException:
             LOGGER.warning("Parsing failed, you are probably trying to read a "
                            "new response. Please implement it before "

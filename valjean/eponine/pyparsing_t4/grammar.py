@@ -1172,9 +1172,9 @@ perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
 
 # replace group by real dict, need to check if fine or not (risk: list needed)
 mygram = (OneOrMore((intro
-                     + OneOrMore(listresponses | ifpadjointcriticality
-                                 | defkeffblock | contribpartblock
-                                 | perturbation | OneOrMore(runtime)))
-                    .setParseAction(trans.to_dict))
-          .setParseAction(trans.print_result)
-          | intro + OneOrMore(runtime))
+                      + OneOrMore(listresponses | ifpadjointcriticality
+                                  | defkeffblock | contribpartblock
+                                  | perturbation | OneOrMore(runtime)))
+                     .setParseAction(trans.to_dict))
+           .setParseAction(trans.print_result)
+           | intro + OneOrMore(runtime))
