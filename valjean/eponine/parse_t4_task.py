@@ -17,19 +17,21 @@ class ParseT4Task(PythonTask):
     and :class:`~cosette.Scheduler`).
     '''
 
-    def __init__(self, name, from_run, *, deps=None):
+    PRIORITY = 40
+
+    def __init__(self, name, run, *, deps=None):
         '''Create a :class:`ParseT4Task` from the name of a TRIPOLI-4 run.
 
-        The `from_run` argument is the name of a TRIPOLI-4 run. When
+        The `run` argument is a TRIPOLI-4 :class:`RunTask`. When
         :class:`ParseT4Task` is scheduled for execution, it will search the
-        environment for the output file of a task called ``'from_run``.
+        environment for the output file of a task called ``'run``.
 
         :param name str: The name of this task.
-        :param from_run str: The name of a TRIPOLI-4 run.
+        :param run RunTask: A TRIPOLI-4 run task.
         :param deps: If this task depends on other tasks (and valjean cannot
-                     automatically discover this), pass them (as a list)
-                     of strings) to the `deps` parameter.
-        :type deps: None or list of task names (`str`)
+                     automatically discover this), pass them (as a list) to the
+                     `deps` parameter.
+        :type deps: None or list of tasks
         '''
 
         def parse_run_from_env(parse_name, run_name, *, env):
@@ -42,7 +44,7 @@ class ParseT4Task(PythonTask):
                              run_name, parse_name, run_name)
                 raise
             try:
-                output_file = run_result['output_file']
+                output_file = run_result['stdout']
             except KeyError:
                 LOGGER.error('Results of run %s are required for '
                              'ParseT4Task %s, but I could not find them',
@@ -52,5 +54,7 @@ class ParseT4Task(PythonTask):
             env_up = {parse_name: {'result': parse_result}}
             return env_up, TaskStatus.DONE
 
-        super().__init__(name, parse_run_from_env, deps=deps,
-                         args=(name, from_run), env_kwarg='env')
+        deps_ = [] if deps is None else deps.copy()
+        deps_.append(run)
+        super().__init__(name, parse_run_from_env, deps=deps_,
+                         args=(name, run.name), env_kwarg='env')
