@@ -159,9 +159,6 @@ class T4Parser():
             str_to_parse = self.scan_res.get_all_batch_results()
         else:
             str_to_parse = self.scan_res[self.batch_number]
-        if LOGGER.isEnabledFor(logging.DEBUG):
-            with open("jddres.txt", 'w') as fout:
-                fout.write(str_to_parse)
         # now parse the results string
         try:
             self.result = pygram.mygram.parseString(str_to_parse)
