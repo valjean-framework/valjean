@@ -20,7 +20,7 @@ You can run the unit-test suite with::
 
     $ ./setup.py test
     $ ./setup.py pytest  # equivalently
-    $ py.test
+    $ pytest
 
 This will run the tests and produce a summary report. Additionally, `pytest`_
 will calculate code coverage; a text report will be printed to stdout,
@@ -30,8 +30,8 @@ The default `pytest` options are defined in the :file:`pytest.ini` file, and
 `coverage` options are defined in :file:`.coveragerc`, using `pytest-doc`_.
 Extra options to `pytest` can be passed on the command line::
 
-    $ py.test -k depgraph        # select tests whose name matches "depgraph"
-    $ py.test --valjean-verbose  # verbose test output
+    $ pytest -k depgraph        # select tests whose name matches "depgraph"
+    $ pytest --valjean-verbose  # verbose test output
 
 The ``--valjean-verbose`` option sets all the :mod:`valjean` loggers to
 maximum verbosity. It is useful when debugging a failing test, in conjunction
@@ -93,18 +93,5 @@ Sometimes the docstrings contain example code such as the following:
    3
 
 These examples can be automatically tested with :mod:`~sphinx.ext.doctest`, a
-`sphinx` extension. You can run the examples with::
-
-    $ ./setup.py build_sphinx -b doctest
-    $ cd doc/src && make doctest  # equivalently
-
-This will produce a long report, with a summary (hopefully) like the following:
-
-.. code-block:: none
-
-    Doctest summary
-    ===============
-       61 tests
-        0 failures in tests
-        0 failures in setup code
-        0 failures in cleanup code
+`sphinx` extension. `pytest`_ automatically runs all the doctest examples and
+checks their output.
