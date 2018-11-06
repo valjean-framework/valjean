@@ -42,11 +42,12 @@ class Command:
         graph = build_graph(tasks)
         LOGGER.debug('resulting graph: %s', graph)
 
-        env_mode = '' if args.env_skip_read else 'r'
-        env_mode += '' if args.env_skip_write else 'w'
-        return schedule(graph, env_path=args.env_path,
-                        env_format=args.env_format, env_mode=env_mode,
-                        config=config)
+        env = init_env(path=args.env_path, skip_read=args.env_skip_read,
+                       fmt=args.env_format)
+        new_env = schedule(graph, env=env, config=config)
+        if not args.env_skip_write:
+            write_env(env=env, path=args.env_path, fmt=args.env_format)
+        return new_env
 
 
 def build_graph(tasks):
@@ -62,49 +63,58 @@ def build_graph(tasks):
     return graph
 
 
-def schedule(graph, *,
-             env_path=None, env_format='pickle', env_mode='rw', config=None):
-    '''Schedule a graph for execution.
+def init_env(*, path, skip_read, fmt):
+    '''Create an initial environment for the given tasks, possibly merging a
+    serialized environment.
 
-    The additional parameters control the behaviour of the scheduler with
-    respect to persistent execution environments. If `env_mode` contains
-    ``'w'``, the environment will be written to the file specified by
-    `env_path` at the end of the run, in the format specified by `env_format`
-    (only ``'pickle'`` is supported at the moment).
+    The environment will be created from the given tasks. If `skip_read` is
+    `False`, the environment will be read from `path` and merged.
 
-    Also, if `env_mode` contains ``'r'``, the environment will be read from
-    `env_path` at the beginning of the run.
+    If `path` is `None`, no de-serialization will take place.
 
-    If `env_path` is `None`, no serialization/de-serialization will take place.
-
-    :param env_path: Path to the serialized environment. If `None`, no
-                     serialization/de-serialzation will take place.
-    :type env_path: str or None
-    :param str env_format: Environment serialization format (only ``'pickle'``
-                           is supported at the moment).
-    :param str env_mode: Possible values: ``'r'`` (read-only), ``'w'``
-                         (write-only), ``'rw'`` (read and write).
+    :param path: Path to the serialized environment. If `None`, no
+                 de-serialzation will take place.
+    :type path: str or None
+    :param bool skip_read: If `True`, the environment will not be deserialized
+                           from the given file.
+    :param str fmt: Environment serialization format (only ``'pickle'`` is
+                    supported at the moment).
     '''
-    scheduler = Scheduler(graph)
-    env = Env.from_graph(graph)
-
-    if env_path is not None and 'r' in env_mode:
+    env = Env()
+    if path is not None and not skip_read:
         LOGGER.info('attempting to deserialize %s environment from file %s',
-                    env_format, env_path)
-        persistent_env = Env.from_file(env_path, env_format)
+                    fmt, path)
+        persistent_env = Env.from_file(path, fmt)
         if persistent_env is not None:
             env.merge_done_tasks(persistent_env)
-    else:
-        LOGGER.debug('starting with an empty environment')
+    LOGGER.debug('returning environment: %s', env)
+    return env
 
-    new_env = scheduler.schedule(env=env, config=config)
 
-    if new_env is not None and env_path is not None and 'w' in env_mode:
+def write_env(env, *, path, fmt):
+    '''Serialize the environment to the given file. If `path` is `None`, no
+    serialization will take place.
+
+    :param Env env: The environment to serialize.
+    :param path: Path to file to be written. If `None`, no serialzation will
+                 take place.
+    :type path: str or None
+    :param str fmt: Environment serialization format (only ``'pickle'`` is
+                    supported at the moment).
+    '''
+    if env is not None and path is not None:
         LOGGER.info('serializing %s environment to file %s',
-                    env_format, env_path)
-        new_env.to_file(env_path, env_format)
+                    fmt, path)
+        env.to_file(path, fmt)
     else:
         LOGGER.debug('skipping environment serialization')
 
+
+def schedule(graph, *, env, config=None):
+    '''Schedule a graph for execution.
+
+    '''
+    scheduler = Scheduler(graph)
+    new_env = scheduler.schedule(env=env, config=config)
     LOGGER.debug('resulting environment: %s', new_env)
     return new_env

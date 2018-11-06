@@ -5,8 +5,8 @@
 
 import tempfile
 
-from hypothesis import given, event, settings, HealthCheck
-from hypothesis.strategies import data, sampled_from
+from hypothesis import given, event, note, settings, HealthCheck
+from hypothesis.strategies import data, sampled_from, lists
 
 from .conftest import envs
 from ..context import valjean  # pylint: disable=unused-import
@@ -91,7 +91,10 @@ def test_updates(env, data):
 def test_merge_done_tasks(env, data):
     '''Test merging two environments.'''
     # generate a new environment with keys taken from those of the first
-    env_to_merge = data.draw(envs(sampled_from(list(env.keys()))))
+    env_keys = list(env.keys())
+    note('env_keys: {}'.format(env_keys))
+    env_to_merge = data.draw(envs(lists(sampled_from(env_keys))))
+    note('env_to_merge: {}'.format(env_to_merge))
     old_env = env.copy()
     env.merge_done_tasks(env_to_merge)
 

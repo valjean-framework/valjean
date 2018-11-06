@@ -86,7 +86,7 @@ class Scheduler:
         '''
 
         if env is None:
-            env = Env.from_graph(self.depgraph)
+            env = Env()
         LOGGER.info('scheduling tasks')
         LOGGER.debug('for graph %s', self.depgraph)
         LOGGER.debug('with env %s', env)

@@ -96,9 +96,9 @@ def make_parser():
                         default=[], dest='job_args',
                         help='arguments that will be passed to the job() '
                         'function; may be specified multiple times')
-    parser.add_argument('--env-path', action='store', default='valjean.env',
+    parser.add_argument('--env-path', action='store', default='valjean.tasks',
                         help='path to the file containing the persistent '
-                        'environment (default: valjean.env)')
+                        'environment (default: valjean.tasks)')
     parser.add_argument('--env-skip-read', action='store_true',
                         help='do not read the environment from the path '
                         'specified by --env_path at the beginning of the run')

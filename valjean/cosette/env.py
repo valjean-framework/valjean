@@ -9,38 +9,43 @@ existing dictionary as follows:
 
 You can use an :class:`Env` object as a glorified dicitionary (:class:`Env`
 inherits from :class:`dict`), but its main purpose is really to store
-information about concurrently running tasks.  For this purpose, :class:`Env`
-provides a number of practical methods.  First of all, if you have a list of
-tasks handy, you can generate an :class:`Env` object from them using the
-:meth:`.from_tasks()` class method:
+information about concurrently running tasks (see :class:`~.task.Task`). By
+convention, the keys in :class:`Env` are assumed to be task names; the
+associated values are dictionaries storing whatever information may be useful
+about the task. The dictionaries are also expected to have a ``'status'`` key
+describing the current task status (see :class:`~.task.TaskStatus`). An example
+of :class:`Env` respecting these conventions is the following:
 
-    >>> from valjean.cosette.task import Task
-    >>> class DoNothing(Task):
-    ...     '''We need a subclass because Task is abstract.'''
-    ...     def do(self, env, config):
-    ...         pass
-    >>> tasks = [DoNothing(str(i)) for i in range(10)]
-    >>> env = Env.from_tasks(tasks)
+    >>> from valjean.cosette.task import Task, TaskStatus
+    >>> class FindHolyGrail(Task):
+    ...   '''We derive a class from Task, which is abstract.'''
+    ...   def do(self, env, config):
+    ...     # find the Holy Grail
+    ...     pass
+    >>> quest = FindHolyGrail('quest')  # 'quest' is the task name
+    >>> tasks = {quest.name: {'name': 'Sir Galahad',
+    ...                       'favourite colour': 'blue',
+    ...                       'status': TaskStatus.FAILED}}
+    >>> env = Env(tasks)
 
-This initializes all tasks with a status of `WAITING`. You can check that as
-follows:
+The :class:`Env` API integrates well with the :mod:`~.task` module and provides
+a number of practical methods for dealing with tasks. For instance, there are
+``is_*`` methods for all members of the :class:`~.TaskStatus` enumeration:
 
-    >>> print(env.get_status(tasks[0]))
-    TaskStatus.WAITING
-    >>> env.is_waiting(tasks[0])  # equivalently
+    >>> env.is_failed(quest)
     True
+    >>> print(env.get_status(quest))    # equivalently
+    TaskStatus.FAILED
 
-There are ``is_*`` methods for all members of the :class:`~.TaskStatus`
-enumeration. Additionally, you can change the status of a task with
+Additionally, you can change the status of a task with
 
-    >>> from valjean.cosette.task import TaskStatus
-    >>> env.set_status(tasks[0], TaskStatus.DONE)
-    >>> env.set_done(tasks[0])  # equivalent, shorter version
+    >>> env.set_status(quest, TaskStatus.DONE)
+    >>> env.set_done(quest)  # equivalent, shorter version
 
 Information about the tasks, incuding their status, is stored with the task
 name as the key:
 
-    >>> print(env[tasks[0].name]['status'])
+    >>> print(env[quest.name]['status'])
     TaskStatus.DONE
 
 The :class:`Env` class tries hard to be thread-safe; that is, all its methods
@@ -48,11 +53,11 @@ will operate atomically. Internally, thread safety is enforced by locking the
 object whenever its contents are accessed. This, however, does not help in case
 of read-and-modify operations, as in the following example::
 
-    >>> if env.is_done(tasks[0]):      # WARNING: do not try this at home
-    ...     env.set_skipped(tasks[1])  # race condition here!
+    >>> if env.is_done(quest):      # WARNING: do not try this at home
+    ...     env.set_skipped(quest)  # race condition here!
 
 This snippet is racy in multithreaded mode because another thread may change
-the status of ``tasks[0]`` after :meth:`~.is_done()` has released the lock but
+the status of ``quest`` after :meth:`~.is_done()` has released the lock but
 before :meth:`~.set_skipped()` has had the chance to acquire it. For these
 scenarios, :class:`Env` offers the :meth:`~.atomically()` method, which accepts
 as an argument the action that should be performed.  When called,
@@ -61,10 +66,10 @@ the :class:`Env` object to the action. A thread-safe implementation of the
 read-and-modify trip above is implemented as follows:
 
     >>> def modify_task1(env):
-    ...     if env.is_done(tasks[0]):
-    ...         env.set_skipped(tasks[1])
+    ...     if env.is_done(quest):
+    ...         env.set_skipped(quest)
     >>> env.atomically(modify_task1)
-    >>> env.is_skipped(tasks[1])
+    >>> env.is_skipped(quest)
     True
 """
 
@@ -73,7 +78,6 @@ from collections.abc import MutableMapping
 
 from .. import LOGGER
 from .task import TaskStatus
-from .depgraph import DepGraph
 
 
 class EnvError(Exception):
@@ -131,35 +135,6 @@ class Env(dict):
             with self.lock:
                 self.update(dictionary)
 
-    @classmethod
-    def from_tasks(cls, tasks):
-        '''Initialize an :class:`Env` object from a list of tasks.
-
-        This class method initializes the environment in such a way that all
-        tasks have a status of `WAITING`. Duplicate task names are not allowed
-        and will raise an exception.
-
-        :raises EnvError: if the task names are not unique.
-        '''
-
-        cls._check_unique_task_names(tasks)
-
-        # initialize the environment
-        dictionary = {}
-        for task in tasks:
-            dictionary[task.name] = {'status': TaskStatus.WAITING}
-        return cls(dictionary)
-
-    @classmethod
-    def from_graph(cls, graph: DepGraph):
-        '''Initialize an :class:`Env` object from a dependency graph of tasks.
-        Works pretty much in the same way as :meth:`~.from_tasks()`.
-
-        :raises EnvError: if the task names are not unique.
-        '''
-
-        return cls.from_tasks(graph.nodes())
-
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,
                                super(Env, self).__repr__())
@@ -193,6 +168,7 @@ class Env(dict):
             LOGGER.warning("cannot load %s environment from file '%s'. "
                            "Error message: %s", fmt, path, error)
             return None
+        LOGGER.debug('returning environment: %s', deser)
         return deser
 
     def to_file(self, path, fmt):
@@ -214,18 +190,6 @@ class Env(dict):
             LOGGER.error("cannot write %s environment to file '%s'.\n"
                          "Error message: %s", fmt, path, error.strerror)
 
-    @staticmethod
-    def _check_unique_task_names(tasks):
-        names = set()
-        for task in tasks:
-            # check that task names are unique
-            name = task.name
-            if name in names:
-                raise EnvError(
-                    'task names must be unique; {} appears more than once'
-                    .format(name))
-            names.add(name)
-
     def merge_done_tasks(self, other):
         '''Merge task status from another environment.
 
@@ -245,21 +209,20 @@ class Env(dict):
         for task_name, status in other.items():
             if status['status'] != TaskStatus.DONE:
                 continue
-            if task_name not in self:
-                continue
             LOGGER.debug('merging status for task %s', task_name)
             self[task_name] = status
 
     def set_status(self, task, status):
         '''Set `task`'s status to `status`.'''
         with self.lock:
-            self[task.name]['status'] = status
+            self.setdefault(task.name, {})['status'] = status
 
     def get_status(self, task):
         '''Return `task`'s status.'''
         with self.lock:
-            # pylint: disable=not-callable
-            return TaskStatus(self[task.name]['status'])
+            status = self.setdefault(task.name,
+                                     {'status': TaskStatus.WAITING})['status']
+            return TaskStatus(status)
 
     def atomically(self, action):
         '''Perform an action atomically on the environment dictionary. The
@@ -288,3 +251,7 @@ class Env(dict):
 
         with self.lock:
             _apply_worker(env_update, self)
+
+    def copy(self):
+        '''Return a shallow copy of `self`.'''
+        return Env(super().copy())

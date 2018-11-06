@@ -3,17 +3,19 @@
 :mod:`~.scheduler` and :mod:`~.depgraph` modules.
 
 This module defines a dummy :class:`Task` class that may be used as a base
-class and extended. However, the current implementation of :meth:`.Task.do()`
-is a no-op and any class with ``do()`` method works just as well.
+class and extended.
 
-The :meth:`.Task.do()` method takes only one argument `env`, which is an
-environment for task execution. The idea of the environment is that tasks may
-use it to store information about their execution. For instance, a task may
-create a file and store its location in the environment, so that later tasks
-may be able to retrieve it.  The type of `env` is really immaterial, but it is
-probably natural to use a key-value mapping of some kind. Note, however, that
-most of the tasks defined in the :mod:`~.task` module hierarchy expect `env` to
-be an :class:`~.Env` object.
+The :meth:`.Task.do()` method takes two arguments:
+
+* `env` is an environment for task execution. The idea of the environment is
+  that tasks may use it to store information about their execution. For
+  instance, a task may create a file and store its location in the environment,
+  so that later tasks may be able to retrieve it.  The type of `env` is really
+  immaterial, but it is probably natural to use a key-value mapping of some
+  kind.  Note, however, that most of the tasks defined in the :mod:`~.task`
+  module hierarchy expect `env` to be an :class:`~.Env` object.
+* `config` is a :class:`~.config.Config` object describing the configuration
+  for the current run. Tasks may look up global configuration values here.
 '''
 
 import enum
@@ -22,7 +24,14 @@ from abc import ABC, abstractmethod
 from .. import LOGGER
 
 
-#: Enumeration for the task status.
+#: Enumeration for the task status. The possible values are:
+#:
+#: * ``WAITING`` (the task is waiting to be scheduled)
+#: * ``PENDING`` (the task is under execution)
+#: * ``DONE`` (the task was executed and it succeeded)
+#: * ``FAILED`` (the task was executed and it failed)
+#: * ``SKIPPED`` (the task was skipped by the scheduler; this may happen, for
+#:   instance, if the one of the task dependencies was not successful)
 TaskStatus = enum.IntEnum('TaskStatus',  # pylint: disable=invalid-name
                           'WAITING PENDING DONE FAILED SKIPPED')
 
