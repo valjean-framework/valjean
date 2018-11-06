@@ -13,6 +13,8 @@ from valjean.eponine.parse_t4_task import ParseT4Task
 def test_parse_t4_task(datafile):
     '''Worker for test_parse_t4_task on a specific file path.'''
     class RunTaskMock:
+        '''A mock class for :class:`~.cosette.RunTask` — it just contains its
+        name.'''
         def __init__(self, name):
             self.name = name
     run_name = datafile.purebasename
