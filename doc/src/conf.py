@@ -169,7 +169,8 @@ intersphinx_mapping = {
     'virtualenvwrapper': (
         ('https://virtualenvwrapper.readthedocs.io/en/latest/', None)),
     'setuptools': ('https://setuptools.readthedocs.io/en/latest/', None),
-    'pip': ('https://pip.pypa.io/en/stable/', None)}
+    'pip': ('https://pip.pypa.io/en/stable/', None),
+    'py': ('https://py.readthedocs.io/en/latest/', None) }
 
 # -- doctest options ------------------------------------------------------
 

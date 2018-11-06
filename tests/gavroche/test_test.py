@@ -63,7 +63,7 @@ def test_approx_equal_if_perturbed(perturbed_its):
 
 @given(dataset=gdatasets())
 def test_equal_bins_raises(dataset):
-    '''Check that :func:`mod.equal` raises on incompatible coordinates.'''
+    '''Check that :func:`~.equal` raises on incompatible coordinates.'''
     modified = dataset.copy()
     new_bins = {k: (b+1.0)*1.1 for k, b in modified.bins.items()}
     modified.bins = new_bins
@@ -75,8 +75,7 @@ def test_equal_bins_raises(dataset):
 
 @given(dataset=gdatasets())
 def test_approx_equal_bins_raises(dataset):
-    '''Test that :func:`mod.approx_equal` raises on incompatible
-    coordinates.'''
+    '''Test that :func:`~.approx_equal` raises on incompatible coordinates.'''
     modified = dataset.copy()
     new_bins = {k: (b+1.0)*1.1 for k, b in modified.bins.items()}
     modified.bins = new_bins

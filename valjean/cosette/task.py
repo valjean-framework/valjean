@@ -44,7 +44,7 @@ class Task(ABC):
         :param deps: The list of dependencies for this task. It must be either
                      `None` (i.e. no dependencies) or list of :class:`Task`
                      objects.
-        :type deps: list of Task or None
+        :type deps: list(Task) or None
         '''
         self.name = name
         self.depends_on = set()

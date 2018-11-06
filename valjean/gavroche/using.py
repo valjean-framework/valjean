@@ -39,12 +39,12 @@ that the test looks as simple as possible.
 Also, and perhaps more importantly, Alice realises that :file:`spam.txt` and
 :file:`eggs.txt` may need to be created beforehand, by some other task. There
 is no way to make sure that :program:`valjean` will not call
-:func:`compare_strlen_by_hand` before the files are created.  In other words,
+:func:`!compare_strlen_by_hand` before the files are created.  In other words,
 :program:`valjean` cannot inspect the definition of
-:func:`compare_strlen_by_hand` and infer that other tasks need to be run first.
-The only way to enforce the correct execution order seems to be to declare the
-data dependency by hand. Alice does not like this.  *Isn't this the kind of
-thing computers should be good at?*, she ponders.
+:func:`!compare_strlen_by_hand` and infer that other tasks need to be run
+first.  The only way to enforce the correct execution order seems to be to
+declare the data dependency by hand. Alice does not like this.  *Isn't this the
+kind of thing computers should be good at?*, she ponders.
 
 The :func:`using` decorator
 ---------------------------
@@ -60,8 +60,8 @@ Alice reads about the :func:`using` decorator and writes the following:
     ... def compare_strlen_using(x, y):
     ...     print('OK' if len(x) == len(y) else 'KO')
 
-The semantics of :func:`compare_strlen_using` is exactly the same as
-:func:`compare_strlen_by_hand`: when :func:`compare_strlen_using` is called,
+The semantics of :func:`!compare_strlen_using` is exactly the same as
+:func:`!compare_strlen_by_hand`: when :func:`!compare_strlen_using` is called,
 the content of :file:`spam.txt` will be read into `x`, and :file:`eggs.txt`
 will be read into `y`; the resulting strings will be passed as named arguments
 to the decorated function.  Alice still thinks this looks a bit noisy, but at
@@ -81,15 +81,15 @@ And it works!
     OK
 
 Note how Alice did not need to pass any arguments to
-:func:`compare_strlen_using`, because the :func:`using` decorators took care of
-it.
+:func:`!compare_strlen_using`, because the :func:`using` decorators took care
+of it.
 
 
 Explicit data dependencies
 --------------------------
 
 How does :func:`using` solve Alice's data-dependency problem? Well, the data
-dependencies of :func:`compare_strlen_using` can be inspected through its
+dependencies of :func:`!compare_strlen_using` can be inspected through its
 `using_dict` attribute:
 
     >>> from pprint import pprint
@@ -98,9 +98,9 @@ dependencies of :func:`compare_strlen_using` can be inspected through its
      'y': (<function slurp at ...>, ('eggs.txt',), {})}
 
 This clearly shows that the `x` argument will be given a value that has
-something to do with :file:`spam.txt` (specifically, the :func:`slurp` function
-that produces `x` will take ``'spam.txt'`` as a positional argument and no
-keyword arguments). :program:`valjean` is now free to inspect these
+something to do with :file:`spam.txt` (specifically, the :func:`!slurp`
+function that produces `x` will take ``'spam.txt'`` as a positional argument
+and no keyword arguments). :program:`valjean` is now free to inspect these
 dependencies and discover (most of!) the data dependencies.
 
 Alice reads in the docstring that :func:`~.using` **reifies** the data

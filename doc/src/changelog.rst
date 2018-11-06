@@ -9,6 +9,6 @@ v0.1 (2018-03-30)
 
   * List of available modules:
 
-    * :mod:`cosette`
-    * :mod:`eponine`
-    * :mod:`cambronne`
+    * :mod:`~.cosette`
+    * :mod:`~.eponine`
+    * :mod:`~.cambronne`

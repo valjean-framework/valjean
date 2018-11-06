@@ -22,7 +22,8 @@ from valjean import LOGGER
 
 
 def make_skip_marker(command, regex):
-    '''Create a :func:`pytest.mark.skipif` marker for a command.
+    '''Create a :func:`pytest.mark.skipif <_pytest._code.pytest.mark.skipif>`
+    marker for a command.
 
     :param str command: the name of a command (an executable). If the command
                         is not available, the marker will flag the tests as
@@ -89,8 +90,8 @@ def setup_project(project_path):
     The project consists of a git repository containing a simple
     `CMakelists.txt` file.
 
-    :param str project_path: the path to an existing directory (as a
-                             :mod:`py.path` object).
+    :param project_path: the path to an existing directory
+    :type project_path: :class:`~py._path.local.LocalPath`
     '''
     LOGGER.debug('Setting up a git/CMake project in %s', project_path)
     LOGGER.debug('HAS_GIT: %s', HAS_GIT)
@@ -218,7 +219,7 @@ def notimpl_build(request):
 def subdir(request):
     '''Return a name for a subdirectory, or an empty string for no subdir.
 
-    This fixture is used to parametrize the :class:`~.RunFactory` tests.
+    This fixture is used to parametrize the :class:`~.RunTaskFactory` tests.
     '''
     return request.param
 

@@ -621,10 +621,12 @@ class Accessor:
     '''
 
     def __init__(self, tparsed_res):  # , merge_score=False):
-        '''
+        '''Create an :class:`Accessor` from a list of responses.
+
         :param list(dict) tparsed_res: result from parsing (for the moment not
-        the result from scan, so some things might be missing like
-        initialization time)
+                                       the result from scan, so some things
+                                       might be missing like initialization
+                                       time)
         '''
         self.parsed_res = tparsed_res
         self.resp_book = (ResponsesBook(self.parsed_res['list_responses'])

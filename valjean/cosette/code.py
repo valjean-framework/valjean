@@ -96,14 +96,6 @@ path to the `source` argument instead.
    >>> pprint(bt_up)
    {'project_build': {'build_dir': '.../build/project_build',
                       'build_log': '.../log/build_project_build.log'}}
-
-:class:`CheckoutTask` and :class:`BuildTask` can also be created from a
-name and a :class:`~.Config` object, using the
-:meth:`CheckoutTask.from_config()` and :meth:`BuildTask.from_config()` class
-methods, respectively. The class methods will look for configuration sections
-called ``[checkout/<name>]`` (``[build/<name>]``, respectively) and take their
-parameters from there. The expected parameters are documented in the method
-docstrings.
 """
 
 import os
@@ -135,7 +127,7 @@ class CheckoutTask(PythonTask):
                              configuration default.
         :param flags: The flags to be used at checkout time, as a list of
                       strings.
-        :type flags: list or None
+        :type flags: list(str) or None
         :param ref: The reference to check out.
         :type ref: str or None
         :param vcs: The version-control system to use. Must be one of:
@@ -144,7 +136,7 @@ class CheckoutTask(PythonTask):
         :param deps: The dependencies for this task (see
                :meth:`Task.__init__() <valjean.cosette.task.Task.__init__>`
                for the format), or `None`.
-        :type deps: list of Task or None
+        :type deps: list(Task) or None
         '''
 
         self.log_root = log_root
@@ -244,7 +236,7 @@ class BuildTask(PythonTask):
         :param str log_root: The path to the log directory.
         :param targets: A list of targets to build, or `None` for the default
                         target.
-        :type targets: list or None
+        :type targets: list(str) or None
         :param str build_system: The name of the build system to use. Must be
                                  one of: ``'cmake'`` (default),
                                  ``'configure'``.
@@ -258,7 +250,7 @@ class BuildTask(PythonTask):
                      :meth:`Task.__init__()
                      <valjean.cosette.task.Task.__init__>` for the type), or
                      `None`.
-        :type deps: list of Task or None
+        :type deps: list(Task) or None
         '''
         assert isinstance(source, (str, CheckoutTask))
         self.source = source

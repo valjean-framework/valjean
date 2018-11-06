@@ -25,11 +25,11 @@ an empty :class:`~.Config` to the :meth:`PythonTask.do` method:
     >>> task.do(env={}, config=None)
     42
 
-Note that, contrary to e.g. :meth:`.run.RunTask.do`, :meth:`PythonTask.do`
-simply returns the result of the wrapped function. For the sake of
-illustration, our function returns an integer; however, if you want to use
-:class:`PythonTask` in a :class:`~.DepGraph`, your wrapped function will need
-to return an `(env_up, status)` pair, like the other tasks.
+Note that :meth:`PythonTask.do` simply returns the result of the wrapped
+function. For the sake of illustration, our function returns an integer;
+however, if you want to use :class:`PythonTask` in a :class:`~.DepGraph`, your
+wrapped function will need to return an `(env_up, status)` pair, like the other
+tasks.
 
 .. note::
 
@@ -52,7 +52,7 @@ then you may do something like
 
 Essentially, you construct a trampoline: the lambda takes no arguments, but it
 captures `x` and `y` from the surrounding scope and passes them to the
-:func:`add` function. This works, but due to the way Python handles captured
+:func:`!add` function. This works, but due to the way Python handles captured
 variables, it may bring a few surprises:
 
     >>> x, y = 5, 3
@@ -247,16 +247,16 @@ class PythonTask(Task):
         '''Initialize the task with a function, a tuple of arguments and a
         dictionary of kwargs.
 
-        :param name str: The name of the task.
-        :param func function: A function to be executed.
-        :param args tuple: A tuple of positional arguments to `func`, or `None`
+        :param str name: The name of the task.
+        :param func: A function to be executed.
+        :param tuple args: A tuple of positional arguments to `func`, or `None`
                            if none are required.
-        :param kwargs dict: A dictionary of keyword arguments to `func`, or
+        :param dict kwargs: A dictionary of keyword arguments to `func`, or
                             `None` if none are required.
-        :param env_kwarg str: The name of the keyword argument that will be
+        :param str env_kwarg: The name of the keyword argument that will be
                               used to pass the environment to the function, or
                               `None` if the environment should not be passed.
-        :param config_kwarg str: The name of the keyword argument that will be
+        :param str config_kwarg: The name of the keyword argument that will be
                                  used to pass the config to the function, or
                                  `None` if the config should not be passed.
         :param deps: If this task depends on other tasks (and valjean cannot

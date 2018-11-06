@@ -11,6 +11,9 @@ cambronne — Commandes, Actions et MoBilisation Rapide des OpératioNs Exécuta
    Pierre Cambronne (1770-1842), général de Napoléon, dans une gravure de
    l'époque.
 
+.. automodule:: valjean.cambronne
+   :undoc-members:
+
 .. toctree::
    :caption: Submodules
 

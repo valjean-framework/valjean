@@ -1,4 +1,4 @@
-'''Tests for the :mod:`~.using` module.'''
+'''Tests for the :mod:`~valjean.gavroche.using` module.'''
 
 from ..context import valjean  # pylint: disable=unused-import
 
@@ -10,7 +10,7 @@ from valjean import LOGGER
 @using('param1', len, 'asd')
 @using('param2', lambda x: x+1, 1)
 def some_function(param1, param2):
-    '''Test that the :func:`using` decorator works.'''
+    '''Test that the :func:`~.using` decorator works.'''
     assert param1 == 3
     assert param2 == 2
 
@@ -21,7 +21,7 @@ def test_using_multiple():
 
 
 def check_kwargs_return_42(expected_task_name, **kwargs):
-    '''Helper function to test kwargs to :func:`using`.'''
+    '''Helper function to test kwargs to :func:`~.using`.'''
     assert kwargs == {'task': expected_task_name}
     return 42
 

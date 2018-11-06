@@ -70,7 +70,7 @@ def same_bins_datasets(*datasets, rtol=1e-5, atol=1e-8):
     '''Return `True` if all datasets have compatible coordinates.
 
     :param datasets: any number of datasets.
-    :type datasets: :class:`Dataset`
+    :type datasets: :class:`~valjean.eponine.dataset.Dataset`
     :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
     :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
     '''
@@ -130,7 +130,8 @@ class Test:
 def equal(*datasets):
     '''Test if the datasets are equal.
 
-    :param datasets: the :class:`Dataset` objects to test.
+    :param datasets: the :class:`~valjean.eponine.dataset.Dataset` objects to
+                     test.
     '''
     return Test(equal_crit, datasets)
 
@@ -152,7 +153,8 @@ def equal_crit(*datasets):
 def approx_equal(*datasets, rtol=1e-5, atol=1e-8):
     '''Test if the datasets are equal within the given tolerances.
 
-    :param datasets: the :class:`Dataset` objects to test.
+    :param datasets: the :class:`~valjean.eponine.dataset.Dataset` objects to
+                     test.
     :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
     :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
     '''

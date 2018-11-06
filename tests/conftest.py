@@ -39,9 +39,9 @@ def intercalate_strings(list1, list2):
         len(list1) == len(list2) + 1
 
     :param list1: a list of strings.
-    :type list1: list of str
+    :type list1: list(str)
     :paral list2: a list of strings.
-    :type list1: list of str
+    :type list2: list(str)
     '''
     intercalated = ''.join(''.join((s1, s2)) for s1, s2 in zip(list1, list2))
     return ''.join((intercalated, list1[-1]))
@@ -95,7 +95,7 @@ def foreach_data(*args, **kwargs):
             pass
 
     When `pytest` imports :file:`test_submod.py`, it will parametrize
-    the `datafile` argument to :func:`test_something` over all the files
+    the `datafile` argument to :func:`!test_something` over all the files
     present in :file:`tests/submod/data/`.
 
     If you wish to filter away some of the files, you can use the alternative
@@ -108,8 +108,9 @@ def foreach_data(*args, **kwargs):
     Here the argument to the `datafile` keyword argument is a predicate that
     must return `True` if `path` is to be parametrized over, and `False`
     otherwise. Note that the `path` argument to the lambda is a
-    :class:`py.path.local` object.  In this example, `pytest` will parametrize
-    :func:`test_something` only over files whose name ends in '.txt'.
+    :class:`py._path.local.LocalPath` object.  In this example, `pytest` will
+    parametrize :func:`!test_something` only over files whose name ends in
+    ``'.txt'``.
     '''
 
     if args:

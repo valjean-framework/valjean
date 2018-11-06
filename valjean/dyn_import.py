@@ -10,7 +10,7 @@ def split_module_path(file_name):
     '''Split a path to a Python module into a path and a module name.
 
     :param path: A path to a Python file.
-    :type path: str or path-like object
+    :type path: str or :term:`path-like object`
     :returns: a `(path, name)` tuple.
     '''
     LOGGER.debug("module_from_name(path='%s')", file_name)

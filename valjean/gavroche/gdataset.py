@@ -556,12 +556,13 @@ LOGGER = logging.getLogger('valjean')
 
 
 class GDataset(Dataset):
-    '''A :class:`~eponine.Dataset` with mathematical operations.'''
+    '''A :class:`~valjean.eponine.dataset.Dataset` with mathematical
+    operations.'''
 
     @classmethod
     def from_dataset(cls, dataset):
         '''Construct a :class:`GDataset` from an instance of a
-        :class:`~eponine.Dataset`.'''
+        :class:`~valjean.eponine.dataset.Dataset`.'''
         return cls(value=dataset.value, error=dataset.error,
                    bins=dataset.bins, name=dataset.name)
 

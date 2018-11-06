@@ -10,8 +10,8 @@ Summary
 * Get the edition batch numbers (if exists)
 
 
-Use of ``scan_t4``
-------------------
+Use of :mod:`scan_t4 <valjean.eponine.scan_t4>`
+-----------------------------------------------
 
 .. doctest:: scan_t4
    :hide:
@@ -29,7 +29,7 @@ Use of ``scan_t4``
    ...           "NORMAL COMPLETION",
    ...           file=tmpfile)
 
-To use ``scan_t4`` you need to create a :class:`Scan` object giving at least
+To use this module you need to create a :class:`Scan` object giving at least
 the path to the file you want to read. This file should be a Tripoli-4 output
 containing at least the flags precised in :ref:`eponine-scan_t4-caveats`.
 
@@ -81,15 +81,8 @@ set on the number of lines read using the argument ``mesh_limit``:
 * Else **Minimum is 1**: to avoid crash in parsing as it needs to parse at
   least one line of mesh result
 
-
-Others
-------
-
-Memory profiling is available using memory_profiler::
-
-  mprof run --python python3 scan.py FILE
-  mprof plot
-
+Module API
+----------
 '''
 
 from collections.abc import Mapping
@@ -218,7 +211,7 @@ class BatchResultScanner:
         Called if end flag has been found, add last line and concatenates
         result.
 
-        :return: string build from lsit of strings junction
+        :return: string build from list of strings junction
         '''
         LOGGER.debug("[1;31mEND FLAG found, batch number = %d, "
                      "current batch = %d, greater batch = %d[0m",
@@ -238,22 +231,41 @@ class Scan(Mapping):
     from the object. Main results are accessible directly from the :obj:`Scan`
     object.
 
-    :ivar fname: name of the file that will be scanned
-    :ivar int reqbatchs: number of batchs required (read from file fname)
-    :ivar bool normalend: presence of "NORMAL COMPLETION"
-    :ivar list(str) end_flags: possible end flags to stop the saving of
-      results
-    :ivar int mesh_limit: maximum lines of mesh to be stored
-    :ivar bool para: True is PARALLEL mode, else False
-    :ivar int countwarnings: count number of warnings (for statistics)
-    :ivar int counterrors: count number of errors (for statistics)
-    :ivar times: save times (initialization, simulation, exploitation and
-      elapsed if exists). Mandatory ones are ``'initialization time'`` and
-      ``'simulation time'`` or ``'exploitation time'``. ``'elapsed time'`` only
-      appears in listings from parallel jobs.
-    :vartype times: :obj:`collections.OrderedDict`
-    :ivar str last_generator_state: keep the random generator state (not
-      included in the result as given after `endflag`)
+    **Instance variables:**
+
+    `fname` (:class:`str`)
+        name of the file that will be scanned
+
+    `reqbatchs` (:class:`int`)
+        number of batchs required (read from file `fname`)
+
+    `normalend` (:class:`bool`)
+        presence of "NORMAL COMPLETION"
+
+    `end_flags` (:class:`list` (:class:`str`))
+        possible end flags to stop the saving of results
+
+    `mesh_limit` (:class:`int`)
+        maximum lines of mesh to be stored
+
+    `para` (:class:`bool`)
+        `True` in parallel mode
+
+    `countwarnings` (:class:`int`)
+        count number of warnings (for statistics)
+
+    `counterrors` (:class:`int`)
+        count number of errors (for statistics)
+
+    `times` (:class:`collections.OrderedDict`)
+        save times (initialization, simulation, exploitation and elapsed if
+        exists). Mandatory ones are ``'initialization time'`` and ``'simulation
+        time'`` or ``'exploitation time'``. ``'elapsed time'`` only appears in
+        listings from parallel jobs.
+
+    `last_generator_state` (:class:`str`)
+        keep the random generator state (not included in the result as given
+        after `endflag`)
     '''
 
     @profile

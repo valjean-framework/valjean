@@ -34,7 +34,7 @@ code to a test file:
    <BLANKLINE>
    sentence = 'My hovercraft is full of eels!'
 
-Our test consists of a single function called, well, :func:`test_function`. We
+Our test consists of a single function called, well, :func:`!test_function`. We
 write it to a file called, well, :file:`test_file.py`:
 
    >>> test_file = 'test_file.py'
@@ -105,9 +105,9 @@ kind of iteration. This doesn't work:
 You may have expected to find four dictionary keys in ``loop``, but only the
 function defined at the last loop iteration was harvested. This is not really a
 problem with harvesting, but rather with function definition. If you import the
-:mod:`test_loop` module, you will see that it contains only one function.  A
+:mod:`!test_loop` module, you will see that it contains only one function.  A
 moment's reflection should convince you that this makes sense; even if the
-module contained several functions called :func:`test_in_loop`, how would you
+module contained several functions called :func:`!test_in_loop`, how would you
 tell them apart since they have the same name?
 
 So, if you want to define tests in a loop, you may be tempted to attempt
@@ -139,8 +139,9 @@ shenanigans such as:
    2
    3
 
-This works but it is way too verbose. You can actually ask :mod:`gavroche` to
-jump through all the hoops using the :func:`export` decorator:
+This works but it is way too verbose. You can actually ask
+:mod:`~valjean.gavroche` to jump through all the hoops using the :func:`export`
+decorator:
 
    >>> print(best)
    from valjean.gavroche.harvest import export
