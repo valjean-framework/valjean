@@ -123,15 +123,25 @@ def make_parser():
     # import each submodule in commands.* and create a new subparser for it
     prefix = commands.__name__ + '.'
     submods_iter = pkgutil.iter_modules(commands.__path__)
+    cmd_objs = []
     for _, modname, _ in submods_iter:
         cmd_name = modname.capitalize() + 'Command'
         module = importlib.import_module(prefix + modname)
         cmd_cls = getattr(module, cmd_name)
-        cmd = cmd_cls()
-        cmd_parser = cmd_parsers.add_parser(cmd_cls.NAME,
-                                            help=cmd_cls.HELP,
-                                            aliases=cmd_cls.ALIASES)
-        cmd.register(cmd_parser)
+        cmd_obj = cmd_cls()
+        cmd_objs.append(cmd_obj)
+
+    # sort the commands by increasing priority; put commands without priority
+    # (e.g. graph at the end of the list)
+    max_priority = max(cmd_obj.PRIORITY for cmd_obj in cmd_objs
+                       if hasattr(cmd_obj, 'PRIORITY'))
+    cmd_objs.sort(key=lambda cmd_obj: getattr(cmd_obj, 'PRIORITY',
+                                              max_priority + 1))
+    for cmd_obj in cmd_objs:
+        cmd_parser = cmd_parsers.add_parser(cmd_obj.NAME,
+                                            help=cmd_obj.HELP,
+                                            aliases=cmd_obj.ALIASES)
+        cmd_obj.register(cmd_parser)
 
     return parser
 
