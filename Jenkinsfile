@@ -74,8 +74,8 @@ pipeline {
           sh """
              source "${VENV}/bin/activate"
              # be nitpicky on the HTML documentation
-             sphinx-build -a -n -b html doc/src doc/build/html |& tee sphinx-html.out
-             sphinx-build -a -b linkcheck doc/src doc/build/linkcheck && mv doc/build/linkcheck/output.txt sphinx-linkcheck.out
+             PYTHONPATH=. sphinx-build -a -E -N -n -w sphinx-html.out -W -b html doc/src doc/build/html
+             PYTHONPATH=. sphinx-build -a -E -N -w sphinx-linkcheck.out -W -b linkcheck doc/src doc/build/linkcheck
              """
         }
       }
