@@ -293,6 +293,37 @@ def dep_dicts(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
     return dag
 
 
+class DoNothingTask(Task):
+    '''A task that does nothing.'''
+    def do(self, _env, _config):
+        '''Do nothing!'''
+        pass
+
+
+@composite
+def dep_tasks(draw, names=text(min_size=1), min_deps=0, max_deps=None,
+              **kwargs):
+    '''Composite Hypothesis strategy to generate a list of
+    interdependent :class:`DoNothingTask` objects (no dependency cycles
+    though!).'''
+    dep_dict = draw(dep_dicts(elements=names, min_deps=min_deps,
+                              max_deps=max_deps, **kwargs))
+
+    def to_task(dep_dict, task_name, task_dict):
+        if task_name in task_dict:
+            return task_dict[task_name]
+        deps = [to_task(dep_dict, name, task_dict)
+                for name in dep_dict[task_name]]
+        task = DoNothingTask(task_name, deps=deps)
+        task_dict[task_name] = task
+        return task
+
+    task_dict = {}
+    tasks = [to_task(dep_dict, task_name, task_dict)
+             for task_name in dep_dict.keys()]
+    return tasks
+
+
 # pylint: disable=too-many-arguments
 @composite
 def depgraphs(draw, elements=integers(0, 10), min_deps=0, max_deps=None,

@@ -67,21 +67,29 @@ def tasks_and_dependencies(tasks):
     :returns: The list of tasks, their dependencies, the dependencies of their
               dependencies and so on.
     '''
-    queue = tasks
-    all_tasks = tasks.copy()
-    task_dict = {task.name: task for task in all_tasks}
+    queue = set(tasks)
+    all_tasks = queue.copy()
     while queue:
-        deps = [dep for task in queue for dep in task.depends_on
-                if task.depends_on is not None]
-        for dep in deps:
-            if dep.name in task_dict and dep is not task_dict[dep.name]:
-                err = ('Task names must be unique; {} found more than once'
-                       .format(dep.name))
-                raise ValueError(err)
-            task_dict[dep.name] = dep
-            all_tasks.append(dep)
+        deps = set(dep for task in queue for dep in task.depends_on
+                   if task.depends_on is not None)
+        all_tasks.update(deps)
         queue = deps
-    return all_tasks
+    return list(all_tasks)
+
+
+def check_unique_task_names(tasks):
+    '''Check that the tasks have unique names.
+
+    :param list tasks: A list of tasks.
+    :raises ValueError: if two or more tasks have the same name.
+    '''
+    names = set()
+    for task in tasks:
+        if task.name in names:
+            err = ('Task names must be unique; {} found more than once'
+                   .format(task.name))
+            raise ValueError(err)
+        names.add(task.name)
 
 
 def make_parser():
