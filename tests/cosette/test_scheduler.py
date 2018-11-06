@@ -50,6 +50,7 @@ def test_dep_tasks(graph, n_workers):
     run(graph, n_workers)
 
 
+@settings(deadline=None)
 @given(graph=graphs(task_strategy=delay_tasks(min_duration=0,
                                               max_duration=1e-2),
                     dep_frac=0.1),

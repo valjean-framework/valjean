@@ -6,7 +6,7 @@ Most of them are silly tests for the moment...
 # pylint: disable=no-value-for-parameter
 
 import numpy as np
-from hypothesis import given, note
+from hypothesis import given, note, settings, HealthCheck
 from hypothesis.strategies import data, floats, one_of
 
 from valjean.gavroche import gdataset as gd
@@ -81,6 +81,7 @@ def test_division(gds):
     assert np.allclose(sgds.error, error, equal_nan=True)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(gds=multiple_gdatasets(size=2))
 def test_sum_commutativity(gds):
     '''Test commutativity of gdatasets addition: a + b == b + a.
@@ -97,6 +98,7 @@ def test_sum_commutativity(gds):
     assert np.allclose(gds_01.error, gds_10.error)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(gds=multiple_gdatasets(size=2))
 def test_difference_commutativity(gds):
     '''Test commutativity of gdatasets subtraction: a - b == -(b - a).
@@ -118,6 +120,7 @@ def test_difference_commutativity(gds):
     assert np.allclose(gds_01.error, gds_10.error)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(gds=multiple_gdatasets(size=2))
 def test_product_commutativity(gds):
     '''Test commutativity of gdatasets multiplication: a * b == b * a.
@@ -134,6 +137,7 @@ def test_product_commutativity(gds):
     assert np.allclose(gds_01.error, gds_10.error, equal_nan=True)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(gds=multiple_gdatasets(size=3))
 def test_sum_associativity(gds):
     '''Test associativity of gdatasets sum: a + (b + c) == (a + b) + c.'''
@@ -146,6 +150,7 @@ def test_sum_associativity(gds):
     assert np.allclose(gds_0_12.error, gds_01_2.error)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(gds=multiple_gdatasets(size=3))
 def test_product_associativity(gds):
     '''Test associativity of gdatasets sum: a * (b * c) == (a * b) * c.'''
@@ -226,6 +231,7 @@ def test_quotient_identity(gds):
     assert np.allclose(gds_gdsid.error, gds.error)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(gds=multiple_gdatasets(size=3))
 def test_left_distributivity(gds):
     '''Test left distributivity between addition and multiplication:
@@ -248,6 +254,7 @@ def test_left_distributivity(gds):
     assert np.allclose(gds_d.value, gds_c.value, rtol=1e-3, atol=1e-5)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(gds=multiple_gdatasets(size=3))
 def test_right_distributivity(gds):
     '''Test right distributivity between addition and multiplication:
@@ -270,6 +277,7 @@ def test_right_distributivity(gds):
     assert np.allclose(gds_d.value, gds_c.value, rtol=1e-3, atol=1e-5)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(gds=multiple_gdatasets(size=3))
 def test_inverse_add(gds):
     '''Test inverse of addition: (a + b) - b == a.
@@ -284,6 +292,7 @@ def test_inverse_add(gds):
     assert np.allclose(gds_b.value, gds[0].value)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(gds=multiple_gdatasets(
     elements=one_of(floats(1e-5, 1e5), floats(-1e5, -1e-5)), size=2))
 def test_inverse_mult(gds):

@@ -33,6 +33,7 @@ def event_frac(name, frac):
 #  tests  #
 ###########
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(env=envs())
 def test_persistence_roundtrip(env, persistence_format):
     '''Test the roundtrip to all the persistence formats.'''

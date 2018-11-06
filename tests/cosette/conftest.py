@@ -419,7 +419,7 @@ def graphs(draw, task_strategy, dep_frac=0.0):
 # pylint: disable=too-many-arguments
 @composite
 def delay_tasks(draw, min_duration=1e-15, max_duration=1e-5,
-                min_size=None, max_size=None):
+                min_size=0, max_size=None):
     '''Composite Hypothesis strategy to generate a list of delay tasks.'''
     durations = draw(
         lists(floats(min_value=min_duration, max_value=max_duration),

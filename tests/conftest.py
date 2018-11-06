@@ -59,7 +59,7 @@ def section_names(draw, sec_ids):
 
 @composite
 def configs(draw, keys=IDS, vals=IDS, sec_names=section_names(IDS),
-            min_size=None):
+            min_size=0):
     '''Composite Hypothesis strategy to generate Config objects.'''
     secs = dictionaries(keys, vals)
     as_dict = draw(dictionaries(sec_names, secs, min_size=min_size))
@@ -68,7 +68,7 @@ def configs(draw, keys=IDS, vals=IDS, sec_names=section_names(IDS),
 
 
 @composite
-def spaces(draw, min_size=None, max_size=None):
+def spaces(draw, min_size=0, max_size=None):
     '''Generate strings of spaces.'''
     return draw(text(' ', min_size=min_size, max_size=max_size))
 
