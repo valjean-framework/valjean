@@ -69,10 +69,17 @@ def tasks_and_dependencies(tasks):
     '''
     queue = tasks
     all_tasks = tasks.copy()
+    task_dict = {task.name: task for task in all_tasks}
     while queue:
         deps = [dep for task in queue for dep in task.depends_on
                 if task.depends_on is not None]
-        all_tasks.extend(deps)
+        for dep in deps:
+            if dep.name in task_dict and dep is not task_dict[dep.name]:
+                err = ('Task names must be unique; {} found more than once'
+                       .format(dep.name))
+                raise ValueError(err)
+            task_dict[dep.name] = dep
+            all_tasks.append(dep)
         queue = deps
     return all_tasks
 
