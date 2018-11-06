@@ -361,7 +361,7 @@ class RunTaskFactory:
                               extra_args, **kwargs):
         cli = [executable]
         cli.extend(arg.format(env=env, config=config, **kwargs)
-                    for arg in default_args)
+                   for arg in default_args)
         cli.extend(extra_args)
         return [cli]
 

@@ -1,7 +1,6 @@
 '''Fixtures for the :mod:`~.valjean.cosette` tests.'''
 # pylint: disable=redefined-outer-name
 
-import sys
 import re
 from subprocess import check_call, check_output, DEVNULL, CalledProcessError
 
