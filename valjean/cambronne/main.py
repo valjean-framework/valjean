@@ -21,8 +21,6 @@ def main(argv=None):
 
     config = process_options(args)
 
-    LOGGER.info('vajean %s', __version__)
-    LOGGER.info('run starts...')
     if hasattr(args, 'func'):
         # collect stuff from valjean.py
         job_file = config.get('path', 'job-file')
@@ -31,7 +29,6 @@ def main(argv=None):
         args.func(args, collected_tasks, config)
     else:
         parser.print_help()
-    LOGGER.info('...finished!')
 
 
 def _collect_tasks(priority, job_file, job_args):
