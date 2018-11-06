@@ -286,8 +286,8 @@ class DepGraph:
         '''Generate a :class:`DepGraph` from a dependency dictionary.'''
 
         # the list of the graph nodes
-        nodes = list(set(dependencies.keys()) |
-                     set(v for vs in dependencies.values() for v in vs))
+        nodes = list(set(dependencies.keys())
+                     | set(v for vs in dependencies.values() for v in vs))
 
         # translate the dependency dictionary elements to indices
         edges = {}
@@ -371,9 +371,9 @@ class DepGraph:
         if not isinstance(other, DepGraph):
             return False
         # pylint: disable=protected-access
-        return (all(node in other._nodes for node in self._nodes) and
-                all(dep in other[node] for node in self._nodes
-                    for dep in self[node]))
+        return (all(node in other._nodes for node in self._nodes)
+                and all(dep in other[node] for node in self._nodes
+                        for dep in self[node]))
 
     def isomorphic_to(self, other):
         '''Returns `True` if this graph is isomorphic to `other`.'''

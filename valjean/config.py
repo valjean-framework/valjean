@@ -152,8 +152,8 @@ class Config:
         other_conf = ConfigParser(default_section='path')
         other_conf.read([os.path.expanduser(p) for p in paths])
         for sec_name, _ in other_conf.items():
-            if (not self.has_section(sec_name) and
-                    sec_name != self._conf.default_section):
+            if (not self.has_section(sec_name)
+                    and sec_name != self._conf.default_section):
                 self.add_section(sec_name)
             for opt, val in other_conf.items(sec_name, raw=True):
                 self.set(sec_name, opt, val)

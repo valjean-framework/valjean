@@ -295,8 +295,8 @@ def test_trans_closure_dependencies(graph):
     dependencies in the transitive closure.'''
     graph_cl = graph.copy().transitive_closure()
     for node in graph.nodes():
-        assert (sorted(graph.dependencies(node, recurse=True)) ==
-                sorted(graph_cl.dependencies(node, recurse=False)))
+        assert (sorted(graph.dependencies(node, recurse=True))
+                == sorted(graph_cl.dependencies(node, recurse=False)))
 
 
 @given(graph=depgraphs(), recurse=booleans())

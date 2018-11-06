@@ -49,8 +49,8 @@ class Task(ABC):
         self.name = name
         self.depends_on = set()
         if deps is not None:
-            if not (isinstance(deps, list) and
-                    all(isinstance(l, Task) for l in deps)):
+            if not (isinstance(deps, list)
+                    and all(isinstance(l, Task) for l in deps)):
                 errmsg = ('The `deps` task argument must '
                           'be either a list of tasks or None; {} found'
                           .format(type(deps)))

@@ -39,8 +39,8 @@ def make_skip_marker(command, regex):
         match = re.match(regex, version_str)
         if match is None:
             version = ''
-            reason = ('could not parse version string for ' + command +
-                      ', needed for this test')
+            reason = ('could not parse version string for ' + command
+                      + ', needed for this test')
         else:
             version = match.group(1)
             has = True
