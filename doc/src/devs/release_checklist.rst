@@ -7,9 +7,11 @@ This page contains a list of things that you should check before issuing a new
 :mod:`valjean` release. In the future, some or all of the things below may
 (should!) be automated.
 
-#. Create a new branch off the development branch. If you are aiming at
-   releasing version :file:`{x.y}`, call the branch :file:`releng-v{x.y}`.
-   Commit all the following steps on this branch.
+#. Choose the version number of the next release. Use `Semantic Versioning`_.
+
+#. Create a new branch off the development branch. If you are releasing version
+   :file:`{x.y.z}`, call the branch :file:`releng-v{x.y.z}`.  Commit all the
+   following steps on this branch.
 
 #. Revise this TODO list, if necessary!
 
@@ -50,7 +52,7 @@ This page contains a list of things that you should check before issuing a new
 
 #. Once the pull request is accepted, tag the new version::
 
-    $ git tag vx.y  # for appropriate values of x and y
+    $ git tag vx.y.z  # for appropriate values of x, y and z
 
    Remember to push the tag to the shared repository.
 
@@ -61,3 +63,5 @@ This page contains a list of things that you should check before issuing a new
 #. Remember to merge any release changes back into the development branch.
 
 #. Congratulations, you have made a new :mod:`valjean` release!
+
+.. _`Semantic Versioning`: https://semver.org/
