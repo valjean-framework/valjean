@@ -2,13 +2,11 @@
 # pylint: disable=invalid-name
 r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
-.. _pyparsing_pip: https://pypi.org/pypi/pyparsing/2.2.0/
 .. |keff| replace:: k\ :sub:`eff`
 .. |kij| replace:: k\ :sub:`ij`
 .. role :: parsing_var(literal)
 
-Documentation on the ``pyparsing`` package can be found in `pyparsing`_
-documentation linked to `pyparsing_pip`_.
+Documentation on the ``pyparsing`` package can be found at `pyparsing`_.
 
 Transformation from ``pyparsing.ParseResults`` to more standard python objects,
 including :obj:`numpy` arrays, is done with :mod:`~.transform`, calling
