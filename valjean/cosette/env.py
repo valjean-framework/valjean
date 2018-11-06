@@ -174,6 +174,7 @@ class Env(dict):
         :returns: The deserialized object.
         '''
         import pickle
+
         def deserializer(file_):
             return pickle.load(file_)
         mode = 'rb'
@@ -202,7 +203,7 @@ class Env(dict):
                         for the moment).
         '''
         import pickle
-        import numpy as np
+
         def serializer(file_):
             pickle.dump(self, file_)
         mode = 'wb'
