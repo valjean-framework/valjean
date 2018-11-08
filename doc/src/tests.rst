@@ -73,8 +73,8 @@ Tests for the :mod:`~.scan_t4` module
 .. automodule:: tests.eponine.test_scan_t4
 
 
-Tests for the :mod:`~.scan_t4` and :mod:`~.parse_t4` modules
-````````````````````````````````````````````````````````````
+Tests for the :mod:`~.parse_t4` modules
+```````````````````````````````````````
 
 .. automodule:: tests.eponine.test_all_listings
 
