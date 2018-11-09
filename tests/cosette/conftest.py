@@ -339,14 +339,6 @@ def depgraphs(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
 #  env fixtures  #
 ##################
 
-class DoNothingTask(Task):
-    '''A task that does nothing.'''
-
-    def do(self, env, config):
-        '''What it says on the tin!'''
-        pass
-
-
 def env_names():
     '''Strategy to generate names for :class:`~.Env`.'''
     return text(min_size=1)

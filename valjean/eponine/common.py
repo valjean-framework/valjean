@@ -517,7 +517,6 @@ specified):
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-import pprint
 import numpy as np
 
 
@@ -530,7 +529,6 @@ if 'profile' not in globals()['__builtins__']:
 
 
 LOGGER = logging.getLogger('valjean')
-PP = pprint.PrettyPrinter(indent=4, depth=2)
 ITYPE = np.int64
 FTYPE = np.float64
 
@@ -1438,7 +1436,6 @@ def convert_sensitivities(res):
             resdict['sensitivity_type'] = itype
             resdict['sensitivity_spectrum_res'] = datadict
             thelist.append(resdict)
-    # PP.pprint(thelist)
     return thelist
 
 

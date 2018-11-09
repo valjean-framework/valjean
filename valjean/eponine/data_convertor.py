@@ -27,7 +27,6 @@ def mesh(fmesh_res, res_type='mesh_res'):
     <valjean.eponine.dataset.Dataset>`.
     '''
     mesh_res = fmesh_res[res_type]
-    print(mesh_res['mesh'].dtype)
     bins = mesh_res.get('bins')
     return Dataset(
         mesh_res['mesh']['score'].copy(),
@@ -48,7 +47,6 @@ def integrated_result(result, res_type):
     bins = OrderedDict()
     if 'spectrum_res' in result:
         ebins = result['spectrum_res']['bins']['e']
-        # bins = OrderedDict([('e', ebins[::ebins.shape[0]-1])])
         bins['e'] = ebins[::ebins.shape[0]-1]
         return Dataset(np.array([intres['score']]),
                        np.array([intres['sigma']]),
@@ -68,15 +66,13 @@ def entropy(result, res_type):
         may need a change in grammar.
 
     '''
-    print("\x1b[35m", result, "\x1b[0m")
+    LOGGER.debug("entropy result %s", result)
     return Dataset(result, 0, name=res_type)
 
 
 def keff(result, estimator):
     '''Conversion of keff in :class:`Dataset`.'''
     id_estim = result['estimators'].index(estimator)
-    print("estimator index =", id_estim)
-    print("essai keff =", result['keff_matrix'][id_estim][id_estim])
     return Dataset(result['keff_matrix'][id_estim][id_estim],
                    (result['sigma_matrix'][id_estim][id_estim]
                     * result['keff_matrix'][id_estim][id_estim] * 0.01),
@@ -93,16 +89,15 @@ def keff_combination(result):
 
 def adjoint_result(result):
     '''Convert IFP in dataset...'''
-    print(type(result))
     if not isinstance(result, dict):
-        print("\x1b[1;31mISSUE !!!\x1b[0m")
+        LOGGER.warning("Issue in adjoint result type (should be a dict): %s",
+                       type(result))
         return None
     if 'score' not in result:
         tres = {k: adjoint_result(v) for k, v in result.items()}
         # for res in result.values():
         #     convert_ifp_in_dataset(res)
         return tres
-    print("\x1b[1;38mFound np.ndarray !!!\x1b[0m")
     return integrated_result(result, 'ifp')
 
 

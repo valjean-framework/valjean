@@ -430,9 +430,8 @@ class Scan(Mapping):
             last_batch = next(reversed(self._collres))
             LOGGER.info("last batch number = %d", last_batch)
             if last_batch != self.reqbatchs:
-                LOGGER.warning("[1;33mWARNING: last batch number %d"
-                               "!= required number of batchs %d[0m",
-                               last_batch, self.reqbatchs)
+                LOGGER.warning("last batch number %d != required number of "
+                               "batchs %d", last_batch, self.reqbatchs)
             return self._collres[last_batch]
 
         try:

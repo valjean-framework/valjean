@@ -240,12 +240,10 @@ Did not found a responses book
 '''
 
 import logging
-import pprint
 from collections import defaultdict, Mapping, Container
 
 
 LOGGER = logging.getLogger('valjean')
-PP = pprint.PrettyPrinter(indent=4, depth=2)
 
 
 def merge_defaultdict(defd1, defd2):
