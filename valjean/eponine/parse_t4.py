@@ -78,21 +78,9 @@ class T4Parser():
         LOGGER.info("Parsing %s (batch %d)", jdd, batch)
         start_time = time.time()
         parser = cls(jdd, batch)
-        try:
-            parser.scan_t4_listing()
-        except T4ParserException as t4pe:
-            print(t4pe)
-            return None
-        LOGGER.info("Successful scan in %f s", time.time()-start_time)
-        start_parse = time.time()
-        try:
-            parser.parse_t4_listing()
-        except T4ParserException as t4pe:
-            print(t4pe)
-            return None
-        LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
-        LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
-        return parser
+        if parser.scan_then_parse(start_time):
+            return parser
+        return None
 
     @classmethod
     def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim=-1, end_flag=""):
@@ -113,21 +101,27 @@ class T4Parser():
         start_time = time.time()
         parser = cls(jdd, batch, mesh_lim)
         parser.end_flag = end_flag
+        if parser.scan_then_parse(start_time):
+            return parser
+        return None
+
+    def scan_then_parse(self, start_time):
+        '''Scan the parse the given jdd.'''
         try:
-            parser.scan_t4_listing()
+            self.scan_t4_listing()
         except T4ParserException as t4pe:
-            print(t4pe)
-            return None
+            LOGGER.error(t4pe)
+            return False
         LOGGER.info("Successful scan in %f s", time.time()-start_time)
         start_parse = time.time()
         try:
-            parser.parse_t4_listing()
+            self.parse_t4_listing()
         except T4ParserException as t4pe:
-            print(t4pe)
-            return None
+            LOGGER.error(t4pe)
+            return False
         LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
         LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
-        return parser
+        return True
 
     @profile
     def scan_t4_listing(self):
@@ -141,10 +135,7 @@ class T4Parser():
                                                     self.para, self.end_flag)
         else:
             self.scan_res = scan_t4.Scan(self.jdd, self.mesh_limit, self.para)
-        # print("is scan_res ?", self.scan_res)
-        # print("len(scan_res) =", len(self.scan_res))
-        # print("normal end:", self.scan_res.normalend)
-        # need to look if we keep or not the excpetion, catch it,
+        # need to look if we keep or not the exception, catch it,
         # let it crash... -> how to count unsuccessful jobs...
         if not self.scan_res:
             raise T4ParserException("No result found in Tripoli-4 listing.")

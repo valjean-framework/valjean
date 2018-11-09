@@ -326,8 +326,7 @@ def test_pertu(datadir):
 
 def test_vov(datadir):
     '''Use Tripoli-4 result from vov.d to test vov spectra.'''
-    t4_res = T4Parser.parse_jdd(
-        str(datadir/"vov.d.res.ceav5"), 0)
+    t4_res = T4Parser.parse_jdd(str(datadir/"vov.d.res.ceav5"), 0)
     assert t4_res
     assert t4_res.scan_res.normalend
     assert t4_res.scan_res.times['simulation time'] == 33
@@ -338,3 +337,14 @@ def test_vov(datadir):
     assert list_resp[-1]['response_index'] == 1
     assert list_resp[-1]['score_index'] == 2
     assert list_resp[0]['scoring_zone_type'] == 'Point'
+
+
+# def test_no_usual_output(datadir, caplog):
+#     '''Use Tripoli-4 result from test_pondng_auto_coupling_OP49.dat as example
+#     of "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
+#     COMPLETION`` keyword neither responses.
+#     '''
+#     t4_res = T4Parser.parse_jdd(
+#         str(datadir/"test_pondng_auto_coupling_OP49.dat.res.ceav5"))
+#     assert not t4_res
+#     assert "No result found in Tripoli-4 listing." in caplog.text
