@@ -40,6 +40,7 @@ class Command:
             tasks = collected_tasks
         LOGGER.debug('building graph for tasks: %s', tasks)
         graph = build_graph(tasks)
+        LOGGER.debug('resulting graph: %s', graph)
 
         env_mode = '' if args.env_skip_read else 'r'
         env_mode += '' if args.env_skip_write else 'w'
