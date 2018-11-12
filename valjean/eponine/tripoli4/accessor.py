@@ -1,7 +1,5 @@
 '''
-Module to access Tripoli-4 parsed results and convert them in standard
-:class:`Dataset <valjean.eponine.dataset.Dataset>`, easily comparable to other
-codes.
+Module to access Tripoli-4 parsed results.
 
   * :class:`Accessor` that allows to access and select in easier way the
     various elements of the parsing results, using internally the 2 follwing

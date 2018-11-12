@@ -17,4 +17,4 @@ eponine — ExPloratiON et INtErfaçage
 
    eponine/tripoli4
    eponine/responses_book
-   eponine/dataset
+   eponine/base_dataset

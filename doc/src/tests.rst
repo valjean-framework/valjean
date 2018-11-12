@@ -104,3 +104,9 @@ Tests for the :mod:`~.using` module
 ```````````````````````````````````
 
 .. automodule:: tests.gavroche.test_using
+
+
+Tests for the :mod:`~valjean.gavroche.dataset` module
+`````````````````````````````````````````````````````
+
+.. automodule:: tests.gavroche.test_dataset

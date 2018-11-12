@@ -1,5 +1,5 @@
 # pylint: disable=trailing-whitespace
-'''Extension of class :class:`Dataset <valjean.eponine.dataset.Dataset>` in
+'''Extension of class :class:`~valjean.eponine.base_dataset.BaseDataset` in
 other to perform simple calculations and usual operations on datasets
 ``(+, -, *, /, [])``.
 
@@ -13,26 +13,26 @@ All operations conserve the name of the initial dataset.
    https://docs.scipy.org/doc/numpy/user/basics.indexing.html
 
 
-Creation of a :class:`GDataset`
--------------------------------
+Creation of a :class:`Dataset`
+------------------------------
 
-.. doctest:: gdataset
+.. doctest:: dataset
     :hide:
 
     >>> # noqa: W291
 
 
-GDatasets can be created from :class:`Dataset
-<valjean.eponine.dataset.Dataset>` or directly from their arguments.
+Datasets can be created from :class:`~valjean.eponine.base_dataset.BaseDataset`
+or directly from their arguments.
 
     >>> from collections import OrderedDict
-    >>> from valjean.gavroche.gdataset import GDataset
+    >>> from valjean.gavroche.dataset import Dataset
 
 From the default arguments:
 
     >>> bins = OrderedDict([('e', np.array([1, 2, 3])), ('t', np.arange(5))])
-    >>> gd1 = GDataset(np.arange(10).reshape(2, 5),
-    ...                np.array([0.3]*10).reshape(2, 5), bins=bins, name='gd1')
+    >>> gd1 = Dataset(np.arange(10).reshape(2, 5),
+    ...               np.array([0.3]*10).reshape(2, 5), bins=bins, name='gd1')
     >>> gd1.name
     'gd1'
     >>> gd1.value.shape == (2, 5)
@@ -49,16 +49,16 @@ From the default arguments:
     >>> np.array_equal(bins['t'], [0, 1, 2, 3, 4])
     True
 
-From a :class:`Dataset <valjean.eponine.dataset.Dataset>` (usually obtained
+From a :class:`~valjean.eponine.base_dataset.BaseDataset` (usually obtained
 from parsing):
 
-    >>> from valjean.eponine.dataset import Dataset
-    >>> ds = Dataset(np.arange(3), np.array([1]*3), name='ds')
-    >>> gds = GDataset.from_dataset(ds)
+    >>> from valjean.eponine.base_dataset import BaseDataset
+    >>> ds = BaseDataset(np.arange(3), np.array([1]*3), name='ds')
+    >>> gds = Dataset.from_dataset(ds)
     >>> ds.__class__
-    <class 'valjean.eponine.dataset.Dataset'>
+    <class 'valjean.eponine.base_dataset.BaseDataset'>
     >>> gds.__class__
-    <class 'valjean.gavroche.gdataset.GDataset'>
+    <class 'valjean.gavroche.dataset.Dataset'>
     >>> ds.name == gds.name
     True
     >>> np.array_equal(ds.value, gds.value)
@@ -69,29 +69,29 @@ from parsing):
     True
 
 
-Operations available on GDatasets
----------------------------------
+Operations available on Datasets
+--------------------------------
 
-Standard operations are available for :class:`GDataset`, inherited from
-:class:`Dataset <valjean.eponine.dataset.Dataset>`. Examples of their use are
+Standard operations are available for :class:`Dataset`, inherited from
+:class:`~valjean.eponine.base_dataset.BaseDataset`. Examples of their use are
 given, including failing cases. Some are used in various methods but shown only
 once.
 
 Addition and subtraction
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Addition and subtraction are possible between a :class:`GDataset` and a scalar
-(:obj:`numpy.generic`), a :obj:`numpy.ndarray` and another :class:`GDataset`.
+Addition and subtraction are possible between a :class:`Dataset` and a scalar
+(:obj:`numpy.generic`), a :obj:`numpy.ndarray` and another :class:`Dataset`.
 The operator to use for addition is ``+`` and for subtraction ``-``.
 
 Restrictions in addition or subtraction with a :obj:`numpy.ndarray` are handled
 by `NumPy`.
 
-The addition or subtraction f 2 :class:`GDataset` can be done if
+The addition or subtraction f 2 :class:`Dataset` can be done if
 
 * both values have the same shape (:func:`consistent_datasets`)
 * bins conditions (:func:`same_coords`):
 
-    * EITHER the second :class:`GDataset` does not have any bins
+    * EITHER the second :class:`Dataset` does not have any bins
     * OR bins are approximately the same, i.e. have the same keys and bins
       values are within 1e-5 tolerance (default from :func:`numpy.allclose`)
 
@@ -119,7 +119,7 @@ Example of subtraction of a :obj:`numpy.ndarray`
     True
     >>> gd1ma = gd1 - a
     >>> gd1ma.__class__
-    <class 'valjean.gavroche.gdataset.GDataset'>
+    <class 'valjean.gavroche.dataset.Dataset'>
     >>> np.array_equal(gd1ma.value, [[-100, -99, -98, -97, -96],
     ...                              [-95, -94, -93, -92, -91]])
     True
@@ -146,17 +146,17 @@ defined).
 
 .. _addition_gdataset:
 
-Example of addition or subtraction of another :class:`GDataset`
-```````````````````````````````````````````````````````````````
+Example of addition or subtraction of another :class:`Dataset`
+``````````````````````````````````````````````````````````````
 
-    >>> gd2 = GDataset(value=np.arange(20, 30).reshape(2, 5),
-    ...                error=np.array([0.4]*10).reshape(2, 5),
-    ...                bins=bins, name='gd2')
+    >>> gd2 = Dataset(value=np.arange(20, 30).reshape(2, 5),
+    ...               error=np.array([0.4]*10).reshape(2, 5),
+    ...               bins=bins, name='gd2')
     >>> gd1.bins == gd2.bins
     True
     >>> gd1p2 = gd1 + gd2
     >>> gd1p2.__class__
-    <class 'valjean.gavroche.gdataset.GDataset'>
+    <class 'valjean.gavroche.dataset.Dataset'>
     >>> gd1p2.name == gd1.name
     True
     >>> np.array_equal(gd1p2.value, [[20, 22, 24, 26, 28],
@@ -170,8 +170,8 @@ quadratically (:math:`e = \\sqrt{gd1.e^2 + gd2.e^2}`).
 
 Datasets without binning can also be added:
 
-    >>> gd3 = GDataset(value=np.arange(200, 300, 10).reshape(2, 5),
-    ...                error=np.array([0.4]*10).reshape(2, 5), name='gd3')
+    >>> gd3 = Dataset(value=np.arange(200, 300, 10).reshape(2, 5),
+    ...               error=np.array([0.4]*10).reshape(2, 5), name='gd3')
     >>> gd3.bins
     OrderedDict()
     >>> gd1p3 = gd1 + gd3
@@ -189,7 +189,7 @@ Bins of the dataset on the left are kept.
 
 Like in `NumPy` array addition, values need to have the same shape:
 
-    >>> gd4 = GDataset(np.arange(5), np.array([0.01]*5), name='gd4')
+    >>> gd4 = Dataset(np.arange(5), np.array([0.01]*5), name='gd4')
     >>> "shape gd1 {0}, gd4 {1} -> comp = {2}".format(
     ...   gd1.value.shape, gd4.value.shape, gd1.value.shape == gd4.value.shape)
     'shape gd1 (2, 5), gd4 (5,) -> comp = False'
@@ -202,9 +202,9 @@ If bins are given, they need to have the same keys and the same values
 (approximately if float values).
 
     >>> bins5 = OrderedDict([('E', np.array([1, 2, 3])), ('t', np.arange(5))])
-    >>> gd5 = GDataset(np.arange(0, -10, -1).reshape(2, 5),
-    ...                np.array([0.01]*10).reshape(2, 5),
-    ...                bins=bins5, name='gd5')
+    >>> gd5 = Dataset(np.arange(0, -10, -1).reshape(2, 5),
+    ...               np.array([0.01]*10).reshape(2, 5),
+    ...               bins=bins5, name='gd5')
     >>> gd1 + gd5
     Traceback (most recent call last):
         [...]
@@ -214,9 +214,9 @@ If bins are given, they need to have the same keys and the same values
     "bins gd1: ['e', 't'], bins gd5: ['E', 't']"
 
     >>> bins6 = OrderedDict([('e', np.array([1, 2, 30])), ('t', np.arange(5))])
-    >>> gd6 = GDataset(np.arange(0, -10, -1).reshape(2, 5),
-    ...                np.array([0.01]*10).reshape(2, 5),
-    ...                bins=bins6, name='gd5')
+    >>> gd6 = Dataset(np.arange(0, -10, -1).reshape(2, 5),
+    ...               np.array([0.01]*10).reshape(2, 5),
+    ...               bins=bins6, name='gd5')
     >>> gd1 - gd6
     Traceback (most recent call last):
         [...]
@@ -233,20 +233,20 @@ If bins are given, they need to have the same keys and the same values
 
 Multiplication and division
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Multiplication and division are possible between a :class:`GDataset` and a
+Multiplication and division are possible between a :class:`Dataset` and a
 scalar (:obj:`numpy.generic`), a :obj:`numpy.ndarray` and another
-:class:`GDataset`.
+:class:`Dataset`.
 The operator to use for multiplication is ``*`` and for division ``/``.
 
 Restrictions in multiplication and division with a :obj:`numpy.ndarray` are
 handled by `NumPy`.
 
-The multiplication or division of 2 :class:`GDataset` can be done if
+The multiplication or division of 2 :class:`Dataset` can be done if
 
 * both values have the same shape (:func:`consistent_datasets`)
 * bins conditions (:func:`same_coords`):
 
-    * EITHER the second :class:`GDataset` does not have any bins
+    * EITHER the second :class:`Dataset` does not have any bins
     * OR bins are approximately the same, i.e. have the same keys and bins
       values are within 1e-5 tolerance (default from :func:`numpy.allclose`)
 
@@ -259,7 +259,7 @@ Example multiplication of a scalar value
 
     >>> gd1m10 = gd1 * 10
     >>> gd1m10.__class__
-    <class 'valjean.gavroche.gdataset.GDataset'>
+    <class 'valjean.gavroche.dataset.Dataset'>
     >>> np.array_equal(gd1m10.value, [[0, 10, 20, 30, 40],
     ...                               [50, 60, 70, 80, 90]])
     True
@@ -303,7 +303,7 @@ with them. It sends a RunningWarning about the division by zero.
 
     >>> c = np.array([[2., 3., np.nan, 4., 0.], [1., np.inf, 5., 10., 0.]])
     >>> gd1 / c  # doctest: +SKIP
-    class: <class 'valjean.gavroche.gdataset.GDataset'>, data type: \
+    class: <class 'valjean.gavroche.dataset.Dataset'>, data type: \
 <class 'numpy.ndarray'>
             name: gd1, with shape (2, 5),
             value: [[0.         0.33333333        nan 0.75              inf]
@@ -315,11 +315,11 @@ array([0, 1, 2, 3, 4]))])
     >>> # prints *** RuntimeWarning: divide by zero encountered in true_divide
 
 
-Example of multiplication or division of another :class:`GDataset`
-``````````````````````````````````````````````````````````````````
+Example of multiplication or division of another :class:`Dataset`
+`````````````````````````````````````````````````````````````````
 
     >>> gd1 * gd2  # doctest: +SKIP
-    class: <class 'valjean.gavroche.gdataset.GDataset'>, data type: \
+    class: <class 'valjean.gavroche.dataset.Dataset'>, data type: \
 <class 'numpy.ndarray'>
             name: gd1, with shape (2, 5),
             value: [[  0  21  44  69  96]
@@ -333,7 +333,7 @@ array([0, 1, 2, 3, 4]))])
     >>> # prints *** invalid value encountered in multiply
 
     >>> gd1 / gd2  # doctest: +SKIP
-    class: <class 'valjean.gavroche.gdataset.GDataset'>, data type: \
+    class: <class 'valjean.gavroche.dataset.Dataset'>, data type: \
 <class 'numpy.ndarray'>
             name: gd1, with shape (2, 5),
             value: [[0.         0.04761905 0.09090909 0.13043478 0.16666667]
@@ -361,13 +361,13 @@ multiplication or division by a :obj:`numpy.ndarray`, see
 Indexing and slicing
 --------------------
 
-It is only possible to get a **slice** of a dataset, getting an GDataset at a
+It is only possible to get a **slice** of a dataset, getting an Dataset at a
 given index is not possible (for dimensions consistency reasons). Requiring a
 given index can then be done using a slice.
 
 
-Getting a subset of the :class:`GDataset`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Getting a subset of the :class:`Dataset`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Time is the second dimension, to remove first and last bins the usual slice is
 ``[1:-1]``, the first dimension, energy, is conserved, so its slice is ``[:]``.
@@ -375,7 +375,7 @@ The slice to apply is then ``[:, 1:-1]``.
 
     >>> gd1sltfl = gd1[:, 1:-1]
     >>> gd1sltfl.__class__
-    <class 'valjean.gavroche.gdataset.GDataset'>
+    <class 'valjean.gavroche.dataset.Dataset'>
     >>> np.array_equal(gd1sltfl.value, [[1, 2, 3], [6, 7, 8]])
     True
     >>> np.array_equal(gd1sltfl.error, np.array([0.3]*6).reshape(2, 3))
@@ -427,13 +427,13 @@ All dimensions have to be present in the slice
 
 Use ``:`` for the untouched dimensions. Number of ``,`` has to be dimension -1.
 
-Let's consider a new GDataset, with 4 dimensions:
+Let's consider a new Dataset, with 4 dimensions:
 
     >>> bins2 = OrderedDict([('e', np.arange(4)), ('t', np.arange(3)),
     ...                      ('mu', np.arange(3)), ('phi', np.arange(5))])
-    >>> gd6 = GDataset(np.arange(48).reshape(3, 2, 2, 4),
-    ...                np.array([0.5]*48).reshape(3, 2, 2, 4),
-    ...                bins=bins2, name='gd6')
+    >>> gd6 = Dataset(np.arange(48).reshape(3, 2, 2, 4),
+    ...               np.array([0.5]*48).reshape(3, 2, 2, 4),
+    ...               bins=bins2, name='gd6')
     >>> gd6.value.ndim == 4
     True
 
@@ -442,7 +442,7 @@ slice to be used is: ``[1:, :, :, :-1]``.
 
     >>> gd6_1 = gd6[1:, :, :, :-1]
     >>> gd6_1.__class__
-    <class 'valjean.gavroche.gdataset.GDataset'>
+    <class 'valjean.gavroche.dataset.Dataset'>
     >>> gd6.value.shape == (3, 2, 2, 4)
     True
     >>> gd6_1.value.shape == (2, 2, 2, 3)
@@ -527,7 +527,7 @@ numpy.ndarray, i.e. (# ',' = dim-1).
     ':' can be used for a slice (dimension) not affected by the selection.
     Slicing is only possible if ndim == 1
 
-    >>> gd7 = GDataset(value=np.arange(48), error=np.array([1]*48))
+    >>> gd7 = Dataset(value=np.arange(48), error=np.array([1]*48))
     >>> gd7.ndim
     1
     >>> gd7.shape
@@ -540,7 +540,7 @@ numpy.ndarray, i.e. (# ',' = dim-1).
     Slicing can also only be applied on :obj:`numpy.ndarray`, not on
     :obj:`numpy.generic`:
 
-    >>> gd8 = GDataset(value=np.int32(100), error=np.int32(1))
+    >>> gd8 = Dataset(value=np.int32(100), error=np.int32(1))
     >>> gd8[0:1]
     Traceback (most recent call last):
         [...]
@@ -550,19 +550,19 @@ numpy.ndarray, i.e. (# ',' = dim-1).
 import logging
 from collections import OrderedDict
 import numpy as np
-from ..eponine.dataset import Dataset
+from ..eponine.base_dataset import BaseDataset
 
 LOGGER = logging.getLogger('valjean')
 
 
-class GDataset(Dataset):
-    '''A :class:`~valjean.eponine.dataset.Dataset` with mathematical
+class Dataset(BaseDataset):
+    '''A :class:`~valjean.eponine.base_dataset.BaseDataset` with mathematical
     operations.'''
 
     @classmethod
     def from_dataset(cls, dataset):
-        '''Construct a :class:`GDataset` from an instance of a
-        :class:`~valjean.eponine.dataset.Dataset`.'''
+        '''Construct a :class:`Dataset` from an instance of a
+        :class:`~valjean.eponine.base_dataset.BaseDataset`.'''
         return cls(value=dataset.value, error=dataset.error,
                    bins=dataset.bins, name=dataset.name)
 
@@ -581,46 +581,46 @@ class GDataset(Dataset):
 
     def __add__(self, other):
         LOGGER.debug("in %s.__add__", self.__class__.__name__)
-        if not isinstance(other, (int, float, np.ndarray, Dataset)):
-            raise TypeError("Int, float, np.array and Dataset"
+        if not isinstance(other, (int, float, np.ndarray, BaseDataset)):
+            raise TypeError("Int, float, np.array and BaseDataset"
                             "accepted for the moment")
-        if not isinstance(other, Dataset):
-            return GDataset(self.value + other, self.error,
-                            bins=self.bins, name=self.name)
+        if not isinstance(other, BaseDataset):
+            return Dataset(self.value + other, self.error,
+                           bins=self.bins, name=self.name)
         self._check_datasets_consistency(other, "add")
         value = self.value + other.value
         error = np.sqrt(self.error**2 + other.error**2)
-        return GDataset(value, error, bins=self.bins, name=self.name)
+        return Dataset(value, error, bins=self.bins, name=self.name)
 
     def __sub__(self, other):
         LOGGER.debug("in %s.__sub__", self.__class__.__name__)
-        if not isinstance(other, (int, float, np.ndarray, Dataset)):
-            raise TypeError("Int, float, np.array and Dataset "
+        if not isinstance(other, (int, float, np.ndarray, BaseDataset)):
+            raise TypeError("Int, float, np.array and BaseDataset "
                             "accepted for the moment")
-        if not isinstance(other, Dataset):
-            return GDataset(self.value - other, self.error,
-                            bins=self.bins, name=self.name)
+        if not isinstance(other, BaseDataset):
+            return Dataset(self.value - other, self.error,
+                           bins=self.bins, name=self.name)
         self._check_datasets_consistency(other, "subtract")
         value = self.value - other.value
         error = np.sqrt(self.error**2 + other.error**2)
-        return GDataset(value, error, bins=self.bins, name=self.name)
+        return Dataset(value, error, bins=self.bins, name=self.name)
 
     def __mul__(self, other):
         LOGGER.debug("in %s.__mul__", self.__class__.__name__)
-        if not isinstance(other, Dataset):
-            return GDataset(
+        if not isinstance(other, BaseDataset):
+            return Dataset(
                 self.value * other, self.error * other,
                 bins=self.bins, name=self.name)
         self._check_datasets_consistency(other, "multiply")
         value = self.value * other.value
         error = np.sqrt((self.error * other.value)**2
                         + (other.error * self.value)**2)
-        return GDataset(value, error, bins=self.bins, name=self.name)
+        return Dataset(value, error, bins=self.bins, name=self.name)
 
     def __truediv__(self, other):
         LOGGER.debug("in %s.__truediv__", self.__class__.__name__)
-        if not isinstance(other, Dataset):
-            return GDataset(
+        if not isinstance(other, BaseDataset):
+            return Dataset(
                 self.value / other, self.error / other,
                 bins=self.bins, name=self.name)
         self._check_datasets_consistency(other, "divide")
@@ -630,7 +630,7 @@ class GDataset(Dataset):
         # with np.errstate(divide='divide', invalid='ignore'):
         error = np.sqrt((self.error / other.value)**2
                         + (self.value * other.error / other.value**2)**2)
-        return GDataset(value, error, bins=self.bins, name=self.name)
+        return Dataset(value, error, bins=self.bins, name=self.name)
 
     @staticmethod
     def _get_bins_slice(index):
@@ -671,7 +671,7 @@ class GDataset(Dataset):
         bins = self._get_bins_items(index)
         LOGGER.debug("Shape: %s -> %s", self.value.shape, value.shape)
         LOGGER.debug("Bins:%s -> %s", self.bins, bins)
-        return GDataset(value, error, bins=bins, name=self.name)
+        return Dataset(value, error, bins=bins, name=self.name)
 
 
 def consistent_datasets(gds1, gds2):

@@ -1,4 +1,4 @@
-'''Tests for the :mod:`~.gdataset` module.
+'''Tests for the :mod:`~valjean.gavroche.dataset` module.
 
 Most of them are silly tests for the moment...
 '''
@@ -9,15 +9,16 @@ import numpy as np
 from hypothesis import given, note, settings, HealthCheck
 from hypothesis.strategies import data, floats, one_of
 
-from valjean.gavroche import gdataset as gd
+from valjean.gavroche import dataset as gd
 
 from ..eponine.conftest import repeat, slice_tuples
-from .conftest import gdatasets, multiple_gdatasets
+from .conftest import datasets, multiple_datasets
 
 
-@given(gds=repeat(gdatasets(), min_size=2, max_size=2))
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=repeat(datasets(), min_size=2, max_size=2))
 def test_addition(gds):
-    '''Test addition of gdatasets.'''
+    '''Test addition of datasets.'''
     assert gd.same_coords(gds[0], gds[1])
     sgds = gds[0] + gds[1]
     assert gd.same_coords(gds[0], sgds)
@@ -26,7 +27,8 @@ def test_addition(gds):
     assert np.allclose(sgds.error, error)
 
 
-@given(gds=repeat(gdatasets(), min_size=2, max_size=2))
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=repeat(datasets(), min_size=2, max_size=2))
 def test_subtraction(gds):
     '''Test subtraction of datasets.'''
     assert gd.same_coords(gds[0], gds[1])
@@ -37,9 +39,10 @@ def test_subtraction(gds):
     assert np.allclose(sgds.error, error)
 
 
-@given(gds=repeat(gdatasets(), min_size=2, max_size=2))
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=repeat(datasets(), min_size=2, max_size=2))
 def test_multiplication(gds):
-    '''Test multiplication of gdatasets (not fully satisfactory).
+    '''Test multiplication of datasets (not fully satisfactory).
     Removal of RuntimeWarning thanks to np.seterr.
     '''
     np.seterr(divide='ignore', invalid='ignore')
@@ -59,9 +62,10 @@ def test_multiplication(gds):
     assert np.allclose(sgds.error, error, equal_nan=True)
 
 
-@given(gds=repeat(gdatasets(), min_size=2, max_size=2))
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=repeat(datasets(), min_size=2, max_size=2))
 def test_division(gds):
-    '''Test division of gdatasets (not fully satisfactory).
+    '''Test division of datasets (not fully satisfactory).
     Removal of RuntimeWarning thanks to np.seterr.
     '''
     np.seterr(divide='ignore', invalid='ignore')
@@ -82,12 +86,12 @@ def test_division(gds):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(gds=multiple_gdatasets(size=2))
+@given(gds=multiple_datasets(size=2))
 def test_sum_commutativity(gds):
-    '''Test commutativity of gdatasets addition: a + b == b + a.
+    '''Test commutativity of datasets addition: a + b == b + a.
 
     This is not true for names, only for value and error. Bins are conserved
-    and should be the same for all gdatasets in the operation.
+    and should be the same for all datasets in the operation.
     '''
     assert gd.same_coords(gds[0], gds[1])
     gds_01 = gds[0] + gds[1]
@@ -99,12 +103,12 @@ def test_sum_commutativity(gds):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(gds=multiple_gdatasets(size=2))
+@given(gds=multiple_datasets(size=2))
 def test_difference_commutativity(gds):
-    '''Test commutativity of gdatasets subtraction: a - b == -(b - a).
+    '''Test commutativity of datasets subtraction: a - b == -(b - a).
 
     This is not true for names, only for value and error. Bins are conserved
-    and should be the same for all gdatasets in the operation.
+    and should be the same for all datasets in the operation.
 
     Remark: errors are the same (at float precision) as quadratic errors are
     used.
@@ -121,12 +125,12 @@ def test_difference_commutativity(gds):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(gds=multiple_gdatasets(size=2))
+@given(gds=multiple_datasets(size=2))
 def test_product_commutativity(gds):
-    '''Test commutativity of gdatasets multiplication: a * b == b * a.
+    '''Test commutativity of datasets multiplication: a * b == b * a.
 
     This is not true for names, only for value and error. Bins are conserved
-    and should be the same for all gdatasets in the operation.
+    and should be the same for all datasets in the operation.
     '''
     np.seterr(divide='ignore', invalid='ignore')
     gds_01 = gds[0] * gds[1]
@@ -138,9 +142,9 @@ def test_product_commutativity(gds):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(gds=multiple_gdatasets(size=3))
+@given(gds=multiple_datasets(size=3))
 def test_sum_associativity(gds):
-    '''Test associativity of gdatasets sum: a + (b + c) == (a + b) + c.'''
+    '''Test associativity of datasets sum: a + (b + c) == (a + b) + c.'''
     gds_0_12 = gds[0] + (gds[1] + gds[2])
     gds_01_2 = (gds[0] + gds[1]) + gds[2]
     assert gd.same_coords(gds[0], gds_0_12)
@@ -151,9 +155,9 @@ def test_sum_associativity(gds):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(gds=multiple_gdatasets(size=3))
+@given(gds=multiple_datasets(size=3))
 def test_product_associativity(gds):
-    '''Test associativity of gdatasets sum: a * (b * c) == (a * b) * c.'''
+    '''Test associativity of datasets sum: a * (b * c) == (a * b) * c.'''
     np.seterr(divide='ignore', invalid='ignore')
     gds_0_12 = gds[0] * (gds[1] * gds[2])
     gds_01_2 = (gds[0] * gds[1]) * gds[2]
@@ -164,67 +168,72 @@ def test_product_associativity(gds):
     assert np.allclose(gds_0_12.error, gds_01_2.error, equal_nan=True)
 
 
-@given(gds=gdatasets())
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=datasets())
 def test_sum_identity(gds):
     '''Test identity for addition: a + 0 = a.'''
-    gdsid = gd.GDataset(np.zeros_like(gds.value), np.zeros_like(gds.error),
-                        bins=gds.bins.copy())
+    gdsid = gd.Dataset(np.zeros_like(gds.value), np.zeros_like(gds.error),
+                       bins=gds.bins.copy())
     gds_gdsid = gds + gdsid
     assert gd.same_coords(gds_gdsid, gds)
     assert np.allclose(gds_gdsid.value, gds.value)
     assert np.allclose(gds_gdsid.error, gds.error)
 
 
-@given(gds=gdatasets())
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=datasets())
 def test_difference_identity(gds):
     '''Test identity for subtraction: a - 0 = a.'''
-    gdsid = gd.GDataset(np.zeros(gds.value.shape), np.zeros(gds.error.shape),
-                        bins=gds.bins.copy())
+    gdsid = gd.Dataset(np.zeros(gds.value.shape), np.zeros(gds.error.shape),
+                       bins=gds.bins.copy())
     gds_gdsid = gds - gdsid
     assert gd.same_coords(gds_gdsid, gds)
     assert np.allclose(gds_gdsid.value, gds.value)
     assert np.allclose(gds_gdsid.error, gds.error)
 
 
-@given(gds=gdatasets())
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=datasets())
 def test_product_zeros(gds):
     '''Test multiplication by 0: a * 0 = 0.
 
     Errors are also set to 0.
     '''
     np.seterr(divide='ignore', invalid='ignore')
-    gdsid = gd.GDataset(np.zeros(gds.value.shape), np.zeros(gds.error.shape),
-                        bins=gds.bins.copy())
+    gdsid = gd.Dataset(np.zeros(gds.value.shape), np.zeros(gds.error.shape),
+                       bins=gds.bins.copy())
     gds_gdsid = gds * gdsid
     assert gd.same_coords(gds_gdsid, gds)
     assert np.allclose(gds_gdsid.value, gdsid.value)
     assert np.allclose(gds_gdsid.error, gdsid.error)
 
 
-@given(gds=gdatasets())
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=datasets())
 def test_product_identity(gds):
     '''Test identity for multiplication: a * 1 = a.
 
     Errors are set to 0 in order to be able to compare errors.
     '''
     np.seterr(divide='ignore', invalid='ignore')
-    gdsid = gd.GDataset(np.ones(gds.value.shape), np.zeros(gds.error.shape),
-                        bins=gds.bins.copy())
+    gdsid = gd.Dataset(np.ones(gds.value.shape), np.zeros(gds.error.shape),
+                       bins=gds.bins.copy())
     gds_gdsid = gds * gdsid
     assert gd.same_coords(gds_gdsid, gds)
     assert np.allclose(gds_gdsid.value, gds.value)
     assert np.allclose(gds_gdsid.error, gds.error)
 
 
-@given(gds=gdatasets())
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=datasets())
 def test_quotient_identity(gds):
     '''Test identity for division: a / 1 = a.
 
     Errors are set to 0 in order to be able to compare errors.
     '''
     np.seterr(divide='ignore', invalid='ignore')
-    gdsid = gd.GDataset(np.ones(gds.value.shape), np.zeros(gds.error.shape),
-                        bins=gds.bins.copy())
+    gdsid = gd.Dataset(np.ones(gds.value.shape), np.zeros(gds.error.shape),
+                       bins=gds.bins.copy())
     gds_gdsid = gds / gdsid
     assert gd.same_coords(gds_gdsid, gds)
     assert np.allclose(gds_gdsid.value, gds.value)
@@ -232,7 +241,7 @@ def test_quotient_identity(gds):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(gds=multiple_gdatasets(size=3))
+@given(gds=multiple_datasets(size=3))
 def test_left_distributivity(gds):
     '''Test left distributivity between addition and multiplication:
     a * (b + c) == a * b + a * c.
@@ -255,7 +264,7 @@ def test_left_distributivity(gds):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(gds=multiple_gdatasets(size=3))
+@given(gds=multiple_datasets(size=3))
 def test_right_distributivity(gds):
     '''Test right distributivity between addition and multiplication:
     (a + b) * c == a * c + b * c.
@@ -278,7 +287,7 @@ def test_right_distributivity(gds):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(gds=multiple_gdatasets(size=3))
+@given(gds=multiple_datasets(size=3))
 def test_inverse_add(gds):
     '''Test inverse of addition: (a + b) - b == a.
 
@@ -293,7 +302,7 @@ def test_inverse_add(gds):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(gds=multiple_gdatasets(
+@given(gds=multiple_datasets(
     elements=one_of(floats(1e-5, 1e5), floats(-1e5, -1e-5)), size=2))
 def test_inverse_mult(gds):
     '''Test inverse of multiplication: (a * b) / b == a.
@@ -317,7 +326,7 @@ def test_slicing(sampler):
     '''Test slicing (same shapes for value and error, consistency of bins and
     shapes, reduction of length in given dimension, etc).
     '''
-    gds = sampler.draw(gdatasets())
+    gds = sampler.draw(datasets())
     slices = sampler.draw(slice_tuples(gds.value.shape))
     gdssl = gds[slices]
     note('initial dataset shape: {}'.format(gds.value.shape))

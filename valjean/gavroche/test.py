@@ -5,7 +5,7 @@ This module provides a few classes and functions to write numeric tests.
 Let us import the relevant modules first:
 
     >>> from collections import OrderedDict
-    >>> from valjean.eponine.dataset import Dataset
+    >>> from valjean.eponine.base_dataset import BaseDataset
     >>> import numpy as np
 
 Now we create a toy data set:
@@ -15,14 +15,14 @@ Now we create a toy data set:
     >>> error = np.zeros_like(y)
     >>> bins = OrderedDict()
     >>> bins['x'] = x
-    >>> parabola = Dataset(y, error, bins=bins, name='parabola')
+    >>> parabola = BaseDataset(y, error, bins=bins, name='parabola')
 
 We perturb the data by applying some small amount of noise:
 
     >>> eps = 1e-8
     >>> noise = np.random.uniform(-eps, eps, parabola.shape)
     >>> y2 = y + noise
-    >>> parabola2 = Dataset(y2, error, bins=bins, name='parabola2')
+    >>> parabola2 = BaseDataset(y2, error, bins=bins, name='parabola2')
 
 Now we can test if the new dataset is equal to the original one:
 
@@ -70,7 +70,7 @@ def same_bins_datasets(*datasets, rtol=1e-5, atol=1e-8):
     '''Return `True` if all datasets have compatible coordinates.
 
     :param datasets: any number of datasets.
-    :type datasets: :class:`~valjean.eponine.dataset.Dataset`
+    :type datasets: :class:`~valjean.eponine.base_dataset.BaseDataset`
     :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
     :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
     '''
@@ -130,8 +130,8 @@ class Test:
 def equal(*datasets):
     '''Test if the datasets are equal.
 
-    :param datasets: the :class:`~valjean.eponine.dataset.Dataset` objects to
-                     test.
+    :param datasets: the :class:`~valjean.eponine.base_dataset.BaseDataset`
+                     objects to test.
     '''
     return Test(equal_crit, datasets)
 
@@ -153,8 +153,8 @@ def equal_crit(*datasets):
 def approx_equal(*datasets, rtol=1e-5, atol=1e-8):
     '''Test if the datasets are equal within the given tolerances.
 
-    :param datasets: the :class:`~valjean.eponine.dataset.Dataset` objects to
-                     test.
+    :param datasets: the :class:`~valjean.eponine.base_dataset.BaseDataset`
+                     objects to test.
     :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
     :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
     '''

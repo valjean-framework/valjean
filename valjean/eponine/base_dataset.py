@@ -12,7 +12,7 @@ The bins object should have the same dimension as the value, the order matches
 the dimensions. If no bins are available it is still possible to use an empty
 :obj:`collections.OrderedDict`.
 
->>> from valjean.eponine.dataset import Dataset
+>>> from valjean.eponine.base_dataset import BaseDataset
 >>> import numpy as np
 >>> from collections import OrderedDict
 >>> vals = np.arange(10).reshape(2, 5)
@@ -20,7 +20,7 @@ the dimensions. If no bins are available it is still possible to use an empty
 >>> bins = OrderedDict([('bacon', np.arange(3)), ('egg', np.arange(5))])
 >>> len(bins) == vals.ndim
 True
->>> myds = Dataset(vals, errs, bins=bins)
+>>> myds = BaseDataset(vals, errs, bins=bins)
 >>> len(myds.bins) == myds.value.ndim
 True
 >>> isinstance(myds.error, type(myds.value))
@@ -36,7 +36,7 @@ If there are useless dimensions, the dataset can be squeezed:
 ...                     ('egg', np.array([0, 2, 4])),
 ...                     ('sausage', np.array([10, 20])),
 ...                     ('spam', np.array([-5, 0, 5, 10]))])
->>> ds = Dataset(vals, errs, bins=bins, name="ds_to_squeeze")
+>>> ds = BaseDataset(vals, errs, bins=bins, name="ds_to_squeeze")
 >>> ds.value.shape == (1, 2, 1, 3)
 True
 >>> len(ds.bins) == 4
@@ -77,24 +77,26 @@ True
 Errors are emitted if the arguments do not have the expected type or if the
 shapes or dimensions are not consistent:
 
->>> tds = Dataset([1, 2, 3], [0.5, 0.5, 0.5])
+>>> tds = BaseDataset([1, 2, 3], [0.5, 0.5, 0.5])
 Traceback (most recent call last):
         [...]
 TypeError: value does not have the expected type (numpy.ndarray or \
 numpy.generic = scalar)
 
->>> tds = Dataset(np.arange(6).reshape(2, 3), np.arange(6).reshape(3, 2))
+>>> tds = BaseDataset(np.arange(6).reshape(2, 3), np.arange(6).reshape(3, 2))
 Traceback (most recent call last):
         [...]
 ValueError: Value and error do not have the same shape
 
->>> tds = Dataset(np.arange(6).reshape(2, 3), np.array([0.5]*6).reshape(2, 3),
+>>> tds = BaseDataset(np.arange(6).reshape(2, 3),
+...               np.array([0.5]*6).reshape(2, 3),
 ...               bins={'spam': [1, 2], 'egg': [1, 2, 3]})
 Traceback (most recent call last):
         [...]
 TypeError: bins should be an OrderedDict
 
->>> tds = Dataset(np.arange(6).reshape(2, 3), np.array([0.5]*6).reshape(2, 3),
+>>> tds = BaseDataset(np.arange(6).reshape(2, 3),
+...               np.array([0.5]*6).reshape(2, 3),
 ...               bins=OrderedDict([('spam', [1, 2])]))
 Traceback (most recent call last):
         [...]
@@ -108,8 +110,8 @@ import numpy as np
 LOGGER = logging.getLogger('valjean')
 
 
-class Dataset:
-    '''Common class for all codes TO BECOME BareDataset ?
+class BaseDataset:
+    '''Common class for data from all codes.
 
     For the moment, units are not treated (removed).
 
@@ -123,7 +125,7 @@ class Dataset:
     '''
 
     def __init__(self, value, error, *, bins=None, name=''):
-        '''Dataset class initialization.
+        '''BaseDataset class initialization.
 
         :param value: array of N dimensions representing the values
         :type value: :obj:`numpy.ndarray` or :obj:`numpy.generic`

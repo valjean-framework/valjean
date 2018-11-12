@@ -4,14 +4,14 @@
 from collections import OrderedDict
 import pytest
 import numpy as np
-from hypothesis import given, note
+from hypothesis import given, note, settings, HealthCheck
 from hypothesis.strategies import data
 
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.gavroche import test
-from valjean.gavroche.gdataset import GDataset
+from valjean.gavroche.dataset import Dataset
 
-from .conftest import gdatasets, perturbed_gdatasets
+from .conftest import datasets, perturbed_datasets
 from ..eponine.conftest import repeat, coord_odicts, perturb
 
 
@@ -37,31 +37,34 @@ def test_different_bins_raises():
     error = np.zeros_like(coords1)
     bins1 = OrderedDict([('e', coords1)])
     bins2 = OrderedDict([('e', coords2)])
-    dataset1 = GDataset(coords1, error, bins=bins1, name='dataset1')
-    dataset2 = GDataset(coords2, error, bins=bins2, name='dataset2')
+    dataset1 = Dataset(coords1, error, bins=bins1, name='dataset1')
+    dataset2 = Dataset(coords2, error, bins=bins2, name='dataset2')
     with pytest.raises(ValueError):
         test.check_bins(dataset1, dataset2)
 
 
-@given(its=repeat(gdatasets()))
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(its=repeat(datasets()))
 def test_equal_if_same(its):
     '''Test that :func:`~.equal` is reflexive.'''
     assert test.equal(*its)
 
 
-@given(its=repeat(gdatasets()))
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(its=repeat(datasets()))
 def test_approx_equal_if_same(its):
     '''Test that :func:`~.approx_equal` is reflexive.'''
     assert test.approx_equal(*its)
 
 
-@given(perturbed_its=perturbed_gdatasets())
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(perturbed_its=perturbed_datasets())
 def test_approx_equal_if_perturbed(perturbed_its):
     '''Test that perturbed datasets are :func:`~.approx_equal`.'''
     assert test.approx_equal(*perturbed_its)
 
 
-@given(dataset=gdatasets())
+@given(dataset=datasets())
 def test_equal_bins_raises(dataset):
     '''Check that :func:`~.equal` raises on incompatible coordinates.'''
     modified = dataset.copy()
@@ -73,7 +76,7 @@ def test_equal_bins_raises(dataset):
         bool(test.equal(dataset, modified))  # force conversion to bool
 
 
-@given(dataset=gdatasets())
+@given(dataset=datasets())
 def test_approx_equal_bins_raises(dataset):
     '''Test that :func:`~.approx_equal` raises on incompatible coordinates.'''
     modified = dataset.copy()
@@ -85,7 +88,7 @@ def test_approx_equal_bins_raises(dataset):
         bool(test.approx_equal(dataset, modified))  # force conversion to bool
 
 
-@given(dataset=gdatasets())
+@given(dataset=datasets())
 def test_not_equal_data(dataset):
     '''Test that datasets with different data are not :func:`~.equal`.'''
     modified = dataset.copy()
@@ -96,7 +99,7 @@ def test_not_equal_data(dataset):
     assert not test.equal(dataset, modified)
 
 
-@given(dataset=gdatasets())
+@given(dataset=datasets())
 def test_not_approx_equal_data(dataset):
     '''Test that datasets with different data are not
     :func:`~.approx_equal`.'''

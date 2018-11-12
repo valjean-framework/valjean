@@ -9,7 +9,7 @@ from hypothesis.extra.numpy import arrays, array_shapes, floating_dtypes
 from collections import OrderedDict
 
 from ..context import valjean  # pylint: disable=unused-import
-from valjean.eponine.dataset import Dataset
+from valjean.eponine.base_dataset import BaseDataset
 
 
 DEF_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -28,8 +28,8 @@ def finite():
 
 
 @composite
-def datasets(draw, elements=None, shape=None, dtype=None, coords=None):
-    '''Strategy for generating :class:`~.Dataset` objects.
+def base_datasets(draw, elements=None, shape=None, dtype=None, coords=None):
+    '''Strategy for generating :class:`~.BaseDataset` objects.
 
     :param elements: a strategy that generates array elements, or None for the
                      default strategy (:func:`~.floats(-1e5, 1e5)`).
@@ -72,7 +72,7 @@ def datasets(draw, elements=None, shape=None, dtype=None, coords=None):
     note('bins: {}'.format(bins))
     note('name: {}'.format(name))
 
-    return Dataset(data_val, data_err, bins=bins, name=name)
+    return BaseDataset(data_val, data_err, bins=bins, name=name)
 
 
 def cnames():
@@ -209,10 +209,10 @@ def repeat(stgy, min_size=0, max_size=6):
 
 
 @composite
-def perturbed_datasets(draw, min_size=0, max_size=6):
-    '''Strategy to generate a list of perturbed :class:`~.Dataset` objects.
+def perturbed_base_datasets(draw, min_size=0, max_size=6):
+    '''Strategy to generate a list of perturbed :class:`~.BaseDataset` objects.
 
-    This strategy generates lists of :class:`~.Dataset` objects of length
+    This strategy generates lists of :class:`~.BaseDataset` objects of length
     between `min_size` and `max_size`. The first dataset is taken as a
     reference and all subsequent list elements are perturbations of the first
     one. Errors are not perturbed.
@@ -223,14 +223,15 @@ def perturbed_datasets(draw, min_size=0, max_size=6):
     n_elems = draw(integers(min_size, max_size))
     if n_elems == 0:
         return []
-    dataset = draw(datasets())
+    dataset = draw(base_datasets())
     if n_elems == 1:
         return [dataset]
     pert_values = draw(lists(elements=perturb(dataset.value),
                              min_size=n_elems-1, max_size=n_elems-1))
     pert_datasets = [dataset]
     for pert_value in pert_values:
-        pert_dataset = Dataset(pert_value, dataset.error.copy(),
-                               bins=dataset.bins, name=dataset.name + '_pert')
+        pert_dataset = BaseDataset(pert_value, dataset.error.copy(),
+                                   bins=dataset.bins,
+                                   name=dataset.name + '_pert')
         pert_datasets.append(pert_dataset)
     return pert_datasets

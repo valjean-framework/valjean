@@ -1,34 +1,34 @@
-'''This module converts Tripoli-4 data from parsing in standard datasets (or
-input to standard dataset or gdatasets).
+'''This module converts Tripoli-4 data from parsing in
+:class:`~valjean.eponine.base_dataset.BaseDatasets`.
 '''
 
 import logging
 from collections import OrderedDict
 import numpy as np
-from valjean.eponine.dataset import Dataset
+from valjean.eponine.base_dataset import BaseDataset
 
 LOGGER = logging.getLogger('valjean')
 
 
 def spectrum(fspec_res, res_type='spectrum_res'):
-    '''Conversion of spectrum in :class:`Dataset
-    <valjean.eponine.dataset.Dataset>`.
+    '''Conversion of spectrum in
+    :class:`~valjean.eponine.base_dataset.BaseDataset`.
     '''
     spec_res = fspec_res[res_type]
     bins = spec_res.get('bins')
-    return Dataset(
+    return BaseDataset(
         spec_res['spectrum']['score'].copy(),
         spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] * 0.01,
         bins=bins, name=res_type)
 
 
 def mesh(fmesh_res, res_type='mesh_res'):
-    '''Conversion of mesh in :class:`Dataset
-    <valjean.eponine.dataset.Dataset>`.
+    '''Conversion of mesh in
+    :class:`~valjean.eponine.base_dataset.BaseDataset`.
     '''
     mesh_res = fmesh_res[res_type]
     bins = mesh_res.get('bins')
-    return Dataset(
+    return BaseDataset(
         mesh_res['mesh']['score'].copy(),
         mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] * 0.01,
         bins=bins, name=res_type)
@@ -36,7 +36,7 @@ def mesh(fmesh_res, res_type='mesh_res'):
 
 def integrated_result(result, res_type):
     '''Conversion of generic score (or energy integrated result) in
-    :class:`Dataset <valjean.eponine.dataset.Dataset>`.
+    :class:`~valjean.eponine.base_dataset.BaseDataset`.
 
     Bins: only possible bin is energy as energy integrated results.
     If other dimensions are not squeezed it is a spectrum so not treated by
@@ -50,22 +50,23 @@ def integrated_result(result, res_type):
             bins = result['spectrum_res']['bins']
             ebins = bins['e']
             intres = result['spectrum_res'].get(res_type)
-            return Dataset(intres['score'],
-                           intres['sigma'] * intres['score'] * 0.01,
-                           bins=bins, name=res_type)
+            return BaseDataset(intres['score'],
+                               intres['sigma'] * intres['score'] * 0.01,
+                               bins=bins, name=res_type)
         ebins = result['spectrum_res']['bins']['e']
         bins['e'] = ebins[::ebins.shape[0]-1]
-        return Dataset(np.array([intres['score']]),
-                       np.array([intres['sigma']]) * intres['score'] * 0.01,
+        return BaseDataset(
+            np.array([intres['score']]),
+            np.array([intres['sigma']]) * intres['score'] * 0.01,
+            bins=bins, name=res_type)
+    return BaseDataset(intres['score'].copy(),
+                       intres['sigma'] * intres['score'] * 0.01,
                        bins=bins, name=res_type)
-    return Dataset(intres['score'].copy(),
-                   intres['sigma'] * intres['score'] * 0.01,
-                   bins=bins, name=res_type)
 
 
 def entropy(result, res_type):
-    '''Conversion of entropy in :class:`Dataset
-    <valjean.eponine.dataset.Dataset>`.
+    '''Conversion of entropy in :class:`
+    ~valjean.eponine.base_dataset.BaseDataset`.
 
     .. todo::
 
@@ -74,24 +75,24 @@ def entropy(result, res_type):
 
     '''
     LOGGER.debug("entropy result %s", result)
-    return Dataset(result, 0, name=res_type)
+    return BaseDataset(result, 0, name=res_type)
 
 
 def keff(result, estimator):
-    '''Conversion of keff in :class:`Dataset`.'''
+    '''Conversion of keff in :class:`~.base_dataset.BaseDataset`.'''
     id_estim = result['estimators'].index(estimator)
-    return Dataset(result['keff_matrix'][id_estim][id_estim],
-                   (result['sigma_matrix'][id_estim][id_estim]
-                    * result['keff_matrix'][id_estim][id_estim] * 0.01),
-                   name='keff_'+estimator)
+    return BaseDataset(result['keff_matrix'][id_estim][id_estim],
+                       (result['sigma_matrix'][id_estim][id_estim]
+                        * result['keff_matrix'][id_estim][id_estim] * 0.01),
+                       name='keff_'+estimator)
 
 
 def keff_combination(result):
-    '''Conversion of keff combination in dataset.'''
+    '''Conversion of keff combination in :class:`~.base_dataset.BaseDataset`.'''
     kcomb = result['full_comb_estimation']
-    return Dataset(kcomb['keff'].copy(),
-                   kcomb['sigma'] * kcomb['keff'] * 0.01,
-                   name='keff_combination')
+    return BaseDataset(kcomb['keff'].copy(),
+                       kcomb['sigma'] * kcomb['keff'] * 0.01,
+                       name='keff_combination')
 
 
 def adjoint_result(result):
@@ -115,9 +116,10 @@ def convert_data_in_dataset(data, data_type):
         LOGGER.warning("Key %s not found in data", data_type)
         return None
     # uscore used in sensitivities (calling default res)
-    return Dataset(data[data_type]['score'].copy(),
-                   data[data_type]['sigma'] * data[data_type]['score'] * 0.01,
-                   bins=data['bins'], name=data_type)
+    return BaseDataset(
+        data[data_type]['score'].copy(),
+        data[data_type]['sigma'] * data[data_type]['score'] * 0.01,
+        bins=data['bins'], name=data_type)
 
 
 CONVERT_IN_DATASET = {
