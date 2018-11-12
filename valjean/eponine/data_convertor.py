@@ -46,10 +46,17 @@ def integrated_result(result, res_type):
     intres = result[res_type] if res_type in result else result
     bins = OrderedDict()
     if 'spectrum_res' in result:
+        if res_type not in result:
+            bins = result['spectrum_res']['bins']
+            ebins = bins['e']
+            intres = result['spectrum_res'].get(res_type)
+            return Dataset(intres['score'],
+                           intres['sigma'] * intres['score'] * 0.01,
+                           bins=bins, name=res_type)
         ebins = result['spectrum_res']['bins']['e']
         bins['e'] = ebins[::ebins.shape[0]-1]
         return Dataset(np.array([intres['score']]),
-                       np.array([intres['sigma']]),
+                       np.array([intres['sigma']]) * intres['score'] * 0.01,
                        bins=bins, name=res_type)
     return Dataset(intres['score'].copy(),
                    intres['sigma'] * intres['score'] * 0.01,
