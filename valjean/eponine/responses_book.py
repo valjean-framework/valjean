@@ -1,12 +1,7 @@
-'''Module to access Tripoli-4 parsed results and convert them in standard
-:class:`Dataset <valjean.eponine.dataset.Dataset>`, easily comparable to other
-codes.
+'''Module to access in easy way results stored in list of dictionaries.
 
-This module is composed of 3 classes:
+This module is composed of 2 classes:
 
-  * :class:`Accessor` that allows to access and select in easier way the
-    various elements of the parsing results, using internally the 2 follwing
-    classes;
   * :class:`ResponsesBook` that stores the list of dictionaries and builds an
     :class:`Index` to facilitate selections;
   * :class:`Index` based on :class:`collections.defaultdict` to perform
@@ -40,7 +35,7 @@ here stored as a list of dictinaries. It commands the index (building and
 selections). Examples are shown below.
 
 
-.. _accessor-example:
+.. _resp-book-example:
 
 Building the responses book
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -52,7 +47,7 @@ what they precisely order as dish under ``'results'`` and optionally the number
 corresponding to their choice of dessert. He will represent these orders as a
 list of orders, one order being a dictionary.
 
->>> from valjean.eponine.accessor import ResponsesBook
+>>> from valjean.eponine.responses_book import ResponsesBook
 >>> from pprint import pprint
 >>> orders = [
 ... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
@@ -166,77 +161,6 @@ ones are ['consumer', 'dessert', 'drink', 'resp_function']
     >>> resps = com_rb.select_by(drink='beer', squeeze=True)
     >>> # prints  WARNING     accessor: Squeeze cannot be applied, more than \
 one response corresponds to your choice
-
-
-:class:`Accessor`
------------------
-
-The :class:`Accessor` class is the real access point to the list of responses
-but not only. The result from parsing is its default input. This parsing result
-is necessarly a dictionary, i.e. if you get a list of dictionary because you
-required to parse more than one batch you'll need to access them thanks to a
-loop over the list of batches. Accessor also allows simplified access to other
-data like simulation time or number of batch.
-
-For example, let's consider a parsing results that contains the ``orders``
-list of dictionaries used above as example for :class:`ResponsesBook`. It will
-now be stored under the key ``'list_responses'`` and additional items will be
-added to that dictionary for it to look like a default parsing results one.
-
->>> from valjean.eponine.accessor import Accessor
->>> pres = {'edition_batch_number': 42, 'list_responses': orders}
->>> pprint(pres)  # doctest: +NORMALIZE_WHITESPACE
-{'edition_batch_number': 42, 'list_responses':\
- [{'consumer': 'Terry', 'drink': 'beer', 'resp_function': 'menu1', \
-'results': {'ingredients_res': ['egg', 'bacon']}},\
- {'consumer': 'John', 'resp_function': 'menu2', \
-'results': [{'ingredients_res': ['egg', 'spam']}, {'ingredients_res': [\
-'tomato', 'spam', 'bacon']}]},\
- {'consumer': 'Graham', 'drink': 'coffee', 'resp_function': 'menu1', \
-'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},\
- {'consumer': 'Eric', 'drink': 'beer', 'resp_function': 'menu3', \
-'results': {'ingredients_res': ['sausage'], 'side_res': 'baked beans'}},\
- {'consumer': 'Michael', 'dessert': 3, 'drink': 'brandy', \
-'resp_function': 'royal_menu', 'results': {'dish_res': ['lobster thermidor', \
-'Mornay sauce']}}]}
-
-Construction accessor and responses book:
-
->>> t4acc = Accessor(pres)
->>> if t4acc.resp_book:
-...    print("Found a responses book")
-Found a responses book
->>> print(t4acc.resp_book)
-ResponsesBook object -> Number of responses: 5, data key: 'results', \
-available metadata keys: ['consumer', 'dessert', 'drink', 'resp_function']
-
-Examples of use:
-
->>> menu_with_dessert = t4acc.get_by(dessert=3)
->>> pprint(menu_with_dessert)  # doctest: +NORMALIZE_WHITESPACE
-[{'consumer': 'Michael', 'dessert': 3, 'drink': 'brandy',\
- 'resp_function': 'royal_menu', 'results': {'dish_res': ['lobster thermidor',\
- 'Mornay sauce']}}]
->>> batch = t4acc.edition_batch_number()
->>> print(batch)
-42
->>> simu_time = t4acc.simulation_time()
->>> print(simu_time)
--1
-
-If no list of responses is avalaible (for example in some creation runs):
-
->>> pres = {'edition_batch_number': 42, 'simulation_time': 4242}
->>> t4acc = Accessor(pres)
->>> if t4acc.resp_book:
-...    print("Found a responses book")
-... else:
-...    print("Did not found a responses book")
-Did not found a responses book
->>> t4acc.edition_batch_number()
-42
->>> t4acc.simulation_time()
-4242
 '''
 
 import logging
@@ -267,7 +191,7 @@ class Index(Mapping):
     Quick example of index (menu for 4 persons, identified by numbers, one has
     no drink):
 
-    >>> from valjean.eponine.accessor import Index
+    >>> from valjean.eponine.responses_book import Index
     >>> myindex = Index()
     >>> myindex.index['drink']['beer'] = {1, 4}
     >>> myindex.index['drink']['wine'] = {2}
@@ -422,9 +346,9 @@ class ResponsesBook(Container):
     Examples on development / debugging methods:
 
     Let's use the example detailled above in
-    :ref:`module introduction <accessor-example>`:
+    :ref:`module introduction <resp-book-example>`:
 
-    >>> from valjean.eponine.accessor import ResponsesBook
+    >>> from valjean.eponine.responses_book import ResponsesBook
     >>> orders = [
     ... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
     ...  'results': {'ingredients_res': ['egg', 'bacon']}},
@@ -469,10 +393,10 @@ class ResponsesBook(Container):
     >>> small_order = [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}]
     >>> so_rb = ResponsesBook(small_order)
     >>> "{0!r}".format(so_rb)
-    "<class 'valjean.eponine.accessor.ResponsesBook'>, \
+    "<class 'valjean.eponine.responses_book.ResponsesBook'>, \
 (Responses: ..., Index: ...)"
     >>> # prints in some order (for responses and index dicts)
-    >>> # "<class 'valjean.eponine.accessor.ResponsesBook'>,
+    >>> # "<class 'valjean.eponine.responses_book.ResponsesBook'>,
     >>> # (Responses: [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}],
     >>> # Index: defaultdict(<function Index.__init__.<locals>.<lambda> at ...>
     >>> # {'drink': defaultdict(<class 'set'>, {'beer': {0}}),
@@ -607,47 +531,3 @@ class ResponsesBook(Container):
                 return None
             return lresp[0]
         return lresp
-
-
-class Accessor:
-    '''Class to access T4 results in a friendly way.
-
-    This class contains two members:
-
-        * parsed_res = result from parsing for only one batch
-        * ResponseBook corresponding to the list of responses if it exists
-    '''
-
-    def __init__(self, tparsed_res):  # , merge_score=False):
-        '''Create an :class:`Accessor` from a list of responses.
-
-        :param list(dict) tparsed_res: result from parsing (for the moment not
-                                       the result from scan, so some things
-                                       might be missing like initialization
-                                       time)
-        '''
-        self.parsed_res = tparsed_res
-        self.resp_book = (ResponsesBook(self.parsed_res['list_responses'])
-                          if 'list_responses' in self.parsed_res
-                          else None)
-        if self.resp_book:
-            LOGGER.debug("RESP_BOOK exists")
-
-    def get_by(self, **kwargs):
-        '''Selection method based on kwargs corresponding to responses / scores
-        characteristics (resp_function, score_name, scoring_zone_id, etc).
-
-        :param \\**\\kwargs: keyword arguments to specify the required
-          response. More than one are allowed.
-        :returns: :class:`ResponsesBook` (subset of the default one,
-          corresponding to the selection)
-        '''
-        return self.resp_book.select_by(**kwargs)
-
-    def simulation_time(self):
-        '''Return simulation time.'''
-        return self.parsed_res.get('simulation_time', -1)
-
-    def edition_batch_number(self):
-        '''Return edition batch number.'''
-        return self.parsed_res.get('edition_batch_number', '?')

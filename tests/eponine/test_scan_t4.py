@@ -1,7 +1,7 @@
-'''Tests for the :mod:`~.scan_t4` module: scan and parse Tripoli-4 outputs
+'''Tests for the :mod:`~.scan` module: scan and parse Tripoli-4 outputs
 stored in the data folder associated to tests on :mod:`~.eponine` package.
-These tests should cover most of functionalities of :mod:`~.scan_t4` and main
-ones for :mod:`~.parse_t4`.
+These tests should cover most of functionalities of :mod:`~.scan` and main
+ones for :mod:`~.parse`.
 '''
 
 from ..context import valjean  # pylint: disable=unused-import
@@ -9,7 +9,7 @@ from ..context import valjean  # pylint: disable=unused-import
 # pylint: disable=wrong-import-order
 import numpy as np
 import logging
-from valjean.eponine.parse_t4 import T4Parser
+from valjean.eponine.tripoli4.parse import T4Parser
 
 
 def keffs_checks(keff_res):
@@ -222,7 +222,7 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     in same jdd), but long.
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
-    monkeypatch.setattr("valjean.eponine.pyparsing_t4.transform.MAX_DEPTH", 6)
+    monkeypatch.setattr("valjean.eponine.tripoli4.transform.MAX_DEPTH", 6)
     t4_res = T4Parser.parse_jdd_with_mesh_lim(
         str(datadir/"entropy.d.res.ceav5"), -1, 10)
     assert t4_res

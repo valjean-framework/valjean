@@ -5,8 +5,8 @@ from ..context import valjean  # pylint: disable=unused-import
 # pylint: disable=wrong-import-order
 from ..conftest import foreach_data
 from valjean.cosette.task import TaskStatus
-from valjean.eponine.parse_t4 import T4Parser
-from valjean.eponine.parse_t4_task import ParseT4Task
+from valjean.eponine.tripoli4.parse import T4Parser
+from valjean.eponine.tripoli4.parse_task import ParseT4Task
 
 
 @foreach_data(datafile=lambda path: str(path).endswith('.res.ceav5'))

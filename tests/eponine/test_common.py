@@ -1,7 +1,7 @@
 # pylint: disable=too-many-lines
-'''Tests for the :mod:`common <valjean.eponine.common>` module using `pytest`_:
-random generation of data thanks to :mod:`hypothesis` then test parsing and
-building output objects (typically from :mod:`numpy`).
+'''Tests for the :mod:`~valjean.eponine.tripoli4.common` module using
+`pytest`_: random generation of data thanks to :mod:`hypothesis` then test
+parsing and building output objects (typically from :mod:`numpy`).
 '''
 
 import numpy as np
@@ -16,9 +16,9 @@ from ..context import valjean  # pylint: disable=unused-import
 # pylint: disable=no-value-for-parameter
 # pylint: disable=redefined-outer-name
 
-from valjean.eponine.common import (MeshDictBuilder, SpectrumDictBuilder,
-                                    FTYPE, convert_list_to_tuple)
-import valjean.eponine.pyparsing_t4.grammar as pygram
+from valjean.eponine.tripoli4.common import (
+    MeshDictBuilder, SpectrumDictBuilder, FTYPE, convert_list_to_tuple)
+import valjean.eponine.tripoli4.grammar as pygram
 from valjean import LOGGER
 
 

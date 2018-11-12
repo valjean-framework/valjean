@@ -18,8 +18,8 @@ import time
 import logging
 from pyparsing import ParseException
 
-from .pyparsing_t4 import grammar as pygram
-from . import scan_t4
+from . import grammar as pygram
+from . import scan
 
 
 LOGGER = logging.getLogger('valjean')
@@ -49,7 +49,7 @@ class T4Parser():
         :param int batch: batch to read (-1 = last, 0 = all, then X)
         :param int mesh_lim: limit of meshes to read (-1 per default)
 
-        It also initalize the result of :class:`.scan_t4.Scan` to ``None`` and
+        It also initalize the result of :class:`.scan.Scan` to ``None`` and
         the parsing result, from *pyparsing*, to ``None``.
 
         If the path contains the ``"PARA"`` string, the checks will be done for
@@ -125,16 +125,16 @@ class T4Parser():
 
     @profile
     def scan_t4_listing(self):
-        '''Scan Tripoli-4 listing, calling :mod:`.scan_t4`.
+        '''Scan Tripoli-4 listing, calling :mod:`.scan`.
 
-        If end_flag was set, calls :meth:`.scan_t4.Scan.debug_scan` instead of
+        If end_flag was set, calls :meth:`.scan.Scan.debug_scan` instead of
         the usual constructor.
         '''
         if self.end_flag:
-            self.scan_res = scan_t4.Scan.debug_scan(self.jdd, self.mesh_limit,
-                                                    self.para, self.end_flag)
+            self.scan_res = scan.Scan.debug_scan(self.jdd, self.mesh_limit,
+                                                 self.para, self.end_flag)
         else:
-            self.scan_res = scan_t4.Scan(self.jdd, self.mesh_limit, self.para)
+            self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para)
         # need to look if we keep or not the exception, catch it,
         # let it crash... -> how to count unsuccessful jobs...
         if not self.scan_res:
@@ -144,7 +144,8 @@ class T4Parser():
                            "NORMAL COMPLETION.")
 
     def parse_t4_listing(self):
-        '''Parse Tripoli-4 results, calling pyparsing and :mod:`.pyparsing_t4`
+        '''Parse Tripoli-4 results, calling pyparsing and
+        :mod:`~valjean.eponine.tripoli4`.
         '''
         if self.batch_number == 0:
             str_to_parse = self.scan_res.get_all_batch_results()

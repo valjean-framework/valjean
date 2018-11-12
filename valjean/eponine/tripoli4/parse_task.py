@@ -1,9 +1,9 @@
 '''Tasks for parsing the TRIPOLI-4 output files. '''
 
-from .. import LOGGER
-from ..cosette.task import TaskStatus
-from ..cosette.pythontask import PythonTask
-from .parse_t4 import T4Parser
+from ... import LOGGER
+from ...cosette.task import TaskStatus
+from ...cosette.pythontask import PythonTask
+from .parse import T4Parser
 
 
 class ParseT4Task(PythonTask):

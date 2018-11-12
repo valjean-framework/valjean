@@ -11,7 +11,7 @@
 import os
 from glob import glob
 import pytest
-import valjean.eponine.parse_t4 as ep
+import valjean.eponine.tripoli4.parse as ep
 from ..context import valjean  # pylint: disable=unused-import
 # pylint: disable=redefined-outer-name
 

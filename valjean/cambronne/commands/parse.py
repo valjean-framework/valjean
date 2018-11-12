@@ -2,7 +2,7 @@
 
 
 from ..common import Command
-from ...eponine.parse_t4_task import ParseT4Task
+from ...eponine.tripoli4.parse_task import ParseT4Task
 
 
 class ParseCommand(Command):

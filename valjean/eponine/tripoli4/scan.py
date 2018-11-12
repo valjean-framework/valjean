@@ -10,14 +10,14 @@ Summary
 * Get the edition batch numbers (if exists)
 
 
-Use of :mod:`scan_t4 <valjean.eponine.scan_t4>`
+Use of :mod:`~valjean.eponine.tripoli4.scan`
 -----------------------------------------------
 
-.. doctest:: scan_t4
+.. doctest:: scan
    :hide:
 
    >>> import os
-   >>> work_dir = 'scan_t4'
+   >>> work_dir = 'scan'
    >>> os.mkdir(work_dir)
    >>> with open(os.path.join(work_dir, 'spam.res'), 'w') as tmpfile:
    ...     print("BATCH 10\\n"
@@ -31,10 +31,10 @@ Use of :mod:`scan_t4 <valjean.eponine.scan_t4>`
 
 To use this module you need to create a :class:`Scan` object giving at least
 the path to the file you want to read. This file should be a Tripoli-4 output
-containing at least the flags precised in :ref:`eponine-scan_t4-caveats`.
+containing at least the flags precised in :ref:`eponine-t4-scan-caveats`.
 
    >>> import os
-   >>> from valjean.eponine.scan_t4 import Scan
+   >>> from valjean.eponine.tripoli4.scan import Scan
    >>> results = Scan(os.path.join(work_dir, 'spam.res'))
    >>> results.normalend
    True
@@ -50,7 +50,7 @@ containing at least the flags precised in :ref:`eponine-scan_t4-caveats`.
    It will probably be better to directly load a test file...
 
 
-.. _eponine-scan_t4-caveats:
+.. _eponine-t4-scan-caveats:
 
 Caveats
 -------
@@ -89,7 +89,7 @@ from collections.abc import Mapping
 from collections import OrderedDict
 
 
-from .. import LOGGER
+from ... import LOGGER
 
 
 # get profile from globals (cleaner)

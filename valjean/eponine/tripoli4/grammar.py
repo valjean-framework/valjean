@@ -2,21 +2,19 @@
 # pylint: disable=invalid-name
 r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
-.. |keff| replace:: k\ :sub:`eff`
-.. |kij| replace:: k\ :sub:`ij`
 .. role :: parsing_var(literal)
 
 Documentation on the ``pyparsing`` package can be found at `pyparsing`_.
 
 Transformation from ``pyparsing.ParseResults`` to more standard python objects,
 including :obj:`numpy` arrays, is done with :mod:`~.transform`, calling
-:mod:`common <valjean.eponine.common>`.
+:mod:`~valjean.eponine.tripoli4.common`.
 
 Generalitites
 -------------
 
 * This parser only parses the result part of the listing (selection done in
-  :mod:`scan_t4 <valjean.eponine.scan_t4>`).
+  :mod:`~valjean.eponine.tripoli4.scan`).
 * It takes into account all responses in ``qualtrip`` database up to Tripoli-4,
   version 10.2.
 * If a response is not taken into account parsing will fail:
@@ -25,9 +23,9 @@ Generalitites
     parsing in the result string (possible to print it) → normally where starts
     your new response
   * it seems to end normally, but did not in reality. One of the best checks in
-    that case is to test if the ``endflag`` in :mod:`scan_t4
-    <valjean.eponine.scan_t4>` was read in the parser, usually not. Then the
-    new response probably have to be added.
+    that case is to test if the ``endflag`` in
+    :mod:`~valjean.eponine.tripoli4.scan` was read in the parser, usually not.
+    Then the new response probably have to be added.
 
 * A general parser is proposed for use in the file, but other parsers can be
   built from the partial parsers written here
@@ -67,10 +65,10 @@ The main parsers blocks are defined at the end of the module, named
 
 Typically, each result block in the listing should start by the `intro` block,
 parsed by :parsing_var:`intro`, and end with at least one `runtime` block,
-parsed by :parsing_var:`runtime`. This parts follows the :mod:`scan_t4
-<valjean.eponine.scan_t4>`: :obj:`str` starting by ``'RESULTS ARE GIVEN'`` and
-ending with ``'simulation time'``, ``'exploitation time'`` or
-``'elapsed time'``.
+parsed by :parsing_var:`runtime`. This parts follows the
+:mod:`valjean.eponine.tripoli4.scan`: :obj:`str` starting by
+``'RESULTS ARE GIVEN'`` and ending with ``'simulation time'``,
+``'exploitation time'`` or ``'elapsed time'``.
 
 Between these blocks can be found the data blocks. The major ones are:
 

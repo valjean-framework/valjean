@@ -1,4 +1,4 @@
-'''Tests for the :mod:`accessor <valjean.eponine.accessor>` module using
+'''Tests for the :mod:`~valjean.eponine.tripoli4.accessor` module using
 `pytest`_: random generation of data thanks to :mod:`hypothesis` then test
 access to various objects typically coming from parsing result.
 '''
@@ -10,8 +10,8 @@ from hypothesis.strategies import (integers, lists, composite, text, booleans,
                                    dictionaries, one_of, data, tuples,
                                    sampled_from)
 
-from valjean.eponine import accessor as acc
-from valjean.eponine.accessor import Index
+from valjean.eponine.tripoli4 import accessor as acc
+from valjean.eponine.responses_book import Index
 from ..context import valjean  # pylint: disable=unused-import
 
 
@@ -231,9 +231,9 @@ def test_strip_index(sampler):
 
     The first step is the removal of these empty sets (and associated
     keys) from the index. If some are present, the
-    :func:`keep_only <valjean.eponine.accessor.Index.keep_only>` is used to
-    remove them, rerun the :func:`empty_sets_and_ids` allows to check that no
-    empty sets subsists.
+    :func:`keep_only <valjean.eponine.responses_book.Index.keep_only>` is used
+    to remove them, rerun the :func:`empty_sets_and_ids` allows to check that
+    no empty sets subsists.
 
     If at least 2 indexes are available in the set, one is poped randomly (and
     known), then it is stripped from the index. The test checks that the poped

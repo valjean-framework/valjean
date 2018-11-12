@@ -62,18 +62,18 @@ Fixtures for the :mod:`~.cosette` package
 Tests for the :mod:`~.eponine` package
 --------------------------------------
 
-Tests for the :mod:`common <valjean.eponine.common>` module
-```````````````````````````````````````````````````````````
+Tests for the :mod:`common <valjean.eponine.tripoli4.common>` module
+````````````````````````````````````````````````````````````````````
 
 .. automodule:: tests.eponine.test_common
 
-Tests for the :mod:`~.scan_t4` module
+Tests for the :mod:`~.scan` module
 `````````````````````````````````````
 
 .. automodule:: tests.eponine.test_scan_t4
 
 
-Tests for the :mod:`~.parse_t4` modules
+Tests for the :mod:`~.parse` modules
 ```````````````````````````````````````
 
 .. automodule:: tests.eponine.test_all_listings

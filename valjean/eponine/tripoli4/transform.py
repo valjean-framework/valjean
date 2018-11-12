@@ -3,7 +3,7 @@ objects.
 
 It is called in the module :mod:`~.grammar` via
 `pyparsing.ParserElement.setParseAction` functions. It calls the general
-module :mod:`common <valjean.eponine.common>`.
+module :mod:`~valjean.eponine.tripoli4.common`.
 
 .. _numpy structured array:
    https://docs.scipy.org/doc/numpy/user/basics.rec.html
@@ -32,7 +32,7 @@ module :mod:`common <valjean.eponine.common>`.
 
 import logging
 import numpy as np
-from .. import common
+from . import common
 
 
 LOGGER = logging.getLogger('valjean')
@@ -60,7 +60,7 @@ def compose(*fs):
 
 def convert_spectrum(toks, colnames):
     '''Convert spectrum to :obj:`numpy` object using
-    :mod:`common <valjean.eponine.common>`.
+    :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: spectrum result
     :type toks: |parseres|
@@ -80,8 +80,8 @@ def convert_spectrum(toks, colnames):
     .. seealso::
 
        :func:`common.convert_spectrum
-       <valjean.eponine.common.convert_spectrum>`
-       and more generally :mod:`common <valjean.eponine.common>`
+       <valjean.eponine.tripoli4.common.convert_spectrum>`
+       and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
     spectrumcols = ['score', 'sigma', 'score/lethargy']
     if "vov" in colnames:
@@ -95,7 +95,7 @@ def convert_spectrum(toks, colnames):
 
 def convert_mesh(toks):
     '''Convert mesh to :obj:`numpy` object using
-    :mod:`common <valjean.eponine.common>`.
+    :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: mesh result
     :type toks: |parseres|
@@ -105,8 +105,9 @@ def convert_mesh(toks):
 
     .. seealso::
 
-       :func:`common.convert_mesh <valjean.eponine.common.convert_mesh>`
-       and more generally :mod:`common <valjean.eponine.common>`
+       :func:`common.convert_mesh
+       <valjean.eponine.tripoli4.common.convert_mesh>`
+       and more generally :mod:`valjean.eponine.tripoli4.common`
     '''
     # mesh = common.convert_mesh_with_time(toks)
     mesh = common.convert_mesh(toks)
@@ -115,7 +116,7 @@ def convert_mesh(toks):
 
 def convert_green_bands(toks):
     '''Convert Green bands to :obj:`numpy` object using
-    :mod:`common <valjean.eponine.common>`.
+    :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: Green bands result
     :type toks: |parseres|
@@ -126,8 +127,8 @@ def convert_green_bands(toks):
     .. seealso::
 
        :func:`common.convert_green_bands
-       <valjean.eponine.common.convert_green_bands>`
-       and more generally :mod:`common <valjean.eponine.common>`
+       <valjean.eponine.tripoli4.common.convert_green_bands>`
+       and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
     cgb = common.convert_green_bands(toks)
     return cgb
@@ -148,7 +149,7 @@ def convert_list_to_tuple(toks):
 
     This function is only used to transform the parseResult in standard python
     list and send it to convert_list_to_tuple in
-    :mod:`common <valjean.eponine.common>`.
+    :mod:`~valjean.eponine.tripoli4.common`.
     '''
     cv_toks = common.convert_list_to_tuple(toks.asList())
     return cv_toks
@@ -196,7 +197,7 @@ def _debug_print(toks):
 
 def convert_generic_adjoint(toks):
     '''Convert adjoint output in :obj:`numpy` object using
-    :mod:`common <valjean.eponine.common>`.
+    :mod:`~valjean.eponine.tripoli4.common`.
 
     This method does not take into account sensitivities calculated via the IFP
     method.
@@ -208,8 +209,8 @@ def convert_generic_adjoint(toks):
     .. seealso::
 
        :func:`common.convert_generic_adjoint
-       <valjean.eponine.common.convert_generic_adjoint>`
-       and more generally :mod:`common <valjean.eponine.common>`
+       <valjean.eponine.tripoli4.common.convert_generic_adjoint>`
+       and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
     rtoks = toks[0]
     if len(list(rtoks.keys())) == 1:
@@ -219,7 +220,7 @@ def convert_generic_adjoint(toks):
 
 def convert_keff(toks):
     r'''Convert k\ :sub:`eff` response in python dictionary including
-    :obj:`numpy.matrix` and using :mod:`common <valjean.eponine.common>`.
+    :obj:`numpy.matrix` and using :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: k\ :sub:`eff` result interpreted as dictionary
     :type toks: |parseres|
@@ -229,14 +230,14 @@ def convert_keff(toks):
     .. note::
 
        For the moment, :func:`common.convert_keff_with_matrix
-       <valjean.eponine.common.convert_keff_with_matrix>`
-       is called. It is possible to call
-       :func:`common.convert_keff <valjean.eponine.common.convert_keff>`
-       instead.
+       <valjean.eponine.tripoli4.common.convert_keff_with_matrix>`
+       is called. It is possible to call :func:`common.convert_keff
+       <valjean.eponine.tripoli4.common.convert_keff>` instead.
 
     .. seealso::
-       :func:`common.convert_keff <valjean.eponine.common.convert_keff>`
-       and more generally :mod:`common <valjean.eponine.common>`
+       :func:`common.convert_keff
+       <valjean.eponine.tripoli4.common.convert_keff>` and more generally
+       :mod:`~valjean.eponine.tripoli4.common`
     '''
     keffmat = common.convert_keff_with_matrix(toks['keff_res'].asDict())
     return keffmat
@@ -244,7 +245,7 @@ def convert_keff(toks):
 
 def convert_kij_sources(toks):
     r'''Convert k\ :sub:`ij` sources to python dictionary containing
-    :obj:`numpy` objects and using :mod:`common <valjean.eponine.common>`.
+    :obj:`numpy` objects and using :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: k\ :sub:`ij` source result (interpreted as dictionary)
     :type toks: |parseres|
@@ -253,8 +254,8 @@ def convert_kij_sources(toks):
 
     .. seealso::
        :func:`common.convert_kij_sources
-       <valjean.eponine.common.convert_kij_sources>`
-       and more generally :mod:`common <valjean.eponine.common>`
+       <valjean.eponine.tripoli4.common.convert_kij_sources>`
+       and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
     kijs = common.convert_kij_sources(toks['kij_sources'].asDict())
     return kijs
@@ -262,7 +263,7 @@ def convert_kij_sources(toks):
 
 def convert_kij_result(toks):
     r'''Convert k\ :sub:`ij` result to dictionary of :obj:`numpy` objects using
-    :mod:`common <valjean.eponine.common>`.
+    :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: k\ :sub:`ij` results (interpreted as dictionary)
     :type toks: |parseres|
@@ -270,8 +271,8 @@ def convert_kij_result(toks):
 
     .. seealso::
        :func:`common.convert_kij_result
-       <valjean.eponine.common.convert_kij_result>`
-       and more generally :mod:`common <valjean.eponine.common>`
+       <valjean.eponine.tripoli4.common.convert_kij_result>`
+       and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
     kijm = common.convert_kij_result(toks['kij_res'].asDict())
     return kijm
@@ -279,7 +280,7 @@ def convert_kij_result(toks):
 
 def convert_kij_keff(toks):
     r'''Convert k\ :sub:`eff` estimated from k\ :sub:`ij` to dictionary of
-    :obj:`numpy` objects using :mod:`common <valjean.eponine.common>`.
+    :obj:`numpy` objects using :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: k\ :sub:`eff` block result interpreted as a list t. Only last
       element is used here (others go to :func:`convert_keff`).
@@ -290,8 +291,8 @@ def convert_kij_keff(toks):
 
     .. seealso::
        :func:`common.convert_kij_keff
-       <valjean.eponine.common.convert_kij_keff>`
-       and more generally :mod:`common <valjean.eponine.common>`
+       <valjean.eponine.tripoli4.common.convert_kij_keff>`
+       and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
     kijkeff = common.convert_kij_keff(toks[-1].asDict())
     return kijkeff
@@ -299,7 +300,7 @@ def convert_kij_keff(toks):
 
 def convert_sensitivities(toks):
     '''Convert sensitivity results to dictionary of :obj:`numpy` objects using
-    :mod:`common <valjean.eponine.common>`..
+    :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: `pyparsing` element
     :returns: python list corresponding to input `pyparsing` list

@@ -104,8 +104,8 @@ Initialization is done giving names of the columns (``'score'`` and ``'sigma'``
 for mesh for example) and the list of number of bins. The length of this list
 should be 7 as we have 7 dimensison.
 
-   >>> from valjean.eponine.common import (DictBuilder, MeshDictBuilder,
-   ...                                     SpectrumDictBuilder)
+   >>> from valjean.eponine.tripoli4.common import (DictBuilder,
+   ...     MeshDictBuilder, SpectrumDictBuilder)
    >>> db = DictBuilder(['score', 'sigma'], [1,2,3,4,5,6,7])
    Traceback (most recent call last):
        [...]
@@ -268,7 +268,7 @@ spectrum
 
 Only |keff| as generic response are converted in *NumPy* objects; historical
 |keff| block is stored in a dictionary (see
-:mod:`grammar <valjean.eponine.pyparsing_t4.grammar>`).
+:mod:`valjean.eponine.tripoli4.grammar`).
 
 In the generic response case, results (value, σ) are available for 3
 estimators: KSTEP, KCOLL and KTRACK. Their correlation coefficients, combined
@@ -464,7 +464,7 @@ The returned object is a dictionary containing the following keys and objects:
 |kij| results are also present in the "historical" |keff| block, as an
 additional estimator. Results are presented in a different way and are
 different... Typical results are |kij| - |keff|, the eigenvector corresponding
-to the best estimation, |kij| matrxix, standard deviation matrix and
+to the best estimation, |kij| matrix, standard deviation matrix and
 sensibility matrix.
 
 The returned object is a dictionary with the following keys (faculative can be
