@@ -296,7 +296,7 @@ class Scan(Mapping):
         :param str end_flag: end flag of the results block in Tripoli-4 listing
         '''
         self.fname = fname
-        self.reqbatchs = -1
+        self.reqbatchs = None
         self.normalend = False
         self.end_flags = ["simulation time", "exploitation time",
                           "elapsed time"]
@@ -330,7 +330,9 @@ class Scan(Mapping):
         '''
         if "BATCH" in line and '_' not in line and "THIS" not in line:
             indbatch = line.split().index('BATCH')
-            self.reqbatchs = int(line.split()[indbatch+1])
+            self.reqbatchs = (int(line.split()[indbatch+1])
+                              if len(line.split()) > 1
+                              else None)
         elif "PACKET_LENGTH" in line:
             LOGGER.info("[1mBatchs grouped by packets -> "
                         "number of batchs expected divided "
@@ -431,7 +433,7 @@ class Scan(Mapping):
             LOGGER.info("last batch number = %d", last_batch)
             if last_batch != self.reqbatchs:
                 LOGGER.warning("last batch number %d != required number of "
-                               "batchs %d", last_batch, self.reqbatchs)
+                               "batchs %s", last_batch, self.reqbatchs)
             return self._collres[last_batch]
 
         try:
