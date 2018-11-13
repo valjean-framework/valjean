@@ -15,9 +15,11 @@ def main(argv=None):
     '''Main entry point for the :program:`valjean` executable.'''
     if argv is None:
         argv = sys.argv[1:]
+    LOGGER.debug('arguments: %s', argv)
 
     parser = make_parser()
     args = parser.parse_args(argv)
+    LOGGER.debug('parsed args: %s', args)
 
     config = process_options(args)
 
@@ -25,14 +27,17 @@ def main(argv=None):
         # collect stuff from valjean.py
         job_file = config.get('path', 'job-file')
         priority = getattr(args.func.__self__, 'PRIORITY', None)
-        collected_tasks = _collect_tasks(priority, job_file, args.job_args)
+        collected_tasks = _collect_tasks(priority, job_file, args.job_args,
+                                         args.targets)
         args.func(args, collected_tasks, config)
     else:
         parser.print_help()
 
 
-def _collect_tasks(priority, job_file, job_args):
+def _collect_tasks(priority, job_file, job_args, targets):
     from ..dyn_import import dyn_import
+    LOGGER.debug('action priority: %s', priority)
+    LOGGER.debug('importing job-file: %s', job_file)
     try:
         module = dyn_import(job_file)
     except FileNotFoundError:
@@ -40,7 +45,7 @@ def _collect_tasks(priority, job_file, job_args):
         sys.exit(1)
 
     try:
-        job_tasks = module.job(*job_args)
+        tasks = module.job(*job_args)
     except TypeError as err:
         if str(err).startswith('job()'):
             import inspect
@@ -50,14 +55,32 @@ def _collect_tasks(priority, job_file, job_args):
                        'option(s)'.format(n_args))
             err = TypeError(new_msg)
         raise err
-    LOGGER.debug('job tasks: %s', job_tasks)
+    LOGGER.debug('job tasks: %s', tasks)
 
-    all_tasks = tasks_and_dependencies(job_tasks)
-    LOGGER.debug('all tasks: %s', all_tasks)
-    collected_tasks = [obj for obj in all_tasks
-                       if priority is None or obj.PRIORITY <= priority]
-    LOGGER.debug('collected tasks: %s', collected_tasks)
-    return collected_tasks
+    # compute the transitive closure of the dependency graph for the tasks
+    # returned by job()
+    tasks = tasks_and_dependencies(tasks)
+    LOGGER.debug('all tasks: %s', tasks)
+
+    if targets:
+        def _filter(task):
+            '''Only keep specified tasks.'''
+            return task.name in targets
+    else:
+        def _filter(_task):
+            '''Keep all tasks, regardless of their name.'''
+            return True
+
+    tasks = [task for task in tasks
+             if (priority is None or task.PRIORITY <= priority)
+             and _filter(task)]
+    LOGGER.debug('filtered tasks: %s', tasks)
+
+    # call tasks_and_dependencies() again to close the dependency graph (some
+    # dependencies may have been suppressed by filtering)
+    tasks = tasks_and_dependencies(tasks)
+    LOGGER.debug('collected tasks: %s', tasks)
+    return tasks
 
 
 def tasks_and_dependencies(tasks):

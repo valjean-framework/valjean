@@ -32,14 +32,8 @@ class Command:
     def execute(self, args, collected_tasks, config):
         '''Execute a generic command.'''
 
-        # filter only requested tasks
-        if args.targets:
-            tasks = [task for task in collected_tasks
-                     if task.name in args.targets]
-        else:
-            tasks = collected_tasks
-        LOGGER.debug('building graph for tasks: %s', tasks)
-        graph = build_graph(tasks)
+        LOGGER.debug('building graph for tasks: %s', collected_tasks)
+        graph = build_graph(collected_tasks)
         LOGGER.debug('resulting graph: %s', graph)
 
         env = init_env(path=args.env_path, skip_read=args.env_skip_read,
