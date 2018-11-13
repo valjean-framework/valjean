@@ -140,7 +140,7 @@ class Env(dict):
                                super(Env, self).__repr__())
 
     @classmethod
-    def from_file(cls, path, fmt):
+    def from_file(cls, path, fmt='pickle'):
         '''Deserialize an :class:`Env` object from a file.
 
         :param str path: Path to the file.
@@ -171,7 +171,7 @@ class Env(dict):
         LOGGER.debug('returning environment: %s', deser)
         return deser
 
-    def to_file(self, path, fmt):
+    def to_file(self, path, fmt='pickle'):
         '''Serialize an :class:`Env` object to a file.
 
         :param str path: Path to the file.
