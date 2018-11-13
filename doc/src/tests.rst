@@ -8,9 +8,19 @@ pytest configuration
    :undoc-members:
 
 
+Integration tests
+-----------------
 
-Tests for the :mod:`~valjean` modules
--------------------------------------
+Tests for the happy path
+````````````````````````
+
+.. automodule:: tests.integration.test_happy_path
+   :undoc-members:
+
+
+
+Unit tests for the :mod:`~valjean` modules
+------------------------------------------
 
 Tests for the :mod:`~valjean.config` package
 ````````````````````````````````````````````
@@ -25,6 +35,15 @@ Fixtures for the :mod:`~valjean` module
    :undoc-members:
 
 
+
+Unit tests for the :mod:`~.cambronne` package
+---------------------------------------------
+
+Tests for the :mod:`~.main` module
+``````````````````````````````````
+
+.. automodule:: tests.cambronne.test_main
+   :undoc-members:
 
 Tests for the :mod:`~.cosette` package
 --------------------------------------
@@ -59,8 +78,8 @@ Fixtures for the :mod:`~.cosette` package
 .. automodule:: tests.cosette.conftest
    :undoc-members:
 
-Tests for the :mod:`~.eponine` package
---------------------------------------
+Unit tests for the :mod:`~.eponine` package
+-------------------------------------------
 
 Tests for the :mod:`common <valjean.eponine.tripoli4.common>` module
 ````````````````````````````````````````````````````````````````````
@@ -85,8 +104,8 @@ Tests for the :mod:`~.accessor` module
 .. automodule:: tests.eponine.test_accessor
 
 
-Tests for the :mod:`~valjean.gavroche` package
-----------------------------------------------
+Unit tests for the :mod:`~valjean.gavroche` package
+---------------------------------------------------
 
 Tests for the :mod:`~.harvest` module
 `````````````````````````````````````

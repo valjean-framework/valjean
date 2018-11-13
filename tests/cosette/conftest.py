@@ -225,7 +225,7 @@ def subdir(request):
 
 @pytest.fixture(scope='session')
 def git_myecho_repo(tmpdir_factory, subdir):
-    '''Set up a git project with a trivial Python echo script.'''
+    '''Set up a git project with the :command:`echo` command.'''
     import py
     project_path = tmpdir_factory.mktemp('project')
     project_path.chmod(0o700)

@@ -14,8 +14,8 @@ from valjean.cambronne.main import (check_unique_task_names,
 # pylint: disable=no-value-for-parameter
 @given(tasks=dep_tasks())
 def test_tasks_dependencies(tasks):
-    '''Check that :func:`cambronne.tasks_and_dependencies` correctly recovers
-    all the dependencies.'''
+    '''Check that :func:`~valjean.cambronne.main.tasks_and_dependencies`
+    correctly recovers all the dependencies.'''
     # if a task appears as a dependency, remove it from the list
     to_remove = set(dep for task in tasks for dep in task.depends_on)
     indep_tasks = list(set(tasks).difference(to_remove))
@@ -26,16 +26,16 @@ def test_tasks_dependencies(tasks):
 
 @given(tasks=dep_tasks())
 def test_unique_names(tasks):
-    '''Check that :func:`cambronne.check_unique_task_names` does not raise if
-    the names are all different (ensured by construction in
-    :func:`conftest.dep_tasks`).'''
+    '''Check that :func:`~valjean.cambronne.main.check_unique_task_names` does
+    not raise if the names are all different (ensured by construction in
+    :func:`~tests.cosette.conftest.dep_tasks`).'''
     check_unique_task_names(tasks)
 
 
 @given(tasks=dep_tasks(min_size=1))
 def test_check_unique_names(tasks):
-    '''Check that :func:`cambronne.check_unique_task_names` raises if two tasks
-    have the same name.'''
+    '''Check that :func:`~valjean.cambronne.main.check_unique_task_names`
+    raises if two tasks have the same name.'''
     a_name = next(task.name for task in tasks)
     tasks.append(DoNothingTask(a_name))
     with pytest.raises(ValueError):
