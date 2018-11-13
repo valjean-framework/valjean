@@ -87,6 +87,7 @@ path to the `source` argument instead.
    {'project_checkout': {'checkout_dir': '.../project_checkout',
                          'checkout_log': \
 '.../log/checkout_project_checkout.log',
+                         'elapsed_time': ...,
                          'repository': '.../repo'}}
    >>> env.apply(ct_up)  # apply CheckoutTask's environment update
    ...                   # for this example, this is actually optional
@@ -95,11 +96,13 @@ path to the `source` argument instead.
    TaskStatus.DONE
    >>> pprint(bt_up)
    {'project_build': {'build_dir': '.../build/project_build',
-                      'build_log': '.../log/build_project_build.log'}}
+                      'build_log': '.../log/build_project_build.log',
+                      'elapsed_time': ...}}
 """
 
 import os
 import logging
+from time import time
 
 from .task import TaskStatus
 from .run import sanitize_filename, run, ensure
@@ -189,7 +192,9 @@ class CheckoutTask(PythonTask):
             ensure(checkout_dir, is_dir=True)
 
             with log_file.open('w') as log:
+                start = time()
                 status = checkout_vcs(checkout_dir, log)
+                elapsed = time() - start
 
             if status != TaskStatus.DONE:
                 LOGGER.warning('CheckoutTask %s did not succeed (status: %s)',
@@ -200,7 +205,8 @@ class CheckoutTask(PythonTask):
 
             env_up = {self.name: {'checkout_log': str(log_file),
                                   'checkout_dir': str(checkout_dir),
-                                  'repository': self.repository}}
+                                  'repository': self.repository,
+                                  'elapsed_time': elapsed}}
             return env_up, status
 
         super().__init__(name, checkout, deps=deps, config_kwarg='config')
@@ -324,7 +330,9 @@ class BuildTask(PythonTask):
                 source_dir = os.path.abspath(env[source.name]['checkout_dir'])
 
             with log_file.open('w') as log:
+                start = time()
                 status = build_sys(source_dir, build_dir, log)
+                elapsed = time() - start
 
             if status != TaskStatus.DONE:
                 LOGGER.warning('BuildTask %s did not succeed (status: %s)',
@@ -334,7 +342,8 @@ class BuildTask(PythonTask):
                         LOGGER.debug('build log:\n%s', log.read())
 
             env_up = {self.name: {'build_log': str(log_file),
-                                  'build_dir': str(build_dir)}}
+                                  'build_dir': str(build_dir),
+                                  'elapsed_time': elapsed}}
             return env_up, status
 
         super().__init__(name, build, deps=deps,
