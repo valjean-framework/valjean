@@ -340,11 +340,11 @@ def test_vov(datadir):
 
 
 # def test_no_usual_output(datadir, caplog):
-#     '''Use Tripoli-4 result from test_pondng_auto_coupling_OP49.dat as example
-#     of "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
+#     '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
+#     "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
 #     COMPLETION`` keyword neither responses.
 #     '''
 #     t4_res = T4Parser.parse_jdd(
-#         str(datadir/"test_pondng_auto_coupling_OP49.dat.res.ceav5"))
+#         str(datadir/"homog_p3_prot_PARA.d.res"))
 #     assert not t4_res
 #     assert "No result found in Tripoli-4 listing." in caplog.text
