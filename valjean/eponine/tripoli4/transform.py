@@ -2,7 +2,7 @@
 objects.
 
 It is called in the module :mod:`~.grammar` via
-`pyparsing.ParserElement.setParseAction` functions. It calls the general
+``pyparsing.ParserElement.setParseAction`` functions. It calls the general
 module :mod:`~valjean.eponine.tripoli4.common`.
 
 .. _numpy structured array:
@@ -23,11 +23,6 @@ module :mod:`~valjean.eponine.tripoli4.common`.
     * Change names to ``BLABLA_to_str`` as strings are returned (not print
       anymore)
     * Think about colors...
-
-.. todo::
-
-    Remove the "choice" functions...
-
 '''
 
 import logging
@@ -303,6 +298,7 @@ def convert_sensitivities(toks):
     :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: `pyparsing` element
+    :type toks: |parseres|
     :returns: python list corresponding to input `pyparsing` list
     '''
     sensitivity = common.convert_sensitivities(toks[0])
@@ -325,28 +321,30 @@ def lod_to_dot(toks):
     This function is dedicated to cases where all the dictionaries (or close)
     in the list have the same keys.
 
-        >>> from pprint import pprint
-        >>> from pyparsing import OneOrMore, Group, Word, nums
-        >>> menu = OneOrMore(Group(Word(nums)('egg') + ','
-        ...                   + Word(nums)('bacon') + ','
-        ...                   + Word(nums)('spam')))
-        >>> lod = menu.parseString('1,2,0 2,0,1 0,3,1')
-        >>> dot = lod_to_dot(lod)
-        >>> pprint(dot)  # doctest: +NORMALIZE_WHITESPACE
-        {'bacon': ('2', '0', '3'), 'egg': ('1', '2', '0'), \
-'spam': ('0', '1', '1')}
+    :param list(dict) toks: list of dictionaries
+    :returns: dict(tuple)
 
-        >>> lod = [{'egg': 1, 'bacon': 2, 'spam': 0},
-        ...        {'egg': 2, 'bacon': 0, 'spam': 1},
-        ...        {'egg': 0, 'bacon': 3, 'spam': 1}]
-        >>> dot = lod_to_dot(lod)
-        >>> pprint(dot)  # doctest: +NORMALIZE_WHITESPACE
-        {'bacon': (2, 0, 3), 'egg': (1, 2, 0), 'spam': (0, 1, 1)}
+    >>> from pprint import pprint
+    >>> from pyparsing import OneOrMore, Group, Word, nums
+    >>> menu = OneOrMore(Group(Word(nums)('egg') + ','
+    ...                        + Word(nums)('bacon') + ','
+    ...                        + Word(nums)('spam')))
+    >>> lod = menu.parseString('1,2,0 2,0,1 0,3,1')
+    >>> dot = lod_to_dot(lod)
+    >>> pprint(dot)  # doctest: +NORMALIZE_WHITESPACE
+    {'bacon': ('2', '0', '3'), 'egg': ('1', '2', '0'), 'spam': ('0', '1', '1')}
 
-        >>> lod = [{'egg': 1, 'bacon': 2, 'spam': 0}]
-        >>> dot = lod_to_dot(lod)
-        >>> pprint(dot)  # doctest: +NORMALIZE_WHITESPACE
-        {'bacon': (2,), 'egg': (1,), 'spam': (0,)}
+    >>> lod = [{'egg': 1, 'bacon': 2, 'spam': 0},
+    ...        {'egg': 2, 'bacon': 0, 'spam': 1},
+    ...        {'egg': 0, 'bacon': 3, 'spam': 1}]
+    >>> dot = lod_to_dot(lod)
+    >>> pprint(dot)  # doctest: +NORMALIZE_WHITESPACE
+    {'bacon': (2, 0, 3), 'egg': (1, 2, 0), 'spam': (0, 1, 1)}
+
+    >>> lod = [{'egg': 1, 'bacon': 2, 'spam': 0}]
+    >>> dot = lod_to_dot(lod)
+    >>> pprint(dot)  # doctest: +NORMALIZE_WHITESPACE
+    {'bacon': (2,), 'egg': (1,), 'spam': (0,)}
 
     We always get a tuple as value of the keys, even in case of a single
     element.
@@ -354,8 +352,8 @@ def lod_to_dot(toks):
     LOGGER.debug("In lod_of_dot")
     ldict = {}
     for elt in toks:
-        # to be able to test the method (= allow toks is aleady a dict and not
-        # a pyparsing.ParseResut)
+        # to be able to test the method (= allow toks is already a dict and not
+        # necessarly a pyparsing.ParseResults)
         edict = elt if isinstance(elt, dict) else elt.asDict()
         for key, val in edict.items():
             ldict.setdefault(key, []).append(val)
@@ -407,7 +405,7 @@ def extract_all_metadata(list_of_dicts):
     'data2_res': D2}, {'bla': X, 'md1': MD1, 'md3': MD3, 'results':
     {'data1_res': D3}}]}]``.
 
-    :params list(dict) list_of_dicts: list of dictionaries
+    :param list(dict) list_of_dicts: list of dictionaries
     :returns: list(dict) with no list of dict under 'results' key
     '''
     return [x for dict_ in list_of_dicts for x in extract_metadata(dict_)]
@@ -417,7 +415,7 @@ def extract_metadata(ldict):
     '''Extract metadata from a list of dictionaries to put it in the
     surrounding dictionary.
 
-    :params dict ldict: dictionary corresponding to a response
+    :param dict ldict: dictionary corresponding to a response
     :returns: list of dictionaries (list(dict))
     '''
     LOGGER.debug("In extract_metadata")
@@ -447,7 +445,7 @@ def index_elements(key):
     '''Add an item `key` in dictionary corresponding to index in the list
     containing the dictionary.
 
-    :params str key: name of the index
+    :param str key: name of the index
     :returns: function that really insert the index in the dict contained in a
       list
 

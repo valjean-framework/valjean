@@ -1,18 +1,17 @@
 '''This module converts Tripoli-4 data from parsing in
-:class:`~valjean.eponine.base_dataset.BaseDatasets`.
+:class:`~valjean.eponine.base_dataset.BaseDataset`.
 '''
 
 import logging
 from collections import OrderedDict
 import numpy as np
-from valjean.eponine.base_dataset import BaseDataset
+from ..base_dataset import BaseDataset
 
 LOGGER = logging.getLogger('valjean')
 
 
 def spectrum(fspec_res, res_type='spectrum_res'):
-    '''Conversion of spectrum in
-    :class:`~valjean.eponine.base_dataset.BaseDataset`.
+    '''Conversion of spectrum in :class:`~.base_dataset.BaseDataset`.
     '''
     spec_res = fspec_res[res_type]
     bins = spec_res.get('bins')
@@ -23,8 +22,7 @@ def spectrum(fspec_res, res_type='spectrum_res'):
 
 
 def mesh(fmesh_res, res_type='mesh_res'):
-    '''Conversion of mesh in
-    :class:`~valjean.eponine.base_dataset.BaseDataset`.
+    '''Conversion of mesh in :class:`~.base_dataset.BaseDataset`.
     '''
     mesh_res = fmesh_res[res_type]
     bins = mesh_res.get('bins')
@@ -65,8 +63,7 @@ def integrated_result(result, res_type):
 
 
 def entropy(result, res_type):
-    '''Conversion of entropy in :class:`
-    ~valjean.eponine.base_dataset.BaseDataset`.
+    '''Conversion of entropy in :class:`~.base_dataset.BaseDataset`.
 
     .. todo::
 
@@ -88,7 +85,8 @@ def keff(result, estimator):
 
 
 def keff_combination(result):
-    '''Conversion of keff combination in :class:`~.base_dataset.BaseDataset`.'''
+    '''Conversion of keff combination in :class:`~.base_dataset.BaseDataset`.
+    '''
     kcomb = result['full_comb_estimation']
     return BaseDataset(kcomb['keff'].copy(),
                        kcomb['sigma'] * kcomb['keff'] * 0.01,
@@ -96,7 +94,12 @@ def keff_combination(result):
 
 
 def adjoint_result(result):
-    '''Convert IFP in dataset...'''
+    '''Convert IFP in :class:`~.base_dataset.BaseDataset`.
+
+    .. todo::
+
+        Improvement probably needed in conversion of IFP results.
+    '''
     if not isinstance(result, dict):
         LOGGER.warning("Issue in adjoint result type (should be a dict): %s",
                        type(result))
@@ -110,7 +113,12 @@ def adjoint_result(result):
 
 
 def convert_data_in_dataset(data, data_type):
-    '''Convert data in dataset. OK for IFP sensitivities for the moment.'''
+    '''Convert data in :class:`~.base_dataset.BaseDataset`.
+
+    .. note::
+
+        OK for IFP sensitivities for the moment.
+    '''
     LOGGER.debug("In convert_data_in_dataset")
     if data_type not in data:
         LOGGER.warning("Key %s not found in data", data_type)

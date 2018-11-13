@@ -66,7 +66,7 @@ The main parsers blocks are defined at the end of the module, named
 Typically, each result block in the listing should start by the `intro` block,
 parsed by :parsing_var:`intro`, and end with at least one `runtime` block,
 parsed by :parsing_var:`runtime`. This parts follows the
-:mod:`valjean.eponine.tripoli4.scan`: :obj:`str` starting by
+:mod:`~valjean.eponine.tripoli4.scan`: :obj:`str` starting by
 ``'RESULTS ARE GIVEN'`` and ending with ``'simulation time'``,
 ``'exploitation time'`` or ``'elapsed time'``.
 

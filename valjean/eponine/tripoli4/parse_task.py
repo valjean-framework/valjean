@@ -11,10 +11,11 @@ class ParseT4Task(PythonTask):
 
     This class represents the task of parsing the output file of a TRIPOLI-4
     run into an object that can later be processed by valjean. Since
-    :class:`ParseT4Task` inherits from :class:`~cosette.Task`, it is easy to
-    integrate objects of this class in valjean's standard framework for
-    handling tasks and their dependency graphs (see :class:`~cosette.DepGraph`
-    and :class:`~cosette.Scheduler`).
+    :class:`ParseT4Task` inherits from :class:`~valjean.cosette.task.Task`, it
+    is easy to integrate objects of this class in valjean's standard framework
+    for handling tasks and their dependency graphs (see
+    :class:`~valjean.cosette.depgraph.DepGraph` and
+    :class:`~valjean.cosette.scheduler.Scheduler`).
     '''
 
     PRIORITY = 40
@@ -22,16 +23,18 @@ class ParseT4Task(PythonTask):
     def __init__(self, name, run, *, deps=None):
         '''Create a :class:`ParseT4Task` from the name of a TRIPOLI-4 run.
 
-        The `run` argument is a TRIPOLI-4 :class:`RunTask`. When
-        :class:`ParseT4Task` is scheduled for execution, it will search the
-        environment for the output file of a task called ``'run``.
+        The `run` argument is a TRIPOLI-4
+        :class:`~valjean.cosette.run.RunTask`. When :class:`ParseT4Task` is
+        scheduled for execution, it will search the environment for the output
+        file of a task called ``'run'``.
 
-        :param name str: The name of this task.
-        :param run RunTask: A TRIPOLI-4 run task.
+        :param str name: The name of this task.
+        :param run: A TRIPOLI-4 run task.
+        :type run: :class:`~valjean.cosette.run.RunTask`
         :param deps: If this task depends on other tasks (and valjean cannot
                      automatically discover this), pass them (as a list) to the
                      `deps` parameter.
-        :type deps: None or list of tasks
+        :type deps: None or list(:class:`~valjean.cosette.task.Task`)
         '''
 
         def parse_run_from_env(parse_name, run_name, *, env):
