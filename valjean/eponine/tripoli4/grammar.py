@@ -195,6 +195,7 @@ from pyparsing import (Word, Keyword, White, alphas, alphanums,
 from pyparsing import pyparsing_common as pyparscom
 from . import transform as trans
 from .transform import compose2
+from .dump import dump_in_logger
 
 
 LOGGER = logging.getLogger('valjean')
@@ -1174,5 +1175,5 @@ mygram = (OneOrMore((intro
                                  | defkeffblock | contribpartblock
                                  | perturbation | OneOrMore(runtime)))
                     .setParseAction(trans.to_dict))
-          .setParseAction(trans.print_result)
+          .setParseAction(dump_in_logger)
           | intro + OneOrMore(runtime))

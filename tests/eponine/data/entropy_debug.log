@@ -2,46 +2,50 @@
 
 [31mKeys: ['default_keffs', 'edition_batch_number', 'list_responses', 'mean_weigt_leak', 'simulation_time', 'source_intensity'][0m
 
-[32mdefault_keffs[0m list of 4 elements -> [34mKeys = ['best_disc_batchs', 'bestkeffres', 'estimator', 'used_batch'][0m
+[32mdefault_keffs[0m 
+list of 4 elements -> 
+[34mDict with keys = ['best_disc_batchs', 'bestkeffres', 'estimator', 'used_batch'][0m
 [94m        best_disc_batchs[0m 2, dtype: int64
-[94m        bestkeffres[0m [35mKeys = ['keff', 'sigma', 'sigma%'][0m
+[94m        bestkeffres[0m [35mDict with keys = ['keff', 'sigma', 'sigma%'][0m
 [94m          keff[0m 9.122718e-01, dtype: float64
 [94m          sigma[0m 6.131945e-03, dtype: float64
 [94m          sigma%[0m 6.721621e-01, dtype: float64
 [94m        estimator[0m KSTEP
 [94m        used_batch[0m 8, dtype: int64
-[34mKeys = ['best_disc_batchs', 'bestkeffres', 'estimator', 'used_batch'][0m
+[34mDict with keys = ['best_disc_batchs', 'bestkeffres', 'estimator', 'used_batch'][0m
 [94m        best_disc_batchs[0m 2, dtype: int64
-[94m        bestkeffres[0m [35mKeys = ['keff', 'sigma', 'sigma%'][0m
+[94m        bestkeffres[0m [35mDict with keys = ['keff', 'sigma', 'sigma%'][0m
 [94m          keff[0m 9.121435e-01, dtype: float64
 [94m          sigma[0m 6.034187e-03, dtype: float64
 [94m          sigma%[0m 6.615392e-01, dtype: float64
 [94m        estimator[0m KCOLL
 [94m        used_batch[0m 8, dtype: int64
-[34mKeys = ['best_disc_batchs', 'bestkeffres', 'estimator', 'used_batch'][0m
+[34mDict with keys = ['best_disc_batchs', 'bestkeffres', 'estimator', 'used_batch'][0m
 [94m        best_disc_batchs[0m 2, dtype: int64
-[94m        bestkeffres[0m [35mKeys = ['keff', 'sigma', 'sigma%'][0m
+[94m        bestkeffres[0m [35mDict with keys = ['keff', 'sigma', 'sigma%'][0m
 [94m          keff[0m 9.082232e-01, dtype: float64
 [94m          sigma[0m 7.976384e-03, dtype: float64
 [94m          sigma%[0m 8.782405e-01, dtype: float64
 [94m        estimator[0m KTRACK
 [94m        used_batch[0m 8, dtype: int64
-[34mKeys = ['best_disc_batchs', 'bestkeffres', 'estimator', 'used_batch'][0m
+[34mDict with keys = ['best_disc_batchs', 'bestkeffres', 'estimator', 'used_batch'][0m
 [94m        best_disc_batchs[0m 2, dtype: int64
-[94m        bestkeffres[0m [35mKeys = ['keff', 'sigma', 'sigma%'][0m
+[94m        bestkeffres[0m [35mDict with keys = ['keff', 'sigma', 'sigma%'][0m
 [94m          keff[0m 9.130250e-01, dtype: float64
 [94m          sigma[0m 5.407199e-03, dtype: float64
 [94m          sigma%[0m 5.922290e-01, dtype: float64
 [94m        estimator[0m MACRO KCOLL
 [94m        used_batch[0m 8, dtype: int64
 
-[32medition_batch_number[0m 10, dtype: int64
+[32medition_batch_number[0m 
+10, dtype: int64
 
-[32mlist_responses[0m Number of responses: 2
+[32mlist_responses[0m 
+Number of responses: 2
 
 RESPONSE 0
 [1;35m'response metadata'[0m
-[33mKeys = ['composition', 'concentration', 'energy_split_name', 'particle', 'reaction', 'reaction_on_nucleus', 'resp_function', 'response_index', 'response_type', 'score_index', 'scoring_mode', 'scoring_zone_type', 'temperature'][0m
+[33mDict with keys = ['composition', 'concentration', 'energy_split_name', 'particle', 'reaction', 'reaction_on_nucleus', 'resp_function', 'response_index', 'response_type', 'score_index', 'scoring_mode', 'scoring_zone_type', 'temperature'][0m
 [94m      composition[0m ('FUEL',)
 [94m      concentration[0m (0.00082213,)
 [94m      energy_split_name[0m DEC_INTEG4
@@ -56,15 +60,15 @@ RESPONSE 0
 [94m      scoring_zone_type[0m Results on a mesh
 [94m      temperature[0m (300.0,)
 [1;35m'results' [0;36m(<class 'dict'>)[0m -> [1mscore_res[0m
-[33mKeys = ['boltzmann_entropy_res', 'integrated_res', 'mesh_res', 'shannon_entropy_res', 'spectrum_res'][0m
+[33mDict with keys = ['boltzmann_entropy_res', 'integrated_res', 'mesh_res', 'shannon_entropy_res', 'spectrum_res'][0m
 [94m      boltzmann_entropy_res[0m 8.342621e-01, dtype: float64
-[94m      integrated_res[0m [34mKeys = ['disc_batch', 'score', 'sigma', 'used_batch'][0m
+[94m      integrated_res[0m [34mDict with keys = ['disc_batch', 'score', 'sigma', 'used_batch'][0m
 [94m        disc_batch[0m 1, dtype: int64
 [94m        score[0m 3.536549e-01, dtype: float64
 [94m        sigma[0m 7.371170e-01, dtype: float64
 [94m        used_batch[0m 9, dtype: int64
-[94m      mesh_res[0m [34mKeys = ['bins', 'mesh', 'units'][0m
-[94m        bins[0m [35mKeys = ['e', 'mu', 'phi', 's0', 's1', 's2', 't'][0m
+[94m      mesh_res[0m [34mDict with keys = ['bins', 'mesh', 'units'][0m
+[94m        bins[0m [35mDict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 't'][0m
 [94m          e[0m <class 'numpy.ndarray'>
 shape: (2,)
 squeezed: [1.000000e-11 2.000000e+01]
@@ -96,7 +100,7 @@ squeezed: [[(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
   (0.000000e+00, 0.000000e+00)]
  [(0.000000e+00, 0.000000e+00) (nan, nan) (nan, nan)]]
 dtype: [('score', '<f8'), ('sigma', '<f8')]
-[94m        units[0m [35mKeys = ['e', 'mu', 'phi', 's0', 's1', 's2', 'score', 'sigma', 't'][0m
+[94m        units[0m [35mDict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 'score', 'sigma', 't'][0m
 [94m          e[0m MeV
 [94m          mu[0m 
 [94m          phi[0m rad
@@ -107,8 +111,8 @@ dtype: [('score', '<f8'), ('sigma', '<f8')]
 [94m          sigma[0m %
 [94m          t[0m s
 [94m      shannon_entropy_res[0m 9.047529e-01, dtype: float64
-[94m      spectrum_res[0m [34mKeys = ['bins', 'disc_batch', 'spectrum', 'units'][0m
-[94m        bins[0m [35mKeys = ['e', 'mu', 'phi', 's0', 's1', 's2', 't'][0m
+[94m      spectrum_res[0m [34mDict with keys = ['bins', 'disc_batch', 'spectrum', 'units'][0m
+[94m        bins[0m [35mDict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 't'][0m
 [94m          e[0m <class 'numpy.ndarray'>
 shape: (2,)
 squeezed: [1.000000e-11 2.000000e+01]
@@ -135,7 +139,7 @@ squeezed: []
 shape: (1, 1, 1, 1, 1, 1, 1)
 squeezed: (0.000000e+00, 0.000000e+00, 0.000000e+00)
 dtype: [('score', '<f8'), ('sigma', '<f8'), ('score/lethargy', '<f8')]
-[94m        units[0m [35mKeys = ['e', 'mu', 'phi', 's0', 's1', 's2', 'score', 'sigma', 't'][0m
+[94m        units[0m [35mDict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 'score', 'sigma', 't'][0m
 [94m          e[0m MeV
 [94m          mu[0m 
 [94m          phi[0m rad
@@ -148,12 +152,12 @@ dtype: [('score', '<f8'), ('sigma', '<f8'), ('score/lethargy', '<f8')]
 
 RESPONSE 1
 [1;35m'response metadata'[0m
-[33mKeys = ['resp_function', 'response_index', 'response_type'][0m
+[33mDict with keys = ['resp_function', 'response_index', 'response_type'][0m
 [94m      resp_function[0m KEFFS
 [94m      response_index[0m 1
 [94m      response_type[0m keff_res
 [1;35m'results' [0;36m(<class 'dict'>)[0m -> [1mkeff_res[0m
-[33mKeys = ['correlation_matrix', 'estimators', 'full_comb_estimation', 'keff_matrix', 'sigma_matrix', 'used_batch'][0m
+[33mDict with keys = ['correlation_matrix', 'estimators', 'full_comb_estimation', 'keff_matrix', 'sigma_matrix', 'used_batch'][0m
 [94m      correlation_matrix[0m <class 'numpy.ndarray'>
 shape: (3, 3)
 squeezed: [[1.000000e+00 9.935526e-01 7.818913e-01]
@@ -173,12 +177,15 @@ squeezed: [[7.773594e-01 7.761104e-01 7.687564e-01]
  [7.687564e-01 7.666668e-01 1.129290e+00]]
 [94m      used_batch[0m 9, dtype: int64
 
-[32mmean_weigt_leak[0m [33mKeys = ['sigma', 'sigma%', 'val'][0m
+[32mmean_weigt_leak[0m 
+[33mDict with keys = ['sigma', 'sigma%', 'val'][0m
 [94m      sigma[0m 4.771245e-01, dtype: float64
 [94m      sigma%[0m 2.397252e+01, dtype: float64
 [94m      val[0m 1.990297e+00, dtype: float64
 
-[32msimulation_time[0m 24, dtype: int64
+[32msimulation_time[0m 
+24, dtype: int64
 
-[32msource_intensity[0m 1.000000e+00, dtype: float64
+[32msource_intensity[0m 
+1.000000e+00, dtype: float64
 [1m------------------------------------------------------[0m
