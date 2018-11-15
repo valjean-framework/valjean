@@ -752,6 +752,11 @@ class MeshDictBuilder(DictBuilder):
         self.bins['e'].append(lastmesh[lastebin]['mesh_energyrange'][2])
 
 
+class SpectrumDictBuilderException(Exception):
+    '''Exception to spectrum builder (bad bins)'''
+    pass
+
+
 class SpectrumDictBuilder(DictBuilder):
     '''Class specific to spectrum dictionary
     -> mainly filling of bins and arrays.
@@ -789,11 +794,18 @@ class SpectrumDictBuilder(DictBuilder):
             # Fill spectrum values
             for ienergy, ivals in enumerate(ispec['spectrum_vals']):
                 if self.itime == 0 and self.imu == 0 and self.iphi == 0:
+                    self._check_bins(ispec['spectrum_vals'], ienergy)
                     self.bins['e'].append(ivals[0])
                 index = (0, 0, 0, ienergy, self.itime, self.imu, self.iphi)
-                self.arrays['default'][index] = np.array(
-                    tuple(ivals[2:]),
-                    dtype=self.arrays['default'].dtype)
+                try:
+                    self.arrays['default'][index] = np.array(
+                        tuple(ivals[2:]),
+                        dtype=self.arrays['default'].dtype)
+                except IndexError:
+                    LOGGER.error("IndexError: your spectrum probably did not "
+                                 "show correct bins, please make sure you run "
+                                 "Tripoli-4 with option '-a'.")
+                    raise
 
             # Fill integrated result if exist
             if 'integrated_res' in ispec and 'integrated_res' in self.arrays:
@@ -802,6 +814,13 @@ class SpectrumDictBuilder(DictBuilder):
                 self.arrays['integrated_res'][index] = (np.array(
                     (iintres['score'], iintres['sigma']),
                     dtype=self.arrays['integrated_res'].dtype))
+
+    def _check_bins(self, vals, ienergy):
+        '''Check bins validity.'''
+        if self.bins['e'] and vals[ienergy][0] != vals[ienergy-1][1]:
+            raise SpectrumDictBuilderException(
+                "Issue with energy bins: some bins are probably missing. "
+                "Please, make sure you run Tripoli-4 with option '-a'")
 
     def _add_last_energy_bin(self, data):
         '''Add last bin in energy from spectrum.
@@ -875,7 +894,11 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
         vals.add_array('integrated_res', ['score', 'sigma'],
                        [1, 1, 1, 1, ntbins, nmubins, nphibins])
     # Fill spectrum, bins and integrated result if exists
-    vals.fill_arrays_and_bins(spectrum)
+    try:
+        vals.fill_arrays_and_bins(spectrum)
+    except SpectrumDictBuilderException as sdbe:
+        LOGGER.error(sdbe)
+        return None
     vals.add_last_bins(spectrum)
     # Flip bins
     vals.flip_bins()

@@ -339,12 +339,88 @@ def test_vov(datadir):
     assert list_resp[0]['scoring_zone_type'] == 'Point'
 
 
-# def test_no_usual_output(datadir, caplog):
-#     '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
-#     "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
-#     COMPLETION`` keyword neither responses.
-#     '''
-#     t4_res = T4Parser.parse_jdd(
-#         str(datadir/"homog_p3_prot_PARA.d.res"))
-#     assert not t4_res
-#     assert "No result found in Tripoli-4 listing." in caplog.text
+def test_empty_file(caplog):
+    with open('empty_file.txt', 'w') as ofile:
+        ofile.write("")
+    t4_res = T4Parser.parse_jdd('empty_file.txt')
+    assert not t4_res
+    assert "No result found in Tripoli-4 listing." in caplog.text
+
+
+def test_no_usual_output(datadir, caplog):
+    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
+    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
+    COMPLETION`` keyword neither responses.
+    '''
+    # t4_res = T4Parser.parse_jdd(
+    #     str(datadir/"homog_p3_prot_PARA.d.res"))
+    # assert not t4_res
+    # assert "No result found in Tripoli-4 listing." in caplog.text
+    t4_res = T4Parser.parse_jdd(str(datadir/"failure_test_segFault.d.res"))
+    assert not t4_res
+    assert "No result found in Tripoli-4 listing." in caplog.text
+
+
+def test_missing_a_t4_opt_1(datadir, caplog):
+    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
+    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
+    COMPLETION`` keyword neither responses.
+    '''
+    t4_res = T4Parser.parse_jdd(str(datadir/"failure_test_no_spec_res.d.res"))
+    assert not t4_res
+    assert ("Parsing error in spectrum (_spectrumvals), "
+            "please check you run Tripoli-4 with '-a' option" in caplog.text)
+
+
+def test_missing_a_t4_opt_2(datadir, caplog):
+    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
+    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
+    COMPLETION`` keyword neither responses.
+    '''
+    t4_res = T4Parser.parse_jdd(str(datadir/"failure_test_no_a_opt.d.res"))
+    assert not t4_res
+    assert ("Issue with energy bins: some bins are probably missing. "
+            "Please, make sure you run Tripoli-4 with option '-a'"
+            in caplog.text)
+
+
+def test_bad_response_name(datadir, caplog):
+    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
+    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
+    COMPLETION`` keyword neither responses.
+
+    Case debug not checked as too dirty prints... (really for debug)
+    '''
+    t4_res = T4Parser.parse_jdd(
+        str(datadir/"failure_test_bad_resp_name.d.res"))
+    assert not t4_res
+    assert ("If you want to get the pyparsing failure message, "
+            "please run with LOGGER at level debug" in caplog.text)
+    assert "Error in parsing, see above." in caplog.text
+
+
+def test_no_normal_completion(datadir, caplog):
+    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
+    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
+    COMPLETION`` keyword neither responses.
+
+    Case debug not checked as too dirty prints... (really for debug)
+    '''
+    t4_res = T4Parser.parse_jdd(
+        str(datadir/"failure_test_no_normal_completion.d.res"))
+    assert t4_res
+    assert ("Tripoli-4 listing did not finished with NORMAL COMPLETION."
+            in caplog.text)
+
+
+def test_no_simulation_time(datadir, caplog):
+    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
+    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
+    COMPLETION`` keyword neither responses.
+
+    Case debug not checked as too dirty prints... (really for debug)
+    '''
+    t4_res = T4Parser.parse_jdd(
+        str(datadir/"failure_test_no_simu_time.d.res"))
+    assert not t4_res
+    assert "No result found in Tripoli-4 listing." in caplog.text

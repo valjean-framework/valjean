@@ -736,17 +736,18 @@ _spectrumcols = Suppress((_spgroupwunit_kw | _spgroup_kw)
 _spectrumunits = Group(Suppress(_units_kw)
                        + Word(alphanums+'.^-+%') * 4)('units')
 _spectrumbin = _fnums + Suppress('-') + _fnums
-_spectrumvals = Group(_spectrumbin + _fnums + _fnums + _fnums)
+_spectrumvals = (Group(_spectrumbin + _fnums + _fnums + _fnums)
+                 .setFailAction(trans.fail_spectrum))
 _spectrum = (Suppress(_spectrum_kw)
              + _numdiscbatch
              + _spectrumcols
              + Optional(_spectrumunits)
              + OneOrMore(_spectrumvals, stopOn=_endtable)('spectrum_vals'))
-spectrumblock = Group(OneOrMore
-                      (Group(OneOrMore(_timestep | _muangzone | _phiangzone)
-                             + _spectrum
-                             + Optional(integratedres)))
-                      | Group(_spectrum))('spectrum_res')
+spectrumblock = (Group(OneOrMore
+                       (Group(OneOrMore(_timestep | _muangzone | _phiangzone)
+                              + _spectrum
+                              + Optional(integratedres)))
+                       | Group(_spectrum))('spectrum_res'))
 
 
 # Spectrum with vov
@@ -1129,16 +1130,18 @@ contribpartblock = (Group(Suppress(_nbcontribpart_kw)
 
 
 # Score block
-scoreblock = Group(
-    scoredesc + (OneOrMore(spectrumblock
-                           | meshblock
-                           | vovspectrumblock
-                           | entropy
-                           | medfile
-                           | integratedres
-                           | uncertblock
-                           | uncertintegblock
-                           | gbblock))).setParseAction(trans.convert_score)
+scoreblock = (Group(scoredesc + (OneOrMore(vovspectrumblock
+                                           | spectrumblock
+                                           | meshblock
+                                           | entropy
+                                           | medfile
+                                           | integratedres
+                                           | uncertblock
+                                           | uncertintegblock
+                                           | gbblock)))
+              .setParseAction(trans.convert_score)
+              .addCondition(lambda toks: isinstance(toks[0], dict)))
+
 listscoreblock = (Group(OneOrMore(scoreblock)
                         .setParseAction(trans.index_elements('score_index')))
                   ('score_res'))
@@ -1176,4 +1179,4 @@ mygram = (OneOrMore((intro
                                  | perturbation | OneOrMore(runtime)))
                     .setParseAction(trans.to_dict))
           .setParseAction(dump_in_logger)
-          | intro + OneOrMore(runtime))
+          | intro + OneOrMore(runtime)).setFailAction(trans.fail_parsing)

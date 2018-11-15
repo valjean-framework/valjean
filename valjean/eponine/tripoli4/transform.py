@@ -161,6 +161,8 @@ def convert_score(toks):
                 res['mesh_res'] = convert_mesh(score['mesh_res'])
             elif 'spectrum_res' in key:
                 res[key] = convert_spectrum(score[key], key)
+                if not res[key]:
+                    return None
             elif 'integrated_res' in key:
                 res[key] = score[key].asDict()
             elif key == 'greenband_res':
@@ -473,3 +475,21 @@ def group_to_dict(toks):
         if isinstance(elt, dict):
             tmpdict[key].update(elt)
     return tmpdict[key]
+
+
+def fail_spectrum(s, loc, expr, err):
+    '''Parsing error when all bins were at 0 if option '-a' was used while
+    running Tripoli-4.
+    '''
+    # pylint: disable=invalid-name, unused-argument
+    LOGGER.error("Parsing error in spectrum (_spectrumvals), "
+                 "please check you run Tripoli-4 with '-a' option\n"
+                 "\t\texpr=%s, err=%s", expr, err)
+
+
+def fail_parsing(s, loc, expr, err):
+    '''Parsing error with clear message of failing line.'''
+    # pylint: disable=invalid-name, unused-argument
+    LOGGER.error("Parsing error located at line: %s, col: %s,\n"
+                 "\t\tcorresponding to line: '%s' in file",
+                 err.lineno, err.col, err.line)
