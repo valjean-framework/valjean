@@ -11,7 +11,7 @@ from hypothesis.strategies import (integers, lists, composite, text, booleans,
                                    sampled_from)
 
 from valjean.eponine.tripoli4 import accessor as acc
-from valjean.eponine.responses_book import Index
+from valjean.eponine.response_book import Index
 from ..context import valjean  # pylint: disable=unused-import
 
 
@@ -99,7 +99,7 @@ def test_build_index(respl):
         responses list (considering category is first level of Index and key is
         second one, e.g. category='response_function' and key='FLUX')
     '''
-    lrb = acc.ResponsesBook(respl)  # lrb = local responses book
+    lrb = acc.ResponseBook(respl)  # lrb = local responses book
     note(sorted([y for x in respl for y in x if y != 'results']))
     note(sorted(lrb.index.keys()))
     note(lrb.index)
@@ -146,7 +146,7 @@ def fixed_metadata_responses(draw, choices):
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(sampler=data())
 def test_selection(sampler, caplog):
-    '''Test the selection from ResponsesBook.
+    '''Test the selection from ResponseBook.
 
     For easier comparison the metadata list of dict is also retrived.
 
@@ -169,7 +169,7 @@ def test_selection(sampler, caplog):
                'ingredient': [('spam', 'egg'), 'spam']}
     mdd, fmdr = sampler.draw(fixed_metadata_responses(choices))
     assert fmdr
-    respb = acc.ResponsesBook(fmdr)
+    respb = acc.ResponseBook(fmdr)
     for key, lval in choices.items():
         for val in lval:
             caplog.clear()
@@ -231,7 +231,7 @@ def test_strip_index(sampler):
 
     The first step is the removal of these empty sets (and associated
     keys) from the index. If some are present, the
-    :func:`keep_only <valjean.eponine.responses_book.Index.keep_only>` is used
+    :func:`keep_only <valjean.eponine.response_book.Index.keep_only>` is used
     to remove them, rerun the :func:`empty_sets_and_ids` allows to check that
     no empty sets subsists.
 

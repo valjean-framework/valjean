@@ -16,5 +16,5 @@ eponine — ExPloratiON et INtErfaçage
    :caption: Submodules
 
    eponine/base_dataset
-   eponine/responses_book
+   eponine/response_book
    eponine/tripoli4

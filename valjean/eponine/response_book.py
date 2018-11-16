@@ -2,13 +2,13 @@
 
 This module is composed of 2 classes:
 
-  * :class:`ResponsesBook` that stores the list of dictionaries and builds an
+  * :class:`ResponseBook` that stores the list of dictionaries and builds an
     :class:`Index` to facilitate selections;
   * :class:`Index` based on :class:`collections.defaultdict` to perform
     selections on the list of dictionaries
 
 
-The classes :class:`Index` and :class:`ResponsesBook` are meant to be general
+The classes :class:`Index` and :class:`ResponseBook` are meant to be general
 even if they will be shown and used in our specific case: parsing results from
 Tripoli-4.
 
@@ -24,10 +24,10 @@ from :mod:`collections`. It implements a ``defaultdict(defaultdict(set))`` from
 the list of dictionaries.
 
 :class:`Index` is not supposed to be used standalone, but called from
-:class:`ResponsesBook`, but this is still possible.
+:class:`ResponseBook`, but this is still possible.
 
 
-:class:`ResponsesBook`
+:class:`ResponseBook`
 ----------------------
 
 This class is analogue to a phonebook: it contains an index and the content,
@@ -47,7 +47,7 @@ what they precisely order as dish under ``'results'`` and optionally the number
 corresponding to their choice of dessert. He will represent these orders as a
 list of orders, one order being a dictionary.
 
->>> from valjean.eponine.responses_book import ResponsesBook
+>>> from valjean.eponine.response_book import ResponseBook
 >>> from pprint import pprint
 >>> orders = [
 ... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
@@ -63,15 +63,15 @@ list of orders, one order being a dictionary.
 ... {'resp_function': 'royal_menu', 'consumer': 'Michael',
 ...  'drink': 'brandy', 'dessert': 3,
 ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
->>> com_rb = ResponsesBook(orders)
+>>> com_rb = ResponseBook(orders)
 >>> print(com_rb)
-ResponsesBook object -> Number of responses: 5, data key: 'results', \
+ResponseBook object -> Number of responses: 5, data key: 'results', \
 available metadata keys: ['consumer', 'dessert', 'drink', 'resp_function']
 
 
 Various methods are available to select one order, depending on requirements:
 
-  * get a new ResponsesBook:
+  * get a new ResponseBook:
 
     >>> sel_rb = com_rb.filter_by(resp_function='menu1', drink='beer')
     >>> pprint(sel_rb.responses)  # doctest: +NORMALIZE_WHITESPACE
@@ -87,7 +87,7 @@ Various methods are available to select one order, depending on requirements:
     >>> 'dessert' in com_rb
     True
 
-    The ``'dessert'`` key has been removed from the ResponsesBook issued from
+    The ``'dessert'`` key has been removed from the ResponseBook issued from
     the selection while it is still present in the original one.
 
   * get the available keys (sorted to be able to test them in the doctest, else
@@ -124,7 +124,7 @@ ones are ['consumer', 'dessert', 'drink', 'resp_function']
     []
 
   * to directly get the responses corresponding to the selection, use the
-    method :func:`ResponsesBook.select_by`
+    method :func:`ResponseBook.select_by`
 
     >>> sel_rb = com_rb.select_by(consumer='Graham')
     >>> type(sel_rb)
@@ -183,7 +183,7 @@ def merge_defaultdict(defd1, defd2):
 
 
 class Index(Mapping):
-    '''Class to describe index used in ResponsesBook.
+    '''Class to describe index used in ResponseBook.
 
     Default structure of Index is a ``defaultdict(defaultdict(set))``.
     This class was derived mainly for printing purposes.
@@ -191,7 +191,7 @@ class Index(Mapping):
     Quick example of index (menu for 4 persons, identified by numbers, one has
     no drink):
 
-    >>> from valjean.eponine.responses_book import Index
+    >>> from valjean.eponine.response_book import Index
     >>> myindex = Index()
     >>> myindex.index['drink']['beer'] = {1, 4}
     >>> myindex.index['drink']['wine'] = {2}
@@ -327,7 +327,7 @@ class Index(Mapping):
         return str(self)
 
 
-class ResponsesBook(Container):
+class ResponseBook(Container):
     '''Class to perform selections on results.
 
     This class is based on two objects:
@@ -348,7 +348,7 @@ class ResponsesBook(Container):
     Let's use the example detailled above in
     :ref:`module introduction <resp-book-example>`:
 
-    >>> from valjean.eponine.responses_book import ResponsesBook
+    >>> from valjean.eponine.response_book import ResponseBook
     >>> orders = [
     ... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
     ...  'results': {'ingredients_res': ['egg', 'bacon']}},
@@ -363,7 +363,7 @@ class ResponsesBook(Container):
     ... {'resp_function': 'royal_menu', 'consumer': 'Michael',
     ...  'drink': 'brandy', 'dessert': 3,
     ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
-    >>> com_rb = ResponsesBook(orders)
+    >>> com_rb = ResponseBook(orders)
 
     * possibility to get the response id directly (internally used method):
 
@@ -374,7 +374,7 @@ class ResponsesBook(Container):
       {2}
 
     * possibility to get the index of the response stripped without rebuilding
-      the full ResponsesBook:
+      the full ResponseBook:
 
       >>> ind = com_rb._filter_index_by(resp_function='menu1')
       >>> isinstance(ind, Index)
@@ -391,12 +391,12 @@ class ResponsesBook(Container):
     Debug print is available thanks to :func:`__repr__`:
 
     >>> small_order = [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}]
-    >>> so_rb = ResponsesBook(small_order)
+    >>> so_rb = ResponseBook(small_order)
     >>> "{0!r}".format(so_rb)
-    "<class 'valjean.eponine.responses_book.ResponsesBook'>, \
+    "<class 'valjean.eponine.response_book.ResponseBook'>, \
 (Responses: ..., Index: ...)"
     >>> # prints in some order (for responses and index dicts)
-    >>> # "<class 'valjean.eponine.responses_book.ResponsesBook'>,
+    >>> # "<class 'valjean.eponine.response_book.ResponseBook'>,
     >>> # (Responses: [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}],
     >>> # Index: defaultdict(<function Index.__init__.<locals>.<lambda> at ...>
     >>> # {'drink': defaultdict(<class 'set'>, {'beer': {0}}),
@@ -495,29 +495,29 @@ class ResponsesBook(Container):
         return self.index.keep_only(respids)
 
     def filter_by(self, **kwargs):
-        '''Get a ResponsesBook corresponding to selection from keyword
+        '''Get a ResponseBook corresponding to selection from keyword
         arguments.
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.
-        :returns: :class:`ResponsesBook` (subset of the default one,
+        :returns: :class:`ResponseBook` (subset of the default one,
           corresponding to the selection)
         '''
         LOGGER.debug("in select_by, kwargs=%s", kwargs)
         respids = self._filter_resp_id_by(**kwargs)
         lresp = [self.responses[i] for i in respids]
-        sub_rb = ResponsesBook(lresp)
+        sub_rb = ResponseBook(lresp)
         return sub_rb
 
     def select_by(self, *, squeeze=False, **kwargs):
-        '''Get a ResponsesBook corresponding to selection from keyword
+        '''Get a ResponseBook corresponding to selection from keyword
         arguments.
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.
         :param bool squeeze: named parameter
         :returns: first element of the list of responses if only one,
-          else subset in :class:`ResponsesBook` format
+          else subset in :class:`ResponseBook` format
         '''
         respids = self._filter_resp_id_by(**kwargs)
         lresp = [self.responses[i] for i in respids]

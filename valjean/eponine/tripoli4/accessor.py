@@ -17,7 +17,7 @@ loop over the list of batches. Accessor also allows simplified access to other
 data like simulation time or number of batch.
 
 For example, let's consider a parsing results that contains the same ``orders``
-as in :mod:`.responses_book`, represented as a list of dictionaries. It will be
+as in :mod:`.response_book`, represented as a list of dictionaries. It will be
 stored under the key ``'list_responses'`` and additional items will be added to
 that dictionary for it to look like a default parsing results one.
 
@@ -60,7 +60,7 @@ Construction accessor and responses book:
 ...    print("Found a responses book")
 Found a responses book
 >>> print(t4acc.resp_book)
-ResponsesBook object -> Number of responses: 5, data key: 'results', \
+ResponseBook object -> Number of responses: 5, data key: 'results', \
 available metadata keys: ['consumer', 'dessert', 'drink', 'resp_function']
 
 Examples of use:
@@ -93,7 +93,7 @@ Did not found a responses book
 '''
 
 import logging
-from ..responses_book import ResponsesBook
+from ..response_book import ResponseBook
 
 
 LOGGER = logging.getLogger('valjean')
@@ -105,7 +105,7 @@ class Accessor:
     This class contains two members:
 
         * parsed_res = result from parsing for only one batch
-        * :class:`.responses_book.ResponsesBook` corresponding to the list of
+        * :class:`.response_book.ResponseBook` corresponding to the list of
             responses if it exists
     '''
 
@@ -118,7 +118,7 @@ class Accessor:
                                        time)
         '''
         self.parsed_res = tparsed_res
-        self.resp_book = (ResponsesBook(self.parsed_res['list_responses'])
+        self.resp_book = (ResponseBook(self.parsed_res['list_responses'])
                           if 'list_responses' in self.parsed_res
                           else None)
         if self.resp_book:
@@ -130,7 +130,7 @@ class Accessor:
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.
-        :returns: :class:`~valjean.eponine.responses_book.ResponsesBook`
+        :returns: :class:`~valjean.eponine.response_book.ResponseBook`
           (subset of the default one, corresponding to the selection)
         '''
         return self.resp_book.select_by(**kwargs)
