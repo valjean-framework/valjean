@@ -32,16 +32,16 @@ def multiple_datasets(draw, size, *, elements=None):
     return mult_gds
 
 
-def perturbed_datasets(min_size=0, max_size=6):
-    '''Strategy to generate a list of perturbed :class:`~.Dataset` objects.
+def perturbed_datasets():
+    '''Strategy to generate a pair of perturbed :class:`~.Dataset` objects.
 
     This strategy uses the :func:`~.perturbed_base_datasets` strategy to
-    generate a list of perturbed :class:`~.BaseDataset` objects, and converts
+    generate a pair of perturbed :class:`~.BaseDataset` objects, and converts
     them to :class:`Dataset`.
 
     :param int min_size: the minimum list size.
     :param int max_size: the maximum list size.
     '''
     # pylint: disable=no-member
-    return (perturbed_base_datasets(min_size=min_size, max_size=max_size)
-            .map(lambda ds: [Dataset.from_dataset(d) for d in ds]))
+    return (perturbed_base_datasets()
+            .map(lambda ds: (Dataset.from_dataset(d) for d in ds)))

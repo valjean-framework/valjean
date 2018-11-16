@@ -12,7 +12,7 @@ from valjean.gavroche import test
 from valjean.gavroche.dataset import Dataset
 
 from .conftest import datasets, perturbed_datasets
-from ..eponine.conftest import repeat, coord_odicts, perturb
+from ..eponine.conftest import coord_odicts, perturb
 
 
 @given(bins_dict=coord_odicts())
@@ -44,17 +44,17 @@ def test_different_bins_raises():
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(its=repeat(datasets()))
-def test_equal_if_same(its):
+@given(dataset=datasets())
+def test_equal_if_same(dataset):
     '''Test that :func:`~.equal` is reflexive.'''
-    assert test.equal(*its)
+    assert test.equal(dataset, dataset)
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(its=repeat(datasets()))
-def test_approx_equal_if_same(its):
+@given(dataset=datasets())
+def test_approx_equal_if_same(dataset):
     '''Test that :func:`~.approx_equal` is reflexive.'''
-    assert test.approx_equal(*its)
+    assert test.approx_equal(dataset, dataset)
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))

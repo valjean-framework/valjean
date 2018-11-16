@@ -209,7 +209,7 @@ def repeat(stgy, min_size=0, max_size=6):
 
 
 @composite
-def perturbed_base_datasets(draw, min_size=0, max_size=6):
+def perturbed_base_datasets(draw):
     '''Strategy to generate a list of perturbed :class:`~.BaseDataset` objects.
 
     This strategy generates lists of :class:`~.BaseDataset` objects of length
@@ -220,20 +220,12 @@ def perturbed_base_datasets(draw, min_size=0, max_size=6):
     :param int min_size: the minimum list size.
     :param int max_size: the maximum list size.
     '''
-    n_elems = draw(integers(min_size, max_size))
-    if n_elems == 0:
-        return []
     dataset = draw(base_datasets())
-    if n_elems == 1:
-        return [dataset]
-    pert_values = draw(lists(elements=perturb(dataset.value),
-                             min_size=n_elems-1, max_size=n_elems-1))
-    pert_datasets = [dataset]
-    for pert_value in pert_values:
-        pert_dataset = BaseDataset(pert_value, dataset.error.copy(),
-                                   bins=dataset.bins,
-                                   name=dataset.name + '_pert')
-        pert_datasets.append(pert_dataset)
+    pert_value = draw(perturb(dataset.value))
+    pert_datasets = (dataset,
+                     BaseDataset(pert_value, dataset.error.copy(),
+                                 bins=dataset.bins,
+                                 name=dataset.name + '_pert'))
     return pert_datasets
 
 
