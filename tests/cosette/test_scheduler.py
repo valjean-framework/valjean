@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-# pylint: disable=no-value-for-parameter
-
 '''Tests for the :mod:`~.scheduler` module.'''
+# pylint: disable=no-value-for-parameter
 
 from hypothesis import given, settings, note, event
 from hypothesis.strategies import integers, data

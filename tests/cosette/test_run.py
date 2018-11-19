@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 '''Tests for the :mod:`~cosette.run` module.'''
 
 from pathlib import Path

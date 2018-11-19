@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-# pylint: disable=no-value-for-parameter
-
 '''Tests for the :mod:`.rlist` module.'''
+# pylint: disable=no-value-for-parameter
 
 from hypothesis import given, note
 from hypothesis.strategies import integers, data
