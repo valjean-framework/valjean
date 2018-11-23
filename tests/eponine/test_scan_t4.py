@@ -340,87 +340,103 @@ def test_vov(datadir):
 
 
 def test_empty_file(caplog):
+    '''Test Tripoli-4 parsing on an empty file: this should fail.'''
     with open('empty_file.txt', 'w') as ofile:
         ofile.write("")
     t4_res = T4Parser.parse_jdd('empty_file.txt')
-    assert not t4_res
+    assert t4_res is None
     assert "No result found in Tripoli-4 listing." in caplog.text
 
 
 def test_no_usual_output(datadir, caplog):
-    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
-    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
-    COMPLETION`` keyword neither responses.
+    '''Use Tripoli-4 result from failure_test_segFault.d.res as example of
+    "failed" jobs: response required in a neutron flux from a neutron source
+    while the particles tracked are photons, so Tripoli-4 fails at execution.
     '''
-    # t4_res = T4Parser.parse_jdd(
-    #     str(datadir/"homog_p3_prot_PARA.d.res"))
-    # assert not t4_res
-    # assert "No result found in Tripoli-4 listing." in caplog.text
     t4_res = T4Parser.parse_jdd(str(datadir/"failure_test_segFault.d.res"))
-    assert not t4_res
+    assert t4_res is None
     assert "No result found in Tripoli-4 listing." in caplog.text
 
 
-def test_missing_a_t4_opt_1(datadir, caplog):
-    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
-    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
-    COMPLETION`` keyword neither responses.
+def test_no_a_t4_opt_no_spectrum(datadir, caplog):
+    '''Use Tripoli-4 result from failure_test_no_spec_res.d.res as example of
+    parsing failure due to lack of option '-a'. In that case all the intervals
+    in the spectrum are at 0, so without option '-a', none of them appears in
+    the output. Parsing succeeds to parse the spectrum columns (and units here)
+    but fails after as it cannot find any row from the spectrum.
     '''
     t4_res = T4Parser.parse_jdd(str(datadir/"failure_test_no_spec_res.d.res"))
-    assert not t4_res
+    assert t4_res is None
     assert ("Parsing error in spectrum (_spectrumvals), "
             "please check you run Tripoli-4 with '-a' option" in caplog.text)
 
 
-def test_missing_a_t4_opt_2(datadir, caplog):
-    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
-    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
-    COMPLETION`` keyword neither responses.
+def test_no_a_t4_opt_bad_bins(datadir, caplog):
+    '''Use Tripoli-4 result from failure_test_no_a_opt.d.res as example of
+    parsing failure due to lack of option '-a'. In this case the spectrum is
+    partially filled but filled bins are not adjacent, they are inconsistent
+    (no possibility for example to guess bin width, if spectrum was also in
+    time for example an new energy bin could appear in the next time step). A
+    specific error is sent.
     '''
     t4_res = T4Parser.parse_jdd(str(datadir/"failure_test_no_a_opt.d.res"))
-    assert not t4_res
-    assert ("Issue with energy bins: some bins are probably missing. "
-            "Please, make sure you run Tripoli-4 with option '-a'"
+    assert ("Problem with energy bins: some bins are probably missing. "
+            "Please make sure you run Tripoli-4 with '-a' option."
             in caplog.text)
+    assert t4_res is None
+
+
+def test_no_a_t4_opt_bad_bins_2(datadir, caplog):
+    '''Use Tripoli-4 result from failure_noaopt_uniform_sources.d.res as
+    example of parsing failure due to lack of option '-a'. In this case the
+    spectrum is partially filled: bins are adjacent, but as the spectrum is in
+    (*E*, *t*), the number of filled energy bins in the second time step being
+    higher than in the first one, we get missing bins in the second step due to
+    the use of '-a' optoin. A specific error is sent.
+    '''
+    t4_res = T4Parser.parse_jdd(str(
+        datadir/"failure_noaopt_uniform_sources.d.res"))
+    assert ("IndexError: your spectrum probably uses more than one dimension "
+            "(X and Y), but the number of x bins may be different in the "
+            "different y bins.\nPlease make sure you run Tripoli-4 with "
+            "option '-a'." in caplog.text)
+    assert t4_res is None
 
 
 def test_bad_response_name(datadir, caplog):
-    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
-    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
-    COMPLETION`` keyword neither responses.
-
-    Case debug not checked as too dirty prints... (really for debug)
+    '''Use Tripoli-4 result from failure_test_bad_resp_name.d.res as example of
+    failing parsing. In this case a not foreseen character, @, has been used in
+    a response name. Pyparsing does not know to do with it and fails.
     '''
     t4_res = T4Parser.parse_jdd(
         str(datadir/"failure_test_bad_resp_name.d.res"))
-    assert not t4_res
-    assert ("If you want to get the pyparsing failure message, "
-            "please run with LOGGER at level debug" in caplog.text)
-    assert "Error in parsing, see above." in caplog.text
+    assert t4_res is None
+    assert "Error in parsing" in caplog.text
+    assert ("corresponding to line: 'RESPONSE NAME : flux_@_neutron' in file"
+            in caplog.text)
 
 
 def test_no_normal_completion(datadir, caplog):
-    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
-    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
-    COMPLETION`` keyword neither responses.
+    '''Use Tripoli-4 result from failure_test_no_normal_completion.d.res as
+    example of lack of "NORMAL COMPLETION" in the output.
 
-    Case debug not checked as too dirty prints... (really for debug)
+    In this case parsing is successful: its result exists, but the
+    ``normalend`` boolean in scan is ``False``.
     '''
     t4_res = T4Parser.parse_jdd(
         str(datadir/"failure_test_no_normal_completion.d.res"))
     assert t4_res
-    assert ("Tripoli-4 listing did not finished with NORMAL COMPLETION."
+    assert ("Tripoli-4 listing did not finish with NORMAL COMPLETION."
             in caplog.text)
+    assert t4_res.scan_res.normalend is False
 
 
 def test_no_simulation_time(datadir, caplog):
-    '''Use Tripoli-4 result from homog_p3_prot_PARA.d.res as example of
-    "failed" jobs: run in interactive mode it does not have nor the ``NORMAL
-    COMPLETION`` keyword neither responses.
-
-    Case debug not checked as too dirty prints... (really for debug)
+    '''Use Tripoli-4 result from failure_test_no_simu_time.d.res as example of
+    lack of the end flag. In this case "NORMAL COMPLETION" is also missing but
+    as pyparsing cannot find the end flag no parsing result can be built.
     '''
     t4_res = T4Parser.parse_jdd(
         str(datadir/"failure_test_no_simu_time.d.res"))
-    assert not t4_res
+    assert t4_res is None
     assert "No result found in Tripoli-4 listing." in caplog.text

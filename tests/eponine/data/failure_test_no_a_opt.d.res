@@ -2,16 +2,16 @@
 =====================================================================
 $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
  hostname: is232540
- pid: 3362
+ pid: 6016
 
 =====================================================================
 $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
  HOSTNAME : is232540
 
- PROCESS ID is : 3362
+ PROCESS ID is : 6016
 
- DATE : Wed Nov 14 17:35:17 2018
+ DATE : Fri Nov 23 17:34:37 2018
 
  Version is $Name: tripoli4_11_branch_release-21-09-2018 $.
 
@@ -43,7 +43,7 @@ $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
 
 GEOMETRY
-TITRE from prob003 for geometrie
+TITRE from prob003 for geometrie, to be run without -a option to remove 0 bins. This will make parsing to fail.
 
 TYPE 1 BOITE 10 10 10
 TYPE 2 SPHERE 2.5 
@@ -109,7 +109,6 @@ SIMULATION
 	SIZE   1000
     PARTICULES   1 NEUTRON 
 	ENERGY_INF NEUTRON 1.
-	XML_EXPORT
 FIN_SIMULATION
 
 

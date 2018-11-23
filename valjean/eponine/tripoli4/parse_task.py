@@ -55,6 +55,8 @@ class ParseT4Task(PythonTask):
                 raise
             parse_result = T4Parser.parse_jdd(output_file)
             env_up = {parse_name: {'result': parse_result}}
+            if parse_result is None:
+                return env_up, TaskStatus.FAILED
             return env_up, TaskStatus.DONE
 
         deps_ = [] if deps is None else deps.copy()

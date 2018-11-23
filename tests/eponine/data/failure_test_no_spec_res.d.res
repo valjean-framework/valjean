@@ -2,16 +2,16 @@
 =====================================================================
 $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
  hostname: is232540
- pid: 25013
+ pid: 6368
 
 =====================================================================
 $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
  HOSTNAME : is232540
 
- PROCESS ID is : 25013
+ PROCESS ID is : 6368
 
- DATE : Thu Nov 15 18:27:20 2018
+ DATE : Fri Nov 23 17:37:45 2018
 
  Version is $Name: tripoli4_11_branch_release-21-09-2018 $.
 
@@ -43,7 +43,7 @@ $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
 
 GEOMETRY
-TITRE from prob003 for geometrie
+TITRE from prob003 for geometrie, to be run without -a option in order to get an empty spectrum which parsing will fail
 
 TYPE 1 BOITE 10 10 10
 TYPE 2 SPHERE 8
@@ -67,7 +67,7 @@ GEOMCOMP
    PLOMB 2 1 2
 FIN_GEOMCOMP
 
-LIST_SOURCES 2
+LIST_SOURCES 1
  NORME 1
 
  SOURCE
@@ -75,14 +75,6 @@ LIST_SOURCES 2
  PONCTUAL 0 0 0
  ANGULAR_DISTRIBUTION ISOTROPIC
  ENERGETIC_DISTRIBUTION SPECTRE MONOCINETIQUE 12
- TIME_DISTRIBUTION DIRAC 0.
- FIN_SOURCE
-
- SOURCE
- NEUTRON
- PONCTUAL 0 0 0
- ANGULAR_DISTRIBUTION ISOTROPIC
- ENERGETIC_DISTRIBUTION SPECTRE MONOCINETIQUE 1.33
  TIME_DISTRIBUTION DIRAC 0.
  FIN_SOURCE
 FIN_LIST_SOURCES
@@ -105,11 +97,10 @@ SCORE
 FIN_SCORE
 
 SIMULATION
-	BATCH	10
-	SIZE   1000
+	BATCH	1
+	SIZE   1
     PARTICULES   1 NEUTRON 
 	ENERGY_INF NEUTRON 1.
-	XML_EXPORT
 FIN_SIMULATION
 
 
@@ -141,25 +132,7 @@ FIN_SIMULATION
 
 	         SIMULATION INTENSITY = 1.256637e+01   BIASED SIMULATION INTENSITY = 1.256637e+01
 
-	 initializing source number : 1
-
-		 Energetic density definition intensity = 1.000000e+00
-
-		 Energetic density simulation intensity = 1.000000e+00
-
-		 Angular intensity = 1.256637e+01
-
-		 Time intensity = 1.000000e+00
-
-		 Geometric intensity = 1.000000e+00
-
-		 Calculated source simulation intensity = 1.256637e+01
-
-		 Calculated source definition intensity = 1.256637e+01
-
-	         SIMULATION INTENSITY = 1.256637e+01   BIASED SIMULATION INTENSITY = 1.256637e+01
-
-   SUM OF SIMULATION INTENSITIES = 2.513274e+01
+   SUM OF SIMULATION INTENSITIES = 1.256637e+01
 
    GLOBAL NORM = 1.000000e+00   GLOBAL SIMULATION INTENSITY = 1.000000e+00
 
@@ -176,79 +149,7 @@ FIN_SIMULATION
  batch number : 1
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.214000e+00	 sigma_n : 3.718669e-01
-
- simulation time (s) : 0
-
-
- batch number : 2
-
-  quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.158000e+00	 sigma_n : 2.451472e-01
-
- simulation time (s) : 0
-
-
- batch number : 3
-
-  quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.438000e+00	 sigma_n : 2.435641e-01
-
- simulation time (s) : 0
-
-
- batch number : 4
-
-  quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.177000e+00	 sigma_n : 2.627712e-01
-
- simulation time (s) : 0
-
-
- batch number : 5
-
-  quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.772000e+00	 sigma_n : 2.512910e-01
-
- simulation time (s) : 0
-
-
- batch number : 6
-
-  quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.151000e+00	 sigma_n : 2.610217e-01
-
- simulation time (s) : 0
-
-
- batch number : 7
-
-  quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.017000e+00	 sigma_n : 2.620484e-01
-
- simulation time (s) : 0
-
-
- batch number : 8
-
-  quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.675000e+00	 sigma_n : 2.469258e-01
-
- simulation time (s) : 0
-
-
- batch number : 9
-
-  quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.060000e+00	 sigma_n : 2.535521e-01
-
- simulation time (s) : 0
-
-
- batch number : 10
-
-  quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.926000e+00	 sigma_n : 2.550011e-01
+	 mean number of collision per neutron history: 6.760000e+00	 sigma_n : 3.106861e-01
 
 *********************************************************
 
@@ -285,7 +186,7 @@ Units:	 MeV			 neut.cm.s^-1	 %		 neut.cm.s^-1
 
 	 number of first discarded batches : 0
 
-number of batches used: 10	0.000000e+00	0.000000e+00
+number of batches used: 1	0.000000e+00	0.000000e+00
 
 
 
@@ -293,7 +194,7 @@ number of batches used: 10	0.000000e+00	0.000000e+00
 
 
  Type and parameters of random generator at the end of simulation: 
-	 DRAND48_RANDOM 19115 48483 25479  COUNTER	679536
+	 DRAND48_RANDOM 5475 4708 19915  COUNTER	32072
 
 
 =====================================================================

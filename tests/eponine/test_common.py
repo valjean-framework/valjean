@@ -317,8 +317,7 @@ def make_mesh_t4_output(meshes, ebins, tbins):
                                               None, 0))
         if 'integrated' in meshes:
             t4out.append(integres_str(meshes['integrated'], 0,
-                                      False if 'energy_integrated' in meshes
-                                      else True))
+                                      'energy_integrated' not in meshes))
     else:
         for itbin in range(len(tbins)-1):
             mintime = (tbins[itbin] if tbins[itbin] < tbins[itbin+1]

@@ -297,7 +297,6 @@ class DoNothingTask(Task):
     '''A task that does nothing.'''
     def do(self, _env, _config):
         '''Do nothing!'''
-        pass
 
 
 @composite

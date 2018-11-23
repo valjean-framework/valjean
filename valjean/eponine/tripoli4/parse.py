@@ -20,6 +20,7 @@ from pyparsing import ParseException
 
 from . import grammar as pygram
 from . import scan
+from .common import SpectrumDictBuilderException
 
 
 LOGGER = logging.getLogger('valjean')
@@ -33,7 +34,6 @@ if 'profile' not in globals()['__builtins__']:
 
 class T4ParserException(Exception):
     '''An error that may be raised by the :class:`T4Parser` class.'''
-    pass
 
 
 class T4Parser():
@@ -140,7 +140,7 @@ class T4Parser():
         if not self.scan_res:
             raise T4ParserException("No result found in Tripoli-4 listing.")
         if not self.scan_res.normalend:
-            LOGGER.warning("Tripoli-4 listing did not finished with "
+            LOGGER.warning("Tripoli-4 listing did not finish with "
                            "NORMAL COMPLETION.")
 
     def parse_t4_listing(self):
@@ -155,17 +155,15 @@ class T4Parser():
         try:
             self.result = pygram.mygram.parseString(str_to_parse).asList()
         except ParseException:
-            LOGGER.warning("Parsing failed, you are probably trying to read a "
-                           "new response. Please implement it before "
-                           "re-running.")
-            LOGGER.warning("If you want to get the pyparsing failure message, "
-                           "please run with LOGGER at level debug.")
-            if LOGGER.isEnabledFor(logging.DEBUG):
-                raise
-            # exception should be caught somewhere ?
+            LOGGER.error("Parsing failed, you are probably trying to read a "
+                         "new response. Please update the parser before "
+                         "re-running.")
             # from None allows to raise a new exception without traceback and
             # message of the previous one here.
-            raise T4ParserException("Error in parsing, see above.") from None
+            raise T4ParserException("Error in parsing") from None
+        except SpectrumDictBuilderException as sdbe:
+            LOGGER.error(sdbe)
+            raise T4ParserException("Error in parsing") from None
 
     def print_t4_stats(self):
         '''Print Tripoli-4 statistics (warnings and errors).'''

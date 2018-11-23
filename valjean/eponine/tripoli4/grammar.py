@@ -1139,8 +1139,7 @@ scoreblock = (Group(scoredesc + (OneOrMore(vovspectrumblock
                                            | uncertblock
                                            | uncertintegblock
                                            | gbblock)))
-              .setParseAction(trans.convert_score)
-              .addCondition(lambda toks: isinstance(toks[0], dict)))
+              .setParseAction(trans.convert_score))
 
 listscoreblock = (Group(OneOrMore(scoreblock)
                         .setParseAction(trans.index_elements('score_index')))

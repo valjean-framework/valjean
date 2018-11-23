@@ -30,7 +30,6 @@ from .. import LOGGER
 
 class SchedulerError(Exception):
     '''An error that may be raised by the :class:`Scheduler` class.'''
-    pass
 
 
 class Scheduler:

@@ -161,8 +161,6 @@ def convert_score(toks):
                 res['mesh_res'] = convert_mesh(score['mesh_res'])
             elif 'spectrum_res' in key:
                 res[key] = convert_spectrum(score[key], key)
-                if not res[key]:
-                    return None
             elif 'integrated_res' in key:
                 res[key] = score[key].asDict()
             elif key == 'greenband_res':

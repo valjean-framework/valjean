@@ -80,13 +80,13 @@ More details on parsing
 -----------------------
 
 Most of the TRIPOLI-4 functionalities are now parsed by `pyparsing`_.
-If a new score or a new response in implemented in Tripoli-4, it would be easier
-for its output to match the exisiting response, or else parsing will have to be
-updated.
+If a new score or a new response in implemented in Tripoli-4, it would be
+easier for its output to match the exisiting response, or else parsing will
+have to be updated.
 
-When parsing fails it should indicate the last line and column where it managed
-to parse (considering the string sent to parsing, not the full output) and the
-problematic line. This should help debugging.
+When parsing fails it indicates the last line and column where parsing
+succeeded (relative to the beginning of the parsed string, not the full output)
+and the problematic line. This should help debugging.
 
 Tests should be performed in the code to take the latter case into account
 (example: test presence of ``'simulation time'`` keyword, see

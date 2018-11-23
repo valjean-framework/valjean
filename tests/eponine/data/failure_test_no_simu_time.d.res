@@ -2,24 +2,24 @@
 =====================================================================
 $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
  hostname: is232540
- pid: 3155
+ pid: 10170
 
 =====================================================================
 $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
  HOSTNAME : is232540
 
- PROCESS ID is : 3155
+ PROCESS ID is : 10170
 
- DATE : Wed Nov 14 17:33:59 2018
+ DATE : Fri Nov 23 18:07:33 2018
 
  Version is $Name: tripoli4_11_branch_release-21-09-2018 $.
 
 =====================================================================
 
- data filename = success_tests.d
+ data filename = failure_test_no_simu_time.d
  catalogname = ../spheresLivermore/Env/sblink_t4path.ceav5
- execution call = tripoli4 -a -u -s NJOY -d success_tests.d -c ../spheresLivermore/Env/sblink_t4path.ceav5 -o success_tests.d.res 
+ execution call = tripoli4 -a -u -s NJOY -d failure_test_no_simu_time.d -c ../spheresLivermore/Env/sblink_t4path.ceav5 -o failure_test_no_simu_time.d.res 
 
 
  dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
@@ -44,6 +44,9 @@ $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
 GEOMETRY
 TITRE from prob003 for geometrie
+// To obtain a result without the "simulation time" keyword, kill the job during its execution.
+// Here a simpler way has been chosen, as the test is for parsing: the job run normally, but the end
+// of the output has been removed from the line with "simulation time".
 
 TYPE 1 BOITE 10 10 10
 TYPE 2 SPHERE 2.5 
@@ -67,7 +70,7 @@ GEOMCOMP
    PLOMB 2 1 2
 FIN_GEOMCOMP
 
-LIST_SOURCE 2
+LIST_SOURCE 1
  NORME 1
 
  SOURCE
@@ -75,14 +78,6 @@ LIST_SOURCE 2
  PONCTUAL 0 0 0
  ANGULAR_DISTRIBUTION ISOTROPIC
  ENERGETIC_DISTRIBUTION SPECTRE MONOCINETIQUE 12.17
- TIME_DISTRIBUTION DIRAC 0.
- FIN_SOURCE
-
- SOURCE
- NEUTRON
- PONCTUAL 0 0 0
- ANGULAR_DISTRIBUTION ISOTROPIC
- ENERGETIC_DISTRIBUTION SPECTRE MONOCINETIQUE 1.33
  TIME_DISTRIBUTION DIRAC 0.
  FIN_SOURCE
 FIN_LIST_SOURCE
@@ -109,7 +104,6 @@ SIMULATION
 	SIZE   1000
     PARTICULES   1 NEUTRON 
 	ENERGY_INF NEUTRON 1.
-	XML_EXPORT
 FIN_SIMULATION
 
 
@@ -141,25 +135,7 @@ FIN_SIMULATION
 
 	         SIMULATION INTENSITY = 1.256637e+01   BIASED SIMULATION INTENSITY = 1.256637e+01
 
-	 initializing source number : 1
-
-		 Energetic density definition intensity = 1.000000e+00
-
-		 Energetic density simulation intensity = 1.000000e+00
-
-		 Angular intensity = 1.256637e+01
-
-		 Time intensity = 1.000000e+00
-
-		 Geometric intensity = 1.000000e+00
-
-		 Calculated source simulation intensity = 1.256637e+01
-
-		 Calculated source definition intensity = 1.256637e+01
-
-	         SIMULATION INTENSITY = 1.256637e+01   BIASED SIMULATION INTENSITY = 1.256637e+01
-
-   SUM OF SIMULATION INTENSITIES = 2.513274e+01
+   SUM OF SIMULATION INTENSITIES = 1.256637e+01
 
    GLOBAL NORM = 1.000000e+00   GLOBAL SIMULATION INTENSITY = 1.000000e+00
 
@@ -176,7 +152,7 @@ FIN_SIMULATION
  batch number : 1
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.718000e+00	 sigma_n : 3.373671e-01
+	 mean number of collision per neutron history: 6.574000e+00	 sigma_n : 3.024699e-01
 
  simulation time (s) : 0
 
@@ -184,7 +160,7 @@ FIN_SIMULATION
  batch number : 2
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.356000e+00	 sigma_n : 2.700485e-01
+	 mean number of collision per neutron history: 6.639000e+00	 sigma_n : 2.097872e-01
 
  simulation time (s) : 0
 
@@ -192,7 +168,7 @@ FIN_SIMULATION
  batch number : 3
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.778000e+00	 sigma_n : 2.474145e-01
+	 mean number of collision per neutron history: 6.523000e+00	 sigma_n : 2.032998e-01
 
  simulation time (s) : 0
 
@@ -200,7 +176,7 @@ FIN_SIMULATION
  batch number : 4
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.004000e+00	 sigma_n : 2.468500e-01
+	 mean number of collision per neutron history: 6.645000e+00	 sigma_n : 2.023510e-01
 
  simulation time (s) : 0
 
@@ -208,7 +184,7 @@ FIN_SIMULATION
  batch number : 5
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.064000e+00	 sigma_n : 2.686598e-01
+	 mean number of collision per neutron history: 6.395000e+00	 sigma_n : 2.058187e-01
 
  simulation time (s) : 0
 
@@ -216,7 +192,7 @@ FIN_SIMULATION
  batch number : 6
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.809000e+00	 sigma_n : 2.328750e-01
+	 mean number of collision per neutron history: 6.357000e+00	 sigma_n : 2.048988e-01
 
  simulation time (s) : 0
 
@@ -224,7 +200,7 @@ FIN_SIMULATION
  batch number : 7
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.706000e+00	 sigma_n : 2.487155e-01
+	 mean number of collision per neutron history: 6.413000e+00	 sigma_n : 2.029523e-01
 
  simulation time (s) : 0
 
@@ -232,7 +208,7 @@ FIN_SIMULATION
  batch number : 8
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.629000e+00	 sigma_n : 2.504677e-01
+	 mean number of collision per neutron history: 6.144000e+00	 sigma_n : 1.958919e-01
 
  simulation time (s) : 0
 
@@ -240,7 +216,7 @@ FIN_SIMULATION
  batch number : 9
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 8.007000e+00	 sigma_n : 2.512331e-01
+	 mean number of collision per neutron history: 6.350000e+00	 sigma_n : 2.024166e-01
 
  simulation time (s) : 0
 
@@ -248,7 +224,7 @@ FIN_SIMULATION
  batch number : 10
 
   quota sampling and descendant statistics: 
-	 mean number of collision per neutron history: 7.729000e+00	 sigma_n : 2.562015e-01
+	 mean number of collision per neutron history: 6.339000e+00	 sigma_n : 2.027343e-01
 
 *********************************************************
 
@@ -283,14 +259,13 @@ ENERGY DECOUPAGE NAME : DEC_SPECTRE
 Units:	 MeV			 neut.s^-1	 %		 neut.s^-1
 
 2.000000e+01 - 1.500000e+01	0.000000e+00	0.000000e+00	0.000000e+00
-1.500000e+01 - 1.000000e+01	3.182656e-04	5.104561e+01	7.849396e-04
-1.000000e+01 - 5.000000e+00	0.000000e+00	0.000000e+00	0.000000e+00
-5.000000e+00 - 1.000000e-11	7.593331e-02	2.148787e+01	2.818831e-03
+1.500000e+01 - 1.000000e+01	9.721141e-04	5.329505e+01	2.397528e-03
+1.000000e+01 - 5.000000e+00	2.440976e-04	1.000000e+02	3.521584e-04
+5.000000e+00 - 1.000000e-11	4.631889e-02	1.560832e+01	1.719471e-03
 
 	 ENERGY INTEGRATED RESULTS
 
 	 number of first discarded batches : 0
 
-number of batches used: 10	7.625158e-02	2.152358e+01
-
+number of batches used: 10	4.753511e-02	1.539491e+01
 

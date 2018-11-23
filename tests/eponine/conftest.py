@@ -235,3 +235,11 @@ def perturbed_base_datasets(draw, min_size=0, max_size=6):
                                    name=dataset.name + '_pert')
         pert_datasets.append(pert_dataset)
     return pert_datasets
+
+
+class RunTaskMock:
+    '''A mock class for :class:`~valjean.cosette.RunTask` — it just contains
+    its name.
+    '''
+    def __init__(self, name):
+        self.name = name

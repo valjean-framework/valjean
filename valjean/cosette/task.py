@@ -38,7 +38,6 @@ TaskStatus = enum.IntEnum('TaskStatus',  # pylint: disable=invalid-name
 
 class TaskError(Exception):
     '''An error that may be raised by :class:`~Task` classes.'''
-    pass
 
 
 class Task(ABC):

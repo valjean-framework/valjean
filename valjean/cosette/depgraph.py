@@ -257,7 +257,6 @@ LOGGER = logging.getLogger('valjean')
 
 class DepGraphError(Exception):
     '''An exception raised by :class:`DepGraph`.'''
-    pass
 
 
 class DepGraph:

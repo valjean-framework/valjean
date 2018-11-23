@@ -2,16 +2,16 @@
 =====================================================================
 $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
  hostname: is232540
- pid: 3239
+ pid: 19636
 
 =====================================================================
 $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
  HOSTNAME : is232540
 
- PROCESS ID is : 3239
+ PROCESS ID is : 19636
 
- DATE : Wed Nov 14 17:35:03 2018
+ DATE : Mon Nov 26 13:45:22 2018
 
  Version is $Name: tripoli4_11_branch_release-21-09-2018 $.
 
@@ -49,6 +49,9 @@ $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
 GEOMETRY
 TITRE from prob003 for geometrie
+// This jdd will seg fault, this is meant: response and source are done on NEUTRONS
+// while PHOTONS are the required particles in the simulation block.
+// This is in order to test bad outputs in parsing.
 
 TYPE 1 BOITE 10 10 10
 TYPE 2 SPHERE 2.5 
@@ -72,7 +75,7 @@ GEOMCOMP
    PLOMB 2 1 2
 FIN_GEOMCOMP
 
-LIST_SOURCE 2
+LIST_SOURCE 1
  NORME 1
 
  SOURCE
@@ -80,14 +83,6 @@ LIST_SOURCE 2
  PONCTUAL 0 0 0
  ANGULAR_DISTRIBUTION ISOTROPIC
  ENERGETIC_DISTRIBUTION SPECTRE MONOCINETIQUE 12.17
- TIME_DISTRIBUTION DIRAC 0.
- FIN_SOURCE
-
- SOURCE
- NEUTRON
- PONCTUAL 0 0 0
- ANGULAR_DISTRIBUTION ISOTROPIC
- ENERGETIC_DISTRIBUTION SPECTRE MONOCINETIQUE 1.33
  TIME_DISTRIBUTION DIRAC 0.
  FIN_SOURCE
 FIN_LIST_SOURCE
@@ -110,11 +105,10 @@ SCORE
 FIN_SCORE
 
 SIMULATION
-	BATCH	10
-	SIZE   1000
+	BATCH	1
+	SIZE   1
     PARTICULES   1 PHOTON 
 	ENERGY_INF NEUTRON 1.
-	XML_EXPORT
 FIN_SIMULATION
 
 

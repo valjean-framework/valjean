@@ -82,7 +82,6 @@ from .task import TaskStatus
 
 class EnvError(Exception):
     '''An error that may be raised by the :class:`~Env` class.'''
-    pass
 
 
 def _add_enum_accessors(enum):

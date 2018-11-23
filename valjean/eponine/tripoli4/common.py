@@ -605,7 +605,6 @@ class DictBuilder(ABC):
 
         :param list data: mesh or spectrum results
         '''
-        pass
 
     def _add_last_bin_for_dim(self, data, dim, lastbin):
         '''Add last bin for the dimension dim. Depending on order of the bins
@@ -681,7 +680,6 @@ class DictBuilder(ABC):
 
         :param list data: mesh or spectrum results
         '''
-        pass
 
 
 class MeshDictBuilder(DictBuilder):
@@ -754,7 +752,6 @@ class MeshDictBuilder(DictBuilder):
 
 class SpectrumDictBuilderException(Exception):
     '''Exception to spectrum builder (bad bins)'''
-    pass
 
 
 class SpectrumDictBuilder(DictBuilder):
@@ -797,14 +794,16 @@ class SpectrumDictBuilder(DictBuilder):
                     self._check_bins(ispec['spectrum_vals'], ienergy)
                     self.bins['e'].append(ivals[0])
                 index = (0, 0, 0, ienergy, self.itime, self.imu, self.iphi)
+                array = np.array(tuple(ivals[2:]),
+                                 dtype=self.arrays['default'].dtype)
                 try:
-                    self.arrays['default'][index] = np.array(
-                        tuple(ivals[2:]),
-                        dtype=self.arrays['default'].dtype)
+                    self.arrays['default'][index] = array
                 except IndexError:
-                    LOGGER.error("IndexError: your spectrum probably did not "
-                                 "show correct bins, please make sure you run "
-                                 "Tripoli-4 with option '-a'.")
+                    LOGGER.error(
+                        "IndexError: your spectrum probably uses more than "
+                        "one dimension (X and Y), but the number of x bins "
+                        "may be different in the different y bins.\n"
+                        "Please make sure you run Tripoli-4 with option '-a'.")
                     raise
 
             # Fill integrated result if exist
@@ -819,8 +818,8 @@ class SpectrumDictBuilder(DictBuilder):
         '''Check bins validity.'''
         if self.bins['e'] and vals[ienergy][0] != vals[ienergy-1][1]:
             raise SpectrumDictBuilderException(
-                "Issue with energy bins: some bins are probably missing. "
-                "Please, make sure you run Tripoli-4 with option '-a'")
+                "Problem with energy bins: some bins are probably missing. "
+                "Please make sure you run Tripoli-4 with '-a' option.")
 
     def _add_last_energy_bin(self, data):
         '''Add last bin in energy from spectrum.
@@ -894,11 +893,7 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
         vals.add_array('integrated_res', ['score', 'sigma'],
                        [1, 1, 1, 1, ntbins, nmubins, nphibins])
     # Fill spectrum, bins and integrated result if exists
-    try:
-        vals.fill_arrays_and_bins(spectrum)
-    except SpectrumDictBuilderException as sdbe:
-        LOGGER.error(sdbe)
-        return None
+    vals.fill_arrays_and_bins(spectrum)
     vals.add_last_bins(spectrum)
     # Flip bins
     vals.flip_bins()
@@ -1166,7 +1161,7 @@ def convert_green_bands(gbs):  # pylint: disable=R0914
       'ebins': numpy.array, 'sebins': numpy.array}`
     '''
     lastsource = gbs[-1]['gb_step_res'][-1]['gb_source']
-    hassourcetab = True if len(lastsource) > 1 else False
+    hassourcetab = len(lastsource) > 1
     spectrum = gbs[0]['gb_step_res'][0]['spectrum_res'][0]
     bins = {'e': [], 'se': []}
     index = (len(gbs),  # number of steps (= number of bins of source energy)
