@@ -26,16 +26,20 @@ We perturb the data by applying some small amount of noise:
 
 Now we can test if the new dataset is equal to the original one:
 
-    >>> from valjean.gavroche.test import equal
-    >>> test_equality = equal(parabola, parabola2)
-    >>> print(bool(test_equality))
+    >>> from valjean.gavroche.test import TestEqual
+    >>> test_equality = TestEqual("parabola", "equality test",
+    ...                           parabola, parabola2)
+    >>> test_equality_res = test_equality.evaluate()
+    >>> print(bool(test_equality_res))
     False
 
 However, they are approximately equal:
 
-    >>> from valjean.gavroche.test import approx_equal
-    >>> test_approx = approx_equal(parabola, parabola2)
-    >>> print(bool(test_approx))
+    >>> from valjean.gavroche.test import TestApproxEqual
+    >>> test_approx = TestApproxEqual("parabola", "approx equal test",
+    ...                               parabola, parabola2)
+    >>> test_approx_res = test_approx.evaluate()
+    >>> print(bool(test_approx_res))
     True
 '''
 from abc import ABC, abstractmethod
@@ -94,135 +98,154 @@ def check_bins(*datasets, rtol=1e-5, atol=1e-8):
         raise ValueError(msg)
 
 
-class Test:
+class Test(ABC):
     '''Generic class for comparing datasets.
 
-    Objects of this class should not be directly instantiated, but through
-    functions such as :func:`equal` or :func:`approx_equal`.
+    Mum class to tests.
     '''
 
-    def __init__(self, criterion, datasets):
-        '''Initialize the :class:`Test` object with a criterion and some
-        datasets.
+    def __init__(self, name, description, ttype=""):
+        '''Initialize the :class:`~.Test` object with a name, a description of
+        the test (can be long) and the test type (equality, Student, χ², etc.).
 
-        The criterion describes how the datasets should be compared (bitwise
-        equality, numerical equality within a given tolerance, statistical
-        test...). I
+        The test is called in the evaluate method that is abstract in the
+        parent class and should be present in all daughter classes.
+
+        :param str name: name of the test (or name of the Tripoli-4 case for
+                         example)
+        :param str description: description of the test exepcted with context
+                                (typically introduction to the test in report)
+        :param str ttype: generic type of the test, given by the Test class of
+                          the chosen test
         '''
-        self._criterion = criterion
-        self._datasets = datasets
-        self._result = None
+        self.name = name
+        self.description = description
+        self.type_test = ttype
 
+    @abstractmethod
     def evaluate(self):
-        '''Evaluate the test criterion on the datasets.
+        '''Evaluate the test on the given datasets.
 
-        The result is stored in `self._result`.
+        Expected to return a :class:`~.TestResult`.
         '''
-        if self._result is None:
-            self._result = self._criterion(*self._datasets)
-        return self._result
-
-    def __bool__(self):
-        '''Return the test result, as a bool.'''
-        self.evaluate()
-        return bool(self._result)
 
 
 class TestResult(ABC):
     '''Generic class for comparison results.
 
-    This result should be callable by Test.
+    This result should be callable by :class:`~.Test` daughter classes.
     '''
 
-    def __init__(self, name, description):
-        self.name = name
-        self.description = description
+    def __init__(self, test):
+        '''Initialisation of :class:`~.TestResult`.
+
+        :param test: the used test
+        :type test: :class:`~.Test` daughter used
+        '''
+        self.test = test
 
     @abstractmethod
-    def call(self):
-        '''Get the result
-
-        Redondant avec le bool...
-        '''
-
     def __bool__(self):
-        return self.call()
+        pass
 
 
 class TestResultEqual(TestResult):
-    '''Result from :func:`equal` test.'''
+    '''Result from :class:`TestEqual`.'''
 
-    def __init__(self, dataset1, dataset2, equal):
-        self.ds1 = dataset1
-        self.ds2 = dataset2
+    def __init__(self, test, equal):
+        '''Initialisation of the result from :class:`~.TestEqual`:
+
+        :param test: the used test
+        :type test: :class:`~.TestEqual`
+        :param equal: result from the test
+        :type equal: :obj:`numpy.generic` if datasets are :obj:`numpy.generic`,
+                     :obj:`numpy.ndarray` if datasets are :obj:`numpy.ndarray`.
+                     In both cases ``dtype = bool``.
+        '''
+        super().__init__(test)
         self.equal = equal
-
-    def call(self):
-        return bool(self)
 
     def __bool__(self):
         return bool(np.all(self.equal))
 
 
-def equal(dataset1, dataset2):
-    '''Test if the datasets are equal.
+class TestEqual(Test):
+    '''Test if the datasets are equal.'''
 
-    :param datasets: the :class:`~valjean.eponine.base_dataset.BaseDataset`
-                     objects to test.
-    '''
-    return Test(equal_crit, (dataset1, dataset2))
+    def __init__(self, name, description, dataset1, dataset2):
+        '''Initialisation of :class:`~.TestEqual`:
 
+        :param str name: local name of the test
+        :param str description: specific description of the test
+        :param dataset1: first dataset
+        :type dataset1: :class:`~.dataset.Dataset`
+        :param dataset2: second dataset
+        :type dataset2: :class:`~.dataset.Dataset`
+        '''
+        super().__init__(name, description, "Dataset equality")
+        self.dataset1 = dataset1
+        self.dataset2 = dataset2
 
-def equal_crit(dataset1, dataset2):
-    '''Criterion for testing dataset equality.
+    def evaluate(self):
+        '''Evaluation of :class:`~.TestEqual` using **NumPy** method on the
+        dataset values (no error considered).
 
-    :raises ValueError: if the dataset coordinates are not compatible.
-    :returns: `True` if the data stored in the datasets are equal, `False`
-              otherwise.
-    '''
-    check_bins(dataset1, dataset2)
-    equal = np.equal(dataset1.value, dataset2.value)
-    return TestResultEqual(dataset1, dataset2, equal)
+        :returns: :class:`~.TestResultEqual`
+        '''
+        check_bins(self.dataset1, self.dataset2)
+        equal = np.equal(self.dataset1.value, self.dataset2.value)
+        return TestResultEqual(self, equal)
 
 
 class TestResultApproxEqual(TestResult):
-    '''Result from :func:`approx_equal` test.'''
+    '''Result from :class:`TestApproxEqual`.'''
 
-    def __init__(self, dataset1, dataset2, approx_equal):
-        self.ds1 = dataset1
-        self.ds2 = dataset2
+    def __init__(self, test, approx_equal):
+        '''Initialisation of the result from :class:`~.TestApproxEqual`:
+
+        :param test: the used test
+        :type test: :class:`~.TestApproxEqual`
+        :param equal: result from the test
+        :type equal: :obj:`numpy.generic` if datasets are :obj:`numpy.generic`,
+                     :obj:`numpy.ndarray` if datasets are :obj:`numpy.ndarray`.
+                     In both cases ``dtype = bool``.
+        '''
+        super().__init__(test)
         self.approx_equal = approx_equal
-
-    def call(self):
-        return bool(self)
 
     def __bool__(self):
         return bool(np.all(self.approx_equal))
 
 
-def approx_equal(dataset1, dataset2, rtol=1e-5, atol=1e-8):
-    '''Test if the datasets are equal within the given tolerances.
+class TestApproxEqual(Test):
+    '''Test if the datasets are equal within the given tolerances.'''
 
-    :param dataset1: the reference
-                     :class:`~valjean.eponine.base_dataset.BaseDataset`.
-    :param dataset2: the :class:`~valjean.eponine.base_dataset.BaseDataset`
-                     to test.
-    :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
-    :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
-    '''
-    return Test(approx_equal_crit(rtol=rtol, atol=atol), (dataset1, dataset2))
+    def __init__(self, name, description, dataset1, dataset2,
+                 rtol=1e-5, atol=1e-8):
+        # pylint: disable=too-many-arguments
+        '''Initialisation of :class:`~.TestApproxEqual`:
 
+        :param str name: local name of the test
+        :param str description: specific description of the test
+        :param dataset1: first dataset
+        :type dataset1: :class:`~.dataset.Dataset`
+        :param dataset2: second dataset
+        :type dataset2: :class:`~.dataset.Dataset`
+        '''
+        super().__init__(name, description, "Approximate dataset equality")
+        self.dataset1 = dataset1
+        self.dataset2 = dataset2
+        self.rtol = rtol
+        self.atol = atol
 
-def approx_equal_crit(*, rtol, atol):
-    '''(Returns a) Criterion for testing approximate dataset equality.
+    def evaluate(self):
+        '''Evaluation of :class:`~.TestApproxEqual` using **NumPy**
+        :func:`numpy.isclose` method on the dataset values (no error
+        considered).
 
-    :raises ValueError: if the dataset coordinates are not compatible.
-    :returns: `True` if the data stored in the datasets are equal, `False`
-              otherwise.
-    '''
-    def _compare(dataset1, dataset2, rtol_cap=rtol, atol_cap=atol):
-        check_bins(dataset1, dataset2)
-        approx_equal = np.isclose(dataset1.value, dataset2.value,
-                                  rtol=rtol_cap, atol=atol_cap)
-        return TestResultApproxEqual(dataset1, dataset2, approx_equal)
-    return _compare
+        :returns: :class:`~.TestResultApproxEqual`
+        '''
+        check_bins(self.dataset1, self.dataset2)
+        approx_equal = np.isclose(self.dataset1.value, self.dataset2.value,
+                                  rtol=self.rtol, atol=self.atol)
+        return TestResultApproxEqual(self, approx_equal)

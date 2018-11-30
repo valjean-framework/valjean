@@ -46,66 +46,76 @@ def test_different_bins_raises():
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(dataset=datasets())
 def test_equal_if_same(dataset):
-    '''Test that :func:`~.equal` is reflexive.'''
-    assert test.equal(dataset, dataset)
+    '''Test that :class:`~.TestEqual` is reflexive.'''
+    assert test.TestEqual("equal", "dataset equality", dataset, dataset)
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(dataset=datasets())
 def test_approx_equal_if_same(dataset):
-    '''Test that :func:`~.approx_equal` is reflexive.'''
-    assert test.approx_equal(dataset, dataset)
+    '''Test that :class:`~.TestApproxEqual` is reflexive.'''
+    assert test.TestApproxEqual("approx_equal", "dataset approx equality",
+                                dataset, dataset)
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(perturbed_its=perturbed_datasets())
 def test_approx_equal_if_perturbed(perturbed_its):
-    '''Test that perturbed datasets are :func:`~.approx_equal`.'''
-    assert test.approx_equal(*perturbed_its)
+    '''Test that perturbed datasets are :class:`~.TestApproxEqual`.'''
+    assert test.TestApproxEqual("approx_equal", "dataset approx equality",
+                                *perturbed_its)
 
 
 @given(dataset=datasets())
 def test_equal_bins_raises(dataset):
-    '''Check that :func:`~.equal` raises on incompatible coordinates.'''
+    '''Check that :class:`~.TestEqual` raises on incompatible coordinates.'''
     modified = dataset.copy()
     new_bins = {k: (b+1.0)*1.1 for k, b in modified.bins.items()}
     modified.bins = new_bins
     note('dataset.bins: {}'.format(dataset.bins))
     note('modified.bins: {}'.format(modified.bins))
+    thetest = test.TestEqual("equal", "dataset equality", dataset, modified)
     with pytest.raises(ValueError):
-        bool(test.equal(dataset, modified))  # force conversion to bool
+        thetest.evaluate()
 
 
 @given(dataset=datasets())
 def test_approx_equal_bins_raises(dataset):
-    '''Test that :func:`~.approx_equal` raises on incompatible coordinates.'''
+    '''Test that :class:`~.TestApproxEqual` raises on incompatible coordinates.
+    '''
     modified = dataset.copy()
     new_bins = {k: (b+1.0)*1.1 for k, b in modified.bins.items()}
     modified.bins = new_bins
     note('dataset.bins: {}'.format(dataset.bins))
     note('modified.bins: {}'.format(modified.bins))
+    thetest = test.TestApproxEqual("approx_equal", "dataset approx equality",
+                                   dataset, modified)
     with pytest.raises(ValueError):
-        bool(test.approx_equal(dataset, modified))  # force conversion to bool
+        thetest.evaluate()
 
 
 @given(dataset=datasets())
 def test_not_equal_data(dataset):
-    '''Test that datasets with different data are not :func:`~.equal`.'''
+    '''Test that datasets with different data are not :class:`~.TestEqual`.'''
     modified = dataset.copy()
     modified.value += 1.0
     modified.value *= 1.1
     note('dataset.value: {}'.format(dataset.value))
     note('modified.value: {}'.format(modified.value))
-    assert not test.equal(dataset, modified)
+    thetest = test.TestEqual("equal", "dataset equality", dataset, modified)
+    thetest_res = thetest.evaluate()
+    assert not bool(thetest_res)
 
 
 @given(dataset=datasets())
 def test_not_approx_equal_data(dataset):
     '''Test that datasets with different data are not
-    :func:`~.approx_equal`.'''
+    :class:`~.TestApproxEqual`.'''
     modified = dataset.copy()
     modified.value += 1.0
     modified.value *= 1.1
     note('dataset.value: {}'.format(dataset.value))
     note('modified.value: {}'.format(modified.value))
-    assert not test.equal(dataset, modified)
+    thetest = test.TestEqual("equal", "dataset equality", dataset, modified)
+    thetest_res = thetest.evaluate()
+    assert not bool(thetest_res)
