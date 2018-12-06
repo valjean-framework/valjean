@@ -165,12 +165,13 @@ intersphinx_mapping = {
     'sphinx': ('https://www.sphinx-doc.org/en/stable/', None),
     'pytest': ('https://docs.pytest.org/en/latest/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'hypothesis': ('https://hypothesis.readthedocs.io/en/latest/', None),
     'virtualenvwrapper': (
         ('https://virtualenvwrapper.readthedocs.io/en/latest/', None)),
     'setuptools': ('https://setuptools.readthedocs.io/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None),
-    'py': ('https://py.readthedocs.io/en/latest/', None) }
+    'py': ('https://py.readthedocs.io/en/latest/', None)}
 
 # -- doctest options ------------------------------------------------------
 

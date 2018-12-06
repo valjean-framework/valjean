@@ -4,7 +4,7 @@ This module provides χ²-test (based on Pearson χ²) to compare dataset. One o
 them is considered as reference.
 
 General test
-````````````
+------------
 
 The general formula to calculate the Pearson's χ² between an observed
 distribution and its theoretical distribution is:
@@ -22,8 +22,8 @@ This χ² can also be seen as:
     \chi^2_{obs} = \sum_{i=1}^p\frac{(O_i - E_i)^2}{E_i}
 
 where :math:`E_i` can be data, another distribution obtained from another
-method, a previous version (for example in non-regression case) and :math:O_i:
-the distribution to test.
+method, a previous version (for example in non-regression case) and
+:math:`O_i`: the distribution to test.
 
 
 Distributions / histograms comparison
@@ -89,62 +89,85 @@ Possible biases can come from wrong estimation of uncertainties
 should be taken into account).
 
 
-Demonstration of the test
-`````````````````````````
+Code implementation
+```````````````````
 
-Let's start with 2 Gaussian distributions of mean 5 and width 2. They are
-randomly filled with 10000 values for both of them, thus we can directly use
-the random distribution without further normalidation. They are both
-represented as histograms with same number of bins (else we could not compare
-the datasets). We consider error as the statistical error, i.e.
-:math:`\sqrt{N_i}`, :math:`N_i` being the number of random number falled in the
-bin :math:`i`.
+Like in the Student case, module :mod:`.student`, **SciPy** is used to
+calculate the p-value. The distribution called is :obj:`scipy.stats.chi2`,
+named ``schi2`` in the code to avoid same name for different objects. The
+p-value is obtained with the ``sf`` method. It is directly compared with the
+significance level required by the user.
 
-In that case we expect close distributions so a positive χ² test result.
 
-# >>> import numpy as np
-# >>> from collections import OrderedDict
-# >>> from valjean.gavroche.dataset import Dataset
-# >>> from valjean.gavroche.stat_tests.chi2 import chi2_hypothesis_test
-# >>> gauss1 = np.random.normal(5, 2, 10000)
-# >>> gauss2 = np.random.normal(5, 2, 10000)
-# >>> hg1, bins = np.histogram(gauss1, bins=100, range=(-5, 15))
-# >>> hg2, binsb = np.histogram(gauss2, bins=100, range=(-5, 15))
-# >>> dsbins = OrderedDict([('b', bins)])
-# >>> ds1 = Dataset(hg1, np.sqrt(hg1), bins=dsbins)
-# >>> ds2 = Dataset(hg2, np.sqrt(hg2), bins=dsbins)
-# >>> chi2_test = chi2_hypothesis_test(ds1, ds2)
-# >>> chi2_res = chi2_test.evaluate()
-# >>> bool(chi2_res)
-# True
-# >>> np.isclose(chi2_res.chi2, chi2_res.ndf, rtol=0.5)
-# True
-# >>> np.fabs(chi2_res.chi2_per_ndf - 1) < 0.5
-# True
-# >>> chi2_res.pvalue > 0.05
-# True
+Examples of the test
+````````````````````
 
-.. todo::
+Let's consider a spectrum of 5 bins with their error and apply the χ² test.
 
-    Test à changer : ça ne converge pas assez bien, impression des résultats
-    serait plus intéressante...
-
+Default test
+^^^^^^^^^^^^
 
 >>> from valjean.gavroche.dataset import Dataset
->>> from valjean.gavroche.stat_tests.student import TestStudent
+>>> from valjean.gavroche.stat_tests.chi2 import TestChi2
 >>> import numpy as np
->>> ds3 = Dataset(np.array([5.2, 5.3, 5.25, 5.4, 5.5]),
+>>> ds1 = Dataset(np.array([5.2, 5.3, 5.25, 5.4, 5.5]),
 ...               np.array([0.2, 0.25, 0.1, 0.2, 0.3]))
->>> ds4 = Dataset(np.array([5.1, 5.6, 5.2, 5.3, 5.2]),
+>>> ds2 = Dataset(np.array([5.1, 5.6, 5.2, 5.3, 5.2]),
 ...               np.array([0.1, 0.3, 0.05, 0.4, 0.3]))
->>> tchi2 = TestChi2("comp", "Comparison using Chi2 test", ds3, ds4, 0.05)
+>>> tchi2 = TestChi2("comp", "Comparison using Chi2 test", ds1, ds2, 0.05)
 >>> tchi2_res = tchi2.evaluate()
 >>> np.isclose(tchi2_res.chi2_per_ndf, 0.3080328)
 True
 >>> bool(tchi2_res)
 True
->>> np.isclose(tchi2_res.pvalue, 0.905, rtol=1e-2)
+>>> np.isclose(tchi2_res.pvalue, 0.9083889)
 True
+
+
+Test with empty bins
+^^^^^^^^^^^^^^^^^^^^
+
+One "empty bin" at the same position in the 2 compared datasets prevents the
+test to work. An empty bin being defined as a bin with zero-error (so
+containing no data). In Tripoli-4 a zero-error can happen for example when only
+one batch has been run, no variance can be calculated in that case (``n-1``
+used with ``n`` the number of batches).
+
+>>> ds3 = Dataset(np.array([5.2, 5.3, 5.25, 5.4, 5.5]),
+...               np.array([0.2, 0.25, 0., 0.2, 0.3]))
+>>> ds4 = Dataset(np.array([5.1, 5.6, 5.2, 5.3, 5.2]),
+...               np.array([0.1, 0.3, 0., 0.4, 0.3]))
+>>> tchi2 = TestChi2("comp", "Comparison using Chi2 test", ds3, ds4, 0.05)
+>>> tchi2_res = tchi2.evaluate()
+>>> tchi2_res.chi2
+inf
+>>> bool(tchi2_res)
+False
+
+If the values are also at zero, we get a ``nan`` instead of an ``inf``.
+
+To get a χ² evaluation based on the non-empty bins, use the ``with_empty``
+argument of the :class:`TestChi2`. It recalculates the number of degrees of
+freedom removing the empty bins and only use the non-zero ones in the χ²
+calculation.
+
+>>> tchi2 = TestChi2("comp", "Comparison using Chi2 test",
+...                  ds3, ds4, 0.05, with_empty=True)
+>>> tchi2_res = tchi2.evaluate()
+>>> np.isclose(tchi2_res.chi2, 1.3401639)
+True
+>>> tchi2_res.test.ndf == 4
+True
+>>> tchi2_res.test.dstest.value.size == 5
+True
+>>> np.isclose(tchi2_res.chi2_per_ndf, 0.33504098)
+True
+>>> bool(tchi2_res)
+True
+
+.. note::
+
+    A RuntimeWarning is emitted if zero bins are used during calculation.
 
 
 .. rubric:: Footnotes
@@ -169,6 +192,7 @@ True
 
 '''
 import numpy as np
+from scipy.stats import chi2 as schi2
 from ..test import Test, TestResult, check_bins
 
 
@@ -180,23 +204,29 @@ class TestResultChi2(TestResult):
 
         :param test: the used χ² test
         :type test: :class:`~.TestChi2`
-        :param chi2: χ² value (float :obj:`numpy.generic`)
-        :type chi2: :obj:`numpy.generic`
+        :param chi2: χ² value
+        :type chi2: :obj:`numpy.generic` (:obj:`float`)
         :param pvalue: p-value of the test
-        :type pvalue: :obj:`numpy.generic` (float)
+        :type pvalue: :obj:`numpy.generic` (:obj:`float`)
         '''
         super().__init__(test)
         self.chi2 = chi2
         self.pvalue = pvalue
 
     def __bool__(self):
-        if self.pvalue > self.test.tol:
+        if self.pvalue > self.test.significance_level:
             return True
         return False
 
     @property
     def chi2_per_ndf(self):
-        '''Calculate the χ² per number of degrees of freedom.'''
+        '''Calculate the χ² per number of degrees of freedom.
+
+        :returns: χ²/ndf
+        :rtype: float
+
+        No parenthesis needed: this is a property.
+        '''
         return self.chi2 / self.test.ndf
 
 
@@ -204,8 +234,8 @@ class TestChi2(Test):
     '''Test class for χ², inheritate from :class:`~valjean.gavroche.test.Test`.
     '''
 
-    def __init__(self, name, description, dstest, dsref, tol,
-                 with_empty=False):
+    def __init__(self, name, description, dstest, dsref,
+                 significance_level=0.01, *, with_empty=False):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`TestChi2`
 
@@ -215,18 +245,28 @@ class TestChi2(Test):
         :type dstest: :class:`~valjean.gavroche.dataset.Dataset`
         :param dsref: dataset used as reference
         :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
-        :param float tol: probability to accept of not the test (pvalue is
-                          expected greater)
+        :param float significance_level: probability to accept of not the test
+                                         (pvalue is expected greater)
         :param bool with_empty: if the array contains zero bins, the test can
                                 done not considering them if this option is
                                 True, else it will probably fail as the array
                                 to sum will contain infinite terms, default is
                                 ``False``.
+
+        Two additional attributes are defined during the initialization of the
+        :class:`TestChi2`:
+
+        :param int ndf: number of degrees of freedom (:obj:`numpy.generic`)
+        :param nonzero_bins: flags to identify zero bins, True if nonzero (so
+                             to be taken into account in calculations, False if
+                             zero)
+        :type nonzero_bins: :obj:`numpy.ndarray` (:obj:`bool`)
         '''
         self.dstest = dstest
         self.dsref = dsref
-        self.tol = tol
+        self.significance_level = significance_level
         self.with_empty = with_empty
+        self.ndf, self.nonzero_bins = self.set_ndf()
         super().__init__(name, description, self._build_type())
 
     def _build_type(self):
@@ -235,38 +275,37 @@ class TestChi2(Test):
             def_type += " removing empty bins in calculation"
         return def_type
 
-    @property
-    def ndf(self):
+    def set_ndf(self):
         '''Calculate number of degrees of freedom.
 
         It is the size of each dataset (normally the same!) minus the number
         of bins with zero error in both datasets (so
-        :math:`err_i^{test} + err_i^{ref}` = 0).
+        :math:`err_i^{test} + err_i^{ref}` = 0). The zero bins are also
+        identified and stored in ``nonzero_bins``: ``True`` for nonzero, else
+        ``False``. This :obj:`numpy.ndarray` is used in the χ² test
+        calculation.
 
-        .. todo::
-
-            change default definition...
-
-        :returns: :obj:`numpy.generic` (int)
+        :returns: :obj:`numpy.generic` (:obj:`int`)
         '''
         if self.with_empty:
-            return np.count_nonzero(self.dstest.error + self.dsref.error)
-        return self.dstest.value.size
+            return (np.count_nonzero(self.dstest.error + self.dsref.error),
+                    np.where((self.dstest.error + self.dsref.error) > 0))
+        return self.dstest.value.size, np.array([True]*self.dstest.value.size)
 
     def pvalue(self, chi2):
         '''Calculation of the p-value of the test.
 
         :param chi2: calculatd χ²
-        :type chi2: :obj:`numpy.generic` (float)
+        :type chi2: :obj:`numpy.generic` (:obj:`float`)
+        :returns: :obj:`numpy.generic` (:obj:`float`)
         '''
-        chi2_pdf = np.random.chisquare(self.ndf, 10000)
-        pvalue = np.sum(chi2_pdf < chi2) / chi2_pdf.size
-        return 1 - pvalue
+        return schi2.sf(chi2, self.ndf)
 
     def chi2_test(self):
         r'''Compute the χ² value for the given datasets.
 
-        :returns: χ² value (float :obj:`numpy.generic`)
+        :returns: χ² value
+        :rtype: :obj:`numpy.generic` (:obj:`float`)
 
         Implementation corresponds to the weighted case.
 
@@ -278,19 +317,16 @@ class TestChi2(Test):
         degrees of freedom is consequently reduced by the number of bins of
         zero error.
         '''
-        denom = self.dstest.error**2 + self.dsref.error**2
-        num = (self.dstest.value - self.dsref.value)**2
-        # print(num, " ", denom)
+        denom = (self.dstest.error**2 + self.dsref.error**2)[self.nonzero_bins]
+        num = ((self.dstest.value - self.dsref.value)**2)[self.nonzero_bins]
         # not possible as pow not defined for datasets
         # square_diff = (self.dstest - self.dsref)**2
-        # print(square_diff)
-        res = np.sum((num/denom)[np.where(denom > 0)])
-        return res
+        return np.sum(num/denom)
 
     def evaluate(self):
         '''Evaluate χ² test method.
 
-        :returns: :class:`~.TestResultChi2`
+        :rtype: :class:`~.TestResultChi2`
         '''
         check_bins(self.dstest, self.dsref)
         chi2 = self.chi2_test()
