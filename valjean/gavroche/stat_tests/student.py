@@ -143,6 +143,10 @@ All calculation are done for a two-sided distribution, this is why we test
 :math:`|\Delta|` instead of :math:`\Delta` and why we use :math:`\alpha/2`
 instead of :math:`\alpha` to get the threshold.
 
+The methods where the test is really applied are static methods, they can be
+used outside of the :class:`TestStudent` class. Examples will only be shown
+inside this class, as this is the more expected behaviour.
+
 
 Examples
 ````````
@@ -352,7 +356,8 @@ class TestStudent(Test):
         self.ds2 = ds2
         self.significance_level = significance_level
         self.pvalue_ndf = pvalue_ndf
-        self.threshold = self.student_threshold()
+        self.threshold = self.student_threshold(self.significance_level,
+                                                self.pvalue_ndf)
         super().__init__(name, description, self._build_type())
 
     def _build_type(self):
@@ -368,36 +373,51 @@ class TestStudent(Test):
         :returns: :class:`~.TestResultStudent`
         '''
         check_bins(self.ds1, self.ds2)
-        deltas = self.student_test()
+        deltas = self.student_test(self.ds1, self.ds2)
         if self.pvalue_ndf:
-            pval = self.pvalue(deltas)
+            pval = self.pvalue(deltas, self.pvalue_ndf)
             return TestResultStudent(self, deltas, pval)
         return TestResultStudent(self, deltas)
 
-    def student_test(self):
+    @staticmethod
+    def student_test(ds1, ds2):
         '''Compute Student test or Student distribution for the given
-        datasets.
+        datasets (**static method**).
 
+        :param ds1: dataset 1
+        :type ds1: :class:`~valjean.gavroche.dataset.Dataset`
+        :param ds2: dataset 2
+        :type ds2: :class:`~valjean.gavroche.dataset.Dataset`
         :returns: :obj:`numpy.generic` or :obj:`numpy.ndarray` depending on
                   :class:`~valjean.gavroche.dataset.Dataset` type
         '''
-        diff = self.ds1 - self.ds2
+        diff = ds1 - ds2
         return diff.value / diff.error
 
-    def pvalue(self, delta):
-        '''Calculation of the pvalue.
+    @staticmethod
+    def pvalue(delta, ndf):
+        '''Calculation of the pvalue (**static method**).
 
-        This might be a bit long for each test...
-
-        .. note::
-
-            One bad point: this function can return a list or a float (numpy
-            float)
+        :param delta: Δ (Student test variable)
+        :type delta: :obj:`numpy.generic` (:obj:`float`) or
+                     :obj:`numpy.ndarray` (:obj:`float`)
+        :param ndf: number of degrees of freedom
+        :type ndf: int or :obj:`numpy.generic` (:obj:`int`)
+        :returns: :obj:`numpy.generic` (:obj:`float`) or
+                  :obj:`numpy.ndarray` (:obj:`float`)
         '''
-        return t.sf(np.fabs(delta), self.pvalue_ndf)
+        return t.sf(np.fabs(delta), ndf)
 
-    def student_threshold(self):
-        '''Get threshold from probability.
+    @staticmethod
+    def student_threshold(significance_level, ndf=None):
+        '''Get threshold from probability (**static method**).
+
+        :param significance_level: required significance level (α)
+        :type significance_level: float or :obj:`numpy.generic` (:obj:`float`)
+        :param ndf: number of degrees of freedom
+        :type ndf: int or :obj:`numpy.generic` (:obj:`int`), default is
+                   ``None``
+        :returns: :obj:`numpy.generic` (:obj:`float`)
 
         Threshold considered is the 2-sided one, so probability has to be
         decrease by half its value (1 half per side) and only the
@@ -413,6 +433,6 @@ class TestStudent(Test):
         as the Student distribution tends to a normal one when the number of
         degrees of freedom is big, we use the normal distribution instead.
         '''
-        if self.pvalue_ndf:
-            return np.fabs(t.ppf(self.significance_level/2, self.pvalue_ndf))
-        return np.fabs(norm.ppf(self.significance_level/2))
+        if ndf:
+            return np.fabs(t.ppf(significance_level/2, ndf))
+        return np.fabs(norm.ppf(significance_level/2))

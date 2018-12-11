@@ -98,6 +98,11 @@ named ``schi2`` in the code to avoid same name for different objects. The
 p-value is obtained with the ``sf`` method. It is directly compared with the
 significance level required by the user.
 
+The methods where the test is really applied are static methods, they can be
+used outside of the :class:`TestChi2` class. Examples will only be shown
+inside this class, as this is the more expected behaviour.
+
+
 
 Examples of the test
 ````````````````````
@@ -292,18 +297,32 @@ class TestChi2(Test):
                     np.where((self.dstest.error + self.dsref.error) > 0))
         return self.dstest.value.size, np.array([True]*self.dstest.value.size)
 
-    def pvalue(self, chi2):
-        '''Calculation of the p-value of the test.
+    @staticmethod
+    def pvalue(chi2, ndf):
+        '''Calculation of the p-value of the test (**static method**).
 
         :param chi2: calculatd χ²
         :type chi2: :obj:`numpy.generic` (:obj:`float`)
+        :param ndf: number of degrees of freedom (number of bins of the
+                    distribution)
+        :type ndf: int or :obj:`numpy.generic` (:obj:`int`)
         :returns: :obj:`numpy.generic` (:obj:`float`)
         '''
-        return schi2.sf(chi2, self.ndf)
+        return schi2.sf(chi2, ndf)
 
-    def chi2_test(self):
-        r'''Compute the χ² value for the given datasets.
+    @staticmethod
+    def chi2_test(dstest, dsref, nonzero_bins=None):
+        r'''Compute the χ² value for the given datasets (**static method**).
 
+        :param dstest: dataset to test
+        :type dstest: :class:`~valjean.gavroche.dataset.Dataset`
+        :param dsref: dataset used as reference
+        :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
+        :param nonzero_bins: optional argument, booleans array of the same size
+                             as ``dstest`` and ``dsref`` to identify zero bins
+                             and possibly avoid them (see below)
+        :type nonzero_bins: :obj:`numpy.ndarray` (:obj:`bool`) or ``None``
+                            (default)
         :returns: χ² value
         :rtype: :obj:`numpy.generic` (:obj:`float`)
 
@@ -317,8 +336,10 @@ class TestChi2(Test):
         degrees of freedom is consequently reduced by the number of bins of
         zero error.
         '''
-        denom = (self.dstest.error**2 + self.dsref.error**2)[self.nonzero_bins]
-        num = ((self.dstest.value - self.dsref.value)**2)[self.nonzero_bins]
+        if nonzero_bins is None:
+            nonzero_bins = np.array([True] * dstest.value.size)
+        denom = (dstest.error**2 + dsref.error**2)[nonzero_bins]
+        num = ((dstest.value - dsref.value)**2)[nonzero_bins]
         # not possible as pow not defined for datasets
         # square_diff = (self.dstest - self.dsref)**2
         return np.sum(num/denom)
@@ -329,6 +350,6 @@ class TestChi2(Test):
         :rtype: :class:`~.TestResultChi2`
         '''
         check_bins(self.dstest, self.dsref)
-        chi2 = self.chi2_test()
-        pvalue = self.pvalue(chi2)
+        chi2 = self.chi2_test(self.dstest, self.dsref, self.nonzero_bins)
+        pvalue = self.pvalue(chi2, self.ndf)
         return TestResultChi2(self, chi2, pvalue)

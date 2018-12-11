@@ -129,6 +129,10 @@ class Test(ABC):
         Expected to return a :class:`~.TestResult`.
         '''
 
+    # tell pytest that this class and derived classes should NOT be collected
+    # as tests
+    __test__ = False
+
 
 class TestResult(ABC):
     '''Generic class for comparison results.
@@ -147,6 +151,10 @@ class TestResult(ABC):
     @abstractmethod
     def __bool__(self):
         pass
+
+    # tell pytest that this class and derived classes should NOT be collected
+    # as tests
+    __test__ = False
 
 
 class TestResultEqual(TestResult):
