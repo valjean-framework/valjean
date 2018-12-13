@@ -84,10 +84,10 @@ significance level required by the user.
     :math:`\infty`.
 
     One option is proposed to remove these bins from the calculation,
-    ``with_empty``. The use if this option implies a reduction of the number of
-    degrees of freedom by the number of removed bins (ndf = # bins). It has to
-    be considered with caution, this does not make necessarly sense, depending
-    on the user case.
+    ``ignore_empty``. The use of this option implies a reduction of the number
+    of degrees of freedom by the number of removed bins (ndf = # bins). It has
+    to be considered with caution, this does not make necessarly sense,
+    depending on the user case.
 
     Another option is to apply some rebinning in order to have no empty bins
     (what usually means re-running to get consistent uncertainties).
@@ -146,7 +146,7 @@ False
 
 If the values are also at zero, we get a ``nan`` instead of an ``inf``.
 
-To get a χ² evaluation based on the non-empty bins, use the ``with_empty``
+To get a χ² evaluation based on the non-empty bins, use the ``ignore_empty``
 argument of the :class:`TestChi2`. It recalculates the number of degrees of
 freedom removing the empty bins and only use the non-zero ones in the χ²
 calculation.
@@ -158,7 +158,7 @@ calculation.
 1.3401639
 >>> tchi2_res.test.ndf
 4
->>> tchi2_res.test.dstest.size
+>>> tchi2_res.test.ds1.size
 5
 >>> print(np.array2string(tchi2_res.test.nonzero_bins))
 [ True  True False  True  True]
@@ -206,7 +206,7 @@ And when we have at least one empty bin, using the ``ignore_empty`` argument:
 5.3401639
 >>> tchi2_res.test.ndf
 5
->>> tchi2_res.test.dstest.size
+>>> tchi2_res.test.ds1.size
 6
 >>> print(np.array2string(tchi2_res.test.nonzero_bins))
 [[ True  True False]
@@ -285,17 +285,17 @@ class TestChi2(Test):
     '''Test class for χ², inheritate from :class:`~valjean.gavroche.test.Test`.
     '''
 
-    def __init__(self, dstest, dsref, *, name, description='', alpha=0.01,
+    def __init__(self, ds1, ds2, *, name, description='', alpha=0.01,
                  ignore_empty=False):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`TestChi2`
 
         :param str name: local name of the test
         :param str description: specific description of the test
-        :param dstest: dataset to test
-        :type dstest: :class:`~valjean.gavroche.dataset.Dataset`
-        :param dsref: dataset used as reference
-        :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
+        :param ds1: first dataset
+        :type ds1: :class:`~valjean.gavroche.dataset.Dataset`
+        :param ds2: second dataset
+        :type ds2: :class:`~valjean.gavroche.dataset.Dataset`
         :param float alpha: probability to accept of not the test (p-value is
                             expected greater), i.e. significance level
         :param bool ignore_empty: if the array contains zero bins, the test can
@@ -304,8 +304,8 @@ class TestChi2(Test):
                                   array to sum will contain infinite terms.
                                   Default is ``False``.
         '''
-        self.dstest = dstest
-        self.dsref = dsref
+        self.ds1 = ds1
+        self.ds2 = ds2
         self.alpha = alpha
         self.ignore_empty = ignore_empty
         #: nonzero bins identification by True, False if zero
@@ -327,8 +327,8 @@ class TestChi2(Test):
         :returns: :obj:`numpy.ndarray` (:obj:`bool`)
         '''
         if self.ignore_empty:
-            return np.logical_or(self.dstest.error > 0, self.dsref.error > 0)
-        return np.full_like(self.dstest.value, True, dtype=bool)
+            return np.logical_or(self.ds1.error > 0, self.ds2.error > 0)
+        return np.full_like(self.ds1.value, True, dtype=bool)
 
     @staticmethod
     def pvalue(chi2, ndf):
@@ -343,16 +343,16 @@ class TestChi2(Test):
         return schi2.sf(chi2, ndf)
 
     @staticmethod
-    def chi2_test(dstest, dsref, nonzero_bins=None):
+    def chi2_test(ds1, ds2, nonzero_bins=None):
         r'''Compute the χ² value for the given datasets.
 
-        :param dstest: dataset to test
-        :type dstest: :class:`~valjean.gavroche.dataset.Dataset`
-        :param dsref: dataset used as reference
-        :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
+        :param ds1: first dataset
+        :type ds1: :class:`~valjean.gavroche.dataset.Dataset`
+        :param ds2: second dataset
+        :type ds2: :class:`~valjean.gavroche.dataset.Dataset`
         :param nonzero_bins: optional argument, booleans array of the same size
-                             as ``dstest`` and ``dsref`` to identify zero bins
-                             and possibly avoid them (see below)
+                             as ``ds1`` and ``ds2`` to identify zero bins and
+                             possibly avoid them (see below)
         :type nonzero_bins: :obj:`numpy.ndarray` (:obj:`bool`) or ``None``
                             (default)
         :returns: χ² value
@@ -366,7 +366,7 @@ class TestChi2(Test):
         consequence: the number of degrees of freedom is consequently reduced
         by the number of bins removed.
         '''
-        diff = dstest - dsref
+        diff = ds1 - ds2
         if nonzero_bins is None:
             return np.sum(((diff.value / diff.error)**2))
         return np.sum(((diff.value / diff.error)**2)[nonzero_bins])
@@ -376,6 +376,6 @@ class TestChi2(Test):
 
         :rtype: :class:`~.TestResultChi2`
         '''
-        chi2 = self.chi2_test(self.dstest, self.dsref, self.nonzero_bins)
+        chi2 = self.chi2_test(self.ds1, self.ds2, self.nonzero_bins)
         pvalue = self.pvalue(chi2, self.ndf)
         return TestResultChi2(self, chi2, pvalue)
