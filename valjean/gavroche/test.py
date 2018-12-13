@@ -205,7 +205,7 @@ class TestEqual(Test):
         return TestResultEqual(self, equal)
 
 
-class TestResultApproxEqual(TestResultEqual):
+class TestResultApproxEqual(TestResult):
     '''Result from :class:`TestApproxEqual`.'''
 
     def __init__(self, test, approx_equal):
@@ -213,10 +213,11 @@ class TestResultApproxEqual(TestResultEqual):
 
         :param test: the used test
         :type test: :class:`~.TestApproxEqual`
-        :param equal: result from the test
-        :type equal: :obj:`numpy.generic` if datasets are :obj:`numpy.generic`,
-                     :obj:`numpy.ndarray` if datasets are :obj:`numpy.ndarray`.
-                     In both cases ``dtype == bool``.
+        :param approx_equal: result from the test
+        :type approx_equal: :obj:`numpy.generic` if datasets are
+                            :obj:`numpy.generic`, :obj:`numpy.ndarray` if
+                            datasets are :obj:`numpy.ndarray`.
+                            In both cases ``dtype == bool``.
         '''
         super().__init__(test)
         self.approx_equal = approx_equal

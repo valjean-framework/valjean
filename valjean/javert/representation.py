@@ -52,17 +52,6 @@ class FullRepresentation(Representation):
         '''
         return self._repr_equal(result, 'equal?')
 
-    def repr_testresultapproxequal(self, result):
-        '''Represent the result of a :class:`~.TestApproxEqual` test.
-
-        :param  result: a test result.
-        :type result: :class:`~.TestResultApproxEqual`
-        :returns: The full representation of a
-                  :class:`~.TestResultApproxEqual`.
-        :rtype: list(:class:`~.TableItem`)
-        '''
-        return self._repr_equal(result, 'approx equal?')
-
     @staticmethod
     def _repr_equal(result, result_header):
         '''Shared worker function for equality tests.'''
@@ -74,10 +63,100 @@ class FullRepresentation(Representation):
                                headers=['reference', 'dataset', result_header])
         return [table_item]
 
-    def repr_testresultstudent(self, result):
-        '''Represent a :class:`~.TestResultStudent`.'''
-        raise NotImplementedError()
+    def repr_testresultapproxequal(self, result):
+        '''Represent the result of a :class:`~.TestApproxEqual` test.
 
+        :param  result: a test result.
+        :type result: :class:`~.TestResultApproxEqual`
+        :returns: The full representation of a
+                  :class:`~.TestResultApproxEqual`.
+        :rtype: list(:class:`~.TableItem`)
+        '''
+        return self._repr_approx_equal(result, 'approx equal?')
+
+    @staticmethod
+    def _repr_approx_equal(result, result_header):
+        '''Shared worker function for equality tests.'''
+        LOGGER.debug('shape of the result: %s', result.approx_equal.shape)
+        table_item = TableItem(result.test.dataset1.value,
+                               result.test.dataset2.value,
+                               result.approx_equal,
+                               highlight=lambda _v1, _v2, eq: not eq,
+                               headers=['reference', 'dataset', result_header])
+        return [table_item]
+
+    def repr_testresultstudent(self, result):
+        '''Represent the result of a :class:`~.TestStudent` test.
+
+        :param  result: a test result.
+        :type result: :class:`~.TestResultStudent`
+        :returns: The full representation of a
+                  :class:`~.TestResultStudent`.
+        :rtype: list(:class:`~.TableItem`)
+        '''
+        return self._repr_student(result, 'student?')
+
+    @staticmethod
+    def _repr_student(result, result_header):
+        '''Shared worker function for Student tests.'''
+        table_item = TableItem(
+            result.test.ds1.value, result.test.ds1.error,
+            result.test.ds2.value, result.test.ds2.error,
+            result.delta, result.bool_array(),
+            highlight=lambda _v1, _e1, _v2, _e2, _delta, eq: not eq,
+            headers=['v1', 'σ1', 'v2', 'σ2', 'Δ', result_header])
+        return table_item
+
+    def repr_testresultbonferroni(self, result):
+        '''Represent the result of a :class:`~.TestBonferroni` test.
+
+        :param  result: a test result.
+        :type result: :class:`~.TestResultBonferroni`
+        :returns: The full representation of a
+                  :class:`~.TestResultBonferroni`.
+        :rtype: list(:class:`~.TableItem`)
+        '''
+        return self._repr_bonferroni(result, 'bonferroni?')
+
+    @staticmethod
+    def _repr_bonferroni(result, result_header):
+        '''Shared worker function for Bonferroni tests.'''
+        table_item = TableItem(
+            [result.first_test_res.test.name],
+            [result.test.ntests],
+            [result.test.alpha],
+            [min(result.first_test_res.pvalue)],
+            [bool(result)],
+            highlight=lambda _t, _ndf, _sl, _min, rnh: not rnh,
+            headers=['test', 'ndf', 'α', 'min(p-value)', result_header])
+        return table_item
+
+    def repr_testresultholmbonferroni(self, result):
+        '''Represent the result of a :class:`~.TestHolmBonferroni` test.
+
+        :param  result: a test result.
+        :type result: :class:`~.TestResultHolmBonferroni`
+        :returns: The full representation of a
+                  :class:`~.TestResultHolmBonferroni`.
+        :rtype: list(:class:`~.TableItem`)
+        '''
+        return self._repr_holm_bonferroni(result, 'holm-bonferroni?')
+
+    @staticmethod
+    def _repr_holm_bonferroni(result, result_header):
+        '''Shared worker function for Holm-Bonferroni tests.'''
+        table_item = TableItem(
+            [result.first_test_res.test.name],
+            [result.test.ntests],
+            [result.test.alpha],
+            [min(result.first_test_res.pvalue)],
+            [result.alphas_i[0]],
+            [result.nb_rejected],
+            [bool(result)],
+            highlight=lambda _t, _ndf, _sl, _min, _malp, _rej, rnh: not rnh,
+            headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
+                     'N rejected', result_header])
+        return table_item
 
 class EmptyRepresentation(Representation):
     '''Class that does not generate any items for any test result.'''

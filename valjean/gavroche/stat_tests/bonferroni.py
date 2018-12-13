@@ -318,8 +318,6 @@ class TestResultBonferroni(TestResult):
 
         :returns: int or :obj:`numpy.generic` (:obj:`int`)
         '''
-        # if self.rejected_null_hyp[-1]:
-        #     return len(self.rejected_null_hyp)
         return np.count_nonzero(self.rejected_null_hyp)
 
     @property
@@ -463,6 +461,12 @@ class TestHolmBonferroni(Test):
         super().__init__(name=name, description=description)
         self.test = test
         self.alpha = alpha / 2
+
+    @property
+    def ntests(self):
+        '''Returns the number of hypotheses to test, i.e. number of bins here.
+        '''
+        return self.test.ds1.size
 
     @staticmethod
     def holm_bonferroni_method(pvalues, alpha):

@@ -85,6 +85,7 @@ class RstFormatter(Formatter):
         :returns: the reST table.
         :rtype: str
         '''
+        print("ON EST DANS format_tableitem")
         return str(RstTable(table))
 
 
@@ -114,6 +115,8 @@ class RstTable:
         highlights = self.gen_mask(self.table.highlight, columns)
         rows = list(self.format_rows(self.transpose(columns), highlights,
                                      self.num_fmt))
+        # rows = list(self.format_rows(columns, highlights, self.num_fmt))
+        print("rows =", rows)
         return self.tabularize(self.table.headers, rows)
 
     @classmethod
@@ -265,7 +268,7 @@ class RstTable:
             except AttributeError:
                 return str(val)
             if type_ in (np.bool, np.bool_, np.int, np.integer, np.int32,
-                         np.int64):
+                         np.int64, np.str_):
                 return str(val)
             return num_fmt.format(val)
         for row, high in zip(rows, highlights):

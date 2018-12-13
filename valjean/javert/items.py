@@ -13,7 +13,8 @@ class TableItem:
     '''A container class that encapsulates all the necessary information to
     represent a table.'''
 
-    def __init__(self, *columns, headers=None, units=None, highlight=None):
+    def __init__(self, *columns, headers=None, units=None,
+                 highlight=lambda *args: False):
         '''Construct a table from a set of columns. The columns must be
         :class:`numpy.ndarray` objects, and they must all contain the same
         number of elements (same array *size*).
@@ -37,11 +38,17 @@ class TableItem:
         :param list(str) units: a list of measurement units.
         :param highlight: a callable of the form `f(*row) -> bool`.
         '''
+        print(columns, type(columns))
         self.columns = columns
         n_columns = len(columns)
         self.headers = ['']*n_columns if headers is None else headers
         self.units = ['']*n_columns if units is None else units
         self.highlight = highlight
+
+        print(self.columns, id(self.columns))
+        print(self.columns[0], id(self.columns[0]))
+        print(len(columns))
+        print(len(headers), id(self.headers))
 
         # some sanity checks follow
         if not columns:
@@ -58,14 +65,50 @@ class TableItem:
             raise ValueError(err)
 
         for i, col in enumerate(self.columns):
-            if not isinstance(col, np.ndarray):
-                raise TypeError('table columns must be Numpy arrays, not {}'
-                                .format(type(col)))
+            if not isinstance(col, (np.ndarray, list)):
+                raise TypeError('table columns must be lists or Numpy arrays, '
+                                'not {}'.format(type(col)))
 
+            col_size = col.size if isinstance(col, np.ndarray) else len(col)
             if i == 0:
-                n_elems = self.columns[0].size
-            elif col.size != n_elems:
+                n_elems = col_size
+            elif col_size != n_elems:
                 err = ('columns must have the same number of elements; '
                        'column 0 has size {}, but column {} has size {}'
-                       .format(n_elems, i, col.size))
+                       .format(n_elems, i, col_size))
                 raise ValueError(err)
+
+    def copy(self):
+        '''Copy a :class:`TableItem` object.
+
+        :returns: :class:`TableItem`
+
+        .. note:: the highlignt function is not really copied, it has the same
+            address as the self one. I don't know how to change that.
+        '''
+        return TableItem(*tuple(col.copy() for col in self.columns),
+                         headers=self.headers.copy(),
+                         units=self.units.copy(), highlight=self.highlight)
+
+    def __iadd__(self, other):
+        '''Implement ``+=`` operator.
+
+        :param other: :class:`TableItem` to add to the current one
+        :returns: updated :class:`TableItem`
+        '''
+        if self.headers != other.headers:
+            raise ValueError("TableItems to add should have same headers")
+        self.units = other.units if self.units is None else self.units
+        self.columns = tuple(self.columns[i] + other.columns[i]
+                             for i in range(len(self.columns)))
+        return self
+
+    def __add__(self, other):
+        '''Implement ``+`` operator.
+
+        :param other: :class:`TableItem` to add to the current one
+        :returns: new :class:`TableItem`
+        '''
+        copy = self.copy()
+        copy += other
+        return copy
