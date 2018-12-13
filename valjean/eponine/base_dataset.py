@@ -204,6 +204,12 @@ class BaseDataset:
         '''Return the data dimension, as a read-only property.'''
         return self.value.ndim
 
+    @property
+    def size(self):
+        '''Return the data size (total number of elements in the array), as a
+        read-only property.'''
+        return self.value.size
+
     def copy(self):
         '''Return a deep copy of `self`.'''
         new_bins = self.bins.copy()

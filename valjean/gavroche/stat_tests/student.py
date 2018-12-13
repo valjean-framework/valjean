@@ -2,17 +2,19 @@ r'''Statistic tests for datasets comparison.
 
 .. _scipy: https://docs.scipy.org/doc/scipy/reference/index.html
 
-This module provides calculation and results for the Student test.
+This module provides calculation and results for the Student's t-test.
 
 
-General Student test
-````````````````````
+General Student's t-test
+````````````````````````
 
 In this test, we consider 2 different datasets that can have different means
-and different variances. The main problematic is to test the mean equality
-knowing the variance. Student test is normally dedicated to equal variances.
-The current test might be closer to the Welch one, where variances can be
-different. Both have to follow a Student law.
+and different variances. The main problematic is to test the mean equality.
+Student's t-test is normally dedicated to equal (but unknown) variances, else
+the Welch test might be used (base on the same calculation but different
+hypothesis). For example, when the same quantity is determined by two different
+method, we use a Welch test as we cannot suppose equal variances. Both tests
+have to follow a Student law.
 
 The test formula is:
 
@@ -37,8 +39,8 @@ Simplifications by :math:`n_i-1` lead to:
     {\sqrt{\frac{\sigma_1^2}{n_1} + \frac{\sigma_2^2}{n_2}}}
 
 
-Student test implementation in MC case
-``````````````````````````````````````
+Student's t-test implementation in MC case
+``````````````````````````````````````````
 
 In Tripoli-4, like in most Monte Carlo codes, the σ that is calculated already
 includes :math:`n`, the number of batches as it measures the convergence of the
@@ -50,7 +52,7 @@ quantity is calculated thanks to
     \sigma^2 = \frac{1}{n-1}\sum_{i=1}^n(x_i - \bar{x})^2
 
 Then the variance of the mean is :math:`\frac{\sigma^2}{n}`, the quantity used
-in the Student test. This is why :math:`n` is not required in our test.
+in the Student's t-test. This is why :math:`n` is not required in our test.
 
 The formula used for the test is then:
 
@@ -66,7 +68,7 @@ equivalent to
 .. code::
 
     diff = dataset_1 - dataset_2
-    t_{Student} = \Delta = diff.value / diff.error
+    t(Student) = Δ = diff.value / diff.error
 
 as value is difference of values and error is equal to the quadratic sum of the
 errors.
@@ -75,18 +77,25 @@ errors.
 Test interpretation
 ```````````````````
 
+The tested hypothesis in the Student's t-test, i.e. the null hypothesis is:
+
+* equal means, so :math:`m_1 = m_2`
+* gaussian errors (or error following a normal distribution)
+* independent datasets.
+
 The test interpretation is based on the comparison of the p-value with a given
-probability, usually the first kind error probability or α-error. The p-value
-is defined by :math:`P(|X| \geq |\Delta|), :math:`X` being the Student
-distribution for :math:`N` degrees of freedom. The α-error is given by the
-user, ususally 1 % or 5 %. We thus test:
-:math:`P(|X| \geq |\Delta|) \leq \alpha`.
+significance level, usually the first kind error probability or α-error. The
+p-value is defined by :math:`P(|X| \geq |\Delta|)`, :math:`X` being the test
+statistic distribution (:math:`t`) for :math:`N` degrees of freedom. The
+α-error is given by the user, ususally 1 % or 5 %. We thus test:
+:math:`P(|X| \geq |\Delta|) \leq \alpha`. If this is the case the null
+hypothesis is rejected.
 
 To evaluate the test we thus need an estimation of the number of degrees of
-freedom, :math:`n_1 + n_2 -2` for the Student test. In most cases we do compare
-results obtained from the same number of batches, so :math:`n_1 = n_2`, but
-this is not the most important: we usually have :math:`n_i \geq 1000`. This is
-why we can consider :math:`n_i\rightarrow\infty` in the Student tables. Our
+freedom, :math:`n_1 + n_2 -2` for the Student's t-test. In most cases we do
+compare results obtained from the same number of batches, so :math:`n_1 = n_2`,
+but this is not the most important: we usually have :math:`n_i \geq 1000`. This
+is why we can consider :math:`n_i\rightarrow\infty` in the Student tables. Our
 results are then considered close to a normal distribution.
 
 In such case (and in many other) it looks easier to compare directly the value
@@ -111,16 +120,29 @@ and acceptance is the middle of the curve (see below). Results for N = |inf|
 come from the normal distribution.
 
 Using directly the threshold is not necessarly obvious, so the requirement is
-to choose a limit on the pvalue, so on α, the threshold is then automatically
+to choose a limit on the p-value, so on α, the threshold is then automatically
 calculated.
+
+
+.. note::
+
+    This test can also be used on histograms (spectrum, mesh): it will be
+    calculated per bin but it cannot be interpreted for the whole histogram, so
+    will raise an error. To use the bins individually a loop is needed, to get
+    an overall result a Bonferroni or a Holm-Bonferroni test can be applied
+    (see module bonferroni).
+
+.. todo::
+
+    Update link when Bonferroni method will be there...
 
 
 Code implementation
 ```````````````````
 
-The Student test variable is calculated for each set of given pair of datasets.
-It is per default compared to the threshold defined by a first kind error or
-α-error equal to 1 %, so, considering an infinite number of degrees (as it is
+The Student's t-test variable is calculated for each pair of datasets. It is
+per default compared to the threshold defined by a first kind error or α-error
+equal to 1 %, so, considering an infinite number of degrees (as it is
 usually at least 1000), a threshold around 2.576, obtained from the normal
 distribution (see :func:`TestStudent.student_threshold`).
 
@@ -159,28 +181,29 @@ Are these numbers in agreement ?
 >>> import numpy as np
 >>> ds1 = Dataset(np.float32(5.3), np.float32(0.2))
 >>> ds2 = Dataset(np.float32(5.25), np.float32(0.08))
->>> tstudent = TestStudent("comp", "Comparison using Student test", ds1, ds2)
+>>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
+...                        ds1, ds2)
 >>> tstudent_res = tstudent.evaluate()
->>> np.isclose(tstudent_res.delta, 0.23212)
-True
->>> np.isclose(tstudent_res.test.threshold, 2.5758293)
-True
+>>> print('{:.7f}'.format(tstudent_res.delta))
+0.2321201
+>>> print('{:.7f}'.format(tstudent_res.test.threshold))
+2.5758293
 >>> bool(tstudent_res)
 True
 
 To obtain the p-value, a number of degrees of freedom should be given:
 
->>> tstudent = TestStudent("comp", "Comparison using Student test",
+>>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
 ...                        ds1, ds2, pvalue_ndf=1000)
 >>> tstudent_res = tstudent.evaluate()
->>> np.isclose(tstudent_res.delta, 0.23212)
-True
->>> np.isclose(tstudent_res.test.threshold, 2.5807546)
-True
+>>> print('{:.7f}'.format(tstudent_res.delta))
+0.2321201
+>>> print('{:.7f}'.format(tstudent_res.test.threshold))
+2.5807547
 >>> bool(tstudent_res)
 True
->>> np.isclose(tstudent_res.pvalue, 0.408246)
-True
+>>> print('{:.7f}'.format(tstudent_res.pvalue))
+0.4082461
 >>> tstudent_res.test_pvalue()
 True
 
@@ -192,10 +215,11 @@ Let's define 2 small datasets containing arrays:
 ...               np.array([0.2, 0.25, 0.1, 0.2, 0.3]))
 >>> ds4 = Dataset(np.array([5.1, 5.6, 5.2, 5.3, 5.2]),
 ...               np.array([0.1, 0.3, 0.05, 0.4, 0.3]))
->>> tstudent = TestStudent("comp", "Comparison using Student test", ds3, ds4)
+>>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
+...                        ds3, ds4)
 >>> tstudent_res = tstudent.evaluate()
->>> tstudent_res.bool_list() == [True, True, True, True, True]
-True
+>>> tstudent_res.bool_list()
+[True, True, True, True, True]
 >>> bool(tstudent_res)
 False
 
@@ -204,55 +228,56 @@ no acceptance limits on the number of good and bad comparisons based on Student
 test.
 
 It is still possible to get bin to bin comparisons, including bad bins, based
-on Student test comparison:
+on Student's t-test comparison:
 
 >>> ds5 = Dataset(np.array([5.1, 5.9, 5.8, 5.3, 4.5]),
 ...               np.array([0.1, 0.1, 0.05, 0.4, 0.1]))
->>> tstudent = TestStudent("comp", "Comparison using Student test", ds3, ds5)
+>>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
+...                        ds3, ds5)
 >>> tstudent_res = tstudent.evaluate()
->>> np.isclose(tstudent_res.test.threshold, 2.5758293)
-True
->>> tstudent_res.bool_list() == [True, True, False, True, False]
-True
+>>> print('{:.7f}'.format(tstudent_res.test.threshold))
+2.5758293
+>>> tstudent_res.bool_list()
+[True, True, False, True, False]
 
 Like in float case it is possible to require the p-values. In both cases the
 probability can be changed via the ``significance_level`` argument, shown here
 in an array case:
 
->>> tstudent = TestStudent("comp", "Comparison using Student test",
+>>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
 ...                        ds3, ds5, significance_level=0.05, pvalue_ndf=1000)
 >>> tstudent_res = tstudent.evaluate()
->>> np.isclose(tstudent_res.test.threshold, 1.962339)
-True
->>> tstudent_res.bool_list() == [True, False, False, True, False]
-True
->>> np.isclose(tstudent_res.delta[1], -2.228344)
-True
+>>> print('{:.7f}'.format(tstudent_res.test.threshold))
+1.9623391
+>>> tstudent_res.bool_list()
+[True, False, False, True, False]
+>>> print('{:.7f}'.format(tstudent_res.delta[1]))
+-2.2283441
 
 This last value is in-between the thresholds at 1 % and 5 %, so accepted in the
 first case and rejected in the second one.
 
 Obtaining p-values and comparing them is also possible in the spectrum case:
 
->>> np.allclose(tstudent_res.pvalue,
-...             [3.27408846e-01, 1.30396405e-02, 5.07387548e-07,
-...              4.11554472e-01, 8.06276197e-04])
-True
->>> np.array_equal(tstudent_res.test_pvalue(),
-...                np.array([True, False, False, True, False]))
-True
+>>> np.array2string(tstudent_res.pvalue,
+...                 formatter={'float_kind':'{:.7e}'.format})
+'[3.2740885e-01 1.3039640e-02 5.0738755e-07 4.1155447e-01 8.0627620e-04]'
+>>> np.array2string(tstudent_res.test_pvalue())
+'[ True False False  True False]'
 
 Finally, an array of size 1 (and dimension 1), the test will do the same as for
 datasets containing :obj:`numpy.generic`:
 
 >>> ds6 = Dataset(np.array([5.3]), np.array([0.2]))
 >>> ds7 = Dataset(np.array([5.25]), np.array([0.08]))
->>> tstudent = TestStudent("comp", "Comparison using Student test", ds6, ds7)
+>>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
+...                        ds6, ds7)
 >>> tstudent_res = tstudent.evaluate()
->>> np.array_equal(np.isclose(tstudent_res.delta, 0.23212), np.array([True]))
-True
->>> np.isclose(tstudent_res.test.threshold, 2.5758293)
-True
+>>> np.array2string(tstudent_res.delta,
+...                 formatter={'float_kind':'{:.7f}'.format})
+'[0.2321192]'
+>>> print('{:.7f}'.format(tstudent_res.test.threshold))
+2.5758293
 >>> bool(tstudent_res)
 True
 
@@ -261,7 +286,8 @@ The format of the NumPy object stays the dataset one, expecially for the Δ.
 Like for usual operations on datasets, only tests between datasets of the same
 format are possible:
 
->>> tstudent = TestStudent("comp", "Comparison using Student test", ds1, ds7)
+>>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
+...                        ds1, ds7)
 >>> tstudent_res = tstudent.evaluate()
 Traceback (most recent call last):
     ...
@@ -273,16 +299,17 @@ from ..test import check_bins, Test, TestResult
 
 
 class TestResultStudent(TestResult):
-    '''Result from Student test.'''
+    '''Result from Student's t-test.'''
 
     def __init__(self, test, delta, pvalue=None):
         '''Initialisation of :class:`~.TestResultStudent`
 
-        :param test: the used Student test
+        :param test: the TestStudent object
         :type test: :class:`~.TestStudent`
-        :param delta: Student test result
+        :param delta: Student's t-test result
         :type delta: :obj:`numpy.ndarray`
-        :param pvalue: pvalue or pvalues depending on datasets, default is None
+        :param pvalue: p-value or p-values depending on datasets, default is
+                       None
         :type pvalue: :class:`numpy.generic` or list(:class:`numpy.generic`)
         '''
         super().__init__(test)
@@ -320,19 +347,20 @@ class TestResultStudent(TestResult):
     def test_pvalue(self):
         '''Result of the test by testing p-value.
 
-        The limit on accepted probability is divided by due to two-sided test.
+        The limit on accepted probability is divided by 2 due to two-sided
+        test.
 
         :returns: bool or :obj:`numpy.ndarray` of bool if ``pvalue_ndf`` was
                   given to :class:`TestStudent` and datasets are
                   :obj:`numpy.ndarray`
         '''
-        if self.test.pvalue_ndf:
-            return self.pvalue > self.test.significance_level/2
-        return False
+        if self.test.pvalue_ndf is None:
+            return False
+        return self.pvalue > self.test.significance_level/2
 
 
 class TestStudent(Test):
-    '''Internal class to build the Student test.'''
+    '''Class to build the Student's t-test.'''
 
     def __init__(self, name, description, ds1, ds2, significance_level=0.01,
                  pvalue_ndf=None):
@@ -345,12 +373,14 @@ class TestStudent(Test):
         :type ds1: :class:`~valjean.gavroche.dataset.Dataset`
         :param ds2: second dataset
         :type ds2: :class:`~valjean.gavroche.dataset.Dataset`
-        :param float significance_level: limit on the pvalue (expected values
+        :param float significance_level: limit on the p-value (expected values
                                          are typically 0.01, 0.05), default is
-                                         ``None``
+                                         ``0.01``
         :param int pvalue_ndf: default is ``None``, if given p-value will be
                                calculated for pvalue_ndf degrees of freedom
-                               (should correspond to number of batches)
+                               (should correspond to number of batches),
+                               otherwise ndf assumed infinite, normal
+                               approximation
         '''
         self.ds1 = ds1
         self.ds2 = ds2
@@ -361,27 +391,27 @@ class TestStudent(Test):
         super().__init__(name, description, self._build_type())
 
     def _build_type(self):
-        def_type = "Student test"
+        def_type = "Student's t-test"
         if self.pvalue_ndf:
-            def_type += (" with pvalue calculation for ndf = {}"
+            def_type += (" with p-value calculation for ndf = {}"
                          .format(self.pvalue_ndf))
         return def_type
 
     def evaluate(self):
-        '''Evaluate Student test method.
+        '''Evaluate Student's t-test method.
 
         :returns: :class:`~.TestResultStudent`
         '''
         check_bins(self.ds1, self.ds2)
         deltas = self.student_test(self.ds1, self.ds2)
-        if self.pvalue_ndf:
-            pval = self.pvalue(deltas, self.pvalue_ndf)
-            return TestResultStudent(self, deltas, pval)
-        return TestResultStudent(self, deltas)
+        if self.pvalue_ndf is None:
+            return TestResultStudent(self, deltas)
+        pval = self.pvalue(deltas, self.pvalue_ndf)
+        return TestResultStudent(self, deltas, pval)
 
     @staticmethod
     def student_test(ds1, ds2):
-        '''Compute Student test or Student distribution for the given
+        '''Compute Student's t-test or Student distribution for the given
         datasets (**static method**).
 
         :param ds1: dataset 1
@@ -396,9 +426,9 @@ class TestStudent(Test):
 
     @staticmethod
     def pvalue(delta, ndf):
-        '''Calculation of the pvalue (**static method**).
+        '''Calculation of the p-value (**static method**).
 
-        :param delta: Δ (Student test variable)
+        :param delta: Δ (Student's t-test variable)
         :type delta: :obj:`numpy.generic` (:obj:`float`) or
                      :obj:`numpy.ndarray` (:obj:`float`)
         :param ndf: number of degrees of freedom
@@ -406,6 +436,8 @@ class TestStudent(Test):
         :returns: :obj:`numpy.generic` (:obj:`float`) or
                   :obj:`numpy.ndarray` (:obj:`float`)
         '''
+        if ndf is None:
+            return norm.sf(np.fabs(delta))
         return t.sf(np.fabs(delta), ndf)
 
     @staticmethod
@@ -433,6 +465,6 @@ class TestStudent(Test):
         as the Student distribution tends to a normal one when the number of
         degrees of freedom is big, we use the normal distribution instead.
         '''
-        if ndf:
-            return np.fabs(t.ppf(significance_level/2, ndf))
-        return np.fabs(norm.ppf(significance_level/2))
+        if ndf is None:
+            return np.fabs(norm.ppf(significance_level/2))
+        return np.fabs(t.ppf(significance_level/2, ndf))

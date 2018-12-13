@@ -101,20 +101,21 @@ def check_bins(*datasets, rtol=1e-5, atol=1e-8):
 class Test(ABC):
     '''Generic class for comparing datasets.
 
-    Mum class to tests.
+    Base class for tests.
     '''
 
     def __init__(self, name, description, ttype=""):
         '''Initialize the :class:`~.Test` object with a name, a description of
         the test (can be long) and the test type (equality, Student, χ², etc.).
 
-        The test is called in the evaluate method that is abstract in the
-        parent class and should be present in all daughter classes.
+        The test is actually performed in the :meth:`evaluate` method, which is
+        abstract in the base class and must be implemented by sub-classes.
 
-        :param str name: name of the test (or name of the Tripoli-4 case for
-                         example)
-        :param str description: description of the test exepcted with context
-                                (typically introduction to the test in report)
+        :param str name: name of the test, this string will typically end up in
+                         the test report as a section name.
+        :param str description: description of the test exepcted with context,
+                                this string will typically end up in the test
+                                report.
         :param str ttype: generic type of the test, given by the Test class of
                           the chosen test
         '''
@@ -126,7 +127,7 @@ class Test(ABC):
     def evaluate(self):
         '''Evaluate the test on the given datasets.
 
-        Expected to return a :class:`~.TestResult`.
+        Must return a subclass of :class:`~.TestResult`.
         '''
 
     # tell pytest that this class and derived classes should NOT be collected
@@ -135,9 +136,9 @@ class Test(ABC):
 
 
 class TestResult(ABC):
-    '''Generic class for comparison results.
+    '''Base class for test results.
 
-    This result should be callable by :class:`~.Test` daughter classes.
+    This result should be filled by :class:`~.Test` daughter classes.
     '''
 
     def __init__(self, test):
@@ -168,22 +169,24 @@ class TestResultEqual(TestResult):
         :param equal: result from the test
         :type equal: :obj:`numpy.generic` if datasets are :obj:`numpy.generic`,
                      :obj:`numpy.ndarray` if datasets are :obj:`numpy.ndarray`.
-                     In both cases ``dtype = bool``.
+                     In both cases ``dtype == bool``.
         '''
         super().__init__(test)
         self.equal = equal
 
     def __bool__(self):
+        '''Return the result of the test: ``True`` or ``False`` or raises an
+        exception when it is not suitable.'''
         return bool(np.all(self.equal))
 
 
 class TestEqual(Test):
-    '''Test if the datasets are equal.'''
+    '''Test if the datasets values are equal. Errors are ignored.'''
 
     def __init__(self, name, description, dataset1, dataset2):
         '''Initialisation of :class:`~.TestEqual`:
 
-        :param str name: local name of the test
+        :param str name: name of the test (in analysis)
         :param str description: specific description of the test
         :param dataset1: first dataset
         :type dataset1: :class:`~.dataset.Dataset`
@@ -195,8 +198,7 @@ class TestEqual(Test):
         self.dataset2 = dataset2
 
     def evaluate(self):
-        '''Evaluation of :class:`~.TestEqual` using **NumPy** method on the
-        dataset values (no error considered).
+        '''Evaluation of :class:`~.TestEqual`.
 
         :returns: :class:`~.TestResultEqual`
         '''
@@ -216,7 +218,7 @@ class TestResultApproxEqual(TestResult):
         :param equal: result from the test
         :type equal: :obj:`numpy.generic` if datasets are :obj:`numpy.generic`,
                      :obj:`numpy.ndarray` if datasets are :obj:`numpy.ndarray`.
-                     In both cases ``dtype = bool``.
+                     In both cases ``dtype == bool``.
         '''
         super().__init__(test)
         self.approx_equal = approx_equal
@@ -226,7 +228,9 @@ class TestResultApproxEqual(TestResult):
 
 
 class TestApproxEqual(Test):
-    '''Test if the datasets are equal within the given tolerances.'''
+    '''Test if the datasets values are equal within the given tolerances.
+    Errors are ignored.
+    '''
 
     def __init__(self, name, description, dataset1, dataset2,
                  rtol=1e-5, atol=1e-8):
@@ -239,6 +243,11 @@ class TestApproxEqual(Test):
         :type dataset1: :class:`~.dataset.Dataset`
         :param dataset2: second dataset
         :type dataset2: :class:`~.dataset.Dataset`
+        :param float rtol: relative tolerance, default = :math:`10^{-5}`
+        :param float atol: absolute tolerance, default = :math:`10^{-8}`
+
+        To get more details on `rtol` and `atol` parameters, see
+        :func:`numpy.isclose`.
         '''
         super().__init__(name, description, "Approximate dataset equality")
         self.dataset1 = dataset1
@@ -247,9 +256,7 @@ class TestApproxEqual(Test):
         self.atol = atol
 
     def evaluate(self):
-        '''Evaluation of :class:`~.TestApproxEqual` using **NumPy**
-        :func:`numpy.isclose` method on the dataset values (no error
-        considered).
+        '''Evaluation of :class:`~.TestApproxEqual`.
 
         :returns: :class:`~.TestResultApproxEqual`
         '''
