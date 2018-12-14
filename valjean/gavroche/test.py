@@ -27,8 +27,8 @@ We perturb the data by applying some small amount of noise:
 Now we can test if the new dataset is equal to the original one:
 
     >>> from valjean.gavroche.test import TestEqual
-    >>> test_equality = TestEqual("parabola", "equality test",
-    ...                           parabola, parabola2)
+    >>> test_equality = TestEqual(parabola, parabola2, name="parabola",
+    ...                           description="equality test")
     >>> test_equality_res = test_equality.evaluate()
     >>> print(bool(test_equality_res))
     False
@@ -36,8 +36,8 @@ Now we can test if the new dataset is equal to the original one:
 However, they are approximately equal:
 
     >>> from valjean.gavroche.test import TestApproxEqual
-    >>> test_approx = TestApproxEqual("parabola", "approx equal test",
-    ...                               parabola, parabola2)
+    >>> test_approx = TestApproxEqual(parabola, parabola2, name="parabola",
+    ...                               description="approx equal test")
     >>> test_approx_res = test_approx.evaluate()
     >>> print(bool(test_approx_res))
     True
@@ -104,7 +104,7 @@ class Test(ABC):
     Base class for tests.
     '''
 
-    def __init__(self, name, description, ttype=""):
+    def __init__(self, *, name, description=''):
         '''Initialize the :class:`~.Test` object with a name, a description of
         the test (can be long) and the test type (equality, Student, χ², etc.).
 
@@ -121,7 +121,6 @@ class Test(ABC):
         '''
         self.name = name
         self.description = description
-        self.type_test = ttype
 
     @abstractmethod
     def evaluate(self):
@@ -183,7 +182,7 @@ class TestResultEqual(TestResult):
 class TestEqual(Test):
     '''Test if the datasets values are equal. Errors are ignored.'''
 
-    def __init__(self, name, description, dataset1, dataset2):
+    def __init__(self, dataset1, dataset2, *, name, description=''):
         '''Initialisation of :class:`~.TestEqual`:
 
         :param str name: name of the test (in analysis)
@@ -193,7 +192,7 @@ class TestEqual(Test):
         :param dataset2: second dataset
         :type dataset2: :class:`~.dataset.Dataset`
         '''
-        super().__init__(name, description, "Dataset equality")
+        super().__init__(name=name, description=description)
         self.dataset1 = dataset1
         self.dataset2 = dataset2
 
@@ -232,7 +231,7 @@ class TestApproxEqual(Test):
     Errors are ignored.
     '''
 
-    def __init__(self, name, description, dataset1, dataset2,
+    def __init__(self, dataset1, dataset2, *, name, description='',
                  rtol=1e-5, atol=1e-8):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`~.TestApproxEqual`:
@@ -249,7 +248,7 @@ class TestApproxEqual(Test):
         To get more details on `rtol` and `atol` parameters, see
         :func:`numpy.isclose`.
         '''
-        super().__init__(name, description, "Approximate dataset equality")
+        super().__init__(name=name, description=description)
         self.dataset1 = dataset1
         self.dataset2 = dataset2
         self.rtol = rtol

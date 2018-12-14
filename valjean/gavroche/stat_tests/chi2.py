@@ -106,7 +106,8 @@ Let's consider a spectrum of 5 bins with their error and apply the χ²-test.
 ...               np.array([0.2, 0.25, 0.1, 0.2, 0.3]))
 >>> ds2 = Dataset(np.array([5.1, 5.6, 5.2, 5.3, 5.2]),
 ...               np.array([0.1, 0.3, 0.05, 0.4, 0.3]))
->>> tchi2 = TestChi2("comp", "Comparison using Chi2 test", ds1, ds2, 0.05)
+>>> tchi2 = TestChi2(ds1, ds2, alpha=0.05, name="comp",
+...                  description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
 >>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf))
 0.3080328
@@ -129,7 +130,8 @@ run, no variance can be calculated in that case (``n-1`` usually used with
 ...               np.array([0.2, 0.25, 0., 0.2, 0.3]))
 >>> ds4 = Dataset(np.array([5.1, 5.6, 5.2, 5.3, 5.2]),
 ...               np.array([0.1, 0.3, 0., 0.4, 0.3]))
->>> tchi2 = TestChi2("comp", "Comparison using Chi2 test", ds3, ds4, 0.05)
+>>> tchi2 = TestChi2(ds3, ds4, alpha=0.05, name="comp",
+...                  description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
 >>> tchi2_res.chi2
 inf
@@ -149,8 +151,8 @@ argument of the :class:`TestChi2`. It recalculates the number of degrees of
 freedom removing the empty bins and only use the non-zero ones in the χ²
 calculation.
 
->>> tchi2 = TestChi2("comp", "Comparison using Chi2 test",
-...                  ds3, ds4, 0.05, with_empty=True)
+>>> tchi2 = TestChi2(ds3, ds4, alpha=0.05, ignore_empty=True,
+...                  name="comp", description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
 >>> print('{:.7f}'.format(tchi2_res.chi2))
 1.3401639
@@ -214,7 +216,7 @@ class TestResultChi2(TestResult):
         self.pvalue = pvalue
 
     def __bool__(self):
-        if self.pvalue > self.test.significance_level:
+        if self.pvalue > self.test.alpha:
             return True
         return False
 
@@ -234,8 +236,8 @@ class TestChi2(Test):
     '''Test class for χ², inheritate from :class:`~valjean.gavroche.test.Test`.
     '''
 
-    def __init__(self, name, description, dstest, dsref,
-                 significance_level=0.01, *, with_empty=False):
+    def __init__(self, dstest, dsref, *, name, description='', alpha=0.01,
+                 ignore_empty=False):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`TestChi2`
 
@@ -245,30 +247,24 @@ class TestChi2(Test):
         :type dstest: :class:`~valjean.gavroche.dataset.Dataset`
         :param dsref: dataset used as reference
         :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
-        :param float significance_level: probability to accept of not the test
-                                         (p-value is expected greater)
-        :param bool with_empty: if the array contains zero bins, the test can
-                                done not considering them if this option is
-                                True,;otherwise it will probably fail as the
-                                array to sum will contain infinite terms
-                                Default is ``False``.
+        :param float alpha: probability to accept of not the test (p-value is
+                            expected greater), i.e. significance level
+        :param bool ignore_empty: if the array contains zero bins, the test can
+                                  done not consider them if this option is
+                                  True; otherwise it will probably fail as the
+                                  array to sum will contain infinite terms.
+                                  Default is ``False``.
         '''
         self.dstest = dstest
         self.dsref = dsref
-        self.significance_level = significance_level
-        self.with_empty = with_empty
+        self.alpha = alpha
+        self.ignore_empty = ignore_empty
         #: nonzero bins identification by True, False if zero
         #: (:obj:`numpy.ndarray` (:obj:`bool`))
         self.nonzero_bins = self._nonzero_bins()
         #: number of degrees of freedom (:obj:`int`)
         self.ndf = np.count_nonzero(self.nonzero_bins)
-        super().__init__(name, description, self._build_type())
-
-    def _build_type(self):
-        def_type = "χ² test"
-        if self.with_empty:
-            def_type += "; empty bins ignored"
-        return def_type
+        super().__init__(name=name, description=description)
 
     def _nonzero_bins(self):
         '''Identify nonzero bins.
@@ -281,7 +277,7 @@ class TestChi2(Test):
 
         :returns: :obj:`numpy.ndarray` (:obj:`bool`)
         '''
-        if self.with_empty:
+        if self.ignore_empty:
             return np.logical_or(self.dstest.error > 0, self.dsref.error > 0)
         return np.full_like(self.dstest.value, True, dtype=bool)
 

@@ -1209,7 +1209,7 @@ def convert_green_bands(gbs):  # pylint: disable=R0914
 def convert_generic_adjoint(res, loctype):
     '''Convert adjoint results in association of dictionaries and NumPy array.
 
-    :param list res: Adjoint result got thanks to IFP or Wielandt methodto be
+    :param list res: Adjoint result got thanks to IFP or Wielandt method to be
       converted
     :returns: dict of
 

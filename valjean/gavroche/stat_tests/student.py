@@ -181,8 +181,8 @@ Are these numbers in agreement ?
 >>> import numpy as np
 >>> ds1 = Dataset(np.float32(5.3), np.float32(0.2))
 >>> ds2 = Dataset(np.float32(5.25), np.float32(0.08))
->>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
-...                        ds1, ds2)
+>>> tstudent = TestStudent(ds1, ds2, name="comp",
+...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
 >>> print('{:.7f}'.format(tstudent_res.delta))
 0.2321201
@@ -193,8 +193,8 @@ True
 
 To obtain the p-value, a number of degrees of freedom should be given:
 
->>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
-...                        ds1, ds2, pvalue_ndf=1000)
+>>> tstudent = TestStudent(ds1, ds2, ndf=1000, name="comp",
+...                        description="Comparison using Student's t- test")
 >>> tstudent_res = tstudent.evaluate()
 >>> print('{:.7f}'.format(tstudent_res.delta))
 0.2321201
@@ -215,8 +215,8 @@ Let's define 2 small datasets containing arrays:
 ...               np.array([0.2, 0.25, 0.1, 0.2, 0.3]))
 >>> ds4 = Dataset(np.array([5.1, 5.6, 5.2, 5.3, 5.2]),
 ...               np.array([0.1, 0.3, 0.05, 0.4, 0.3]))
->>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
-...                        ds3, ds4)
+>>> tstudent = TestStudent(ds3, ds4, name="comp",
+...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
 >>> tstudent_res.bool_list()
 [True, True, True, True, True]
@@ -232,8 +232,8 @@ on Student's t-test comparison:
 
 >>> ds5 = Dataset(np.array([5.1, 5.9, 5.8, 5.3, 4.5]),
 ...               np.array([0.1, 0.1, 0.05, 0.4, 0.1]))
->>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
-...                        ds3, ds5)
+>>> tstudent = TestStudent(ds3, ds5, name="comp",
+...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
 2.5758293
@@ -241,11 +241,11 @@ on Student's t-test comparison:
 [True, True, False, True, False]
 
 Like in float case it is possible to require the p-values. In both cases the
-probability can be changed via the ``significance_level`` argument, shown here
-in an array case:
+probability can be changed via the ``alpha`` argument, shown here in an array
+case:
 
->>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
-...                        ds3, ds5, significance_level=0.05, pvalue_ndf=1000)
+>>> tstudent = TestStudent(ds3, ds5, name="comp", alpha=0.05, ndf=1000,
+...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
 1.9623391
@@ -270,8 +270,8 @@ datasets containing :obj:`numpy.generic`:
 
 >>> ds6 = Dataset(np.array([5.3]), np.array([0.2]))
 >>> ds7 = Dataset(np.array([5.25]), np.array([0.08]))
->>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
-...                        ds6, ds7)
+>>> tstudent = TestStudent(ds6, ds7, name="comp",
+...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
 >>> np.array2string(tstudent_res.delta,
 ...                 formatter={'float_kind':'{:.7f}'.format})
@@ -286,8 +286,8 @@ The format of the NumPy object stays the dataset one, expecially for the Δ.
 Like for usual operations on datasets, only tests between datasets of the same
 format are possible:
 
->>> tstudent = TestStudent("comp", "Comparison using Student's t-test",
-...                        ds1, ds7)
+>>> tstudent = TestStudent(ds1, ds7, name="comp",
+...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
 Traceback (most recent call last):
     ...
@@ -350,20 +350,19 @@ class TestResultStudent(TestResult):
         The limit on accepted probability is divided by 2 due to two-sided
         test.
 
-        :returns: bool or :obj:`numpy.ndarray` of bool if ``pvalue_ndf`` was
-                  given to :class:`TestStudent` and datasets are
-                  :obj:`numpy.ndarray`
+        :returns: bool or :obj:`numpy.ndarray` of bool if ``ndf`` was given to
+                 :class:`TestStudent` and datasets are :obj:`numpy.ndarray`
         '''
-        if self.test.pvalue_ndf is None:
+        if self.test.ndf is None:
             return False
-        return self.pvalue > self.test.significance_level/2
+        return self.pvalue > self.test.alpha/2
 
 
 class TestStudent(Test):
     '''Class to build the Student's t-test.'''
 
-    def __init__(self, name, description, ds1, ds2, significance_level=0.01,
-                 pvalue_ndf=None):
+    def __init__(self, ds1, ds2, *, name, description='', alpha=0.01,
+                 ndf=None):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`TestStudent`
 
@@ -373,29 +372,20 @@ class TestStudent(Test):
         :type ds1: :class:`~valjean.gavroche.dataset.Dataset`
         :param ds2: second dataset
         :type ds2: :class:`~valjean.gavroche.dataset.Dataset`
-        :param float significance_level: limit on the p-value (expected values
-                                         are typically 0.01, 0.05), default is
-                                         ``0.01``
-        :param int pvalue_ndf: default is ``None``, if given p-value will be
-                               calculated for pvalue_ndf degrees of freedom
-                               (should correspond to number of batches),
-                               otherwise ndf assumed infinite, normal
-                               approximation
+        :param float alpha: significance level, i.e. limit on the p-value
+                            (expected values are typically 0.01, 0.05),
+                            default is ``None``
+        :param int ndf: default is ``None``, if given p-value will be
+                        calculated for ndf degrees of freedom
+                        (should correspond to number of batches),
+                        otherwise ndf assumed infinite, normal approximation
         '''
         self.ds1 = ds1
         self.ds2 = ds2
-        self.significance_level = significance_level
-        self.pvalue_ndf = pvalue_ndf
-        self.threshold = self.student_threshold(self.significance_level,
-                                                self.pvalue_ndf)
-        super().__init__(name, description, self._build_type())
-
-    def _build_type(self):
-        def_type = "Student's t-test"
-        if self.pvalue_ndf:
-            def_type += (" with p-value calculation for ndf = {}"
-                         .format(self.pvalue_ndf))
-        return def_type
+        self.alpha = alpha
+        self.ndf = ndf
+        self.threshold = self.student_threshold(self.alpha, self.ndf)
+        super().__init__(name=name, description=description)
 
     def evaluate(self):
         '''Evaluate Student's t-test method.
@@ -404,9 +394,9 @@ class TestStudent(Test):
         '''
         check_bins(self.ds1, self.ds2)
         deltas = self.student_test(self.ds1, self.ds2)
-        if self.pvalue_ndf is None:
+        if self.ndf is None:
             return TestResultStudent(self, deltas)
-        pval = self.pvalue(deltas, self.pvalue_ndf)
+        pval = self.pvalue(deltas, self.ndf)
         return TestResultStudent(self, deltas, pval)
 
     @staticmethod
@@ -441,11 +431,11 @@ class TestStudent(Test):
         return t.sf(np.fabs(delta), ndf)
 
     @staticmethod
-    def student_threshold(significance_level, ndf=None):
+    def student_threshold(alpha, ndf=None):
         '''Get threshold from probability (**static method**).
 
-        :param significance_level: required significance level (α)
-        :type significance_level: float or :obj:`numpy.generic` (:obj:`float`)
+        :param alpha: required significance level (α)
+        :type alpha: float or :obj:`numpy.generic` (:obj:`float`)
         :param ndf: number of degrees of freedom
         :type ndf: int or :obj:`numpy.generic` (:obj:`int`), default is
                    ``None``
@@ -457,8 +447,7 @@ class TestStudent(Test):
         is symmetric.
 
         If number of degrees of freedom is given, the distribution used is the
-        Student one corresponding to ``pvalue_ndf`` number of degrees of
-        freedom.
+        Student one corresponding to ``ndf``.
 
         If not, we consider an infinite number of degrees of freedom (what is
         often the case as we usually have at least 1000 batches). In that case,
@@ -466,5 +455,5 @@ class TestStudent(Test):
         degrees of freedom is big, we use the normal distribution instead.
         '''
         if ndf is None:
-            return np.fabs(norm.ppf(significance_level/2))
-        return np.fabs(t.ppf(significance_level/2, ndf))
+            return np.fabs(norm.ppf(alpha/2))
+        return np.fabs(t.ppf(alpha/2, ndf))

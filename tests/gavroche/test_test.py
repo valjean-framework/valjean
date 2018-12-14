@@ -47,23 +47,24 @@ def test_different_bins_raises():
 @given(dataset=datasets())
 def test_equal_if_same(dataset):
     '''Test that :class:`~.TestEqual` is reflexive.'''
-    assert test.TestEqual("equal", "dataset equality", dataset, dataset)
+    assert test.TestEqual(dataset, dataset, name="equal",
+                          description="dataset equality")
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(dataset=datasets())
 def test_approx_equal_if_same(dataset):
     '''Test that :class:`~.TestApproxEqual` is reflexive.'''
-    assert test.TestApproxEqual("approx_equal", "dataset approx equality",
-                                dataset, dataset)
+    assert test.TestApproxEqual(dataset, dataset, name="approx_equal",
+                                description="dataset approx equality")
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(perturbed_its=perturbed_datasets())
 def test_approx_equal_if_perturbed(perturbed_its):
     '''Test that perturbed datasets are :class:`~.TestApproxEqual`.'''
-    assert test.TestApproxEqual("approx_equal", "dataset approx equality",
-                                *perturbed_its)
+    assert test.TestApproxEqual(*perturbed_its, name="approx_equal",
+                                description="dataset approx equality")
 
 
 @given(dataset=datasets())
@@ -74,7 +75,8 @@ def test_equal_bins_raises(dataset):
     modified.bins = new_bins
     note('dataset.bins: {}'.format(dataset.bins))
     note('modified.bins: {}'.format(modified.bins))
-    thetest = test.TestEqual("equal", "dataset equality", dataset, modified)
+    thetest = test.TestEqual(dataset, modified, name="equal",
+                             description="dataset equality")
     with pytest.raises(ValueError):
         thetest.evaluate()
 
@@ -88,8 +90,8 @@ def test_approx_equal_bins_raises(dataset):
     modified.bins = new_bins
     note('dataset.bins: {}'.format(dataset.bins))
     note('modified.bins: {}'.format(modified.bins))
-    thetest = test.TestApproxEqual("approx_equal", "dataset approx equality",
-                                   dataset, modified)
+    thetest = test.TestApproxEqual(dataset, modified, name="approx_equal",
+                                   description="dataset approx equality")
     with pytest.raises(ValueError):
         thetest.evaluate()
 
@@ -102,7 +104,8 @@ def test_not_equal_data(dataset):
     modified.value *= 1.1
     note('dataset.value: {}'.format(dataset.value))
     note('modified.value: {}'.format(modified.value))
-    thetest = test.TestEqual("equal", "dataset equality", dataset, modified)
+    thetest = test.TestEqual(dataset, modified, name="equal",
+                             description="dataset equality")
     thetest_res = thetest.evaluate()
     assert not bool(thetest_res)
 
@@ -116,6 +119,7 @@ def test_not_approx_equal_data(dataset):
     modified.value *= 1.1
     note('dataset.value: {}'.format(dataset.value))
     note('modified.value: {}'.format(modified.value))
-    thetest = test.TestEqual("equal", "dataset equality", dataset, modified)
+    thetest = test.TestEqual(dataset, modified, name="equal",
+                             description="dataset equality")
     thetest_res = thetest.evaluate()
     assert not bool(thetest_res)
