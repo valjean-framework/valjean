@@ -30,6 +30,10 @@ individual hypothesis. The p-value of the test is calculated and used in the
 following tests. Like in other tests, we consider two-sided significance levels
 here.
 
+The null hypothesis is that the p-value is higher than a given significance
+level, that depends on the overall required significance level, the number of
+tests considered and the chosen method (Bonferroni or Holm-Bonferroni).
+
 
 Bonferroni correction
 `````````````````````
@@ -44,7 +48,7 @@ null hypothesis will be rejected if
 
 .. math::
 
-    p_i \leq \frac{\alpha}{m}
+    p_k \leq \frac{\alpha}{m}
 
 The  individual significance level is usually largely smaller than the required
 one and the sum of them obvioulsy give α.
@@ -73,7 +77,7 @@ Then each of them are compared to the significance level weighted by
 
 .. math::
 
-    p_i \leq \frac{\alpha}{m - k + 1}.
+    p_k \leq \frac{\alpha}{m - k + 1}.
 
 The test can be stopped at the first :math:`k` accepting the null hypothesis.
 
@@ -113,48 +117,53 @@ Successful test with Bonferroni correction
 ...               np.array([0.2, 0.25, 0.1, 0.2, 0.3]))
 >>> ds2 = Dataset(np.array([5.1, 5.6, 5.2, 5.3, 5.2]),
 ...               np.array([0.1, 0.3, 0.05, 0.4, 0.3]))
->>> tstudent_12 = TestStudent("comp", "Comparison using Student test", ds1,
-...                           ds2, significance_level=0.05, pvalue_ndf=1000)
->>> tbonf = TestBonferroni("bonf", "Bonferroni correction", tstudent_12,
-...                        significance_level=0.05)
->>> np.equal(tbonf.ntests, ds1.value.size)
+>>> tstudent_12 = TestStudent(ds1, ds2, name="comp",
+...                           description="Comparison using Student test",
+...                           alpha=0.05, ndf=1000)
+>>> tbonf = TestBonferroni(name="bonf", description="Bonferroni correction",
+...                        test=tstudent_12, alpha=0.05)
+>>> tbonf.ntests
+5
+>>> np.equal(tbonf.ntests, ds1.size)
 True
->>> np.equal(tbonf.bonf_signi_level, 0.05/2/5)
-True
+>>> tbonf.bonf_signi_level
+0.005
 >>> tbonf_res = tbonf.evaluate()
 >>> bool(tbonf_res)
 True
->>> np.array_equal(tbonf_res.reject_null_hyp,
-...                np.array([False, False, False, False, False]))
-True
+>>> np.array2string(tbonf_res.reject_null_hyp)
+'[False False False False False]'
 
 Failing test with Bonferroni correction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 >>> ds3 = Dataset(np.array([5.1, 5.9, 5.8, 5.3, 4.5]),
 ...               np.array([0.1, 0.1, 0.05, 0.4, 0.1]))
->>> tstudent_13 = TestStudent("comp", "Comparison using Student test", ds1,
-...                           ds3, significance_level=0.05, pvalue_ndf=1000)
->>> tbonf = TestBonferroni("bonf", "Bonferroni correction", tstudent_13,
-...                        significance_level=0.05)
->>> np.equal(tbonf.ntests, ds1.value.size)
+>>> tstudent_13 = TestStudent(ds1, ds3, name="comp",
+...                           description="Comparison using Student test",
+...                           alpha=0.05, ndf=1000)
+>>> tbonf = TestBonferroni(name="bonf", description="Bonferroni correction",
+...                        test=tstudent_13, alpha=0.05)
+>>> tbonf.ntests
+5
+>>> np.equal(tbonf.ntests, ds1.size)
 True
->>> np.equal(tbonf.bonf_signi_level, 0.05/2/5)
-True
+>>> tbonf.bonf_signi_level
+0.005
 >>> tbonf_res = tbonf.evaluate()
 >>> bool(tbonf_res)
 False
->>> np.array_equal(tbonf_res.reject_null_hyp,
-...                np.array([False, False, True, False, True]))
-True
+>>> np.array2string(tbonf_res.reject_null_hyp)
+'[False False  True False  True]'
 
 We perform the same tests with the Holm-Bonferroni method:
 
 Successful test with Holm-Bonferroni method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
->>> tholmbonf = TestHolmBonferroni("holm-bonf", "Holm-Bonferroni method",
-...                                tstudent_12, significance_level=0.05)
+>>> tholmbonf = TestHolmBonferroni(name="holm-bonf",
+...                                description="Holm-Bonferroni method",
+...                                test=tstudent_12, alpha=0.05)
 >>> thb_res = tholmbonf.evaluate()
 >>> bool(thb_res)
 True
@@ -164,10 +173,10 @@ True
 True
 >>> np.array_equal(thb_res.sorted_indices, np.array([1, 4, 0, 2, 3]))
 True
->>> alpha = tholmbonf.significance_level
+>>> alpha = tholmbonf.alpha
 >>> alpha  # alpha is two-sided
 0.025
->>> np.allclose(thb_res.significance_levels,
+>>> np.allclose(thb_res.alphas_i,
 ...             np.array([alpha/(5-1+1), alpha/(5-2+1), alpha/(5-3+1),
 ...                       alpha/(5-4+1), alpha/(5-5+1)]))
 True
@@ -179,8 +188,9 @@ True
 Failing test with Holm-Bonferroni method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
->>> tholmbonf = TestHolmBonferroni("holm-bonf", "Holm-Bonferroni method",
-...                                tstudent_13, significance_level=0.05)
+>>> tholmbonf = TestHolmBonferroni(name="holm-bonf",
+...                                description="Holm-Bonferroni method",
+...                                test=tstudent_13, alpha=0.05)
 >>> thb_res = tholmbonf.evaluate()
 >>> bool(thb_res)
 False
@@ -188,18 +198,17 @@ False
 ...             np.array([5.1e-07, 8.06e-04, 1.304e-02, 3.274e-01, 4.116e-01]),
 ...             rtol=1e-3)
 True
->>> np.array_equal(thb_res.sorted_indices, np.array([2, 4, 1, 0, 3]))
-True
->>> alpha = tholmbonf.significance_level
+>>> np.array2string(thb_res.sorted_indices)
+'[2 4 1 0 3]'
+>>> alpha = tholmbonf.alpha
 >>> alpha  # alpha is two-sided
 0.025
->>> np.allclose(thb_res.significance_levels,
+>>> np.allclose(thb_res.alphas_i,
 ...             np.array([alpha/(5-1+1), alpha/(5-2+1), alpha/(5-3+1),
 ...                       alpha/(5-4+1), alpha/(5-5+1)]))
 True
->>> np.array_equal(thb_res.rejected_null_hyp,
-...                np.array([True, True, False, False, False]))
-True
+>>> thb_res.rejected_null_hyp
+[True, True, False, False, False]
 >>> thb_res.nb_rejected
 2
 >>> thb_res.rejected_proportion  # in percentage
@@ -239,7 +248,7 @@ class TestResultBonferroni(TestResult):
 class TestBonferroni(Test):
     '''Bonferroni correction for multiple tests of the same hypothesis.'''
 
-    def __init__(self, name, description, test, significance_level=0.01):
+    def __init__(self, *, name, description, test, alpha=0.01):
         '''Initialisation of TestBonferroni.
 
 
@@ -247,20 +256,20 @@ class TestBonferroni(Test):
         :param str description: specific description of the test
         :param test: test from which pvalues will be extracted
         :type test: :class:`valjean.gavroche.test.Test` child class
-        :param float significance_level: required significane level
+        :param float alpha: required significance level
 
-        The significance level is also considered two-sided here, so divide by
-        2. This one is the significance level for the whole test.
+        The significance level is considered two-sided here, so divide by 2.
+        It is the significance level for the whole test.
         '''
-        super().__init__(name, description, "Bonferroni correction")
+        super().__init__(name=name, description=description)
         self.test = test
-        self.significance_level = significance_level / 2
-        self.bonf_signi_level = self.significance_level / self.ntests
+        self.alpha = alpha / 2
+        self.bonf_signi_level = self.alpha / self.ntests
 
     @property
     def ntests(self):
         '''Link to number of hypothesis to test, i.e. number of bins here.'''
-        return self.test.ds1.value.size
+        return self.test.ds1.size
 
     @staticmethod
     def bonferroni_correction(pvalues, bonf_signi_level):
@@ -278,9 +287,6 @@ class TestBonferroni(Test):
         * if higher, null hypothesis is accepted for the bin.
         '''
         reject = pvalues <= bonf_signi_level
-        # print(pvalues)
-        # print(bonf_signi_level)
-        # print(reject)
         # found in statsmodels.stats.multitest, don't understand its use
         # pvals_corr = self.pvalue * self.ntests
         return reject
@@ -299,8 +305,8 @@ class TestBonferroni(Test):
 class TestResultHolmBonferroni(TestResult):
     '''Result from the Holm-Bonferroni method.'''
 
-    def __init__(self, test, first_test_res, sorted_indices,
-                 significance_levels, rejected_hyp):
+    def __init__(self, test, first_test_res, sorted_indices, alphas_i,
+                 rejected_hyp):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`~.TestResultHolmBonferroni`
 
@@ -312,14 +318,14 @@ class TestResultHolmBonferroni(TestResult):
         :param sorted_indices: indices of the p-values sorted to get p-values
                                in increasing order
         :type sorted_indices: :obj:`numpy.generic` (:obj:`int`)
-        :param significance_levels: significance levels for sorted pvalues
-        :type significance_levels: :obj:`numpy.ndarray` (:obj:`float`)
+        :param alphas_i: significance levels for sorted pvalues
+        :type alphas_i: :obj:`numpy.ndarray` (:obj:`float`)
         :param rejected_hyp: rejection of the null hypothesis for all bins
         :type rejected_hyp: :obj:`numpy.ndarray` (:obj:`bool`)
         '''
         super().__init__(test)
         self.sorted_indices = sorted_indices
-        self.significance_levels = significance_levels
+        self.alphas_i = alphas_i
         self.rejected_null_hyp = rejected_hyp
         self.first_test_res = first_test_res
 
@@ -356,40 +362,40 @@ class TestResultHolmBonferroni(TestResult):
 class TestHolmBonferroni(Test):
     '''Holm-Bonferroni method for multiple tests of the same hypothesis.'''
 
-    def __init__(self, name, description, test, significance_level=0.01):
+    def __init__(self, *, name, description, test, alpha=0.01):
         '''Initialisation of TestHolmBonferroni.
 
         :param str name: local name of the test
         :param str description: specific description of the test
         :param test: test from which pvalues will be extracted
         :type test: :class:`valjean.gavroche.test.Test` child class
-        :param float significance_level: significance level
+        :param float alpha: significance level
 
         The significance level is also considered two-sided here, so divide by
         2. This is the overall significance level.
         '''
-        super().__init__(name, description, "Bonferroni correction")
+        super().__init__(name=name, description=description)
         self.test = test
-        self.significance_level = significance_level / 2
+        self.alpha = alpha / 2
 
     @staticmethod
-    def holm_bonferroni_method(pvalues, significance_level):
+    def holm_bonferroni_method(pvalues, alpha):
         '''Holm-Bonferroni method.
 
         :param pvalues: array of pvalues
         :type pvalues: :obj:`numpy.ndarray`
-        :param float significance_level: significance level chosen for the
+        :param float alpha: significance level chosen for the
                                          Holm-Bonferroni method
         :returns: sorted indices, array of the bins significance level, array
                   of rejection of the null hypothesis
         '''
         sorted_inds = np.argsort(pvalues)
-        loc_significance_level, rejected_hyp = [], []
+        alpha_i, rejected_hyp = [], []
         for _i, pval in enumerate(pvalues[sorted_inds]):
             denom = pvalues.size - (_i+1) + 1
-            loc_significance_level.append(significance_level / denom)
-            rejected_hyp.append(pval < loc_significance_level[-1])
-        return sorted_inds, loc_significance_level, rejected_hyp
+            alpha_i.append(alpha / denom)
+            rejected_hyp.append(pval < alpha_i[-1])
+        return sorted_inds, alpha_i, rejected_hyp
 
     def evaluate(self):
         '''Evaluation of the used test and of the Holm-Bonferroni method.
@@ -397,6 +403,5 @@ class TestHolmBonferroni(Test):
         :returns: :class:`~.TestResultHolmBonferroni`
         '''
         test_res = self.test.evaluate()
-        hb_res = self.holm_bonferroni_method(test_res.pvalue,
-                                             self.significance_level)
+        hb_res = self.holm_bonferroni_method(test_res.pvalue, self.alpha)
         return TestResultHolmBonferroni(self, test_res, *hb_res)
