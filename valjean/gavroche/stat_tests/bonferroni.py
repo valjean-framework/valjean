@@ -213,6 +213,51 @@ True
 2
 >>> thb_res.rejected_proportion  # in percentage
 40.0
+
+Tests with multi-dimension datasets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+>>> ds4 = Dataset(np.array([[5.2, 5.3, 5.25], [5.4, 5.5, 5.2]]),
+...               np.array([[0.2, 0.25, 0.1], [0.2, 0.3, 0.1]]))
+>>> ds5 = Dataset(np.array([[5.1, 5.6, 5.2], [5.3, 5.2, 5.3]]),
+...               np.array([[0.1, 0.3, 0.05], [0.4, 0.3, 0.2]]))
+>>> ds4.shape
+(2, 3)
+>>> ds4.size
+6
+>>> tstudent_45 = TestStudent(ds4, ds5, name="comp",
+...                           description="Comparison using Student test",
+...                           alpha=0.05, ndf=1000)
+>>> tbonf = TestBonferroni(name="bonf", description="Bonferroni correction",
+...                        test=tstudent_45, alpha=0.05)
+>>> tbonf.ntests
+6
+>>> print('{:.6f}'.format(tbonf.bonf_signi_level))
+0.004167
+>>> tbonf_res = tbonf.evaluate()
+>>> bool(tbonf_res)
+True
+
+>>> tholmbonf = TestHolmBonferroni(name="holm-bonf",
+...                                description="Holm-Bonferroni method",
+...                                test=tstudent_45, alpha=0.05)
+>>> thb_res = tholmbonf.evaluate()
+>>> bool(thb_res)
+True
+>>> tholmbonf.alpha
+0.025
+>>> np.array2string(thb_res.first_test_res.pvalue,
+...                 formatter={'float_kind':'{:.3e}'.format})
+'[[3.274e-01 2.213e-01 3.274e-01]\n [4.116e-01 2.398e-01 3.274e-01]]'
+>>> np.array2string(thb_res.first_test_res.pvalue.flatten(),
+...                 formatter={'float_kind':'{:.3e}'.format})
+'[3.274e-01 2.213e-01 3.274e-01 4.116e-01 2.398e-01 3.274e-01]'
+>>> np.array2string(thb_res.sorted_indices)
+'[1 4 0 2 5 3]'
+>>> np.array2string(
+...     thb_res.first_test_res.pvalue.flatten()[thb_res.sorted_indices],
+...     formatter={'float_kind':'{:.3e}'.format})
+'[2.213e-01 2.398e-01 3.274e-01 3.274e-01 3.274e-01 4.116e-01]'
 '''
 
 import numpy as np
@@ -403,5 +448,6 @@ class TestHolmBonferroni(Test):
         :returns: :class:`~.TestResultHolmBonferroni`
         '''
         test_res = self.test.evaluate()
-        hb_res = self.holm_bonferroni_method(test_res.pvalue, self.alpha)
+        hb_res = self.holm_bonferroni_method(test_res.pvalue.flatten(),
+                                             self.alpha)
         return TestResultHolmBonferroni(self, test_res, *hb_res)
