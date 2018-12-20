@@ -144,7 +144,7 @@ class TestResult(ABC):
         '''Initialisation of :class:`~.TestResult`.
 
         :param test: the used test
-        :type test: :class:`~.Test` daughter used
+        :type test: :class:`~.Test` used
         '''
         self.test = test
 

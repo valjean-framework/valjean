@@ -2,7 +2,7 @@ r'''Statistic tests for datasets comparison.
 
 .. _scipy: https://docs.scipy.org/doc/scipy/reference/index.html
 
-This module provides calculation and results for the Student's t-test.
+This module provides calculation and results for Student's t-test.
 
 
 General Student's t-test
@@ -218,10 +218,12 @@ Let's define 2 small datasets containing arrays:
 >>> tstudent = TestStudent(ds3, ds4, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> tstudent_res.bool_list()
-[True, True, True, True, True]
+>>> print(np.array2string(tstudent_res.bool_array()))
+[ True  True  True  True  True]
 >>> bool(tstudent_res)
-False
+Traceback (most recent call last):
+    ...
+ValueError: Not suitable to multi-dimension arrays, except within a user's loop
 
 The test will always return false in a :obj:`numpy.ndarray` case as there are
 no acceptance limits on the number of good and bad comparisons based on Student
@@ -237,8 +239,8 @@ on Student's t-test comparison:
 >>> tstudent_res = tstudent.evaluate()
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
 2.5758293
->>> tstudent_res.bool_list()
-[True, True, False, True, False]
+>>> print(np.array2string(tstudent_res.bool_array()))
+[ True  True False  True False]
 
 Like in float case it is possible to require the p-values. In both cases the
 probability can be changed via the ``alpha`` argument, shown here in an array
@@ -249,8 +251,8 @@ case:
 >>> tstudent_res = tstudent.evaluate()
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
 1.9623391
->>> tstudent_res.bool_list()
-[True, False, False, True, False]
+>>> print(np.array2string(tstudent_res.bool_array()))
+[ True False False  True False]
 >>> print('{:.7f}'.format(tstudent_res.delta[1]))
 -2.2283441
 
@@ -259,11 +261,11 @@ first case and rejected in the second one.
 
 Obtaining p-values and comparing them is also possible in the spectrum case:
 
->>> np.array2string(tstudent_res.pvalue,
-...                 formatter={'float_kind':'{:.7e}'.format})
-'[3.2740885e-01 1.3039640e-02 5.0738755e-07 4.1155447e-01 8.0627620e-04]'
->>> np.array2string(tstudent_res.test_pvalue())
-'[ True False False  True False]'
+>>> print(np.array2string(tstudent_res.pvalue,
+...                       formatter={'float_kind':'{:.7e}'.format}))
+[3.2740885e-01 1.3039640e-02 5.0738755e-07 4.1155447e-01 8.0627620e-04]
+>>> print(np.array2string(tstudent_res.test_pvalue()))
+[ True False False  True False]
 
 Finally, an array of size 1 (and dimension 1), the test will do the same as for
 datasets containing :obj:`numpy.generic`:
@@ -273,9 +275,9 @@ datasets containing :obj:`numpy.generic`:
 >>> tstudent = TestStudent(ds6, ds7, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> np.array2string(tstudent_res.delta,
-...                 formatter={'float_kind':'{:.7f}'.format})
-'[0.2321192]'
+>>> print(np.array2string(tstudent_res.delta,
+...                       formatter={'float_kind':'{:.7f}'.format}))
+[0.2321192]
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
 2.5758293
 >>> bool(tstudent_res)
@@ -292,6 +294,32 @@ format are possible:
 Traceback (most recent call last):
     ...
 ValueError: Datasets to subtract do not have same shape
+
+Multiple dimensions datasets are also allowed:
+
+>>> ds8 = Dataset(np.array([[5.2, 5.3, 5.25], [5.4, 5.5, 5.2]]),
+...               np.array([[0.2, 0.25, 0.1], [0.2, 0.3, 0.1]]))
+>>> ds9 = Dataset(np.array([[5.1, 5.6, 5.2], [5.3, 5.2, 5.3]]),
+...               np.array([[0.1, 0.3, 0.05], [0.4, 0.3, 0.2]]))
+>>> ds8.shape
+(2, 3)
+>>> ds8.size
+6
+>>> tstudent = TestStudent(ds8, ds9, alpha=0.05, ndf=1000, name="comp",
+...                        description="Comparison using Student's t-test")
+>>> tstudent_res = tstudent.evaluate()
+>>> bool(tstudent_res)
+Traceback (most recent call last):
+    ...
+ValueError: Not suitable to multi-dimension arrays, except within a user's loop
+>>> print(np.array2string(tstudent_res.delta,
+...                       formatter={'float_kind':'{:.7f}'.format}))
+[[0.4472136 -0.7682213 0.4472136]
+ [0.2236068 0.7071068 -0.4472136]]
+>>> print(np.array2string(tstudent_res.bool_array()))
+[[ True  True  True]
+ [ True  True  True]]
+
 '''
 import numpy as np
 from scipy.stats import t, norm
@@ -323,26 +351,24 @@ class TestResultStudent(TestResult):
         :type delta: :obj:`numpy.generic`
         :returns: bool
         '''
-        if np.fabs(delta) > self.test.threshold:
-            return False
-        return True
+        return np.fabs(delta) < self.test.threshold
 
-    def bool_list(self):
+    def bool_array(self):
         '''Final test (if spectrum)
 
         :returns: list(bool)
         '''
         if isinstance(self.delta, np.generic):
-            return [self.test_alpha(self.delta)]
-        blist = [self.test_alpha(_delta) for _delta in self.delta]
-        return blist
+            return np.array([self.test_alpha(self.delta)])
+        return np.fabs(self.delta) < self.test.threshold
 
     def __bool__(self):
         if isinstance(self.delta, np.generic):
-            return self.test_alpha(self.delta)
+            return bool(self.test_alpha(self.delta))
         if self.delta.size == 1:
-            return self.test_alpha(self.delta[0])
-        return False
+            return bool(self.test_alpha(self.delta[0]))
+        raise ValueError("Not suitable to multi-dimension arrays, "
+                         "except within a user's loop")
 
     def test_pvalue(self):
         '''Result of the test by testing p-value.

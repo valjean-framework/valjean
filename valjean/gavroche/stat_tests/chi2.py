@@ -137,8 +137,8 @@ run, no variance can be calculated in that case (``n-1`` usually used with
 inf
 >>> bool(tchi2_res)
 False
->>> np.array2string(tchi2_res.test.nonzero_bins)
-'[ True  True  True  True  True]'
+>>> print(np.array2string(tchi2_res.test.nonzero_bins))
+[ True  True  True  True  True]
 >>> tchi2_res.test.ndf
 5
 >>> np.count_nonzero(ds4.error)
@@ -160,10 +160,59 @@ calculation.
 4
 >>> tchi2_res.test.dstest.size
 5
->>> np.array2string(tchi2_res.test.nonzero_bins)
-'[ True  True False  True  True]'
+>>> print(np.array2string(tchi2_res.test.nonzero_bins))
+[ True  True False  True  True]
 >>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf))
 0.3350410
+>>> bool(tchi2_res)
+True
+
+
+Test with multiple dimensions datasets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+>>> ds5 = Dataset(np.array([[5.2, 5.3, 5.25], [5.4, 5.5, 5.2]]),
+...               np.array([[0.2, 0.25, 0.1], [0.2, 0.3, 0.1]]))
+>>> ds6 = Dataset(np.array([[5.1, 5.6, 5.2], [5.3, 5.2, 5.3]]),
+...               np.array([[0.1, 0.3, 0.05], [0.4, 0.3, 0.2]]))
+>>> ds5.shape
+(2, 3)
+>>> ds5.size
+6
+>>> tchi2 = TestChi2(ds5, ds6, alpha=0.05, name="comp",
+...                  description="Comparison using Chi2 test")
+>>> tchi2_res = tchi2.evaluate()
+>>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf))
+0.2900273
+>>> bool(tchi2_res)
+True
+>>> print('{:.7f}'.format(tchi2_res.pvalue))
+0.9419786
+
+And when we have at least one empty bin, using the ``ignore_empty`` argument:
+
+>>> ds7 = Dataset(np.array([[5.2, 5.3, 5.25], [5.4, 5.5, 5.2]]),
+...               np.array([[0.2, 0.25, 0.], [0.2, 0.3, 0.1]]))
+>>> ds8 = Dataset(np.array([[5.1, 5.6, 5.2], [5.3, 5.2, 5.4]]),
+...               np.array([[0.1, 0.3, 0.], [0.4, 0.3, 0.]]))
+>>> ds7.shape
+(2, 3)
+>>> ds7.size
+6
+>>> tchi2 = TestChi2(ds7, ds8, alpha=0.05, ignore_empty=True,
+...                  name="comp", description="Comparison using Chi2 test")
+>>> tchi2_res = tchi2.evaluate()
+>>> print('{:.7f}'.format(tchi2_res.chi2))
+5.3401639
+>>> tchi2_res.test.ndf
+5
+>>> tchi2_res.test.dstest.size
+6
+>>> print(np.array2string(tchi2_res.test.nonzero_bins))
+[[ True  True False]
+ [ True  True  True]]
+>>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf))
+1.0680328
 >>> bool(tchi2_res)
 True
 
