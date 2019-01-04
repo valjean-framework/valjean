@@ -220,10 +220,11 @@ Let's define 2 small datasets containing arrays:
 >>> tstudent_res = tstudent.evaluate()
 >>> print(np.array2string(tstudent_res.bool_array()))
 [ True  True  True  True  True]
->>> bool(tstudent_res)
+>>> bool(tstudent_res)  # doctest: +IGNORE_EXCEPTION_DETAIL
 Traceback (most recent call last):
     ...
-ValueError: Not suitable to multi-dimension arrays, except within a user's loop
+TestResultStudentException: Not suitable to multi-dimension arrays, \
+except within a user's loop
 
 The test will always return false in a :obj:`numpy.ndarray` case as there are
 no acceptance limits on the number of good and bad comparisons based on Student
@@ -308,10 +309,11 @@ Multiple dimensions datasets are also allowed:
 >>> tstudent = TestStudent(ds8, ds9, alpha=0.05, ndf=1000, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> bool(tstudent_res)
+>>> bool(tstudent_res)  # doctest: +IGNORE_EXCEPTION_DETAIL
 Traceback (most recent call last):
     ...
-ValueError: Not suitable to multi-dimension arrays, except within a user's loop
+TestResultStudentException: Not suitable to multi-dimension arrays, except \
+within a user's loop
 >>> print(np.array2string(tstudent_res.delta,
 ...                       formatter={'float_kind':'{:.7f}'.format}))
 [[0.4472136 -0.7682213 0.4472136]
@@ -324,6 +326,13 @@ ValueError: Not suitable to multi-dimension arrays, except within a user's loop
 import numpy as np
 from scipy.stats import t, norm
 from ..test import check_bins, Test, TestResult
+
+
+class TestResultStudentException(Exception):
+    '''Exception happening in the Student test.'''
+    # tell pytest that this class and derived classes should NOT be collected
+    # as tests
+    __test__ = False
 
 
 class TestResultStudent(TestResult):
@@ -367,8 +376,9 @@ class TestResultStudent(TestResult):
             return bool(self.test_alpha(self.delta))
         if self.delta.size == 1:
             return bool(self.test_alpha(self.delta[0]))
-        raise ValueError("Not suitable to multi-dimension arrays, "
-                         "except within a user's loop")
+        raise TestResultStudentException(
+            "Not suitable to multi-dimension arrays, "
+            "except within a user's loop")
 
     def test_pvalue(self):
         '''Result of the test by testing p-value.
