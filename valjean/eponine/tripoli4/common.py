@@ -1066,10 +1066,8 @@ def convert_keff_with_matrix(res):
     '''
     # not converged cases a tester...
     LOGGER.debug("In common.convert_keff_with_matrix")
-    if 'not_converged' in res:
-        return {'used_batch': res['used_batch'],
-                'not_converged': res['not_converged']}
-
+    if {'not_converged', 'warning'} & set(res):
+        return res
     dtkeff = np.dtype([('keff', FTYPE), ('sigma', FTYPE)])
     fullcombres = (np.array(tuple(res['full_comb_estimation']), dtype=dtkeff)
                    if len(res['full_comb_estimation']) > 1

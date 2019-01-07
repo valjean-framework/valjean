@@ -121,6 +121,7 @@ class T4Parser():
             return False
         LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
         LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
+        self.check_t4_parsing()
         return True
 
     @profile
@@ -201,6 +202,29 @@ class T4Parser():
         '''
         for stime, vtime in self.scan_res.times.items():
             print(stime.capitalize(), "=", vtime)
+
+    def check_t4_parsing(self):
+        '''Check if parsing went to the end:
+
+        * if the end flag was not precised, a time should appear in the last
+          result;
+        * if not, no check can be performed as the end flag can be anywhere,
+          even "transformed" during parsing.
+
+        Print a logger message if not found but don't block access to the
+        parsing result (this can help to find the issue).
+        '''
+        if not self.end_flag:
+            if not any("_time" in s for s in self.result[-1].keys()):
+                LOGGER.error("Time not found in the parsing result, "
+                             "parsing probably stopped before end, "
+                             "please check.")
+        if self.end_flag:
+            LOGGER.info("You are running with an end flag ('%s'), "
+                        "no automatic check of correct end of parsing is "
+                        "currently available in that case, "
+                        "please check carefully.",
+                        self.end_flag)
 
 
 def main(myjdd="", batch_num=-1, mesh_lim=None, end_flag=""):

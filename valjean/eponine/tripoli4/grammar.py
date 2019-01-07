@@ -189,7 +189,7 @@ level as the response block. These parsers and the associated dictionary key
 
 import logging
 from pyparsing import (Word, Keyword, White, alphas, alphanums,
-                       Suppress, Optional, LineEnd, LineStart,
+                       Suppress, Optional, LineEnd, LineStart, CaselessKeyword,
                        Group, OneOrMore, ZeroOrMore, Forward,
                        tokenMap)
 from pyparsing import pyparsing_common as pyparscom
@@ -213,11 +213,12 @@ _numbatchsused_kw = (Keyword("number of")
                      + (Keyword("batches") | Keyword("batch"))
                      + Optional(Keyword("used")))
 _numbatchs1stdiscarded_kw = Keyword("number of first discarded batches")
-_notconverged_kw = (Keyword("NOT YET CONVERGED") | Keyword("Not converged")
-                    | Keyword("not converged"))
+_notconverged_kw = (Keyword("NOT YET CONVERGED")
+                    | CaselessKeyword("Not converged"))
 _unknown_kw = Keyword("unknown")
 _unavailable_kw = Keyword("unavailable")
 _units_kw = Keyword("Units:")
+_warning_kw = CaselessKeyword("Warning")
 _endtable = LineEnd() + LineEnd()
 
 # Introduction keywords
@@ -292,6 +293,13 @@ _correlations_kw = Group(Keyword("estimators")
                          + Keyword("combined sigma%"))
 _estimator_kw = Keyword("ESTIMATOR")
 _equivkeff_kw = Keyword("Equivalent Keff:")
+_warn_combkeff_kw = (
+    Keyword("One of the Keffectives is null and should not be")
+    + Keyword("Combined Keffectives will not be edited"))
+_warn_fixsourcekeff_kw = (
+    Keyword("In FIXED_SOURCES_CRITICITY mode, the keff result")
+    + Keyword("is actually an overall multiplication factor "
+              "(cf User's Guide)"))
 
 # Time steps
 _timestepnum_kw = Keyword("TIME STEP NUMBER")
@@ -899,9 +907,12 @@ _fullcombestimation = (Group(Suppress(_fullcomb_kw)
                        ('full_comb_estimation'))
 _defkeffres = ((_keffresblock + _correlationblock + _fullcombestimation)
                | _notconverged_kw('not_converged'))
+_warnkeff = (Suppress(_warning_kw)
+             + _warn_combkeff_kw.setParseAction(' '.join)('warning'))
 keffblock = Group(Suppress(_integratedres_kw)
                   + _numusedbatch
-                  + _defkeffres).setParseAction(trans.convert_keff)('keff_res')
+                  + (_defkeffres | _warnkeff)
+                  ).setParseAction(trans.convert_keff)('keff_res')
 
 
 # Keff as historical response
@@ -916,14 +927,18 @@ _bestkeff = (Group(Suppress(Keyword("keff") + '=') + _fnums('keff')
                    + Suppress(Keyword("sigma%") + '=') + _fnums('sigma%'))
              ('bestkeffres'))
 _equivkeff = Suppress(_equivkeff_kw) + _fnums('equivalent_keff')
-_bestkeffpestim = (_notconverged_kw
+_bestkeffpestim = (_notconverged_kw('not_converged')
                    | (_bestresdiscbatch
                       + _numusedbatch
                       + _bestkeff
                       + Optional(_equivkeff)))
 _bestreskeff = Group(_bestresestim + _minus_line + _bestkeffpestim)
+_warnfixedsources = Group(Suppress(_warning_kw) + _minus_line
+                          + _warn_fixsourcekeff_kw('warning'))
 _bestresblock = OneOrMore(_bestreskeff, stopOn="KIJ")
-defkeffblock = Group(_bestresblock + Optional(_kijkeffblock))('default_keffs')
+defkeffblock = Group(Optional(_warnfixedsources)
+                     + _bestresblock
+                     + Optional(_kijkeffblock))('default_keffs')
 
 
 # MED files
@@ -1049,10 +1064,8 @@ def _define_ifp_adj_table_dim(toks):
 
 
 # IFP adjoint criticality edition
-_ifpadfcrit_intro = (Group(_star_line
-                           + Suppress(_ifpadjcriticality_kw)
-                           + _star_line
-                           + Word(alphas+'_')('ifp_score')
+_adjcrit_ed_intro = _star_line + Suppress(_ifpadjcriticality_kw) + _star_line
+_ifpadjcrit_intro = (Group(Word(alphas+'_')('ifp_response')
                            + _scorename
                            + Suppress(_ifpadjcyclelength_kw)
                            + _inums('ifp_cycle_length')
@@ -1068,10 +1081,12 @@ _ifpadjcoordinates = ((Optional(_ifpadjvol_kw) + OneOrMore(_ifpadjcoordinate))
 _ifpadjcolumns = _ifpadjcoordinates + _ifpadjscore_kw + _spsigma_kw
 _ifpadjline = Group(_ifpadjbinval + _fnums + _fnums)
 _ifpadjvalues = OneOrMore(_ifpadjline)('values')
-ifpadjointcriticality = (Group(_ifpadfcrit_intro
-                               + _ifpadjcolumns('columns')
-                               + _ifpadjvalues
-                               + _star_line)
+_adjcritblock = Group(_ifpadjcrit_intro
+                      + _ifpadjcolumns('columns')
+                      + _ifpadjvalues
+                      + _star_line)
+ifpadjointcriticality = (Group(_adjcrit_ed_intro
+                               + OneOrMore(_adjcritblock))
                          ('ifp_adjoint_crit_edition'))
 
 
