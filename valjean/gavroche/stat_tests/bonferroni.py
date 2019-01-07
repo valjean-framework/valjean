@@ -1,8 +1,8 @@
 r'''Bonferroni methods to compare datasets from other statistical tests.
 
 .. _family-wise: https://en.wikipedia.org/wiki/Family-wise_error_rate
-.. _bonferroni: https://en.wikipedia.org/wiki/Bonferroni_correction
-.. _holm-bonferroni: https://en.wikipedia.org/wiki/Holm-Bonferroni_method
+.. _Bonferroni: https://en.wikipedia.org/wiki/Bonferroni_correction
+.. _Holm-Bonferroni: https://en.wikipedia.org/wiki/Holm-Bonferroni_method
 
 Multiple hypotheses tests
 `````````````````````````
@@ -13,14 +13,14 @@ individual test is supposed to be successful but in most of the case we can
 accept that some of them fail (in a given acceptance of course).
 
 The Bonferroni correction and the Holm-Bonferroni method allow to treat such
-cases. See for example `family-wise`_ error rate wikipedia webpage for more
+cases. See for example `family-wise`_ error rate Wikipedia webpage for more
 details on this kind    of tests.
 
 Here are implemented two tests based on comparison of the p-value from the
 chosen test and a significance level:
 
-* Bonferroni correction: all individual p-vlaues are compared to the same
-  significance level, depending on the number of tests
+* Bonferroni correction: all individual p-values are compared to the same
+  significance level, depending on the number of tests;
 * Holm-Bonferroni method: p-values are first sorted then compared to different
   significance levels depending on number of tests and rank.
 
@@ -38,8 +38,8 @@ tests considered and the chosen method (Bonferroni or Holm-Bonferroni).
 Bonferroni correction
 `````````````````````
 
-The Bonferroni correction is described for example in the wikipédia webpage
-about `bonferroni`_ correction.
+The Bonferroni_ correction is used for multiple comparisons. It is based on a
+weighted comparison to the sognificance level α.
 
 If we have :math:`m` different tests (for example a spectrum with :math:`m`
 bins), the significance level α will be weighted by :math:`m`. This p-value of
@@ -67,8 +67,7 @@ hypothesis rejected.
 Holm-Bonferroni method
 ``````````````````````
 
-The Holm-Bonferroni method is a variation of the Bonferroni correction. It can
-be found in the wikipedia webpage on `holm-bonferroni`_ method.
+The Holm-Bonferroni_ method is a variation of the Bonferroni correction.
 
 The p-value from the chosen test are first sorted from lower to higher value.
 Then each of them are compared to the significance level weighted by
@@ -88,7 +87,7 @@ accepted and rejected hypothesis, like in the Bonferroni correction case.
 Code implementation
 ```````````````````
 
-In both cases, the test is initiliazed with an other test, a Student test for
+In both cases, the test is initiliazed with another test, a Student test for
 example. This test can be evaluated inside the new test
 :meth:`~TestBonferroni.evaluate` method or outside of it. Only examples with
 the full structure will be shown here.
@@ -124,20 +123,22 @@ Successful test with Bonferroni correction
 ...                        test=tstudent_12, alpha=0.05)
 >>> tbonf.ntests
 5
->>> np.equal(tbonf.ntests, ds1.size)
+>>> tbonf.ntests == ds1.size
 True
 >>> tbonf.bonf_signi_level
 0.005
 >>> tbonf_res = tbonf.evaluate()
 >>> bool(tbonf_res)
 True
->>> np.array2string(tbonf_res.reject_null_hyp)
-'[False False False False False]'
+>>> list(tbonf_res.rejected_null_hyp)
+[False, False, False, False, False]
+>>> tbonf_res.nb_rejected
+0
 
 Failing test with Bonferroni correction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
->>> ds3 = Dataset(np.array([5.1, 5.9, 5.8, 5.3, 4.5]),
+>>> ds3 = Dataset(np.array([5.1, 5.9, 5.8, 5.3, 4.7]),
 ...               np.array([0.1, 0.1, 0.05, 0.4, 0.1]))
 >>> tstudent_13 = TestStudent(ds1, ds3, name="comp",
 ...                           description="Comparison using Student test",
@@ -151,10 +152,18 @@ True
 >>> tbonf.bonf_signi_level
 0.005
 >>> tbonf_res = tbonf.evaluate()
+>>> print(np.array2string(tbonf_res.first_test_res.pvalue,
+...                       formatter={'float_kind':'{:.3e}'.format}))
+[3.274e-01 1.304e-02 5.074e-07 4.116e-01 5.782e-03]
+>>> # comparing these numbers to 0.005, only the thrid one should fail
 >>> bool(tbonf_res)
 False
->>> np.array2string(tbonf_res.reject_null_hyp)
-'[False False  True False  True]'
+>>> list(tbonf_res.rejected_null_hyp)
+[False, False, True, False, False]
+>>> tbonf_res.nb_rejected
+1
+>>> tbonf_res.rejected_proportion  # in percentage
+20.0
 
 We perform the same tests with the Holm-Bonferroni method:
 
@@ -194,25 +203,28 @@ Failing test with Holm-Bonferroni method
 >>> thb_res = tholmbonf.evaluate()
 >>> bool(thb_res)
 False
->>> np.allclose(thb_res.first_test_res.pvalue[thb_res.sorted_indices],
-...             np.array([5.1e-07, 8.06e-04, 1.304e-02, 3.274e-01, 4.116e-01]),
-...             rtol=1e-3)
-True
->>> np.array2string(thb_res.sorted_indices)
-'[2 4 1 0 3]'
+>>> print(np.array2string(
+...    thb_res.first_test_res.pvalue[thb_res.sorted_indices],
+...    formatter={'float_kind':'{:.3e}'.format}))
+[5.074e-07 5.782e-03 1.304e-02 3.274e-01 4.116e-01]
+>>> print(thb_res.sorted_indices)
+[2 4 1 0 3]
 >>> alpha = tholmbonf.alpha
 >>> alpha  # alpha is two-sided
 0.025
->>> np.allclose(thb_res.alphas_i,
-...             np.array([alpha/(5-1+1), alpha/(5-2+1), alpha/(5-3+1),
-...                       alpha/(5-4+1), alpha/(5-5+1)]))
-True
->>> thb_res.rejected_null_hyp
+>>> print(np.array2string(thb_res.alphas_i,
+...                       formatter={'float_kind':'{:.2e}'.format}))
+[5.00e-03 6.25e-03 8.33e-03 1.25e-02 2.50e-02]
+>>> list(thb_res.rejected_null_hyp)
 [True, True, False, False, False]
 >>> thb_res.nb_rejected
 2
 >>> thb_res.rejected_proportion  # in percentage
 40.0
+
+The Holm-Bonferroni test is here more restrictive than the Bonferroni one (2
+elements rejected while only one according to Bonferroni correction).
+
 
 Tests with multi-dimension datasets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -235,6 +247,10 @@ Tests with multi-dimension datasets
 >>> print('{:.6f}'.format(tbonf.bonf_signi_level))
 0.004167
 >>> tbonf_res = tbonf.evaluate()
+>>> print(np.array2string(tbonf_res.first_test_res.pvalue,
+...                       formatter={'float_kind':'{:.3e}'.format}))
+[[3.274e-01 2.213e-01 3.274e-01]
+ [4.116e-01 2.398e-01 3.274e-01]]
 >>> bool(tbonf_res)
 True
 
@@ -242,22 +258,15 @@ True
 ...                                description="Holm-Bonferroni method",
 ...                                test=tstudent_45, alpha=0.05)
 >>> thb_res = tholmbonf.evaluate()
->>> bool(thb_res)
-True
 >>> tholmbonf.alpha
 0.025
->>> np.array2string(thb_res.first_test_res.pvalue,
-...                 formatter={'float_kind':'{:.3e}'.format})
-'[[3.274e-01 2.213e-01 3.274e-01]\n [4.116e-01 2.398e-01 3.274e-01]]'
->>> np.array2string(thb_res.first_test_res.pvalue.flatten(),
-...                 formatter={'float_kind':'{:.3e}'.format})
-'[3.274e-01 2.213e-01 3.274e-01 4.116e-01 2.398e-01 3.274e-01]'
->>> np.array2string(thb_res.sorted_indices)
-'[1 4 0 2 5 3]'
->>> np.array2string(
-...     thb_res.first_test_res.pvalue.flatten()[thb_res.sorted_indices],
-...     formatter={'float_kind':'{:.3e}'.format})
-'[2.213e-01 2.398e-01 3.274e-01 3.274e-01 3.274e-01 4.116e-01]'
+>>> print(np.array2string(thb_res.alphas_i,
+...                       formatter={'float_kind':'{:.2e}'.format}))
+[4.17e-03 5.00e-03 6.25e-03 8.33e-03 1.25e-02 2.50e-02]
+>>> print(thb_res.sorted_indices)
+[1 4 0 2 5 3]
+>>> bool(thb_res)
+True
 '''
 
 import numpy as np
@@ -271,7 +280,7 @@ class TestResultBonferroni(TestResult):
     accepted) and ``False`` if it is rejected.
     '''
 
-    def __init__(self, test, first_test_res, reject_hyp):
+    def __init__(self, test, first_test_res, rejected_hyp):
         '''Initialisation of :class:`~.TestResultBonferroni`
 
         :param test: the used Bonferroni test
@@ -284,10 +293,28 @@ class TestResultBonferroni(TestResult):
         '''
         super().__init__(test)
         self.first_test_res = first_test_res
-        self.reject_null_hyp = reject_hyp
+        self.rejected_null_hyp = rejected_hyp
 
     def __bool__(self):
-        return not np.any(self.reject_null_hyp)
+        return not np.any(self.rejected_null_hyp)
+
+    @property
+    def nb_rejected(self):
+        '''Number of rejected null hypothesis according Holm-Bonferroni test.
+
+        :returns: int or :obj:`numpy.generic` (:obj:`int`)
+        '''
+        # if self.rejected_null_hyp[-1]:
+        #     return len(self.rejected_null_hyp)
+        return np.count_nonzero(self.rejected_null_hyp)
+
+    @property
+    def rejected_proportion(self):
+        '''Rejected proportion in percentage.
+
+        :returns: :class:`numpy.generic` (:obj:`float`)
+        '''
+        return self.nb_rejected / self.rejected_null_hyp.size * 100
 
 
 class TestBonferroni(Test):
@@ -313,7 +340,8 @@ class TestBonferroni(Test):
 
     @property
     def ntests(self):
-        '''Link to number of hypothesis to test, i.e. number of bins here.'''
+        '''Returns the number of hypotheses to test, i.e. number of bins here.
+        '''
         return self.test.ds1.size
 
     @staticmethod
@@ -332,8 +360,6 @@ class TestBonferroni(Test):
         * if higher, null hypothesis is accepted for the bin.
         '''
         reject = pvalues <= bonf_signi_level
-        # found in statsmodels.stats.multitest, don't understand its use
-        # pvals_corr = self.pvalue * self.ntests
         return reject
 
     def evaluate(self):
@@ -383,8 +409,8 @@ class TestResultHolmBonferroni(TestResult):
 
         :returns: int or :obj:`numpy.generic` (:obj:`int`)
         '''
-        if self.rejected_null_hyp[-1]:
-            return len(self.rejected_null_hyp)
+        # if self.rejected_null_hyp[-1]:
+        #     return len(self.rejected_null_hyp)
         return np.count_nonzero(self.rejected_null_hyp)
 
     @property
@@ -440,7 +466,7 @@ class TestHolmBonferroni(Test):
             denom = pvalues.size - (_i+1) + 1
             alpha_i.append(alpha / denom)
             rejected_hyp.append(pval < alpha_i[-1])
-        return sorted_inds, alpha_i, rejected_hyp
+        return sorted_inds, np.array(alpha_i), np.array(rejected_hyp)
 
     def evaluate(self):
         '''Evaluation of the used test and of the Holm-Bonferroni method.
