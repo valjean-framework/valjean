@@ -13,13 +13,12 @@ Some options for debugging are available (end flag).
    :ref:`cambronne <cambronne-main>`.
 '''
 
-import sys
 import time
 import logging
 from pyparsing import ParseException
 
-from . import grammar as pygram
 from . import scan
+from .grammar import t4gram
 from .common import SpectrumDictBuilderException
 
 
@@ -37,13 +36,11 @@ class T4ParserException(Exception):
 
 
 class T4Parser():
-    '''Scan Tripoli-4 listings, then parse the required batches.
-    '''
+    '''Scan Tripoli-4 listings, then parse the required batches.'''
 
     @profile
     def __init__(self, jddname, batch=-1, mesh_lim=-1):  # config, *,
-        '''
-        Initialize the :class:`T4Parser` object.
+        '''Initialize the :class:`T4Parser` object.
 
         :param str jddname: path to the Tripoli-4 output
         :param int batch: batch to read (-1 = last, 0 = all, then X)
@@ -58,7 +55,6 @@ class T4Parser():
         self.jdd = jddname
         self.batch_number = batch
         self.mesh_limit = mesh_lim
-        self.end_flag = ""
         self.scan_res = None
         self.result = None
         self.para = "PARA" in jddname or "th_task" in jddname
@@ -83,7 +79,7 @@ class T4Parser():
         return None
 
     @classmethod
-    def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim=-1, end_flag=""):
+    def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim=-1):
         '''
         Constructor for T4Parser for cases where a limit on meshes can be set.
         It is also possible, for debug cases, to put a user's end flag.
@@ -95,12 +91,9 @@ class T4Parser():
                           parsed)
         :param int mesh_lim: limit on lines of meshes (-1 = all of them,
                              X > 0 = lines kept for each mesh, X = 0 will fail)
-        :param str end_flag: optional end flag to stop scanning (and parsing)
-        :returns: T4Parser object
         '''
         start_time = time.time()
         parser = cls(jdd, batch, mesh_lim)
-        parser.end_flag = end_flag
         if parser.scan_then_parse(start_time):
             return parser
         return None
@@ -121,7 +114,6 @@ class T4Parser():
             return False
         LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
         LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
-        self.check_t4_parsing()
         return True
 
     @profile
@@ -131,11 +123,7 @@ class T4Parser():
         If end_flag was set, calls :meth:`.scan.Scan.debug_scan` instead of
         the usual constructor.
         '''
-        if self.end_flag:
-            self.scan_res = scan.Scan.debug_scan(self.jdd, self.mesh_limit,
-                                                 self.para, self.end_flag)
-        else:
-            self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para)
+        self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para)
         # need to look if we keep or not the exception, catch it,
         # let it crash... -> how to count unsuccessful jobs...
         if not self.scan_res:
@@ -154,7 +142,7 @@ class T4Parser():
             str_to_parse = self.scan_res[self.batch_number]
         # now parse the results string
         try:
-            self.result = pygram.mygram.parseString(str_to_parse).asList()
+            self.result = t4gram.parseString(str_to_parse).asList()
         except ParseException:
             LOGGER.error("Parsing failed, you are probably trying to read a "
                          "new response. Please update the parser before "
@@ -202,60 +190,3 @@ class T4Parser():
         '''
         for stime, vtime in self.scan_res.times.items():
             print(stime.capitalize(), "=", vtime)
-
-    def check_t4_parsing(self):
-        '''Check if parsing went to the end:
-
-        * if the end flag was not precised, a time should appear in the last
-          result;
-        * if not, no check can be performed as the end flag can be anywhere,
-          even "transformed" during parsing.
-
-        Print a logger message if not found but don't block access to the
-        parsing result (this can help to find the issue).
-        '''
-        if not self.end_flag:
-            if not any("_time" in s for s in self.result[-1].keys()):
-                LOGGER.error("Time not found in the parsing result, "
-                             "parsing probably stopped before end, "
-                             "please check.")
-        if self.end_flag:
-            LOGGER.info("You are running with an end flag ('%s'), "
-                        "no automatic check of correct end of parsing is "
-                        "currently available in that case, "
-                        "please check carefully.",
-                        self.end_flag)
-
-
-def main(myjdd="", batch_num=-1, mesh_lim=None, end_flag=""):
-    '''Main function in order to test parsing directly from this module.
-
-    :param str myjdd: path to the T4 input
-    :param int batch_number: batch number to parse
-    :param int mesh_lim: number of lines of mesh to read
-                         (if required, else None)
-    :returns: boolean, True if parsing was successful, else False
-    '''
-    if myjdd == "":
-        try:
-            myjdd = sys.argv[1]
-            if "end_flag" in sys.argv:
-                end_flag = sys.argv[sys.argv.index("end_flag")+1]
-        except IndexError:
-            print("Eponine: argument needed (jdd name)")
-            exit(-1)
-
-    # need to think about endflag (?), meshlim and para arguments
-    if mesh_lim or end_flag:
-        if not mesh_lim:
-            mesh_lim = -1
-        t4_res = T4Parser.parse_jdd_with_mesh_lim(myjdd, batch_num, mesh_lim,
-                                                  end_flag)
-    else:
-        t4_res = T4Parser.parse_jdd(myjdd, batch_num)
-    if t4_res:
-        if LOGGER.isEnabledFor(logging.INFO):
-            t4_res.print_t4_stats()
-            t4_res.print_t4_times()
-        return t4_res.check_t4_times()
-    return None

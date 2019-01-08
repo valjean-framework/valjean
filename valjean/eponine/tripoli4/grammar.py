@@ -1182,15 +1182,31 @@ listresponses = Group(OneOrMore(response).setParseAction(
 perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
 
 
+
+################################
+#         DEBUG PARSER         #
+################################
+
+# debug grammar, to be used with parse_debug (only for parsing development)
+t4debug_gram = (OneOrMore((intro
+                           + OneOrMore(listresponses | ifpadjointcriticality
+                                       | defkeffblock | contribpartblock
+                                       | perturbation | OneOrMore(runtime)))
+                          .setParseAction(trans.to_dict))
+                .setParseAction(dump_in_logger)
+                | intro + OneOrMore(runtime)).setFailAction(trans.fail_parsing)
+
+
 ################################
 #        GENERAL PARSER        #
 ################################
 
 # replace group by real dict, need to check if fine or not (risk: list needed)
-mygram = (OneOrMore((intro
+t4gram = (OneOrMore((intro
                      + OneOrMore(listresponses | ifpadjointcriticality
                                  | defkeffblock | contribpartblock
-                                 | perturbation | OneOrMore(runtime)))
+                                 | perturbation)
+                     + runtime)
                     .setParseAction(trans.to_dict))
           .setParseAction(dump_in_logger)
-          | intro + OneOrMore(runtime)).setFailAction(trans.fail_parsing)
+          | intro + runtime).setFailAction(trans.fail_parsing)

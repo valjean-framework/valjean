@@ -31,6 +31,8 @@ the innest ones:
         ``setParseAction`` applied on the ``pyparsing.ParseResults``
       * :mod:`~valjean.eponine.tripoli4.common`: methods to transform TRIPOLI-4
         data in `NumPy` objects
+      * One additional module parsing module is available for debugging and
+        development: :mod:`~.parse_debug`
 
 
 Main modules
@@ -112,3 +114,10 @@ Tests should be performed in the code to take the latter case into account
 .. automodule:: valjean.eponine.tripoli4.common
    :synopsis: Common methods to build numpy arrays from dictionaries and lists
    :private-members:
+
+
+:mod:`~.parse_debug` – Debug parsing of TRIPOLI-4 outputs
+`````````````````````````````````````````````````````````
+
+.. automodule:: valjean.eponine.tripoli4.parse_debug
+   :synopsis: Debug parsing of TRIPOLI-4 outputs
