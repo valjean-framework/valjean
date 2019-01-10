@@ -191,7 +191,7 @@ import logging
 from pyparsing import (Word, Keyword, White, alphas, alphanums,
                        Suppress, Optional, LineEnd, LineStart, CaselessKeyword,
                        Group, OneOrMore, ZeroOrMore, Forward,
-                       tokenMap)
+                       tokenMap, delimitedList, printables)
 from pyparsing import pyparsing_common as pyparscom
 from . import transform as trans
 from .transform import compose2
@@ -208,7 +208,8 @@ _inums = pyparscom.number.setParseAction(tokenMap(trans.common.ITYPE))
 ###################################
 
 # General keywords
-_integratedres_kw = Keyword("ENERGY INTEGRATED RESULTS")
+_integratedres_kw = (Keyword("ENERGY INTEGRATED RESULTS")
+                     | Keyword("NU INTEGRATED RESULTS"))
 _numbatchsused_kw = (Keyword("number of")
                      + (Keyword("batches") | Keyword("batch"))
                      + Optional(Keyword("used")))
@@ -243,6 +244,7 @@ _respfunction_kw = Keyword("RESPONSE FUNCTION")
 _respname_kw = Keyword("RESPONSE NAME")
 _scorename_kw = Keyword("SCORE NAME")
 _energysplitname_kw = Keyword("ENERGY DECOUPAGE NAME")
+_nusplitname_kw = Keyword("DECOUPAGE NAME")
 _particule_kw = Keyword("PARTICULE")
 _incparticle_kw = Keyword("INCIDENT PARTICULE")
 _reactiononnucl_kw = Keyword("reaction on nucleus")
@@ -284,6 +286,11 @@ _scoremaillevol_kw = Keyword("num of volume")
 _scoremailledepth_kw = Keyword("depth of lattice")
 _scoremaillecell_kw = Keyword("num of cell")
 
+# Correspondence table (volumes and their names)
+_corresptable_kw = Keyword("Correspondence table between volumes "
+                           "ids and names :")
+_vol_kw = Keyword("Volume")
+
 # KEFF keywords
 _fullcomb_kw = Keyword("full combined estimator")
 _bestresdiscbatchs_kw = Keyword("best results are obtained with discarding")
@@ -318,16 +325,19 @@ _phimax_kw = Keyword("phi max. =")
 _spectrum_kw = Keyword("SPECTRUM RESULTS")
 _spgroupwunit_kw = Keyword("group (MeV)")
 _spgroup_kw = Keyword("group")
-_spscore_kw = Keyword("score")
-_spsigma_kw = Keyword("sigma_%")
 _spscovlethargy_kw = Keyword("score/lethargy")
 _spvov_kw = Keyword("vov")
+_nuspectrum_kw = Keyword("NU RESULTS")
+_nusprange_kw = Keyword("range")
+_spscore_kw = Keyword("score")
+_spsigma_kw = Keyword("sigma_%")
 
 # Mesh keywords
 _energyrange_kw = Keyword("Energy range")
 
 # MED files
 _creationmedfile_kw = Keyword("Creating MED output file")
+_creationfile_kw = Keyword("# Creating output file")
 _medmeshid_kw = Keyword("MED mesh id")
 
 # Entropy
@@ -368,7 +378,11 @@ _kijmkeff_kw = Keyword("kij-keff =")
 _kijdomratio_kw = Keyword("dominant ratio =")
 _kijeigenval_kw = Keyword("eigenvalues (re, im)")
 _kijeigenvec_kw = Keyword("eigenvectors")
+_kijeigenvecnotprint_kw = Keyword("KIJ eigenvectors not printed, "
+                                  "increase maximum dump size if needed")
 _kijmatrix_kw = Keyword("KIJ_MATRIX :")
+_kijmatrixnotprint_kw = Keyword("KIJ matrix not printed, "
+                                "increase maximum dump size if needed")
 
 # KIJ sources
 _kijsources_kw = Keyword("SOURCES VECTOR :")
@@ -439,17 +453,16 @@ _meanweightleakvals = Group(_fnums('val')
                             + Suppress("sigma =") + _fnums('sigma')
                             + Suppress('sigma% =') + _fnums('sigma%'))
 _meanweightleak = (Suppress(_meanweightleakage_kw)
-                   + (Suppress('=') + _meanweightleakvals
-                      | Suppress(':') + _unknown_kw)
-                   ('mean_weigt_leak'))
-_meanweightleakin = (Suppress(_meanweightleakagein_kw)
-                     + (Suppress('=') + _meanweightleakvals
-                        | Suppress(':') + _unknown_kw)
-                     ('mean_weigt_leak_inside'))
+                   + (Suppress('=') + _meanweightleakvals('mean_weight_leak')
+                      | Suppress(':') + _unknown_kw('mean_weight_leak')))
+_meanweightleakin = (
+    Suppress(_meanweightleakagein_kw)
+    + (Suppress('=') + _meanweightleakvals('mean_weight_leak_inside')
+       | Suppress(':') + _unknown_kw('mean_weight_leak_inside')))
 _edbatchnum = Suppress(_edbatchnum_kw + ':') + _inums('edition_batch_number')
 
 _meanweightrestartpart = (Suppress(_meanweightrestartpart_kw)
-                          + _fnums('meanwgtrestartpart'))
+                          + _fnums('mean_weight_restart_particle'))
 _introelts = (_meanweightleak | _meanweightleakin | _edbatchnum
               | _meanweightrestartpart)
 intro = _sourceintensity + _star_line + OneOrMore(_introelts)
@@ -465,8 +478,9 @@ runtime = _simutime | _elapsedtime | _exploitime
 # Response parser
 # Description of the response
 _respfunc = (Suppress(_respfunction_kw + ':')
-             + OneOrMore(Word(alphanums + '_() =+/:-'), stopOn=LineEnd())
-             .setParseAction(''.join)('resp_function'))
+             + OneOrMore(Word(printables), stopOn=LineEnd())
+             # + OneOrMore(Word(alphanums + '_() =+/:-'), stopOn=LineEnd())
+             .setParseAction(' '.join)('response_function'))
 # warning: order matters hier, LineEnd has to be before Optional(Word)
 _respname = (Suppress(_respname_kw + ':')
              + (Suppress(LineEnd())
@@ -475,8 +489,10 @@ _scorename = (Suppress(_scorename_kw + ":")
               + Word(alphanums + '_ ')('score_name'))
 _energysplit = (Suppress(_energysplitname_kw + ':')
                 + Word(alphanums + '_ -')('energy_split_name'))
+_nusplit = (Suppress(_nusplitname_kw + ':')
+            + Word(alphanums + '_ -')('nu_split_name'))
 respdesc = (_respfunc + Optional(_respname) + Optional(_scorename)
-            + Optional(_energysplit))
+            + Optional(_energysplit | _nusplit))
 
 _particle = (Suppress(_particule_kw + ':')
              + OneOrMore(Word(alphas+','), stopOn=LineEnd())
@@ -587,33 +603,33 @@ _score_allgeom = _scoreallgeom_kw('scoring_zone_type')
 _score_allsources = _scoreallsources_kw('scoring_zone_type')
 _score_vol = (_scorevol_kw('scoring_zone_type')
               + Suppress(_scorevolvol_kw + ':')
-              + _inums('scoring_zone_id')
+              + (_inums | Word(printables))('scoring_zone_id')
               + Suppress(_scorevolume_kw + ':')
               + _fnums('scoring_zone_volsurf'))
 _score_vol_sum = ((_scorevolsum_kw('scoring_zone_type')
                    + Suppress(_scorevolsumvol_kw + ':')
-                   + Group(_inums
-                           + ZeroOrMore(Suppress('+') + _inums))
+                   + Group(delimitedList(_inums, delim='+'))
+                   # + Group(_inums
+                   #         + ZeroOrMore(Suppress('+') + _inums))
                    ('scoring_zone_id')
                    + Suppress(_scorevolumesum_kw + ':')
                    + _fnums('scoring_zone_volsurf')))
 _score_surf = (_scoresurf_kw('scoring_zone_type')
                + Suppress(_scoresurfvol_kw + ':')
-               + (Group(_inums + Suppress(',') + _inums)
-                  | Group(Word(alphanums+'/_') + Suppress(',')
-                          + Word(alphanums+'/_')))
+               + Group(delimitedList(_inums
+                                     | Word(printables, excludeChars=',')))
                ('scoring_zone_id')
                + Optional(Suppress(_scoresurface_kw + ':')
                           + _fnums('scoring_zone_volsurf')))
-_score_surf_sum = (_scoresurfsum_kw('scoring_zone_type')
-                   + Suppress(_scoresurfsumfront_kw + ':')
-                   + OneOrMore(Group(Suppress('(')
-                                     + _inums + Suppress(',')
-                                     + _inums + Suppress(')')
-                                     + Optional(Suppress('+'))))
-                   ('scoring_zone_id')
-                   + Suppress(_scoresurfacesum_kw + ':')
-                   + _fnums('scoring_zone_volsurf'))
+_score_surf_sum = (
+    _scoresurfsum_kw('scoring_zone_type')
+    + Suppress(_scoresurfsumfront_kw + ':')
+    + delimitedList(Group(Suppress('(')
+                          + delimitedList(Word(printables, excludeChars=',()')
+                                          | _inums)
+                          + Suppress(')')), delim='+')('scoring_zone_id')
+    + Suppress(_scoresurfacesum_kw + ':')
+    + _fnums('scoring_zone_volsurf'))
 _score_point = (_scorepoint_kw('scoring_zone_type')
                 + Suppress(':')
                 + Group(_fnums + Suppress(',')
@@ -654,6 +670,15 @@ scorezone = (Suppress(_scorezone_kw+':')
                 | LineEnd()))
 # scoring description = scoring mode + scoring zone
 scoredesc = scoremode + scorezone
+
+# Correspondence table (volumes ids and names)
+corresptable = (Suppress(_corresptable_kw)
+                + OneOrMore(Group(
+                    Suppress(_vol_kw + ':')
+                    + _inums('volume_id')
+                    + Suppress(Keyword('is :'))
+                    + Word(printables)('volume_name')), stopOn=_endtable)
+                ('correspondence_table'))
 
 
 # RESPONSE RESULTS
@@ -737,13 +762,13 @@ _phiangzone = Group(Suppress(_phiangzone_kw) + _inums
 
 
 # Spectrum
+_spectrumunits = Group(Suppress(_units_kw)
+                       + Word(alphanums+'.^-+%') * 4)('units')
+_spectrumbin = _fnums + Suppress('-') + _fnums
 _spectrumcols = Suppress((_spgroupwunit_kw | _spgroup_kw)
                          + _spscore_kw
                          + _spsigma_kw
                          + _spscovlethargy_kw)
-_spectrumunits = Group(Suppress(_units_kw)
-                       + Word(alphanums+'.^-+%') * 4)('units')
-_spectrumbin = _fnums + Suppress('-') + _fnums
 _spectrumvals = (Group(_spectrumbin + _fnums + _fnums + _fnums)
                  .setFailAction(trans.fail_spectrum))
 _spectrum = (Suppress(_spectrum_kw)
@@ -769,6 +794,18 @@ _vovspectrum = (Suppress(_spectrum_kw)
                 + OneOrMore(_vovspectrumvals, stopOn=_endtable)
                 ('spectrum_vals'))
 vovspectrumblock = Group(Group(_vovspectrum))('vov_spectrum_res')
+
+
+# Nu spectrum
+_nuspectrumcols = Suppress(_nusprange_kw + _spscore_kw + _spsigma_kw)
+_nuspectrumvals = (Group(_spectrumbin + _fnums + _fnums)
+                   .setFailAction(trans.fail_spectrum))
+_nuspectrum = (Suppress(_nuspectrum_kw)
+               + _numdiscbatch
+               + _nuspectrumcols
+               + Optional(_spectrumunits)
+               + OneOrMore(_nuspectrumvals, stopOn=_endtable)('spectrum_vals'))
+nuspectrumblock = Group(Group(_nuspectrum + integratedres))('nu_spectrum_res')
 
 
 def _printtoks(toks):
@@ -815,9 +852,10 @@ _kijmatrix = Forward()
 _kijeigenvaltab = (Suppress(_kijeigenval_kw)
                    + Group(OneOrMore(_kijeigenval).setParseAction(_set_kijdim))
                    ('kij_eigenval'))
-_kijeigenvectab = (Suppress(_kijeigenvec_kw) + Group(OneOrMore(_kijeigenvec))
-                   ('kij_eigenvec'))
-_kijmatrixtab = (Suppress(_kijmatrix_kw) + Group(OneOrMore(_kijmatrix))
+_kijeigenvectab = ((Suppress(_kijeigenvec_kw) + Group(OneOrMore(_kijeigenvec)))
+                   | _kijeigenvecnotprint_kw)('kij_eigenvec')
+_kijmatrixtab = (Suppress(_kijmatrix_kw)
+                 + (Group(OneOrMore(_kijmatrix)) | _kijmatrixnotprint_kw)
                  ('kij_matrix'))
 kijres = (Group(Suppress(_integratedres_kw)
                 + _numusedbatch
@@ -942,7 +980,7 @@ defkeffblock = Group(Optional(_warnfixedsources)
 
 
 # MED files
-medfile = (Suppress(_creationmedfile_kw + ':')
+medfile = (Suppress((_creationmedfile_kw | _creationfile_kw) + ':')
            + Word(alphanums+'/_.')('med_file_res')
            + Suppress(_medmeshid_kw + Word(alphanums+'_.')))
 
@@ -1147,13 +1185,15 @@ contribpartblock = (Group(Suppress(_nbcontribpart_kw)
 # Score block
 scoreblock = (Group(scoredesc + (OneOrMore(vovspectrumblock
                                            | spectrumblock
+                                           | nuspectrumblock
                                            | meshblock
                                            | entropy
                                            | medfile
                                            | integratedres
                                            | uncertblock
                                            | uncertintegblock
-                                           | gbblock)))
+                                           | gbblock
+                                           | corresptable)))
               .setParseAction(trans.convert_score))
 
 listscoreblock = (Group(OneOrMore(scoreblock)
@@ -1182,7 +1222,6 @@ listresponses = Group(OneOrMore(response).setParseAction(
 perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
 
 
-
 ################################
 #         DEBUG PARSER         #
 ################################
@@ -1201,7 +1240,6 @@ t4debug_gram = (OneOrMore((intro
 #        GENERAL PARSER        #
 ################################
 
-# replace group by real dict, need to check if fine or not (risk: list needed)
 t4gram = (OneOrMore((intro
                      + OneOrMore(listresponses | ifpadjointcriticality
                                  | defkeffblock | contribpartblock
@@ -1209,4 +1247,13 @@ t4gram = (OneOrMore((intro
                      + runtime)
                     .setParseAction(trans.to_dict))
           .setParseAction(dump_in_logger)
-          | intro + runtime).setFailAction(trans.fail_parsing)
+          | (intro + runtime).setParseAction(trans.to_dict)
+          ).setFailAction(trans.fail_parsing)
+
+oldgram = (OneOrMore((intro
+                      + OneOrMore(listresponses | ifpadjointcriticality
+                                  | defkeffblock | contribpartblock
+                                  | perturbation | OneOrMore(runtime)))
+                     .setParseAction(trans.to_dict))
+           .setParseAction(dump_in_logger)
+           | intro + OneOrMore(runtime)).setFailAction(trans.fail_parsing)

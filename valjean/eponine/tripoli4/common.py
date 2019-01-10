@@ -56,7 +56,7 @@ Spectrum and meshes results use a common representation build using
 :class:`DictBuilder`. This common representation is a **7-dimension structured
 array** from `NumPy`, see `doc`_ or `numpy structured array`_.
 
-Dimensions are given in :data:`DictBuilder.VARS`:
+Dimensions are given in :data:`KinematicDictBuilder.VARS`:
 
 * **s0**, **s1**, **s2**: space coordinates (typically (x, y, z), (r, θ, z) or
   (r, θ, ϕ), depending on frame reference)
@@ -534,28 +534,7 @@ FTYPE = np.float64
 
 
 class DictBuilder(ABC):
-    '''Class to build the dictionary for spectrum and mesh results as
-    7-dimensions structured arrays.
-    7-dimensions are: space (3), energy, time, mu and phi (direction angles)
-
-    This class has 2 abstract methods, :meth:`_add_last_energy_bin` and
-    :meth:`fill_arrays_and_bins`, so it cannot be initialized directly.
-
-    .. data:: DictBuilder.VAR_FLAG
-
-       ``{'t': 'time_step', 'mu': 'mu_angle_zone', 'phi': 'phi_angle_zone'}``:
-       correspondance dictionary between internal name of dimensions and names
-       in listings
-
-    .. data:: DictBuilder.VARS
-
-       ``['s0', 's1', 's2', 'e', 't', 'mu', 'phi']``:
-       names of the 7 dimensions as used internally
-    '''
-    VAR_FLAG = {'t': 'time_step',
-                'mu': 'mu_angle_zone',
-                'phi': 'phi_angle_zone'}
-    VARS = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
+    '''General class to build dictionaries.'''
 
     def __init__(self, colnames, lnbins):
         '''Initialization of DictBuilder.
@@ -565,25 +544,11 @@ class DictBuilder(ABC):
            ``'score'``, ``'sigma'``, ``'score/lethargy'`` for spectrum)
         :param list(int) lnbins: number of bins for each dimension
         '''
-        try:
-            assert len(lnbins) == 7
-        except TypeError:
-            LOGGER.error("lnbins should the list of number of bins")
-            raise TypeError
-        except AssertionError:
-            LOGGER.error("Number of bins should be 7 (3 space dimensions, "
-                         "1 energy, 1 time, 2 direction angles)")
-            raise AssertionError
-        self.bins = OrderedDict([('s0', []), ('s1', []), ('s2', []),
-                                 ('e', []), ('t', []),
-                                 ('mu', []), ('phi', [])])
-        self.units = {'s0': 'cm', 's1': 'unknown', 's2': 'unknown',
-                      'e': 'MeV', 't': 's', 'mu': '', 'phi': 'rad',
-                      'score': 'unknown', 'sigma': '%'}
+        self.bins = OrderedDict()
+        self.units = {}
         dtype = np.dtype({'names': colnames,
                           'formats': [FTYPE]*len(colnames)})
         self.arrays = {'default': np.full((lnbins), np.nan, dtype=dtype)}
-        LOGGER.debug("bins: %s", str(self.bins))
 
     def add_array(self, name, colnames, lnbins):
         '''Add a new array to dictionary arrays with key name.
@@ -600,51 +565,18 @@ class DictBuilder(ABC):
         self.arrays[name] = np.full((lnbins), np.nan, dtype=dtype)
 
     @abstractmethod
-    def _add_last_energy_bin(self, data):
-        '''Add last bin in energy from spectrum or mesh.
-
-        :param list data: mesh or spectrum results
-        '''
-
-    def _add_last_bin_for_dim(self, data, dim, lastbin):
-        '''Add last bin for the dimension dim. Depending on order of the bins
-        the last one will be inserted as first bin or added as last bin.
-
-        :param list data: mesh or spectrum results
-        :param str dim: dimension where the bin will be added (t, mu, phi)
-        :param int lastbin: index of the bin in mesh or spectrum containing the
-                         missing edge of the bins
-        '''
-        LOGGER.debug("Adding last bin for dim %s, flag = %s",
-                     dim, DictBuilder.VAR_FLAG[dim])
-        if len(self.bins[dim]) > 1 and self.bins[dim][0] > self.bins[dim][1]:
-            self.bins[dim].insert(0, data[0][DictBuilder.VAR_FLAG[dim]][2])
-        else:
-            self.bins[dim].append(data[lastbin][DictBuilder.VAR_FLAG[dim]][2])
-
     def add_last_bins(self, data):
-        '''Add last bins in energy, time, mu and phi direction angles.
-        Based on keywords presence in data.
+        '''Add last bins based on keywords presence in data.
 
         :param list data: mesh or spectrum results
         '''
-        self._add_last_energy_bin(data)
-        nphibins = len(self.bins['phi']) if self.bins['phi'] else 1
-        nmubins = len(self.bins['mu']) if self.bins['mu'] else 1
-        # other possibility: if DictBuilder.VAR_FLAG['t'] in data[0]
-        if 'time_step' in data[0]:
-            self._add_last_bin_for_dim(data, 't', -int(nphibins)*int(nmubins))
-        if 'mu_angle_zone' in data[0]:
-            self._add_last_bin_for_dim(data, 'mu', -int(nphibins))
-        if 'phi_angle_zone' in data[0]:
-            self._add_last_bin_for_dim(data, 'phi', -1)
 
     def _flip_bins_for_dim(self, dim, axis):
         '''Flip bins for dimension dim.
 
-        :param str dim: dimension ('e', 't', 'mu', 'phi')
+        :param str dim: dimension (examples: 'e', 't', 'mu', 'phi')
         :param int axis: axis of the dimension
-                     ('e' -> 3, 't' -> 4, 'mu' -> 5, 'phi' -> 6)
+                     (example: 'e' -> 3, 't' -> 4, 'mu' -> 5, 'phi' -> 6)
         '''
         LOGGER.debug("Bins %s avant flip: %s", dim, str(self.bins[dim]))
         self.bins[dim] = np.flip(self.bins[dim], 0)
@@ -682,7 +614,106 @@ class DictBuilder(ABC):
         '''
 
 
-class MeshDictBuilder(DictBuilder):
+class KinematicDictBuilder(DictBuilder):
+    '''Class to build the dictionary for spectrum and mesh results as
+    7-dimensions structured arrays.
+    7-dimensions are: space (3), energy, time, mu and phi (direction angles)
+
+    This class has 2 abstract methods, :meth:`_add_last_energy_bin` and
+    :meth:`fill_arrays_and_bins`, so it cannot be initialized directly.
+
+    .. data:: KinematicDictBuilder.VAR_FLAG
+
+       ``{'t': 'time_step', 'mu': 'mu_angle_zone', 'phi': 'phi_angle_zone'}``:
+       correspondance dictionary between internal name of dimensions and names
+       in listings
+
+    .. data:: KinematicDictBuilder.VARS
+
+       ``['s0', 's1', 's2', 'e', 't', 'mu', 'phi']``:
+       names of the 7 dimensions as used internally
+    '''
+    VAR_FLAG = {'t': 'time_step',
+                'mu': 'mu_angle_zone',
+                'phi': 'phi_angle_zone'}
+    # VARS = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
+
+    def __init__(self, colnames, lnbins):
+        '''Initialization of DictBuilder.
+
+        :param list(str) colnames: name of the columns/results
+           (e.g. ``'score'`` and ``'sigma'`` for mesh, or
+           ``'score'``, ``'sigma'``, ``'score/lethargy'`` for spectrum)
+        :param list(int) lnbins: number of bins for each dimension
+        '''
+        try:
+            assert len(lnbins) == 7
+        except TypeError:
+            LOGGER.error("lnbins should the list of number of bins")
+            raise TypeError
+        except AssertionError:
+            LOGGER.error("Number of bins should be 7 (3 space dimensions, "
+                         "1 energy, 1 time, 2 direction angles)")
+            raise AssertionError
+        super().__init__(colnames, lnbins)
+        self.bins = OrderedDict([('s0', []), ('s1', []), ('s2', []),
+                                 ('e', []), ('t', []),
+                                 ('mu', []), ('phi', [])])
+        self.units = {'s0': 'cm', 's1': 'unknown', 's2': 'unknown',
+                      'e': 'MeV', 't': 's', 'mu': '', 'phi': 'rad',
+                      'score': 'unknown', 'sigma': '%'}
+
+    @abstractmethod
+    def _add_last_energy_bin(self, data):
+        '''Add last bin in energy from spectrum or mesh.
+
+        :param list data: mesh or spectrum results
+        '''
+
+    def _add_last_bin_for_dim(self, data, dim, lastbin):
+        '''Add last bin for the dimension dim. Depending on order of the bins
+        the last one will be inserted as first bin or added as last bin.
+
+        :param list data: mesh or spectrum results
+        :param str dim: dimension where the bin will be added (t, mu, phi)
+        :param int lastbin: index of the bin in mesh or spectrum containing the
+                         missing edge of the bins
+        '''
+        LOGGER.debug("Adding last bin for dim %s, flag = %s",
+                     dim, KinematicDictBuilder.VAR_FLAG[dim])
+        if len(self.bins[dim]) > 1 and self.bins[dim][0] > self.bins[dim][1]:
+            self.bins[dim].insert(
+                0, data[0][KinematicDictBuilder.VAR_FLAG[dim]][2])
+        else:
+            self.bins[dim].append(
+                data[lastbin][KinematicDictBuilder.VAR_FLAG[dim]][2])
+
+    def add_last_bins(self, data):
+        '''Add last bins in energy, time, mu and phi direction angles.
+        Based on keywords presence in data.
+
+        :param list data: mesh or spectrum results
+        '''
+        self._add_last_energy_bin(data)
+        nphibins = len(self.bins['phi']) if self.bins['phi'] else 1
+        nmubins = len(self.bins['mu']) if self.bins['mu'] else 1
+        # other possibility: if DictBuilder.VAR_FLAG['t'] in data[0]
+        if 'time_step' in data[0]:
+            self._add_last_bin_for_dim(data, 't', -int(nphibins)*int(nmubins))
+        if 'mu_angle_zone' in data[0]:
+            self._add_last_bin_for_dim(data, 'mu', -int(nphibins))
+        if 'phi_angle_zone' in data[0]:
+            self._add_last_bin_for_dim(data, 'phi', -1)
+
+    @abstractmethod
+    def fill_arrays_and_bins(self, data):
+        '''Fill arrays and bins for spectrum or mesh data.
+
+        :param list data: mesh or spectrum results
+        '''
+
+
+class MeshDictBuilder(KinematicDictBuilder):
     '''Class specific to mesh dictionary -> mainly filling of bins and arrays.
 
     This class inherites from DictBuilder, see :class:`DictBuilder` for
@@ -754,7 +785,7 @@ class SpectrumDictBuilderException(Exception):
     '''Exception to spectrum builder (bad bins)'''
 
 
-class SpectrumDictBuilder(DictBuilder):
+class SpectrumDictBuilder(KinematicDictBuilder):
     '''Class specific to spectrum dictionary
     -> mainly filling of bins and arrays.
 
@@ -1037,6 +1068,114 @@ def convert_mesh(meshres):
     return convmesh
 
 
+class NuSpectrumDictBuilder(DictBuilder):
+    '''Class specific to spectrum dictionary
+    -> mainly filling of bins and arrays.
+
+    This class inherites from DictBuilder, see :class:`DictBuilder` for
+    initialization and common methods.
+    '''
+
+    def __init__(self, colnames, lnbins):
+        super().__init__(colnames, lnbins)
+        self.bins = OrderedDict([('nu', [])])
+        self.units = {'nu': ''}
+
+    def fill_arrays_and_bins(self, data):
+        '''Fill arrays and bins for spectrum data.
+
+        :param list data: spectrum results
+
+        Current arrays possibly filled are:
+
+        * ``'default'`` (mandatory)
+        * ``'integrated_res'`` (over nu)
+        '''
+        LOGGER.debug("In NuSpectrumDictBuilder.fill_arrays_and_bins")
+        for ispec in data:
+            # Fill spectrum values
+            for inu, ivals in enumerate(ispec['spectrum_vals']):
+                self._check_bins(ispec['spectrum_vals'], inu)
+                self.bins['nu'].append(ivals[0])
+                index = (inu, )
+                array = np.array(tuple(ivals[2:]),
+                                 dtype=self.arrays['default'].dtype)
+                try:
+                    self.arrays['default'][index] = array
+                except IndexError:
+                    LOGGER.error(
+                        "IndexError: your spectrum probably uses more than "
+                        "one dimension (X and Y), but the number of x bins "
+                        "may be different in the different y bins.\n"
+                        "Please make sure you run Tripoli-4 with option '-a'.")
+                    raise
+
+            # Fill integrated result if exist
+            if 'integrated_res' in ispec and 'integrated_res' in self.arrays:
+                iintres = ispec['integrated_res']
+                index = (0, )
+                self.arrays['integrated_res'][index] = (np.array(
+                    (iintres['score'], iintres['sigma']),
+                    dtype=self.arrays['integrated_res'].dtype))
+
+    def _check_bins(self, vals, inu):
+        '''Check bins validity.'''
+        if self.bins['nu'] and vals[inu][0] != vals[inu-1][1]:
+            raise SpectrumDictBuilderException(
+                "Problem with energy bins: some bins are probably missing. "
+                "Please make sure you run Tripoli-4 with '-a' option.")
+
+    def add_last_bins(self, data):
+        '''Add last bin in nu from spectrum.
+
+        :param list data: spectrum results
+        '''
+        self.bins['nu'].append(data[-1]['spectrum_vals'][-1][1])
+
+
+def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
+    '''Convert nu spectrum results in 1D NumPy structured array.
+
+    :param list spectrum: list of spectra.
+     Accepts time and (direction) angular grids.
+    :param list(str) colnames: list of the names of the columns.
+      Default = ``['score', 'sigma']``
+    :returns: dictionary with keys and elements
+
+      * ``'spectrum'``: 1 dimension NumPy structured array with related
+        binnings as NumPy arrays
+        ``v[nu] = ('score', 'sigma')``
+      * ``'disc_batchs'``: number of discarded batchs for the score
+      * ``'nubins'``: nu binning
+      * ``'integrated_res'``: 1 dimension NumPy structured array
+        ``v[nu] = ('score', 'sigma')``
+      * ``'used_batch'``: number of used batchs (only if integrated result)
+    '''
+    nnubins = len(spectrum[0]["spectrum_vals"])
+    LOGGER.debug("nnubins = %d", nnubins)
+    vals = NuSpectrumDictBuilder(colnames, [nnubins])
+    if 'integrated_res' in spectrum[0]:
+        vals.add_array('integrated_res', ['score', 'sigma'], [1])
+    # Fill spectrum, bins and integrated result if exists
+    vals.fill_arrays_and_bins(spectrum)
+    vals.add_last_bins(spectrum)
+    # Flip bins
+    vals.flip_bins()
+    # Build dictionary to be returned
+    convspec = {'disc_batch': spectrum[0]['disc_batch'],
+                'spectrum': vals.arrays['default'],
+                'bins': vals.bins,
+                'units': vals.units}
+    if 'units' in spectrum[0]:
+        convspec['units']['nu'] = spectrum[0]['units'][0]
+        convspec['units']['score'] = spectrum[0]['units'][1]
+        convspec['units']['sigma'] = spectrum[0]['units'][2]
+    if 'integrated_res' in spectrum[0]:
+        convspec['integrated_res'] = vals.arrays['integrated_res']
+        convspec['used_batch'] = spectrum[0]['integrated_res']['used_batch']
+    return convspec
+
+
 def convert_integrated_result(result):
     '''Convert the energy integrated result in NumPy structured array
 
@@ -1278,15 +1417,20 @@ def convert_kij_result(res):
     imegval = np.array(list(zip(*res['kij_eigenval']))[1])
     egvals = reegval + 1j*imegval
     # eigen vectors
-    egvecs = np.array(res['kij_eigenvec'])
+    egvecs = (np.array(res['kij_eigenvec'])
+              if isinstance(res['kij_eigenvec'], list)
+              else res['kij_eigenvec'])
     # kij matrix
-    kijmat = np.array(res['kij_matrix'])
+    kijmat = (np.array(res['kij_matrix'])
+              if isinstance(res['kij_matrix'], list)
+              else res['kij_matrix'])
     return {'used_batch': res['used_batch'],
             'kijmkeff_res': res['kijmkeff_res'][0],
             'kijdomratio': res['kijmkeff_res'][1],
             'kij_eigenval': egvals,
             'kij_eigenvec': egvecs,
-            'kij_matrix': kijmat}
+            'kij_matrix': kijmat
+            }
 
 
 def convert_kij_keff(res):

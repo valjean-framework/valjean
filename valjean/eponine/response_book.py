@@ -42,40 +42,40 @@ Building the responses book
 
 Let's consider a bunch of friends going to the restaurant and ordering their
 menus. For each of them the waiter has to remember their name, under
-``'consumer'``, their choice of menu under ``'resp_function'``, their drink,
-what they precisely order as dish under ``'results'`` and optionally the number
-corresponding to their choice of dessert. He will represent these orders as a
-list of orders, one order being a dictionary.
+``'consumer'``, their choice of menu under ``'response_function'``, their
+drink, what they precisely order as dish under ``'results'`` and optionally the
+number corresponding to their choice of dessert. He will represent these orders
+as a list of orders, one order being a dictionary.
 
 >>> from valjean.eponine.response_book import ResponseBook
 >>> from pprint import pprint
 >>> orders = [
-... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
+... {'response_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
 ...  'results': {'ingredients_res': ['egg', 'bacon']}},
-... {'resp_function': 'menu2', 'consumer': 'John',
+... {'response_function': 'menu2', 'consumer': 'John',
 ...  'results': [{'ingredients_res': ['egg', 'spam']},
 ...              {'ingredients_res': ['tomato', 'spam', 'bacon']}]},
-... {'resp_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
+... {'response_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
 ...  'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},
-... {'resp_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
+... {'response_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
 ...  'results': {'ingredients_res': ['sausage'],
 ...              'side_res': 'baked beans'}},
-... {'resp_function': 'royal_menu', 'consumer': 'Michael',
+... {'response_function': 'royal_menu', 'consumer': 'Michael',
 ...  'drink': 'brandy', 'dessert': 3,
 ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
 >>> com_rb = ResponseBook(orders)
 >>> print(com_rb)
 ResponseBook object -> Number of responses: 5, data key: 'results', \
-available metadata keys: ['consumer', 'dessert', 'drink', 'resp_function']
+available metadata keys: ['consumer', 'dessert', 'drink', 'response_function']
 
 
 Various methods are available to select one order, depending on requirements:
 
   * get a new ResponseBook:
 
-    >>> sel_rb = com_rb.filter_by(resp_function='menu1', drink='beer')
+    >>> sel_rb = com_rb.filter_by(response_function='menu1', drink='beer')
     >>> pprint(sel_rb.responses)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Terry',  'drink': 'beer', 'resp_function': 'menu1', \
+    [{'consumer': 'Terry',  'drink': 'beer', 'response_function': 'menu1', \
 'results': {'ingredients_res': ['egg', 'bacon']}}]
 
     * check if a key is present or not:
@@ -94,15 +94,15 @@ Various methods are available to select one order, depending on requirements:
     list is enough):
 
     >>> sorted(sel_rb.keys())
-    ['consumer', 'drink', 'resp_function']
+    ['consumer', 'drink', 'response_function']
     >>> sorted(com_rb.keys())
-    ['consumer', 'dessert', 'drink', 'resp_function']
+    ['consumer', 'dessert', 'drink', 'response_function']
 
   * if the required key doesn't exist a warning is emitted:
 
     >>> sel_rb = com_rb.filter_by(quantity=5)
     >>> # prints  WARNING     accessor: quantity not a valid key. Possible \
-ones are ['consumer', 'dessert', 'drink', 'resp_function']
+ones are ['consumer', 'dessert', 'drink', 'response_function']
     >>> 'quantity' in com_rb
     False
 
@@ -132,16 +132,16 @@ ones are ['consumer', 'dessert', 'drink', 'resp_function']
     >>> len(sel_rb)
     1
     >>> pprint(sel_rb)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Graham', 'drink': 'coffee', 'resp_function': 'menu1', \
+    [{'consumer': 'Graham', 'drink': 'coffee', 'response_function': 'menu1', \
 'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}]
 
   * this also work when more than one response corresponds to the selection:
 
     >>> sel_rb = com_rb.select_by(drink='beer')
     >>> pprint(sel_rb)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Terry', 'drink': 'beer', 'resp_function': 'menu1', \
+    [{'consumer': 'Terry', 'drink': 'beer', 'response_function': 'menu1', \
 'results': {'ingredients_res': ['egg', 'bacon']}}, \
-{'consumer': 'Eric', 'drink': 'beer', 'resp_function': 'menu3', \
+{'consumer': 'Eric', 'drink': 'beer', 'response_function': 'menu3', \
 'results': {'ingredients_res': ['sausage'], 'side_res': 'baked beans'}}]
     >>> len(sel_rb)
     2
@@ -152,7 +152,7 @@ ones are ['consumer', 'dessert', 'drink', 'resp_function']
 
     >>> resp = com_rb.select_by(consumer='Graham', squeeze=True)
     >>> pprint(resp)  # doctest: +NORMALIZE_WHITESPACE
-    {'consumer': 'Graham', 'drink': 'coffee', 'resp_function': 'menu1', \
+    {'consumer': 'Graham', 'drink': 'coffee', 'response_function': 'menu1', \
 'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}
 
   * squeeze is not possible if more than one result corresponds to the
@@ -350,17 +350,17 @@ class ResponseBook(Container):
 
     >>> from valjean.eponine.response_book import ResponseBook
     >>> orders = [
-    ... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
+    ... {'response_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
     ...  'results': {'ingredients_res': ['egg', 'bacon']}},
-    ... {'resp_function': 'menu2', 'consumer': 'John',
+    ... {'response_function': 'menu2', 'consumer': 'John',
     ...  'results': [{'ingredients_res': ['egg', 'spam']},
     ...              {'ingredients_res': ['tomato', 'spam', 'bacon']}]},
-    ... {'resp_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
+    ... {'response_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
     ...  'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},
-    ... {'resp_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
+    ... {'response_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
     ...  'results': {'ingredients_res': ['sausage'],
     ...              'side_res': 'baked beans'}},
-    ... {'resp_function': 'royal_menu', 'consumer': 'Michael',
+    ... {'response_function': 'royal_menu', 'consumer': 'Michael',
     ...  'drink': 'brandy', 'dessert': 3,
     ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
     >>> com_rb = ResponseBook(orders)
@@ -376,12 +376,12 @@ class ResponseBook(Container):
     * possibility to get the index of the response stripped without rebuilding
       the full ResponseBook:
 
-      >>> ind = com_rb._filter_index_by(resp_function='menu1')
+      >>> ind = com_rb._filter_index_by(response_function='menu1')
       >>> isinstance(ind, Index)
       True
       >>> ind.dump(sort=True)  # doctest: +NORMALIZE_WHITESPACE
       "{'consumer': {'Graham': {2}, 'Terry': {0}}, \
-'drink': {'beer': {0}, 'coffee': {2}}, 'resp_function': {'menu1': {0, 2}}}"
+'drink': {'beer': {0}, 'coffee': {2}}, 'response_function': {'menu1': {0, 2}}}"
 
       The 'dessert' key has been stripped from the index:
 

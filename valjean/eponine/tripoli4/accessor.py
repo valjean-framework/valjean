@@ -24,34 +24,34 @@ that dictionary for it to look like a default parsing results one.
 >>> from valjean.eponine.tripoli4.accessor import Accessor
 >>> from pprint import pprint
 >>> orders = [
-... {'resp_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
+... {'response_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
 ...  'results': {'ingredients_res': ['egg', 'bacon']}},
-... {'resp_function': 'menu2', 'consumer': 'John',
+... {'response_function': 'menu2', 'consumer': 'John',
 ...  'results': [{'ingredients_res': ['egg', 'spam']},
 ...              {'ingredients_res': ['tomato', 'spam', 'bacon']}]},
-... {'resp_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
+... {'response_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
 ...  'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},
-... {'resp_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
+... {'response_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
 ...  'results': {'ingredients_res': ['sausage'],
 ...              'side_res': 'baked beans'}},
-... {'resp_function': 'royal_menu', 'consumer': 'Michael',
+... {'response_function': 'royal_menu', 'consumer': 'Michael',
 ...  'drink': 'brandy', 'dessert': 3,
 ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
 >>> pres = {'edition_batch_number': 42, 'list_responses': orders}
 >>> pprint(pres)  # doctest: +NORMALIZE_WHITESPACE
 {'edition_batch_number': 42, 'list_responses':\
- [{'consumer': 'Terry', 'drink': 'beer', 'resp_function': 'menu1', \
+ [{'consumer': 'Terry', 'drink': 'beer', 'response_function': 'menu1', \
 'results': {'ingredients_res': ['egg', 'bacon']}},\
- {'consumer': 'John', 'resp_function': 'menu2', \
+ {'consumer': 'John', 'response_function': 'menu2', \
 'results': [{'ingredients_res': ['egg', 'spam']}, {'ingredients_res': [\
 'tomato', 'spam', 'bacon']}]},\
- {'consumer': 'Graham', 'drink': 'coffee', 'resp_function': 'menu1', \
+ {'consumer': 'Graham', 'drink': 'coffee', 'response_function': 'menu1', \
 'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},\
- {'consumer': 'Eric', 'drink': 'beer', 'resp_function': 'menu3', \
+ {'consumer': 'Eric', 'drink': 'beer', 'response_function': 'menu3', \
 'results': {'ingredients_res': ['sausage'], 'side_res': 'baked beans'}},\
  {'consumer': 'Michael', 'dessert': 3, 'drink': 'brandy', \
-'resp_function': 'royal_menu', 'results': {'dish_res': ['lobster thermidor', \
-'Mornay sauce']}}]}
+'response_function': 'royal_menu', \
+'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]}
 
 Construction accessor and responses book:
 
@@ -61,15 +61,15 @@ Construction accessor and responses book:
 Found a responses book
 >>> print(t4acc.resp_book)
 ResponseBook object -> Number of responses: 5, data key: 'results', \
-available metadata keys: ['consumer', 'dessert', 'drink', 'resp_function']
+available metadata keys: ['consumer', 'dessert', 'drink', 'response_function']
 
 Examples of use:
 
 >>> menu_with_dessert = t4acc.get_by(dessert=3)
 >>> pprint(menu_with_dessert)  # doctest: +NORMALIZE_WHITESPACE
 [{'consumer': 'Michael', 'dessert': 3, 'drink': 'brandy',\
- 'resp_function': 'royal_menu', 'results': {'dish_res': ['lobster thermidor',\
- 'Mornay sauce']}}]
+ 'response_function': 'royal_menu', \
+ 'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
 >>> batch = t4acc.edition_batch_number()
 >>> print(batch)
 42
@@ -126,7 +126,7 @@ class Accessor:
 
     def get_by(self, **kwargs):
         '''Selection method based on kwargs corresponding to responses / scores
-        characteristics (resp_function, score_name, scoring_zone_id, etc).
+        characteristics (response_function, score_name, scoring_zone_id, etc).
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.

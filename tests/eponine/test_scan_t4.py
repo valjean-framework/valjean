@@ -10,6 +10,7 @@ from ..context import valjean  # pylint: disable=unused-import
 import numpy as np
 import logging
 from valjean.eponine.tripoli4.parse import T4Parser
+from valjean.eponine.tripoli4.parse_debug import T4ParserDebug
 
 
 def keffs_checks(keff_res):
@@ -97,7 +98,7 @@ def test_gauss_spectrum(datadir):
         assert batch == 200*(len(t4_res.scan_res)-rbatch)
     assert t4_res.scan_res.get_last_edited_batch_number() == 400
     resp0 = t4_res.result[-1]['list_responses'][0]
-    assert resp0['resp_function'] == "COURANT"
+    assert resp0['response_function'] == "COURANT"
     assert resp0['response_type'] == 'score_res'
     assert resp0['scoring_mode'] == "SCORE_SURF"
     assert all(x in resp0['results']
@@ -161,11 +162,12 @@ def test_tt_simple_packet20_para(datadir):
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 7
     assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 3
-    assert t4_res.result[-1]['list_responses'][-1]['resp_function'] == 'KEFFS'
+    assert (t4_res.result[-1]['list_responses'][-1]['response_function']
+            == 'KEFFS')
     assert ['score_index' in x
             for x in t4_res.result[-1]['list_responses']].count(True) == 6
     resp5 = t4_res.result[-1]['list_responses'][4]
-    assert resp5['resp_function'] == 'REACTION'
+    assert resp5['response_function'] == 'REACTION'
     assert resp5['reaction_on_nucleus'] == ("U235",)
     assert resp5['temperature'] == (300,)
     assert resp5['composition'] == ("COMBUSTIBLE",)
@@ -175,8 +177,9 @@ def test_debug_entropy(datadir):
     '''Use Tripoli-4 result from entropy.d to test entropy, mesh, spectrum and
     debug mode.
     '''
-    t4_res = T4Parser.parse_jdd_with_mesh_lim(
-        str(datadir/"entropy.d.res.ceav5"), -1, 10, "number of batches used")
+    t4_res = T4ParserDebug.parse_debug(
+        str(datadir/"entropy.d.res.ceav5"), -1, 10,
+        end_flag="number of batches used")
     assert t4_res
     assert t4_res.scan_res.normalend
     assert t4_res.scan_res.times['simulation time'] == 24
@@ -209,7 +212,7 @@ def test_entropy(datadir):
     lastres = t4_res.result[-1]['list_responses']
     resp_func = ['REACTION', 'KEFFS']
     for ind, ires in enumerate(lastres):
-        assert ires['resp_function'] == resp_func[ind]
+        assert ires['response_function'] == resp_func[ind]
     firstres = t4_res.result[0]['list_responses']
     assert firstres[1]['response_type'] == 'keff_res'
     assert 'not_converged' in firstres[1]['results']
@@ -244,7 +247,7 @@ def test_ifp(datadir):
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 20
     last_resp = t4_res.result[-1]['list_responses'][-1]
-    assert last_resp['resp_function'] == "IFP ADJOINT WEIGHTED ROSSI ALPHA"
+    assert last_resp['response_function'] == "IFP ADJOINT WEIGHTED ROSSI ALPHA"
     assert last_resp['response_type'] == 'adjoint_res'
     assert last_resp['results']['used_batch'] == 81
 
@@ -262,9 +265,9 @@ def test_kij(datadir):
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 16
     resp_list = t4_res.result[-1]['list_responses']
-    assert resp_list[13]['resp_function'] == "KIJ_MATRIX"
-    assert resp_list[14]['resp_function'] == "KIJ_SOURCES"
-    assert resp_list[15]['resp_function'] == "KEFFS"
+    assert resp_list[13]['response_function'] == "KIJ_MATRIX"
+    assert resp_list[14]['response_function'] == "KIJ_SOURCES"
+    assert resp_list[15]['response_function'] == "KEFFS"
 
 
 def test_green_bands(datadir):
@@ -293,7 +296,8 @@ def test_tt_simple_packet20_mono(datadir):
     assert len(t4_res.scan_res) == 2
     assert len(t4_res.result[-1]['list_responses']) == 7
     assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 3
-    assert t4_res.result[-1]['list_responses'][-1]['resp_function'] == 'KEFFS'
+    assert (t4_res.result[-1]['list_responses'][-1]['response_function']
+            == 'KEFFS')
     assert ['score_index' in x
             for x in t4_res.result[-1]['list_responses']].count(True) == 6
 
@@ -310,7 +314,7 @@ def test_pertu(datadir):
     assert t4_res.scan_res.times['initialization time'] == 0
     assert len(t4_res.scan_res) == 1
     assert (sorted(list(t4_res.result[-1].keys()))
-            == ['edition_batch_number', 'list_responses', 'mean_weigt_leak',
+            == ['edition_batch_number', 'list_responses', 'mean_weight_leak',
                 'perturbation', 'simulation_time', 'source_intensity'])
     assert len(t4_res.result[-1]['list_responses']) == 3
     assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 0

@@ -73,8 +73,10 @@ def convert_spectrum(toks, colnames):
     if "uncert" in colnames:
         spectrumcols = ['sigma2(means)', 'mean(sigma_n2)', 'sigma(sigma_n2)',
                         'fisher test']
-    cspec = common.convert_spectrum(toks, spectrumcols)
-    return cspec
+    if "nu" in colnames:
+        spectrumcols.pop()
+        return common.convert_nu_spectrum(toks, spectrumcols)
+    return common.convert_spectrum(toks, spectrumcols)
 
 
 def convert_mesh(toks):
@@ -118,6 +120,14 @@ def convert_green_bands(toks):
     return cgb
 
 
+def convert_correspondence_table(toks):
+    '''Convert correspondence table to dict (volume id, volume name).
+
+    :returns: tuple(tuple)
+    '''
+    return tuple(set(common.convert_list_to_tuple(toks.asList())))
+
+
 def convert_scoring_zone_id(toks):
     '''Convert scoring zone id (volume numbers, cells, points, etc) into native
     python objects (str, tuple, numpy object).
@@ -152,6 +162,7 @@ def convert_score(toks):
     LOGGER.debug("Keys in score: %s", str(list(toks.keys())))
     res = {}
     for score in toks:
+        # print(list(score.keys()))
         if 'mesh_res' in score and 'unit' in score:
             unit = score.pop('unit')
             for mesh in score['mesh_res']:
@@ -160,13 +171,15 @@ def convert_score(toks):
             if key == 'mesh_res':
                 res['mesh_res'] = convert_mesh(score['mesh_res'])
             elif 'spectrum_res' in key:
-                res[key] = convert_spectrum(score[key], key)
+                res['spectrum_res'] = convert_spectrum(score[key], key)
             elif 'integrated_res' in key:
                 res[key] = score[key].asDict()
             elif key == 'greenband_res':
                 res[key] = convert_green_bands(score[key])
             elif key == 'scoring_zone_id':
                 res['scoring_zone_id'] = convert_scoring_zone_id(score[key])
+            elif key == 'correspondence_table':
+                res[key] = convert_correspondence_table(score[key])
             else:
                 res[key] = score[key]
     return res
