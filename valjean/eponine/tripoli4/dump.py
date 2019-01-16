@@ -158,7 +158,6 @@ def parsing_result_to_str(toks):
     :type toks: |parseres|
     :const MAX_DEPTH: maximum of prints level
     '''
-    print("dans dump_result")
     depth = 0
     lstr = []
     lstr.append("\n\x1b[1m--------------------- "

@@ -202,6 +202,7 @@ class TestEqual(Test):
         :returns: :class:`~.TestResultEqual`
         '''
         check_bins(self.dataset1, self.dataset2)
+        # pylint: disable=E1111
         equal = np.equal(self.dataset1.value, self.dataset2.value)
         return TestResultEqual(self, equal)
 
