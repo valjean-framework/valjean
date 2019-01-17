@@ -4,8 +4,8 @@
 '''Tests for the :mod:`.rlist` module.'''
 
 from hypothesis import given, note
-from hypothesis.strategies import (integers, sampled_from,
-                                   data)
+from hypothesis.strategies import integers, sampled_from, data
+import pytest
 
 from .conftest import reversible_lists
 from ..context import valjean  # pylint: disable=unused-import
@@ -73,3 +73,43 @@ def test_setitem(rlst, new, sampler):
     check_revlist_invariant(rlst)
     check_revlist_invariant(rlst_modified)
     assert len(rlst_modified) == len(rlst)
+
+
+@given(rlst=reversible_lists())
+def test_index(rlst):
+    '''Test that all list elements are correctly indexed.'''
+    for elem in rlst:
+        ind = rlst.index(elem)
+        assert rlst[ind] == elem
+
+
+@given(rlst=reversible_lists(min_size=1), sampler=data())
+def test_index_bounds(rlst, sampler):
+    '''Test that all list elements are correctly indexed, even when bounds are
+    specified.'''
+    n_elems = len(rlst)
+    start = sampler.draw(integers(0, n_elems-1))
+    stop = sampler.draw(integers(start+1, n_elems))
+    for elem in rlst[start:stop]:
+        ind = rlst.index(elem, start, stop)
+        assert rlst[ind] == elem
+
+
+@given(rlst=reversible_lists(elements=integers(0, 10), min_size=1))
+def test_index_missing_raises(rlst):
+    '''Test that index raises `ValueError` if there is no such element.'''
+    missing = 11
+    with pytest.raises(ValueError):
+        rlst.index(missing)
+
+
+@given(rlst=reversible_lists(min_size=1), sampler=data())
+def test_index_out_bounds_raises(rlst, sampler):
+    '''Test that index raises `ValueError` if there is no such element.'''
+    n_elems = len(rlst)
+    start = sampler.draw(integers(0, n_elems-1))
+    stop = sampler.draw(integers(start+1, n_elems))
+    max_elem = max(rlst[start:stop])
+    missing = max_elem + 1
+    with pytest.raises(ValueError):
+        rlst.index(missing, start, stop)

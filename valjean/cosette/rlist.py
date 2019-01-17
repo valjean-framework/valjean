@@ -152,17 +152,25 @@ class RList(MutableSequence):
         self._seq.insert(index, value)
         self._index[id(value)].append(index)
 
-    def index(self, value):
+    def index(self, value, start=0, stop=None):
         '''Return the index of the given value, if present.
 
         :param value: The object to search for.
-        :raises KeyError: if the element is not present in the container.
+        :param int start: The index to search from.
+        :param int stop: The index to search up to.
+        :raises ValueError: if the element is not present in the container.
         :returns: The index of (the first occurrence of) `value` in the list.
+                  The returned value `i` always satisfies `start <= i < stop`.
         '''
-        i = self._index.get(id(value), None)
-        if i is None:
-            raise KeyError(id(value))
-        return i[0]
+        indices = self._index.get(id(value), None)
+        if indices is None:
+            raise ValueError('{} is not in list'.format(value))
+        found = next((ind for ind in indices
+                      if ind >= start and (stop is None or ind < stop)),
+                     None)
+        if found is None:
+            raise ValueError('{} is not in list'.format(value))
+        return found
 
     def indices(self, value):
         '''Return all the indices of the given value, if present.
