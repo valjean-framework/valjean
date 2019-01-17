@@ -4,7 +4,7 @@
 '''Tests for the :mod:`~.scheduler` module.'''
 
 from hypothesis import given, settings, note, event
-from hypothesis.strategies import integers
+from hypothesis.strategies import integers, data
 import pytest
 
 from .conftest import (graphs, failing_tasks, delay_tasks, FailingTask,
@@ -102,24 +102,30 @@ class TestSchedulerOnFailingTasks:
 
     @staticmethod
     @given(graph=graphs(delay_tasks(min_duration=0.0, max_duration=0.0,
-                                    min_size=3),
-                        dep_frac=0.3),
-           n_workers=integers(min_value=0, max_value=100))
-    @settings(max_examples=30)
-    def test_failing_blocks_deps(graph, n_workers):
+                                    min_size=3, max_size=10),
+                        dep_frac=0.5),
+           n_workers=integers(min_value=0, max_value=10),
+           sampler=data())
+    def test_failing_blocks_deps(graph, n_workers, sampler):
         '''Check that tasks depending on a failing task are not executed.'''
 
         # add a failing task to the dependency of one of the tasks
-        task = graph.nodes()[0]
-        note('selected task: {}'.format(task))
         failing_task = FailingTask('RottenApple')
-        graph.add_dependency(task, on=failing_task)
+        i_task = sampler.draw(integers(0, len(graph)))
+        if i_task < len(graph):
+            task = graph.nodes()[i_task]
+            graph.add_dependency(task, on=failing_task)
+            deps = graph.invert().dependencies(task, recurse=True)
+            note('selected task for dependency: {}'.format(task))
+        else:
+            task = None
+            deps = []
+            note('no task selected for dependency.')
 
         # schedule the graph
         env = run(graph, n_workers)
         note('environment after scheduling: {}'.format(env))
 
-        deps = graph.invert().dependencies(task, recurse=True)
         n_blocked = 0
         for node in graph.nodes():
             note('node = {}'.format(node))
