@@ -1103,30 +1103,28 @@ def _define_ifp_adj_table_dim(toks):
 
 # IFP adjoint criticality edition
 _adjcrit_ed_intro = _star_line + Suppress(_ifpadjcriticality_kw) + _star_line
-_ifpadjcrit_intro = (Group(Word(alphas+'_')('ifp_response')
-                           + _scorename
-                           + Suppress(_ifpadjcyclelength_kw)
-                           + _inums('ifp_cycle_length')
-                           + (Optional(_ifpadjnormalizedres_kw
-                                       .setParseAction(_rename_norm_kw))
-                              ('normalized'))
-                           + _star_line)
-                     ('ifp_adjoint_criticality_intro'))
+_ifpadjcrit_intro = Group(Word(alphas+'_')('ifp_response')
+                          + _scorename
+                          + Suppress(_ifpadjcyclelength_kw)
+                          + _inums('ifp_cycle_length')
+                          + (Optional(_ifpadjnormalizedres_kw
+                                      .setParseAction(_rename_norm_kw))
+                             ('normalized'))
+                          + _star_line)
 _ifpadjbinval = Forward()
 _ifpadjcoordinate = Word(alphas) + Suppress(_ifpadjminmax_kw)
 _ifpadjcoordinates = ((Optional(_ifpadjvol_kw) + OneOrMore(_ifpadjcoordinate))
                       .setParseAction(_define_ifp_adj_table_dim))
 _ifpadjcolumns = _ifpadjcoordinates + _ifpadjscore_kw + _spsigma_kw
 _ifpadjline = Group(_ifpadjbinval + _fnums + _fnums)
-_ifpadjvalues = OneOrMore(_ifpadjline)('values')
-_adjcritblock = Group(_ifpadjcrit_intro
+_ifpadjvalues = OneOrMore(_ifpadjline)
+_adjcritblock = Group(_ifpadjcrit_intro('ifp_adjoint_criticality_intro')
                       + _ifpadjcolumns('columns')
-                      + _ifpadjvalues
+                      + _ifpadjvalues('values')
                       + _star_line)
-ifpadjointcriticality = (Group(_adjcrit_ed_intro
-                               + OneOrMore(_adjcritblock))
+ifpadjointcriticality = (Group((_adjcrit_ed_intro + OneOrMore(_adjcritblock))
+                               .setParseAction(trans.convert_ifp_adj_crit_ed))
                          ('ifp_adjoint_crit_edition'))
-
 
 # Perturbations
 _perturank = Suppress(_perturank_kw) + _inums('rank')

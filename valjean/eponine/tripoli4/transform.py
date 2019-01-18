@@ -307,6 +307,20 @@ def convert_sensitivities(toks):
     return sensitivity
 
 
+def convert_ifp_adj_crit_ed(toks):
+    '''Convert IFP adjoint criticality edition in kinematic array.'''
+    lced = []
+    for ind, crit_ed in enumerate(toks):
+        LOGGER.debug("IFP adjoint crit edition result %d", ind)
+        score_res = {'results': common.convert_crit_edition(crit_ed.asDict()),
+                     'response_type': 'ifp_adj_crit_edition'}
+        score_res.update(crit_ed['ifp_adjoint_criticality_intro'])
+        lced.append(score_res)
+        LOGGER.debug(list(score_res.keys()))
+    LOGGER.debug("Nombre de score dans l'edition: %d", len(lced))
+    return lced
+
+
 def to_dict(toks):
     '''Convert to dictionary result of `pyparsing`.
 

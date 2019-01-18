@@ -109,7 +109,7 @@ class Accessor:
             responses if it exists
     '''
 
-    def __init__(self, tparsed_res):  # , merge_score=False):
+    def __init__(self, tparsed_res, book_type='list_responses'):
         '''Create an :class:`Accessor` from a list of responses.
 
         :param list(dict) tparsed_res: result from parsing (for the moment not
@@ -118,11 +118,17 @@ class Accessor:
                                        time)
         '''
         self.parsed_res = tparsed_res
-        self.resp_book = (ResponseBook(self.parsed_res['list_responses'])
-                          if 'list_responses' in self.parsed_res
+        self.resp_book = (ResponseBook(self.parsed_res[book_type])
+                          if book_type in self.parsed_res
                           else None)
         if self.resp_book:
             LOGGER.debug("RESP_BOOK exists")
+        else:
+            if book_type in self.parsed_res:
+                LOGGER.error("The required book_type apparently failed, "
+                             "its shape might not be suitable, please check. "
+                             "Currently available and tested: "
+                             "('list_responses', 'ifp_adjoint_crit_edition')")
 
     def get_by(self, **kwargs):
         '''Selection method based on kwargs corresponding to responses / scores

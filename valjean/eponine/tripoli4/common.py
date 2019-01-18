@@ -636,7 +636,6 @@ class KinematicDictBuilder(DictBuilder):
     VAR_FLAG = {'t': 'time_step',
                 'mu': 'mu_angle_zone',
                 'phi': 'phi_angle_zone'}
-    # VARS = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
 
     def __init__(self, colnames, lnbins):
         '''Initialization of DictBuilder.
@@ -1378,6 +1377,167 @@ def convert_generic_adjoint(res, loctype):
                 mydict[find][lind] = dict(zip(keys, tuple(iires[1:])))
     index = loctype.split('_')[2:]
     return {'index': index, 'scores': mydict}
+
+
+class AdjointCritEdDictBuilderException(Exception):
+    '''Exception to adjoint criticality edition array builder (bad bins)'''
+
+
+class AdjointCritEdDictBuilder(KinematicDictBuilder):
+    '''Specific class to build IFP adjoint criticality edition results as a
+    KinematicDictBuilder.
+    '''
+    VARS = ['X', 'Y', 'Z', 'Phi', 'Theta', 'E', 'T']
+
+    def __init__(self, colnames, bins):
+        '''Initialisation of AdjointCritEdDictBuilder.
+
+        Caution: in that case bins are direclty sent, not 'only' their number
+        as done per default in :class:`DictBuilder`.
+
+        Order of the kinematic variables is also different from the usual
+        spectra or mesh.
+        '''
+        lnbins, odbins = [], OrderedDict()
+        for var in AdjointCritEdDictBuilder.VARS:
+            if var in bins:
+                lnbins.append(bins[var].size-1)
+                odbins[var] = bins[var]
+            else:
+                lnbins.append(1)
+                odbins[var] = np.array([])
+        super().__init__(colnames, lnbins)
+        self.bins = odbins
+        self.units = {'X': 'cm', 'Y': 'cm', 'Z': 'cm',
+                      'Phi': 'rad', 'Theta': 'rad', 'E': 'MeV', 'T': 's',
+                      'score': 'unknown', 'sigma': '%'}
+
+    def _fill_array(self, data):
+        '''Fill array of results from IFP adjoint criticality edition.
+
+        Results are looping in the following order: X, Y, Z, Phi, Theta, E.
+        This is then the order to fill the array (indices).
+        '''
+        for _iv, val in enumerate(data):
+            lindex = [0]*7
+            pdims = 1
+            for dim, bsize in enumerate([b.size for b in self.bins.values()]):
+                lindex[dim] = (_iv//pdims) % (bsize-1 if bsize else 1)
+                pdims *= bsize-1 if bsize else 1
+            index = tuple(lindex)
+            array = np.array(tuple(val), dtype=self.arrays['default'].dtype)
+            self.arrays['default'][index] = array
+        LOGGER.debug("array.shape: %s", str(self.arrays['default'].shape))
+
+    def fill_arrays_and_bins(self, data):
+        '''Only fill array in IFP adjoint criticality edition case.'''
+        self._fill_array(data)
+
+    def _add_last_energy_bin(self, data):
+        pass
+
+
+class VolAdjCritEdDictBuilder(DictBuilder):
+    '''Class to build spectrum per volume instead of per kinematic variables.
+    E is still present.
+    '''
+
+    def __init__(self, colnames, bins):
+        '''Initialisation of VolAdjCritEdDictBuilder.
+
+        Caution: in that case bins are direclty sent, not 'only' their number
+        as done per default in :class:`DictBuilder`.
+        '''
+        LOGGER.debug("VolAdjCritEdDictBuilder: bins = %s", str(bins))
+        lnbins = [bins['Vol'].size, bins['E'].size-1]
+        LOGGER.debug("Number of bins per dimension: %s", str(lnbins))
+        super().__init__(colnames, lnbins)
+        self.bins = bins
+        self.units = {'Vol': '', 'E': 'MeV', 'score': 'unknown', 'sigma': '%'}
+
+    def _fill_array(self, data):
+        '''Fill array of results from IFP adjoint criticality edition when
+        spectrum is given by volume.
+
+        Results are looping in the following order: Vol, E.
+        This is then the order to fill the array (indices).
+        '''
+        for _iv, val in enumerate(data):
+            index = (_iv % self.bins['Vol'].size,
+                     (_iv//self.bins['Vol'].size % (self.bins['E'].size-1)))
+            self.arrays['default'][index] = np.array(
+                tuple(val), dtype=self.arrays['default'].dtype)
+        LOGGER.debug("array.shape: %s", str(self.arrays['default'].shape))
+
+    def fill_arrays_and_bins(self, data):
+        '''Only fill array in IFP adjoint criticality edition case.'''
+        self._fill_array(data)
+
+    def add_last_bins(self, data):
+        pass
+
+
+def _get_ace_kin_bins(columns, values):
+    '''Initialize bins for IFP adjoint criticality edition.'''
+    bins = OrderedDict()
+    for idim, dim in enumerate(columns):
+        bins[dim] = np.unique(values[:, idim*2:(idim+1)*2])
+    total_dim = np.prod([val.size-1 for val in bins.values()])
+    if total_dim != values.shape[0]:
+        raise AdjointCritEdDictBuilderException(
+            "Issue with the bins: the total dimension ({0}) does not match "
+            "the length of the table in the output ({1}), please check the "
+            "-a option has been used.".format(total_dim, values.shape[0]))
+    return bins
+
+
+def _get_ace_vol_bins(values):
+    '''Initialize bins for IFP adjoint criticality edition.'''
+    bins = OrderedDict()
+    bins['Vol'] = np.array(np.unique(values[:, 0]), dtype=ITYPE)
+    bins['E'] = np.array(np.unique(values[:, 1:3]), dtype=FTYPE)
+    total_dim = bins['Vol'].size * (bins['E'].size-1)
+    if total_dim != values.shape[0]:
+        raise AdjointCritEdDictBuilderException(
+            "Issue with the bins: the total dimension ({0}) does not match "
+            "the length of the table in the output ({1}), please check the "
+            "-a option has been used.".format(total_dim, values.shape[0]))
+    return bins
+
+
+def _crit_edition_dict_builder(columns, values):
+    '''Return the needed DictBuilder for IFP adjoint criticality edition
+    according to columns names.
+
+    :param list(str) columns: columns names
+    :param list(int,float) values: bins edges or centers
+    :returns: :class:`~AdjointCritEdDictBuilder` or
+              :class:`~VolAdjCritEdDictBuilder`.
+    '''
+    if 'Vol' in columns:
+        bins = _get_ace_vol_bins(values)
+        return VolAdjCritEdDictBuilder(['score', 'sigma'], bins)
+    bins = _get_ace_kin_bins(columns, values)
+    return AdjointCritEdDictBuilder(['score', 'sigma'], bins)
+
+
+def convert_crit_edition(res):
+    '''Convert IFP adjpint criticality edition results in standard kinematic
+    result.
+    '''
+    LOGGER.debug('In convert_crit_edition')
+    if 'score' not in res['columns'][-2]:
+        raise ValueError("Issue with the columns names, not foreseen case "
+                         "(score should be second to last, last being sigma)")
+    acedb = _crit_edition_dict_builder(
+        res['columns'][:-2],
+        np.array([dval[:-2] for dval in res['values']]))
+    acedb.fill_arrays_and_bins([vals[-2:] for vals in res['values']])
+    acedb.flip_bins()
+    convres = {'spectrum': acedb.arrays['default'],
+               'bins': acedb.bins,
+               'units': acedb.units}
+    return {'spectrum_res': convres}
 
 
 def convert_kij_sources(res):
