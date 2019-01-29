@@ -3,7 +3,7 @@
 .. todo::
 
    * To be moved in the future "qualtrip" package, in the corresponding
-     chronological folder (here checks for version 10.2).
+     chronological folder (here checks for version 11).
    * ``qualtrip*`` fixtures will also probably be moved to new "qualtrip"
      conftest module instead of here.
 '''
@@ -28,9 +28,10 @@ MAIN_CATEGORIES = ["cristal", "elem", "protection"]
 EXCLUDED_STRINGS_MONO = ["perle", "epicure", "part1", "phn_intrumen",
                          "test_pondng_auto_coupling", "gado_assembly",
                          "jezebel", "faddegon", "fcore", "ntoffg4"]
-EXCLUDED_STRINGS_PARA = ["part1", "exp", "etape2", "homog_p3_prot",
+EXCLUDED_STRINGS_PARA = ["expl", "etape2", "homog_p3_prot", "store_", "chrome",
                          "test_pondng_auto_coupling", "gado_assembly"]
-EXCLUDED_STRINGS = ["sauv", "_v0", "save", "gammaFRP.", "_connectivity"]
+EXCLUDED_STRINGS = ["sauv", "_v0", "save", "gammaFRP.", "_connectivity",
+                    "waterSplit."]
 MESH_LIM_FILES = ['godivaBeff_MED.d.res.ceav5']
 
 # EXPECTED_RESULTS are counts expected from the input files run for a given
@@ -46,21 +47,21 @@ EXPECTED_RESULTS = {("cristal", MONO): (148, 0, 0),
                     ("protection", MONO): (25, 0, 0),
                     ("protection", PARA): (25, 0, 0),
                     ("tripoli44", MONO): (22, 0, 0),
-                    ("tripoli44", PARA): (18, 1, 4),
+                    ("tripoli44", PARA): (16, 0, 2),
                     ("tripoli45", MONO): (22, 0, 0),
-                    ("tripoli45", PARA): (21, 0, 2),
+                    ("tripoli45", PARA): (20, 2, 0),
                     ("tripoli46", MONO): (8, 0, 0),
-                    ("tripoli46", PARA): (5, 0, 3),
+                    ("tripoli46", PARA): (5, 0, 0),
                     ("tripoli47", MONO): (27, 0, 1),
-                    ("tripoli47", PARA): (28, 0, 0),
+                    ("tripoli47", PARA): (28, 1, 0),
                     ("tripoli48", MONO): (33, 0, 2),
-                    ("tripoli48", PARA): (37, 0, 2),
+                    ("tripoli48", PARA): (33, 0, 2),
                     ("tripoli49", MONO): (39, 0, 9),  # many jezebel excluded
                     ("tripoli49", PARA): (36, 0, 1),
                     ("tripoli410", MONO): (59, 4, 5),
-                    ("tripoli410", PARA): (59, 4, 6),
+                    ("tripoli410", PARA): (55, 4, 0),
                     ("tripoli411", MONO): (62, 0, 7),
-                    ("tripoli411", PARA): (59, 4, 6)}
+                    ("tripoli411", PARA): (55, 0, 1)}
 
 AUX_CATEGORIES = sorted(list(
     filter(lambda y: y not in MAIN_CATEGORIES,
@@ -71,8 +72,13 @@ QUALT_CATEGORIES = ([(MAIN, x) for x in MAIN_CATEGORIES]
 ALL_FOLDERS = [os.path.join(mode, *qualt_fold)
                for mode in [MONO, PARA]
                for qualt_fold in QUALT_CATEGORIES]
-# need to remove tripoli4102 as was not run in PARA for VV of 10.2
-# ALL_FOLDERS.remove(os.path.join(PARA, AUX, "tripoli4102"))
+ALL_FOLDERS = [
+    os.path.join(mode, *qualt_fold)
+    for mode in [MONO, PARA]
+    for qualt_fold in (QUALT_CATEGORIES if mode == MONO
+                       else [(AUX, x)
+                             for x in sorted(set(x[0]
+                                             for x in EXPECTED_RESULTS))])]
 
 
 @pytest.fixture
@@ -219,7 +225,7 @@ def test_t4_listings(folder, request, monkeypatch):
     and of the report section (main or aux). Restrictions are possible from
     command line, via options ``'--qualtrip-exclude='["spam", "egg"]'`` and
     ``'--qualtrip-match='["bacon"]'``.
-    Currently adapted to version 10.2 of Tripoli-4.
+    Currently adapted to version 11 of Tripoli-4.
 
     Tests performed on number of input files used, excluded and failed.
     '''
@@ -234,6 +240,8 @@ def test_t4_listings(folder, request, monkeypatch):
     used_files = list(filter(lambda x: x not in excluded_files, all_files))
     excluded_files = [fil for fil in excluded_files
                       if not any(pat in fil for pat in EXCLUDED_STRINGS)]
+    # print("used_files:", used_files)
+    # print("excluded_files:", excluded_files)
     jdds_ok, failed_jdds = loop_on_files(used_files)
     print_summary(jdds_ok, len(used_files), failed_jdds, excluded_files)
     category = used_files[0].split('/')[-4]
