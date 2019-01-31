@@ -1247,11 +1247,3 @@ t4gram = (OneOrMore((intro
           .setParseAction(dump_in_logger)
           | (intro + runtime).setParseAction(trans.to_dict)
           ).setFailAction(trans.fail_parsing)
-
-oldgram = (OneOrMore((intro
-                      + OneOrMore(listresponses | ifpadjointcriticality
-                                  | defkeffblock | contribpartblock
-                                  | perturbation | OneOrMore(runtime)))
-                     .setParseAction(trans.to_dict))
-           .setParseAction(dump_in_logger)
-           | intro + OneOrMore(runtime)).setFailAction(trans.fail_parsing)

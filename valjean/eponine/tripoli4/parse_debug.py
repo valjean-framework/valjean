@@ -6,12 +6,10 @@ Main difference is the possibility of using the ``end_flag`` parameter in the
 
 import time
 import logging
-from pyparsing import ParseException
 
 from .parse import T4Parser, T4ParserException
 from . import scan
 from .grammar import t4debug_gram
-from .common import SpectrumDictBuilderException
 
 
 LOGGER = logging.getLogger('valjean')
@@ -21,6 +19,7 @@ class T4ParserDebug(T4Parser):
     '''Scan up to the end flag then parse. For parsing debugging.'''
 
     def __init__(self, jddname, batch=-1, mesh_lim=-1, end_flag="", ofile=""):
+        # pylint: disable=too-many-arguments
         '''Initialize the :class:`T4ParserDebug` object.
 
         :param str jddname: path to the Tripoli-4 output
@@ -41,6 +40,7 @@ class T4ParserDebug(T4Parser):
 
     @classmethod
     def parse_debug(cls, jdd, batch, mesh_lim=-1, end_flag="", ofile=""):
+        # pylint: disable=too-many-arguments
         '''Constructor for T4ParserDebug for cases where a limit on meshes can
         be set. It is also possible, for debug cases, to put a user's end flag.
         Scanning and parsing are automatically done.
@@ -55,9 +55,7 @@ class T4ParserDebug(T4Parser):
         :returns: T4ParserDebug object
         '''
         start_time = time.time()
-        parser = cls(jdd, batch, mesh_lim)
-        parser.end_flag = end_flag
-        parser.ofile = ofile
+        parser = cls(jdd, batch, mesh_lim, end_flag, ofile)
         if parser.scan_then_parse(start_time):
             parser.check_t4_parsing()
             return parser
@@ -65,7 +63,6 @@ class T4ParserDebug(T4Parser):
 
     def scan_t4_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
-        print("SCAN DANS LE CAS DEBUG")
         self.scan_res = scan.Scan.debug_scan(self.jdd, self.mesh_limit,
                                              self.para, self.end_flag)
         if not self.scan_res:
@@ -76,29 +73,16 @@ class T4ParserDebug(T4Parser):
 
     def parse_t4_listing(self):
         '''Parse Tripoli-4 results, calling pyparsing and
-        :mod:`~valjean.eponine.tripoli4`.
+        :mod:`~valjean.eponine.tripoli4`. Use the debug grammar.
+
+        If debugging is activated in the logger and if an output file is given,
+        the string sent to the parser is printed in a file.
         '''
-        print("PARSE DANS LE CAS DEBUG")
-        if self.batch_number == 0:
-            str_to_parse = self.scan_res.get_all_batch_results()
-        else:
-            str_to_parse = self.scan_res[self.batch_number]
+        str_to_parse = self._str_to_parse()
         if LOGGER.isEnabledFor(logging.DEBUG) and self.ofile:
             with open(self.ofile, 'w') as fout:
                 fout.write(str_to_parse)
-        # now parse the results string
-        try:
-            self.result = t4debug_gram.parseString(str_to_parse).asList()
-        except ParseException:
-            LOGGER.error("Parsing failed, you are probably trying to read a "
-                         "new response. Please update the parser before "
-                         "re-running.")
-            # from None allows to raise a new exception without traceback and
-            # message of the previous one here.
-            raise T4ParserException("Error in parsing") from None
-        except SpectrumDictBuilderException as sdbe:
-            LOGGER.error(sdbe)
-            raise T4ParserException("Error in parsing") from None
+        self._parse_t4_listing_worker(t4debug_gram, str_to_parse)
 
     def check_t4_parsing(self):
         '''Check if parsing went to the end:

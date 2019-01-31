@@ -56,7 +56,7 @@ Spectrum and meshes results use a common representation build using
 :class:`DictBuilder`. This common representation is a **7-dimension structured
 array** from `NumPy`, see `doc`_ or `numpy structured array`_.
 
-Dimensions are given in :data:`KinematicDictBuilder.VARS`:
+Kinematic dimensions are:
 
 * **s0**, **s1**, **s2**: space coordinates (typically (x, y, z), (r, θ, z) or
   (r, θ, ϕ), depending on frame reference)
@@ -534,7 +534,14 @@ FTYPE = np.float64
 
 
 class DictBuilder(ABC):
-    '''General class to build dictionaries.'''
+    '''General class to build dictionaries.
+
+    This class implements a pattern for array results storage as dictionaries.
+    It transforms the Tripoli-4 array strings in numpy arrays of a given number
+    of dimensions, depending on the kind of array (spectrum, mesh, IFP result,
+    etc.). General methods are implemented, mandatory methods are implemented
+    as abstract and need to be derived in daughter classes.
+    '''
 
     def __init__(self, colnames, lnbins):
         '''Initialization of DictBuilder.
@@ -617,7 +624,9 @@ class DictBuilder(ABC):
 class KinematicDictBuilder(DictBuilder):
     '''Class to build the dictionary for spectrum and mesh results as
     7-dimensions structured arrays.
-    7-dimensions are: space (3), energy, time, mu and phi (direction angles)
+    7-dimensions are: space (3, written ``'s0', 's1', 's2'``), energy
+    (``'e'``), time (``'t'``), mu (``mu'``) and phi (``'phi'``) (direction
+    angles).
 
     This class has 2 abstract methods, :meth:`_add_last_energy_bin` and
     :meth:`fill_arrays_and_bins`, so it cannot be initialized directly.
@@ -627,11 +636,6 @@ class KinematicDictBuilder(DictBuilder):
        ``{'t': 'time_step', 'mu': 'mu_angle_zone', 'phi': 'phi_angle_zone'}``:
        correspondance dictionary between internal name of dimensions and names
        in listings
-
-    .. data:: KinematicDictBuilder.VARS
-
-       ``['s0', 's1', 's2', 'e', 't', 'mu', 'phi']``:
-       names of the 7 dimensions as used internally
     '''
     VAR_FLAG = {'t': 'time_step',
                 'mu': 'mu_angle_zone',
@@ -715,8 +719,8 @@ class KinematicDictBuilder(DictBuilder):
 class MeshDictBuilder(KinematicDictBuilder):
     '''Class specific to mesh dictionary -> mainly filling of bins and arrays.
 
-    This class inherites from DictBuilder, see :class:`DictBuilder` for
-    initialization and common methods.
+    This class inherites from KinematicDictBuilder, see
+    :class:`KinematicDictBuilder` for initialization and common methods.
     '''
     itime, imu, iphi = 0, 0, 0
 
@@ -788,8 +792,8 @@ class SpectrumDictBuilder(KinematicDictBuilder):
     '''Class specific to spectrum dictionary
     -> mainly filling of bins and arrays.
 
-    This class inherites from DictBuilder, see :class:`DictBuilder` for
-    initialization and common methods.
+    This class inherites from KinematicDictBuilder, see
+    :class:`KinematicDictBuilder` for initialization and common methods.
     '''
     itime, imu, iphi = 0, 0, 0
 
@@ -929,7 +933,7 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
     vals.flip_bins()
     # Build dictionary to be returned
     convspec = {'disc_batch': spectrum[0]['disc_batch'],
-                'spectrum': vals.arrays['default'],
+                'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
     if 'units' in spectrum[0]:
@@ -1054,13 +1058,13 @@ def convert_mesh(meshres):
     vals.add_last_bins(meshres)
     vals.flip_bins()
     # build dictionary to be returned
-    convmesh = {'mesh': vals.arrays['default'],
+    convmesh = {'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
     if 'unit' in meshres[0]:
         convmesh['units']['score'] = meshres[0]['unit']
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
-        convmesh['eintegrated_mesh'] = vals.arrays['eintegrated_mesh']
+        convmesh['eintegrated_array'] = vals.arrays['eintegrated_mesh']
     if 'integrated_res' in meshres[0]:
         convmesh['integrated_res'] = vals.arrays['integrated_res']
         convmesh['used_batch'] = meshres[0]['integrated_res']['used_batch']
@@ -1162,7 +1166,7 @@ def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
     vals.flip_bins()
     # Build dictionary to be returned
     convspec = {'disc_batch': spectrum[0]['disc_batch'],
-                'spectrum': vals.arrays['default'],
+                'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
     if 'units' in spectrum[0]:
@@ -1204,7 +1208,7 @@ def convert_keff_with_matrix(res):
     '''
     # not converged cases a tester...
     LOGGER.debug("In common.convert_keff_with_matrix")
-    if {'not_converged', 'warning'} & set(res):
+    if 'not_converged' in res or 'warning' in res:
         return res
     dtkeff = np.dtype([('keff', FTYPE), ('sigma', FTYPE)])
     fullcombres = (np.array(tuple(res['full_comb_estimation']), dtype=dtkeff)
@@ -1534,10 +1538,10 @@ def convert_crit_edition(res):
         np.array([dval[:-2] for dval in res['values']]))
     acedb.fill_arrays_and_bins([vals[-2:] for vals in res['values']])
     acedb.flip_bins()
-    convres = {'spectrum': acedb.arrays['default'],
+    convres = {'array': acedb.arrays['default'],
                'bins': acedb.bins,
                'units': acedb.units}
-    return {'spectrum_res': convres}
+    return {'adj_crit_ed_res': convres}
 
 
 def convert_kij_sources(res):

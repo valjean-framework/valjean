@@ -134,9 +134,10 @@ def loop_on_files(filelist):
     failed_jdds = []
     for ifile in filelist:
         print("Reading:", ifile)
-        found_time = (ep.main(ifile, -1)
-                      if os.path.basename(ifile) not in MESH_LIM_FILES
-                      else ep.main(ifile, -1, mesh_lim=2))
+        found_time = (
+            ep.T4Parser.parse_jdd(ifile, -1)
+            if os.path.basename(ifile) not in MESH_LIM_FILES
+            else ep.T4Parser.parse_jdd_with_mesh_lim(ifile, -1, mesh_lim=2))
         if found_time:
             nb_jdds_ok += 1
         else:

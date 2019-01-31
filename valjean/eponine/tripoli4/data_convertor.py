@@ -10,25 +10,35 @@ from ..base_dataset import BaseDataset
 LOGGER = logging.getLogger('valjean')
 
 
-def spectrum(fspec_res, res_type='spectrum_res'):
-    '''Conversion of spectrum in :class:`~.base_dataset.BaseDataset`.
-    '''
-    spec_res = fspec_res[res_type]
-    bins = spec_res.get('bins')
-    return BaseDataset(
-        spec_res['spectrum']['score'].copy(),
-        spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] * 0.01,
-        bins=bins, name=res_type)
+# def spectrum(fspec_res, res_type='spectrum_res'):
+#     '''Conversion of spectrum in :class:`~.base_dataset.BaseDataset`.
+#     '''
+#     spec_res = fspec_res[res_type]
+#     bins = spec_res.get('bins')
+#     return BaseDataset(
+#         spec_res['spectrum']['score'].copy(),
+#         spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] * 0.01,
+#         bins=bins, name=res_type)
 
 
-def mesh(fmesh_res, res_type='mesh_res'):
+# def mesh(fmesh_res, res_type='mesh_res'):
+#     '''Conversion of mesh in :class:`~.base_dataset.BaseDataset`.
+#     '''
+#     mesh_res = fmesh_res[res_type]
+#     bins = mesh_res.get('bins')
+#     return BaseDataset(
+#         mesh_res['mesh']['score'].copy(),
+#         mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] * 0.01,
+#         bins=bins, name=res_type)
+
+def array_result(farray_res, res_type='mesh_res'):
     '''Conversion of mesh in :class:`~.base_dataset.BaseDataset`.
     '''
-    mesh_res = fmesh_res[res_type]
-    bins = mesh_res.get('bins')
+    array_res = farray_res[res_type]
+    bins = array_res.get('bins')
     return BaseDataset(
-        mesh_res['mesh']['score'].copy(),
-        mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] * 0.01,
+        array_res['array']['score'].copy(),
+        array_res['array']['sigma'] * array_res['array']['score'] * 0.01,
         bins=bins, name=res_type)
 
 
@@ -131,8 +141,10 @@ def convert_data_in_dataset(data, data_type):
 
 
 CONVERT_IN_DATASET = {
-    'spectrum_res': spectrum,
-    'mesh_res': mesh,
+    # 'spectrum_res': spectrum,
+    # 'mesh_res': mesh,
+    'spectrum_res': array_result,
+    'mesh_res': array_result,
     'shannon_entropy': entropy,
     'boltzmann_entropy': entropy,
     'integrated_res': integrated_result

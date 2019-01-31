@@ -380,10 +380,10 @@ def test_parse_mesh_roundtrip(array_bins):
     assert np.allclose(parsed_mesh['bins']['e'], lbins['e'])
     if len(lbins['t']) > 2:
         assert np.allclose(parsed_mesh['bins']['t'], lbins['t'])
-    assert array.dtype == parsed_mesh['mesh'].dtype
-    assert array.shape == parsed_mesh['mesh'].shape
+    assert array.dtype == parsed_mesh['array'].dtype
+    assert array.shape == parsed_mesh['array'].shape
     for comp in array.dtype.names:
-        assert np.allclose(array[:][comp], parsed_mesh['mesh'][:][comp])
+        assert np.allclose(array[:][comp], parsed_mesh['array'][:][comp])
     if 'integrated' in larray:
         if array.shape[4] == 1:
             assert np.isclose(pres[0]['integrated_res']['score'],
@@ -397,10 +397,10 @@ def test_parse_mesh_roundtrip(array_bins):
             assert np.allclose(larray['integrated'][:]['sigma'],
                                parsed_mesh['integrated_res']['sigma'])
     if 'energy_integrated' in larray:
-        assert 'eintegrated_mesh' in list(parsed_mesh.keys())
+        assert 'eintegrated_array' in list(parsed_mesh.keys())
         for key in ['score', 'sigma']:
             assert np.allclose(larray['energy_integrated'][:][key],
-                               parsed_mesh['eintegrated_mesh'][key])
+                               parsed_mesh['eintegrated_array'][key])
     pres2 = pygram.listscoreblock.parseString(mesh_t4_out)
     pres2d = pres2.asDict()
     keys.insert(2, 'score_index')
@@ -636,7 +636,7 @@ def test_parse_spectrum_roundtrip(array_bins, units):
     else:
         assert sorted(list(pres[0].keys())) == keys[1:]
     compare_bins(bins, pres[0]['spectrum_res'])
-    spectrum = pres[0]['spectrum_res']['spectrum']
+    spectrum = pres[0]['spectrum_res']['array']
     assert array.dtype == spectrum.dtype
     assert array.shape == spectrum.shape
     for comp in array.dtype.names:

@@ -297,6 +297,7 @@ class Scan(Mapping):
         '''
         self.fname = fname
         self.reqbatchs = None
+        self.tasks = 1
         self.normalend = False
         self.end_flags = ["simulation time", "exploitation time",
                           "elapsed time"]
@@ -333,6 +334,11 @@ class Scan(Mapping):
             self.reqbatchs = (int(line.split()[indbatch+1])
                               if len(line.split()) > 1
                               else None)
+        elif "number of tasks is" in line:
+            self.tasks = int(line.split()[5])
+        elif "BATCH_PER_SIMULATOR" in line:
+            self.reqbatchs = (int(line.split()[1])
+                              * (self.tasks-2 if self.tasks > 1 else 1))
         elif "PACKET_LENGTH" in line:
             LOGGER.info("[1mBatchs grouped by packets -> "
                         "number of batchs expected divided "

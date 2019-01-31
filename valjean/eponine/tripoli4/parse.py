@@ -132,17 +132,25 @@ class T4Parser():
             LOGGER.warning("Tripoli-4 listing did not finish with "
                            "NORMAL COMPLETION.")
 
-    def parse_t4_listing(self):
-        '''Parse Tripoli-4 results, calling pyparsing and
-        :mod:`~valjean.eponine.tripoli4`.
+    def _str_to_parse(self):
+        '''Return string to parse (depends on the required batches).
+
+        :returns: str
         '''
         if self.batch_number == 0:
-            str_to_parse = self.scan_res.get_all_batch_results()
-        else:
-            str_to_parse = self.scan_res[self.batch_number]
-        # now parse the results string
+            return self.scan_res.get_all_batch_results()
+        return self.scan_res[self.batch_number]
+
+    def parse_t4_listing(self):
+        '''Parse Tripoli-4 results, calling pyparsing and
+        :mod:`~valjean.eponine.tripoli4`. Use the default grammar.
+        '''
+        self._parse_t4_listing_worker(t4gram, self._str_to_parse())
+
+    def _parse_t4_listing_worker(self, gram, str_to_parse):
+        '''Parse the given string and raise exception if parsing failed.'''
         try:
-            self.result = t4gram.parseString(str_to_parse).asList()
+            self.result = gram.parseString(str_to_parse).asList()
         except ParseException:
             LOGGER.error("Parsing failed, you are probably trying to read a "
                          "new response. Please update the parser before "

@@ -67,7 +67,17 @@ RESPONSE 0
 [94m        score[0m 3.536549e-01, dtype: float64
 [94m        sigma[0m 7.371170e-01, dtype: float64
 [94m        used_batch[0m 9, dtype: int64
-[94m      mesh_res[0m [34mDict with keys = ['bins', 'mesh', 'units'][0m
+[94m      mesh_res[0m [34mDict with keys = ['array', 'bins', 'units'][0m
+[94m        array[0m <class 'numpy.ndarray'>
+shape: (4, 3, 1, 1, 1, 1, 1)
+squeezed: [[(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
+  (0.000000e+00, 0.000000e+00)]
+ [(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
+  (0.000000e+00, 0.000000e+00)]
+ [(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
+  (0.000000e+00, 0.000000e+00)]
+ [(0.000000e+00, 0.000000e+00) (nan, nan) (nan, nan)]]
+dtype: [('score', '<f8'), ('sigma', '<f8')]
 [94m        bins[0m [35mDict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 't'][0m
 [94m          e[0m <class 'numpy.ndarray'>
 shape: (2,)
@@ -90,16 +100,6 @@ squeezed: []
 [94m          t[0m <class 'numpy.ndarray'>
 shape: (0,)
 squeezed: []
-[94m        mesh[0m <class 'numpy.ndarray'>
-shape: (4, 3, 1, 1, 1, 1, 1)
-squeezed: [[(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
-  (0.000000e+00, 0.000000e+00)]
- [(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
-  (0.000000e+00, 0.000000e+00)]
- [(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
-  (0.000000e+00, 0.000000e+00)]
- [(0.000000e+00, 0.000000e+00) (nan, nan) (nan, nan)]]
-dtype: [('score', '<f8'), ('sigma', '<f8')]
 [94m        units[0m [35mDict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 'score', 'sigma', 't'][0m
 [94m          e[0m MeV
 [94m          mu[0m 
@@ -111,7 +111,11 @@ dtype: [('score', '<f8'), ('sigma', '<f8')]
 [94m          sigma[0m %
 [94m          t[0m s
 [94m      shannon_entropy_res[0m 9.047529e-01, dtype: float64
-[94m      spectrum_res[0m [34mDict with keys = ['bins', 'disc_batch', 'spectrum', 'units'][0m
+[94m      spectrum_res[0m [34mDict with keys = ['array', 'bins', 'disc_batch', 'units'][0m
+[94m        array[0m <class 'numpy.ndarray'>
+shape: (1, 1, 1, 1, 1, 1, 1)
+squeezed: (0.000000e+00, 0.000000e+00, 0.000000e+00)
+dtype: [('score', '<f8'), ('sigma', '<f8'), ('score/lethargy', '<f8')]
 [94m        bins[0m [35mDict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 't'][0m
 [94m          e[0m <class 'numpy.ndarray'>
 shape: (2,)
@@ -135,10 +139,6 @@ squeezed: []
 shape: (0,)
 squeezed: []
 [94m        disc_batch[0m 1, dtype: int64
-[94m        spectrum[0m <class 'numpy.ndarray'>
-shape: (1, 1, 1, 1, 1, 1, 1)
-squeezed: (0.000000e+00, 0.000000e+00, 0.000000e+00)
-dtype: [('score', '<f8'), ('sigma', '<f8'), ('score/lethargy', '<f8')]
 [94m        units[0m [35mDict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 'score', 'sigma', 't'][0m
 [94m          e[0m MeV
 [94m          mu[0m 
