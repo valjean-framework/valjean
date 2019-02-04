@@ -145,6 +145,8 @@ CONVERT_IN_DATASET = {
     # 'mesh_res': mesh,
     'spectrum_res': array_result,
     'mesh_res': array_result,
+    'greenbands_res': array_result,
+    'adj_crit_ed_res': array_result,
     'shannon_entropy': entropy,
     'boltzmann_entropy': entropy,
     'integrated_res': integrated_result

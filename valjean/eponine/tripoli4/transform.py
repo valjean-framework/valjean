@@ -173,7 +173,7 @@ def convert_score(toks):
                 res['spectrum_res'] = convert_spectrum(score[key], key)
             elif 'integrated_res' in key:
                 res[key] = score[key].asDict()
-            elif key == 'greenband_res':
+            elif key == 'greenbands_res':
                 res[key] = convert_green_bands(score[key])
             elif key == 'scoring_zone_id':
                 res['scoring_zone_id'] = convert_scoring_zone_id(score[key])

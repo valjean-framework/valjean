@@ -1291,58 +1291,100 @@ def convert_keff(res):
             'correlation_matrix': corrres}
 
 
-# 17 locals in convert_green_bands instead 15, but helps reading of the method
-def convert_green_bands(gbs):  # pylint: disable=R0914
-    '''Convert Green bands results in NumPy structured array.
+class GreenBandsDictBuilder(DictBuilder):
+    '''Class to build Green bands spectrum results.'''
 
-    :param list gbs: Green bands individually stored as dictionaries
-    :returns: dict similar to spectum one
-      :code:`{'used_batch': int, 'vals': numpy.array,
-      'ebins': numpy.array, 'sebins': numpy.array}`
+    def __init__(self, colnames, lnbins):
+        '''Initialisation of GreenBandsDictBuilder.'''
+        super().__init__(colnames, lnbins)
+        self.bins = OrderedDict([('se', []), ('ns', []),
+                                 ('u', []), ('v', []), ('w', []),
+                                 ('e', [])])
+        self.units = {'se': 'MeV', 'ns': '', 'u': '', 'v': '', 'w': '',
+                      'e': 'MeV', 'score': 'unknown', 'sigma': '%'}
+
+    def add_last_bins(self, data):
+        '''Add last bins from source energy bins and energy bins.
+        Also remove duplicates in source number and source tabulations.
+
+        :param data: Green bands results
+        '''
+        if ((len(self.bins['se']) > 1
+             and self.bins['se'][0] > self.bins['se'][1])):
+            self.bins['se'].append(data[-1]['gb_step_desc'][1])
+        else:
+            self.bins['se'].insert(0, data[0]['gb_step_desc'][1])
+        spectrum = data[0]['gb_step_res'][0]['spectrum_res'][0]
+        self.bins['e'].append(spectrum['spectrum_vals'][-1][1])
+        for key in ('ns', 'u', 'v', 'w'):
+            self.bins[key] = np.unique(self.bins[key])
+
+    def fill_arrays_and_bins(self, data):
+        '''Fill arrays and bins from Green bands result.
+
+        :param data: Green bands results
+        '''
+        for ist, gbstep in enumerate(data):
+            istep = gbstep['gb_step_desc'][0]
+            self.bins['se'].append(gbstep['gb_step_desc'][2])
+            for ires, gbres in enumerate(gbstep['gb_step_res']):
+                isource = gbres['gb_source']
+                if ist == 0:
+                    self.bins['ns'].append(isource[0])
+                    if len(isource) > 1:
+                        self.bins['u'].append(isource[1][0])
+                        self.bins['v'].append(isource[1][1])
+                        self.bins['w'].append(isource[1][2])
+                if len(gbres['spectrum_res']) > 1:
+                    LOGGER.warning("\x1b[31mMore than one spectrum_res while "
+                                   "only one foreseen for the moment\x1b[0m")
+                ispectrum = gbres['spectrum_res'][0]['spectrum_vals']
+                for iebin, ivals in enumerate(ispectrum):
+                    if ist == 0 and ires == 0:
+                        self.bins['e'].append(ivals[0])
+                    locind = ((istep, isource[0],
+                               isource[1][0], isource[1][1], isource[1][2],
+                               iebin) if len(isource) > 1
+                              else (istep, isource[0], 0, 0, 0, iebin))
+                    self.arrays['default'][locind] = np.array(
+                        tuple(ivals[2:]), dtype=self.arrays['default'].dtype)
+
+
+def _get_gb_nbins(gbres):
+    '''Get the number of bins for Green bands results.
+
+    :param gbres: Green bands results
+    :returns: tuple(int)
     '''
-    lastsource = gbs[-1]['gb_step_res'][-1]['gb_source']
+    lastsource = gbres[-1]['gb_step_res'][-1]['gb_source']
     hassourcetab = len(lastsource) > 1
-    spectrum = gbs[0]['gb_step_res'][0]['spectrum_res'][0]
-    bins = {'e': [], 'se': []}
-    index = (len(gbs),  # number of steps (= number of bins of source energy)
+    spectrum = gbres[0]['gb_step_res'][0]['spectrum_res'][0]
+    index = (len(gbres),  # number of steps (= number of bins of source energy)
              lastsource[0]+1,  # number of sources
              lastsource[1][0]+1 if hassourcetab else 1,  # number of u bins
              lastsource[1][1]+1 if hassourcetab else 1,  # number of v bins
              lastsource[1][2]+1 if hassourcetab else 1,  # number of w bins
              len(spectrum['spectrum_vals']))  # number of energy bins
-    vals = np.full(index, np.nan,
-                   dtype=np.dtype([('score', FTYPE),
-                                   ('sigma', FTYPE),
-                                   ('score/lethargy', FTYPE)]))
-    # Loop over results to fill them in numpy array
-    for ist, gbstep in enumerate(gbs):
-        istep = gbstep['gb_step_desc'][0]
-        bins['se'].append(gbstep['gb_step_desc'][2])
-        for ires, gbres in enumerate(gbstep['gb_step_res']):
-            isource = gbres['gb_source']
-            if len(gbres['spectrum_res']) > 1:
-                LOGGER.warning("[31mMore than one spectrum_res "
-                               "while only one foreseen for the moment[0m")
-            ispectrum = gbres['spectrum_res'][0]['spectrum_vals']
-            for iebin, ivals in enumerate(ispectrum):
-                if ist == 0 and ires == 0:
-                    bins['e'].append(ivals[0])
-                locind = ((istep, isource[0],
-                           isource[1][0], isource[1][1], isource[1][2],
-                           iebin) if hassourcetab
-                          else (istep, isource[0], 0, 0, 0, iebin))
-                vals[locind] = np.array(tuple(ivals[2:]), dtype=vals.dtype)
-    # Add last bins
-    if len(bins['se']) > 1 and bins['se'][0] > bins['se'][1]:
-        bins['se'].append(gbs[-1]['gb_step_desc'][1])
-    else:
-        bins['se'].insert(0, gbs[0]['gb_step_desc'][1])
-    bins['e'].append(spectrum['spectrum_vals'][-1][1])
-    # No flip bins for the moment, question about order of steps (so energy
-    # bins of sources)
-    return {'ebins': np.array(bins['e']),
-            'vals': vals,
-            'sebins': np.array(bins['se']),
+    return index
+
+
+def convert_green_bands(gbs):
+    '''Convert Green bands contribution results in arrays, using same schema as
+    spectrum or mesh.
+
+    :param gbs: Green bands results
+    :returns: dict
+    '''
+    LOGGER.debug("In convert_green_bands")
+    lnbins = _get_gb_nbins(gbs)
+    gbdb = GreenBandsDictBuilder(('score', 'sigma', 'score/lethargy'), lnbins)
+    gbdb.fill_arrays_and_bins(gbs)
+    gbdb.add_last_bins(gbs)
+    gbdb.flip_bins()
+    spectrum = gbs[0]['gb_step_res'][0]['spectrum_res'][0]
+    return {'array': gbdb.arrays['default'],
+            'bins': gbdb.bins,
+            'units': gbdb.units,
             'disc_batch': spectrum['disc_batch']}
 
 

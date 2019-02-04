@@ -1007,7 +1007,7 @@ _gbsource = Group(Suppress(_gbsourcenum_kw)
                   + (_minus_line | (_gbtabulation + _minus_line)))('gb_source')
 _gbrespersource = Group(_gbsource + spectrumblock)
 _gbstep = Group(_gbstepdesc + Group(OneOrMore(_gbrespersource))('gb_step_res'))
-gbblock = Group(OneOrMore(_gbstep))('greenband_res')
+gbblock = Group(OneOrMore(_gbstep))('greenbands_res')
 
 
 # Scores ordered by nuclei and precursor families, IFP outputs

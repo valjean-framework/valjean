@@ -812,17 +812,21 @@ def test_parse_greenbands_roundtrip(array_bins, disc_batch):
     assert pres
     assert len(pres) == 1
     assert (sorted(list(pres[0].keys()))
-            == ['greenband_res', 'scoring_mode', 'scoring_zone_id',
+            == ['greenbands_res', 'scoring_mode', 'scoring_zone_id',
                 'scoring_zone_type'])
-    gbres = pres[0]['greenband_res']
+    gbres = pres[0]['greenbands_res']
     assert (sorted(list(gbres.keys()))
-            == ['disc_batch', 'ebins', 'sebins', 'vals'])
-    assert np.allclose(gbres['ebins'], np.array(bins['e']))
-    assert np.allclose(gbres['sebins'], np.array(bins['se']))
-    assert array.dtype == gbres['vals'].dtype
-    assert array.shape == gbres['vals'].shape
+            == ['array', 'bins', 'disc_batch', 'units'])
+    incr = dict(map(
+        lambda i: (i[0], 1 if len(i[1]) > 1 and i[1][1] > i[1][0] else -1),
+        bins.items()))
+    assert np.allclose(gbres['bins']['e'], bins['e'][::incr['e']])
+    assert np.allclose(gbres['bins']['se'], bins['se'][::incr['se']])
+    assert array.dtype == gbres['array'].dtype
+    assert array.shape == gbres['array'].shape
     for comp in array.dtype.names:
-        assert np.allclose(gbres['vals'][:][comp], array[:][comp])
+        assert np.allclose(gbres['array'][:][comp],
+                           array[::incr['se'], ..., ::incr['e']][comp])
     assert gbres['disc_batch'] == disc_batch
 
 
