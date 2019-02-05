@@ -67,6 +67,13 @@ def integrated_result(result, res_type):
             np.array([intres['score']]),
             np.array([intres['sigma']]) * intres['score'] * 0.01,
             bins=bins, name=res_type)
+    if 'sensitivity_spectrum_res' in result:
+        for key, val in result['sensitivity_spectrum_res']['bins'].items():
+            bins[key] = val[::val.shape[0]-1]
+        return BaseDataset(
+            np.array(intres['score']),
+            np.array(intres['sigma']) * intres['score'] * 0.01,
+            bins=bins, name=res_type)
     return BaseDataset(intres['score'].copy(),
                        intres['sigma'] * intres['score'] * 0.01,
                        bins=bins, name=res_type)
@@ -146,6 +153,7 @@ CONVERT_IN_DATASET = {
     'spectrum_res': array_result,
     'mesh_res': array_result,
     'greenbands_res': array_result,
+    'sensitivity_spectrum_res': array_result,
     'adj_crit_ed_res': array_result,
     'shannon_entropy': entropy,
     'boltzmann_entropy': entropy,

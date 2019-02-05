@@ -58,7 +58,7 @@ EXPECTED_RESULTS = {("cristal", MONO): (148, 0, 0),
                     ("tripoli48", PARA): (33, 0, 2),
                     ("tripoli49", MONO): (39, 0, 9),  # many jezebel excluded
                     ("tripoli49", PARA): (36, 0, 1),
-                    ("tripoli410", MONO): (59, 4, 5),
+                    ("tripoli410", MONO): (61, 4, 5),
                     ("tripoli410", PARA): (55, 4, 0),
                     ("tripoli411", MONO): (62, 0, 7),
                     ("tripoli411", PARA): (55, 0, 1)}

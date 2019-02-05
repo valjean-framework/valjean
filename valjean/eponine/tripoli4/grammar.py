@@ -1033,6 +1033,17 @@ _perturborder = (Suppress(_perturborder_kw)
 _cvgline = Group(Suppress("L =") + _inums + _generic_score)
 _cvgstat = (Suppress(_cvgstat_kw)
             + ZeroOrMore(_cvgline)('score_per_length'))
+# results from adjoint calculation
+adjointres = (Group(Group(Suppress(_integratedres_kw)
+                          + _numusedbatch
+                          + Group(_nuclfamorder
+                                  | _nucleiorder
+                                  | _familyorder
+                                  | _perturborder
+                                  | _cvgstat)('adj_res')
+                          + Optional(_unitsres)('units')
+                          ).setParseAction(trans.convert_generic_adjoint))
+              )('adjoint_res')
 # sensitivities
 _sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
                      + OneOrMore(Word(alphas + '_,()'),
@@ -1054,7 +1065,8 @@ _sensitivity_energyinc = Group(Suppress(_sensitivity_incenergy_kw)
 _sensitivity_cols = (Keyword("E min") + Keyword("E max")
                      + Keyword("S(E)") + Keyword("sigma"))
 _sensitivity_vals = Group(_fnums*4)
-_sensitivity_energyint = Suppress(_sensitivity_energyint_kw) + _integratedres
+_sensitivity_energyint = Group(Suppress(_sensitivity_energyint_kw)
+                               + _integratedres)
 _sensitivity_res = Group(_sensitivity_index('charac')
                          + Group(OneOrMore(Group(
                              ZeroOrMore(_sensitivity_dircos
@@ -1072,16 +1084,6 @@ sensitivityres = Group(Group(Optional(Suppress(_integratedres_kw))
                              + Optional(_unitsres)('units'))
                        .setParseAction(trans.convert_sensitivities)
                        )('sensitivity_res')
-adjointres = (Group(Suppress(_integratedres_kw)
-                    + _numusedbatch
-                    + Group(_nuclfamorder
-                            | _nucleiorder
-                            | _familyorder
-                            | _perturborder
-                            | _cvgstat)
-                    .setParseAction(trans.convert_generic_adjoint)
-                    + Optional(_unitsres))
-              .setParseAction(trans.group_to_dict)('adjoint_res'))
 
 
 def _rename_norm_kw():

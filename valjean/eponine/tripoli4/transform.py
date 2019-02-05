@@ -200,7 +200,9 @@ def convert_generic_adjoint(toks):
 
     :param toks: Adjoint result (got thanks to IFP or Wielandt method)
     :type toks: |parseres|
-    :returns: `numpy structured array`_ (dimension 1)
+    :returns: list(dict) compatible with
+      :class:`~valjean.eponine.response_book.ResponseBook` and
+      :class:`~valjean.eponine.response_book.Index`.
 
     .. seealso::
 
@@ -209,9 +211,8 @@ def convert_generic_adjoint(toks):
        and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
     rtoks = toks[0]
-    if len(list(rtoks.keys())) == 1:
-        return common.convert_generic_adjoint(rtoks, list(rtoks.keys())[0])
-    raise ValueError("more than one key available, what should we do ?")
+    lod = common.convert_generic_adjoint(rtoks)
+    return lod
 
 
 def convert_keff(toks):
@@ -423,6 +424,7 @@ def extract_all_metadata(list_of_dicts):
     :param list(dict) list_of_dicts: list of dictionaries
     :returns: list(dict) with no list of dict under 'results' key
     '''
+    LOGGER.debug("In extract_all_metadata")
     return [x for dict_ in list_of_dicts for x in extract_metadata(dict_)]
 
 

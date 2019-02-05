@@ -245,11 +245,13 @@ def test_ifp(datadir):
     assert t4_res.scan_res.times['simulation time'] == 15
     assert t4_res.scan_res.times['initialization time'] == 18
     assert len(t4_res.result) == 1
-    assert len(t4_res.result[-1]['list_responses']) == 20
+    assert max([v['response_index']
+                for v in t4_res.result[-1]['list_responses']]) + 1 == 20
+    assert len(t4_res.result[-1]['list_responses']) == 77
     last_resp = t4_res.result[-1]['list_responses'][-1]
     assert last_resp['response_function'] == "IFP ADJOINT WEIGHTED ROSSI ALPHA"
     assert last_resp['response_type'] == 'adjoint_res'
-    assert last_resp['results']['used_batch'] == 81
+    assert last_resp['results']['integrated_res']['used_batch'] == 81
 
 
 def test_kij(datadir):

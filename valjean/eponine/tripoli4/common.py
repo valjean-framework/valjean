@@ -1388,41 +1388,54 @@ def convert_green_bands(gbs):
             'disc_batch': spectrum['disc_batch']}
 
 
-def convert_generic_adjoint(res, loctype):
+def convert_generic_adjoint(res):
     '''Convert adjoint results in association of dictionaries and NumPy array.
 
     :param list res: Adjoint result got thanks to IFP or Wielandt method to be
       converted
-    :returns: dict of
+    :returns: list(dict) each dictionary containing
 
-      * index: list of keys used to identify dictionary order
-      * scores: dict of :obj:`numpy.ndarray` or dict of dict of
-        :obj:`numpy.ndarray`
+      * metadata like nucleus name, family number or cycle length
+      * data saved as ``'integrated_res'``
 
-    Indexes correspond to names of the dictionaries keys.
+    Units, if available, and used batch are also saved under the integrated
+    result.
 
-    Examples: if ``'index': ['nucleus', 'family']``, scores will be ordered as
-    ``{nucleus_1: {family_1: array, family_2: array, }, nucleus_2: {}, }``
+    This structure is compatible with the response book and the index.
+    Selections are done like in the default score cases.
     '''
-    # dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
     keys = ('score', 'sigma')
-    mydict = {}
-    for ires in res[loctype]:
+    tlist = []
+    loctype = list(res['adj_res'].keys())[0]
+    index = loctype.split('_')[2:]
+    adjres = res.pop('adj_res')
+    if len(adjres.asDict()) != 1:
+        LOGGER.warning("Issue: more than one key for adjoint result")
+    for ires in adjres[loctype]:
+        mydict = {}
         find = ires[0]
+        nindex = index[0]
+        mydict[nindex] = find
         if len(ires) == 1:
-            mydict[find] = "No result available"
+            mydict['integrated_res'] = {
+                'not_converged': "No result available"}
+            mydict['integrated_res'].update(res.asDict())
+            tlist.append(mydict)
             continue
         if isinstance(ires[1], FTYPE):
-            # mydict[find] = np.array(tuple(ires[1:]), dtype=dtype)
-            mydict[find] = dict(zip(keys, tuple(ires[1:])))
+            mydict['integrated_res'] = dict(zip(keys, tuple(ires[1:])))
+            mydict['integrated_res'].update(res.asDict())
+            tlist.append(mydict)
         else:
-            mydict[find] = {}
             for iires in ires[1:]:
+                myrdict = mydict.copy()
                 lind = iires[0]
-                # mydict[find][lind] = np.array(tuple(iires[1:]), dtype=dtype)
-                mydict[find][lind] = dict(zip(keys, tuple(iires[1:])))
-    index = loctype.split('_')[2:]
-    return {'index': index, 'scores': mydict}
+                nindex2 = index[1]
+                myrdict[nindex2] = lind
+                myrdict['integrated_res'] = dict(zip(keys, tuple(iires[1:])))
+                myrdict['integrated_res'].update(res.asDict())
+                tlist.append(myrdict)
+    return tlist
 
 
 class AdjointCritEdDictBuilderException(Exception):
@@ -1697,48 +1710,72 @@ def convert_kij_keff(res):
             'keff_sensibility_matrix': np.array(sensibmat)}
 
 
-def add_last_sensitivities_bins(data, bins):
-    '''Add last bins (E, E', µ) for sensitivities. All orders are possible.
+class SensitivityDictBuilder(DictBuilder):
+    '''Class to build sensitivity results dictionary.'''
 
-    :param list data: results as a list of dictionaries
-    :param bins: all bins (minus one edge to be updated
-    :type bins: dict(:obj:`numpy.ndarray`)
-    '''
-    if len(bins['e']) > 1 and bins['e'][0] > bins['e'][1]:
-        bins['e'].insert(0, data[-1]['values'][0][1])
-    else:
-        bins['e'].append(data[-1]['values'][-1][1])
-    if bins['mu']:
-        if len(bins['mu']) > 1 and bins['mu'][0] > bins['mu'][1]:
-            bins['mu'].insert(0, data[0]['direction_cosine'][1])
+    def __init__(self, colnames, lnbins):
+        super().__init__(colnames, lnbins)
+        self.bins = OrderedDict([('einc', []), ('e', []), ('mu', [])])
+        self.units = {'einc': 'MeV', 'e': 'MeV', 'mu': '',
+                      'score': 'unknown', 'sigma': '%'}
+
+    def fill_arrays_and_bins(self, data):
+        '''Fill arrays and bins for sensitivities.
+
+        Fill integrated result (written as energy integrated but integrated
+        over all dimensions) in the ``'integrated_res'`` array, that will be in
+        parallel of the default sensitivity result (a priori always here).
+        '''
+        ibin = [0, 0, 0]
+        for ind, vals in enumerate(data['vals']):
+            if 'direction_cosine' in vals:
+                if ind != 0:
+                    ibin[2] += 1
+                    ibin[:2] = [0, 0]
+                self.bins['mu'].append(vals['direction_cosine'][0])
+            if 'energy_incident' in vals:
+                if ibin[2] == 0:
+                    self.bins['einc'].append(vals['energy_incident'][0])
+                if ind % self.arrays['default'].shape[0] != 0:
+                    ibin[0] += 1
+            for ienergy, ivals in enumerate(vals['values']):
+                if ibin[0] == ibin[2] == 0:
+                    self.bins['e'].append(ivals[0])
+                ibin[1] = ienergy
+                self.arrays['default'][tuple(ibin)] = np.array(
+                    tuple(ivals[2:]), dtype=self.arrays['default'].dtype)
+        if 'energy_integrated' in data:
+            self.arrays['integrated_res'][(0, 0, 0)] = np.array(
+                (data['energy_integrated']['score'],
+                 data['energy_integrated']['sigma']),
+                dtype=self.arrays['default'].dtype)
+
+    def add_last_bins(self, data):
+        '''Add last bins in incident energy (E), energy (E') and direction
+        cosine (µ). All orders are possible.
+
+        :param list data: results as a list of dictionaries
+        '''
+        if len(self.bins['e']) > 1 and self.bins['e'][0] > self.bins['e'][1]:
+            self.bins['e'].insert(0, data[-1]['values'][0][1])
         else:
-            bins['mu'].append(data[-len(bins['einc'])]['direction_cosine'][1])
-    if bins['einc']:
-        if len(bins['einc']) > 1 and bins['einc'][0] > bins['einc'][1]:
-            bins['einc'].insert(0, data[0]['energy_incident'][1])
-        else:
-            bins['einc'].append(data[-1]['energy_incident'][1])
+            self.bins['e'].append(data[-1]['values'][-1][1])
+        if self.bins['mu']:
+            if ((len(self.bins['mu']) > 1
+                 and self.bins['mu'][0] > self.bins['mu'][1])):
+                self.bins['mu'].insert(0, data[0]['direction_cosine'][1])
+            else:
+                self.bins['mu'].append(data[-len(self.bins['einc'])]
+                                       ['direction_cosine'][1])
+        if self.bins['einc']:
+            if ((len(self.bins['einc']) > 1
+                 and self.bins['einc'][0] > self.bins['einc'][1])):
+                self.bins['einc'].insert(0, data[0]['energy_incident'][1])
+            else:
+                self.bins['einc'].append(data[-1]['energy_incident'][1])
 
 
-def flip_sensitivities_bins(array, bins):
-    '''Flip bins for sensitivities spectrum, like in usual spectrum cases.'''
-    LOGGER.debug("In flip_sensitivities_bins")
-    key_iaxis = [('einc', 0), ('e', 1), ('mu', 2)]
-    for key, iaxis in key_iaxis:
-        if len(bins.get(key)) > 1 and bins[key][0] > bins[key][1]:
-            bins[key] = np.flip(bins[key], 0)
-            array[:] = np.flip(array, axis=iaxis)
-
-
-def fill_sensitivities_arrays(data):
-    '''Build array and bins for sensitivities.
-
-    :param list data: results as a list of dictionaries
-    :returns: array and bins as :obj:`numpy.ndarray`
-    '''
-    dtype = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
-    # variables: E, E', mu
-    # nbres de bins
+def _get_sensitivity_bins(data):
     nbcos = len([x for x in data if "direction_cosine" in x.keys()])
     if nbcos == 0:
         nbcos = 1
@@ -1746,36 +1783,14 @@ def fill_sensitivities_arrays(data):
     if nbeinc == 0:
         nbeinc = 1
     nbebins = len(data[-1]['values'])
-    # initialisation et remplissage
-    bins = OrderedDict([('einc', []), ('e', []), ('mu', [])])
-    array = np.full((nbeinc, nbebins, nbcos), np.nan, dtype)
-    ibin = [0, 0, 0]
-    for ind, vals in enumerate(data):
-        if 'direction_cosine' in vals:
-            if ind != 0:
-                ibin[2] += 1
-                ibin[:2] = [0, 0]
-            bins['mu'].append(vals['direction_cosine'][0])
-        if 'energy_incident' in vals:
-            if ibin[2] == 0:
-                bins['einc'].append(vals['energy_incident'][0])
-            if ind % nbeinc != 0:
-                ibin[0] += 1
-        for ienergy, ivals in enumerate(vals['values']):
-            if ibin[0] == ibin[2] == 0:
-                bins['e'].append(ivals[0])
-            ibin[1] = ienergy
-            array[tuple(ibin)] = np.array(tuple(ivals[2:]), dtype=dtype)
-    add_last_sensitivities_bins(data, bins)
-    flip_sensitivities_bins(array, bins)
-    return array, bins
+    return (nbeinc, nbebins, nbcos)
 
 
 def convert_sensitivities(res):
     '''Convert sensitivities to dictionary containing :obj:`numpy.ndarray`.
 
     :param res: result
-    :return: dict with :obj:`numpy.ndarray`
+    :return: list(dict) containing the results and the associated metadata.
 
     The dictionary contains a structured array of 3 dimensions: incident
     energy ``'einc'``, exiting energy ``'e'`` and direction cosine ``'mu'``.
@@ -1790,17 +1805,26 @@ def convert_sensitivities(res):
     for ires in lres:
         itype = ''.join(ires['sensitivity_type'])
         for iindex in ires['res']:
-            array, bins = fill_sensitivities_arrays(iindex['vals'])
-            datadict = {
-                'energy_integrated': iindex['energy_integrated'].asDict(),
-                'array': array,
-                'bins': bins,
-                'used_batch': res['used_batch']}
+            sensidb = SensitivityDictBuilder(
+                ['score', 'sigma'],
+                _get_sensitivity_bins(iindex['vals']))
+            if 'energy_integrated' in iindex:
+                sensidb.add_array('integrated_res', ['score', 'sigma'],
+                                  [1]*sensidb.arrays['default'].ndim)
+            sensidb.fill_arrays_and_bins(iindex)
+            sensidb.add_last_bins(iindex['vals'])
+            sensidb.flip_bins()
             if 'units' in res:
-                datadict['units'] = res['units'][0]
+                sensidb.units['score'] = res['units'][0]['uscore']
+            datadict = {
+                'array': sensidb.arrays['default'],
+                'bins': sensidb.bins,
+                'used_batch': res['used_batch'],
+                'units': sensidb.units}
             resdict = iindex['charac'].asDict()
             resdict['sensitivity_type'] = itype
             resdict['sensitivity_spectrum_res'] = datadict
+            resdict['integrated_res'] = sensidb.arrays['integrated_res']
             thelist.append(resdict)
     return thelist
 
