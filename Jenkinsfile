@@ -110,11 +110,9 @@ pipeline {
         notifyTuleap(false)
     }
     always {
-      warnings(parserConfigurations: [[parserName: 'pep8', pattern: "**/flake8.out"],
-                                      [parserName: 'pylint', pattern: "**/pylint.out"],
-                                      [parserName: 'sphinx-build', pattern: "**/sphinx-html.out"],
-                                      [parserName: 'sphinx-linkcheck', pattern: "**/sphinx-linkcheck.out"]],
-               usePreviousBuildAsReference: true)
+      recordIssues referenceJobName: 'valjean/reference/master', enabledForFailure: true, tool: pep8(pattern: '**/flake8.out', reportEncoding: 'UTF-8')
+      recordIssues referenceJobName: 'valjean/reference/master', enabledForFailure: true, tool: pyLint(pattern: '**/pylint.out', reportEncoding: 'UTF-8')
+      recordIssues referenceJobName: 'valjean/reference/master', enabledForFailure: true, tool: sphinxBuild(pattern: '**/sphinx-*.out', reportEncoding: 'UTF-8')
       archiveArtifacts artifacts: "**/flake8.out", fingerprint: true
       archiveArtifacts artifacts: "**/pylint.out", fingerprint: true
       archiveArtifacts artifacts: "**/sphinx-html.out", fingerprint: true
