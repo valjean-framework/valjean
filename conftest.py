@@ -2,7 +2,6 @@
 
 `pytest`_ configuration file.
 '''
-
 import pytest
 
 
@@ -18,7 +17,13 @@ def pytest_addoption(parser):
                      default=None, help="list of patterns to exclude in paths")
     parser.addoption("--qualtrip-match", action="store",
                      default=None, help="list of patterns to match in paths")
-
+    parser.addoption("--parsing-config-files", action="append", default=[],
+                     help="list of python configuration files to test "
+                          "intensively the parsing")
+    parser.addoption("--parsing-exclude", action="store",
+                     default=None, help="list of patterns to exclude in paths")
+    parser.addoption("--parsing-match", action="store",
+                     default=None, help="list of patterns to match in paths")
 
 def pytest_generate_tests(metafunc):
     '''Handle the ``--valjean-verbose`` option.'''
@@ -43,7 +48,6 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "slow" in item.keywords:
             item.add_marker(skip_slow)
-
 
 ##############
 #  fixtures  #

@@ -75,10 +75,10 @@ ALL_FOLDERS = [os.path.join(mode, *qualt_fold)
 ALL_FOLDERS = [
     os.path.join(mode, *qualt_fold)
     for mode in [MONO, PARA]
-    for qualt_fold in (QUALT_CATEGORIES if mode == MONO
-                       else [(AUX, x)
-                             for x in sorted(set(x[0]
-                                             for x in EXPECTED_RESULTS))])]
+    for qualt_fold in (
+        QUALT_CATEGORIES if mode == MONO
+        else [(AUX, x) for x in sorted(
+            set(x[0] for x in EXPECTED_RESULTS))])]
 
 
 @pytest.fixture

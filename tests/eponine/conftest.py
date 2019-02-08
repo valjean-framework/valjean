@@ -1,6 +1,9 @@
 '''Fixtures for the :mod:`eponine` module.'''
 
 # pylint: disable=wrong-import-order,no-value-for-parameter
+import pytest
+import os
+import sys
 import numpy as np
 from hypothesis import note
 from hypothesis.strategies import (lists, floats, composite, just, booleans,
@@ -10,6 +13,7 @@ from collections import OrderedDict
 
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.eponine.base_dataset import BaseDataset
+from valjean.dyn_import import dyn_import
 
 
 DEF_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -235,3 +239,55 @@ class RunTaskMock:
     '''
     def __init__(self, name):
         self.name = name
+
+
+@pytest.fixture
+def parsing_config_files(request):
+    '''Fixture to read configuration files to test parsing coverage.
+
+    This is for example used during nightly tests.
+    '''
+    return request.config.getoption('--parsing-config-files')
+
+
+@pytest.fixture
+def parsing_exclude(request):
+    '''Fixture to exclude test on some patterns from list of folders to test
+    with pytest.
+
+    Synthax: ``--parsing-exclude=spam,egg``
+    '''
+    return request.config.getoption('--parsing-exclude')
+
+
+@pytest.fixture
+def parsing_match(request):
+    '''Fixture to select a pattern from list of folders to test with pytest.
+
+    Synthax: ``--parsing-match=bacon``
+    '''
+    return request.config.getoption('--parsing-match')
+
+
+def pytest_generate_tests(metafunc):
+    '''Handle the ``--parsing-config-files`` option in order to make one test
+    per folder required for comparison simplicity.
+    '''
+    if metafunc.function.__name__ == "test_listing_parsing":
+        confiles = metafunc.config.getoption("--parsing-config-files")
+        list_params = []
+        if len(set(os.path.basename(x) for x in confiles)) != len(confiles):
+            import logging
+            logger = logging.getLogger('valjean')
+            logger.warning("Some modules with same name in the given "
+                           "parsing-config-files, only one among the "
+                           "duplicated names will be read.")
+        for cfile in confiles:
+            try:
+                config = dyn_import(cfile)
+            except FileNotFoundError:
+                print('Cannot find config file %s', parsing_config_files)
+                sys.exit(1)
+            list_params.extend((x, config) for x in config.ALL_FOLDERS)
+        ids = list(config.__name__ + '/' + x for x, config in list_params)
+        metafunc.parametrize('vv_params', list_params, ids=ids)
