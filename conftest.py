@@ -11,12 +11,6 @@ def pytest_addoption(parser):
                      help="Maximize valjean verbosity")
     parser.addoption("--runslow", action="store_true",
                      default=False, help="run slow tests")
-    parser.addoption("--qualtrip", action="store",
-                     default="", help="path of qualtrip folder to be tested")
-    parser.addoption("--qualtrip-exclude", action="store",
-                     default=None, help="list of patterns to exclude in paths")
-    parser.addoption("--qualtrip-match", action="store",
-                     default=None, help="list of patterns to match in paths")
     parser.addoption("--parsing-config-files", action="append", default=[],
                      help="list of python configuration files to test "
                           "intensively the parsing")
@@ -24,6 +18,7 @@ def pytest_addoption(parser):
                      default=None, help="list of patterns to exclude in paths")
     parser.addoption("--parsing-match", action="store",
                      default=None, help="list of patterns to match in paths")
+
 
 def pytest_generate_tests(metafunc):
     '''Handle the ``--valjean-verbose`` option.'''
@@ -49,9 +44,11 @@ def pytest_collection_modifyitems(config, items):
         if "slow" in item.keywords:
             item.add_marker(skip_slow)
 
+
 ##############
 #  fixtures  #
 ##############
+
 
 @pytest.fixture
 def datadir(tmpdir, request):

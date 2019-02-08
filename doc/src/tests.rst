@@ -95,7 +95,7 @@ Tests for the :mod:`~.scan` module
 Tests for the :mod:`~.parse` modules
 ```````````````````````````````````````
 
-.. automodule:: tests.eponine.test_all_listings
+.. automodule:: tests.eponine.test_parsing
 
 
 Tests for the :mod:`~.accessor` module
