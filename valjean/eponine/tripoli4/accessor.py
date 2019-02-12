@@ -90,6 +90,25 @@ Did not found a responses book
 42
 >>> t4acc.simulation_time()
 4242
+
+
+For the moment only two keys allow the construction of a responses book:
+``'list_responses'`` (default) and ``'ifp_adjoint_crit_edition'``, others
+return an error.
+
+>>> pres2 = {'edition_batch_number': 42, 'ifp_adjoint_crit_edition': orders}
+>>> t4acc2 = Accessor(pres2, book_type='ifp_adjoint_crit_edition')
+>>> print(t4acc2.resp_book)
+ResponseBook object -> Number of responses: 5, data key: 'results', \
+available metadata keys: ['consumer', 'dessert', 'drink', 'response_function']
+
+>>> pres3 = {'edition_batch_number': 42, 'and_these_are_our_meals': orders}
+>>> t4acc3 = Accessor(pres3)
+>>> # prints: ERROR     accessor: The required book_type apparently failed, \
+... its shape might not be suitable, please check. Currently available and  \
+... tested: ('list_responses', 'ifp_adjoint_crit_edition')
+>>> print(t4acc3.resp_book)
+None
 '''
 
 import logging
@@ -124,7 +143,7 @@ class Accessor:
         if self.resp_book:
             LOGGER.debug("RESP_BOOK exists")
         else:
-            if book_type in self.parsed_res:
+            if book_type not in self.parsed_res:
                 LOGGER.error("The required book_type apparently failed, "
                              "its shape might not be suitable, please check. "
                              "Currently available and tested: "

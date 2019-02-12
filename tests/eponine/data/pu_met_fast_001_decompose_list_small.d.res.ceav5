@@ -1,0 +1,2410 @@
+
+=====================================================================
+$Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
+ hostname: is232540
+ pid: 8609
+
+=====================================================================
+$Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
+
+ HOSTNAME : is232540
+
+ PROCESS ID is : 8609
+
+ DATE : Tue Feb 12 14:21:14 2019
+
+ Version is $Name: tripoli4_11 $.
+
+=====================================================================
+
+ data filename = pu_met_fast_001_decompose_list_small.d
+ catalogname = /home/tripoli4.11/tripoli4.11.0/Env/t4path.ceav512
+ execution call = tripoli4 -s NJOY -a -c /home/tripoli4.11/tripoli4.11.0/Env/t4path.ceav512 -d pu_met_fast_001_decompose_list_small.d -o pu_met_fast_001_decompose_list_small.d.res.ceav5 
+
+
+ dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
+ mass file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
+ Q fission directory : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/Qfission
+ electron cross section  directory : /data/tmpuranus2/GALILEE-V0-3.0/PEID/Electron_Photon
+ abondance file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/abundance
+ own evaluations directory : 
+
+
+ WARNING
+ method name : T4_path
+ error message : No such directory for own evaluations
+
+
+
+
+ 	 reading geometry : 
+
+ 	 checking association of compositions and volumes :  ok 
+
+WARNING : The number of discarded batches has been increased by (IFP_CYCLE_LENGTH - 1) due to the IFP method for kinetics parameters and/or perturbations, sensitivities and Diven factor.
+          Discard is now 119
+
+
+COMMENT
+NEA/NSC/DOC(95)03/I PU-MET-FAST-001
+Bare Sphere of Plutonium-239 Metal (4.5at.% of Pu-240, 1.02wt.% of Ga)
+Resultats existes   6
+Experience                              1.0000   0.0020
+KENO (Hansen-Roach)                     1.0000   0.0026
+KENO (27g ENDF/B-IV)                    0.9974   0.0011
+MCNP (ENDF/B-V)                         0.9957   0.0012
+ONEDANT (27g ENDF/B-IV)                 0.9978   0.
+MONK6B (UKNDL)                          1.0119   0.0011
+COMMENT
+
+// Reference values for the Diven parameter:
+// DIVEN FACTOR D_NU (NEUTRON NUMBER) = 0.82	
+// DIVEN FACTOR D_S (SPATIAL SHAPE) = 1.03
+// DIVEN FACTOR D = D_NU D_S = 0.85
+
+GEOMETRIE
+TITRE
+
+TYPE 1 	SPHERE 6.38493
+VOLU 1  COMBI 1 0 0 0  FINV
+
+
+COMMENT
+GRAF
+-10 0 -10
+1 0 0
+0 0 1
+20 20
+1
+COMMENT
+FING
+
+COMPOSITION
+	1
+	PONCTUAL 300  PLUTONIUM   4
+		GA	1.3752E-03
+		PU239	3.71E-02
+		PU240	1.7512E-03
+		PU241	1.1674E-04
+FIN_COMPO
+
+//		PU239	3.7047E-02
+
+GEOMCOMP
+	PLUTONIUM   1   1
+FIN_GEOMCOMP
+
+LIST_SOURCE 1
+SOURCE 
+	NEUTRON  
+	PONCTUAL  0  0 0
+	ANGULAR_DISTRIBUTION   ISOTROPIC 
+	ENERGETIC_DISTRIBUTION SPECTRE   WATT_SPECTRE
+        TIME_DISTRIBUTION  DIRAC 0
+FIN_SOURCE
+FIN_LIST_SOURCE
+
+REPONSES
+1 FLUX NEUTRON
+FIN_REPONSES
+
+LIST_DECOUPAGE
+	2
+    DEC_SPECT 2 1E-11 20
+    DEC_SPECT2
+       241
+1.0000000e-11   1.3335214e-11   1.7782794e-11   2.3713737e-11   3.1622777e-11   4.2169650e-11   5.6234133e-11   7.4989421e-11   1.0000000e-10   1.3335214e-10   1.7782794e-10   2.3713737e-10   3.1622777e-10   4.2169650e-10   5.6234133e-10   7.4989421e-10   1.0000000e-09   1.3335214e-09   1.7782794e-09   2.3713737e-09   3.1622777e-09   4.2169650e-09   5.6234133e-09   7.4989421e-09   1.0000000e-08   1.3335214e-08   1.7782794e-08   2.3713737e-08   3.1622777e-08   4.2169650e-08   5.6234133e-08   7.4989421e-08   1.0000000e-07   1.3335214e-07   1.7782794e-07   2.3713737e-07   3.1622777e-07   4.2169650e-07   5.6234133e-07   7.4989421e-07   1.0000000e-06   1.3335214e-06   1.7782794e-06   2.3713737e-06   3.1622777e-06   4.2169650e-06   5.6234133e-06   7.4989421e-06   1.0000000e-05   1.3335214e-05   1.7782794e-05   2.3713737e-05   3.1622777e-05   4.2169650e-05   5.6234133e-05   7.4989421e-05   1.0000000e-04   1.3335214e-04   1.7782794e-04   2.3713737e-04   3.1622777e-04   4.2169650e-04   5.6234133e-04   7.4989421e-04   1.0000000e-03   1.3335214e-03   1.7782794e-03   2.3713737e-03   3.1622777e-03   4.2169650e-03   5.6234133e-03   7.4989421e-03   1.0000000e-02   1.3335214e-02   1.7782794e-02   2.3713737e-02   3.1622777e-02   4.2169650e-02   5.6234133e-02   7.4989421e-02   1.0000000e-01   1.3335214e-01   1.7782794e-01   2.3713737e-01   3.1622777e-01   4.2169650e-01   5.6234133e-01   7.4989421e-01   1.0000000e-00   1.1250000e+00   1.2500000e+00   1.3750000e+00   1.5000000e+00   1.6250000e+00   1.7500000e+00   1.8750000e+00   2.0000000e+00   2.1250000e+00   2.2500000e+00   2.3750000e+00   2.5000000e+00   2.6250000e+00   2.7500000e+00   2.8750000e+00   3.0000000e+00   3.1250000e+00   3.2500000e+00   3.3750000e+00   3.5000000e+00   3.6250000e+00   3.7500000e+00   3.8750000e+00   4.0000000e+00   4.1250000e+00   4.2500000e+00   4.3750000e+00   4.5000000e+00   4.6250000e+00   4.7500000e+00   4.8750000e+00   5.0000000e+00   5.1250000e+00   5.2500000e+00   5.3750000e+00   5.5000000e+00   5.6250000e+00   5.7500000e+00   5.8750000e+00   6.0000000e+00   6.1250000e+00   6.2500000e+00   6.3750000e+00   6.5000000e+00   6.6250000e+00   6.7500000e+00   6.8750000e+00   7.0000000e+00   7.1250000e+00   7.2500000e+00   7.3750000e+00   7.5000000e+00   7.6250000e+00   7.7500000e+00   7.8750000e+00   8.0000000e+00   8.1250000e+00   8.2500000e+00   8.3750000e+00   8.5000000e+00   8.6250000e+00   8.7500000e+00   8.8750000e+00   9.0000000e+00   9.1250000e+00   9.2500000e+00   9.3750000e+00   9.5000000e+00   9.6250000e+00   9.7500000e+00   9.8750000e+00   1.0000000e+01   1.0125000e+01   1.0250000e+01   1.0375000e+01   1.0500000e+01   1.0625000e+01   1.0750000e+01   1.0875000e+01   1.1000000e+01   1.1125000e+01   1.1250000e+01   1.1375000e+01   1.1500000e+01   1.1625000e+01   1.1750000e+01   1.1875000e+01   1.2000000e+01   1.2125000e+01   1.2250000e+01   1.2375000e+01   1.2500000e+01   1.2625000e+01   1.2750000e+01   1.2875000e+01   1.3000000e+01   1.3125000e+01   1.3250000e+01   1.3375000e+01   1.3500000e+01   1.3625000e+01   1.3750000e+01   1.3875000e+01   1.4000000e+01   1.4125000e+01   1.4250000e+01   1.4375000e+01   1.4500000e+01   1.4625000e+01   1.4750000e+01   1.4875000e+01   1.5000000e+01   1.5125000e+01   1.5250000e+01   1.5375000e+01   1.5500000e+01   1.5625000e+01   1.5750000e+01   1.5875000e+01   1.6000000e+01   1.6125000e+01   1.6250000e+01   1.6375000e+01   1.6500000e+01   1.6625000e+01   1.6750000e+01   1.6875000e+01   1.7000000e+01   1.7125000e+01   1.7250000e+01   1.7375000e+01   1.7500000e+01   1.7625000e+01   1.7750000e+01   1.7875000e+01   1.8000000e+01   1.8125000e+01   1.8250000e+01   1.8375000e+01   1.8500000e+01   1.8625000e+01   1.8750000e+01   1.8875000e+01   1.9000000e+01   1.9125000e+01   1.9250000e+01   1.9375000e+01   1.9500000e+01   1.9625000e+01   1.9750000e+01   1.9875000e+01   2.0000000e+01 
+FIN_LIST_DECOUPAGE
+
+SCORE 
+1
+	1 COLL DECOUPAGE DEC_SPECT2 VOLU SOMME 1 1
+FIN_SCORE
+
+
+SIMULATION
+  	CRITICITE DISCARD 100
+	BATCH 	200
+	SIZE  	4000
+	EDITION 200
+	ENERGY_INF NEUTRON 1.E-11
+	PARTICULES   1 NEUTRON
+	FORCED_UNIT_BASE_INTERPOL
+	KINETIC_PARAMETERS
+	// NAUCHI_KINETIC_PARAMETERS
+	IFP_KINETIC_PARAMETERS IFP_CYCLE_LENGTH 20 IFP_CONVERGENCE_STATISTICS
+	NUCLEI_CONTRIBUTIONS LIST 3 PU239 PU240 PU241
+FIN_SIMULATION
+
+
+
+ data reading time (s): 0
+
+ Total concentration of material PLUTONIUM (1.E24at/cm3) is: 4.034314e-02
+
+
+ Loading response functions ...
+ Constructing score  ...0
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 9.999997e-01
+
+		 Energetic density simulation intensity = 9.999997e-01
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 1.000000e+00
+
+		 Calculated source simulation intensity = 1.256637e+01
+
+		 Calculated source definition intensity = 1.256637e+01
+
+	         SIMULATION INTENSITY = 1.256637e+01   BIASED SIMULATION INTENSITY = 1.256637e+01
+
+   SUM OF SIMULATION INTENSITIES = 1.256637e+01
+
+   GLOBAL SIMULATION INTENSITY = 1.256637e+01
+
+   BIASED TOTAL SOURCE INTENSITY = 1.256637e+01
+
+
+ initialization time (s): 1
+
+
+ Type and parameters of random generator before batch 1 : 
+	 DRAND48_RANDOM 123 13 37  COUNTER	0
+
+
+ batch number : 1
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.083750e+00	 sigma_n : 3.135570e-02
+	 number of secondary particules: 5382
+	 number of fission neutrons: 5382
+
+ simulation time (s) : 0
+
+
+ batch number : 2
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.433668e+00	 sigma_n : 2.146368e-02
+	 number of secondary particules: 5191
+	 number of fission neutrons: 5191
+
+ simulation time (s) : 0
+
+
+ batch number : 3
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.377384e+00	 sigma_n : 2.236156e-02
+	 number of secondary particules: 4911
+	 number of fission neutrons: 4911
+
+ simulation time (s) : 0
+
+
+ batch number : 4
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.356954e+00	 sigma_n : 2.237065e-02
+	 number of secondary particules: 4494
+	 number of fission neutrons: 4494
+
+ simulation time (s) : 0
+
+
+ batch number : 5
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.449933e+00	 sigma_n : 2.497078e-02
+	 number of secondary particules: 4389
+	 number of fission neutrons: 4389
+
+ simulation time (s) : 0
+
+
+ batch number : 6
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.467532e+00	 sigma_n : 2.529710e-02
+	 number of secondary particules: 4317
+	 number of fission neutrons: 4317
+
+ simulation time (s) : 0
+
+
+ batch number : 7
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.503359e+00	 sigma_n : 2.565280e-02
+	 number of secondary particules: 4433
+	 number of fission neutrons: 4433
+
+ simulation time (s) : 0
+
+
+ batch number : 8
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.371532e+00	 sigma_n : 2.352706e-02
+	 number of secondary particules: 4173
+	 number of fission neutrons: 4173
+
+ simulation time (s) : 0
+
+
+ batch number : 9
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.462737e+00	 sigma_n : 2.699760e-02
+	 number of secondary particules: 4108
+	 number of fission neutrons: 4108
+
+ simulation time (s) : 0
+
+
+ batch number : 10
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.527994e+00	 sigma_n : 2.827016e-02
+	 number of secondary particules: 4211
+	 number of fission neutrons: 4211
+
+ simulation time (s) : 0
+
+
+ batch number : 11
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.431489e+00	 sigma_n : 2.609814e-02
+	 number of secondary particules: 4107
+	 number of fission neutrons: 4107
+
+ simulation time (s) : 0
+
+
+ batch number : 12
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.459946e+00	 sigma_n : 2.574161e-02
+	 number of secondary particules: 4085
+	 number of fission neutrons: 4085
+
+ simulation time (s) : 0
+
+
+ batch number : 13
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.522889e+00	 sigma_n : 2.707438e-02
+	 number of secondary particules: 4103
+	 number of fission neutrons: 4103
+
+ simulation time (s) : 0
+
+
+ batch number : 14
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.445284e+00	 sigma_n : 2.561558e-02
+	 number of secondary particules: 4019
+	 number of fission neutrons: 4019
+
+ simulation time (s) : 1
+
+
+ batch number : 15
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.472008e+00	 sigma_n : 2.619377e-02
+	 number of secondary particules: 3977
+	 number of fission neutrons: 3977
+
+ simulation time (s) : 1
+
+
+ batch number : 16
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.542620e+00	 sigma_n : 2.737644e-02
+	 number of secondary particules: 4135
+	 number of fission neutrons: 4135
+
+ simulation time (s) : 1
+
+
+ batch number : 17
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.435792e+00	 sigma_n : 2.545783e-02
+	 number of secondary particules: 3942
+	 number of fission neutrons: 3942
+
+ simulation time (s) : 1
+
+
+ batch number : 18
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.571284e+00	 sigma_n : 2.939920e-02
+	 number of secondary particules: 4042
+	 number of fission neutrons: 4042
+
+ simulation time (s) : 1
+
+
+ batch number : 19
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.542553e+00	 sigma_n : 2.859020e-02
+	 number of secondary particules: 4118
+	 number of fission neutrons: 4118
+
+ simulation time (s) : 1
+
+
+ batch number : 20
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.451918e+00	 sigma_n : 2.673287e-02
+	 number of secondary particules: 4077
+	 number of fission neutrons: 4077
+
+ simulation time (s) : 1
+
+
+ batch number : 21
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.489576e+00	 sigma_n : 2.763485e-02
+	 number of secondary particules: 4097
+	 number of fission neutrons: 4097
+
+ batch number : 22
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.494508e+00	 sigma_n : 2.616673e-02
+	 number of secondary particules: 4043
+	 number of fission neutrons: 4043
+
+ batch number : 23
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.520653e+00	 sigma_n : 2.730408e-02
+	 number of secondary particules: 4165
+	 number of fission neutrons: 4165
+
+ batch number : 24
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.508043e+00	 sigma_n : 2.792579e-02
+	 number of secondary particules: 4102
+	 number of fission neutrons: 4102
+
+ batch number : 25
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.465383e+00	 sigma_n : 2.606247e-02
+	 number of secondary particules: 4072
+	 number of fission neutrons: 4072
+
+ batch number : 26
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.505894e+00	 sigma_n : 2.765031e-02
+	 number of secondary particules: 4149
+	 number of fission neutrons: 4149
+
+ batch number : 27
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.458906e+00	 sigma_n : 2.488814e-02
+	 number of secondary particules: 4089
+	 number of fission neutrons: 4089
+
+ batch number : 28
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.501345e+00	 sigma_n : 2.706904e-02
+	 number of secondary particules: 4035
+	 number of fission neutrons: 4035
+
+ batch number : 29
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.514746e+00	 sigma_n : 2.837548e-02
+	 number of secondary particules: 4004
+	 number of fission neutrons: 4004
+
+ batch number : 30
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.527722e+00	 sigma_n : 2.831240e-02
+	 number of secondary particules: 4165
+	 number of fission neutrons: 4165
+
+ batch number : 31
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.521729e+00	 sigma_n : 2.822390e-02
+	 number of secondary particules: 4255
+	 number of fission neutrons: 4255
+
+ batch number : 32
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.443713e+00	 sigma_n : 2.560404e-02
+	 number of secondary particules: 4107
+	 number of fission neutrons: 4107
+
+ batch number : 33
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.469442e+00	 sigma_n : 2.606753e-02
+	 number of secondary particules: 4035
+	 number of fission neutrons: 4035
+
+ batch number : 34
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.499133e+00	 sigma_n : 2.635831e-02
+	 number of secondary particules: 4063
+	 number of fission neutrons: 4063
+
+ batch number : 35
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.493724e+00	 sigma_n : 2.707199e-02
+	 number of secondary particules: 4134
+	 number of fission neutrons: 4134
+
+ batch number : 36
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.501935e+00	 sigma_n : 2.819393e-02
+	 number of secondary particules: 4172
+	 number of fission neutrons: 4172
+
+ batch number : 37
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.498802e+00	 sigma_n : 2.653993e-02
+	 number of secondary particules: 4219
+	 number of fission neutrons: 4219
+
+ batch number : 38
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.470728e+00	 sigma_n : 2.611130e-02
+	 number of secondary particules: 4117
+	 number of fission neutrons: 4117
+
+ batch number : 39
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.513724e+00	 sigma_n : 2.755508e-02
+	 number of secondary particules: 4222
+	 number of fission neutrons: 4222
+
+ batch number : 40
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.430602e+00	 sigma_n : 2.653420e-02
+	 number of secondary particules: 4076
+	 number of fission neutrons: 4076
+
+ batch number : 41
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.487488e+00	 sigma_n : 2.738732e-02
+	 number of secondary particules: 4101
+	 number of fission neutrons: 4101
+
+ batch number : 42
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.448183e+00	 sigma_n : 2.654545e-02
+	 number of secondary particules: 3984
+	 number of fission neutrons: 3984
+
+ batch number : 43
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.533635e+00	 sigma_n : 2.769764e-02
+	 number of secondary particules: 4128
+	 number of fission neutrons: 4128
+
+ batch number : 44
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.452762e+00	 sigma_n : 2.599354e-02
+	 number of secondary particules: 4066
+	 number of fission neutrons: 4066
+
+ batch number : 45
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.534924e+00	 sigma_n : 2.957762e-02
+	 number of secondary particules: 4105
+	 number of fission neutrons: 4105
+
+ batch number : 46
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.477467e+00	 sigma_n : 2.594246e-02
+	 number of secondary particules: 4088
+	 number of fission neutrons: 4088
+
+ batch number : 47
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.517857e+00	 sigma_n : 2.739482e-02
+	 number of secondary particules: 4135
+	 number of fission neutrons: 4135
+
+ batch number : 48
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.456348e+00	 sigma_n : 2.698080e-02
+	 number of secondary particules: 4061
+	 number of fission neutrons: 4061
+
+ batch number : 49
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.474021e+00	 sigma_n : 2.736704e-02
+	 number of secondary particules: 3991
+	 number of fission neutrons: 3991
+
+ batch number : 50
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.499624e+00	 sigma_n : 2.780562e-02
+	 number of secondary particules: 3974
+	 number of fission neutrons: 3974
+
+ batch number : 51
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.551334e+00	 sigma_n : 2.845402e-02
+	 number of secondary particules: 4110
+	 number of fission neutrons: 4110
+
+ batch number : 52
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.445985e+00	 sigma_n : 2.637897e-02
+	 number of secondary particules: 3960
+	 number of fission neutrons: 3960
+
+ batch number : 53
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.498485e+00	 sigma_n : 2.699881e-02
+	 number of secondary particules: 3944
+	 number of fission neutrons: 3944
+
+ batch number : 54
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.554767e+00	 sigma_n : 2.819229e-02
+	 number of secondary particules: 4116
+	 number of fission neutrons: 4116
+
+ batch number : 55
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.517250e+00	 sigma_n : 2.668155e-02
+	 number of secondary particules: 4207
+	 number of fission neutrons: 4207
+
+ batch number : 56
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.426670e+00	 sigma_n : 2.487760e-02
+	 number of secondary particules: 4058
+	 number of fission neutrons: 4058
+
+ batch number : 57
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.506161e+00	 sigma_n : 2.708602e-02
+	 number of secondary particules: 4012
+	 number of fission neutrons: 4012
+
+ batch number : 58
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.495639e+00	 sigma_n : 2.638589e-02
+	 number of secondary particules: 4042
+	 number of fission neutrons: 4042
+
+ batch number : 59
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.473398e+00	 sigma_n : 2.679504e-02
+	 number of secondary particules: 4025
+	 number of fission neutrons: 4025
+
+ batch number : 60
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.474783e+00	 sigma_n : 2.701871e-02
+	 number of secondary particules: 3986
+	 number of fission neutrons: 3986
+
+ batch number : 61
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.540893e+00	 sigma_n : 2.691855e-02
+	 number of secondary particules: 4081
+	 number of fission neutrons: 4081
+
+ batch number : 62
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.542024e+00	 sigma_n : 2.806970e-02
+	 number of secondary particules: 4234
+	 number of fission neutrons: 4234
+
+ batch number : 63
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.480161e+00	 sigma_n : 2.692272e-02
+	 number of secondary particules: 4181
+	 number of fission neutrons: 4181
+
+ batch number : 64
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.502033e+00	 sigma_n : 2.739009e-02
+	 number of secondary particules: 4216
+	 number of fission neutrons: 4216
+
+ batch number : 65
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.454696e+00	 sigma_n : 2.634245e-02
+	 number of secondary particules: 4062
+	 number of fission neutrons: 4062
+
+ batch number : 66
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.499508e+00	 sigma_n : 2.887068e-02
+	 number of secondary particules: 4126
+	 number of fission neutrons: 4126
+
+ batch number : 67
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.467038e+00	 sigma_n : 2.758728e-02
+	 number of secondary particules: 4057
+	 number of fission neutrons: 4057
+
+ batch number : 68
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.473010e+00	 sigma_n : 2.687757e-02
+	 number of secondary particules: 3971
+	 number of fission neutrons: 3971
+
+ batch number : 69
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.499874e+00	 sigma_n : 2.714312e-02
+	 number of secondary particules: 4028
+	 number of fission neutrons: 4028
+
+ batch number : 70
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.470457e+00	 sigma_n : 2.734548e-02
+	 number of secondary particules: 4062
+	 number of fission neutrons: 4062
+
+ batch number : 71
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.467750e+00	 sigma_n : 2.705590e-02
+	 number of secondary particules: 4053
+	 number of fission neutrons: 4053
+
+ batch number : 72
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.534419e+00	 sigma_n : 2.701382e-02
+	 number of secondary particules: 4203
+	 number of fission neutrons: 4203
+
+ batch number : 73
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.449441e+00	 sigma_n : 2.581770e-02
+	 number of secondary particules: 4135
+	 number of fission neutrons: 4135
+
+ batch number : 74
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.457316e+00	 sigma_n : 2.632046e-02
+	 number of secondary particules: 4004
+	 number of fission neutrons: 4004
+
+ batch number : 75
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.542458e+00	 sigma_n : 2.742343e-02
+	 number of secondary particules: 4126
+	 number of fission neutrons: 4126
+
+ batch number : 76
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.483519e+00	 sigma_n : 2.659104e-02
+	 number of secondary particules: 4169
+	 number of fission neutrons: 4169
+
+ batch number : 77
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.523147e+00	 sigma_n : 2.704752e-02
+	 number of secondary particules: 4316
+	 number of fission neutrons: 4316
+
+ batch number : 78
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.418906e+00	 sigma_n : 2.504175e-02
+	 number of secondary particules: 4111
+	 number of fission neutrons: 4111
+
+ batch number : 79
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.463391e+00	 sigma_n : 2.701633e-02
+	 number of secondary particules: 4084
+	 number of fission neutrons: 4084
+
+ batch number : 80
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.462292e+00	 sigma_n : 2.708332e-02
+	 number of secondary particules: 4004
+	 number of fission neutrons: 4004
+
+ batch number : 81
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.513736e+00	 sigma_n : 2.826423e-02
+	 number of secondary particules: 4141
+	 number of fission neutrons: 4141
+
+ batch number : 82
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.514369e+00	 sigma_n : 2.714286e-02
+	 number of secondary particules: 4185
+	 number of fission neutrons: 4185
+
+ batch number : 83
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.464755e+00	 sigma_n : 2.673454e-02
+	 number of secondary particules: 4121
+	 number of fission neutrons: 4121
+
+ batch number : 84
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.496967e+00	 sigma_n : 2.809350e-02
+	 number of secondary particules: 4093
+	 number of fission neutrons: 4093
+
+ batch number : 85
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.532861e+00	 sigma_n : 2.770197e-02
+	 number of secondary particules: 4203
+	 number of fission neutrons: 4203
+
+ batch number : 86
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.485368e+00	 sigma_n : 2.616392e-02
+	 number of secondary particules: 4238
+	 number of fission neutrons: 4238
+
+ batch number : 87
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.475224e+00	 sigma_n : 2.580906e-02
+	 number of secondary particules: 4265
+	 number of fission neutrons: 4265
+
+ batch number : 88
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.495193e+00	 sigma_n : 2.710020e-02
+	 number of secondary particules: 4186
+	 number of fission neutrons: 4186
+
+ batch number : 89
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.488055e+00	 sigma_n : 2.803206e-02
+	 number of secondary particules: 4163
+	 number of fission neutrons: 4163
+
+ batch number : 90
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.472496e+00	 sigma_n : 2.647182e-02
+	 number of secondary particules: 4108
+	 number of fission neutrons: 4108
+
+ batch number : 91
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.505112e+00	 sigma_n : 2.729858e-02
+	 number of secondary particules: 4169
+	 number of fission neutrons: 4169
+
+ batch number : 92
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.500360e+00	 sigma_n : 2.691125e-02
+	 number of secondary particules: 4285
+	 number of fission neutrons: 4285
+
+ batch number : 93
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.474912e+00	 sigma_n : 2.768373e-02
+	 number of secondary particules: 4162
+	 number of fission neutrons: 4162
+
+ batch number : 94
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.490389e+00	 sigma_n : 2.690921e-02
+	 number of secondary particules: 4229
+	 number of fission neutrons: 4229
+
+ batch number : 95
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.458501e+00	 sigma_n : 2.729798e-02
+	 number of secondary particules: 4132
+	 number of fission neutrons: 4132
+
+ batch number : 96
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.446515e+00	 sigma_n : 2.571263e-02
+	 number of secondary particules: 4012
+	 number of fission neutrons: 4012
+
+ batch number : 97
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.533898e+00	 sigma_n : 2.832674e-02
+	 number of secondary particules: 4135
+	 number of fission neutrons: 4135
+
+ batch number : 98
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.474002e+00	 sigma_n : 2.719577e-02
+	 number of secondary particules: 4112
+	 number of fission neutrons: 4112
+
+ batch number : 99
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.486868e+00	 sigma_n : 2.684615e-02
+	 number of secondary particules: 4194
+	 number of fission neutrons: 4194
+
+ batch number : 100
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.492608e+00	 sigma_n : 2.657810e-02
+	 number of secondary particules: 4184
+	 number of fission neutrons: 4184
+
+ batch number : 101
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.502629e+00	 sigma_n : 2.745043e-02
+	 number of secondary particules: 4229
+	 number of fission neutrons: 4229
+
+ batch number : 102
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.515488e+00	 sigma_n : 2.857548e-02
+	 number of secondary particules: 4326
+	 number of fission neutrons: 4326
+
+ batch number : 103
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.400601e+00	 sigma_n : 2.383668e-02
+	 number of secondary particules: 4112
+	 number of fission neutrons: 4112
+
+ batch number : 104
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.498784e+00	 sigma_n : 2.725152e-02
+	 number of secondary particules: 4128
+	 number of fission neutrons: 4128
+
+ batch number : 105
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.507994e+00	 sigma_n : 2.703292e-02
+	 number of secondary particules: 4163
+	 number of fission neutrons: 4163
+
+ batch number : 106
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.478261e+00	 sigma_n : 2.603121e-02
+	 number of secondary particules: 4121
+	 number of fission neutrons: 4121
+
+ batch number : 107
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.494540e+00	 sigma_n : 2.754935e-02
+	 number of secondary particules: 4092
+	 number of fission neutrons: 4092
+
+ batch number : 108
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.483382e+00	 sigma_n : 2.749779e-02
+	 number of secondary particules: 4037
+	 number of fission neutrons: 4037
+
+ batch number : 109
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.494179e+00	 sigma_n : 2.674795e-02
+	 number of secondary particules: 4097
+	 number of fission neutrons: 4097
+
+ batch number : 110
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.456432e+00	 sigma_n : 2.643448e-02
+	 number of secondary particules: 3993
+	 number of fission neutrons: 3993
+
+ batch number : 111
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.511645e+00	 sigma_n : 2.797838e-02
+	 number of secondary particules: 4071
+	 number of fission neutrons: 4071
+
+ batch number : 112
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.509948e+00	 sigma_n : 2.763253e-02
+	 number of secondary particules: 4133
+	 number of fission neutrons: 4133
+
+ batch number : 113
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.540527e+00	 sigma_n : 2.775177e-02
+	 number of secondary particules: 4238
+	 number of fission neutrons: 4238
+
+ batch number : 114
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.457055e+00	 sigma_n : 2.591972e-02
+	 number of secondary particules: 4205
+	 number of fission neutrons: 4205
+
+ batch number : 115
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.495838e+00	 sigma_n : 2.742412e-02
+	 number of secondary particules: 4163
+	 number of fission neutrons: 4163
+
+ batch number : 116
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.495316e+00	 sigma_n : 2.810570e-02
+	 number of secondary particules: 4094
+	 number of fission neutrons: 4094
+
+ batch number : 117
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.485344e+00	 sigma_n : 2.719925e-02
+	 number of secondary particules: 4112
+	 number of fission neutrons: 4112
+
+ batch number : 118
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.464494e+00	 sigma_n : 2.617395e-02
+	 number of secondary particules: 3973
+	 number of fission neutrons: 3973
+
+ batch number : 119
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.505412e+00	 sigma_n : 2.777621e-02
+	 number of secondary particules: 3993
+	 number of fission neutrons: 3993
+
+ batch number : 120
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.482344e+00	 sigma_n : 2.591000e-02
+	 number of secondary particules: 4015
+	 number of fission neutrons: 4015
+
+ batch number : 121
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.517808e+00	 sigma_n : 2.761550e-02
+	 number of secondary particules: 4116
+	 number of fission neutrons: 4116
+
+ batch number : 122
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.474976e+00	 sigma_n : 2.756386e-02
+	 number of secondary particules: 4015
+	 number of fission neutrons: 4015
+
+ batch number : 123
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.539726e+00	 sigma_n : 2.856852e-02
+	 number of secondary particules: 4095
+	 number of fission neutrons: 4095
+
+ batch number : 124
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.511355e+00	 sigma_n : 2.838666e-02
+	 number of secondary particules: 4163
+	 number of fission neutrons: 4163
+
+ batch number : 125
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.477780e+00	 sigma_n : 2.615718e-02
+	 number of secondary particules: 4108
+	 number of fission neutrons: 4108
+
+ batch number : 126
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.484177e+00	 sigma_n : 2.649768e-02
+	 number of secondary particules: 4104
+	 number of fission neutrons: 4104
+
+ batch number : 127
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.475634e+00	 sigma_n : 2.717992e-02
+	 number of secondary particules: 4058
+	 number of fission neutrons: 4058
+
+ batch number : 128
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.457122e+00	 sigma_n : 2.661628e-02
+	 number of secondary particules: 4032
+	 number of fission neutrons: 4032
+
+ batch number : 129
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.488095e+00	 sigma_n : 2.816769e-02
+	 number of secondary particules: 3995
+	 number of fission neutrons: 3995
+
+ batch number : 130
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.541677e+00	 sigma_n : 2.852805e-02
+	 number of secondary particules: 4098
+	 number of fission neutrons: 4098
+
+ batch number : 131
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.484871e+00	 sigma_n : 2.760214e-02
+	 number of secondary particules: 4019
+	 number of fission neutrons: 4019
+
+ batch number : 132
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.527743e+00	 sigma_n : 2.785071e-02
+	 number of secondary particules: 3987
+	 number of fission neutrons: 3987
+
+ batch number : 133
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.441685e+00	 sigma_n : 2.560994e-02
+	 number of secondary particules: 3949
+	 number of fission neutrons: 3949
+
+ batch number : 134
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.546214e+00	 sigma_n : 2.863170e-02
+	 number of secondary particules: 4084
+	 number of fission neutrons: 4084
+
+ batch number : 135
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.565132e+00	 sigma_n : 2.764922e-02
+	 number of secondary particules: 4285
+	 number of fission neutrons: 4285
+
+ batch number : 136
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.455543e+00	 sigma_n : 2.639456e-02
+	 number of secondary particules: 4275
+	 number of fission neutrons: 4275
+
+ batch number : 137
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.400234e+00	 sigma_n : 2.438673e-02
+	 number of secondary particules: 4130
+	 number of fission neutrons: 4130
+
+ batch number : 138
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.481598e+00	 sigma_n : 2.671795e-02
+	 number of secondary particules: 4059
+	 number of fission neutrons: 4059
+
+ batch number : 139
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.480414e+00	 sigma_n : 2.730134e-02
+	 number of secondary particules: 4084
+	 number of fission neutrons: 4084
+
+ batch number : 140
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.477963e+00	 sigma_n : 2.723108e-02
+	 number of secondary particules: 4079
+	 number of fission neutrons: 4079
+
+ batch number : 141
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.508458e+00	 sigma_n : 2.703911e-02
+	 number of secondary particules: 4159
+	 number of fission neutrons: 4159
+
+ batch number : 142
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.492667e+00	 sigma_n : 2.620975e-02
+	 number of secondary particules: 4186
+	 number of fission neutrons: 4186
+
+ batch number : 143
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.481366e+00	 sigma_n : 2.762090e-02
+	 number of secondary particules: 4091
+	 number of fission neutrons: 4091
+
+ batch number : 144
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.491811e+00	 sigma_n : 2.728702e-02
+	 number of secondary particules: 4066
+	 number of fission neutrons: 4066
+
+ batch number : 145
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.473192e+00	 sigma_n : 2.626677e-02
+	 number of secondary particules: 4077
+	 number of fission neutrons: 4077
+
+ batch number : 146
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.521707e+00	 sigma_n : 2.741242e-02
+	 number of secondary particules: 4179
+	 number of fission neutrons: 4179
+
+ batch number : 147
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.478344e+00	 sigma_n : 2.675767e-02
+	 number of secondary particules: 4135
+	 number of fission neutrons: 4135
+
+ batch number : 148
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.451511e+00	 sigma_n : 2.659223e-02
+	 number of secondary particules: 4047
+	 number of fission neutrons: 4047
+
+ batch number : 149
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.532246e+00	 sigma_n : 2.746731e-02
+	 number of secondary particules: 4160
+	 number of fission neutrons: 4160
+
+ batch number : 150
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.467308e+00	 sigma_n : 2.700514e-02
+	 number of secondary particules: 4126
+	 number of fission neutrons: 4126
+
+ batch number : 151
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.470674e+00	 sigma_n : 2.617635e-02
+	 number of secondary particules: 4107
+	 number of fission neutrons: 4107
+
+ batch number : 152
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.522036e+00	 sigma_n : 2.767181e-02
+	 number of secondary particules: 4244
+	 number of fission neutrons: 4244
+
+ batch number : 153
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.486805e+00	 sigma_n : 2.748207e-02
+	 number of secondary particules: 4199
+	 number of fission neutrons: 4199
+
+ batch number : 154
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.462729e+00	 sigma_n : 2.656102e-02
+	 number of secondary particules: 4092
+	 number of fission neutrons: 4092
+
+ batch number : 155
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.478495e+00	 sigma_n : 2.689956e-02
+	 number of secondary particules: 4060
+	 number of fission neutrons: 4060
+
+ batch number : 156
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.466502e+00	 sigma_n : 2.662757e-02
+	 number of secondary particules: 3973
+	 number of fission neutrons: 3973
+
+ batch number : 157
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.502895e+00	 sigma_n : 2.823563e-02
+	 number of secondary particules: 4020
+	 number of fission neutrons: 4020
+
+ batch number : 158
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.509204e+00	 sigma_n : 2.745765e-02
+	 number of secondary particules: 4065
+	 number of fission neutrons: 4065
+
+ batch number : 159
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.499385e+00	 sigma_n : 2.785526e-02
+	 number of secondary particules: 4096
+	 number of fission neutrons: 4096
+
+ batch number : 160
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.446045e+00	 sigma_n : 2.656197e-02
+	 number of secondary particules: 3985
+	 number of fission neutrons: 3985
+
+ batch number : 161
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.497616e+00	 sigma_n : 2.637508e-02
+	 number of secondary particules: 4085
+	 number of fission neutrons: 4085
+
+ batch number : 162
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.549816e+00	 sigma_n : 2.778891e-02
+	 number of secondary particules: 4272
+	 number of fission neutrons: 4272
+
+ batch number : 163
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.450843e+00	 sigma_n : 2.616765e-02
+	 number of secondary particules: 4184
+	 number of fission neutrons: 4184
+
+ batch number : 164
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.505497e+00	 sigma_n : 2.723300e-02
+	 number of secondary particules: 4219
+	 number of fission neutrons: 4219
+
+ batch number : 165
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.488030e+00	 sigma_n : 2.631176e-02
+	 number of secondary particules: 4256
+	 number of fission neutrons: 4256
+
+ batch number : 166
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.457237e+00	 sigma_n : 2.669203e-02
+	 number of secondary particules: 4152
+	 number of fission neutrons: 4152
+
+ batch number : 167
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.506021e+00	 sigma_n : 2.674475e-02
+	 number of secondary particules: 4168
+	 number of fission neutrons: 4168
+
+ batch number : 168
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.463292e+00	 sigma_n : 2.707142e-02
+	 number of secondary particules: 4123
+	 number of fission neutrons: 4123
+
+ batch number : 169
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.416202e+00	 sigma_n : 2.537369e-02
+	 number of secondary particules: 3955
+	 number of fission neutrons: 3955
+
+ batch number : 170
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.500379e+00	 sigma_n : 2.797316e-02
+	 number of secondary particules: 4019
+	 number of fission neutrons: 4019
+
+ batch number : 171
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.524509e+00	 sigma_n : 2.741899e-02
+	 number of secondary particules: 4116
+	 number of fission neutrons: 4116
+
+ batch number : 172
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.463557e+00	 sigma_n : 2.627546e-02
+	 number of secondary particules: 4069
+	 number of fission neutrons: 4069
+
+ batch number : 173
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.463013e+00	 sigma_n : 2.672198e-02
+	 number of secondary particules: 3962
+	 number of fission neutrons: 3962
+
+ batch number : 174
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.511358e+00	 sigma_n : 2.748817e-02
+	 number of secondary particules: 3952
+	 number of fission neutrons: 3952
+
+ batch number : 175
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.538462e+00	 sigma_n : 2.778705e-02
+	 number of secondary particules: 4170
+	 number of fission neutrons: 4170
+
+ batch number : 176
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.533573e+00	 sigma_n : 2.764665e-02
+	 number of secondary particules: 4338
+	 number of fission neutrons: 4338
+
+ batch number : 177
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.455509e+00	 sigma_n : 2.696117e-02
+	 number of secondary particules: 4230
+	 number of fission neutrons: 4230
+
+ batch number : 178
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.491962e+00	 sigma_n : 2.596610e-02
+	 number of secondary particules: 4243
+	 number of fission neutrons: 4243
+
+ batch number : 179
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.479378e+00	 sigma_n : 2.517903e-02
+	 number of secondary particules: 4287
+	 number of fission neutrons: 4287
+
+ batch number : 180
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.430604e+00	 sigma_n : 2.509268e-02
+	 number of secondary particules: 4167
+	 number of fission neutrons: 4167
+
+ batch number : 181
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.463643e+00	 sigma_n : 2.624595e-02
+	 number of secondary particules: 4181
+	 number of fission neutrons: 4181
+
+ batch number : 182
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.503468e+00	 sigma_n : 2.851189e-02
+	 number of secondary particules: 4159
+	 number of fission neutrons: 4159
+
+ batch number : 183
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.468622e+00	 sigma_n : 2.701174e-02
+	 number of secondary particules: 4051
+	 number of fission neutrons: 4051
+
+ batch number : 184
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.492224e+00	 sigma_n : 2.836310e-02
+	 number of secondary particules: 4134
+	 number of fission neutrons: 4134
+
+ batch number : 185
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.469763e+00	 sigma_n : 2.708026e-02
+	 number of secondary particules: 4026
+	 number of fission neutrons: 4026
+
+ batch number : 186
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.509190e+00	 sigma_n : 2.780284e-02
+	 number of secondary particules: 4166
+	 number of fission neutrons: 4166
+
+ batch number : 187
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.482237e+00	 sigma_n : 2.652736e-02
+	 number of secondary particules: 4138
+	 number of fission neutrons: 4138
+
+ batch number : 188
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.499275e+00	 sigma_n : 2.733416e-02
+	 number of secondary particules: 4186
+	 number of fission neutrons: 4186
+
+ batch number : 189
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.519350e+00	 sigma_n : 2.866935e-02
+	 number of secondary particules: 4194
+	 number of fission neutrons: 4194
+
+ batch number : 190
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.501907e+00	 sigma_n : 2.739381e-02
+	 number of secondary particules: 4220
+	 number of fission neutrons: 4220
+
+ batch number : 191
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.454739e+00	 sigma_n : 2.623733e-02
+	 number of secondary particules: 4182
+	 number of fission neutrons: 4182
+
+ batch number : 192
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.450980e+00	 sigma_n : 2.544597e-02
+	 number of secondary particules: 4131
+	 number of fission neutrons: 4131
+
+ batch number : 193
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.477850e+00	 sigma_n : 2.612983e-02
+	 number of secondary particules: 4144
+	 number of fission neutrons: 4144
+
+ batch number : 194
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.479006e+00	 sigma_n : 2.637390e-02
+	 number of secondary particules: 4118
+	 number of fission neutrons: 4118
+
+ batch number : 195
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.497329e+00	 sigma_n : 2.613881e-02
+	 number of secondary particules: 4143
+	 number of fission neutrons: 4143
+
+ batch number : 196
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.473087e+00	 sigma_n : 2.731211e-02
+	 number of secondary particules: 4049
+	 number of fission neutrons: 4049
+
+ batch number : 197
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.460855e+00	 sigma_n : 2.664456e-02
+	 number of secondary particules: 4012
+	 number of fission neutrons: 4012
+
+ batch number : 198
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.462363e+00	 sigma_n : 2.677599e-02
+	 number of secondary particules: 3955
+	 number of fission neutrons: 3955
+
+ batch number : 199
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.542351e+00	 sigma_n : 2.992679e-02
+	 number of secondary particules: 4111
+	 number of fission neutrons: 4111
+
+ Type and parameters of random generator before batch 200 : 
+	 DRAND48_RANDOM 184 42667 130  COUNTER	19206727
+
+
+ batch number : 200
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.487229e+00	 sigma_n : 2.770939e-02
+	 number of secondary particules: 3987
+	 number of fission neutrons: 3987
+
+ KEFF at step  : 200
+ keff = 1.000613e+00 sigma : 2.033683e-03
+ number of batch used: 81
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.256637e+01
+*********************************************************
+
+
+ Mean weight leakage = 2.680688e+03	 sigma = 3.083572e+00	 sigma% = 1.150291e-01
+
+
+ Edition after batch number : 200
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : FLUX
+RESPONSE NAME : 
+ENERGY DECOUPAGE NAME : DEC_SPECT2
+
+
+ PARTICULE : NEUTRON 
+******************************************************************************
+
+	 scoring mode : SCORE_COLL
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		1	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 119
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+1.000000e-11 - 1.333521e-11	0.000000e+00	0.000000e+00	0.000000e+00
+1.333521e-11 - 1.778279e-11	0.000000e+00	0.000000e+00	0.000000e+00
+1.778279e-11 - 2.371374e-11	0.000000e+00	0.000000e+00	0.000000e+00
+2.371374e-11 - 3.162278e-11	0.000000e+00	0.000000e+00	0.000000e+00
+3.162278e-11 - 4.216965e-11	0.000000e+00	0.000000e+00	0.000000e+00
+4.216965e-11 - 5.623413e-11	0.000000e+00	0.000000e+00	0.000000e+00
+5.623413e-11 - 7.498942e-11	0.000000e+00	0.000000e+00	0.000000e+00
+7.498942e-11 - 1.000000e-10	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-10 - 1.333521e-10	0.000000e+00	0.000000e+00	0.000000e+00
+1.333521e-10 - 1.778279e-10	0.000000e+00	0.000000e+00	0.000000e+00
+1.778279e-10 - 2.371374e-10	0.000000e+00	0.000000e+00	0.000000e+00
+2.371374e-10 - 3.162278e-10	0.000000e+00	0.000000e+00	0.000000e+00
+3.162278e-10 - 4.216965e-10	0.000000e+00	0.000000e+00	0.000000e+00
+4.216965e-10 - 5.623413e-10	0.000000e+00	0.000000e+00	0.000000e+00
+5.623413e-10 - 7.498942e-10	0.000000e+00	0.000000e+00	0.000000e+00
+7.498942e-10 - 1.000000e-09	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-09 - 1.333521e-09	0.000000e+00	0.000000e+00	0.000000e+00
+1.333521e-09 - 1.778279e-09	0.000000e+00	0.000000e+00	0.000000e+00
+1.778279e-09 - 2.371374e-09	0.000000e+00	0.000000e+00	0.000000e+00
+2.371374e-09 - 3.162278e-09	0.000000e+00	0.000000e+00	0.000000e+00
+3.162278e-09 - 4.216965e-09	0.000000e+00	0.000000e+00	0.000000e+00
+4.216965e-09 - 5.623413e-09	0.000000e+00	0.000000e+00	0.000000e+00
+5.623413e-09 - 7.498942e-09	0.000000e+00	0.000000e+00	0.000000e+00
+7.498942e-09 - 1.000000e-08	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-08 - 1.333521e-08	0.000000e+00	0.000000e+00	0.000000e+00
+1.333521e-08 - 1.778279e-08	0.000000e+00	0.000000e+00	0.000000e+00
+1.778279e-08 - 2.371374e-08	0.000000e+00	0.000000e+00	0.000000e+00
+2.371374e-08 - 3.162278e-08	0.000000e+00	0.000000e+00	0.000000e+00
+3.162278e-08 - 4.216965e-08	0.000000e+00	0.000000e+00	0.000000e+00
+4.216965e-08 - 5.623413e-08	0.000000e+00	0.000000e+00	0.000000e+00
+5.623413e-08 - 7.498942e-08	0.000000e+00	0.000000e+00	0.000000e+00
+7.498942e-08 - 1.000000e-07	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-07 - 1.333521e-07	0.000000e+00	0.000000e+00	0.000000e+00
+1.333521e-07 - 1.778279e-07	0.000000e+00	0.000000e+00	0.000000e+00
+1.778279e-07 - 2.371374e-07	0.000000e+00	0.000000e+00	0.000000e+00
+2.371374e-07 - 3.162278e-07	0.000000e+00	0.000000e+00	0.000000e+00
+3.162278e-07 - 4.216965e-07	0.000000e+00	0.000000e+00	0.000000e+00
+4.216965e-07 - 5.623413e-07	0.000000e+00	0.000000e+00	0.000000e+00
+5.623413e-07 - 7.498942e-07	0.000000e+00	0.000000e+00	0.000000e+00
+7.498942e-07 - 1.000000e-06	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-06 - 1.333521e-06	0.000000e+00	0.000000e+00	0.000000e+00
+1.333521e-06 - 1.778279e-06	0.000000e+00	0.000000e+00	0.000000e+00
+1.778279e-06 - 2.371374e-06	0.000000e+00	0.000000e+00	0.000000e+00
+2.371374e-06 - 3.162278e-06	0.000000e+00	0.000000e+00	0.000000e+00
+3.162278e-06 - 4.216965e-06	0.000000e+00	0.000000e+00	0.000000e+00
+4.216965e-06 - 5.623413e-06	0.000000e+00	0.000000e+00	0.000000e+00
+5.623413e-06 - 7.498942e-06	0.000000e+00	0.000000e+00	0.000000e+00
+7.498942e-06 - 1.000000e-05	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-05 - 1.333521e-05	0.000000e+00	0.000000e+00	0.000000e+00
+1.333521e-05 - 1.778279e-05	0.000000e+00	0.000000e+00	0.000000e+00
+1.778279e-05 - 2.371374e-05	0.000000e+00	0.000000e+00	0.000000e+00
+2.371374e-05 - 3.162278e-05	0.000000e+00	0.000000e+00	0.000000e+00
+3.162278e-05 - 4.216965e-05	0.000000e+00	0.000000e+00	0.000000e+00
+4.216965e-05 - 5.623413e-05	0.000000e+00	0.000000e+00	0.000000e+00
+5.623413e-05 - 7.498942e-05	0.000000e+00	0.000000e+00	0.000000e+00
+7.498942e-05 - 1.000000e-04	0.000000e+00	0.000000e+00	0.000000e+00
+1.000000e-04 - 1.333521e-04	0.000000e+00	0.000000e+00	0.000000e+00
+1.333521e-04 - 1.778279e-04	2.957901e-05	1.000000e+02	1.027680e-04
+1.778279e-04 - 2.371374e-04	0.000000e+00	0.000000e+00	0.000000e+00
+2.371374e-04 - 3.162278e-04	0.000000e+00	0.000000e+00	0.000000e+00
+3.162278e-04 - 4.216965e-04	0.000000e+00	0.000000e+00	0.000000e+00
+4.216965e-04 - 5.623413e-04	1.212225e-04	8.724796e+01	4.211701e-04
+5.623413e-04 - 7.498942e-04	1.868983e-05	1.000000e+02	6.493513e-05
+7.498942e-04 - 1.000000e-03	4.307034e-04	5.720086e+01	1.496416e-03
+1.000000e-03 - 1.333521e-03	4.901793e-05	1.000000e+02	1.703058e-04
+1.333521e-03 - 1.778279e-03	3.826330e-04	5.316396e+01	1.329403e-03
+1.778279e-03 - 2.371374e-03	1.099778e-03	6.023405e+01	3.821023e-03
+2.371374e-03 - 3.162278e-03	1.171934e-03	3.682029e+01	4.071714e-03
+3.162278e-03 - 4.216965e-03	2.558521e-03	2.798041e+01	8.889213e-03
+4.216965e-03 - 5.623413e-03	2.549984e-03	2.710473e+01	8.859552e-03
+5.623413e-03 - 7.498942e-03	5.275825e-03	2.286120e+01	1.833009e-02
+7.498942e-03 - 1.000000e-02	1.052265e-02	1.802149e+01	3.655942e-02
+1.000000e-02 - 1.333521e-02	1.753690e-02	1.535549e+01	6.092944e-02
+1.333521e-02 - 1.778279e-02	2.477837e-02	1.011830e+01	8.608885e-02
+1.778279e-02 - 2.371374e-02	3.830910e-02	7.887915e+00	1.330994e-01
+2.371374e-02 - 3.162278e-02	6.847138e-02	7.414265e+00	2.378939e-01
+3.162278e-02 - 4.216965e-02	1.021000e-01	6.158143e+00	3.547320e-01
+4.216965e-02 - 5.623413e-02	1.879887e-01	4.094663e+00	6.531396e-01
+5.623413e-02 - 7.498942e-02	2.870669e-01	3.185398e+00	9.973725e-01
+7.498942e-02 - 1.000000e-01	4.598032e-01	2.613187e+00	1.597520e+00
+1.000000e-01 - 1.333521e-01	7.184113e-01	2.171331e+00	2.496017e+00
+1.333521e-01 - 1.778279e-01	1.043875e+00	1.707225e+00	3.626792e+00
+1.778279e-01 - 2.371374e-01	1.539381e+00	1.607663e+00	5.348357e+00
+2.371374e-01 - 3.162278e-01	2.111898e+00	1.275061e+00	7.337485e+00
+3.162278e-01 - 4.216965e-01	2.879819e+00	1.091386e+00	1.000552e+01
+4.216965e-01 - 5.623413e-01	3.682476e+00	9.842961e-01	1.279423e+01
+5.623413e-01 - 7.498942e-01	4.431183e+00	8.740058e-01	1.539551e+01
+7.498942e-01 - 1.000000e+00	5.250762e+00	7.279507e-01	1.824301e+01
+1.000000e+00 - 1.125000e+00	2.364849e+00	1.053405e+00	2.007801e+01
+1.125000e+00 - 1.250000e+00	2.253282e+00	1.207183e+00	2.138640e+01
+1.250000e+00 - 1.375000e+00	2.076613e+00	1.025846e+00	2.178795e+01
+1.375000e+00 - 1.500000e+00	1.948928e+00	1.267862e+00	2.239854e+01
+1.500000e+00 - 1.625000e+00	1.813164e+00	1.194313e+00	2.265245e+01
+1.625000e+00 - 1.750000e+00	1.738685e+00	1.187297e+00	2.346151e+01
+1.750000e+00 - 1.875000e+00	1.605875e+00	1.265284e+00	2.327596e+01
+1.875000e+00 - 2.000000e+00	1.492464e+00	1.378560e+00	2.312517e+01
+2.000000e+00 - 2.125000e+00	1.449636e+00	1.246463e+00	2.391167e+01
+2.125000e+00 - 2.250000e+00	1.347580e+00	1.261191e+00	2.357624e+01
+2.250000e+00 - 2.375000e+00	1.226770e+00	1.382007e+00	2.268972e+01
+2.375000e+00 - 2.500000e+00	1.178094e+00	1.365938e+00	2.296780e+01
+2.500000e+00 - 2.625000e+00	1.093062e+00	1.359077e+00	2.240333e+01
+2.625000e+00 - 2.750000e+00	1.011078e+00	1.598588e+00	2.173425e+01
+2.750000e+00 - 2.875000e+00	9.654771e-01	1.537711e+00	2.171966e+01
+2.875000e+00 - 3.000000e+00	8.806918e-01	1.958545e+00	2.069313e+01
+3.000000e+00 - 3.125000e+00	8.080847e-01	1.778236e+00	1.979533e+01
+3.125000e+00 - 3.250000e+00	7.612496e-01	1.533620e+00	1.940938e+01
+3.250000e+00 - 3.375000e+00	6.972779e-01	1.925195e+00	1.847567e+01
+3.375000e+00 - 3.500000e+00	6.622775e-01	1.832840e+00	1.821062e+01
+3.500000e+00 - 3.625000e+00	6.268257e-01	1.983753e+00	1.786270e+01
+3.625000e+00 - 3.750000e+00	5.986048e-01	1.891799e+00	1.765715e+01
+3.750000e+00 - 3.875000e+00	5.460262e-01	1.912927e+00	1.665231e+01
+3.875000e+00 - 4.000000e+00	4.886694e-01	2.463801e+00	1.539179e+01
+4.000000e+00 - 4.125000e+00	4.567641e-01	2.237505e+00	1.484366e+01
+4.125000e+00 - 4.250000e+00	4.365276e-01	2.629422e+00	1.462259e+01
+4.250000e+00 - 4.375000e+00	4.033334e-01	2.516198e+00	1.391403e+01
+4.375000e+00 - 4.500000e+00	3.726795e-01	2.706585e+00	1.322925e+01
+4.500000e+00 - 4.625000e+00	3.393511e-01	2.619242e+00	1.238554e+01
+4.625000e+00 - 4.750000e+00	3.183708e-01	2.814233e+00	1.193820e+01
+4.750000e+00 - 4.875000e+00	2.972949e-01	2.697594e+00	1.144521e+01
+4.875000e+00 - 5.000000e+00	2.554895e-01	2.879018e+00	1.009130e+01
+5.000000e+00 - 5.125000e+00	2.482156e-01	2.649552e+00	1.005222e+01
+5.125000e+00 - 5.250000e+00	2.284997e-01	3.265115e+00	9.482279e+00
+5.250000e+00 - 5.375000e+00	2.228823e-01	3.298307e+00	9.472062e+00
+5.375000e+00 - 5.500000e+00	2.095992e-01	3.777244e+00	9.117165e+00
+5.500000e+00 - 5.625000e+00	1.913727e-01	3.942261e+00	8.515725e+00
+5.625000e+00 - 5.750000e+00	1.597852e-01	3.709501e+00	7.269935e+00
+5.750000e+00 - 5.875000e+00	1.545922e-01	3.852028e+00	7.188259e+00
+5.875000e+00 - 6.000000e+00	1.351437e-01	3.988637e+00	6.419089e+00
+6.000000e+00 - 6.125000e+00	1.394979e-01	4.628520e+00	6.765409e+00
+6.125000e+00 - 6.250000e+00	1.271521e-01	4.211802e+00	6.293815e+00
+6.250000e+00 - 6.375000e+00	1.119197e-01	3.955079e+00	5.651760e+00
+6.375000e+00 - 6.500000e+00	1.033757e-01	5.255426e+00	5.323684e+00
+6.500000e+00 - 6.625000e+00	9.607679e-02	4.751076e+00	5.043879e+00
+6.625000e+00 - 6.750000e+00	9.377027e-02	4.887328e+00	5.016563e+00
+6.750000e+00 - 6.875000e+00	8.243405e-02	5.059802e+00	4.492529e+00
+6.875000e+00 - 7.000000e+00	7.408676e-02	6.639988e+00	4.111704e+00
+7.000000e+00 - 7.125000e+00	6.832018e-02	5.585509e+00	3.859989e+00
+7.125000e+00 - 7.250000e+00	6.032733e-02	5.310093e+00	3.468734e+00
+7.250000e+00 - 7.375000e+00	6.096280e-02	5.719616e+00	3.566237e+00
+7.375000e+00 - 7.500000e+00	5.089704e-02	6.561714e+00	3.028303e+00
+7.500000e+00 - 7.625000e+00	5.657188e-02	6.815668e+00	3.422521e+00
+7.625000e+00 - 7.750000e+00	3.683894e-02	7.257394e+00	2.265545e+00
+7.750000e+00 - 7.875000e+00	4.459899e-02	6.282460e+00	2.787378e+00
+7.875000e+00 - 8.000000e+00	4.419226e-02	7.601801e+00	2.806151e+00
+8.000000e+00 - 8.125000e+00	3.497784e-02	8.661593e+00	2.256025e+00
+8.125000e+00 - 8.250000e+00	3.741752e-02	7.821170e+00	2.450800e+00
+8.250000e+00 - 8.375000e+00	3.174759e-02	8.565649e+00	2.111175e+00
+8.375000e+00 - 8.500000e+00	3.110536e-02	1.012101e+01	2.099574e+00
+8.500000e+00 - 8.625000e+00	2.563015e-02	9.671956e+00	1.755634e+00
+8.625000e+00 - 8.750000e+00	2.321683e-02	1.090125e+01	1.613542e+00
+8.750000e+00 - 8.875000e+00	2.487279e-02	1.083931e+01	1.753502e+00
+8.875000e+00 - 9.000000e+00	1.941191e-02	1.011084e+01	1.387929e+00
+9.000000e+00 - 9.125000e+00	1.783722e-02	1.122436e+01	1.293178e+00
+9.125000e+00 - 9.250000e+00	1.473306e-02	1.334769e+01	1.082863e+00
+9.250000e+00 - 9.375000e+00	1.257682e-02	1.364358e+01	9.369587e-01
+9.375000e+00 - 9.500000e+00	1.538128e-02	1.657077e+01	1.161269e+00
+9.500000e+00 - 9.625000e+00	1.195642e-02	1.516988e+01	9.146530e-01
+9.625000e+00 - 9.750000e+00	1.269762e-02	1.548644e+01	9.840516e-01
+9.750000e+00 - 9.875000e+00	1.115622e-02	1.393871e+01	8.757518e-01
+9.875000e+00 - 1.000000e+01	1.071470e-02	1.787815e+01	8.518072e-01
+1.000000e+01 - 1.012500e+01	9.340492e-03	1.548149e+01	7.518999e-01
+1.012500e+01 - 1.025000e+01	9.788313e-03	1.730123e+01	7.977375e-01
+1.025000e+01 - 1.037500e+01	7.341262e-03	1.696343e+01	6.056467e-01
+1.037500e+01 - 1.050000e+01	6.861204e-03	1.951031e+01	5.729037e-01
+1.050000e+01 - 1.062500e+01	5.555516e-03	2.034103e+01	4.694356e-01
+1.062500e+01 - 1.075000e+01	6.322459e-03	2.098439e+01	5.405641e-01
+1.075000e+01 - 1.087500e+01	4.669165e-03	2.253138e+01	4.038783e-01
+1.087500e+01 - 1.100000e+01	5.943344e-03	2.041256e+01	5.200370e-01
+1.100000e+01 - 1.112500e+01	5.608615e-03	2.024290e+01	4.963571e-01
+1.112500e+01 - 1.125000e+01	3.745897e-03	2.490345e+01	3.352543e-01
+1.125000e+01 - 1.137500e+01	2.339525e-03	3.506594e+01	2.117249e-01
+1.137500e+01 - 1.150000e+01	2.948018e-03	2.385911e+01	2.697410e-01
+1.150000e+01 - 1.162500e+01	2.243919e-03	3.365424e+01	2.075605e-01
+1.162500e+01 - 1.175000e+01	3.315969e-03	2.533795e+01	3.100402e-01
+1.175000e+01 - 1.187500e+01	2.545037e-03	3.057407e+01	2.405038e-01
+1.187500e+01 - 1.200000e+01	1.685753e-03	3.860781e+01	1.609879e-01
+1.200000e+01 - 1.212500e+01	3.102701e-03	2.852466e+01	2.994079e-01
+1.212500e+01 - 1.225000e+01	2.905665e-03	3.092605e+01	2.832998e-01
+1.225000e+01 - 1.237500e+01	1.200371e-03	3.644778e+01	1.182355e-01
+1.237500e+01 - 1.250000e+01	2.374891e-03	3.931839e+01	2.362997e-01
+1.250000e+01 - 1.262500e+01	2.526318e-03	3.812343e+01	2.538929e-01
+1.262500e+01 - 1.275000e+01	1.335037e-03	3.774010e+01	1.355052e-01
+1.275000e+01 - 1.287500e+01	8.550891e-04	6.573557e+01	8.764593e-02
+1.287500e+01 - 1.300000e+01	6.807611e-04	7.875073e+01	7.045823e-02
+1.300000e+01 - 1.312500e+01	8.355288e-04	5.203417e+01	8.731210e-02
+1.312500e+01 - 1.325000e+01	9.988269e-04	3.963582e+01	1.053755e-01
+1.325000e+01 - 1.337500e+01	1.140017e-03	4.672333e+01	1.214109e-01
+1.337500e+01 - 1.350000e+01	1.338203e-03	6.545332e+01	1.438558e-01
+1.350000e+01 - 1.362500e+01	7.777325e-04	4.381134e+01	8.438338e-02
+1.362500e+01 - 1.375000e+01	5.121978e-04	5.701543e+01	5.608526e-02
+1.375000e+01 - 1.387500e+01	1.174594e-03	5.827969e+01	1.297918e-01
+1.387500e+01 - 1.400000e+01	3.252791e-04	7.027289e+01	3.626837e-02
+1.400000e+01 - 1.412500e+01	1.660216e-04	1.000000e+02	1.867730e-02
+1.412500e+01 - 1.425000e+01	9.558109e-04	4.698916e+01	1.084838e-01
+1.425000e+01 - 1.437500e+01	4.974221e-04	5.703428e+01	5.695447e-02
+1.437500e+01 - 1.450000e+01	3.305316e-04	7.029679e+01	3.817616e-02
+1.450000e+01 - 1.462500e+01	4.547661e-04	5.717684e+01	5.297993e-02
+1.462500e+01 - 1.475000e+01	5.096123e-04	7.433193e+01	5.987909e-02
+1.475000e+01 - 1.487500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.487500e+01 - 1.500000e+01	6.695447e-04	7.885415e+01	8.001012e-02
+1.500000e+01 - 1.512500e+01	1.676366e-04	1.000000e+02	2.020009e-02
+1.512500e+01 - 1.525000e+01	4.988061e-04	7.455700e+01	6.060459e-02
+1.525000e+01 - 1.537500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.537500e+01 - 1.550000e+01	3.045185e-04	1.000000e+02	3.760782e-02
+1.550000e+01 - 1.562500e+01	4.979753e-04	5.704271e+01	6.199760e-02
+1.562500e+01 - 1.575000e+01	1.604374e-04	1.000000e+02	2.013479e-02
+1.575000e+01 - 1.587500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.587500e+01 - 1.600000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.600000e+01 - 1.612500e+01	3.282831e-04	1.000000e+02	4.218416e-02
+1.612500e+01 - 1.625000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.625000e+01 - 1.637500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.637500e+01 - 1.650000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.650000e+01 - 1.662500e+01	1.465590e-04	1.000000e+02	1.941898e-02
+1.662500e+01 - 1.675000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.675000e+01 - 1.687500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.687500e+01 - 1.700000e+01	1.583580e-04	1.000000e+02	2.145742e-02
+1.700000e+01 - 1.712500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.712500e+01 - 1.725000e+01	3.291517e-04	1.000000e+02	4.525816e-02
+1.725000e+01 - 1.737500e+01	3.252385e-04	1.000000e+02	4.504534e-02
+1.737500e+01 - 1.750000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.750000e+01 - 1.762500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.762500e+01 - 1.775000e+01	1.577459e-04	1.000000e+02	2.232095e-02
+1.775000e+01 - 1.787500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.787500e+01 - 1.800000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.800000e+01 - 1.812500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.812500e+01 - 1.825000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.825000e+01 - 1.837500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.837500e+01 - 1.850000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.850000e+01 - 1.862500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.862500e+01 - 1.875000e+01	3.175286e-04	1.000000e+02	4.747035e-02
+1.875000e+01 - 1.887500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.887500e+01 - 1.900000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.900000e+01 - 1.912500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.912500e+01 - 1.925000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.925000e+01 - 1.937500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.937500e+01 - 1.950000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.950000e+01 - 1.962500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.962500e+01 - 1.975000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.975000e+01 - 1.987500e+01	0.000000e+00	0.000000e+00	0.000000e+00
+1.987500e+01 - 2.000000e+01	0.000000e+00	0.000000e+00	0.000000e+00
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 119
+
+number of batches used: 81	5.862901e+01	1.838266e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+ KSTEP  1.000613e+00	2.032437e-01
+ KCOLL  1.000398e+00	1.791166e-01
+ KTRACK 1.000142e+00	1.353274e-01
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  8.823593e-01  	  1.000397e+00  	  1.791161e-01
+  	  KSTEP <-> KTRACK  	    	  4.716803e-01  	  1.000217e+00  	  1.321615e-01
+  	  KCOLL <-> KTRACK  	    	  5.604755e-01  	  1.000194e+00  	  1.317234e-01
+
+  	  full combined estimator  1.000194e+00	1.317271e-01
+
+******************************************************************************
+RESPONSE FUNCTION : REMOVAL LIFETIME
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81	3.621473e-09	2.307965e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : GENERATION TIME
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81	3.617052e-09	2.459202e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : ABSORPTION LIFETIME
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81	1.102839e-08	2.122313e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : LEAKAGE LIFETIME
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81	5.393116e-09	2.830189e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : K = PRODUCTION / (ABSORPTION + LEAKAGE)
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81	1.001411e+00	1.997266e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : AVERAGE BETA (DELAYED NEUTRON FRACTION)
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81	2.125452e-03	3.854682e+00
+
+
+******************************************************************************
+RESPONSE FUNCTION : AVERAGE BETA (DELAYED NEUTRON FRACTION): NUCLEI CONTRIBUTIONS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores for nuclei contributions are ordered according to the user list:
+
+     PU239 : 2.006712e-03 3.955878e+00
+     PU240 : 1.063976e-04 1.583161e+01
+     PU241 : 1.234242e-05 4.909718e+01
+
+******************************************************************************
+RESPONSE FUNCTION : BETA_i (DELAYED NEUTRON FRACTION FOR i-th FAMILY)
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 4.601632e-05 3.300578e+01
+ i = 2 : 4.385096e-04 7.335121e+00
+ i = 3 : 1.938455e-04 1.151469e+01
+ i = 4 : 3.110587e-04 9.841021e+00
+ i = 5 : 7.652320e-04 6.043435e+00
+ i = 6 : 1.034921e-04 1.738991e+01
+ i = 7 : 2.342123e-04 1.103997e+01
+ i = 8 : 3.308520e-05 3.062010e+01
+
+******************************************************************************
+RESPONSE FUNCTION : BETA_i (DELAYED NEUTRON FRACTION FOR i-th FAMILY): NUCLEI CONTRIBUTIONS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores are ordered by nuclei and by families:
+
+Nucleus : PU239. Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 4.601632e-05 3.300578e+01
+ i = 2 : 4.048743e-04 8.050048e+00
+ i = 3 : 1.849592e-04 1.202907e+01
+ i = 4 : 2.985444e-04 9.900006e+00
+ i = 5 : 7.262777e-04 6.288579e+00
+ i = 6 : 9.738811e-05 1.783200e+01
+ i = 7 : 2.155666e-04 1.078016e+01
+ i = 8 : 3.308520e-05 3.062010e+01
+
+Nucleus : PU240. Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 0.000000e+00 0.000000e+00
+ i = 2 : 3.061559e-05 2.982172e+01
+ i = 3 : 8.886398e-06 5.709737e+01
+ i = 4 : 1.251428e-05 4.906156e+01
+ i = 5 : 3.895428e-05 2.563752e+01
+ i = 6 : 6.103946e-06 7.026998e+01
+ i = 7 : 9.323146e-06 5.700985e+01
+ i = 8 : 0.000000e+00 0.000000e+00
+
+Nucleus : PU241. Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 0.000000e+00 0.000000e+00
+ i = 2 : 3.019793e-06 1.000000e+02
+ i = 3 : 0.000000e+00 0.000000e+00
+ i = 4 : 0.000000e+00 0.000000e+00
+ i = 5 : 0.000000e+00 0.000000e+00
+ i = 6 : 0.000000e+00 0.000000e+00
+ i = 7 : 9.322625e-06 5.706868e+01
+ i = 8 : 0.000000e+00 0.000000e+00
+
+
+******************************************************************************
+RESPONSE FUNCTION : LAMBDA_i (DECAY CONSTANT FOR i-th FAMILY)
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 1.246670e-02 2.075134e-07
+ i = 2 : 2.829170e-02 0.000000e+00
+ i = 3 : 4.252440e-02 2.720661e-07
+ i = 4 : 1.330420e-01 1.555603e-07
+ i = 5 : 2.924672e-01 0.000000e+00
+ i = 6 : 6.664877e-01 0.000000e+00
+ i = 7 : 1.634781e+00 2.480811e-07
+ i = 8 : 3.554600e+00 0.000000e+00
+
+******************************************************************************
+RESPONSE FUNCTION : LAMBDA_i (DECAY CONSTANT FOR i-th FAMILY): NUCLEI CONTRIBUTIONS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores are ordered by nuclei and by families:
+
+Nucleus : PU239. Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 1.246670e-02 3.594237e-07
+ i = 2 : 2.829170e-02 0.000000e+00
+ i = 3 : 4.252440e-02 0.000000e+00
+ i = 4 : 1.330420e-01 1.555603e-07
+ i = 5 : 2.924672e-01 0.000000e+00
+ i = 6 : 6.664877e-01 2.484194e-07
+ i = 7 : 1.634781e+00 0.000000e+00
+ i = 8 : 3.554600e+00 0.000000e+00
+
+Nucleus : PU240. Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 1.246670e-02 2.075134e-07
+ i = 2 : 2.829170e-02 1.828810e-07
+ i = 3 : 4.252440e-02 0.000000e+00
+ i = 4 : 1.330420e-01 1.555603e-07
+ i = 5 : 2.924672e-01 0.000000e+00
+ i = 6 : 6.664877e-01 0.000000e+00
+ i = 7 : 1.634781e+00 2.480811e-07
+ i = 8 : 3.554600e+00 1.317443e-07
+
+Nucleus : PU241. Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 1.246670e-02 1.467341e-07
+ i = 2 : 2.829170e-02 2.891602e-07
+ i = 3 : 4.252440e-02 2.433433e-07
+ i = 4 : 1.330420e-01 0.000000e+00
+ i = 5 : 2.924672e-01 0.000000e+00
+ i = 6 : 6.664877e-01 0.000000e+00
+ i = 7 : 1.634781e+00 2.480811e-07
+ i = 8 : 3.554600e+00 0.000000e+00
+
+
+******************************************************************************
+RESPONSE FUNCTION : AVERAGE DECAY CONSTANT = BETA / SUM (BETA_i/LAMBDA_i)
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81	6.740538e-02	5.756405e-03
+
+
+******************************************************************************
+RESPONSE FUNCTION : MIGRATION AREA
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81	2.077551e+01	2.149239e-01
+
+
+******************************************************************************
+RESPONSE FUNCTION : IFP ADJOINT WEIGHTED BETA (DELAYED NEUTRON FRACTION)
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores for IFP convergence statistics are ordered from cycle length L = 1 to L = MAX:
+
+ L = 1 : 1.966160e-03 5.694363e+00
+ L = 2 : 1.918924e-03 8.160863e+00
+ L = 3 : 1.707341e-03 8.504078e+00
+ L = 4 : 1.717173e-03 1.038219e+01
+ L = 5 : 1.788517e-03 1.251666e+01
+ L = 6 : 1.844382e-03 1.322193e+01
+ L = 7 : 1.911561e-03 1.423311e+01
+ L = 8 : 1.943941e-03 1.532112e+01
+ L = 9 : 1.837213e-03 1.532964e+01
+ L = 10 : 1.780094e-03 1.732434e+01
+ L = 11 : 1.964352e-03 1.840764e+01
+ L = 12 : 2.161587e-03 1.873023e+01
+ L = 13 : 2.247467e-03 1.801748e+01
+ L = 14 : 2.226222e-03 1.886295e+01
+ L = 15 : 2.389416e-03 1.824840e+01
+ L = 16 : 2.302307e-03 1.823555e+01
+ L = 17 : 2.399380e-03 1.822751e+01
+ L = 18 : 2.425118e-03 1.822503e+01
+ L = 19 : 2.611982e-03 1.778275e+01
+ L = 20 : 2.465053e-03 1.778411e+01
+
+******************************************************************************
+RESPONSE FUNCTION : IFP ADJOINT WEIGHTED BETA (DELAYED NEUTRON FRACTION): NUCLEI CONTRIBUTIONS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores for nuclei contributions are ordered according to the user list:
+
+     PU239 : 2.465053e-03 1.778411e+01
+     PU240 : 0.000000e+00 0.000000e+00
+     PU241 : 0.000000e+00 0.000000e+00
+
+******************************************************************************
+RESPONSE FUNCTION : IFP ADJOINT WEIGHTED BETA_i FOR i-th FAMILY
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 0.000000e+00 0.000000e+00
+ i = 2 : 4.938237e-04 3.447244e+01
+ i = 3 : 1.929675e-04 4.849190e+01
+ i = 4 : 1.040587e-03 3.116138e+01
+ i = 5 : 4.962352e-04 3.202316e+01
+ i = 6 : 0.000000e+00 0.000000e+00
+ i = 7 : 1.767035e-04 4.939028e+01
+ i = 8 : 6.473631e-05 1.000000e+02
+
+******************************************************************************
+RESPONSE FUNCTION : IFP ADJOINT WEIGHTED BETA_i FOR i-th FAMILY: NUCLEI CONTRIBUTIONS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores are ordered by nuclei and by families:
+
+Nucleus : PU239. Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 0.000000e+00 0.000000e+00
+ i = 2 : 4.938237e-04 3.447244e+01
+ i = 3 : 1.929675e-04 4.849190e+01
+ i = 4 : 1.040587e-03 3.116138e+01
+ i = 5 : 4.962352e-04 3.202316e+01
+ i = 6 : 0.000000e+00 0.000000e+00
+ i = 7 : 1.767035e-04 4.939028e+01
+ i = 8 : 6.473631e-05 1.000000e+02
+
+Nucleus : PU240. Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 0.000000e+00 0.000000e+00
+ i = 2 : 0.000000e+00 0.000000e+00
+ i = 3 : 0.000000e+00 0.000000e+00
+ i = 4 : 0.000000e+00 0.000000e+00
+ i = 5 : 0.000000e+00 0.000000e+00
+ i = 6 : 0.000000e+00 0.000000e+00
+ i = 7 : 0.000000e+00 0.000000e+00
+ i = 8 : 0.000000e+00 0.000000e+00
+
+Nucleus : PU241. Scores are ordered from family i = 1 to i = MAX:
+
+ i = 1 : 0.000000e+00 0.000000e+00
+ i = 2 : 0.000000e+00 0.000000e+00
+ i = 3 : 0.000000e+00 0.000000e+00
+ i = 4 : 0.000000e+00 0.000000e+00
+ i = 5 : 0.000000e+00 0.000000e+00
+ i = 6 : 0.000000e+00 0.000000e+00
+ i = 7 : 0.000000e+00 0.000000e+00
+ i = 8 : 0.000000e+00 0.000000e+00
+
+
+******************************************************************************
+RESPONSE FUNCTION : IFP ADJOINT WEIGHTED GENERATION TIME
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores for IFP convergence statistics are ordered from cycle length L = 1 to L = MAX:
+
+ L = 1 : 2.839315e-09 5.027242e-01
+ L = 2 : 2.788760e-09 6.302604e-01
+ L = 3 : 2.756291e-09 7.422744e-01
+ L = 4 : 2.739744e-09 8.151855e-01
+ L = 5 : 2.742213e-09 9.220708e-01
+ L = 6 : 2.734257e-09 8.994324e-01
+ L = 7 : 2.716489e-09 9.275339e-01
+ L = 8 : 2.711580e-09 9.961479e-01
+ L = 9 : 2.714840e-09 1.033598e+00
+ L = 10 : 2.699199e-09 1.100242e+00
+ L = 11 : 2.696529e-09 1.081791e+00
+ L = 12 : 2.705232e-09 1.136398e+00
+ L = 13 : 2.706393e-09 1.191580e+00
+ L = 14 : 2.708672e-09 1.230500e+00
+ L = 15 : 2.719239e-09 1.302058e+00
+ L = 16 : 2.733412e-09 1.401283e+00
+ L = 17 : 2.718690e-09 1.411856e+00
+ L = 18 : 2.720522e-09 1.560464e+00
+ L = 19 : 2.710573e-09 1.572172e+00
+ L = 20 : 2.702979e-09 1.549303e+00
+
+******************************************************************************
+RESPONSE FUNCTION : IFP ADJOINT WEIGHTED ROSSI ALPHA
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores for IFP convergence statistics are ordered from cycle length L = 1 to L = MAX:
+
+ L = 1 : -6.946603e+05 5.696033e+00
+ L = 2 : -6.903425e+05 8.117887e+00
+ L = 3 : -6.219413e+05 8.499615e+00
+ L = 4 : -6.270480e+05 1.037502e+01
+ L = 5 : -6.488222e+05 1.253978e+01
+ L = 6 : -6.684990e+05 1.335545e+01
+ L = 7 : -6.921724e+05 1.410990e+01
+ L = 8 : -7.051552e+05 1.535174e+01
+ L = 9 : -6.614434e+05 1.518617e+01
+ L = 10 : -6.434794e+05 1.714953e+01
+ L = 11 : -7.111984e+05 1.839314e+01
+ L = 12 : -7.901153e+05 1.892543e+01
+ L = 13 : -8.116764e+05 1.826172e+01
+ L = 14 : -8.035381e+05 1.924761e+01
+ L = 15 : -8.600913e+05 1.849891e+01
+ L = 16 : -8.125535e+05 1.842923e+01
+ L = 17 : -8.519874e+05 1.842416e+01
+ L = 18 : -8.654060e+05 1.853224e+01
+ L = 19 : -9.404881e+05 1.781510e+01
+ L = 20 : -8.945884e+05 1.790767e+01
+
+******************************************************************************
+RESPONSE FUNCTION : IFP ADJOINT WEIGHTED MIGRATION AREA
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	81
+
+Scores for IFP convergence statistics are ordered from cycle length L = 1 to L = MAX:
+
+ L = 1 : 1.238958e+01 4.046945e-01
+ L = 2 : 1.189750e+01 4.762714e-01
+ L = 3 : 1.169710e+01 5.446581e-01
+ L = 4 : 1.160087e+01 5.985528e-01
+ L = 5 : 1.154868e+01 6.774494e-01
+ L = 6 : 1.154031e+01 6.772014e-01
+ L = 7 : 1.149645e+01 7.231962e-01
+ L = 8 : 1.147283e+01 8.031261e-01
+ L = 9 : 1.150947e+01 9.513739e-01
+ L = 10 : 1.146355e+01 1.012889e+00
+ L = 11 : 1.141214e+01 1.029539e+00
+ L = 12 : 1.140354e+01 1.091919e+00
+ L = 13 : 1.140783e+01 1.099297e+00
+ L = 14 : 1.142493e+01 1.219871e+00
+ L = 15 : 1.137237e+01 1.339630e+00
+ L = 16 : 1.143401e+01 1.376366e+00
+ L = 17 : 1.147979e+01 1.379757e+00
+ L = 18 : 1.149485e+01 1.401347e+00
+ L = 19 : 1.147916e+01 1.411548e+00
+ L = 20 : 1.152614e+01 1.448412e+00
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 7 batches
+
+	 number of batch used: 193	 keff = 1.000460e+00	 sigma = 1.327768e-03	 sigma% = 1.327157e-01
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 8 batches
+
+	 number of batch used: 192	 keff = 1.001729e+00	 sigma = 1.197596e-03	 sigma% = 1.195528e-01
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 4 batches
+
+	 number of batch used: 196	 keff = 1.001251e+00	 sigma = 9.177959e-04	 sigma% = 9.166490e-02
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 8 batches
+
+	 number of batch used: 192	 keff = 1.001827e+00	 sigma = 1.192855e-03	 sigma% = 1.190679e-01
+
+
+ simulation time (s) : 13
+
+
+ Type and parameters of random generator at the end of simulation: 
+	 DRAND48_RANDOM 9436 14901 14746  COUNTER	19301611
+
+
+=====================================================================
+	NORMAL COMPLETION
+=====================================================================

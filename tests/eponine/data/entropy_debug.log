@@ -157,20 +157,21 @@ RESPONSE 1
 [94m      response_index[0m 1
 [94m      response_type[0m keff_res
 [1;35m'results' [0;36m(<class 'dict'>)[0m -> [1mkeff_res[0m
-[33mDict with keys = ['correlation_matrix', 'estimators', 'full_comb_estimation', 'keff_matrix', 'sigma_matrix', 'used_batch'][0m
-[94m      correlation_matrix[0m <class 'numpy.ndarray'>
+[33mDict with keys = ['keff_combination_res', 'keff_per_estimator_res', 'used_batch'][0m
+[94m      keff_combination_res[0m (9.169699e-01, 7.721112e-01), dtype: [('keff', '<f8'), ('sigma', '<f8')]
+[94m      keff_per_estimator_res[0m [34mDict with keys = ['correlation_matrix', 'estimators', 'keff_matrix', 'sigma_matrix'][0m
+[94m        correlation_matrix[0m <class 'numpy.ndarray'>
 shape: (3, 3)
 squeezed: [[1.000000e+00 9.935526e-01 7.818913e-01]
  [9.935526e-01 1.000000e+00 8.287193e-01]
  [7.818913e-01 8.287193e-01 1.000000e+00]]
-[94m      estimators[0m ('KSTEP', 'KCOLL', 'KTRACK')
-[94m      full_comb_estimation[0m (9.169699e-01, 7.721112e-01), dtype: [('keff', '<f8'), ('sigma', '<f8')]
-[94m      keff_matrix[0m <class 'numpy.ndarray'>
+[94m        estimators[0m ('KSTEP', 'KCOLL', 'KTRACK')
+[94m        keff_matrix[0m <class 'numpy.ndarray'>
 shape: (3, 3)
 squeezed: [[9.169150e-01 9.168596e-01 9.170936e-01]
  [9.168596e-01 9.170253e-01 9.173621e-01]
  [9.170936e-01 9.173621e-01 9.158044e-01]]
-[94m      sigma_matrix[0m <class 'numpy.ndarray'>
+[94m        sigma_matrix[0m <class 'numpy.ndarray'>
 shape: (3, 3)
 squeezed: [[7.773594e-01 7.761104e-01 7.687564e-01]
  [7.761104e-01 7.875050e-01 7.666668e-01]

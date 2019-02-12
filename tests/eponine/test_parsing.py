@@ -28,6 +28,7 @@ Expected variables in the configuration file are:
 
 import os
 from glob import glob
+import logging
 import pytest
 import valjean.eponine.tripoli4.parse as ep
 from valjean.eponine.tripoli4.accessor import Accessor
@@ -45,9 +46,7 @@ def result_test(res):
     '''
     # get last result (default returns list if more than one batch required)
     # elapsed_time needed for cases with PARTIAL EDITION (not correct end)
-    assert ('simulation_time' in res.result[-1].keys()
-            or 'exploitation_time' in res.result[-1].keys()
-            or 'elapsed_time' in res.result[-1].keys())
+    assert any("_time" in s for s in res.result[-1].keys())
     print("keys =", list(res.result[-1].keys()))
     if 'list_responses' in res.result[-1].keys():
         lresp = res.result[-1]['list_responses']
@@ -56,22 +55,25 @@ def result_test(res):
             assert 'results' in resp
             assert isinstance(resp['results'], dict)
             assert isinstance(resp['response_type'], str)
-    if not any("_time" in s for s in res.result[-1].keys()):
-        return False
-    return True
+    return res.scan_res.normalend
 
 
-def accessor_test(res):
+def accessor_test(res, book_type='list_responses'):
     '''Quick test of accessor.
 
     Main goal of this test is not apparent: it is to check if the accessor can
     be built for all types of responses available in the T4 outputs given set,
     else accessor has to be updated to probably take into account a new type of
     response.
+
+    A first check on the presence of the ``book_type`` is done in order to
+    avoid a useless error here.
     '''
-    t4acc = Accessor(res.result[-1])
+    if book_type not in res.result[-1]:
+        return
+    t4acc = Accessor(res.result[-1], book_type=book_type)
     if t4acc.resp_book is None:
-        assert all('list_responses' not in x for x in t4acc.parsed_res)
+        assert all(book_type not in x for x in t4acc.parsed_res)
         return
     ids = set()
     for _v0 in t4acc.resp_book.index.values():
@@ -102,10 +104,10 @@ def loop_on_files(filelist, cfile):
             if result_test(res):
                 nb_jdds_ok += 1
             else:
-                print("\x1b[1;31mOn passe par la ?\x1b[0m")
                 failed_jdds.append(ifile)
             # quick temporary test of accessor
             accessor_test(res)
+            accessor_test(res, 'ifp_adjoint_crit_edition')
         else:
             failed_jdds.append(ifile)
     return nb_jdds_ok, failed_jdds
@@ -125,7 +127,7 @@ def print_summary(nb_ok, nb_used, failed, excluded):
 
 
 @pytest.mark.slow
-def test_listing_parsing(vv_params, parsing_exclude, parsing_match):
+def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     '''Test parsing of files configured from the ``--parsing-config-files``
     option.
 
@@ -137,6 +139,7 @@ def test_listing_parsing(vv_params, parsing_exclude, parsing_match):
 
     Tests performed on number of input files used, excluded and failed.
     '''
+    caplog.set_level(logging.WARNING, logger='valjean')
     vv_folder, vv_file = vv_params
     if parsing_exclude:
         if any(pat in vv_folder for pat in parsing_exclude.split(',')):

@@ -7,139 +7,155 @@ from collections import OrderedDict
 import numpy as np
 from ..base_dataset import BaseDataset
 
+
 LOGGER = logging.getLogger('valjean')
 
 
-# def spectrum(fspec_res, res_type='spectrum_res'):
-#     '''Conversion of spectrum in :class:`~.base_dataset.BaseDataset`.
-#     '''
-#     spec_res = fspec_res[res_type]
-#     bins = spec_res.get('bins')
-#     return BaseDataset(
-#         spec_res['spectrum']['score'].copy(),
-#         spec_res['spectrum']['sigma'] * spec_res['spectrum']['score'] * 0.01,
-#         bins=bins, name=res_type)
+def bins_reduction(def_bins, def_array_shape, array_shape):
+    '''Reduce number of bins for integrated results (on one or more dimension).
+
+    :param def_bins: default bins (all of them)
+    :type def_bins: :obj:`collections.OrderedDict` (str, :obj:`numpy.ndarray`)
+    :param tuple(int) def_array_shape: shape of the default array
+    :param tuple(int) array_shape: shape of the integrated array
+    :returns: :obj:`collections.OrderedDict` (str, :obj:`numpy.ndarray`), i.e.
+        adapted bins
+    '''
+    bins = OrderedDict()
+    for ibin, _bin in enumerate(def_bins.keys()):
+        if def_array_shape[ibin] != array_shape[ibin]:
+            bins[_bin] = def_bins[_bin][::def_bins[_bin].size-1]
+        else:
+            LOGGER.debug("Keep bins from 'array'.")
+            bins[_bin] = def_bins[_bin]
+    return bins
 
 
-# def mesh(fmesh_res, res_type='mesh_res'):
-#     '''Conversion of mesh in :class:`~.base_dataset.BaseDataset`.
-#     '''
-#     mesh_res = fmesh_res[res_type]
-#     bins = mesh_res.get('bins')
-#     return BaseDataset(
-#         mesh_res['mesh']['score'].copy(),
-#         mesh_res['mesh']['sigma'] * mesh_res['mesh']['score'] * 0.01,
-#         bins=bins, name=res_type)
-
-def array_result(farray_res, res_type='mesh_res'):
+def array_result(farray_res, res_type, array_type='array'):
     '''Conversion of mesh in :class:`~.base_dataset.BaseDataset`.
+
+    :param dict farray_res: results dictionary containing ``res_type`` key
+    :param str res_type: result type, like ``'spectrum_res'``, ``'mesh_res'``
+    :param str array_type: default=``'array'`` but it can be an integrated
+        array for example, should be a key inside ``farray_res``
+    :returns: :class:`~.base_dataset.BaseDataset`
     '''
     array_res = farray_res[res_type]
-    bins = array_res.get('bins')
+    if 'array' not in farray_res[res_type]:
+        raise KeyError("key 'array' should be in the available keys")
+    bins = (array_res.get('bins') if array_type == 'array'
+            else bins_reduction(array_res.get('bins'),
+                                array_res['array'].shape,
+                                array_res[array_type].shape))
     return BaseDataset(
-        array_res['array']['score'].copy(),
-        array_res['array']['sigma'] * array_res['array']['score'] * 0.01,
+        array_res[array_type]['score'].copy(),
+        array_res[array_type]['sigma'] * array_res[array_type]['score'] * 0.01,
         bins=bins, name=res_type)
 
 
-def integrated_result(result, res_type):
+def integrated_result(result, res_type='integrated_res'):
     '''Conversion of generic score (or energy integrated result) in
     :class:`~valjean.eponine.base_dataset.BaseDataset`.
 
-    Bins: only possible bin is energy as energy integrated results.
-    If other dimensions are not squeezed it is a spectrum so not treated by
-    this function.
+    Bins are squeezed according to the integrated dimension. They are given
+    only if an array was also stored in the same result, else no bins can be
+    given at that step. Users can always add some later.
+
+    :param dict result: results dictionary containing ``res_type`` key
+    :param str res_type: should be 'integrated_res'
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
     LOGGER.debug("In integrated_result")
     intres = result[res_type] if res_type in result else result
-    bins = OrderedDict()
-    if 'spectrum_res' in result:
+    if isinstance(intres, dict) and 'not_converged' in intres:
+        return not_converged_result()
+    other_res = [x for x in result
+                 if x != res_type and ('spectrum' in x or 'mesh' in x)]
+    if other_res:
         if res_type not in result:
-            bins = result['spectrum_res']['bins']
-            ebins = bins['e']
-            intres = result['spectrum_res'].get(res_type)
+            if res_type not in result[other_res[0]]:
+                if len(other_res) > 1:
+                    LOGGER.warning("More than one other result: %s, "
+                                   "case not foreseen", str(other_res))
+                    return None
+                LOGGER.warning('%s not found in %s, please check',
+                               res_type, other_res)
+                return None
+            intres = result[other_res[0]].get(res_type)
+            bins = bins_reduction(result[other_res[0]]['bins'],
+                                  result[other_res[0]]['array'].shape,
+                                  intres.shape)
             return BaseDataset(intres['score'],
                                intres['sigma'] * intres['score'] * 0.01,
                                bins=bins, name=res_type)
-        ebins = result['spectrum_res']['bins']['e']
-        bins['e'] = ebins[::ebins.shape[0]-1]
+        ishape = tuple([1]*result[other_res[0]]['array'].ndim)
+        bins = bins_reduction(result[other_res[0]]['bins'],
+                              result[other_res[0]]['array'].shape,
+                              ishape)
         return BaseDataset(
-            np.array([intres['score']]),
-            np.array([intres['sigma']]) * intres['score'] * 0.01,
-            bins=bins, name=res_type)
-    if 'sensitivity_spectrum_res' in result:
-        for key, val in result['sensitivity_spectrum_res']['bins'].items():
-            bins[key] = val[::val.shape[0]-1]
-        return BaseDataset(
-            np.array(intres['score']),
-            np.array(intres['sigma']) * intres['score'] * 0.01,
+            np.array([intres['score']]).reshape(ishape),
+            np.array([intres['sigma']*intres['score']*0.01]).reshape(ishape),
             bins=bins, name=res_type)
     return BaseDataset(intres['score'].copy(),
                        intres['sigma'] * intres['score'] * 0.01,
-                       bins=bins, name=res_type)
+                       bins=OrderedDict(), name=res_type)
 
 
 def entropy(result, res_type):
     '''Conversion of entropy in :class:`~.base_dataset.BaseDataset`.
 
-    .. todo::
-
-        think if should be coded as generic score or not (no error), this
-        may need a change in grammar.
-
+    :param dict result: results dictionary containing ``res_type`` key
+    :param str res_type: can be ``'shannon_entropy_res'`` or
+        ``'boltzmann_entropy_res'``
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
-    LOGGER.debug("entropy result %s", result)
-    return BaseDataset(result, 0, name=res_type)
+    LOGGER.debug("entropy result %s", result[res_type])
+    return BaseDataset(result[res_type], np.int_(0), name=res_type)
 
 
-def keff(result, estimator):
-    '''Conversion of keff in :class:`~.base_dataset.BaseDataset`.'''
-    id_estim = result['estimators'].index(estimator)
-    return BaseDataset(result['keff_matrix'][id_estim][id_estim],
-                       (result['sigma_matrix'][id_estim][id_estim]
-                        * result['keff_matrix'][id_estim][id_estim] * 0.01),
+def keff_estimator(result, res_type, estimator):
+    '''Conversion of keff in :class:`~.base_dataset.BaseDataset` for a given
+    estimator.
+
+    :param dict result: results dictionary containing ``res_type`` key
+    :param str res_type: should be ``'keff_per_estimator_res'``
+    :param str estimator: estimator among ``['KSTEP', 'KTRACK', 'KCOLL']``
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
+    '''
+    res = result[res_type]
+    id_estim = res['estimators'].index(estimator)
+    return BaseDataset(res['keff_matrix'][id_estim][id_estim],
+                       (res['sigma_matrix'][id_estim][id_estim]
+                        * res['keff_matrix'][id_estim][id_estim] * 0.01),
                        name='keff_'+estimator)
 
 
-def keff_combination(result):
+def keff_combination(result, res_type):
     '''Conversion of keff combination in :class:`~.base_dataset.BaseDataset`.
+
+    :param dict result: results dictionary containing ``res_type`` key
+    :param str res_type: should be ``'keff_combination_res'``
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
-    kcomb = result['full_comb_estimation']
+    kcomb = result[res_type]
     return BaseDataset(kcomb['keff'].copy(),
                        kcomb['sigma'] * kcomb['keff'] * 0.01,
                        name='keff_combination')
 
 
-def adjoint_result(result):
-    '''Convert IFP in :class:`~.base_dataset.BaseDataset`.
-
-    .. todo::
-
-        Improvement probably needed in conversion of IFP results.
-    '''
-    if not isinstance(result, dict):
-        LOGGER.warning("Issue in adjoint result type (should be a dict): %s",
-                       type(result))
-        return None
-    if 'score' not in result:
-        tres = {k: adjoint_result(v) for k, v in result.items()}
-        # for res in result.values():
-        #     convert_ifp_in_dataset(res)
-        return tres
-    return integrated_result(result, 'ifp')
+def not_converged_result():
+    '''Deals with not converged results return None instead of a dataset.'''
+    LOGGER.warning('Result not converged, no dataset can be built')
 
 
 def convert_data_in_dataset(data, data_type):
     '''Convert data in :class:`~.base_dataset.BaseDataset`.
 
-    .. note::
-
-        OK for IFP sensitivities for the moment.
+    :param dict data: results dictionary containing ``data_type`` key
+    :param str data_type: data key
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
     LOGGER.debug("In convert_data_in_dataset")
-    if data_type not in data:
-        LOGGER.warning("Key %s not found in data", data_type)
-        return None
     # uscore used in sensitivities (calling default res)
     return BaseDataset(
         data[data_type]['score'].copy(),
@@ -148,28 +164,35 @@ def convert_data_in_dataset(data, data_type):
 
 
 CONVERT_IN_DATASET = {
-    # 'spectrum_res': spectrum,
-    # 'mesh_res': mesh,
     'spectrum_res': array_result,
     'mesh_res': array_result,
     'greenbands_res': array_result,
     'sensitivity_spectrum_res': array_result,
     'adj_crit_ed_res': array_result,
-    'shannon_entropy': entropy,
-    'boltzmann_entropy': entropy,
-    'integrated_res': integrated_result
+    'shannon_entropy_res': entropy,
+    'boltzmann_entropy_res': entropy,
+    'integrated_res': integrated_result,
+    'keff_per_estimator_res': keff_estimator,
+    'keff_combination_res': keff_combination
 }
 
 
-def convert_data(data, data_type):
+def convert_data(data, data_type, **kwargs):
     '''Test for data conversion using dict or default.
 
     An exception for integrated_res is for the moment needed as they can come
     from spectrum res or generic scores but are treated a bit differently.
     To be homogenized.
+
+    :param dict data: results dictionary containing ``data_type`` key
+    :param str data_type: data key
+    :param kwargs: keyword arguements if needed
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
     if data_type != 'integrated_res' and data_type not in data:
+        if 'not_converged' in data:
+            return not_converged_result()
         LOGGER.warning("%s not found in data", data_type)
         return None
     return CONVERT_IN_DATASET.get(data_type, convert_data_in_dataset)(
-        data, data_type)
+        data, data_type, **kwargs)

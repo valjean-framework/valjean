@@ -1240,11 +1240,11 @@ def convert_keff_with_matrix(res):
             else:
                 continue
     return {'used_batch': res['used_batch'],
-            'estimators': keffnames,
-            'full_comb_estimation': fullcombres,
-            'keff_matrix': keffmat,
-            'correlation_matrix': corrmat,
-            'sigma_matrix': sigmat}
+            'keff_per_estimator_res': {'estimators': keffnames,
+                                       'keff_matrix': keffmat,
+                                       'correlation_matrix': corrmat,
+                                       'sigma_matrix': sigmat},
+            'keff_combination_res': fullcombres}
 
 
 def convert_keff(res):

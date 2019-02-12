@@ -891,15 +891,19 @@ def test_parse_keffs_roundtrip(corrmat, keffmat, sigmat, combination):
     assert keffres
     assert list(keffres.keys()) == ['keff_res']
     assert (sorted(list(keffres['keff_res'].keys()))
-            == ['correlation_matrix', 'estimators', 'full_comb_estimation',
-                'keff_matrix', 'sigma_matrix', 'used_batch'])
-    assert np.allclose(keffres['keff_res']['correlation_matrix'], corrmat)
-    assert np.allclose(keffres['keff_res']['keff_matrix'], keffmat)
-    assert np.allclose(keffres['keff_res']['sigma_matrix'], sigmat)
+            == ['keff_combination_res', 'keff_per_estimator_res',
+                'used_batch'])
+    assert (sorted(list(keffres['keff_res']['keff_per_estimator_res']))
+            == ['correlation_matrix', 'estimators', 'keff_matrix',
+                'sigma_matrix'])
+    keff_per_estim = keffres['keff_res']['keff_per_estimator_res']
+    assert np.allclose(keff_per_estim['correlation_matrix'], corrmat)
+    assert np.allclose(keff_per_estim['keff_matrix'], keffmat)
+    assert np.allclose(keff_per_estim['sigma_matrix'], sigmat)
     assert np.isclose(
-        keffres['keff_res']['full_comb_estimation']['keff'], combination[0])
+        keffres['keff_res']['keff_combination_res']['keff'], combination[0])
     assert np.isclose(
-        keffres['keff_res']['full_comb_estimation']['sigma'], combination[1])
+        keffres['keff_res']['keff_combination_res']['sigma'], combination[1])
 
 
 @composite

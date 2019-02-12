@@ -11,9 +11,12 @@ import numpy as np
 import logging
 from valjean.eponine.tripoli4.parse import T4Parser
 from valjean.eponine.tripoli4.parse_debug import T4ParserDebug
+from valjean.eponine.tripoli4.accessor import Accessor
+import valjean.eponine.tripoli4.data_convertor as dcv
 
 
 def keffs_checks(keff_res):
+    # pylint: disable=too-many-locals
     r'''Quick calculations on k\ :sub:`eff` to check covariance matrix
     calculation and combination. One huge limitation: formulas used are exactly
     the same as in Tripoli-4, so this is not a real check. Their writing in
@@ -30,10 +33,11 @@ def keffs_checks(keff_res):
     * Test full combination (only working if first combining KSTEP and KCOLL,
       then KTRACK
     '''
-    keff = keff_res['keff_matrix'].diagonal()
-    sigma = keff_res['sigma_matrix'].diagonal()
+    keffestim = keff_res['keff_per_estimator_res']
+    keff = keffestim['keff_matrix'].diagonal()
+    sigma = keffestim['sigma_matrix'].diagonal()
     sigma = sigma/100. * keff
-    covmat = keff_res['correlation_matrix'] * np.outer(sigma, sigma)
+    covmat = keffestim['correlation_matrix'] * np.outer(sigma, sigma)
     nums = np.empty([keff.shape[0], keff.shape[0]])
     # print("covariance rank =", np.linalg.matrix_rank(np.matrix(covmat)))
     # print("covariance determinant =", np.linalg.det(covmat))
@@ -54,11 +58,11 @@ def keffs_checks(keff_res):
             nums[jkeff, ikeff] = (sigma[ikeff]**2 - covmat[ikeff, jkeff])
             cbkeff = (nums[ikeff, jkeff]*keff[ikeff]
                       + nums[jkeff, ikeff]*keff[jkeff]) / denom
-            assert np.isclose(cbkeff, keff_res['keff_matrix'][ikeff, jkeff])
+            assert np.isclose(cbkeff, keffestim['keff_matrix'][ikeff, jkeff])
             cbsig = (sigma[ikeff]*sigma[jkeff])**2 - covmat[ikeff, jkeff]**2
             cbsig = np.sqrt(cbsig/denom)
             assert np.isclose(cbsig*100/cbkeff,
-                              keff_res['sigma_matrix'][ikeff, jkeff])
+                              keffestim['sigma_matrix'][ikeff, jkeff])
             # test full combination
             itcomb = keff.shape[0] - ikeff - jkeff
             cov012 = (nums[ikeff, jkeff] * covmat[ikeff, itcomb]
@@ -70,9 +74,50 @@ def keffs_checks(keff_res):
             # print("combination: ", k012, "±", np.sqrt(v012))
             if itcomb == 2:
                 assert np.isclose(
-                    k012, keff_res['full_comb_estimation']['keff'])
+                    k012, keff_res['keff_combination_res']['keff'])
                 assert np.isclose(np.sqrt(v012)*100/k012,
-                                  keff_res['full_comb_estimation']['sigma'])
+                                  keff_res['keff_combination_res']['sigma'])
+
+
+def check_gauss_e_spectrum(resp):
+    '''Check gauss spectrum: usual spectrum in energy with default integrated
+    results.
+    '''
+    bds = dcv.convert_data(resp['results'], data_type='spectrum_res')
+    assert bds.shape == (1, 1, 1, 4, 1, 1, 1)
+    bdsi = dcv.convert_data(resp['results'], data_type='integrated_res')
+    assert bdsi.shape == (1, 1, 1, 1, 1, 1, 1)
+    assert bdsi.bins['e'].size == 2
+    assert bds.bins['e'].size == 5
+    assert np.array_equal(bdsi.bins['e'], bds.bins['e'][::4])
+
+
+def check_gauss_et_spectrum(resp):
+    '''Check gauss spectrum: spectrum in time and energy. Integrated results
+    are given by time bins.
+    '''
+    bds = dcv.convert_data(resp['results'], data_type='spectrum_res')
+    assert bds.shape == (1, 1, 1, 4, 4, 1, 1)
+    bdsi = dcv.convert_data(resp['results'], data_type='integrated_res')
+    assert bdsi.shape == (1, 1, 1, 1, 4, 1, 1)
+    assert bdsi.bins['e'].size == 2
+    assert bds.bins['e'].size == 5
+    assert bdsi.bins['t'].size == bdsi.shape[4]+1 == 5
+    assert np.array_equal(bdsi.bins['e'], bds.bins['e'][::4])
+
+
+def check_gauss_etmuphi_spectrum(resp):
+    '''Check gauss spectrum: spectrum in time, energy, mu and phi. No
+    integrated results are available.
+    '''
+    bds = dcv.convert_data(resp['results'], data_type='spectrum_res')
+    assert bds.shape == (1, 1, 1, 4, 4, 4, 2)
+    assert list(bds.bins.keys()) == ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
+    assert ([x for x, y in bds.bins.items() if y.size > 0]
+            == list(bds.squeeze().bins.keys()))
+    assert list(bds.squeeze().bins.keys()) == ['e', 't', 'mu', 'phi']
+    bdsi = dcv.convert_data(resp['results'], data_type='integrated_res')
+    assert bdsi is None
 
 
 def test_gauss_spectrum(datadir):
@@ -82,9 +127,7 @@ def test_gauss_spectrum(datadir):
     t4_res = T4Parser.parse_jdd(
         str(datadir/"gauss_time_mu_phi_E.d.res.ceav5"), 0)
     assert t4_res
-    # t4_res.print_t4_stats()
     assert t4_res.check_t4_times()
-    # t4_res.print_t4_times()
     assert t4_res.scan_res.normalend
     assert t4_res.scan_res.times['simulation time'] == 2
     assert t4_res.scan_res.times['initialization time'] == 0
@@ -103,6 +146,22 @@ def test_gauss_spectrum(datadir):
     assert resp0['scoring_mode'] == "SCORE_SURF"
     assert all(x in resp0['results']
                for x in ('spectrum_res', 'integrated_res'))
+    t4acc = Accessor(t4_res.result[-1])
+    assert len(t4acc.resp_book.keys()) == 13
+    assert (list(t4acc.resp_book.available_values('response_function'))
+            == ['COURANT'])
+    assert len(list(t4acc.resp_book.available_values('response_index'))) == 6
+    # use response 0: usual spectrum
+    selresp0 = t4acc.resp_book.select_by(response_index=0, squeeze=True)
+    check_gauss_e_spectrum(selresp0)
+    # use response 1: spectrum in energy and time
+    # speciticity: integrated result in energy per time bin
+    selresp1 = t4acc.resp_book.select_by(response_index=1, squeeze=True)
+    check_gauss_et_spectrum(selresp1)
+    # use response 4: spectrum in e, t, mu and phi
+    # no integral available
+    selresp = t4acc.resp_book.select_by(response_index=4, squeeze=True)
+    check_gauss_etmuphi_spectrum(selresp)
 
 
 def test_tungstene_file(datadir):
@@ -123,6 +182,22 @@ def test_tungstene_file(datadir):
     assert resp0['response_type'] == 'score_res'
     assert resp0['scoring_mode'] == "SCORE_TRACK"
     assert 'mesh_res' in resp0['results']
+    t4acc = Accessor(t4_res.result[-1])
+    resp = t4acc.resp_book.select_by(response_function='FLUX', squeeze=True)
+    bd_mesh = dcv.convert_data(resp['results'], data_type='mesh_res')
+    bd_mesh_squeeze = bd_mesh.squeeze()
+    assert bd_mesh.shape == (1, 1, 17, 3, 1, 1, 1)
+    assert list(bd_mesh_squeeze.bins.keys()) == ['s2', 'e']
+    bd_int = dcv.convert_data(resp['results'], data_type='integrated_res')
+    assert bd_int.shape == (1, 1, 1, 1, 1, 1, 1)
+    assert bd_int.bins['e'].size == 2
+    bd_int_squeeze = bd_int.squeeze()
+    assert bd_int_squeeze.shape == ()
+    assert not bd_int_squeeze.bins
+    bd_eintm = dcv.convert_data(resp['results'], data_type='mesh_res',
+                                array_type='eintegrated_array')
+    assert bd_eintm.shape == (1, 1, 17, 1, 1, 1, 1)
+    assert bd_eintm.bins['e'].size == 2
 
 
 # def test_petit_coeur_para():
@@ -196,12 +271,64 @@ def test_debug_entropy(datadir):
     assert sorted(list(res0.keys())) == sorted(scorecontent)
 
 
+def check_last_entropy_result(entropy_acc):
+    '''Check last entropy result (all converged).'''
+    # response_function = reaction
+    resp = entropy_acc.resp_book.select_by(response_function='REACTION',
+                                           squeeze=True)
+    assert (sorted(list(resp['results'].keys()))
+            == ['boltzmann_entropy_res', 'integrated_res', 'mesh_res',
+                'shannon_entropy_res', 'spectrum_res'])
+    bd_mesh = dcv.convert_data(resp['results'], data_type='mesh_res')
+    assert bd_mesh.shape == (24, 3, 1, 1, 1, 1, 1)
+    bd_entropy = dcv.convert_data(resp['results'],
+                                  data_type='shannon_entropy_res')
+    assert np.array_equal(bd_entropy.error, 0)
+    bd_entropy = dcv.convert_data(resp['results'],
+                                  data_type='boltzmann_entropy_res')
+    assert np.array_equal(bd_entropy.error, 0)
+    bd_spectrum = dcv.convert_data(resp['results'], data_type='spectrum_res')
+    assert bd_spectrum.shape == (1, 1, 1, 1, 1, 1, 1)
+    assert bd_spectrum.bins['e'].size == 2
+    assert np.array_equal(bd_spectrum.bins['e'], bd_mesh.bins['e'])
+    bd_int = dcv.convert_data(resp['results'], data_type='integrated_res')
+    assert np.array_equal(bd_spectrum.bins['e'], bd_int.bins['e'])
+    # response_function = keff
+    resp = entropy_acc.resp_book.select_by(response_type='keff_res',
+                                           squeeze=True)
+    bd_keff = dcv.convert_data(resp['results'],
+                               data_type='keff_per_estimator_res',
+                               estimator='KSTEP')
+    assert bd_keff.name == 'keff_KSTEP'
+    assert bd_keff.shape == ()
+    bd_keff = dcv.convert_data(resp['results'],
+                               data_type='keff_combination_res')
+    assert bd_keff.name == 'keff_combination'
+    assert not bd_keff.bins
+
+
+def check_first_entropy_result(entropy_acc):
+    '''Check first entropy result (not converged).'''
+    resp0 = entropy_acc.resp_book.select_by(response_function='REACTION',
+                                            squeeze=True)
+    bd_int0 = dcv.convert_data(resp0['results'], data_type='integrated_res')
+    assert bd_int0 is None
+    resp0 = entropy_acc.resp_book.select_by(response_type='keff_res',
+                                            squeeze=True)
+    bd_keff = dcv.convert_data(resp0['results'],
+                               data_type='keff_per_estimator_res',
+                               estimator='KSTEP')
+    assert bd_keff is None
+    bd_keff = dcv.convert_data(resp0['results'],
+                               data_type='keff_combination_res')
+    assert bd_keff is None
+
+
 def test_entropy(datadir):
     '''Use Tripoli-4 result from entropy.d to test entropy, mesh, spectrum with
     progressively converging results.
     '''
-    t4_res = T4Parser.parse_jdd_with_mesh_lim(
-        str(datadir/"entropy.d.res.ceav5"), 0, 10)
+    t4_res = T4Parser.parse_jdd(str(datadir/"entropy.d.res.ceav5"), 0)
     assert t4_res
     assert t4_res.scan_res.normalend
     assert t4_res.scan_res.times['simulation time'] == 24
@@ -210,14 +337,17 @@ def test_entropy(datadir):
     assert len(t4_res.result) == 10
     assert len(t4_res.result[-1]['list_responses']) == 2
     lastres = t4_res.result[-1]['list_responses']
-    resp_func = ['REACTION', 'KEFFS']
-    for ind, ires in enumerate(lastres):
-        assert ires['response_function'] == resp_func[ind]
+    for ires in lastres:
+        assert ires['response_function'] in ['REACTION', 'KEFFS']
     firstres = t4_res.result[0]['list_responses']
     assert firstres[1]['response_type'] == 'keff_res'
     assert 'not_converged' in firstres[1]['results']
     assert lastres[1]['response_type'] == 'keff_res'
     keffs_checks(lastres[1]['results'])
+    t4acc = Accessor(t4_res.result[-1])
+    check_last_entropy_result(t4acc)
+    t4acc0 = Accessor(t4_res.result[0])
+    check_first_entropy_result(t4acc0)
 
 
 def test_verbose_entropy(datadir, caplog, monkeypatch):
@@ -236,22 +366,129 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
 
 
 def test_ifp(datadir):
-    '''Use Tripoli-4 result from GODIVA_ifp_statistics.d to test IFP parsing.
+    '''Use Tripoli-4 result from  pu_met_fast_001_decompose_list_small.d to
+    test IFP parsing.
     '''
     t4_res = T4Parser.parse_jdd(
-        str(datadir/"GODIVA_ifp_statistics.d.res.ceav5"), -1)
+        str(datadir/"pu_met_fast_001_decompose_list_small.d.res.ceav5"), -1)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 15
-    assert t4_res.scan_res.times['initialization time'] == 18
+    assert t4_res.scan_res.times['simulation time'] == 13
+    assert t4_res.scan_res.times['initialization time'] == 1
     assert len(t4_res.result) == 1
     assert max([v['response_index']
-                for v in t4_res.result[-1]['list_responses']]) + 1 == 20
-    assert len(t4_res.result[-1]['list_responses']) == 77
+                for v in t4_res.result[-1]['list_responses']]) + 1 == 22
+    assert len(t4_res.result[-1]['list_responses']) == 192
     last_resp = t4_res.result[-1]['list_responses'][-1]
-    assert last_resp['response_function'] == "IFP ADJOINT WEIGHTED ROSSI ALPHA"
+    assert (last_resp['response_function']
+            == "IFP ADJOINT WEIGHTED MIGRATION AREA")
     assert last_resp['response_type'] == 'adjoint_res'
     assert last_resp['results']['integrated_res']['used_batch'] == 81
+    t4acc = Accessor(t4_res.result[-1])
+    assert (len(list(t4acc.resp_book.available_values('response_function')))
+            == 22)
+    resps = t4acc.resp_book.select_by(
+        response_function="IFP ADJOINT WEIGHTED ROSSI ALPHA")
+    assert len(resps) == 20  # number of IFP cycles
+    assert sorted(list(resps[0].keys())) == ['length', 'response_function',
+                                             'response_index', 'response_type',
+                                             'results']
+    bd_cycle = dcv.convert_data(resps[0]['results'],
+                                data_type='integrated_res')
+    assert bd_cycle.shape == ()
+    assert not bd_cycle.bins
+    rb_betai = t4acc.resp_book.filter_by(
+        response_function="BETA_i (DELAYED NEUTRON FRACTION FOR i-th FAMILY): "
+                          "NUCLEI CONTRIBUTIONS")
+    assert len(rb_betai.responses) == 24
+    assert (sorted(list(rb_betai.available_values('nucleus')))
+            == ['PU239', 'PU240', 'PU241'])
+    resp = rb_betai.select_by(family=5, nucleus='PU239', squeeze=True)
+    assert resp['response_type'] == 'adjoint_res'
+    assert list(resp['results'].keys()) == ['integrated_res']
+    assert resp['results']['integrated_res']['used_batch'] == 81
+    bd_pu239_f5 = dcv.convert_data(resp['results'], data_type='integrated_res')
+    assert bd_pu239_f5.shape == ()
+    assert not bd_pu239_f5.bins
+
+
+def test_ifp_adjoint_edition(datadir):
+    '''Use Tripoli-4 result from test_adjoint_small.d to test IFP adjoint
+    criticality edition parsing.
+
+    Caution: T4 output has been modified due to a bug in Equivalent keff.
+    '''
+    t4_res = T4Parser.parse_jdd(str(datadir/"test_adjoint_small.d.res"), -1)
+    assert t4_res
+    assert t4_res.scan_res.normalend
+    assert t4_res.scan_res.times['simulation time'] == 77
+    assert t4_res.scan_res.times['initialization time'] == 3
+    t4acc = Accessor(t4_res.result[-1])
+    assert (list(t4acc.resp_book.available_values('response_type'))
+            == ['keff_res'])
+    t4acc = Accessor(t4_res.result[-1], book_type='ifp_adjoint_crit_edition')
+    assert (sorted(list(t4acc.resp_book.keys()))
+            == ['ifp_cycle_length', 'ifp_response', 'response_type',
+                'score_name'])
+    resp = t4acc.resp_book.select_by(score_name='FluxAdj_1', squeeze=True)
+    bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed_res')
+    assert bd_adj.shape == (2, 2, 2, 1, 1, 3, 1)
+    assert (list(bd_adj.bins.keys())
+            == ['X', 'Y', 'Z', 'Phi', 'Theta', 'E', 'T'])
+    assert bd_adj.bins['X'].size == bd_adj.shape[0]+1
+    resp = t4acc.resp_book.select_by(score_name='FluxAdj_ang_1', squeeze=True)
+    bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed_res')
+    assert bd_adj.shape == (2, 2, 2, 2, 2, 3, 1)
+    assert (list(bd_adj.bins.keys())
+            == ['X', 'Y', 'Z', 'Phi', 'Theta', 'E', 'T'])
+    resp = t4acc.resp_book.select_by(score_name='flux_vol', squeeze=True)
+    bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed_res')
+    assert bd_adj.shape == (2, 3)
+    assert list(bd_adj.bins.keys()) == ['Vol', 'E']
+    assert bd_adj.bins['Vol'].size == bd_adj.shape[0]
+    assert np.array_equal(bd_adj.bins['Vol'], [10, 11])
+
+
+def test_sensitivity(datadir):
+    '''Use Tripoli-4 result from sensitivity_godiva.d to test sensitivity
+    parsing and dataset construction.
+    '''
+    t4_res = T4Parser.parse_jdd(str(datadir/"sensitivity_godiva.d.res"), -1)
+    assert t4_res
+    assert t4_res.scan_res.normalend
+    assert t4_res.scan_res.times['simulation time'] == 159
+    assert t4_res.scan_res.times['initialization time'] == 1
+    t4acc = Accessor(t4_res.result[-1])
+    rb_sensitiv = t4acc.resp_book.filter_by(response_type='sensitivity_res')
+    assert len(rb_sensitiv.responses) == 8
+    assert (sorted(list(rb_sensitiv.keys()))
+            == ['response_function', 'response_index', 'response_type',
+                'sensitivity_index', 'sensitivity_nucleus',
+                'sensitivity_reaction', 'sensitivity_type'])
+    print(list(rb_sensitiv.available_values('sensitivity_type')))
+    resp = rb_sensitiv.select_by(sensitivity_nucleus='U235',
+                                 sensitivity_reaction='TOTAL FISSION_NU',
+                                 squeeze=True)
+    bds = dcv.convert_data(resp['results'],
+                           data_type='sensitivity_spectrum_res')
+    assert bds.shape == (1, 33, 1)
+    assert list(bds.bins.keys()) == ['einc', 'e', 'mu']
+    bds_int = dcv.convert_data(resp['results'],
+                               data_type='integrated_res')
+    assert bds_int.shape == (1, 1, 1)
+    assert list(bds_int.bins.keys()) == list(bds.bins.keys())
+    resp = rb_sensitiv.select_by(
+        sensitivity_nucleus='U238',
+        sensitivity_reaction='SCATTERING LAW 21 (CONSTRAINED)',
+        squeeze=True)
+    bds = dcv.convert_data(resp['results'],
+                           data_type='sensitivity_spectrum_res')
+    assert bds.shape == (2, 3, 4)
+    assert list(bds.bins.keys()) == ['einc', 'e', 'mu']
+    bds_int = dcv.convert_data(resp['results'],
+                               data_type='integrated_res')
+    assert bds_int.shape == (1, 1, 1)
+    assert list(bds_int.bins.keys()) == list(bds.bins.keys())
 
 
 def test_kij(datadir):
@@ -283,6 +520,11 @@ def test_green_bands(datadir):
     assert t4_res.scan_res.times['exploitation time'] == 2
     assert t4_res.scan_res.times['initialization time'] == 2
     assert len(t4_res.result) == 1
+    t4acc = Accessor(t4_res.result[-1])
+    resp = t4acc.resp_book.select_by(response_function='FLUX', squeeze=True)
+    bd_gb = dcv.convert_data(resp['results'], data_type='greenbands_res')
+    assert bd_gb.shape == (2, 2, 1, 2, 4, 3)
+    assert list(bd_gb.bins.keys()) == ['se', 'ns', 'u', 'v', 'w', 'e']
 
 
 def test_tt_simple_packet20_mono(datadir):
