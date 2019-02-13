@@ -30,7 +30,7 @@ import os
 from glob import glob
 import logging
 import pytest
-import valjean.eponine.tripoli4.parse as ep
+from valjean.eponine.tripoli4.parse import T4Parser, T4ParserException
 from valjean.eponine.tripoli4.accessor import Accessor
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
@@ -97,19 +97,20 @@ def loop_on_files(filelist, cfile):
     failed_jdds = []
     for ifile in filelist:
         print("Reading:", ifile)
-        res = (ep.T4Parser.parse_jdd(ifile, -1)
-               if os.path.basename(ifile) not in cfile.MESH_LIM_FILES
-               else ep.T4Parser.parse_jdd_with_mesh_lim(ifile, -1, mesh_lim=2))
-        if res:
-            if result_test(res):
-                nb_jdds_ok += 1
-            else:
-                failed_jdds.append(ifile)
-            # quick temporary test of accessor
-            accessor_test(res)
-            accessor_test(res, 'ifp_adjoint_crit_edition')
+        try:
+            res = (T4Parser(ifile, -1)
+                   if os.path.basename(ifile) not in cfile.MESH_LIM_FILES
+                   else T4Parser(ifile, -1, mesh_lim=2))
+        except T4ParserException:
+            failed_jdds.append(ifile)
+            continue
+        if result_test(res):
+            nb_jdds_ok += 1
         else:
             failed_jdds.append(ifile)
+        # quick temporary test of accessor
+        accessor_test(res)
+        accessor_test(res, 'ifp_adjoint_crit_edition')
     return nb_jdds_ok, failed_jdds
 
 

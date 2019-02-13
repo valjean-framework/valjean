@@ -39,7 +39,7 @@ class T4Parser():
     '''Scan Tripoli-4 listings, then parse the required batches.'''
 
     @profile
-    def __init__(self, jddname, batch=-1, mesh_lim=-1):  # config, *,
+    def __init__(self, jddname, batch=-1, *, mesh_lim=-1):  # config, *,
         '''Initialize the :class:`T4Parser` object.
 
         :param str jddname: path to the Tripoli-4 output
@@ -52,77 +52,32 @@ class T4Parser():
         If the path contains the ``"PARA"`` string, the checks will be done for
         parallel mode.
         '''
+        LOGGER.info("Parsing %s (batch %d)", jddname, batch)
+        start_time = time.time()
         self.jdd = jddname
         self.batch_number = batch
         self.mesh_limit = mesh_lim
         self.scan_res = None
         self.result = None
         self.para = "PARA" in jddname or "th_task" in jddname
-
-    @classmethod
-    @profile
-    def parse_jdd(cls, jdd, batch=-1):
-        '''
-        Constructor for T4Parser for "default" cases: no mesh limit. Scanning
-        and parsing are automatically done.
-
-        :param str jdd: path to the output from Tripoli-4
-        :param int batch: number of the batch to parse (-1 = last one
-                          (*default*), 0 = all of them, X > 0 = batch X to be
-                          parsed)
-        '''
-        LOGGER.info("Parsing %s (batch %d)", jdd, batch)
-        start_time = time.time()
-        parser = cls(jdd, batch)
-        if parser.scan_then_parse(start_time):
-            return parser
-        return None
-
-    @classmethod
-    def parse_jdd_with_mesh_lim(cls, jdd, batch, mesh_lim=-1):
-        '''
-        Constructor for T4Parser for cases where a limit on meshes can be set.
-        It is also possible, for debug cases, to put a user's end flag.
-        Scanning and parsing are automatically done.
-
-        :param str jdd: path to the output from Tripoli-4
-        :param int batch: number of the batch to parse (-1 = last one
-                          (*default*), 0 = all of them, X > 0 = batch X to be
-                          parsed)
-        :param int mesh_lim: limit on lines of meshes (-1 = all of them,
-                             X > 0 = lines kept for each mesh, X = 0 will fail)
-        '''
-        start_time = time.time()
-        parser = cls(jdd, batch, mesh_lim)
-        if parser.scan_then_parse(start_time):
-            return parser
-        return None
+        try:
+            self.scan_then_parse(start_time)
+        except T4ParserException as t4pe:
+            LOGGER.error(t4pe)
+            raise T4ParserException("Scanning or parsing failed.") from None
 
     def scan_then_parse(self, start_time):
         '''Scan the parse the given jdd.'''
-        try:
-            self.scan_t4_listing()
-        except T4ParserException as t4pe:
-            LOGGER.error(t4pe)
-            return False
+        self.scan_t4_listing()
         LOGGER.info("Successful scan in %f s", time.time()-start_time)
         start_parse = time.time()
-        try:
-            self.parse_t4_listing()
-        except T4ParserException as t4pe:
-            LOGGER.error(t4pe)
-            return False
+        self.parse_t4_listing()
         LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
         LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
-        return True
 
     @profile
     def scan_t4_listing(self):
-        '''Scan Tripoli-4 listing, calling :mod:`.scan`.
-
-        If end_flag was set, calls :meth:`.scan.Scan.debug_scan` instead of
-        the usual constructor.
-        '''
+        '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
         self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para)
         # need to look if we keep or not the exception, catch it,
         # let it crash... -> how to count unsuccessful jobs...

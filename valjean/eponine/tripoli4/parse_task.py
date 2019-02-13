@@ -3,7 +3,7 @@
 from ... import LOGGER
 from ...cosette.task import TaskStatus
 from ...cosette.pythontask import PythonTask
-from .parse import T4Parser
+from .parse import T4Parser, T4ParserException
 
 
 class ParseT4Task(PythonTask):
@@ -53,10 +53,12 @@ class ParseT4Task(PythonTask):
                              'ParseT4Task %s, but I could not find them',
                              run_name, parse_name)
                 raise
-            parse_result = T4Parser.parse_jdd(output_file)
-            env_up = {parse_name: {'result': parse_result}}
-            if parse_result is None:
+            try:
+                parse_result = T4Parser(output_file)
+            except T4ParserException:
+                env_up = {parse_name: {'result': None}}
                 return env_up, TaskStatus.FAILED
+            env_up = {parse_name: {'result': parse_result}}
             return env_up, TaskStatus.DONE
 
         deps_ = [] if deps is None else deps.copy()

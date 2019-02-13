@@ -314,20 +314,9 @@ class Scan(Mapping):
         self._collres = OrderedDict()
         self._get_collres()
 
-    @classmethod
-    def debug_scan(cls, fname, mesh_lim=-1, para=False, end_flag=""):
-        '''Debug constructor, adding possibilty to use a custom end flag.
-
-        :param str fname: path to the file to scan
-        :param int mesh_lim: limit on number of lines of mesh to read
-        :param str end_flag: end flag on which ending scanning
-        :returns: instance of :class:`Scan`.
-        '''
-        return cls(fname, mesh_lim, para, end_flag)
-
     def _check_input_data(self, line):
         '''Get some parameters from introdcution of the results file, i.e.
-        from the data file. Typilcally the number of batchs required.
+        from the data file. Typically the number of batchs required.
         '''
         if "BATCH" in line and '_' not in line and "THIS" not in line:
             indbatch = line.split().index('BATCH')

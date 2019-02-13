@@ -4,7 +4,6 @@ Main difference is the possibility of using the ``end_flag`` parameter in the
 :mod:`~.scan`.
 '''
 
-import time
 import logging
 
 from .parse import T4Parser, T4ParserException
@@ -18,7 +17,8 @@ LOGGER = logging.getLogger('valjean')
 class T4ParserDebug(T4Parser):
     '''Scan up to the end flag then parse. For parsing debugging.'''
 
-    def __init__(self, jddname, batch=-1, mesh_lim=-1, end_flag="", ofile=""):
+    def __init__(self, jddname, batch=-1, *,
+                 mesh_lim=-1, end_flag="", ofile=""):
         # pylint: disable=too-many-arguments
         '''Initialize the :class:`T4ParserDebug` object.
 
@@ -34,37 +34,15 @@ class T4ParserDebug(T4Parser):
         If the path contains the ``"PARA"`` string, the checks will be done for
         parallel mode.
         '''
-        super().__init__(jddname, batch, mesh_lim)
         self.end_flag = end_flag
         self.ofile = ofile
-
-    @classmethod
-    def parse_debug(cls, jdd, batch, mesh_lim=-1, end_flag="", ofile=""):
-        # pylint: disable=too-many-arguments
-        '''Constructor for T4ParserDebug for cases where a limit on meshes can
-        be set. It is also possible, for debug cases, to put a user's end flag.
-        Scanning and parsing are automatically done.
-
-        :param str jdd: path to the output from Tripoli-4
-        :param int batch: number of the batch to parse (-1 = last one
-                          (*default*), 0 = all of them, X > 0 = batch X to be
-                          parsed)
-        :param int mesh_lim: limit on lines of meshes (-1 = all of them,
-                             X > 0 = lines kept for each mesh, X = 0 will fail)
-        :param str end_flag: optional end flag to stop scanning (and parsing)
-        :returns: T4ParserDebug object
-        '''
-        start_time = time.time()
-        parser = cls(jdd, batch, mesh_lim, end_flag, ofile)
-        if parser.scan_then_parse(start_time):
-            parser.check_t4_parsing()
-            return parser
-        return None
+        super().__init__(jddname, batch, mesh_lim=mesh_lim)
+        self.check_t4_parsing()
 
     def scan_t4_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
-        self.scan_res = scan.Scan.debug_scan(self.jdd, self.mesh_limit,
-                                             self.para, self.end_flag)
+        self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para,
+                                  self.end_flag)
         if not self.scan_res:
             raise T4ParserException("No result found in Tripoli-4 listing.")
         if not self.scan_res.normalend:
