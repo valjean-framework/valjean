@@ -4,7 +4,7 @@
 '''Tests for the :mod:`.rlist` module.'''
 
 from hypothesis import given, note
-from hypothesis.strategies import integers, sampled_from, data
+from hypothesis.strategies import integers, data
 import pytest
 
 from .conftest import reversible_lists
@@ -17,12 +17,12 @@ def check_revlist_invariant(rlst):
         assert i in rlst.indices(item)
 
 
-@given(rlst=reversible_lists(), sampler=data())
+@given(rlst=reversible_lists(min_size=1), sampler=data())
 def test_swap_indices(rlst, sampler):
     '''Test that swapping two elements does not violate any invariant.'''
     n_elems = len(rlst)
-    i = sampler.draw(sampled_from(range(-n_elems, n_elems)))
-    j = sampler.draw(sampled_from(range(-n_elems, n_elems)))
+    i = sampler.draw(integers(-n_elems, n_elems-1))
+    j = sampler.draw(integers(-n_elems, n_elems-1))
     rlst_swapped = rlst.copy()
     rlst_swapped.swap(i, j)
     note('rlst = {}'.format(rlst))
@@ -37,7 +37,7 @@ def test_insert(rlst, new, sampler):
     '''Test that inserting an element does not violate any invariant.'''
     n_elems = len(rlst)
     # draw the index in a somewhat larger window (insert should allow this)
-    i = sampler.draw(sampled_from(range(-n_elems-2, n_elems+2)))
+    i = sampler.draw(integers(-n_elems-2, n_elems+1))
     rlst_inserted = rlst.copy()
     rlst_inserted.insert(i, new)
     note('rlst = {}'.format(rlst))
@@ -51,7 +51,7 @@ def test_insert(rlst, new, sampler):
 def test_delete(rlst, sampler):
     '''Test that deleting an element does not violate any invariant.'''
     n_elems = len(rlst)
-    i = sampler.draw(sampled_from(range(n_elems)))
+    i = sampler.draw(integers(-n_elems, n_elems-1))
     rlst_deleted = rlst.copy()
     del rlst_deleted[i]
     note('rlst = {}'.format(rlst))
@@ -65,7 +65,7 @@ def test_delete(rlst, sampler):
 def test_setitem(rlst, new, sampler):
     '''Test that updating an element does not violate any invariant.'''
     n_elems = len(rlst)
-    i = sampler.draw(sampled_from(range(n_elems)))
+    i = sampler.draw(integers(-n_elems, n_elems-1))
     rlst_modified = rlst.copy()
     rlst_modified[i] = new
     note('rlst = {}'.format(rlst))
