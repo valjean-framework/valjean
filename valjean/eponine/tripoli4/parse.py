@@ -51,6 +51,26 @@ class T4Parser():
 
         If the path contains the ``"PARA"`` string, the checks will be done for
         parallel mode.
+
+        The T4Parser object instance variables are:
+
+        `scan_res` (:class:`~.scan.Scan`)
+            result from the scan of the Tripoli-4 output. See in the related
+            documentation the various instance variables available (like
+            ``times``). Inheriting from :class:`collections.abc.Mapping`
+            various default methods are available like ``len``, ``[]``, etc.
+            The keys of :class:`~.scan.Scan` are the batch numbers available
+            from the Tripoli-4 output. To get their list, use the ``keys``
+            method.
+
+        `result` (:class:`list` (:class:`dict`))
+            stores the result from *pyparsing*. Each item of the list (most
+            external one) corresponds to a batch, i.e. to all results available
+            for that batch.
+
+        This class takes care of the scanning of the Tripoli-4 output, then of
+        its parsing if the first step was successful. If one of these steps
+        fails, exceptions will be raised.
         '''
         LOGGER.info("Parsing %s (batch %d)", jddname, batch)
         start_time = time.time()
@@ -79,8 +99,6 @@ class T4Parser():
     def scan_t4_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
         self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para)
-        # need to look if we keep or not the exception, catch it,
-        # let it crash... -> how to count unsuccessful jobs...
         if not self.scan_res:
             raise T4ParserException("No result found in Tripoli-4 listing.")
         if not self.scan_res.normalend:

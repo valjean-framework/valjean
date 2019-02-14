@@ -266,6 +266,19 @@ class Scan(Mapping):
     `last_generator_state` (:class:`str`)
         keep the random generator state (not included in the result as given
         after `endflag`)
+
+
+    **Available methods:**
+
+    :class:`Scan` inherits from :class:`collections.abc.Mapping` so many
+    methods are implemented or available per default: ``keys``, ``items``,
+    ``values``, ``get``, ``__contains__`` (used via ``in``). ``__getitem``
+    (used with ``[]``), ``__iter__`` (when iterators are required), ``__len__``
+    and ``__reversed__`` are redefined.
+
+    This class points on the :obj:`collections.OrderedDict` that it contains.
+    The keys are the available batch numbers in the Tripoli-4 output, obtained
+    using ``scan_obj.keys()``.
     '''
 
     @profile
