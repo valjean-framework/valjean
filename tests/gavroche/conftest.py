@@ -5,7 +5,7 @@
 from collections import OrderedDict
 
 import pytest
-from hypothesis.strategies import composite, just
+from hypothesis.strategies import composite, just, one_of, floats, integers
 import numpy as np
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
@@ -279,3 +279,15 @@ def holm_bonferroni_test_fail(student_test_fail_with_pvalues):
 def holm_bonferroni_test_result_fail(holm_bonferroni_test_fail):
     '''Return a Holm-Bonferroni test result based on a Student test.'''
     return holm_bonferroni_test_fail.evaluate()
+
+
+@composite
+def one_dim_dataset(draw):
+    '''Strategy for generating 1-dimension datasets.'''
+    # print(draw(datasets()))
+    return draw(datasets(elements=integers(min_value=-5, max_value=5),
+                         shape=just(5)))
+    # bla = draw(datasets())
+    # print(bla)
+    # print(draw(just(5)))
+    # return bla

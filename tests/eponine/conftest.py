@@ -112,7 +112,7 @@ def coord_odicts(draw, *, shape=None, dtype=None, edges=None):
     coord_names = draw(lists(elements=cnames(), min_size=len(a_shape),
                              max_size=len(a_shape), unique=True))
     for nbins, name in zip(a_shape, coord_names):
-        n_elems = nbins+1 if draw(s_edges) else nbins+1
+        n_elems = nbins+1 if draw(s_edges) else nbins
         coord_odict[name] = np.sort(draw(arrays(a_dtype, n_elems,
                                                 elements=finite(),
                                                 unique=True)))

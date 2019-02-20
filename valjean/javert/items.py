@@ -7,7 +7,7 @@ are handled by suitable formatting classes, such as :class:`~.Rst`.
 '''
 
 import numpy as np
-
+from .. import LOGGER
 
 class TableItem:
     '''A container class that encapsulates all the necessary information to
@@ -112,3 +112,37 @@ class TableItem:
         copy = self.copy()
         copy += other
         return copy
+
+
+class PlotItem:
+    '''A container for various shapes of plots depending on data nature
+    (points, points series, etc). 2D plots per default (y=f(x)).'''
+
+    def __init__(self, vals, bins, *, xerrors=None, yerrors=None,
+                 xname='', yname='', title=''):
+        self.vals = vals
+        self.bins = bins
+        self.xerrors = xerrors
+        self.yerrors = yerrors
+        self.xname = xname
+        self.yname = yname
+        self.title = title
+
+        if ((not isinstance(self.vals, np.ndarray)
+             or not isinstance(self.bins, np.ndarray))):
+            raise TypeError('Vals and bins have to be np.ndarrays')
+
+        if self.vals.ndim > 1:
+            raise ValueError("Only 1-D values arrays taken into account")
+
+        if self.xerrors is not None:
+            if not isinstance(self.xerrors, np.ndarray):
+                raise TypeError("x-errors has to be np.ndarray")
+            if self.xerrors.size != self.vals.size:
+                raise ValueError("Errors and values should have the same size")
+
+        if self.yerrors is not None:
+            if not isinstance(self.yerrors, np.ndarray):
+                raise TypeError("y-errors has to be np.ndarray")
+            if self.yerrors.size != self.vals.size:
+                raise ValueError("Errors and values should have the same size")
