@@ -1,5 +1,5 @@
 '''Test parsing of all listings contained in the selected folders from
-``--parsing-config-files`` option.
+``--parsing-config-file`` option.
 
 Exclusion and matching are possible via ``--parsing-exclude`` and
 ``--parsing-match`` options.
@@ -129,7 +129,7 @@ def print_summary(nb_ok, nb_used, failed, excluded):
 
 @pytest.mark.slow
 def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
-    '''Test parsing of files configured from the ``--parsing-config-files``
+    '''Test parsing of files configured from the ``--parsing-config-file``
     option.
 
     By default all files are included, independent of the mode (MONO or PARA),

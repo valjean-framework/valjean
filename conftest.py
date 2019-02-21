@@ -11,7 +11,7 @@ def pytest_addoption(parser):
                      help="Maximize valjean verbosity")
     parser.addoption("--runslow", action="store_true",
                      default=False, help="run slow tests")
-    parser.addoption("--parsing-config-files", action="append", default=[],
+    parser.addoption("--parsing-config-file", action="append", default=[],
                      help="list of python configuration files to test "
                           "intensively the parsing")
     parser.addoption("--parsing-exclude", action="store",

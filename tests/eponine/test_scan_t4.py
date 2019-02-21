@@ -600,10 +600,8 @@ def test_empty_file(caplog):
     with open('empty_file.txt', 'w') as ofile:
         ofile.write("")
     with pytest.raises(T4ParserException):
-        t4res = T4Parser('empty_file.txt')
-        assert "No result found in Tripoli-4 listing." in caplog.text
-        assert "Scanning or parsing failed." in caplog.text
-        assert t4res is None
+        T4Parser('empty_file.txt')
+    assert "No result found in Tripoli-4 listing." in caplog.text
 
 
 def test_no_usual_output(datadir, caplog):
@@ -612,9 +610,8 @@ def test_no_usual_output(datadir, caplog):
     while the particles tracked are photons, so Tripoli-4 fails at execution.
     '''
     with pytest.raises(T4ParserException):
-        t4_res = T4Parser(str(datadir/"failure_test_segFault.d.res"))
-        assert t4_res is None
-        assert "No result found in Tripoli-4 listing." in caplog.text
+        T4Parser(str(datadir/"failure_test_segFault.d.res"))
+    assert "No result found in Tripoli-4 listing." in caplog.text
 
 
 def test_no_a_t4_opt_no_spectrum(datadir, caplog):
@@ -625,11 +622,10 @@ def test_no_a_t4_opt_no_spectrum(datadir, caplog):
     but fails after as it cannot find any row from the spectrum.
     '''
     with pytest.raises(T4ParserException):
-        t4_res = T4Parser(str(datadir/"failure_test_no_spec_res.d.res"))
-        assert t4_res is None
-        assert ("Parsing error in spectrum (_spectrumvals), "
-                "please check you run Tripoli-4 with '-a' option"
-                in caplog.text)
+        T4Parser(str(datadir/"failure_test_no_spec_res.d.res"))
+    assert ("Parsing error in spectrum (_spectrumvals), "
+            "please check you run Tripoli-4 with '-a' option"
+            in caplog.text)
 
 
 def test_no_a_t4_opt_bad_bins(datadir, caplog):
@@ -641,11 +637,10 @@ def test_no_a_t4_opt_bad_bins(datadir, caplog):
     specific error is sent.
     '''
     with pytest.raises(T4ParserException):
-        t4_res = T4Parser(str(datadir/"failure_test_no_a_opt.d.res"))
-        assert ("Problem with energy bins: some bins are probably missing. "
-                "Please make sure you run Tripoli-4 with '-a' option."
-                in caplog.text)
-        assert t4_res is None
+        T4Parser(str(datadir/"failure_test_no_a_opt.d.res"))
+    assert ("Problem with energy bins: some bins are probably missing. "
+            "Please make sure you run Tripoli-4 with '-a' option."
+            in caplog.text)
 
 
 def test_no_a_t4_opt_bad_bins_2(datadir, caplog):
@@ -657,12 +652,11 @@ def test_no_a_t4_opt_bad_bins_2(datadir, caplog):
     the use of '-a' optoin. A specific error is sent.
     '''
     with pytest.raises(T4ParserException):
-        t4_res = T4Parser(str(datadir/"failure_noaopt_uniform_sources.d.res"))
-        assert ("IndexError: your spectrum probably uses more than one "
-                "dimension (X and Y), but the number of x bins may be "
-                "different in the different y bins.\nPlease make sure you run "
-                "Tripoli-4 with option '-a'." in caplog.text)
-        assert t4_res is None
+        T4Parser(str(datadir/"failure_noaopt_uniform_sources.d.res"))
+    assert ("IndexError: your spectrum probably uses more than one dimension "
+            "(X and Y), but the number of x bins may be different in the "
+            "different y bins.\nPlease make sure you run Tripoli-4 with "
+            "option '-a'." in caplog.text)
 
 
 def test_bad_response_name(datadir, caplog):
@@ -671,11 +665,10 @@ def test_bad_response_name(datadir, caplog):
     a response name. Pyparsing does not know to do with it and fails.
     '''
     with pytest.raises(T4ParserException):
-        t4_res = T4Parser(str(datadir/"failure_test_bad_resp_name.d.res"))
-        assert t4_res is None
-        assert "Error in parsing" in caplog.text
-        assert ("corresponding to line: "
-                "'RESPONSE NAME : flux_@_neutron' in file" in caplog.text)
+        T4Parser(str(datadir/"failure_test_bad_resp_name.d.res"))
+    assert "Error in parsing" in caplog.text
+    assert ("corresponding to line: "
+            "'RESPONSE NAME : flux_@_neutron' in file" in caplog.text)
 
 
 def test_no_normal_completion(datadir, caplog):
@@ -698,6 +691,5 @@ def test_no_simulation_time(datadir, caplog):
     as pyparsing cannot find the end flag no parsing result can be built.
     '''
     with pytest.raises(T4ParserException):
-        t4_res = T4Parser(str(datadir/"failure_test_no_simu_time.d.res"))
-        assert t4_res is None
-        assert "No result found in Tripoli-4 listing." in caplog.text
+        T4Parser(str(datadir/"failure_test_no_simu_time.d.res"))
+    assert "No result found in Tripoli-4 listing." in caplog.text

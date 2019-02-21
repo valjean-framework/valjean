@@ -39,7 +39,7 @@ class T4Parser():
     '''Scan Tripoli-4 listings, then parse the required batches.'''
 
     @profile
-    def __init__(self, jddname, batch=-1, *, mesh_lim=-1):  # config, *,
+    def __init__(self, jddname, batch=-1, *, mesh_lim=-1):
         '''Initialize the :class:`T4Parser` object.
 
         :param str jddname: path to the Tripoli-4 output

@@ -329,7 +329,7 @@ class Scan(Mapping):
 
     def _check_input_data(self, line):
         '''Get some parameters from introdcution of the results file, i.e.
-        from the data file. Typically the number of batchs required.
+        from the data file. Typically the number of batches required.
         '''
         if "BATCH" in line and '_' not in line and "THIS" not in line:
             indbatch = line.split().index('BATCH')

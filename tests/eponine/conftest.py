@@ -247,7 +247,7 @@ def parsing_config_files(request):
 
     This is for example used during nightly tests.
     '''
-    return request.config.getoption('--parsing-config-files')
+    return request.config.getoption('--parsing-config-file')
 
 
 @pytest.fixture
@@ -270,18 +270,16 @@ def parsing_match(request):
 
 
 def pytest_generate_tests(metafunc):
-    '''Handle the ``--parsing-config-files`` option in order to make one test
+    '''Handle the ``--parsing-config-file`` option in order to make one test
     per folder required for comparison simplicity.
     '''
     if metafunc.function.__name__ == "test_listing_parsing":
-        confiles = metafunc.config.getoption("--parsing-config-files")
+        confiles = metafunc.config.getoption("--parsing-config-file")
         list_params = []
         if len(set(os.path.basename(x) for x in confiles)) != len(confiles):
-            import logging
-            logger = logging.getLogger('valjean')
-            logger.warning("Some modules with same name in the given "
-                           "parsing-config-files, only one among the "
-                           "duplicated names will be read.")
+            from valjean import LOGGER
+            LOGGER.error("Several parsing configuration files share the same "
+                         "name, only one among them will be read.")
         for cfile in confiles:
             try:
                 config = dyn_import(cfile)
