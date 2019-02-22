@@ -119,14 +119,14 @@ class PlotItem:
     (points, points series, etc). 2D plots per default (y=f(x)).'''
 
     def __init__(self, vals, bins, *, xerrors=None, yerrors=None,
-                 xname='', yname='', title=''):
+                 xname='', yname='score', label=''):
         self.vals = vals
         self.bins = bins
         self.xerrors = xerrors
         self.yerrors = yerrors
         self.xname = xname
         self.yname = yname
-        self.title = title
+        self.label = label
 
         if ((not isinstance(self.vals, np.ndarray)
              or not isinstance(self.bins, np.ndarray))):
@@ -146,3 +146,63 @@ class PlotItem:
                 raise TypeError("y-errors has to be np.ndarray")
             if self.yerrors.size != self.vals.size:
                 raise ValueError("Errors and values should have the same size")
+
+
+class TestResPlotItem(PlotItem):
+    '''A container for the result of the test. No errors available, not the
+    same ``yname`` (needs a specific subplot)...
+    '''
+    def __init__(self, vals, bins, *, xname='', yname=r"$\Delta$", label=''):
+        super().__init__(vals, bins, xname=xname, yname=yname, label=label)
+
+
+class FullPlotItem:
+    '''A container for full test result to be represented as a plot. This
+    includes all the datasets and the test result (when plot, possibly pvalue,
+    etc).
+    '''
+
+    def __init__(self, *, bins, values, labels, ynames, xname='', errors=None):
+        '''Initialisation of FullPlotItem.
+
+        :param bins: bins, common for all plots (important), only one set is
+            needed
+        :type bins: :obj:`numpy.ndarray`
+        :param values: list of arrays to be represented on the plot
+        :type values: list(:obj:`numpy.ndarray`)
+        :param list(str) labels: label to be used in the legend to characterize
+            the curve
+        :param list(str) ynames: label of y-axis (used to determine the number
+            of subplots on the plot)
+        :param str xname: name of x-axis (default: ``''``)
+        :param errors: errors associated to values (per default only on y-axis)
+        :type errors: list(:obj:`numpy.ndarray`)
+        '''
+        self.bins = bins
+        self.values = values
+        self.labels = labels
+        self.ynames = ynames
+        self.xname = xname
+        self.errors = errors
+
+        if ((not isinstance(self.values, list)
+             or not isinstance(self.labels, list)
+             or not isinstance(self.ynames, list))):
+            raise TypeError('Values, labels and ynames should be lists.')
+
+        if ((len(self.values) != len(self.labels)
+             or len(self.values) != len(self.ynames))):
+            raise ValueError('Values, labels and ynames should contain the '
+                             'same number of elements')
+
+        if not all(isinstance(v, np.ndarray) for v in self.values):
+            raise TypeError('All values should be np.ndarray.')
+
+        if self.errors is not None:
+            if not isinstance(self.errors, list):
+                raise TypeError('Errors should be a list.')
+            if len(self.errors) != len(self.values):
+                raise ValueError('Errors should contain the same number of '
+                                 'elements as values.')
+            if not all(e is None or isinstance(e, np.ndarray) for e in self.errors):
+                raise TypeError('All errors should be np.ndarray or None')

@@ -10,7 +10,9 @@ from ..context import valjean  # noqa: F401
 from ..gavroche.conftest import some_dataset, other_dataset
 from valjean.javert.representation import (FullRepresentation,
                                            EmptyRepresentation,
-                                           TableRepresentation)
+                                           TableRepresentation,
+                                           PlotRepresentation,
+                                           PlotRepresentation2)
 from valjean.javert.items import TableItem
 from valjean.javert.rst import RstFormatter
 
@@ -55,6 +57,18 @@ def empty_repr():
 def table_repr():
     '''Create a :class:`~.TableRepresentation` object.'''
     return TableRepresentation()
+
+
+@pytest.fixture
+def plot_repr():
+    '''Create a :class:`~.PlotRepresentation` object.'''
+    return PlotRepresentation()
+
+
+@pytest.fixture
+def fplt_repr():
+    '''Create a :class:`~.PlotRepresentation2` object.'''
+    return PlotRepresentation2()
 
 
 @pytest.fixture

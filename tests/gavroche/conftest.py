@@ -112,7 +112,7 @@ def other_1d_dataset():
     dataset = Dataset(np.array([1.5, 2.0, 2.7, 4.5, 5.7]),
                       np.array([0.3, 0.2, 0.3, 0.3, 0.4]),
                       bins=bins,
-                      name="some 1D dataset")
+                      name="other 1D dataset")
     return dataset
 
 
@@ -124,7 +124,32 @@ def different_1d_dataset():
     dataset = Dataset(np.array([1.5, 2.6, 2.3, 4.5, 3.5]),
                       np.array([0.1, 0.2, 0.1, 0.1, 0.2]),
                       bins=bins,
+                      name="different 1D dataset")
+    return dataset
+
+
+@pytest.fixture
+def some_1d_dataset_edges():
+    '''Return a simple 1D :class:`~.Dataset` object, bins are given by edges.'''
+    bins = OrderedDict([('e', np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))])
+    dataset = Dataset(np.array([1.0, 2.0, 3.0, 4.0, 5.0]),
+                      np.array([0.3, 0.1, 0.2, 0.3, 0.5]),
+                      bins=bins,
                       name="some 1D dataset")
+    return dataset
+
+
+@pytest.fixture
+def other_1d_dataset_edges():
+    '''Return a other 1D :class:`~.Dataset` object, successfully compared to
+    :func:`some_1d_dataset` when taking into account errors. Bines are given by
+    edges.
+    '''
+    bins = OrderedDict([('e', np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))])
+    dataset = Dataset(np.array([1.5, 2.0, 2.7, 4.5, 5.7]),
+                      np.array([0.3, 0.2, 0.3, 0.3, 0.4]),
+                      bins=bins,
+                      name="other 1D dataset")
     return dataset
 
 
@@ -185,6 +210,22 @@ def student_test(some_1d_dataset, other_1d_dataset):
 def student_test_result(student_test):
     '''Return a Student test result between datasets.'''
     return student_test.evaluate()
+
+
+@pytest.fixture
+def student_test_edges(some_1d_dataset_edges, other_1d_dataset_edges):
+    '''Return a Student test between datasets with bins given by edges.'''
+    return TestStudent(some_1d_dataset_edges, other_1d_dataset_edges,
+                       name='A Student test',
+                       description='Have the dataset the same mean taking '
+                                   'into account the errors?')
+
+
+@pytest.fixture
+def student_test_edges_result(student_test_edges):
+    '''Return a Student test result between datasets with bins given by edges.
+    '''
+    return student_test_edges.evaluate()
 
 
 @pytest.fixture

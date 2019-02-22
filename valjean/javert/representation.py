@@ -14,14 +14,14 @@ human-readable representation (table, plots, etc.).
     bugs.
 '''
 from .. import LOGGER
-from .items import TableItem
+from .items import TableItem, PlotItem, FullPlotItem
 
 
 class Representation:
     '''Base class for representing test results as items (in the sense of the
     :mod:`~.items` module).'''
 
-    def __call__(self, result):
+    def __call__(self, result, **kwargs):
         '''Dispatch handling of `result` to the appropriate subclass method,
         based on the name of the class of `result`. This methods essentially
         implements a simplified, run-time version of the Visitor pattern.'''
@@ -32,7 +32,7 @@ class Representation:
         except AttributeError:
             LOGGER.debug('no representation for class %s', class_name)
             return []
-        return meth(result)
+        return meth(result, **kwargs)
 
 
 class TableRepresentation(Representation):
@@ -164,9 +164,126 @@ class PlotRepresentation(Representation):
     '''This class represents the different representations available for plots.
     '''
 
+    def repr_testresultstudent(self, result, **kwargs):
+        '''Represent the result of a :class:`~.TestStudent` test.
+
+        :param  result: a test result.
+        :type result: :class:`~.TestResultStudent`
+        :returns: The full representation of a
+                  :class:`~.TestResultStudent`.
+        :rtype: list(:class:`~.PlotItem`)
+        '''
+        return self._repr_student(result, test_name=r'$\Delta_{Student}$',
+                                  **kwargs)
+
+    @staticmethod
+    def _repr_student(result, *, dim, test_name='', plot_res=False,
+                      only_res=False, **kwargs):
+        '''Shared worker function for Student tests.
+
+        :returns: list( :class:`~.PlotItem` )
+        '''
+        lres = []
+        plot_res = True if only_res else plot_res
+        if not only_res:
+            lres.append(PlotItem(
+                result.test.ds1.value, result.test.ds1.bins[dim],
+                yerrors=result.test.ds1.error, xname=dim,
+                label=result.test.ds1.name, **kwargs))
+            lres.append(PlotItem(
+                result.test.ds2.value, result.test.ds2.bins[dim],
+                yerrors=result.test.ds2.error, xname=dim,
+                label=result.test.ds2.name, **kwargs))
+        if plot_res:
+            lres.append(PlotItem(result.delta,
+                                 result.test.ds1.bins[dim],
+                                 xname=dim, yname=test_name, **kwargs))
+        # return [plot_item]
+        return lres
+
+
+class PlotRepresentation2(Representation):
+    '''PlotRepresentation usinf FullPlotItem.'''
+
+    def repr_testresultstudent(self, result, **kwargs):
+        '''Represent the result of a :class:`~.TestStudent` test.
+
+        :param  result: a test result.
+        :type result: :class:`~.TestResultStudent`
+        :returns: The full representation of a
+                  :class:`~.TestResultStudent`.
+        :rtype: list(:class:`~.PlotItem`)
+        '''
+        if kwargs.pop('only_res', False):
+            return self._repr_student_delta(result, **kwargs)
+        if kwargs.pop('only_values', False):
+            return self._repr_student_values(result, **kwargs)
+        return self._repr_student(result, **kwargs)
+
+    @staticmethod
+    def _repr_student(result, dim, **kwargs):
+        '''Shared worker function for Student tests returning FullPlotItems.
+
+        :returns: :class:`~.FullPlotItem`
+
+        Remark: if we have a member ``units`` in base_dataset the axis names
+        would be constructed like ``name + units['name']``.
+        '''
+        bins = result.test.ds1.bins[dim]
+        xname = dim
+        values = [result.test.ds1.value, result.test.ds2.value, result.delta]
+        labels = (['dataset 1', 'dataset 2', r'$\Delta_{Student}$']
+                  if 'labels' not in kwargs else kwargs['labels'])
+        ynames = (['score', 'score', r'$\Delta_{Student}$']
+                  if 'ynames' not in kwargs else kwargs['ynames'])
+        errors = [result.test.ds1.error, result.test.ds2.error, None]
+        return FullPlotItem(bins=bins, values=values, labels=labels,
+                            ynames=ynames, xname=xname, errors=errors)
+
+    @staticmethod
+    def _repr_student_delta(result, dim, **kwargs):
+        '''Shared worker function for Student tests returning FullPlotItems.
+        Only returns the delta distribution here.
+
+        :returns: :class:`~.FullPlotItem`
+
+        Remark: if we have a member ``units`` in base_dataset the axis names
+        would be constructed like ``name + units['name']``.
+        '''
+        bins = result.test.ds1.bins[dim]
+        xname = dim
+        values = [result.delta]
+        labels = [r'$\Delta_{Student}$']
+        ynames = [r'$\Delta_{Student}$']
+        errors = [None]
+        return FullPlotItem(bins=bins, values=values, labels=labels,
+                            ynames=ynames, xname=xname, errors=errors)
+
+    @staticmethod
+    def _repr_student_values(result, dim, **kwargs):
+        '''Shared worker function for Student tests returning FullPlotItems.
+        Only returns the delta distribution here.
+
+        :returns: :class:`~.FullPlotItem`
+
+        Remark: if we have a member ``units`` in base_dataset the axis names
+        would be constructed like ``name + units['name']``.
+        '''
+        bins = result.test.ds1.bins[dim]
+        xname = dim
+        values = [result.test.ds1.value, result.test.ds2.value]
+        labels = (['dataset 1', 'dataset 2'] if 'labels' not in kwargs
+                  else kwargs['labels'])
+        ynames = (['score', 'score'] if 'ynames' not in kwargs
+                  else kwargs['ynames'])
+        errors = [result.test.ds1.error, result.test.ds2.error]
+        return FullPlotItem(bins=bins, values=values, labels=labels,
+                            ynames=ynames, xname=xname, errors=errors)
+
 
 class EmptyRepresentation(Representation):
     '''Class that does not generate any items for any test result.'''
+
 
 
 class FullRepresentation(Representation):
@@ -179,7 +296,7 @@ class FullRepresentation(Representation):
         self.table_repr = TableRepresentation()
         self.plot_repr = PlotRepresentation()
 
-    def __call__(self, result):
+    def __call__(self, result, **kwargs):
         '''Dispatch handling of `result` to all the Representation subclass
         instance attributes of :class:`FullRepresentation`, based on the name
         of the class of `result`.'''
@@ -193,7 +310,7 @@ class FullRepresentation(Representation):
             table_res = []
         try:
             plot_meth = getattr(self.plot_repr, meth_name)
-            plot_res = plot_meth(result)
+            plot_res = plot_meth(result, **kwargs)
         except AttributeError:
             LOGGER.debug('no plot representation for class %s', class_name)
             plot_res = []
