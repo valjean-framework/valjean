@@ -19,7 +19,7 @@ author_email = u'davide.mancusi@cea.fr'
 copyright = u'2017, ' + author
 
 test_deps = ['hypothesis', 'pytest', 'pytest-cov', 'pytest-xdist',
-             'pytest-timeout']
+             'pytest-timeout', 'rstcheck']
 graphviz_deps = ['pydot']
 dev_deps = test_deps + graphviz_deps + ['flake8', 'pylint', 'sphinx',
                                         'sphinx_rtd_theme']
