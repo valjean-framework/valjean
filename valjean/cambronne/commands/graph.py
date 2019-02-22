@@ -15,6 +15,7 @@ class GraphCommand(Command):
 
     def register(self, parser):
         '''Register options for this command in the parser.'''
+        super().register(parser)
         parser.add_argument('-o', '--output',
                             action='store', help='path to the output file')
         parser.set_defaults(func=self.execute)

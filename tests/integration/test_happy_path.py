@@ -105,3 +105,32 @@ def test_run(job_config, target, env_path):
     elif target is None:
         assert_task_done(env, 'pling')
         assert_task_done(env, 'plong')
+
+
+@pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho'],
+                         ids=['no target', 'checkout_cecho', 'build_cecho'])
+def test_graph(job_config, target, env_path, capsys):
+    '''Test that the `graph` command produces syntactically valid graphviz
+    files.'''
+    pydot = pytest.importorskip('pydot')
+    args = ['graph']
+    if target is not None:
+        args.append(target)
+    run_valjean(args, job_config=job_config, env_path=env_path)
+    captured = capsys.readouterr()
+    pydot.graph_from_dot_data(captured.out)
+
+
+@pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho'],
+                         ids=['no target', 'checkout_cecho', 'build_cecho'])
+def test_graph_on_file(job_config, target, env_path, tmpdir):
+    '''Test that the `graph` command produces syntactically valid graphviz
+    files.'''
+    pydot = pytest.importorskip('pydot')
+    output_file = tmpdir / 'graph.dot'
+    args = ['graph', '-o', str(output_file)]
+    if target is not None:
+        args.append(target)
+    run_valjean(args, job_config=job_config, env_path=env_path)
+    graph = output_file.read()
+    pydot.graph_from_dot_data(graph)
