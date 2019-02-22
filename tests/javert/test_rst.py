@@ -51,13 +51,25 @@ def test_rst_table(rstcheck, table_item, rst_formatter):
     assert not list(errs)
 
 
-def test_rst_equal(rstcheck, equal_test_result, rst_formatter, full_repr):
+def test_rst_equal(rstcheck, equal_test_result, rst_formatter, table_repr):
+    '''Test that :class:`~.RstFormatter` yields syntactically correct reST
+    tables when formatting an equality test.'''
+    items = table_repr(equal_test_result)
+    rst = '\n'.join(rst_formatter(item) for item in items)
+    LOGGER.debug('generated rst:\n%s', rst)
+    errs = rstcheck.check(rst)
+    assert not list(errs)
+
+
+def test_rst_equal_full(rstcheck, equal_test_result, rst_formatter, full_repr):
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
     tables when formatting an equality test.'''
     items = full_repr(equal_test_result)
     rst = '\n'.join(rst_formatter(item) for item in items)
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
+    print()
+    print(rst)
     assert not list(errs)
 
 
@@ -87,10 +99,13 @@ def test_rst_approx_equal(rstcheck, approx_equal_test_result, rst_formatter,
 
 def test_rst_student(rstcheck, student_test_result, rst_formatter, full_repr):
     '''Test that :class:`~.RstFormatter` generates correct reST table.'''
+    print("ICI")
     items = full_repr(student_test_result)
-    rst = rst_formatter(items)
+    rst = '\n'.join(rst_formatter(item) for item in items)
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
+    print()
+    print(rst)
     assert not list(errs)
 
 
@@ -99,7 +114,7 @@ def test_rst_student_hl(rstcheck, student_test_result_fail, rst_formatter,
     '''Test that :class:`~.RstFormatter` generates correct reST table for
     Student results.'''
     items = full_repr(student_test_result_fail)
-    rst = rst_formatter(items)
+    rst = '\n'.join(rst_formatter(item) for item in items)
     # patch the generated rst with a declaration for the highlight role
     rst = '.. role:: hl\n\n' + rst
     LOGGER.debug('generated rst:\n%s', rst)
@@ -115,7 +130,20 @@ def test_rst_bonferroni(rstcheck, bonferroni_test_result, rst_formatter,
     Bonferroni result.'''
     items = full_repr(bonferroni_test_result)
     print(items)
-    rst = rst_formatter(items)
+    rst = '\n'.join(rst_formatter(item) for item in items)
+    LOGGER.debug('generated rst:\n%s', rst)
+    errs = rstcheck.check(rst)
+    print()
+    print(rst)
+    assert not list(errs)
+
+
+def test_rst_holm_bonferroni(rstcheck, holm_bonferroni_test_result,
+                              rst_formatter, full_repr):
+    '''Test that :class:`~.RstFormatter` generates correct reST table for
+    Holm-Bonferroni results.'''
+    items = full_repr(holm_bonferroni_test_result)
+    rst = '\n'.join(rst_formatter(item) for item in items)
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
     print()

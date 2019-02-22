@@ -35,10 +35,9 @@ class Representation:
         return meth(result)
 
 
-class FullRepresentation(Representation):
-    '''This class generates the fullest possible representation for test
-    results. If anything can be represented as an item,
-    :class:`FullRepresentation` will do it.
+class TableRepresentation(Representation):
+    '''This class represents the different representations available for
+    tables.
     '''
 
     def repr_testresultequal(self, result):
@@ -105,7 +104,7 @@ class FullRepresentation(Representation):
             result.delta, result.bool_array(),
             highlight=lambda _v1, _e1, _v2, _e2, _delta, eq: not eq,
             headers=['v1', 'σ1', 'v2', 'σ2', 'Δ', result_header])
-        return table_item
+        return [table_item]
 
     def repr_testresultbonferroni(self, result):
         '''Represent the result of a :class:`~.TestBonferroni` test.
@@ -116,7 +115,8 @@ class FullRepresentation(Representation):
                   :class:`~.TestResultBonferroni`.
         :rtype: list(:class:`~.TableItem`)
         '''
-        return self._repr_bonferroni(result, 'bonferroni?')
+        return (self.repr_testresultstudent(result.first_test_res)
+                + self._repr_bonferroni(result, 'bonferroni?'))
 
     @staticmethod
     def _repr_bonferroni(result, result_header):
@@ -129,7 +129,7 @@ class FullRepresentation(Representation):
             [bool(result)],
             highlight=lambda _t, _ndf, _sl, _min, rnh: not rnh,
             headers=['test', 'ndf', 'α', 'min(p-value)', result_header])
-        return table_item
+        return [table_item]
 
     def repr_testresultholmbonferroni(self, result):
         '''Represent the result of a :class:`~.TestHolmBonferroni` test.
@@ -140,7 +140,8 @@ class FullRepresentation(Representation):
                   :class:`~.TestResultHolmBonferroni`.
         :rtype: list(:class:`~.TableItem`)
         '''
-        return self._repr_holm_bonferroni(result, 'holm-bonferroni?')
+        return (self.repr_testresultstudent(result.first_test_res)
+                + self._repr_holm_bonferroni(result, 'holm-bonferroni?'))
 
     @staticmethod
     def _repr_holm_bonferroni(result, result_header):
@@ -156,7 +157,44 @@ class FullRepresentation(Representation):
             highlight=lambda _t, _ndf, _sl, _min, _malp, _rej, rnh: not rnh,
             headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
                      'N rejected', result_header])
-        return table_item
+        return [table_item]
+
+
+class PlotRepresentation(Representation):
+    '''This class represents the different representations available for plots.
+    '''
+
 
 class EmptyRepresentation(Representation):
     '''Class that does not generate any items for any test result.'''
+
+
+class FullRepresentation(Representation):
+    '''This class generates the fullest possible representation for test
+    results. If anything can be represented as an item,
+    :class:`FullRepresentation` will do it.
+    '''
+
+    def __init__(self):
+        self.table_repr = TableRepresentation()
+        self.plot_repr = PlotRepresentation()
+
+    def __call__(self, result):
+        '''Dispatch handling of `result` to all the Representation subclass
+        instance attributes of :class:`FullRepresentation`, based on the name
+        of the class of `result`.'''
+        class_name = result.__class__.__name__
+        meth_name = 'repr_' + class_name.lower()
+        try:
+            table_meth = getattr(self.table_repr, meth_name)
+            table_res = table_meth(result)
+        except AttributeError:
+            LOGGER.debug('no table representation for class %s', class_name)
+            table_res = []
+        try:
+            plot_meth = getattr(self.plot_repr, meth_name)
+            plot_res = plot_meth(result)
+        except AttributeError:
+            LOGGER.debug('no plot representation for class %s', class_name)
+            plot_res = []
+        return table_res + plot_res

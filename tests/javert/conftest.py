@@ -9,7 +9,8 @@ import pytest
 from ..context import valjean  # noqa: F401
 from ..gavroche.conftest import some_dataset, other_dataset
 from valjean.javert.representation import (FullRepresentation,
-                                           EmptyRepresentation)
+                                           EmptyRepresentation,
+                                           TableRepresentation)
 from valjean.javert.items import TableItem
 from valjean.javert.rst import RstFormatter
 
@@ -48,6 +49,12 @@ def full_repr():
 def empty_repr():
     '''Create an :class:`~.EmptyRepresentation` object.'''
     return EmptyRepresentation()
+
+
+@pytest.fixture
+def table_repr():
+    '''Create a :class:`~.TableRepresentation` object.'''
+    return TableRepresentation()
 
 
 @pytest.fixture

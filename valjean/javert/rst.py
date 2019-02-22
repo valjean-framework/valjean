@@ -158,6 +158,7 @@ class RstTable:
         lines = [sep_row, header_row, sep_row]
         lines.extend(cls.concat_rows(widths, rows))
         lines.append(sep_row)
+        lines.append('')  # in order to get 2 tables
         return '\n'.join(lines)
 
     @classmethod
