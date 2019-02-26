@@ -108,8 +108,8 @@ def test_factory_exe_args(config_tmp):
 
 
 def test_factory_exe_raise_missing(config_tmp):
-    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
-    objects from an existing executable.
+    '''Test that :class:`RunTaskFactory` raises if required run arguments are
+    missing.
     '''
     factory = RunTaskFactory.from_executable('/bin/echo',
                                              default_args=['{text}'])
