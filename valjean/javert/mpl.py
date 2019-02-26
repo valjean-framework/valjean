@@ -1,5 +1,5 @@
-'''This module provides the classes to convert test results to matplotlib
-plots.
+'''This module provides the classes to convert test results to plots using
+:mod:`matplotlib.pyplot`.
 '''
 
 import numpy as np
@@ -52,10 +52,11 @@ class MplPlot:
         print("in no_error_plot")
         self.splt.set(xlabel=self.data.xname, ylabel=self.data.yname,
                       title=self.data.title)
-        return self.splt.plot(self.data.bins, self.data.vals) #, 'bo-')
+        return self.splt.plot(self.data.bins, self.data.vals)
 
     def error_plot(self):
-        '''Draw the plot with error bars.
+        '''Draw the plot with error bars using
+        :func:`matplotlib.pyplot.errorbar`.
 
         WORKS WHEN ONLY ONE CURVE TO DRAW ON GRAPH.
         Line not needed in that case for the case N(bins) = N(vals)
@@ -126,18 +127,20 @@ class MplPlot:
         self.splt[0].legend(self.legend['handles'], self.legend['labels'])
 
     def step_plot(self):
+        '''Test of step plot. TO BE REMOVED.'''
         print("step plot")
         self.splt.set_xlabel(self.data.xname)
         self.splt.set_ylabel(self.data.yname)
         self.splt.set_title(self.data.title)
-        return self.splt.errorbar(self.data.bins, self.data.vals) #,
-                                  #fmt='bo-', drawstyle='steps-mid')
+        return self.splt.errorbar(self.data.bins, self.data.vals)
 
     def pie(self):
+        '''Test of pie plot. TO BE REMOVED.'''
         print('une tarte, enfin un camembert en bon français !')
         return self.splt.pie(self.data.vals)
 
     def scatter(self):
+        '''Test of scatter plot. TO BE REMOVED.'''
         print('scatter plot')
         return self.splt.scatter(self.data.bins, self.data.vals)
 
@@ -152,6 +155,7 @@ class MplPlot:
 
     @staticmethod
     def plt():
+        '''Return the matplotlib instance.'''
         return plt
 
 

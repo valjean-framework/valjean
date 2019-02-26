@@ -173,8 +173,10 @@ class PlotRepresentation(Representation):
                   :class:`~.TestResultStudent`.
         :rtype: list(:class:`~.PlotItem`)
         '''
+        dims = [k for k, v in result.test.ds1.bins.items() if v.size != 0]
+        dim = kwargs.pop('dim', dims[0] if dims else '')
         return self._repr_student(result, test_name=r'$\Delta_{Student}$',
-                                  **kwargs)
+                                  dim=dim, **kwargs)
 
     @staticmethod
     def _repr_student(result, *, dim, test_name='', plot_res=False,
@@ -215,7 +217,7 @@ class PlotRepresentation2(Representation):
         :rtype: list(:class:`~.PlotItem`)
         '''
         if kwargs.pop('only_res', False):
-            return self._repr_student_delta(result, **kwargs)
+            return self._repr_student_delta(result, dim=kwargs['dim'])
         if kwargs.pop('only_values', False):
             return self._repr_student_values(result, **kwargs)
         return self._repr_student(result, **kwargs)
@@ -241,7 +243,7 @@ class PlotRepresentation2(Representation):
                             ynames=ynames, xname=xname, errors=errors)
 
     @staticmethod
-    def _repr_student_delta(result, dim, **kwargs):
+    def _repr_student_delta(result, dim):
         '''Shared worker function for Student tests returning FullPlotItems.
         Only returns the delta distribution here.
 
@@ -283,7 +285,6 @@ class PlotRepresentation2(Representation):
 
 class EmptyRepresentation(Representation):
     '''Class that does not generate any items for any test result.'''
-
 
 
 class FullRepresentation(Representation):

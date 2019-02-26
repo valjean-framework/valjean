@@ -1,14 +1,15 @@
-'''Tests for the :mod:`~javert.mpl` module.'''
+'''Tests for the :mod:`~valjean.javert.mpl` module.'''
 # pylint: disable=redefined-outer-name
+# pylint: disable=unused-import
 
 import pytest
 import numpy as np
 from hypothesis import given, settings, HealthCheck
+from valjean.javert.items import PlotItem
+from valjean.javert.mpl import MplPlot, MplPlot2
 from ..gavroche.conftest import (some_1d_dataset, one_dim_dataset,
                                  other_1d_dataset, some_1d_dataset_edges,
                                  other_1d_dataset_edges)
-from valjean.javert.items import PlotItem
-from valjean.javert.mpl import MplPlot, MplPlot2
 from ..gavroche.conftest import (student_test, student_test_result,
                                  student_test_edges, student_test_edges_result)
 
@@ -59,25 +60,13 @@ def test_plot_with_errors(oneds):
     plti = PlotItem(oneds.value, oneds.bins[dim], yerrors=oneds.error,
                     xname=dim, yname='score')
     assert oneds.error.size == oneds.value.size
+    assert plti.xname == dim
     # mplt = MplPlot(plti)
     # mplt.show()
 
 
-# @image_comparison(baseline_images=["/home/el220326/valjean/tests/javert/data/my_baseline_image.png"])
-@pytest.mark.mpl_image_compare(filename='monplot.png',
-                               baseline_dir='mes_plots')
-def test_plot_with_matplotlib():
-    '''Test with matplotlib test.'''
-    plti = PlotItem(np.arange(5), np.arange(5), xname='X', yname='Y')
-    mplt = MplPlot(plti)
-    mplt.splt.set_title('my test')
-    return mplt.fig
-    # mplt.save("/home/el220326/valjean/tests/javert/data/monplot.png")
-    # mpl = mplt.plt()
-
-
 @pytest.mark.mpl_image_compare(filename='plot_reg_bins.png',
-                               baseline_dir='mes_plots')
+                               baseline_dir='ref_plots')
 def test_plot_show():
     '''Test with matplotlib test.'''
     plti = PlotItem(np.arange(5), np.arange(6), xname='X', yname='Y')
@@ -88,7 +77,7 @@ def test_plot_show():
 
 
 @pytest.mark.mpl_image_compare(filename='plot_irreg_bins.png',
-                               baseline_dir='mes_plots')
+                               baseline_dir='ref_plots')
 def test_plot_show_irreg_bins():
     '''Test with matplotlib test.'''
     plti = PlotItem(np.arange(5), np.array([0, 2, 3, 6, 7, 10]),
@@ -100,7 +89,7 @@ def test_plot_show_irreg_bins():
 
 
 @pytest.mark.mpl_image_compare(filename='student_plot.png',
-                               baseline_dir='mes_plots')
+                               baseline_dir='ref_plots')
 def test_student_plot(student_test_result, plot_repr):
     '''Test plot of student result.'''
     items = plot_repr(student_test_result, dim='e', plot_res=True)
@@ -110,7 +99,7 @@ def test_student_plot(student_test_result, plot_repr):
 
 
 @pytest.mark.mpl_image_compare(filename='student_comp_points.png',
-                               baseline_dir='mes_plots')
+                               baseline_dir='ref_plots')
 def test_student_full(student_test_result, full_repr):
     '''Test plot of student result.'''
     # items = full_repr(student_test_result, dim='e')
@@ -121,7 +110,7 @@ def test_student_full(student_test_result, full_repr):
 
 
 @pytest.mark.mpl_image_compare(filename='student_comp_edges.png',
-                               baseline_dir='mes_plots')
+                               baseline_dir='ref_plots')
 def test_student_edges_full(student_test_edges_result, full_repr):
     '''Test plot of student result when bins are given by edges.'''
     # items = full_repr(student_test_result, dim='e')
@@ -132,7 +121,7 @@ def test_student_edges_full(student_test_edges_result, full_repr):
 
 
 @pytest.mark.mpl_image_compare(filename='student_wfpi.png',
-                               baseline_dir='mes_plots')
+                               baseline_dir='ref_plots')
 def test_student_with_fpi(student_test_result, fplt_repr):
     '''Test plot of student result.'''
     # items = full_repr(student_test_result, dim='e')
@@ -143,7 +132,7 @@ def test_student_with_fpi(student_test_result, fplt_repr):
 
 
 @pytest.mark.mpl_image_compare(filename='student_edges_wfpi.png',
-                               baseline_dir='mes_plots')
+                               baseline_dir='ref_plots')
 def test_student_edges_with_fpi(student_test_edges_result, fplt_repr):
     '''Test plot of student result when bins are given by edges.'''
     # items = full_repr(student_test_result, dim='e')
@@ -154,7 +143,7 @@ def test_student_edges_with_fpi(student_test_edges_result, fplt_repr):
 
 
 @pytest.mark.mpl_image_compare(filename='student_wfpi_delta.png',
-                               baseline_dir='mes_plots')
+                               baseline_dir='ref_plots')
 def test_student_with_fpi_d(student_test_result, fplt_repr):
     '''Test plot of student result.'''
     # items = full_repr(student_test_result, dim='e')
@@ -165,7 +154,7 @@ def test_student_with_fpi_d(student_test_result, fplt_repr):
 
 
 @pytest.mark.mpl_image_compare(filename='student_edges_wfpi_values.png',
-                               baseline_dir='mes_plots')
+                               baseline_dir='ref_plots')
 def test_student_edges_with_fpi_v(student_test_edges_result, fplt_repr):
     '''Test plot of student result when bins are given by edges.'''
     # items = full_repr(student_test_result, dim='e')

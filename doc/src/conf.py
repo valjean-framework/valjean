@@ -19,6 +19,8 @@
 '''Configuration file for sphinx documentation.'''
 
 from pkg_resources import get_distribution
+import matplotlib
+matplotlib.use('AGG')
 
 # pylint: disable=invalid-name
 
@@ -170,7 +172,8 @@ intersphinx_mapping = {
         ('https://virtualenvwrapper.readthedocs.io/en/latest/', None)),
     'setuptools': ('https://setuptools.readthedocs.io/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None),
-    'py': ('https://py.readthedocs.io/en/latest/', None)}
+    'py': ('https://py.readthedocs.io/en/latest/', None),
+    'matplotlib': ('https://matplotlib.org/', None)}
 
 # -- doctest options ------------------------------------------------------
 

@@ -19,7 +19,7 @@ author_email = u'davide.mancusi@cea.fr'
 copyright = u'2017, ' + author
 
 test_deps = ['hypothesis', 'pytest', 'pytest-cov', 'pytest-xdist',
-             'pytest-timeout', 'rstcheck']
+             'pytest-timeout', 'rstcheck', 'pytest-mpl']
 graphviz_deps = ['pydot']
 dev_deps = test_deps + graphviz_deps + ['flake8', 'pylint', 'sphinx',
                                         'sphinx_rtd_theme']
@@ -31,12 +31,11 @@ setup(name=name,
       packages=find_packages(exclude=['doc', 'tests', 'tests.*']),
       python_requires='>=3.4',
       setup_requires=['pytest-runner', 'setuptools_scm'],
-      install_requires=['pyparsing', 'numpy', 'scipy'],
+      install_requires=['pyparsing', 'numpy', 'scipy', 'matplotlib'],
       tests_require=test_deps,
       extras_require={
           'dev': dev_deps,
           'graphviz': graphviz_deps,
-          'rstcheck': ['rstcheck']
           },
       command_options={
           'build_sphinx': {

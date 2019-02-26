@@ -129,3 +129,24 @@ Tests for the :mod:`~valjean.gavroche.dataset` module
 `````````````````````````````````````````````````````
 
 .. automodule:: tests.gavroche.test_dataset
+
+
+Unit tests for the :mod:`~valjean.javert` package
+-------------------------------------------------
+
+Tests for the :mod:`~.representation` module
+````````````````````````````````````````````
+
+.. automodule:: tests.javert.test_representation
+
+
+Tests for the :mod:`~.rst` module
+`````````````````````````````````
+
+.. automodule:: tests.javert.test_rst
+
+
+Tests for the :mod:`~.mpl` module
+`````````````````````````````````
+
+.. automodule:: tests.javert.test_mpl

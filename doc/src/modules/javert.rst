@@ -18,3 +18,4 @@ javert — Journal Automatique de VÉRificaTion
    javert/representation
    javert/formatter
    javert/rst
+   javert/mpl

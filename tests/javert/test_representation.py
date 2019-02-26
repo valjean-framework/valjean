@@ -1,4 +1,4 @@
-'''Tests for the :mod:`~javert.representation` module.'''
+'''Tests for the :mod:`~valjean.javert.representation` module.'''
 import pytest
 
 # pylint: disable=wrong-import-order

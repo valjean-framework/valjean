@@ -85,7 +85,6 @@ class RstFormatter(Formatter):
         :returns: the reST table.
         :rtype: str
         '''
-        print("ON EST DANS format_tableitem")
         return str(RstTable(table))
 
 
@@ -116,7 +115,7 @@ class RstTable:
         rows = list(self.format_rows(self.transpose(columns), highlights,
                                      self.num_fmt))
         # rows = list(self.format_rows(columns, highlights, self.num_fmt))
-        print("rows =", rows)
+        # print("rows =", rows)
         return self.tabularize(self.table.headers, rows)
 
     @classmethod
@@ -143,6 +142,7 @@ class RstTable:
             Lancelot  to seek the Holy Grail              blue
              Galahad  to seek the Holy Grail            yellow
             ========  ======================  ================
+            <BLANKLINE>
 
         :param list(str) headers: The table headers.
         :param list(list(str)) rows: The table rows.

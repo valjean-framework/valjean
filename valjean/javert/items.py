@@ -7,7 +7,7 @@ are handled by suitable formatting classes, such as :class:`~.Rst`.
 '''
 
 import numpy as np
-from .. import LOGGER
+
 
 class TableItem:
     '''A container class that encapsulates all the necessary information to
@@ -38,17 +38,17 @@ class TableItem:
         :param list(str) units: a list of measurement units.
         :param highlight: a callable of the form `f(*row) -> bool`.
         '''
-        print(columns, type(columns))
+        # print(columns, type(columns))
         self.columns = columns
         n_columns = len(columns)
         self.headers = ['']*n_columns if headers is None else headers
         self.units = ['']*n_columns if units is None else units
         self.highlight = highlight
 
-        print(self.columns, id(self.columns))
-        print(self.columns[0], id(self.columns[0]))
-        print(len(columns))
-        print(len(headers), id(self.headers))
+        # print(self.columns, id(self.columns))
+        # print(self.columns[0], id(self.columns[0]))
+        # print(len(columns))
+        # print(len(headers), id(self.headers))
 
         # some sanity checks follow
         if not columns:
@@ -95,6 +95,11 @@ class TableItem:
 
         :param other: :class:`TableItem` to add to the current one
         :returns: updated :class:`TableItem`
+
+        .. todo ::
+
+            Correct this method to take into account results in arrays format,
+            like Student results for spectrum (currently addition of arrays...)
         '''
         if self.headers != other.headers:
             raise ValueError("TableItems to add should have same headers")
@@ -204,5 +209,6 @@ class FullPlotItem:
             if len(self.errors) != len(self.values):
                 raise ValueError('Errors should contain the same number of '
                                  'elements as values.')
-            if not all(e is None or isinstance(e, np.ndarray) for e in self.errors):
+            if not all(e is None or isinstance(e, np.ndarray)
+                       for e in self.errors):
                 raise TypeError('All errors should be np.ndarray or None')

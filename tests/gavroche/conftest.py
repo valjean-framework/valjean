@@ -5,7 +5,7 @@
 from collections import OrderedDict
 
 import pytest
-from hypothesis.strategies import composite, just, one_of, floats, integers
+from hypothesis.strategies import composite, just, integers
 import numpy as np
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
@@ -130,7 +130,8 @@ def different_1d_dataset():
 
 @pytest.fixture
 def some_1d_dataset_edges():
-    '''Return a simple 1D :class:`~.Dataset` object, bins are given by edges.'''
+    '''Return a simple 1D :class:`~.Dataset` object, bins are given by edges.
+    '''
     bins = OrderedDict([('e', np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))])
     dataset = Dataset(np.array([1.0, 2.0, 3.0, 4.0, 5.0]),
                       np.array([0.3, 0.1, 0.2, 0.3, 0.5]),
@@ -317,7 +318,7 @@ def holm_bonferroni_test_fail(student_test_fail_with_pvalues):
 
 
 @pytest.fixture
-def holm_bonferroni_test_result_fail(holm_bonferroni_test_fail):
+def holm_bonf_test_result_fail(holm_bonferroni_test_fail):
     '''Return a Holm-Bonferroni test result based on a Student test.'''
     return holm_bonferroni_test_fail.evaluate()
 
