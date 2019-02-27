@@ -5,6 +5,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .. import LOGGER
+from collections import OrderedDict
 
 
 class Mpl:
@@ -176,7 +177,7 @@ class MplPlot2:
             figsize=(6.4, 4.8+1.2*(self.nb_splts-1)),
             gridspec_kw={'height_ratios': [4] + [1]*(self.nb_splts-1),
                          'hspace': 0.05})
-        self.legend = {'handles': [], 'labels': []}
+        self.legend = {'handles': [], 'labels': [], 'iplot': []}
         self.draw()
 
     def draw(self):
@@ -209,7 +210,7 @@ class MplPlot2:
                                fmt='bo', label=self.data.labels[0])
             # plt.legend()
 
-    def ierror_plot(self, idata, iplot):
+    def ierror_plot(self, idata, iplot, ithiplt):
         '''Draw the plot with error bars.
         '''
         LOGGER.debug("in ierror plot for plot %d on subplot %d", idata, iplot)
@@ -217,28 +218,28 @@ class MplPlot2:
         if iplot == self.nb_splts-1:
             splt.set_xlabel(self.data.xname)
         splt.set_ylabel(self.data.ynames[idata])
-        col = 'C'+str(idata) if iplot == 0 else 'k'
+        col = 'C'+str(ithiplt) if iplot == 0 else str(0+0.5 *ithiplt)
         if self.data.bins.size == self.data.values[idata].size+1:
             steps = splt.errorbar(
                 self.data.bins,
                 np.append(self.data.values[idata], [np.nan]),
-                fmt=col+'-', drawstyle='steps-post')
+                fmt='-', color=col, drawstyle='steps-post')
             markers = splt.errorbar(
                 (self.data.bins[1:] + self.data.bins[:-1])/2,
                 self.data.values[idata],
                 yerr=self.data.errors[idata],
-                fmt=col+'o')
-            if iplot == 0:
-                self.legend['handles'].append((steps, markers))
-                self.legend['labels'].append(self.data.labels[idata])
+                fmt='o', color=col)
+            self.legend['handles'].append((steps, markers))
+            self.legend['labels'].append(self.data.labels[idata])
+            self.legend['iplot'].append(iplot)
         else:
             eplt = splt.errorbar(
                 self.data.bins, self.data.values[idata],
                 yerr=self.data.errors[idata],
-                fmt=col+'o--')
-            if iplot == 0:
-                self.legend['handles'].append(eplt)
-                self.legend['labels'].append(self.data.labels[idata])
+                fmt='o--', color=col)
+            self.legend['handles'].append(eplt)
+            self.legend['labels'].append(self.data.labels[idata])
+            self.legend['iplot'].append(iplot)
 
     def multiple_error_plots(self):
         '''Plot errorbar plot when more than one curve are available.
@@ -246,19 +247,27 @@ class MplPlot2:
         Remark: datasets are supposed to be already consistent as coming from
         a single test. If we had them manually bins will need to be checked.
         '''
-        ynames = ()
+        ynames = OrderedDict()
         if len(self.data.values) > 10:
             LOGGER.warning("This method only accepts up to 10 sets of data"
                            "on the same plot (color numbering issue).")
             return
         for iplt, yax in enumerate(self.data.ynames):
             if yax not in ynames:
-                ynames = ynames + (yax,)
-            self.ierror_plot(iplt, ynames.index(yax))
+                ynames[yax] = 0
+            else:
+                ynames[yax] += 1
+            self.ierror_plot(iplt, list(ynames.keys()).index(yax), ynames[yax])
         if self.nb_splts == 1:
             self.splt.legend(self.legend['handles'], self.legend['labels'])
         else:
-            self.splt[0].legend(self.legend['handles'], self.legend['labels'])
+            for iyax, nplt in enumerate(ynames.values()):
+                if nplt > 0:
+                    self.splt[iyax].legend(
+                        [h for i, h in enumerate(self.legend['handles'])
+                         if self.legend['iplot'][i] == iyax],
+                        [l for i, l in enumerate(self.legend['labels'])
+                         if self.legend['iplot'][i] == iyax])
 
     @staticmethod
     def show():

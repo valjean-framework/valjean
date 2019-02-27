@@ -3,6 +3,7 @@
 
 import numpy as np
 from hypothesis import given, note
+import pytest
 
 # pylint: disable=wrong-import-order
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
@@ -218,3 +219,18 @@ def test_tableitem_add(rstcheck, bonferroni_test_result,
     # items2 column elements are all in items3
     assert all(tuple((row[0] in items3.columns[i]
                       for i, row in enumerate(items2[1].columns))))
+
+
+def test_tableitem_iadd_array(table_repr,
+                              student_test_result,
+                              student_test_result_fail):
+    '''Test iadd table items containing arrays (failing).'''
+    item1 = table_repr(student_test_result)
+    print('item1 =', item1, len(item1))
+    print([col for col in item1[0].columns])
+    item2 = table_repr(student_test_result_fail)
+    print('item2 =', item2, len(item2))
+    print([col for col in item2[0].columns])
+    with pytest.raises(TypeError):
+        item1[0] += item2[0]
+    print("apres ajout:", [col for col in item1[0].columns])

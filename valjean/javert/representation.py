@@ -239,8 +239,8 @@ class PlotRepresentation2(Representation):
         ynames = (['score', 'score', r'$\Delta_{Student}$']
                   if 'ynames' not in kwargs else kwargs['ynames'])
         errors = [result.test.ds1.error, result.test.ds2.error, None]
-        return FullPlotItem(bins=bins, values=values, labels=labels,
-                            ynames=ynames, xname=xname, errors=errors)
+        return [FullPlotItem(bins=bins, values=values, labels=labels,
+                             ynames=ynames, xname=xname, errors=errors)]
 
     @staticmethod
     def _repr_student_delta(result, dim):
@@ -258,8 +258,8 @@ class PlotRepresentation2(Representation):
         labels = [r'$\Delta_{Student}$']
         ynames = [r'$\Delta_{Student}$']
         errors = [None]
-        return FullPlotItem(bins=bins, values=values, labels=labels,
-                            ynames=ynames, xname=xname, errors=errors)
+        return [FullPlotItem(bins=bins, values=values, labels=labels,
+                             ynames=ynames, xname=xname, errors=errors)]
 
     @staticmethod
     def _repr_student_values(result, dim, **kwargs):
@@ -279,8 +279,8 @@ class PlotRepresentation2(Representation):
         ynames = (['score', 'score'] if 'ynames' not in kwargs
                   else kwargs['ynames'])
         errors = [result.test.ds1.error, result.test.ds2.error]
-        return FullPlotItem(bins=bins, values=values, labels=labels,
-                            ynames=ynames, xname=xname, errors=errors)
+        return [FullPlotItem(bins=bins, values=values, labels=labels,
+                             ynames=ynames, xname=xname, errors=errors)]
 
 
 class EmptyRepresentation(Representation):
@@ -296,6 +296,37 @@ class FullRepresentation(Representation):
     def __init__(self):
         self.table_repr = TableRepresentation()
         self.plot_repr = PlotRepresentation()
+
+    def __call__(self, result, **kwargs):
+        '''Dispatch handling of `result` to all the Representation subclass
+        instance attributes of :class:`FullRepresentation`, based on the name
+        of the class of `result`.'''
+        class_name = result.__class__.__name__
+        meth_name = 'repr_' + class_name.lower()
+        try:
+            table_meth = getattr(self.table_repr, meth_name)
+            table_res = table_meth(result)
+        except AttributeError:
+            LOGGER.debug('no table representation for class %s', class_name)
+            table_res = []
+        try:
+            plot_meth = getattr(self.plot_repr, meth_name)
+            plot_res = plot_meth(result, **kwargs)
+        except AttributeError:
+            LOGGER.debug('no plot representation for class %s', class_name)
+            plot_res = []
+        return table_res + plot_res
+
+
+class FullRepresentation2(Representation):
+    '''This class generates the fullest possible representation for test
+    results. If anything can be represented as an item,
+    :class:`FullRepresentation` will do it.
+    '''
+
+    def __init__(self):
+        self.table_repr = TableRepresentation()
+        self.plot_repr = PlotRepresentation2()
 
     def __call__(self, result, **kwargs):
         '''Dispatch handling of `result` to all the Representation subclass

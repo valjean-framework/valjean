@@ -5,12 +5,13 @@
 import pytest
 import numpy as np
 from hypothesis import given, settings, HealthCheck
-from valjean.javert.items import PlotItem
+from valjean.javert.items import PlotItem, concatenate, TableItem, FullPlotItem
 from valjean.javert.mpl import MplPlot, MplPlot2
 from ..gavroche.conftest import (some_1d_dataset, one_dim_dataset,
                                  other_1d_dataset, some_1d_dataset_edges,
-                                 other_1d_dataset_edges)
+                                 other_1d_dataset_edges, different_1d_dataset)
 from ..gavroche.conftest import (student_test, student_test_result,
+                                 student_test_fail, student_test_result_fail,
                                  student_test_edges, student_test_edges_result)
 
 
@@ -162,3 +163,62 @@ def test_student_edges_with_fpi_v(student_test_edges_result, fplt_repr):
     mplt = MplPlot2(item)
     # mplt.show()
     return mplt.fig
+
+
+def test_fplit_cc(student_test_result, fplt_repr):
+    '''Test copy of FullPlotItem from student result.'''
+    # items = full_repr(student_test_result, dim='e')
+    item = fplt_repr(student_test_result, dim='e')
+    item2 = item.copy()
+    assert id(item.bins) != id(item2.bins)
+    assert id(item.values) != id(item2.values)
+    assert id(item.labels) != id(item2.labels)
+    assert id(item.ynames) != id(item2.ynames)
+    assert id(item.errors) != id(item2.errors)
+    assert ([id(val) for val in item.values]
+            != [id(val) for val in item2.values])
+    assert all([id(err1) != id(err2)
+                for err1, err2 in zip(item.errors, item2.errors)
+                if err1 is not None and err2 is not None])
+    # xname is a string -> point to same address
+    # but can be updated independently
+    assert id(item.xname) == id(item2.xname)
+    item.xname = 'f'
+    assert id(item.xname) != id(item2.xname) and item.xname != item2.xname
+
+
+def test_fplit_iadd(student_test_result, student_test_result_fail, fplt_repr):
+    '''Test addition of FullPlotItem from student result.'''
+    item = fplt_repr(student_test_result, dim='e')
+    item_cc = item.copy()
+    item2 = fplt_repr(student_test_result_fail, dim='e')
+    item += item2
+    assert item.xname == item2.xname
+    assert len(item.values) == len(item_cc.values) + len(item2.values)
+    assert len(item.labels) == len(item_cc.labels) + len(item2.labels)
+    assert item.ynames[:len(item_cc.ynames)] == item2.ynames
+
+
+def test_fplit_add(student_test_result, student_test_result_fail, fplt_repr):
+    '''Test addition of FullPlotItem from student result.'''
+    item1 = fplt_repr(student_test_result, dim='e')
+    item2 = fplt_repr(student_test_result_fail, dim='e')
+    item3 = item1 + item2
+    assert item3.xname == item1.xname
+    assert item3.xname == item2.xname
+    assert len(item3.values) == len(item1.values) + len(item2.values)
+    assert len(item3.labels) == len(item1.labels) + len(item2.labels)
+    assert item3.ynames[:len(item1.ynames)] == item2.ynames
+    assert item3.ynames[len(item1.ynames):] == item1.ynames
+
+
+def test_full_concatenation(student_test_result, student_test_result_fail,
+                            full_repr2):
+    '''Test concatenation of all items.'''
+    item1 = full_repr2(student_test_result, dim='e')
+    item2 = full_repr2(student_test_result_fail, dim='e')
+    items3 = concatenate(item1 + item2)
+    assert len(items3) == 3
+    assert [isinstance(it, TableItem) for it in items3] == [True, False, True]
+    assert ([isinstance(it, FullPlotItem) for it in items3]
+            == [False, True, False])

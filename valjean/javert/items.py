@@ -7,6 +7,7 @@ are handled by suitable formatting classes, such as :class:`~.Rst`.
 '''
 
 import numpy as np
+from .. import LOGGER
 
 
 class TableItem:
@@ -95,17 +96,15 @@ class TableItem:
 
         :param other: :class:`TableItem` to add to the current one
         :returns: updated :class:`TableItem`
-
-        .. todo ::
-
-            Correct this method to take into account results in arrays format,
-            like Student results for spectrum (currently addition of arrays...)
         '''
         if self.headers != other.headers:
             raise ValueError("TableItems to add should have same headers")
-        self.units = other.units if self.units is None else self.units
+        if any([isinstance(col, np.ndarray) for col in self.columns]):
+            raise TypeError("No addition permitted on array (else it would "
+                            "really add the arrays)")
         self.columns = tuple(self.columns[i] + other.columns[i]
                              for i in range(len(self.columns)))
+        self.units = other.units if self.units is None else self.units
         return self
 
     def __add__(self, other):
@@ -212,3 +211,85 @@ class FullPlotItem:
             if not all(e is None or isinstance(e, np.ndarray)
                        for e in self.errors):
                 raise TypeError('All errors should be np.ndarray or None')
+
+    def copy(self):
+        '''Copy a :class:`FullPlotItem` object.
+
+        :returns: :class:`FullPlotItem`
+        '''
+        return FullPlotItem(bins=self.bins.copy(),
+                            values=[None if val is None else val.copy()
+                                    for val in self.values],
+                            labels=self.labels.copy(),
+                            ynames=self.ynames.copy(),
+                            xname=self.xname,
+                            errors=[None if err is None else err.copy()
+                                    for err in self.errors])
+
+    def __iadd__(self, other):
+        '''Implement ``+=`` operator.
+
+        :param other: :class:`FullPlotItem` to add to the current one
+        :returns: updated :class:`FullPlotItem`
+        '''
+        if self.xname != other.xname:
+            raise ValueError("FullPlotItems should have the same xname")
+        if not np.array_equal(self.bins, other.bins):
+            raise ValueError("Bins should be the same in both FullPlotItems")
+        self.values.extend(other.values)
+        self.ynames.extend(other.ynames)
+        if self.errors is not None:
+            if other.errors is not None:
+                self.errors.extend(other.errors)
+            else:
+                self.errors.extend([None]*len(other.values))
+        if self.labels == other.labels:
+            LOGGER.warning("same labels for both FullPlotItem, "
+                           "please consider changing them for plots clarity")
+        self.labels.extend(other.labels)
+        return self
+
+    def __add__(self, other):
+        '''Implement ``+`` operator.
+
+        :param other: :class:`FullPlotItem` to add to the current one
+        :returns: new :class:`FullPlotItem`
+        '''
+        copy = self.copy()
+        copy += other
+        return copy
+
+    def __repr__(self):
+        '''Printing of FullPlotItem.'''
+        return (
+            "class: {0}\n"
+            "bins: {1}\n"
+            "xname: {2}\n"
+            "labels: {3}\n"
+            "ynames: {4}\n"
+            "values: {5}\n"
+            "errors: {6}\n".format(self.__class__, self.bins, self.xname,
+                                   self.labels, self.ynames,
+                                   self.values, self.errors))
+
+
+def concatenate(litems):
+    '''Concatenate a list of items containing TableItems, PlotItems,
+    FullPlotItems...
+    '''
+    nitems = [litems[0].copy()]
+    for it1 in litems[1:]:
+        added = False
+        for it2 in nitems:
+            if isinstance(it1, type(it2)):
+                try:
+                    it2 += it1
+                except ValueError:
+                    continue
+                except TypeError:
+                    continue
+                added = True
+                break
+        if not added:
+            nitems.append(it1.copy())
+    return nitems
