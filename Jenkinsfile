@@ -56,53 +56,57 @@ pipeline {
         """
       }
     }
-    stage('Linting') {
-      steps {
-        echo 'Linting...'
-        dir("${SRC}") {
-          sh """
-              source "${VENV}/bin/activate"
-              pylint -f parseable valjean/ tests/ | tee pylint.out
-              # flake8 returns 1 in case of warnings and that would stop the
-              # build
-              flake8 --tee --output-file flake8.out || true
-              # avoid empty flake8.out files, Jenkins complains 
-              echo "end of flake8 file" >> flake8.out
-              """
+    stage('Test') {
+      parallel {
+        stage('Lint') {
+          steps {
+            echo 'Linting...'
+            dir("${SRC}") {
+              sh """
+                  source "${VENV}/bin/activate"
+                  pylint -f parseable valjean/ tests/ | tee pylint.out
+                  # flake8 returns 1 in case of warnings and that would stop the
+                  # build
+                  flake8 --tee --output-file flake8.out || true
+                  # avoid empty flake8.out files, Jenkins complains 
+                  echo "end of flake8 file" >> flake8.out
+                  """
+            }
+          }
         }
-      }
-    }
-    stage('Build and check HTML doc') {
-      steps {
-        echo 'Building and checking documentation...'
-        dir("${SRC}") {
-          sh """
-             source "${VENV}/bin/activate"
-             # be nitpicky on the HTML documentation
-             PYTHONPATH=. sphinx-build -a -E -N -n -w sphinx-html.out -W -b html doc/src doc/build/html
-             PYTHONPATH=. sphinx-build -a -E -N -w sphinx-linkcheck.out -W -b linkcheck doc/src doc/build/linkcheck
-             """
+        stage('Build and check HTML doc') {
+          steps {
+            echo 'Building and checking documentation...'
+            dir("${SRC}") {
+              sh """
+                source "${VENV}/bin/activate"
+                # be nitpicky on the HTML documentation
+                PYTHONPATH=. sphinx-build -a -E -N -n -w sphinx-html.out -W -b html doc/src doc/build/html
+                PYTHONPATH=. sphinx-build -a -E -N -w sphinx-linkcheck.out -W -b linkcheck doc/src doc/build/linkcheck
+                """
+            }
+          }
         }
-      }
-    }
-    stage('Run unit tests') {
-      steps {
-        echo 'Running unit tests...'
-        dir("${SRC}") {
-          sh """
-             source "${VENV}/bin/activate"
-             pytest --cov-report term-missing --cov-config .coveragerc --cov-report=xml --cov=valjean --junit-xml=pytest.xml --timeout=30 | tee pytest.out
-             """
-          step([$class: 'CoberturaPublisher',
-                autoUpdateHealth: false,
-                autoUpdateStability: false,
-                coberturaReportFile: 'tests/coverage.xml',
-                failUnhealthy: false,
-                failUnstable: false,
-                maxNumberOfBuilds: 0,
-                onlyStable: false,
-                sourceEncoding: 'ASCII',
-                zoomCoverageChart: false])
+        stage('Run unit tests') {
+          steps {
+            echo 'Running unit tests...'
+            dir("${SRC}") {
+              sh """
+                source "${VENV}/bin/activate"
+                pytest --cov-report term-missing --cov-config .coveragerc --cov-report=xml --cov=valjean --junit-xml=pytest.xml --timeout=30 | tee pytest.out
+                """
+              step([$class: 'CoberturaPublisher',
+                    autoUpdateHealth: false,
+                    autoUpdateStability: false,
+                    coberturaReportFile: 'tests/coverage.xml',
+                    failUnhealthy: false,
+                    failUnstable: false,
+                    maxNumberOfBuilds: 0,
+                    onlyStable: false,
+                    sourceEncoding: 'ASCII',
+                    zoomCoverageChart: false])
+            }
+          }
         }
       }
     }
