@@ -360,7 +360,7 @@ class TestResultStudent(TestResult):
         :type delta: :obj:`numpy.generic`
         :returns: bool
         '''
-        return np.fabs(delta) < self.test.threshold
+        return np.less(np.fabs(delta), self.test.threshold)
 
     def bool_array(self):
         '''Final test (if spectrum)
@@ -369,7 +369,7 @@ class TestResultStudent(TestResult):
         '''
         if isinstance(self.delta, np.generic):
             return np.array([self.test_alpha(self.delta)])
-        return np.fabs(self.delta) < self.test.threshold
+        return np.less(np.fabs(self.delta), self.test.threshold)
 
     def __bool__(self):
         if isinstance(self.delta, np.generic):
