@@ -118,164 +118,124 @@ class TableItem:
         return copy
 
 
-class PlotItem:
-    '''A container for various shapes of plots depending on data nature
-    (points, points series, etc). 2D plots per default (y=f(x)).'''
+class CurveElements:
+    '''Characteristic of each plot.'''
 
-    def __init__(self, vals, bins, *, xerrors=None, yerrors=None,
-                 xname='', yname='score', label=''):
-        self.vals = vals
-        self.bins = bins
-        self.xerrors = xerrors
-        self.yerrors = yerrors
-        self.xname = xname
-        self.yname = yname
+    def __init__(self, values, label, *, yname='', errors=None):
+        '''Initialisation of :class:`CurveElements`: curve details (values,
+        label, etc).
+
+        :param values: list of arrays to be represented on the plot,
+            **mandatory**
+        :type values: list(:obj:`numpy.ndarray`)
+        :param str label: label to be used in the legend to characterize the
+            curve, **mandatory**
+        :param str yname: label of y-axis (used to determine the number of
+            subplots on the plot)
+        :param errors: errors associated to values (per default only on y-axis)
+        :type errors: list(:obj:`numpy.ndarray`)
+        '''
+        self.values = values
         self.label = label
+        self.yname = yname
+        self.errors = errors
 
-        if ((not isinstance(self.vals, np.ndarray)
-             or not isinstance(self.bins, np.ndarray))):
-            raise TypeError('Vals and bins have to be np.ndarrays')
+        if not isinstance(self.values, np.ndarray):
+            raise TypeError('Values should be np.ndarray.')
 
-        if self.vals.ndim > 1:
-            raise ValueError("Only 1-D values arrays taken into account")
+        if self.errors is not None:
+            if not isinstance(self.errors, np.ndarray):
+                raise TypeError('Errors should be np.ndarray or None')
 
-        if self.xerrors is not None:
-            if not isinstance(self.xerrors, np.ndarray):
-                raise TypeError("x-errors has to be np.ndarray")
-            if self.xerrors.size != self.vals.size:
-                raise ValueError("Errors and values should have the same size")
+    def copy(self):
+        '''Copy a :class:`CurveElements` object.
 
-        if self.yerrors is not None:
-            if not isinstance(self.yerrors, np.ndarray):
-                raise TypeError("y-errors has to be np.ndarray")
-            if self.yerrors.size != self.vals.size:
-                raise ValueError("Errors and values should have the same size")
-
-
-class TestResPlotItem(PlotItem):
-    '''A container for the result of the test. No errors available, not the
-    same ``yname`` (needs a specific subplot)...
-    '''
-    def __init__(self, vals, bins, *, xname='', yname=r"$\Delta$", label=''):
-        super().__init__(vals, bins, xname=xname, yname=yname, label=label)
+        :returns: :class:`CurveElements`
+        '''
+        return CurveElements(values=self.values.copy(),
+                             label=self.label,
+                             yname=self.yname,
+                             errors=(None if self.errors is None
+                                     else self.errors.copy()))
 
 
-class FullPlotItem:
+class PlotItem:
     '''A container for full test result to be represented as a plot. This
     includes all the datasets and the test result (when plot, possibly pvalue,
     etc).
     '''
 
-    def __init__(self, *, bins, values, labels, ynames, xname='', errors=None):
-        '''Initialisation of FullPlotItem.
+    def __init__(self, *, bins, curves, xname=''):
+        '''Initialisation of PlotItem.
 
         :param bins: bins, common for all plots (important), only one set is
             needed
         :type bins: :obj:`numpy.ndarray`
-        :param values: list of arrays to be represented on the plot
-        :type values: list(:obj:`numpy.ndarray`)
-        :param list(str) labels: label to be used in the legend to characterize
-            the curve
-        :param list(str) ynames: label of y-axis (used to determine the number
-            of subplots on the plot)
         :param str xname: name of x-axis (default: ``''``)
-        :param errors: errors associated to values (per default only on y-axis)
-        :type errors: list(:obj:`numpy.ndarray`)
+        :param curves: list of curves characteristics
+        :type curves: list( :class:`CurveElements` )
         '''
         self.bins = bins
-        self.values = values
-        self.labels = labels
-        self.ynames = ynames
         self.xname = xname
-        self.errors = errors
+        self.curves = curves
 
-        if ((not isinstance(self.values, list)
-             or not isinstance(self.labels, list)
-             or not isinstance(self.ynames, list))):
-            raise TypeError('Values, labels and ynames should be lists.')
+        if not isinstance(self.curves, list):
+            raise TypeError("Curves should be a list of CurveElements.")
 
-        if ((len(self.values) != len(self.labels)
-             or len(self.values) != len(self.ynames))):
-            raise ValueError('Values, labels and ynames should contain the '
-                             'same number of elements')
-
-        if not all(isinstance(v, np.ndarray) for v in self.values):
-            raise TypeError('All values should be np.ndarray.')
-
-        if self.errors is not None:
-            if not isinstance(self.errors, list):
-                raise TypeError('Errors should be a list.')
-            if len(self.errors) != len(self.values):
-                raise ValueError('Errors should contain the same number of '
-                                 'elements as values.')
-            if not all(e is None or isinstance(e, np.ndarray)
-                       for e in self.errors):
-                raise TypeError('All errors should be np.ndarray or None')
+        for curve in self.curves:
+            if not isinstance(curve, CurveElements):
+                raise TypeError("Curve should be a PlotElement.")
 
     def copy(self):
-        '''Copy a :class:`FullPlotItem` object.
+        '''Copy a :class:`PlotItem` object.
 
-        :returns: :class:`FullPlotItem`
+        :returns: :class:`PlotItem`
         '''
-        return FullPlotItem(bins=self.bins.copy(),
-                            values=[None if val is None else val.copy()
-                                    for val in self.values],
-                            labels=self.labels.copy(),
-                            ynames=self.ynames.copy(),
-                            xname=self.xname,
-                            errors=[None if err is None else err.copy()
-                                    for err in self.errors])
+        return PlotItem(bins=self.bins.copy(),
+                        xname=self.xname,
+                        curves=[pelt.copy() for pelt in self.curves])
 
     def __iadd__(self, other):
         '''Implement ``+=`` operator.
 
-        :param other: :class:`FullPlotItem` to add to the current one
-        :returns: updated :class:`FullPlotItem`
+        :param other: :class:`PlotItem` to add to the current one
+        :returns: updated :class:`PlotItem`
         '''
         if self.xname != other.xname:
-            raise ValueError("FullPlotItems should have the same xname")
+            raise ValueError("PlotItems should have the same xname")
         if not np.array_equal(self.bins, other.bins):
-            raise ValueError("Bins should be the same in both FullPlotItems")
-        self.values.extend(other.values)
-        self.ynames.extend(other.ynames)
-        if self.errors is not None:
-            if other.errors is not None:
-                self.errors.extend(other.errors)
-            else:
-                self.errors.extend([None]*len(other.values))
-        if self.labels == other.labels:
-            LOGGER.warning("same labels for both FullPlotItem, "
-                           "please consider changing them for plots clarity")
-        self.labels.extend(other.labels)
+            raise ValueError("Bins should be the same in both PlotItems")
+        self.curves.extend(other.curves)
         return self
 
     def __add__(self, other):
         '''Implement ``+`` operator.
 
-        :param other: :class:`FullPlotItem` to add to the current one
-        :returns: new :class:`FullPlotItem`
+        :param other: :class:`PlotItem` to add to the current one
+        :returns: new :class:`PlotItem`
         '''
         copy = self.copy()
         copy += other
         return copy
 
     def __repr__(self):
-        '''Printing of FullPlotItem.'''
-        return (
-            "class: {0}\n"
-            "bins: {1}\n"
-            "xname: {2}\n"
-            "labels: {3}\n"
-            "ynames: {4}\n"
-            "values: {5}\n"
-            "errors: {6}\n".format(self.__class__, self.bins, self.xname,
-                                   self.labels, self.ynames,
-                                   self.values, self.errors))
+        '''Printing of PlotItem.'''
+        intro = ["class: {0}\n"
+                 "bins: {1}\n"
+                 "xname: {2}\n".format(self.__class__, self.bins, self.xname)]
+        elts = []
+        for curve in self.curves:
+            elts.append("label:  {0}\n"
+                        "yname:  {1}\n"
+                        "values: {2}\n"
+                        "errors: {3}\n".format(curve.label, curve.yname,
+                                               curve.values, curve.errors))
+        return ''.join(intro + elts)
 
 
 def concatenate(litems):
     '''Concatenate a list of items containing TableItems, PlotItems,
-    FullPlotItems...
+    PlotItems...
     '''
     nitems = [litems[0].copy()]
     for it1 in litems[1:]:
