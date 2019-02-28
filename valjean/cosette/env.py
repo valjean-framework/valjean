@@ -254,3 +254,16 @@ class Env(dict):
     def copy(self):
         '''Return a shallow copy of `self`.'''
         return Env(super().copy())
+
+    def __getstate__(self):
+        '''Do not serialize the lock, as doing so results in exceptions with
+        Python >=3.6.'''
+        state = self.__dict__.copy()
+        del state['lock']
+        return state
+
+    def __setstate__(self, state):
+        '''The serialized state does not contain a lock; create a new one
+        instead.'''
+        self.__dict__.update(state)
+        self.lock = threading.RLock()
