@@ -33,6 +33,11 @@ pipeline {
   }
 
   stages {
+    stage('Clean workspace') {
+      steps {
+        cleanWs()
+      }
+    }
     stage('Checkout') {
       steps {
         dir("${SRC}") {
@@ -127,9 +132,6 @@ pipeline {
                    reportName: "Sphinx documentation"
       ])
       junit "**/pytest.xml"
-    }
-    cleanup {
-      cleanWs()
     }
   }
 }
