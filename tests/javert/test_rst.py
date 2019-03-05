@@ -63,7 +63,8 @@ def test_rst_equal(rstcheck, equal_test_result, rst_formatter, table_repr):
     assert not list(errs)
 
 
-def test_rst_equal_full(rstcheck, equal_test_result, rst_formatter, table_repr):
+def test_rst_equal_full(rstcheck, equal_test_result, rst_formatter,
+                        table_repr):
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
     tables when formatting an equality test.'''
     items = table_repr(equal_test_result)
@@ -93,6 +94,8 @@ def test_rst_approx_equal(rstcheck, approx_equal_test_result, rst_formatter,
     items = table_repr(approx_equal_test_result)
     rst = '\n'.join(rst_formatter(item) for item in items)
     LOGGER.debug('generated rst:\n%s', rst)
+    # print()
+    # print(rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
 
@@ -102,6 +105,8 @@ def test_rst_student(rstcheck, student_test_result, rst_formatter, table_repr):
     items = table_repr(student_test_result)
     rst = '\n'.join(rst_formatter(item) for item in items)
     LOGGER.debug('generated rst:\n%s', rst)
+    # print()
+    # print(rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
 
@@ -126,6 +131,8 @@ def test_rst_bonferroni(rstcheck, bonferroni_test_result, rst_formatter,
     items = table_repr(bonferroni_test_result)
     rst = '\n'.join(rst_formatter(item) for item in items)
     LOGGER.debug('generated rst:\n%s', rst)
+    # print()
+    # print(rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
 
@@ -137,6 +144,8 @@ def test_rst_holm_bonferroni(rstcheck, holm_bonferroni_test_result,
     items = table_repr(holm_bonferroni_test_result)
     rst = '\n'.join(rst_formatter(item) for item in items)
     LOGGER.debug('generated rst:\n%s', rst)
+    # print()
+    # print(rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
 
@@ -226,11 +235,11 @@ def test_tableitem_iadd_array(table_repr,
                               student_test_result_fail):
     '''Test iadd table items containing arrays (failing).'''
     item1 = table_repr(student_test_result)
-    print('item1 =', item1, len(item1))
-    print([col for col in item1[0].columns])
+    # print('item1 =', item1, len(item1))
+    # print([col for col in item1[0].columns])
     item2 = table_repr(student_test_result_fail)
-    print('item2 =', item2, len(item2))
-    print([col for col in item2[0].columns])
+    # print('item2 =', item2, len(item2))
+    # print([col for col in item2[0].columns])
     with pytest.raises(TypeError):
         item1[0] += item2[0]
-    print("apres ajout:", [col for col in item1[0].columns])
+    # print("apres ajout:", [col for col in item1[0].columns])

@@ -7,7 +7,7 @@ are handled by suitable formatting classes, such as :class:`~.Rst`.
 '''
 
 import numpy as np
-from .. import LOGGER
+# from .. import LOGGER
 
 
 class TableItem:

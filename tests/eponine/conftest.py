@@ -64,7 +64,8 @@ def base_datasets(draw, elements=None, shape=None, dtype=None, coords=None):
 
     if coords is None:
         bins = draw(coord_odicts(shape=just(data_val.shape),
-                                 dtype=just(data_val.dtype)))
+                                 dtype=just(data_val.dtype),
+                                 elements=elements))
     else:
         bins = draw(coords)
 
@@ -85,7 +86,7 @@ def cnames():
 
 
 @composite
-def coord_odicts(draw, *, shape=None, dtype=None, edges=None):
+def coord_odicts(draw, *, shape=None, dtype=None, edges=None, elements=None):
     '''Create a strategy for generating ordered dictionaries of coordinates
     arrays.
 
@@ -106,6 +107,11 @@ def coord_odicts(draw, *, shape=None, dtype=None, edges=None):
     else:
         a_dtype = draw(dtype)
 
+    if elements is None:
+        a_elements = finite()
+    else:
+        a_elements = elements
+
     s_edges = booleans() if edges is None else edges
 
     coord_odict = OrderedDict()
@@ -114,7 +120,7 @@ def coord_odicts(draw, *, shape=None, dtype=None, edges=None):
     for nbins, name in zip(a_shape, coord_names):
         n_elems = nbins+1 if draw(s_edges) else nbins
         coord_odict[name] = np.sort(draw(arrays(a_dtype, n_elems,
-                                                elements=finite(),
+                                                elements=a_elements,
                                                 unique=True)))
     return coord_odict
 

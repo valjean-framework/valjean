@@ -14,222 +14,127 @@ human-readable representation (table, plots, etc.).
     bugs.
 '''
 from .. import LOGGER
-from .items import TableItem, PlotItem, CurveElements
+from . import table_elements as tab_elts
+from . import plot_elements as plt_elts
 
 
 class Representation:
     '''Base class for representing test results as items (in the sense of the
     :mod:`~.items` module).'''
 
-    def __call__(self, result, **kwargs):
+    def __call__(self, result):
         '''Dispatch handling of `result` to the appropriate subclass method,
         based on the name of the class of `result`. This methods essentially
         implements a simplified, run-time version of the Visitor pattern.'''
+        LOGGER.debug("In Representation.__call__")
         class_name = result.__class__.__name__
         meth_name = 'repr_' + class_name.lower()
         try:
             meth = getattr(self, meth_name)
         except AttributeError:
             LOGGER.debug('no representation for class %s', class_name)
-            return []
-        return meth(result, **kwargs)
+            return None
+        return meth(result)
 
 
 class TableRepresentation(Representation):
-    '''This class represents the different representations available for
-    tables.
+    '''This class is the default representation class for tables. It contains
+    the overridden :meth:`Representation.__call__`.
+
+    Advice: users TableRepresentation classes should inherit from it and not
+    override the :meth:`Representation.__call__` method.
     '''
 
-    def repr_testresultequal(self, result):
-        '''Represent the result of a :class:`~.TestEqual` test.
+    def __call__(self, result):
+        LOGGER.debug("In TableRepresentation.__call__")
+        res = super().__call__(result)
+        if res is None:
+            class_name = result.__class__.__name__
+            meth_name = 'repr_' + class_name.lower()
+            meth = getattr(tab_elts, meth_name)
+            res = meth(result)
+        return res
 
-        :param result: a test result.
-        :type result: :class:`~.TestResultEqual`
-        :returns: The full representation of a :class:`~.TestResultEqual`; for
-                  the moment, this consists of... a table. Wow.
-        :rtype: list(:class:`~.TableItem`)
-        '''
-        return self._repr_equal(result, 'equal?')
 
-    @staticmethod
-    def _repr_equal(result, result_header):
-        '''Shared worker function for equality tests.'''
-        LOGGER.debug('shape of the result: %s', result.equal.shape)
-        table_item = TableItem(result.test.dataset1.value,
-                               result.test.dataset2.value,
-                               result.equal,
-                               highlight=lambda _v1, _v2, eq: not eq,
-                               headers=['reference', 'dataset', result_header])
-        return [table_item]
-
-    def repr_testresultapproxequal(self, result):
-        '''Represent the result of a :class:`~.TestApproxEqual` test.
-
-        :param  result: a test result.
-        :type result: :class:`~.TestResultApproxEqual`
-        :returns: The full representation of a
-                  :class:`~.TestResultApproxEqual`.
-        :rtype: list(:class:`~.TableItem`)
-        '''
-        return self._repr_approx_equal(result, 'approx equal?')
-
-    @staticmethod
-    def _repr_approx_equal(result, result_header):
-        '''Shared worker function for equality tests.'''
-        LOGGER.debug('shape of the result: %s', result.approx_equal.shape)
-        table_item = TableItem(result.test.dataset1.value,
-                               result.test.dataset2.value,
-                               result.approx_equal,
-                               highlight=lambda _v1, _v2, eq: not eq,
-                               headers=['reference', 'dataset', result_header])
-        return [table_item]
-
-    def repr_testresultstudent(self, result):
-        '''Represent the result of a :class:`~.TestStudent` test.
-
-        :param  result: a test result.
-        :type result: :class:`~.TestResultStudent`
-        :returns: The full representation of a
-                  :class:`~.TestResultStudent`.
-        :rtype: list(:class:`~.TableItem`)
-        '''
-        return self._repr_student(result, 'student?')
-
-    @staticmethod
-    def _repr_student(result, result_header):
-        '''Shared worker function for Student tests.'''
-        table_item = TableItem(
-            result.test.ds1.value, result.test.ds1.error,
-            result.test.ds2.value, result.test.ds2.error,
-            result.delta, result.bool_array(),
-            highlight=lambda _v1, _e1, _v2, _e2, _delta, eq: not eq,
-            headers=['v1', 'σ1', 'v2', 'σ2', 'Δ', result_header])
-        return [table_item]
+class FullTableRepresentation(TableRepresentation):
+    '''Class to define the specific methods for full representation of tables.
+    This only involve few cases needing the
+    :meth:`TableRepresentation.__call__` method like in Bonferroni and
+    Holm-Bonferroni test results.
+    '''
 
     def repr_testresultbonferroni(self, result):
-        '''Represent the result of a :class:`~.TestBonferroni` test.
+        '''Represent the result of a :class:`~.TestBonferroni` test in two
+        tables:
+
+        1. First test result (Student, equal, etc)
+        2. Bonferroni test result
 
         :param  result: a test result.
         :type result: :class:`~.TestResultBonferroni`
-        :returns: The full representation of a
-                  :class:`~.TestResultBonferroni`.
+        :returns: Representation of a :class:`~.TestResultBonferroni` as
+            2 tables (the first test result and the Bonferroni result).
         :rtype: list(:class:`~.TableItem`)
         '''
-        return (self.repr_testresultstudent(result.first_test_res)
-                + self._repr_bonferroni(result, 'bonferroni?'))
-
-    @staticmethod
-    def _repr_bonferroni(result, result_header):
-        '''Shared worker function for Bonferroni tests.'''
-        table_item = TableItem(
-            [result.first_test_res.test.name],
-            [result.test.ntests],
-            [result.test.alpha],
-            [min(result.first_test_res.pvalue)],
-            [bool(result)],
-            highlight=lambda _t, _ndf, _sl, _min, rnh: not rnh,
-            headers=['test', 'ndf', 'α', 'min(p-value)', result_header])
-        return [table_item]
+        LOGGER.debug("In FullTableRepresentation.repr_testresultbonferroni")
+        return (super().__call__(result.first_test_res)
+                + tab_elts.repr_testresultbonferroni(result))
 
     def repr_testresultholmbonferroni(self, result):
-        '''Represent the result of a :class:`~.TestHolmBonferroni` test.
+        '''Represent the result of a :class:`~.TestHolmBonferroni` test in two
+        tables:
+
+        1. First test result (Student, equal, etc)
+        2. Holm-Bonferroni test result
 
         :param  result: a test result.
         :type result: :class:`~.TestResultHolmBonferroni`
-        :returns: The full representation of a
-                  :class:`~.TestResultHolmBonferroni`.
+        :returns: Representation of a :class:`~.TestResultHolmBonferroni` as
+            2 tables (the first test result and the Holm-Bonferroni result).
         :rtype: list(:class:`~.TableItem`)
         '''
-        return (self.repr_testresultstudent(result.first_test_res)
-                + self._repr_holm_bonferroni(result, 'holm-bonferroni?'))
-
-    @staticmethod
-    def _repr_holm_bonferroni(result, result_header):
-        '''Shared worker function for Holm-Bonferroni tests.'''
-        table_item = TableItem(
-            [result.first_test_res.test.name],
-            [result.test.ntests],
-            [result.test.alpha],
-            [min(result.first_test_res.pvalue)],
-            [result.alphas_i[0]],
-            [result.nb_rejected],
-            [bool(result)],
-            highlight=lambda _t, _ndf, _sl, _min, _malp, _rej, rnh: not rnh,
-            headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
-                     'N rejected', result_header])
-        return [table_item]
+        LOGGER.debug(
+            "In FullTableRepresentation.repr_testresultholmbonferroni")
+        return (super().__call__(result.first_test_res)
+                + tab_elts.repr_testresultholmbonferroni(result))
 
 
 class PlotRepresentation(Representation):
-    '''PlotRepresentation using :class:`~.items.PlotItem`.'''
+    '''This class is the default representation class for plots. It contains
+    the overridden :meth:`Representation.__call__`.
 
-    def repr_testresultstudent(self, result, **kwargs):
-        '''Represent the result of a :class:`~.TestStudent` test.
+    Advice: users PlotRepresentation classes should inherit from it and not
+    override the :meth:`Representation.__call__` method.
+    '''
 
-        :param  result: a test result.
-        :type result: :class:`~.TestResultStudent`
-        :returns: The full representation of a
-                  :class:`~.TestResultStudent`.
-        :rtype: list(:class:`~.PlotItem`)
-        '''
-        if kwargs.pop('only_res', False):
-            return self._repr_student_delta(result, dim=kwargs['dim'])
-        if kwargs.pop('only_values', False):
-            return self._repr_student_values(result, **kwargs)
-        dim = kwargs.pop('dim')
-        return self._repr_student(result, dim=dim, **kwargs)
+    def __call__(self, result):
+        LOGGER.debug("In PlotRepresentation.__call__")
+        res = super().__call__(result)
+        if res is None:
+            class_name = result.__class__.__name__
+            meth_name = 'repr_' + class_name.lower()
+            meth = getattr(plt_elts, meth_name)
+            res = meth(result)
+        return res
 
-    # @staticmethod
-    def _repr_student(self, result, dim, **kwargs):
-        '''Shared worker function for Student tests returning FullPlotItems.
 
-        :returns: :class:`~.FullPlotItem`
-
-        Remark: if we have a member ``units`` in base_dataset the axis names
-        would be constructed like ``name + units['name']``.
-        '''
-        return [self._repr_student_values(result, dim)[0]
-                + self._repr_student_delta(result, dim)[0]]
-
-    @staticmethod
-    def _repr_student_delta(result, dim):
-        '''Shared worker function for Student tests returning FullPlotItems.
-        Only returns the delta distribution here.
-
-        :returns: :class:`~.FullPlotItem`
-
-        Remark: if we have a member ``units`` in base_dataset the axis names
-        would be constructed like ``name + units['name']``.
-        '''
-        bins = result.test.ds1.bins[dim]
-        xname = dim
-        curve = CurveElements(values=result.delta, label=result.test.name,
-                              yname=r'$\Delta_{Student}$', errors=None)
-        return [PlotItem(bins=bins, xname=xname, curves=[curve])]
-
-    @staticmethod
-    def _repr_student_values(result, dim, **kwargs):
-        '''Shared worker function for Student tests returning FullPlotItems.
-        Only returns the delta distribution here.
-
-        :returns: :class:`~.FullPlotItem`
-
-        Remark: if we have a member ``units`` in base_dataset the axis names
-        would be constructed like ``name + units['name']``.
-        '''
-        bins = result.test.ds1.bins[dim]
-        xname = dim
-        cds1 = CurveElements(values=result.test.ds1.value,
-                             label=result.test.name+': dataset 1', yname='',
-                             errors=result.test.ds1.error)
-        cds2 = CurveElements(values=result.test.ds2.value,
-                             label=result.test.name+': dataset 2', yname='',
-                             errors=result.test.ds2.error)
-        return [PlotItem(bins=bins, xname=xname, curves=[cds1, cds2])]
+class FullPlotRepresentation(PlotRepresentation):
+    '''Class to define the specific methods for full representation of plots.
+    This only involve few cases needing the
+    :meth:`PlotRepresentation.__call__` method like in Bonferroni and
+    Holm-Bonferroni test results.
+    '''
 
 
 class EmptyRepresentation(Representation):
     '''Class that does not generate any items for any test result.'''
+
+    def __call__(self, result):
+        '''Dispatch handling of `result` to all the Representation subclass
+        instance attributes of :class:`EmptyRepresentation`.
+        Always returns an empty list.
+        '''
+        return []
 
 
 class FullRepresentation(Representation):
@@ -239,24 +144,22 @@ class FullRepresentation(Representation):
     '''
 
     def __init__(self):
-        self.table_repr = TableRepresentation()
+        LOGGER.debug("In initialisation of FullRepresentation")
+        self.table_repr = FullTableRepresentation()
         self.plot_repr = PlotRepresentation()
 
-    def __call__(self, result, **kwargs):
+    def __call__(self, result):
         '''Dispatch handling of `result` to all the Representation subclass
         instance attributes of :class:`FullRepresentation`, based on the name
         of the class of `result`.'''
         class_name = result.__class__.__name__
-        meth_name = 'repr_' + class_name.lower()
         try:
-            table_meth = getattr(self.table_repr, meth_name)
-            table_res = table_meth(result)
+            table_res = self.table_repr(result)
         except AttributeError:
             LOGGER.debug('no table representation for class %s', class_name)
             table_res = []
         try:
-            plot_meth = getattr(self.plot_repr, meth_name)
-            plot_res = plot_meth(result, **kwargs)
+            plot_res = self.plot_repr(result)
         except AttributeError:
             LOGGER.debug('no plot representation for class %s', class_name)
             plot_res = []

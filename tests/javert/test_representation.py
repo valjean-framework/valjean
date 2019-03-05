@@ -4,7 +4,9 @@ import pytest
 # pylint: disable=wrong-import-order
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.javert.items import TableItem
-from valjean.javert.representation import (FullRepresentation,
+# from valjean.javert.representation import (FullRepresentation,
+#                                            EmptyRepresentation)
+from valjean.javert.representation import (TableRepresentation,
                                            EmptyRepresentation)
 
 from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
@@ -16,7 +18,7 @@ def test_full_repr(test_name, request):
     '''Test that :class:`~.FullRepresentation` yields all the expected items
     for equality tests.'''
     test = request.getfixturevalue(test_name)
-    representation = FullRepresentation()
+    representation = TableRepresentation()
     items = representation(test.evaluate())
     assert isinstance(items, list)
     assert any(isinstance(item, TableItem) for item in items)
