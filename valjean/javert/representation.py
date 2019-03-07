@@ -12,6 +12,44 @@ human-readable representation (table, plots, etc.).
     needs to be extended to handle the new class. This is better than silently
     falling back to some default do-nothing implementation, which may lead to
     bugs.
+
+
+Currently we have 3 main ``Representation`` classes:
+
+* :class:`Representation`: parent class of all others, containing the default
+  :meth:`Representation.__call__` method, calling the class method named
+  ``'repr_' + class.name`` of the test;
+* :class:`TableRepresentation`: inherited from :class:`Representation`,
+  designed as a parent class for user's own representations of tables. It's
+  :meth:`TableRepresentation.__call__` method first calls the class
+  representation method through the :meth:`Representation.__call__` one
+  (meaning it should also be named ``'repr_' + class.name``), if it does not
+  exist call the default method from the catalogue of table representation
+  accessible in :mod:`.table_elements`;
+* :class:`PlotRepresentation`: inherited from :class:`Representation`, designed
+  as a parent class for user's own representations of plots. It's
+  :meth:`PlotRepresentation.__call__` method first calls the class
+  representation method through the :meth:`Representation.__call__` one
+  (meaning it should also be named ``'repr_' + class.name``), if it does not
+  exist call the default method from the catalogue of plot representation
+  accessible in :mod:`.plot_elements`.
+
+
+An example of use of the ``Representation`` objects can be seen in the
+:class:`FullTableRepresentation`. For example, in this table representation for
+the Bonferroni test result, the input test result is first represented in a
+table, then the Bonferroni itself is represented in a second table (they cannot
+be combined as different headers, see :func:`.items.concatenate`).
+
+
+Thus the use of the ``Representation`` is forseen as:
+
+* use the default methods provided in :class:`TableRepresentation` and
+  :class:`PlotRepresentation`;
+* if customisation is needed, you can easily call the additional method
+  available in :mod:`.table_elements` and :mod:`.plot_elements`;
+* you can also write your own representation method provided they follow the
+  naming convention ``'repr_' + class.name``.
 '''
 from .. import LOGGER
 from . import table_elements as tab_elts
@@ -144,6 +182,11 @@ class FullRepresentation(Representation):
     '''
 
     def __init__(self):
+        '''Initialisation of :class:`FullRepresentation`.
+
+        Two instance objects are built: a :class:`FullTableRepresentation` and
+        a :class:`PlotRepresentation`.
+        '''
         LOGGER.debug("In initialisation of FullRepresentation")
         self.table_repr = FullTableRepresentation()
         self.plot_repr = PlotRepresentation()

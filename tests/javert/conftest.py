@@ -14,6 +14,7 @@ from valjean.javert.representation import (FullRepresentation,
                                            PlotRepresentation)
 from valjean.javert.items import TableItem
 from valjean.javert.rst import RstFormatter
+from valjean.javert.mpl import MplPlot
 
 
 @composite

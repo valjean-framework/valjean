@@ -34,8 +34,9 @@ def dimension_from_array(array_shape):
 
 
 def dimension(bins, array_shape):
-    '''Determine the x-dimension of the result from the :class:`OrderedDict` of
-    bins. It is expected to be the "only non-trivial" dimension.
+    '''Determine the x-dimension of the result from the
+    :obj:`collections.OrderedDict` of bins. It is expected to be the "only
+    non-trivial" dimension.
 
     :param bins: bins coming from the results dataset
     :type bins: :obj:`collections.OrderedDict` (str, :obj:`numpy.ndarray`)
@@ -54,13 +55,13 @@ def dimension(bins, array_shape):
 def repr_testresultstudent(result):
     '''Represent the Student test result as a plot.
 
-    Per default two :class:`PlotItem` are returned in order to get a top plot
-    representing the two series of values and the bottom plot representing the
-    Δ from the Student test.
+    Per default two :class:`~.items.PlotItem` are returned in order to get a
+    top plot representing the two series of values and the bottom plot
+    representing the Δ from the Student test.
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: list( :class:`PlotItem`)
+    :returns: list( :class:`~.items.PlotItem`)
     '''
     return concatenate(repr_student_values(result)
                        + repr_student_delta(result))
@@ -71,7 +72,7 @@ def repr_student_delta(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: list( :class:`PlotItem`)
+    :returns: list( :class:`~.items.PlotItem`)
 
     .. note::
         if we have a member ``units`` in base_dataset the axis names
@@ -90,7 +91,7 @@ def repr_student_values(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: list( :class:`PlotItem`)
+    :returns: list( :class:`~.items.PlotItem`)
 
     .. note::
         if we have a member ``units`` in base_dataset the axis names
@@ -112,7 +113,7 @@ def repr_student_pvalues(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: list( :class:`PlotItem`)
+    :returns: list( :class:`~.items.PlotItem`)
     :raises: ValueError if p-value is None
     '''
     if result.pvalue is None:
@@ -126,12 +127,14 @@ def repr_student_pvalues(result):
 
 def repr_datasets_values(result):
     '''Representation of the datasets values from test results like
-    :class:`TestResultEqual` or :class:`TestResultApproxEqual`, i.e. all tests
+    :class:`~valjean.gavroche.test.TestResultEqual` or
+    :class:`~valjean.gavroche.test.TestResultApproxEqual`, i.e. all tests
     containing a ``dataset1`` and a ``dataset2`` members.
 
     :param result: test result
-    :type result: :class:`TestResultEqual`, :class:`TestResultApproxEqual`
-    :returns: list( :class:`PlotItem`)
+    :type result: :class:`~valjean.gavroche.test.TestResultEqual`,
+        :class:`~valjean.gavroche.test.TestResultApproxEqual`
+    :returns: list( :class:`~.items.PlotItem`)
     '''
     dim = dimension(result.test.dataset1.bins,
                     result.test.dataset1.value.shape)
@@ -150,7 +153,7 @@ def repr_testresultequal(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultEqual`
-    :returns: list( :class:`PlotItem`)
+    :returns: list( :class:`~.items.PlotItem`)
     '''
     return repr_datasets_values(result)
 
@@ -160,6 +163,6 @@ def repr_testresultapproxequal(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultApproxEqual`
-    :returns: list( :class:`PlotItem`)
+    :returns: list( :class:`~.items.PlotItem`)
     '''
     return repr_datasets_values(result)

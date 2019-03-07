@@ -3,7 +3,6 @@
 
 import numpy as np
 from hypothesis import given, note
-import pytest
 
 # pylint: disable=wrong-import-order
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
@@ -181,13 +180,7 @@ def test_rst_holm_bonferronis(rstcheck, holm_bonferroni_test_result,
 def test_tableitem_iadd(rstcheck, bonferroni_test_result,
                         bonferroni_test_result_fail, rst_formatter,
                         table_repr):
-    '''Test :meth:`~valjean.javert.items.TableItem.__iadd__`.
-
-    .. warning ::
-
-        Only working for Bonferroni (or Holm-Bonferroni) results, not from
-        array results like in Student !!!
-    '''
+    '''Test :meth:`~valjean.javert.items.TableItem.__iadd__`.'''
     items = table_repr(bonferroni_test_result)
     items_id = id(items[1])
     LOGGER.debug("items = %s", str(items))
@@ -203,13 +196,7 @@ def test_tableitem_iadd(rstcheck, bonferroni_test_result,
 
 def test_tableitem_add(rstcheck, bonferroni_test_result,
                        bonferroni_test_result_fail, rst_formatter, table_repr):
-    '''Test  :meth:`~valjean.javert.items.TableItem.__add__`.
-
-    .. warning ::
-
-        Only working for Bonferroni (or Holm-Bonferroni) results, not from
-        array results like in Student !!!
-    '''
+    '''Test  :meth:`~valjean.javert.items.TableItem.__add__`.'''
     items1 = table_repr(bonferroni_test_result)
     LOGGER.debug("items1 = %s", str(items1))
     items2 = table_repr(bonferroni_test_result_fail)
@@ -235,11 +222,18 @@ def test_tableitem_iadd_array(table_repr,
                               student_test_result_fail):
     '''Test iadd table items containing arrays (failing).'''
     item1 = table_repr(student_test_result)
-    # print('item1 =', item1, len(item1))
-    # print([col for col in item1[0].columns])
+    item1_cc = item1[0].copy()
+    LOGGER.debug('item1 = %s', str(item1))
     item2 = table_repr(student_test_result_fail)
-    # print('item2 =', item2, len(item2))
-    # print([col for col in item2[0].columns])
-    with pytest.raises(TypeError):
-        item1[0] += item2[0]
-    # print("apres ajout:", [col for col in item1[0].columns])
+    LOGGER.debug('item2 = %s', str(item2))
+    item1[0] += item2[0]
+    LOGGER.debug('after iadd: item1 = %s', str(item1))
+    assert item1[0].headers == item1_cc.headers
+    assert item1[0].headers == item2[0].headers
+    assert all(col.size == col1.size + col2.size
+               for col, col1, col2 in zip(item1[0].columns, item1_cc.columns,
+                                          item2[0].columns))
+    assert all(np.isin(item1[0].columns[4][item1_cc.columns[4].size:],
+                       item2[0].columns[4]))
+    assert all(np.isin(item1[0].columns[4][:item1_cc.columns[4].size],
+                       item1_cc.columns[4]))
