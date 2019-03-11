@@ -235,8 +235,21 @@ Module API
 ----------
 '''
 
-from .task import Task
+from .task import Task, TaskStatus
 from .. import LOGGER
+
+
+class TaskException(Exception):
+    '''An exception that can be raised by any functions wrapped in
+    :class:`PythonTask`. It causes the task to fail. A reason can be specified
+    in the constructor.'''
+
+    def __init__(self, reason='unknown'):
+        '''Construct a :class:`TaskException`.
+
+        :param str reason: why this exception was raised.'''
+        super().__init__()
+        self.because = reason
 
 
 class PythonTask(Task):
@@ -288,4 +301,10 @@ class PythonTask(Task):
             self.kwargs[self.env_kwarg] = MappingProxyType(env)
         if self.config_kwarg is not None:
             self.kwargs[self.config_kwarg] = config
-        return self.func(*self.args, **self.kwargs)
+        try:
+            # here result is actually an (env_up, status) tuple
+            result = self.func(*self.args, **self.kwargs)
+        except TaskException as task_exc:
+            env_up = {self.name: {'why': task_exc.because}}
+            return env_up, TaskStatus.FAILED
+        return result

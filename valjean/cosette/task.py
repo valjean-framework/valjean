@@ -57,10 +57,10 @@ class Task(ABC):
         self.name = name
         self.depends_on = set()
         if deps is not None:
-            if not isinstance(deps, list):
+            if not isinstance(deps, (tuple, list, set)):
                 errmsg = ('The `deps` task argument must '
-                          'be either a list of tasks or None; type {} found'
-                          .format(type(deps)))
+                          'be either a collection of tasks or None; '
+                          'type {} found'.format(type(deps)))
                 raise TypeError(errmsg)
             self.depends_on.update(deps)
 

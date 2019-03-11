@@ -509,3 +509,8 @@ class RunTaskFactory:
         kwargs_.update(kwargs)
         cli_closure = self.make_closure(e_args, **kwargs_)
         return RunTask(name, cli_closure, deps=self.deps + deps_, **sp_args)
+
+    def copy(self):
+        '''Return a copy of this object.'''
+        return self.__class__(self.make_closure, deps=self.deps.copy(),
+                              **self.kwargs)

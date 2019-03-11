@@ -17,34 +17,27 @@ It contains various modules from scanning the TRIPOLI-4 output to conversion of
 its data in datasets, listed here starting from the most external modules to
 the innest ones:
 
-   * General task for parsing in :mod:`~.parse_task`
+   * Integration of parsing in the :mod:`valjean` workflow is handled by
+     :mod:`~.use`;
    * Conversion of data to :class:`~.base_dataset.BaseDataset` in
-     :mod:`~.data_convertor`
-   * Easy access to TRIPOLI-4 results via metadata in :mod:`~.accessor`
-   * Parsing module :mod:`~.parse` calling the scanning one :mod:`~.scan`
+     :mod:`~.data_convertor`;
+   * Easy access to TRIPOLI-4 results via metadata in :mod:`~.accessor`;
+   * Parsing module :mod:`~.parse` calling the scanning one :mod:`~.scan`;
    * The parsing itself is done thanks to 3 modules:
 
       * :mod:`~.grammar`: the grammar of the TRIPOLI-4 ASCII output using
-        `pyparsing`
+        `pyparsing`;
       * :mod:`~.transform`: methods to transform the parsing result in standard
         `python` and `NumPy` objects called in :mod:`~.grammar` via
-        ``setParseAction`` applied on the ``pyparsing.ParseResults``
+        ``setParseAction`` applied on the ``pyparsing.ParseResults``;
       * :mod:`~valjean.eponine.tripoli4.common`: methods to transform TRIPOLI-4
-        data in `NumPy` objects
+        data in `NumPy` objects.
       * One additional module parsing module is available for debugging and
         development: :mod:`~.parse_debug`
 
 
 Main modules
 ------------
-
-:mod:`~.parse_task` – Task for parsing TRIPOLI-4 results
-````````````````````````````````````````````````````````
-
-.. automodule:: valjean.eponine.tripoli4.parse_task
-   :synopsis: Task to parse TRIPOLI-4 results using :class:`~.cosette.Task`
-   :private-members:
-
 
 :mod:`~.data_convertor` – Convert TRIPOLI-4 results to :class:`~.eponine.base_dataset.BaseDataset`
 ``````````````````````````````````````````````````````````````````````````````````````````````````
@@ -76,6 +69,12 @@ Main modules
 .. automodule:: valjean.eponine.tripoli4.scan
    :synopsis: Scan TRIPOLI-4 outputs and select relevant results
 
+
+:mod:`use <valjean.eponine.tripoli4.use>` – Inject parsing results into free functions
+``````````````````````````````````````````````````````````````````````````````````````
+
+.. automodule:: valjean.eponine.tripoli4.use
+   :synopsis: Inject parsing results into free functions
 
 
 More details on parsing

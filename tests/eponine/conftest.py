@@ -239,14 +239,6 @@ def perturbed_base_datasets(draw):
     return pert_datasets
 
 
-class RunTaskMock:
-    '''A mock class for :class:`~valjean.cosette.RunTask` — it just contains
-    its name.
-    '''
-    def __init__(self, name):
-        self.name = name
-
-
 @pytest.fixture
 def parsing_config_files(request):
     '''Fixture to read configuration files to test parsing coverage.

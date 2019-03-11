@@ -104,6 +104,12 @@ Tests for the :mod:`~.accessor` module
 .. automodule:: tests.eponine.test_accessor
 
 
+Tests for the :mod:`~.tripoli4.use` module
+``````````````````````````````````````````
+
+.. automodule:: tests.eponine.test_use
+
+
 Unit tests for the :mod:`~valjean.gavroche` package
 ---------------------------------------------------
 
@@ -117,12 +123,6 @@ Tests for the :mod:`~.test` module
 `````````````````````````````````````
 
 .. automodule:: tests.gavroche.test_test
-
-
-Tests for the :mod:`~.using` module
-```````````````````````````````````
-
-.. automodule:: tests.gavroche.test_using
 
 
 Tests for the :mod:`~valjean.gavroche.dataset` module

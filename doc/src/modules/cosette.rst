@@ -22,3 +22,4 @@ cosette — COnStruction et ExécuTion de TâchEs
    cosette/rlist
    cosette/env
    cosette/scheduler
+   cosette/use
