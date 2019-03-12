@@ -551,6 +551,7 @@ class DictBuilder(ABC):
            ``'score'``, ``'sigma'``, ``'score/lethargy'`` for spectrum)
         :param list(int) lnbins: number of bins for each dimension
         '''
+        LOGGER.debug("Initialisation of DictBuilder")
         self.bins = OrderedDict()
         self.units = {}
         dtype = np.dtype({'names': colnames,
@@ -642,13 +643,14 @@ class KinematicDictBuilder(DictBuilder):
                 'phi': 'phi_angle_zone'}
 
     def __init__(self, colnames, lnbins):
-        '''Initialization of DictBuilder.
+        '''Initialization of KinematicDictBuilder.
 
         :param list(str) colnames: name of the columns/results
            (e.g. ``'score'`` and ``'sigma'`` for mesh, or
            ``'score'``, ``'sigma'``, ``'score/lethargy'`` for spectrum)
         :param list(int) lnbins: number of bins for each dimension
         '''
+        LOGGER.debug("Initialisation of KinematicDictBuilder")
         try:
             assert len(lnbins) == 7
         except TypeError:
@@ -723,6 +725,24 @@ class MeshDictBuilder(KinematicDictBuilder):
     :class:`KinematicDictBuilder` for initialization and common methods.
     '''
     itime, imu, iphi = 0, 0, 0
+
+    def __init__(self, colnames, lnbins):
+        '''Initialization of KinematicDictBuilder.
+
+        :param list(str) colnames: name of the columns/results
+           (e.g. ``'score'`` and ``'sigma'`` for mesh, or
+           ``'score'``, ``'sigma'``, ``'score/lethargy'`` for spectrum)
+        :param list(int) lnbins: number of bins for each dimension
+
+        As no bins (centers or edges) are given for space mesh, they are
+        initialised to index in mesh (in the considered direction), starting at
+        0 by convention.
+        '''
+        LOGGER.debug("Initialisation of MeshDictBuilder")
+        super().__init__(colnames, lnbins)
+        self.bins['s0'] = np.arange(lnbins[0])
+        self.bins['s1'] = np.arange(lnbins[1])
+        self.bins['s2'] = np.arange(lnbins[2])
 
     def _fill_mesh_array(self, meshvals, name, ebin):
         '''Fill mesh array.
