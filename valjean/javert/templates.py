@@ -4,10 +4,13 @@ instance, in the case of tables this includes the column contents, the headers,
 etc.  It does **not** include any formatting information, such as column
 widths, floating-point precision, colours, etc.  Decisions about the formatting
 are handled by suitable formatting classes, such as :class:`~.Rst`.
+
+.. _numpy indexing:
+   https://docs.scipy.org/doc/numpy/user/basics.indexing.html
 '''
 
 import numpy as np
-# from .. import LOGGER
+from .. import LOGGER
 
 
 class TableTemplate:
@@ -225,6 +228,26 @@ class TableTemplate:
         for header, col in zip(self.headers, self.columns):
             elts.append("{0}: {1}\n".format(header, col))
         return ''.join(intro + elts)
+
+    def __getitem__(self, index):
+        '''Build a sliced :class:`TableTemplate` from the current
+        :class:`TableTemplate`.
+
+        Slicing is done lilke in the usual `NumPy` arrays, see:
+        `numpy indexing`_ for more informations. No treatment like in
+        :mod:`~valjean.gavroche.dataset` is done.
+
+        :param index: index, slice or tuple of slices
+        :type index: int, slice, tuple(slice)
+        :returns: :class:`TableTemplate`
+        '''
+        LOGGER.debug("In TableTemplate.__getitem__")
+        if not isinstance(self.columns[0], np.ndarray):
+            raise TypeError("Slicing is only possible when the values in the "
+                            "TableItem are np.ndarray.")
+        return TableTemplate(*tuple(col[index] for col in self.columns),
+                             headers=self.headers.copy(),
+                             units=self.units.copy(), highlight=self.highlight)
 
 
 class CurveElements:
