@@ -1,6 +1,7 @@
 '''Module containing all available methods to convert a test result in a table
 to be converted in rst.
 '''
+from itertools import chain
 from .. import LOGGER
 from .templates import TableTemplate
 
@@ -25,13 +26,21 @@ def repr_equal(result, result_header):
     :returns: Representation of a :class:`~.TestResultEqual` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    LOGGER.debug('shape of the result: %s', result.equal.shape)
+    LOGGER.debug("In repr_equal")
+    dscols = tuple((ds.value, eq)
+                   for ds, eq in zip(result.test.datasets, result.equal))
+    heads = [('reference',)]
+    for ids in range(len(dscols)):
+        str_ids = str(ids)
+        heads.append(
+            ('dataset'+str_ids, result_header.replace('?', str_ids+'?'))
+            if len(dscols) > 1 else ('dataset', result_header))
     table_template = TableTemplate(
-        result.test.dataset1.value,
-        result.test.dataset2.value,
-        result.equal,
-        highlight=lambda _v1, _v2, eq: not eq,
-        headers=['reference', 'dataset', result_header])
+        result.test.dsref.value,
+        *chain.from_iterable(dscols),
+        highlight=lambda *cols: any([not col for col in cols
+                                     if col.dtype == 'bool']),
+        headers=list(chain.from_iterable(heads)))
     return [table_template]
 
 
@@ -55,13 +64,22 @@ def repr_approx_equal(result, result_header):
     :returns: Representation of a :class:`~.TestResultApproxEqual` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    LOGGER.debug('shape of the result: %s', result.approx_equal.shape)
+    LOGGER.debug("In repr_approx_equal")
+    dscols = tuple((ds.value, eq)
+                   for ds, eq in zip(result.test.datasets,
+                                     result.approx_equal))
+    heads = [('reference',)]
+    for ids in range(len(dscols)):
+        str_ids = str(ids)
+        heads.append(
+            ('dataset'+str_ids, result_header.replace('?', str_ids+'?'))
+            if len(dscols) > 1 else ('dataset', result_header))
     table_template = TableTemplate(
-        result.test.dataset1.value,
-        result.test.dataset2.value,
-        result.approx_equal,
-        highlight=lambda _v1, _v2, eq: not eq,
-        headers=['reference', 'dataset', result_header])
+        result.test.dsref.value,
+        *chain.from_iterable(dscols),
+        highlight=lambda *cols: any([not col for col in cols
+                                     if col.dtype == 'bool']),
+        headers=list(chain.from_iterable(heads)))
     return [table_template]
 
 
@@ -85,12 +103,24 @@ def repr_student(result, result_header):
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
+    LOGGER.debug("In repr_student")
+    dscols = tuple((ds.value, ds.error, delta, studbool)
+                   for ds, delta, studbool in zip(result.test.datasets,
+                                                  result.delta,
+                                                  result.oracles()))
+    heads = [('v_ref', 'σ_ref')]
+    for ids in range(len(dscols)):
+        str_ids = str(ids)
+        heads.append(('v'+str_ids, 'σ'+str_ids, 'Δ'+str_ids,
+                      result_header.replace('?', str_ids+'?'))
+                     if len(dscols) > 1
+                     else ('v_test', 'σ_test', 'Δ_test', result_header))
     table_template = TableTemplate(
-        result.test.ds1.value, result.test.ds1.error,
-        result.test.ds2.value, result.test.ds2.error,
-        result.delta, result.bool_array(),
-        highlight=lambda _v1, _e1, _v2, _e2, _delta, eq: not eq,
-        headers=['v1', 'σ1', 'v2', 'σ2', 'Δ', result_header])
+        result.test.dsref.value, result.test.dsref.error,
+        *chain.from_iterable(dscols),
+        highlight=lambda *cols: any([not col for col in cols
+                                     if col.dtype == 'bool']),
+        headers=list(chain.from_iterable(heads)))
     return [table_template]
 
 
@@ -118,14 +148,17 @@ def repr_bonferroni(result, result_header):
     :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
+    ndatasets = len(result.first_test_res.test.datasets)
     table_template = TableTemplate(
-        [result.first_test_res.test.name],
-        [result.test.ntests],
-        [result.test.alpha],
-        [min(result.first_test_res.pvalue)],
-        [bool(result)],
-        highlight=lambda _t, _ndf, _sl, _min, rnh: not rnh,
-        headers=['test', 'ndf', 'α', 'min(p-value)', result_header])
+        [result.first_test_res.test.name] * ndatasets,
+        [result.test.ntests] * ndatasets,
+        [result.test.alpha] * ndatasets,
+        [result.test.bonf_signi_level] * ndatasets,
+        [min(pval) for pval in result.first_test_res.pvalue],
+        [res for res in result.oracles()],
+        highlight=lambda _t, _ndf, _sl, _bsl, _min, rnh: not rnh,
+        headers=['test', 'ndf', 'α', 'α(Bonferroni)', 'min(p-value)',
+                 result_header])
     return [table_template]
 
 
@@ -153,14 +186,15 @@ def repr_holm_bonferroni(result, result_header):
         table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
+    ndatasets = len(result.first_test_res.test.datasets)
     table_template = TableTemplate(
-        [result.first_test_res.test.name],
-        [result.test.ntests],
-        [result.test.alpha],
-        [min(result.first_test_res.pvalue)],
-        [result.alphas_i[0]],
-        [result.nb_rejected],
-        [bool(result)],
+        [result.first_test_res.test.name] * ndatasets,
+        [result.test.ntests] * ndatasets,
+        [result.test.alpha] * ndatasets,
+        [min(pval) for pval in result.first_test_res.pvalue],
+        [alpha_i[0] for alpha_i in result.alphas_i],
+        [nr for nr in result.nb_rejected],
+        [res for res in result.oracles()],
         highlight=lambda _t, _ndf, _sl, _min, _malp, _rej, rnh: not rnh,
         headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
                  'N rejected', result_header])

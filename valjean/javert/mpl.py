@@ -173,20 +173,26 @@ class MplPlot:
         ynames = OrderedDict()
         icv_format = (('k', 'o', 'full') if len(self.data.curves) > 1
                       else ('b', 'o', 'full'))
-        for icv, yax in enumerate([c.yname for c in self.data.curves]):
-            if yax not in ynames:
-                ynames[yax] = 0
+        for icv, curve in enumerate(self.data.curves):
+            if curve.yname not in ynames:
+                ynames[curve.yname] = 0
             else:
-                ynames[yax] += 1
-            if self.data.curves[icv].label in self.legend['labels']:
-                ilab = self.legend['labels'].index(self.data.curves[icv].label)
-                icv_format = (self.legend['handles'][ilab][0].get_color(),
-                              self.legend['handles'][ilab][0].get_marker(),
-                              self.legend['handles'][ilab][0].get_fillstyle())
+                ynames[curve.yname] += 1
+            if curve.label in self.legend['labels']:
+                ilab = self.legend['labels'].index(curve.label)
+                prevc = (
+                    self.legend['handles'][ilab][1][0]
+                    if self.data.bins.size == curve.values.size+1
+                    else self.legend['handles'][ilab][0])
+                icv_format = (prevc.get_color(),
+                              prevc.get_marker(),
+                              prevc.get_fillstyle())
             else:
                 if self.nb_splts != len(self.data.curves) and icv > 0:
                     icv_format = tuple(next(pf) for pf in self.curve_format)
-            self.ierror_plot(icv, list(ynames.keys()).index(yax), icv_format)
+            self.ierror_plot(icv,
+                             list(ynames.keys()).index(curve.yname),
+                             icv_format)
         self._build_legend(ynames)
 
     def _build_legend(self, ynames):

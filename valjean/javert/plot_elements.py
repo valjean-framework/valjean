@@ -61,7 +61,7 @@ def repr_testresultstudent(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
+    :returns: :class:`list` (:class:`~.PlotTemplate`)
     '''
     rstudent = [join(rvals, rdelta)
                 for rvals, rdelta in zip(repr_student_values(result),
@@ -74,19 +74,23 @@ def repr_student_delta(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
+    :returns: :class:`list` (:class:`~.PlotTemplate`)
 
     .. note::
         if we have a member ``units`` in base_dataset the axis names
         would be constructed like ``name + units['name']``.
+
+    If the dimension cannot be determined a empty list is returned.
     '''
-    dim = dimension(result.test.ds1.bins, result.test.ds1.value.shape)
+    dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
         return []
-    bins = result.test.ds1.bins[dim]
-    curve = CurveElements(values=result.delta, label=result.test.name,
-                          yname=r'$\Delta_{Student}$', errors=None)
-    return [PlotTemplate(bins=bins, xname=dim, curves=[curve])]
+    bins = result.test.dsref.bins[dim]
+    curves = [CurveElements(values=delta,
+                            label=result.test.name+': dataset '+str(ind),
+                            yname=r'$\Delta_{Student}$', errors=None)
+              for ind, delta in enumerate(result.delta)]
+    return [PlotTemplate(bins=bins, xname=dim, curves=curves)]
 
 
 def repr_student_values(result):
@@ -95,23 +99,27 @@ def repr_student_values(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
+    :returns: :class:`list` (:class:`~.PlotTemplate`)
 
     .. note::
         if we have a member ``units`` in base_dataset the axis names
         would be constructed like ``name + units['name']``.
+
+    If the dimension cannot be determined a empty list is returned.
     '''
-    dim = dimension(result.test.ds1.bins, result.test.ds1.value.shape)
+    dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
         return []
-    bins = result.test.ds1.bins[dim]
-    cds1 = CurveElements(values=result.test.ds1.value,
-                         label=result.test.name+': dataset 1', yname='',
-                         errors=result.test.ds1.error)
-    cds2 = CurveElements(values=result.test.ds2.value,
-                         label=result.test.name+': dataset 2', yname='',
-                         errors=result.test.ds2.error)
-    return [PlotTemplate(bins=bins, xname=dim, curves=[cds1, cds2])]
+    bins = result.test.dsref.bins[dim]
+    cdsref = CurveElements(values=result.test.dsref.value,
+                           label=result.test.name+': reference dataset',
+                           yname='', errors=result.test.dsref.error)
+    cds = [CurveElements(values=ds.value,
+                         label=result.test.name+': dataset '+str(ids),
+                         yname='', errors=ds.error)
+           for ids, ds in enumerate(result.test.datasets)]
+    cds.insert(0, cdsref)
+    return [PlotTemplate(bins=bins, xname=dim, curves=cds)]
 
 
 def repr_student_pvalues(result):
@@ -120,17 +128,22 @@ def repr_student_pvalues(result):
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
     :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
+
+    If p-values were not calculated, no :class:`~.PlotTemplate` is build, so
+    an empty list is returned.
     '''
     if result.pvalue is None:
         LOGGER.error("p-value is None, won't be possible to plot it.")
         return []
-    dim = dimension(result.test.ds1.bins, result.test.ds1.value.shape)
+    dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
         return []
-    bins = result.test.ds1.bins[dim]
-    curve = CurveElements(values=result.pvalue,
-                          label=result.test.name, yname='p-value', errors=None)
-    return [PlotTemplate(bins=bins, xname=dim, curves=[curve])]
+    bins = result.test.dsref.bins[dim]
+    curves = [CurveElements(values=pval,
+                            label=result.test.name+': dataset '+str(ind),
+                            yname='p-value', errors=None)
+              for ind, pval in enumerate(result.pvalue)]
+    return [PlotTemplate(bins=bins, xname=dim, curves=curves)]
 
 
 def repr_datasets_values(result):
@@ -142,20 +155,24 @@ def repr_datasets_values(result):
     :param result: test result
     :type result: :class:`~valjean.gavroche.test.TestResultEqual`,
         :class:`~valjean.gavroche.test.TestResultApproxEqual`
-    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
+    :returns: :class:`list` (:class:`~.PlotTemplate`)
+
+    If the dimension cannot be determined a empty list is returned.
     '''
-    dim = dimension(result.test.dataset1.bins,
-                    result.test.dataset1.value.shape)
+    dim = dimension(result.test.dsref.bins,
+                    result.test.dsref.value.shape)
     if dim is None:
         return []
-    bins = result.test.dataset1.bins[dim]
-    cds1 = CurveElements(values=result.test.dataset1.value,
-                         label=result.test.name+': dataset 1', yname='',
-                         errors=result.test.dataset1.error)
-    cds2 = CurveElements(values=result.test.dataset2.value,
-                         label=result.test.name+': dataset 2', yname='',
-                         errors=result.test.dataset2.error)
-    return [PlotTemplate(bins=bins, xname=dim, curves=[cds1, cds2])]
+    bins = result.test.dsref.bins[dim]
+    cdsref = CurveElements(values=result.test.dsref.value,
+                           label=result.test.name+': reference dataset',
+                           yname='', errors=result.test.dsref.error)
+    cds = [CurveElements(values=ds.value,
+                         label=result.test.name+': dataset '+str(ids),
+                         yname='', errors=ds.error)
+           for ids, ds in enumerate(result.test.datasets)]
+    cds.insert(0, cdsref)
+    return [PlotTemplate(bins=bins, xname=dim, curves=cds)]
 
 
 def repr_testresultequal(result):

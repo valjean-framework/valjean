@@ -310,6 +310,14 @@ class RstTable:
         'dis'
         >>> RstTable.highlight('DAT', True)
         ':hl:`DAT`'
+
+        .. todo::
+
+            Should think about other ways of highlighting results ? It can be
+            done only on the booleans for example, with::
+
+                return (':{}:`{}`'.format(cls.HIGHLIGHT_ROLE, val)
+                        if val == "False" else val)
         '''
         if flag:
             return ':{}:`{}`'.format(cls.HIGHLIGHT_ROLE, val)

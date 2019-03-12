@@ -164,9 +164,9 @@ class TestResultEqual(TestResult):
         :param test: the used test
         :type test: :class:`~.TestEqual`
         :param equal: result from the test
-        :type equal: :obj:`numpy.generic` if datasets are :obj:`numpy.generic`,
-                     :obj:`numpy.ndarray` if datasets are :obj:`numpy.ndarray`.
-                     In both cases ``dtype == bool``.
+        :type equal: :class:`list` (``numpy.bool_``) if datasets are
+            :obj:`numpy.generic`, :class:`list` (:obj:`numpy.ndarray`) if
+            datasets are :obj:`numpy.ndarray` with ``dtype == bool``.
         '''
         super().__init__(test)
         self.equal = equal
@@ -180,28 +180,32 @@ class TestResultEqual(TestResult):
 class TestEqual(Test):
     '''Test if the datasets values are equal. Errors are ignored.'''
 
-    def __init__(self, dataset1, dataset2, *, name, description=''):
+    def __init__(self, dsref, *datasets, name, description=''):
         '''Initialisation of :class:`~.TestEqual`:
 
         :param str name: name of the test (in analysis)
         :param str description: specific description of the test
-        :param dataset1: first dataset
-        :type dataset1: :class:`~.dataset.Dataset`
-        :param dataset2: second dataset
-        :type dataset2: :class:`~.dataset.Dataset`
+        :param dsref: reference dataset
+        :type dsref: :class:`~.dataset.Dataset`
+        :param datasets: list of datasets to be compared to reference dataset
+        :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
         '''
         super().__init__(name=name, description=description)
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
+        self.dsref = dsref
+        self.datasets = datasets
+        if not datasets:
+            raise ValueError('At least one dataset expected to be compared to '
+                             'the reference one')
 
     def evaluate(self):
         '''Evaluation of :class:`~.TestEqual`.
 
         :returns: :class:`~.TestResultEqual`
         '''
-        check_bins(self.dataset1, self.dataset2)
-        # pylint: disable=E1111
-        equal = np.equal(self.dataset1.value, self.dataset2.value)
+        equal = []
+        for _ds in self.datasets:
+            check_bins(self.dsref, _ds)
+            equal.append(np.equal(self.dsref.value, _ds.value))
         return TestResultEqual(self, equal)
 
 
@@ -231,17 +235,17 @@ class TestApproxEqual(Test):
     Errors are ignored.
     '''
 
-    def __init__(self, dataset1, dataset2, *, name, description='',
+    def __init__(self, dsref, *datasets, name, description='',
                  rtol=1e-5, atol=1e-8):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`~.TestApproxEqual`:
 
         :param str name: local name of the test
         :param str description: specific description of the test
-        :param dataset1: first dataset
-        :type dataset1: :class:`~.dataset.Dataset`
-        :param dataset2: second dataset
-        :type dataset2: :class:`~.dataset.Dataset`
+        :param dsref: reference dataset
+        :type dsref: :class:`~.dataset.Dataset`
+        :param datasets: list of datasets to be compared to reference dataset
+        :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
         :param float rtol: relative tolerance, default = :math:`10^{-5}`
         :param float atol: absolute tolerance, default = :math:`10^{-8}`
 
@@ -249,17 +253,22 @@ class TestApproxEqual(Test):
         :func:`numpy.isclose`.
         '''
         super().__init__(name=name, description=description)
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
+        self.dsref = dsref
+        self.datasets = datasets
         self.rtol = rtol
         self.atol = atol
+        if not datasets:
+            raise ValueError('At least one dataset expected to be compared to '
+                             'the reference one')
 
     def evaluate(self):
         '''Evaluation of :class:`~.TestApproxEqual`.
 
         :returns: :class:`~.TestResultApproxEqual`
         '''
-        check_bins(self.dataset1, self.dataset2)
-        approx_equal = np.isclose(self.dataset1.value, self.dataset2.value,
-                                  rtol=self.rtol, atol=self.atol)
+        approx_equal = []
+        for _ds in self.datasets:
+            check_bins(self.dsref, _ds)
+            approx_equal.append(np.isclose(self.dsref.value, _ds.value,
+                                           rtol=self.rtol, atol=self.atol))
         return TestResultApproxEqual(self, approx_equal)

@@ -109,11 +109,11 @@ Let's consider a spectrum of 5 bins with their error and apply the χ²-test.
 >>> tchi2 = TestChi2(ds1, ds2, alpha=0.05, name="comp",
 ...                  description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
->>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf))
+>>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf[0]))
 0.3080328
 >>> bool(tchi2_res)
 True
->>> print('{:.7f}'.format(tchi2_res.pvalue))
+>>> print('{:.7f}'.format(tchi2_res.pvalue[0]))
 0.9083889
 
 
@@ -134,12 +134,12 @@ run, no variance can be calculated in that case (``n-1`` usually used with
 ...                  description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
 >>> tchi2_res.chi2
-inf
+[inf]
 >>> bool(tchi2_res)
 False
->>> print(np.array2string(tchi2_res.test.nonzero_bins))
+>>> print(np.array2string(tchi2_res.test.nonzero_bins[0]))
 [ True  True  True  True  True]
->>> tchi2_res.test.ndf
+>>> tchi2_res.test.ndf[0]
 5
 >>> np.count_nonzero(ds4.error)
 4
@@ -154,15 +154,15 @@ calculation.
 >>> tchi2 = TestChi2(ds3, ds4, alpha=0.05, ignore_empty=True,
 ...                  name="comp", description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
->>> print('{:.7f}'.format(tchi2_res.chi2))
+>>> print('{:.7f}'.format(tchi2_res.chi2[0]))
 1.3401639
->>> tchi2_res.test.ndf
+>>> tchi2_res.test.ndf[0]
 4
->>> tchi2_res.test.ds1.size
+>>> tchi2_res.test.dsref.size
 5
->>> print(np.array2string(tchi2_res.test.nonzero_bins))
+>>> print(np.array2string(tchi2_res.test.nonzero_bins[0]))
 [ True  True False  True  True]
->>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf))
+>>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf[0]))
 0.3350410
 >>> bool(tchi2_res)
 True
@@ -182,11 +182,11 @@ Test with multiple dimensions datasets
 >>> tchi2 = TestChi2(ds5, ds6, alpha=0.05, name="comp",
 ...                  description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
->>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf))
+>>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf[0]))
 0.2900273
 >>> bool(tchi2_res)
 True
->>> print('{:.7f}'.format(tchi2_res.pvalue))
+>>> print('{:.7f}'.format(tchi2_res.pvalue[0]))
 0.9419786
 
 And when we have at least one empty bin, using the ``ignore_empty`` argument:
@@ -202,16 +202,16 @@ And when we have at least one empty bin, using the ``ignore_empty`` argument:
 >>> tchi2 = TestChi2(ds7, ds8, alpha=0.05, ignore_empty=True,
 ...                  name="comp", description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
->>> print('{:.7f}'.format(tchi2_res.chi2))
+>>> print('{:.7f}'.format(tchi2_res.chi2[0]))
 5.3401639
->>> tchi2_res.test.ndf
+>>> tchi2_res.test.ndf[0]
 5
->>> tchi2_res.test.ds1.size
+>>> tchi2_res.test.dsref.size
 6
->>> print(np.array2string(tchi2_res.test.nonzero_bins))
+>>> print(np.array2string(tchi2_res.test.nonzero_bins[0]))
 [[ True  True False]
  [ True  True  True]]
->>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf))
+>>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf[0]))
 1.0680328
 >>> bool(tchi2_res)
 True
@@ -253,21 +253,29 @@ class TestResultChi2(TestResult):
     def __init__(self, test, chi2, pvalue):
         '''Construct a TestResultChi2 object.
 
+        Members are lists which length corresponds to the number of datasets
+        compared to the reference dataset.
+
         :param test: the χ² test object
         :type test: :class:`~.TestChi2`
         :param chi2: the value of the χ² statistic
-        :type chi2: :obj:`numpy.generic` (:obj:`float`)
+        :type chi2: :class:`list` (:obj:`numpy.generic` (:obj:`float`))
         :param pvalue: the test p-value
-        :type pvalue: :obj:`numpy.generic` (:obj:`float`)
+        :type pvalue: :class:`list` (:obj:`numpy.generic` (:obj:`float`))
         '''
         super().__init__(test)
         self.chi2 = chi2
         self.pvalue = pvalue
 
+    def oracles(self):
+        '''Final test for the list of compared datasets.
+
+        :returns: list(bool)
+        '''
+        return [pval > self.test.alpha for pval in self.pvalue]
+
     def __bool__(self):
-        if self.pvalue > self.test.alpha:
-            return True
-        return False
+        return all(self.oracles())
 
     @property
     def chi2_per_ndf(self):
@@ -278,24 +286,24 @@ class TestResultChi2(TestResult):
 
         No parenthesis needed: this is a property.
         '''
-        return self.chi2 / self.test.ndf
+        return [c2 / df for c2, df in zip(self.chi2, self.test.ndf)]
 
 
 class TestChi2(Test):
     '''Test class for χ², inheritate from :class:`~valjean.gavroche.test.Test`.
     '''
 
-    def __init__(self, ds1, ds2, *, name, description='', alpha=0.01,
+    def __init__(self, dsref, *datasets, name, description='', alpha=0.01,
                  ignore_empty=False):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`TestChi2`
 
         :param str name: local name of the test
         :param str description: specific description of the test
-        :param ds1: first dataset
-        :type ds1: :class:`~valjean.gavroche.dataset.Dataset`
-        :param ds2: second dataset
-        :type ds2: :class:`~valjean.gavroche.dataset.Dataset`
+        :param dsref: reference dataset
+        :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
+        :param datasets: list of datasets  to be compared to reference dataset
+        :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
         :param float alpha: probability to accept of not the test (p-value is
                             expected greater), i.e. significance level
         :param bool ignore_empty: if the array contains zero bins, the test can
@@ -304,15 +312,15 @@ class TestChi2(Test):
                                   array to sum will contain infinite terms.
                                   Default is ``False``.
         '''
-        self.ds1 = ds1
-        self.ds2 = ds2
+        self.dsref = dsref
+        self.datasets = datasets
         self.alpha = alpha
         self.ignore_empty = ignore_empty
         #: nonzero bins identification by True, False if zero
-        #: (:obj:`numpy.ndarray` (:obj:`bool`))
+        #: (:class:`list` (:obj:`numpy.ndarray` (:obj:`bool`)))
         self.nonzero_bins = self._nonzero_bins()
-        #: number of degrees of freedom (:obj:`int`)
-        self.ndf = np.count_nonzero(self.nonzero_bins)
+        #: number of degrees of freedom (:class:`list` (:obj:`int`))
+        self.ndf = [np.count_nonzero(nzb) for nzb in self.nonzero_bins]
         super().__init__(name=name, description=description)
 
     def _nonzero_bins(self):
@@ -327,8 +335,10 @@ class TestChi2(Test):
         :returns: :obj:`numpy.ndarray` (:obj:`bool`)
         '''
         if self.ignore_empty:
-            return np.logical_or(self.ds1.error > 0, self.ds2.error > 0)
-        return np.full_like(self.ds1.value, True, dtype=bool)
+            return [np.logical_or(self.dsref.error > 0, _ds.error > 0)
+                    for _ds in self.datasets]
+        return [np.full_like(self.dsref.value, True, dtype=bool)
+                for _ in range(len(self.datasets))]
 
     @staticmethod
     def pvalue(chi2, ndf):
@@ -376,6 +386,9 @@ class TestChi2(Test):
 
         :rtype: :class:`~.TestResultChi2`
         '''
-        chi2 = self.chi2_test(self.ds1, self.ds2, self.nonzero_bins)
-        pvalue = self.pvalue(chi2, self.ndf)
+        chi2 = []
+        for _ds, _nzb in zip(self.datasets, self.nonzero_bins):
+            chi2.append(self.chi2_test(self.dsref, _ds, _nzb))
+        pvalue = [self.pvalue(_chi2, _ndf)
+                  for _chi2, _ndf in zip(chi2, self.ndf)]
         return TestResultChi2(self, chi2, pvalue)

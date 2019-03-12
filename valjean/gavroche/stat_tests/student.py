@@ -184,7 +184,7 @@ Are these numbers in agreement ?
 >>> tstudent = TestStudent(ds1, ds2, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> print('{:.7f}'.format(tstudent_res.delta))
+>>> print('{:.7f}'.format(tstudent_res.delta[0]))
 0.2321201
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
 2.5758293
@@ -196,16 +196,16 @@ To obtain the p-value, a number of degrees of freedom should be given:
 >>> tstudent = TestStudent(ds1, ds2, ndf=1000, name="comp",
 ...                        description="Comparison using Student's t- test")
 >>> tstudent_res = tstudent.evaluate()
->>> print('{:.7f}'.format(tstudent_res.delta))
+>>> print('{:.7f}'.format(tstudent_res.delta[0]))
 0.2321201
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
 2.5807547
 >>> bool(tstudent_res)
 True
->>> print('{:.7f}'.format(tstudent_res.pvalue))
+>>> print('{:.7f}'.format(tstudent_res.pvalue[0]))
 0.4082461
 >>> tstudent_res.test_pvalue()
-True
+[True]
 
 
 This is also possible if we want to compare a bin to bin different spectra.
@@ -218,8 +218,8 @@ Let's define 2 small datasets containing arrays:
 >>> tstudent = TestStudent(ds3, ds4, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> print(np.array2string(tstudent_res.bool_array()))
-[ True  True  True  True  True]
+>>> print(np.array2string(tstudent_res.oracles()))
+[[ True  True  True  True  True]]
 >>> bool(tstudent_res)  # doctest: +IGNORE_EXCEPTION_DETAIL
 Traceback (most recent call last):
     ...
@@ -240,8 +240,8 @@ on Student's t-test comparison:
 >>> tstudent_res = tstudent.evaluate()
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
 2.5758293
->>> print(np.array2string(tstudent_res.bool_array()))
-[ True  True False  True False]
+>>> print(np.array2string(tstudent_res.oracles()))
+[[ True  True False  True False]]
 
 Like in float case it is possible to require the p-values. In both cases the
 probability can be changed via the ``alpha`` argument, shown here in an array
@@ -252,9 +252,9 @@ case:
 >>> tstudent_res = tstudent.evaluate()
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
 1.9623391
->>> print(np.array2string(tstudent_res.bool_array()))
-[ True False False  True False]
->>> print('{:.7f}'.format(tstudent_res.delta[1]))
+>>> print(np.array2string(tstudent_res.oracles()))
+[[ True False False  True False]]
+>>> print('{:.7f}'.format(tstudent_res.delta[0][1]))
 -2.2283441
 
 This last value is in-between the thresholds at 1 % and 5 %, so accepted in the
@@ -262,10 +262,10 @@ first case and rejected in the second one.
 
 Obtaining p-values and comparing them is also possible in the spectrum case:
 
->>> print(np.array2string(tstudent_res.pvalue,
+>>> print(np.array2string(tstudent_res.pvalue[0],
 ...                       formatter={'float_kind':'{:.7e}'.format}))
 [3.2740885e-01 1.3039640e-02 5.0738755e-07 4.1155447e-01 8.0627620e-04]
->>> print(np.array2string(tstudent_res.test_pvalue()))
+>>> print(np.array2string(tstudent_res.test_pvalue()[0]))
 [ True False False  True False]
 
 Finally, an array of size 1 (and dimension 1), the test will do the same as for
@@ -276,7 +276,7 @@ datasets containing :obj:`numpy.generic`:
 >>> tstudent = TestStudent(ds6, ds7, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> print(np.array2string(tstudent_res.delta,
+>>> print(np.array2string(tstudent_res.delta[0],
 ...                       formatter={'float_kind':'{:.7f}'.format}))
 [0.2321192]
 >>> print('{:.7f}'.format(tstudent_res.test.threshold))
@@ -314,13 +314,13 @@ Traceback (most recent call last):
     ...
 TestResultStudentException: Not suitable to multi-dimension arrays, except \
 within a user's loop
->>> print(np.array2string(tstudent_res.delta,
+>>> print(np.array2string(tstudent_res.delta[0],
 ...                       formatter={'float_kind':'{:.7f}'.format}))
 [[0.4472136 -0.7682213 0.4472136]
  [0.2236068 0.7071068 -0.4472136]]
->>> print(np.array2string(tstudent_res.bool_array()))
-[[ True  True  True]
- [ True  True  True]]
+>>> print(np.array2string(tstudent_res.oracles()))
+[[[ True  True  True]
+  [ True  True  True]]]
 
 '''
 import numpy as np
@@ -341,13 +341,17 @@ class TestResultStudent(TestResult):
     def __init__(self, test, delta, pvalue=None):
         '''Initialisation of :class:`~.TestResultStudent`
 
+        Members are lists whose length corresponds to the number of datasets
+        compared to the reference dataset.
+
         :param test: the TestStudent object
         :type test: :class:`~.TestStudent`
-        :param delta: Student's t-test result
-        :type delta: :obj:`numpy.ndarray`
+        :param delta: Student's t-test results
+        :type delta: :class:`list` (:obj:`numpy.ndarray`)
         :param pvalue: p-value or p-values depending on datasets, default is
                        None
-        :type pvalue: :class:`numpy.generic` or list(:class:`numpy.generic`)
+        :type pvalue: :class:`list` (:class:`numpy.generic`)
+            or :class:`list` (:class:`list` (:class:`numpy.generic`))
         '''
         super().__init__(test)
         self.delta = delta
@@ -362,7 +366,7 @@ class TestResultStudent(TestResult):
         '''
         return np.less(np.fabs(delta), self.test.threshold)
 
-    def bool_array(self):
+    def oracles(self):
         '''Final test (if spectrum)
 
         :returns: list(bool)
@@ -372,10 +376,11 @@ class TestResultStudent(TestResult):
         return np.less(np.fabs(self.delta), self.test.threshold)
 
     def __bool__(self):
-        if isinstance(self.delta, np.generic):
-            return bool(self.test_alpha(self.delta))
-        if self.delta.size == 1:
-            return bool(self.test_alpha(self.delta[0]))
+        if len(self.test.datasets) == 1:
+            if isinstance(self.delta[0], np.generic):
+                return bool(self.test_alpha(self.delta[0]))
+            if self.delta[0].size == 1:
+                return bool(self.test_alpha(self.delta[0][0]))
         raise TestResultStudentException(
             "Not suitable to multi-dimension arrays, "
             "except within a user's loop")
@@ -391,23 +396,23 @@ class TestResultStudent(TestResult):
         '''
         if self.test.ndf is None:
             return False
-        return self.pvalue > self.test.alpha/2
+        return [pval > self.test.alpha/2 for pval in self.pvalue]
 
 
 class TestStudent(Test):
     '''Class to build the Student's t-test.'''
 
-    def __init__(self, ds1, ds2, *, name, description='', alpha=0.01,
+    def __init__(self, dsref, *datasets, name, description='', alpha=0.01,
                  ndf=None):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`TestStudent`
 
         :param str name: local name of the test
         :param str description: specific description of the test
-        :param ds1: first dataset
-        :type ds1: :class:`~valjean.gavroche.dataset.Dataset`
-        :param ds2: second dataset
-        :type ds2: :class:`~valjean.gavroche.dataset.Dataset`
+        :param dsref: reference dataset
+        :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
+        :param datasets: list of datasets to be compared to reference dataset
+        :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
         :param float alpha: significance level, i.e. limit on the p-value
                             (expected values are typically 0.01, 0.05),
                             default is ``None``
@@ -416,8 +421,11 @@ class TestStudent(Test):
                         (should correspond to number of batches),
                         otherwise ndf assumed infinite, normal approximation
         '''
-        self.ds1 = ds1
-        self.ds2 = ds2
+        self.dsref = dsref
+        self.datasets = datasets
+        if not datasets:
+            raise ValueError('At least one dataset expected to be compared to '
+                             'the reference one')
         self.alpha = alpha
         self.ndf = ndf
         self.threshold = self.student_threshold(self.alpha, self.ndf)
@@ -428,11 +436,13 @@ class TestStudent(Test):
 
         :returns: :class:`~.TestResultStudent`
         '''
-        check_bins(self.ds1, self.ds2)
-        deltas = self.student_test(self.ds1, self.ds2)
+        deltas = []
+        for _ds in self.datasets:
+            check_bins(self.dsref, _ds)
+            deltas.append(self.student_test(self.dsref, _ds))
         if self.ndf is None:
             return TestResultStudent(self, deltas)
-        pval = self.pvalue(deltas, self.ndf)
+        pval = [self.pvalue(delta, self.ndf) for delta in deltas]
         return TestResultStudent(self, deltas, pval)
 
     @staticmethod

@@ -132,7 +132,7 @@ True
 >>> bool(tbonf_res)
 True
 >>> tbonf_res.nb_rejected
-0
+[0]
 
 >>> tholmbonf = TestHolmBonferroni(name="holm-bonf",
 ...                                description="Holm-Bonferroni method",
@@ -143,7 +143,7 @@ True
 >>> bool(thb_res)
 True
 >>> thb_res.nb_rejected
-0
+[0]
 
 
 Failing test with Bonferroni correction and Holm-Bonferroni method
@@ -165,9 +165,9 @@ Failing test with Bonferroni correction and Holm-Bonferroni method
 >>> bool(tbonf_res)
 False
 >>> tbonf_res.nb_rejected
-1
+[1]
 >>> tbonf_res.rejected_proportion  # in percentage
-20.0
+[20.0]
 
 >>> tholmbonf = TestHolmBonferroni(name="holm-bonf",
 ...                                description="Holm-Bonferroni method",
@@ -178,9 +178,9 @@ False
 >>> bool(thb_res)
 False
 >>> thb_res.nb_rejected
-2
+[2]
 >>> thb_res.rejected_proportion  # in percentage
-40.0
+[40.0]
 
 For an easier comparison, p-values, associated significance levels and the
 corresponding result from the test (rejection or not) can be printed. The
@@ -195,18 +195,22 @@ sorting order is also given for the Holm-Bonferroni method.
 ...     if it.iterindex == 0:
 ...         print("index  | pvalue(B) |   α(B)    |  reject B | order(HB) |"
 ...               "   α(HB)   | reject HB\n{0:->77}".format('-'))
-...     print("{i}   | {bp:.3e} | {ba:.3e} | {br!s:^9} | {hbo:^7}   |"
+...     print("{i} | {bp:.3e} | {ba:.3e} | {br!s:^9} | {hbo:^7}   |"
 ...           " {hba:.3e} |   {hbr!s:<}"
 ...           .format(i=it.multi_index, bp=it[0], ba=it[1], br=it[2],
 ...                   hbo=it[3], hba=it[4], hbr=it[5]))
 ...     _ = it.iternext()
 index  | pvalue(B) |   α(B)    |  reject B | order(HB) |   α(HB)   | reject HB
 -----------------------------------------------------------------------------
-(0,)   | 3.274e-01 | 5.000e-03 |   False   |    3      | 1.250e-02 |   False
-(1,)   | 1.304e-02 | 5.000e-03 |   False   |    2      | 8.333e-03 |   False
-(2,)   | 5.074e-07 | 5.000e-03 |   True    |    0      | 5.000e-03 |   True
-(3,)   | 4.116e-01 | 5.000e-03 |   False   |    4      | 2.500e-02 |   False
-(4,)   | 5.782e-03 | 5.000e-03 |   False   |    1      | 6.250e-03 |   True
+(0, 0) | 3.274e-01 | 5.000e-03 |   False   |    3      | 1.250e-02 |   False
+(0, 1) | 1.304e-02 | 5.000e-03 |   False   |    2      | 8.333e-03 |   False
+(0, 2) | 5.074e-07 | 5.000e-03 |   True    |    0      | 5.000e-03 |   True
+(0, 3) | 4.116e-01 | 5.000e-03 |   False   |    4      | 2.500e-02 |   False
+(0, 4) | 5.782e-03 | 5.000e-03 |   False   |    1      | 6.250e-03 |   True
+
+
+The first index corresponds to the index of the compared dataset in the
+``datasets`` container in the input test (compared to ``dsref``).
 
 The Holm-Bonferroni test is uniformly more powerful than the Bonferroni test.
 In this particular case, Holm-Bonferroni is able to reject an additional null
@@ -238,8 +242,8 @@ Tests with multi-dimension datasets
 >>> bool(tbonf_res)
 False
 >>> tbonf_res.nb_rejected
-1
->>> print('{:.3f} %'.format(tbonf_res.rejected_proportion))
+[1]
+>>> print('{:.3f} %'.format(tbonf_res.rejected_proportion[0]))
 16.667 %
 
 >>> tholmbonf = TestHolmBonferroni(name="holm-bonf",
@@ -251,8 +255,8 @@ False
 >>> bool(thb_res)
 False
 >>> thb_res.nb_rejected
-2
->>> print('{:.3f} %'.format(thb_res.rejected_proportion))
+[2]
+>>> print('{:.3f} %'.format(thb_res.rejected_proportion[0]))
 33.333 %
 
 The detailed comparison also works for multi-dimensions arrays:
@@ -263,24 +267,28 @@ The detailed comparison also works for multi-dimensions arrays:
 ...                flags=['multi_index'])
 >>> while not it.finished:
 ...     if it.iterindex == 0:
-...         print("index  | pvalue(B) |   α(B)    | reject B | order(HB) |"
-...               "   α(HB)   | reject HB\n{0:->77}".format('-'))
-...     print("{i} | {bp:.3e} | {ba:.3e} | {br!s:^7}  | {hbo:^7}   |"
-...           " {hba:.3e} |   {hbr!s:<}"
+...         print("index     | pvalue(B) |   α(B)   | reject B | order(HB) |"
+...               "   α(HB)  | reject HB\n{0:->79}".format('-'))
+...     print("{i} |  {bp:.2e} | {ba:.2e} | {br!s:^7}  | {hbo:^7}   |"
+...           " {hba:.2e} |   {hbr!s:<}"
 ...           .format(i=it.multi_index, bp=it[0], ba=it[1], br=it[2],
 ...                   hbo=it[3], hba=it[4], hbr=it[5]))
 ...     _ = it.iternext()
-index  | pvalue(B) |   α(B)    | reject B | order(HB) |   α(HB)   | reject HB
------------------------------------------------------------------------------
-(0, 0) | 3.274e-01 | 4.167e-03 |  False   |    4      | 1.250e-02 |   False
-(0, 1) | 1.304e-02 | 4.167e-03 |  False   |    2      | 6.250e-03 |   False
-(0, 2) | 5.074e-07 | 4.167e-03 |  True    |    0      | 4.167e-03 |   True
-(1, 0) | 4.116e-01 | 4.167e-03 |  False   |    5      | 2.500e-02 |   False
-(1, 1) | 4.330e-03 | 4.167e-03 |  False   |    1      | 5.000e-03 |   True
-(1, 2) | 1.745e-01 | 4.167e-03 |  False   |    3      | 8.333e-03 |   False
+index     | pvalue(B) |   α(B)   | reject B | order(HB) |   α(HB)  | reject HB
+-------------------------------------------------------------------------------
+(0, 0, 0) |  3.27e-01 | 4.17e-03 |  False   |    4      | 1.25e-02 |   False
+(0, 0, 1) |  1.30e-02 | 4.17e-03 |  False   |    2      | 6.25e-03 |   False
+(0, 0, 2) |  5.07e-07 | 4.17e-03 |  True    |    0      | 4.17e-03 |   True
+(0, 1, 0) |  4.12e-01 | 4.17e-03 |  False   |    5      | 2.50e-02 |   False
+(0, 1, 1) |  4.33e-03 | 4.17e-03 |  False   |    1      | 5.00e-03 |   True
+(0, 1, 2) |  1.74e-01 | 4.17e-03 |  False   |    3      | 8.33e-03 |   False
 
-Indices correspond to the shape of the arrays. The sorting order for
-Holm-Bonferroni considers all elements as equivalent (not done per dimension).
+The first index corresponds to the index of the compared dataset in the
+``datasets`` container in the input test (compared to ``dsref``). The next ones
+correspond to the shape of the arrays.
+
+The sorting order for Holm-Bonferroni considers all elements as equivalent (not
+done per dimension).
 '''
 
 import numpy as np
@@ -309,6 +317,14 @@ class TestResultBonferroni(TestResult):
         self.first_test_res = first_test_res
         self.rejected_null_hyp = rejected_null_hyp
 
+    def oracles(self):
+        '''Final test (on list of tests, espacially in case of mulitple tests
+        on common reference).
+
+        :returns: list(bool)
+        '''
+        return [not np.any(rnh) for rnh in self.rejected_null_hyp]
+
     def __bool__(self):
         return not np.any(self.rejected_null_hyp)
 
@@ -316,17 +332,19 @@ class TestResultBonferroni(TestResult):
     def nb_rejected(self):
         '''Number of rejected null hypothesis according Holm-Bonferroni test.
 
-        :returns: int or :obj:`numpy.generic` (:obj:`int`)
+        :returns: list(int) or
+            :class:`list` (:obj:`numpy.generic` (:obj:`int`))
         '''
-        return np.count_nonzero(self.rejected_null_hyp)
+        return [np.count_nonzero(rnh) for rnh in self.rejected_null_hyp]
 
     @property
     def rejected_proportion(self):
         '''Rejected proportion in percentage.
 
-        :returns: :class:`numpy.generic` (:obj:`float`)
+        :returns: :class:`list` (:class:`numpy.generic` (:obj:`float`))
         '''
-        return self.nb_rejected / self.rejected_null_hyp.size * 100
+        return [nr / rnh.size * 100
+                for nr, rnh in zip(self.nb_rejected, self.rejected_null_hyp)]
 
 
 class TestBonferroni(Test):
@@ -354,7 +372,7 @@ class TestBonferroni(Test):
     def ntests(self):
         '''Returns the number of hypotheses to test, i.e. number of bins here.
         '''
-        return self.test.ds1.size
+        return self.test.dsref.size
 
     @staticmethod
     def bonferroni_correction(pvalues, bonf_signi_level):
@@ -380,8 +398,9 @@ class TestBonferroni(Test):
         :returns: :class:`~TestResultBonferroni`
         '''
         test_res = self.test.evaluate()
-        null_hyp_reject = self.bonferroni_correction(test_res.pvalue,
-                                                     self.bonf_signi_level)
+        null_hyp_reject = [
+            self.bonferroni_correction(pval, self.bonf_signi_level)
+            for pval in test_res.pvalue]
         return TestResultBonferroni(self, test_res, null_hyp_reject)
 
 
@@ -406,10 +425,17 @@ class TestResultHolmBonferroni(TestResult):
         :type rejected_hyp: :obj:`numpy.ndarray` (:obj:`bool`)
         '''
         super().__init__(test)
-        # self.sorted_indices = sorted_indices
         self.alphas_i = alphas_i
         self.rejected_null_hyp = rejected_null_hyp
         self.first_test_res = first_test_res
+
+    def oracles(self):
+        '''Final test (on list of tests, espacially in case of mulitple tests
+        on common reference).
+
+        :returns: list(bool)
+        '''
+        return [not np.any(rnh) for rnh in self.rejected_null_hyp]
 
     def __bool__(self):
         return not np.any(self.rejected_null_hyp)
@@ -418,29 +444,32 @@ class TestResultHolmBonferroni(TestResult):
     def nb_rejected(self):
         '''Number of rejected null hypothesis according Holm-Bonferroni test.
 
-        :returns: int or :obj:`numpy.generic` (:obj:`int`)
+        :returns: list(int) or
+            :class:`list` (:obj:`numpy.generic` (:obj:`int`))
         '''
-        # if self.rejected_null_hyp[-1]:
-        #     return len(self.rejected_null_hyp)
-        return np.count_nonzero(self.rejected_null_hyp)
+        return [np.count_nonzero(rnh) for rnh in self.rejected_null_hyp]
 
     @property
     def rejected_proportion(self):
         '''Rejected proportion in percentage.
 
-        :returns: :class:`numpy.generic` (:obj:`float`)
+        :returns: :class:`list` (:class:`numpy.generic` (:obj:`float`))
         '''
-        return self.nb_rejected / self.first_test_res.pvalue.size * 100
+        return [nr / rnh.size * 100
+                for nr, rnh in zip(self.nb_rejected, self.rejected_null_hyp)]
 
     @property
     def sort_ordering(self):
         '''Get the sorted pvalues.
 
-        :returns: :class:`numpy.generic` (:obj:`int`)
+        :returns: :class:`list` (:class:`numpy.generic` (:obj:`int`))
         '''
-        sort_inds = np.argsort(self.first_test_res.pvalue.flatten())
-        inv_sort = np.argsort(sort_inds)
-        return inv_sort.reshape(self.first_test_res.pvalue.shape)
+        sort_inds = [np.argsort(pvals.flatten())
+                     for pvals in self.first_test_res.pvalue]
+        inv_sort = [np.argsort(si) for si in sort_inds]
+        return [iv.reshape(pvals.shape)
+                for pvals in self.first_test_res.pvalue
+                for iv in inv_sort]
 
 
 class TestHolmBonferroni(Test):
@@ -466,7 +495,7 @@ class TestHolmBonferroni(Test):
     def ntests(self):
         '''Returns the number of hypotheses to test, i.e. number of bins here.
         '''
-        return self.test.ds1.size
+        return self.test.dsref.size
 
     @staticmethod
     def holm_bonferroni_method(pvalues, alpha):
@@ -496,5 +525,6 @@ class TestHolmBonferroni(Test):
         :returns: :class:`~.TestResultHolmBonferroni`
         '''
         test_res = self.test.evaluate()
-        hb_res = self.holm_bonferroni_method(test_res.pvalue, self.alpha)
-        return TestResultHolmBonferroni(self, test_res, *hb_res)
+        hb_res = [self.holm_bonferroni_method(pvals, self.alpha)
+                  for pvals in test_res.pvalue]
+        return TestResultHolmBonferroni(self, test_res, *zip(*hb_res))
