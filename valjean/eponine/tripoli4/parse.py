@@ -89,6 +89,7 @@ class T4Parser():
     def scan_then_parse(self, start_time):
         '''Scan the parse the given jdd.'''
         self.scan_t4_listing()
+        self.check_t4_scan()
         LOGGER.info("Successful scan in %f s", time.time()-start_time)
         start_parse = time.time()
         self.parse_t4_listing()
@@ -99,6 +100,11 @@ class T4Parser():
     def scan_t4_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
         self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para)
+
+    def check_t4_scan(self):
+        '''Check existence of scan result and presence of normal end (per
+        default NORMAL COMPLETION).
+        '''
         if not self.scan_res:
             raise T4ParserException("No result found in Tripoli-4 listing.")
         if not self.scan_res.normalend:

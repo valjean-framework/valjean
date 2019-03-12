@@ -6,7 +6,7 @@ Main difference is the possibility of using the ``end_flag`` parameter in the
 
 import logging
 
-from .parse import T4Parser, T4ParserException
+from .parse import T4Parser
 from . import scan
 from .grammar import t4debug_gram
 
@@ -43,11 +43,6 @@ class T4ParserDebug(T4Parser):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
         self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para,
                                   self.end_flag)
-        if not self.scan_res:
-            raise T4ParserException("No result found in Tripoli-4 listing.")
-        if not self.scan_res.normalend:
-            LOGGER.warning("Tripoli-4 listing did not finish with "
-                           "NORMAL COMPLETION.")
 
     def parse_t4_listing(self):
         '''Parse Tripoli-4 results, calling pyparsing and
