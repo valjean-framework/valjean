@@ -203,7 +203,7 @@ def student_test(some_1d_dataset, other_1d_dataset):
     '''Return a Student test between datasets.'''
     return TestStudent(some_1d_dataset, other_1d_dataset,
                        name='A Student test',
-                       description='Have the dataset the same mean taking '
+                       description='Do the datasets have the same mean taking '
                                    'into account the errors?')
 
 
@@ -218,7 +218,7 @@ def student_test_edges(some_1d_dataset_edges, other_1d_dataset_edges):
     '''Return a Student test between datasets with bins given by edges.'''
     return TestStudent(some_1d_dataset_edges, other_1d_dataset_edges,
                        name='A Student test',
-                       description='Have the dataset the same mean taking '
+                       description='Do the datasets have the same mean taking '
                                    'into account the errors?')
 
 
@@ -233,8 +233,8 @@ def student_test_edges_result(student_test_edges):
 def student_test_fail(some_1d_dataset, different_1d_dataset):
     '''Return a Student test between different datasets (failing test).'''
     return TestStudent(some_1d_dataset, different_1d_dataset,
-                       name='A Student test',
-                       description='Have the dataset the same mean taking '
+                       name='Failing Student test',
+                       description='Do the datasets have the same mean taking '
                                    'into account the errors? no...')
 
 
@@ -250,7 +250,7 @@ def student_test_with_pvalues(some_1d_dataset, other_1d_dataset):
     '''Return a Student test between datasets.'''
     return TestStudent(some_1d_dataset, other_1d_dataset,
                        name='A Student test',
-                       description='Have the dataset the same mean taking '
+                       description='Do the datasets have the same mean taking '
                                    'into account the errors?',
                        ndf=20)
 
@@ -260,7 +260,7 @@ def student_test_fail_with_pvalues(some_1d_dataset, different_1d_dataset):
     '''Return a Student test between datasets.'''
     return TestStudent(some_1d_dataset, different_1d_dataset,
                        name='A Student test failing',
-                       description='Have the dataset the same mean taking '
+                       description='Do the datasets have the same mean taking '
                                    'into account the errors?',
                        ndf=20)
 
@@ -326,10 +326,5 @@ def holm_bonf_test_result_fail(holm_bonferroni_test_fail):
 @composite
 def one_dim_dataset(draw):
     '''Strategy for generating 1-dimension datasets.'''
-    # print(draw(datasets()))
     return draw(datasets(elements=integers(min_value=-5, max_value=5),
                          shape=just(5)))
-    # bla = draw(datasets())
-    # print(bla)
-    # print(draw(just(5)))
-    # return bla

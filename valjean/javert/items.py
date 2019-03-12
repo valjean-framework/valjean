@@ -41,17 +41,11 @@ class TableItem:
         :param list(str) units: a list of measurement units.
         :param highlight: a callable of the form `f(*row) -> bool`.
         '''
-        # print(columns, type(columns))
         self.columns = columns
         n_columns = len(columns)
         self.headers = ['']*n_columns if headers is None else headers
         self.units = ['']*n_columns if units is None else units
         self.highlight = highlight
-
-        # print(self.columns, id(self.columns))
-        # print(self.columns[0], id(self.columns[0]))
-        # print(len(columns))
-        # print(len(headers), id(self.headers))
 
         # some sanity checks follow
         if not columns:
@@ -102,9 +96,6 @@ class TableItem:
         '''
         if self.headers != other.headers:
             raise ValueError("TableItems to add should have same headers")
-        # if any([isinstance(col, np.ndarray) for col in self.columns]):
-        #     raise TypeError("No addition permitted on array (else it would "
-        #                     "really add the arrays)")
         self.columns = tuple(
             self.columns[i] + other.columns[i]
             if isinstance(self.columns[i], list)
@@ -134,13 +125,13 @@ class TableItem:
 
 
 class CurveElements:
-    '''Class to define the characteristics of each curve to be plotted.'''
+    '''Define the characteristics of a curve to plot.'''
 
     def __init__(self, values, label, *, yname='', errors=None):
         '''Construction of :class:`CurveElements`: curve details (values,
         label, etc).
 
-        Major parameters are ``yname``, set per default to ``''``: this is the
+        A major parameter is ``yname``, set by default to ``''``: this is the
         y-axis name. When representing the curve on the pyplot, the subplot is
         chosen according this ``yname``.
 
@@ -149,15 +140,14 @@ class CurveElements:
         Values and errors (if given) should be :obj:`numpy.ndarray` of same
         shape.
 
-        :param values: list of arrays to be represented on the plot,
-            **mandatory**
-        :type values: :class:`list` (:obj:`numpy.ndarray`)
+        :param values: array to be represented on the plot, **mandatory**
+        :type values: :obj:`numpy.ndarray`
         :param str label: label to be used in the legend to characterize the
             curve, **mandatory**
         :param str yname: label of y-axis (used to determine the number of
             subplots on the plot)
         :param errors: errors associated to values (per default only on y-axis)
-        :type errors: :class:`list` (:obj:`numpy.ndarray`)
+        :type errors: :obj:`numpy.ndarray`
         '''
         self.values = values
         self.label = label
@@ -193,29 +183,30 @@ class PlotItem:
     def __init__(self, *, bins, curves, xname=''):
         '''Construction of the PlotItem from x-bins and curves.
 
-        The curves should be :class:`CurveElements`.
+        The curves should be a list of :class:`CurveElements`.
 
-        The bins means the x-axis bins. They should be common to all the
-        curves. It is up to the user to insure that (when coming from a unique
-        test this should be automatic).
+        The bins mean the x-axis bins. They should be common to all the curves.
+        It is up to the user to ensure that (when coming from a unique test
+        this should be automatic).
 
         :param bins: bins, common for all plots (important), only one set is
             needed
         :type bins: :obj:`numpy.ndarray`
         :param str xname: name of x-axis (default: ``''``)
         :param curves: list of curves characteristics
-        :type curves: :class:`list` ( :class:`CurveElements` )
+        :type curves: :class:`list` (:class:`CurveElements`)
         '''
         self.bins = bins
         self.xname = xname
         self.curves = curves
 
         if not isinstance(self.curves, list):
-            raise TypeError("Curves should be a list of CurveElements.")
+            raise TypeError("The 'curves' argument must a list of "
+                            "CurveElements.")
 
-        for curve in self.curves:
-            if not isinstance(curve, CurveElements):
-                raise TypeError("Curve should be a PlotElement.")
+        if not all(isinstance(curve, CurveElements) for curve in self.curves):
+            raise TypeError("The 'curves' argument must a list of "
+                            "CurveElements.")
 
     def copy(self):
         '''Copy a :class:`PlotItem` object.
@@ -228,6 +219,14 @@ class PlotItem:
 
     def __iadd__(self, other):
         '''Implement ``+=`` operator.
+
+        This operator **concatenates** the current :class:`PlotItem` to the
+        ``other`` one, i.e., if they share the x-axis (bins and name), the
+        curves list is extended.
+
+        The curves are not added in the mathematical sense. If this is what you
+        really want to do, please add the datasets themselves before and
+        probably redo the test.
 
         :param other: :class:`PlotItem` to add to the current one
         :returns: updated :class:`PlotItem`
@@ -242,7 +241,13 @@ class PlotItem:
     def __add__(self, other):
         '''Implement ``+`` operator.
 
+        This operator **concatenates** the current :class:`PlotItem` to the
+        ``other`` one, i.e., if they share the x-axis (bins and name), the
+        curves list is extended. A new :class:`PlotItem` is returned, the
+        current one is left intact.
+
         :param other: :class:`PlotItem` to add to the current one
+        :type: :class:`PlotItem`
         :returns: new :class:`PlotItem`
         '''
         copy = self.copy()
@@ -250,7 +255,7 @@ class PlotItem:
         return copy
 
     def __repr__(self):
-        '''Printing of PlotItem.'''
+        '''Printing of :class:`PlotItem`.'''
         intro = ["class: {0}\n"
                  "bins: {1}\n"
                  "xname: {2}\n".format(self.__class__, self.bins, self.xname)]
@@ -267,7 +272,7 @@ class PlotItem:
 def concatenate(litems):
     '''Concatenate a list of items containing TableItems, PlotItems.
 
-    It concatenates the various items of same shape, following the
+    This function concatenates the various items of same shape, following the
     :meth:`TableItem.__iadd__` and :meth:`PlotItem.__iadd__` methods:
 
     * same number of columns and same headers for TableItems
@@ -277,8 +282,8 @@ def concatenate(litems):
     items are compatible.
 
     :param litems: list of items
-    :type litems: :class:`list` ( :class:`TableItem`, :class:`PlotItem`)
-    :returns: :class:`list` ( :class:`TableItem`, :class:`PlotItem`)
+    :type litems: :class:`list` (:class:`TableItem`, :class:`PlotItem`)
+    :returns: :class:`list` (:class:`TableItem`, :class:`PlotItem`)
 
 
     >>> import numpy as np

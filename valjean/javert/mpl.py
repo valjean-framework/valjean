@@ -3,13 +3,13 @@
 
 
 :class:`MplPlot` objects take as input :class:`~.items.PlotItem` containing at
-minima values and bins.
+least values and bins.
 
 The format, or rendering, of the plot can be set using the rcParams but also
 some predefined parameters on which the class cycle like colors, markers shape
 and filling.
 
-Per default the first color is black and only used for reference. The cycle on
+By default the first color is black and only used for reference. The cycle on
 colors excludes the reference color.
 
 Plots can be obtained with the following for example:
@@ -20,10 +20,9 @@ Plots can be obtained with the following for example:
     >>> import numpy as np
     >>> from valjean.javert.items import PlotItem, CurveElements
     >>> bins = np.array(np.arange(10))
-    >>> lcurves = []
-    >>> for icurve in range(20):
-    ...     lcurves.append(CurveElements(values=bins*0.5*(icurve+1),
-    ...                                  label=str(icurve+1)))
+    >>> lcurves = [CurveElements(values=bins*0.5*(icurve+1),
+    ...                          label=str(icurve+1))
+    ...            for icurve in range(20)]
     >>> pltit = PlotItem(bins=bins, curves=lcurves, xname='the x-axis')
     >>> from valjean.javert.mpl import MplPlot
     >>> mplplt = MplPlot(pltit)
@@ -75,7 +74,6 @@ Colors and markers can also be changed directly:
     >>> mpl.MARKERS_FILL = ['top', 'full', 'right', 'none', 'bottom', 'left',
     ...                     'none']
     >>> mplplt = mpl.MplPlot(pltit)
-
 '''
 from collections import OrderedDict
 from itertools import cycle
@@ -116,41 +114,15 @@ class MplPlot:
 
     def draw(self):
         '''Draw method.'''
-        if len(self.data.curves) == 1:
-            return self.error_plot()
-        return self.multiple_error_plots()
-
-    def error_plot(self):
-        '''Draw the plot with error bars.
-
-        .. warning::
-
-            WORKS WHEN ONLY ONE CURVE TO DRAW ON GRAPH.
-
-        Line not represented in the case N(bins) = N(vals) (no steps).
-        '''
-        LOGGER.debug("in error plot")
-        self.splt.set_xlabel(self.data.xname)
-        self.splt.set_ylabel(self.data.curves[0].yname)
-        if self.data.bins.size == self.data.curves[0].values.size+1:
-            steps = self.splt.errorbar(
-                self.data.bins,
-                np.append(self.data.curves[0].values, [np.nan]),
-                fmt='b-', drawstyle='steps-post')
-            marker = self.splt.errorbar(
-                (self.data.bins[1:] + self.data.bins[:-1])/2,
-                self.data.curves[0].values, yerr=self.data.curves[0].errors,
-                fmt='bo')
-            plt.legend((steps, marker), self.data.curves[0].label)
-        else:
-            self.splt.errorbar(self.data.bins, self.data.curves[0].values,
-                               yerr=self.data.curves[0].errors,
-                               fmt='bo', label=self.data.curves[0].label)
-            if self.data.curves[0].label:
-                plt.legend()
+        return self.error_plots()
 
     def ierror_plot(self, idata, iplot, data_fmt):
         '''Draw the plot with error bars on the plot (update the plot)
+
+        If only one curve is represented and the bins are given by centers not
+        (dashed) line will be represented between points, as soon as at least
+        two curves are represented a dashed line join the points for better
+        lisibility.
 
         :param int idata: index of the data curve in the curves list
         :param int iplot: index of the subplot (chosen according y-axis name)
@@ -177,29 +149,43 @@ class MplPlot:
             self.legend['labels'].append(self.data.curves[idata].label)
             self.legend['iplot'].append(iplot)
         else:
+            linesty = '--' if len(self.data.curves) > 1 else ''
             eplt = splt.errorbar(
                 self.data.bins, self.data.curves[idata].values,
-                yerr=self.data.curves[idata].errors, linestyle='--',
+                yerr=self.data.curves[idata].errors, linestyle=linesty,
                 color=data_fmt[0], marker=data_fmt[1], fillstyle=data_fmt[2])
             self.legend['handles'].append(eplt)
             self.legend['labels'].append(self.data.curves[idata].label)
             self.legend['iplot'].append(iplot)
 
-    def multiple_error_plots(self):
-        '''Plot errorbar plot when more than one curve are available (update
-        the pyplot instance). Also build the legend.
+    def error_plots(self):
+        '''Plot errorbar plot (update the pyplot instance) and build the
+        legend.
 
         Remark: datasets are supposed to be already consistent as coming from
         a single test. If we had them manually bins will need to be checked.
+
+        .. todo::
+
+            change logic of color/marker incrementing when reference will
+            be given (next PR)
         '''
         ynames = OrderedDict()
-        icv_format = ('k', 'o', 'full')
+        icv_format = (('k', 'o', 'full') if len(self.data.curves) > 1
+                      else ('b', 'o', 'full'))
         for icv, yax in enumerate([c.yname for c in self.data.curves]):
             if yax not in ynames:
                 ynames[yax] = 0
             else:
                 ynames[yax] += 1
-                if list(ynames.keys()).index(yax) == 0:
+            if self.data.curves[icv].label in self.legend['labels']:
+                ilab = self.legend['labels'].index(self.data.curves[icv].label)
+                print("le label existe deja c'est le", ilab)
+                icv_format = (self.legend['handles'][ilab][0].get_color(),
+                              self.legend['handles'][ilab][0].get_marker(),
+                              self.legend['handles'][ilab][0].get_fillstyle())
+            else:
+                if self.nb_splts != len(self.data.curves) and icv > 0:
                     icv_format = tuple(next(pf) for pf in self.curve_format)
             self.ierror_plot(icv, list(ynames.keys()).index(yax), icv_format)
         self._build_legend(ynames)
@@ -211,8 +197,12 @@ class MplPlot:
         of curves to be plotted on each subplot. It has been decided to add a
         new columns each 5 curves.
 
+        No legend is printed when only one curve is given.
+
         :param ynames: available y-axis names
         '''
+        if len(self.data.curves) == 1:
+            return
         if self.nb_splts == 1:
             ncol = len(self.legend['handles']) // 6 + 1
             self.splt.legend(self.legend['handles'],
@@ -229,11 +219,6 @@ class MplPlot:
                          if self.legend['iplot'][i] == iyax],
                         ncol=ncol)
 
-    @staticmethod
-    def show():
-        '''Show the plot in a popup window.'''
-        plt.show()
-
     def save(self, name='fig.png'):
         '''Save the plot under the given name.
 
@@ -241,8 +226,3 @@ class MplPlot:
             pdf, svg, eps.
         '''
         self.fig.savefig(name)
-
-    @staticmethod
-    def plt():
-        '''Return the matplotlib instance.'''
-        return plt

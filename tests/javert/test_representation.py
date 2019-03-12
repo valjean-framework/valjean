@@ -67,8 +67,7 @@ def test_empty_repr(test_name, request):
     test = request.getfixturevalue(test_name)
     representation = EmptyRepresentation()
     items = representation(test.evaluate())
-    assert isinstance(items, list)
-    assert not items
+    assert items is None
 
 
 def test_full_concatenation(student_test_result, student_test_result_fail,

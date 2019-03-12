@@ -15,20 +15,20 @@ def dimension_from_array(array_shape):
     :param tuple(int) array_shape: shape of the **values** array
     :returns: index of the chosen dimension in the tuple of array shape
     :rtype: int
-    :raises: TypeError if more than one non-trivial dimensions or only trivial
-        dimensions and more than one.
     '''
     non_trivial_dims = tuple(d for d, s in enumerate(array_shape) if s > 1)
-    LOGGER.debug("Non-trivial dimensions: %s", str(non_trivial_dims))
+    LOGGER.debug("Non-trivial dimensions: %s", non_trivial_dims)
     if len(non_trivial_dims) > 1:
-        raise TypeError("More than one non-trivial dimensions, N-dimensions "
-                        "should be required or a dataset slice.")
+        LOGGER.error("More than one non-trivial dimensions, N-dimensions "
+                     "should be required or a dataset slice.")
+        return None
     if not non_trivial_dims:
         LOGGER.info("Only trivial dimension, you may prefer a different kind "
                     "of plot (PlotPoint).")
         if len(array_shape) > 1:
-            raise TypeError("Only trivial dimensions and more than one trivial"
-                            " dimensions, no dimension choice possible.")
+            LOGGER.error("Only trivial dimensions and more than one trivial"
+                         " dimensions, no dimension choice possible.")
+            return None
         return 0
     return non_trivial_dims[0]
 
@@ -39,29 +39,29 @@ def dimension(bins, array_shape):
     non-trivial" dimension.
 
     :param bins: bins coming from the results dataset
-    :type bins: :obj:`collections.OrderedDict` (str, :obj:`numpy.ndarray`)
+    :type bins: :obj:`collections.OrderedDict` (:class:`str`,
+        :obj:`numpy.ndarray`)
     :param tuple(int) array_shape: shape of the **values** array from the
         results dataset
     :returns: dimension to be used
     :rtype: str
     '''
     idim = dimension_from_array(array_shape)
-    dim_name = list(bins.keys())[idim]
-    LOGGER.debug("Used dimension: %s among %s", dim_name,
-                 str(list(bins.keys())))
+    dim_name = list(bins.keys())[idim] if idim is not None else None
+    LOGGER.debug("Used dimension: %s among %s", dim_name, list(bins.keys()))
     return dim_name
 
 
 def repr_testresultstudent(result):
     '''Represent the Student test result as a plot.
 
-    Per default two :class:`~.items.PlotItem` are returned in order to get a
-    top plot representing the two series of values and the bottom plot
-    representing the Δ from the Student test.
+    By default two :class:`~.items.PlotItem` are returned in order to get a top
+    plot representing the two series of values and the bottom plot representing
+    the Δ from the Student test.
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: list( :class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.items.PlotItem`)
     '''
     return concatenate(repr_student_values(result)
                        + repr_student_delta(result))
@@ -72,13 +72,15 @@ def repr_student_delta(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: list( :class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.items.PlotItem`)
 
     .. note::
         if we have a member ``units`` in base_dataset the axis names
         would be constructed like ``name + units['name']``.
     '''
     dim = dimension(result.test.ds1.bins, result.test.ds1.value.shape)
+    if dim is None:
+        return []
     bins = result.test.ds1.bins[dim]
     curve = CurveElements(values=result.delta, label=result.test.name,
                           yname=r'$\Delta_{Student}$', errors=None)
@@ -91,13 +93,15 @@ def repr_student_values(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: list( :class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.items.PlotItem`)
 
     .. note::
         if we have a member ``units`` in base_dataset the axis names
         would be constructed like ``name + units['name']``.
     '''
     dim = dimension(result.test.ds1.bins, result.test.ds1.value.shape)
+    if dim is None:
+        return []
     bins = result.test.ds1.bins[dim]
     cds1 = CurveElements(values=result.test.ds1.value,
                          label=result.test.name+': dataset 1', yname='',
@@ -113,12 +117,14 @@ def repr_student_pvalues(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: list( :class:`~.items.PlotItem`)
-    :raises: ValueError if p-value is None
+    :returns: :class:`list` (:class:`~.items.PlotItem`)
     '''
     if result.pvalue is None:
-        raise ValueError("p-value is None, won't be possible to plot it.")
+        LOGGER.error("p-value is None, won't be possible to plot it.")
+        return []
     dim = dimension(result.test.ds1.bins, result.test.ds1.value.shape)
+    if dim is None:
+        return []
     bins = result.test.ds1.bins[dim]
     curve = CurveElements(values=result.pvalue,
                           label=result.test.name, yname='p-value', errors=None)
@@ -134,10 +140,12 @@ def repr_datasets_values(result):
     :param result: test result
     :type result: :class:`~valjean.gavroche.test.TestResultEqual`,
         :class:`~valjean.gavroche.test.TestResultApproxEqual`
-    :returns: list( :class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.items.PlotItem`)
     '''
     dim = dimension(result.test.dataset1.bins,
                     result.test.dataset1.value.shape)
+    if dim is None:
+        return []
     bins = result.test.dataset1.bins[dim]
     cds1 = CurveElements(values=result.test.dataset1.value,
                          label=result.test.name+': dataset 1', yname='',
@@ -153,7 +161,7 @@ def repr_testresultequal(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultEqual`
-    :returns: list( :class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.items.PlotItem`)
     '''
     return repr_datasets_values(result)
 
@@ -163,6 +171,6 @@ def repr_testresultapproxequal(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultApproxEqual`
-    :returns: list( :class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.items.PlotItem`)
     '''
     return repr_datasets_values(result)

@@ -39,10 +39,10 @@ An example of use of the ``Representation`` objects can be seen in the
 :class:`FullTableRepresentation`. For example, in this table representation for
 the Bonferroni test result, the input test result is first represented in a
 table, then the Bonferroni itself is represented in a second table (they cannot
-be combined as different headers, see :func:`.items.concatenate`).
+be combined as they have different headers, see :func:`.items.concatenate`).
 
 
-Thus the use of the ``Representation`` is forseen as:
+Thus the use of the ``Representation`` is foreseen as:
 
 * use the default methods provided in :class:`TableRepresentation` and
   :class:`PlotRepresentation`;
@@ -79,8 +79,9 @@ class TableRepresentation(Representation):
     '''This class is the default representation class for tables. It contains
     the overridden :meth:`Representation.__call__`.
 
-    Advice: users TableRepresentation classes should inherit from it and not
-    override the :meth:`Representation.__call__` method.
+    Advice: users willing to customize the behaviour of TableRepresentation for
+    specific test results should subclass TableRepresentation and define the
+    relevant ``repr_*`` methods.
     '''
 
     def __call__(self, result):
@@ -89,7 +90,11 @@ class TableRepresentation(Representation):
         if res is None:
             class_name = result.__class__.__name__
             meth_name = 'repr_' + class_name.lower()
-            meth = getattr(tab_elts, meth_name)
+            try:
+                meth = getattr(tab_elts, meth_name)
+            except AttributeError:
+                LOGGER.debug('no representation for class %s', class_name)
+                return None
             res = meth(result)
         return res
 
@@ -141,8 +146,9 @@ class PlotRepresentation(Representation):
     '''This class is the default representation class for plots. It contains
     the overridden :meth:`Representation.__call__`.
 
-    Advice: users PlotRepresentation classes should inherit from it and not
-    override the :meth:`Representation.__call__` method.
+    Advice: users willing to customize the behaviour of PlotRepresentation for
+    specific test results should subclass PlotRepresentation and define the
+    relevant ``repr_*`` methods.
     '''
 
     def __call__(self, result):
@@ -167,12 +173,12 @@ class FullPlotRepresentation(PlotRepresentation):
 class EmptyRepresentation(Representation):
     '''Class that does not generate any items for any test result.'''
 
-    def __call__(self, result):
-        '''Dispatch handling of `result` to all the Representation subclass
-        instance attributes of :class:`EmptyRepresentation`.
-        Always returns an empty list.
-        '''
-        return []
+    # def __call__(self, result):
+    #     '''Dispatch handling of `result` to all the Representation subclass
+    #     instance attributes of :class:`EmptyRepresentation`.
+    #     Always returns an empty list.
+    #     '''
+    #     return []
 
 
 class FullRepresentation(Representation):

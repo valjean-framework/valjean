@@ -88,7 +88,7 @@ def test_plot_show_irreg_bins():
 @pytest.mark.mpl_image_compare(filename='student_plot.png',
                                baseline_dir='ref_plots')
 def test_student_plot(student_test_result, plot_repr):
-    '''Test plot of student result.'''
+    '''Test plot of Student result.'''
     items = plot_repr(student_test_result)
     mplt = MplPlot(items[-1])
     return mplt.fig
@@ -97,7 +97,7 @@ def test_student_plot(student_test_result, plot_repr):
 @pytest.mark.mpl_image_compare(filename='student_wfpi.png',
                                baseline_dir='ref_plots')
 def test_student_with_fpi(student_test_result, plot_repr):
-    '''Test plot of student result.'''
+    '''Test plot of Student result.'''
     item = plot_repr(student_test_result)
     mplt = MplPlot(item[0])
     return mplt.fig
@@ -106,7 +106,7 @@ def test_student_with_fpi(student_test_result, plot_repr):
 @pytest.mark.mpl_image_compare(filename='student_edges_wfpi.png',
                                baseline_dir='ref_plots')
 def test_student_edges_with_fpi(student_test_edges_result, plot_repr):
-    '''Test plot of student result when bins are given by edges.'''
+    '''Test plot of Student result when bins are given by edges.'''
     item = plot_repr(student_test_edges_result)
     mplt = MplPlot(item[0])
     return mplt.fig
@@ -115,7 +115,7 @@ def test_student_edges_with_fpi(student_test_edges_result, plot_repr):
 @pytest.mark.mpl_image_compare(filename='student_wfpi_delta.png',
                                baseline_dir='ref_plots')
 def test_student_with_fpi_d(student_test_result):
-    '''Test plot of student result.'''
+    '''Test plot of Student result.'''
     item = plt_elts.repr_student_delta(student_test_result)
     mplt = MplPlot(item[0])
     return mplt.fig
@@ -124,14 +124,14 @@ def test_student_with_fpi_d(student_test_result):
 @pytest.mark.mpl_image_compare(filename='student_edges_wfpi_values.png',
                                baseline_dir='ref_plots')
 def test_student_edges_with_fpi_v(student_test_edges_result):
-    '''Test plot of student result when bins are given by edges.'''
+    '''Test plot of Student result when bins are given by edges.'''
     item = plt_elts.repr_student_values(student_test_edges_result)
     mplt = MplPlot(item[0])
     return mplt.fig
 
 
 def test_fplit_cc(student_test_result, plot_repr):
-    '''Test copy of FullPlotItem from student result.'''
+    '''Test copy of FullPlotItem from Student result.'''
     item = plot_repr(student_test_result)[0]
     item2 = item.copy()
     assert id(item.bins) != id(item2.bins)
@@ -149,7 +149,7 @@ def test_fplit_cc(student_test_result, plot_repr):
 
 
 def test_fplit_iadd(student_test_result, student_test_result_fail, plot_repr):
-    '''Test addition of FullPlotItem from student result.'''
+    '''Test addition of FullPlotItem from Student result.'''
     item = plot_repr(student_test_result)[0]
     item_cc = item.copy()
     item2 = plot_repr(student_test_result_fail)[0]
@@ -163,7 +163,7 @@ def test_fplit_iadd(student_test_result, student_test_result_fail, plot_repr):
 @pytest.mark.mpl_image_compare(filename='student_fplit_add.png',
                                baseline_dir='ref_plots')
 def test_fplit_add(student_test_result, student_test_result_fail, plot_repr):
-    '''Test addition of FullPlotItem from student result.'''
+    '''Test addition of FullPlotItem from Student result.'''
     item1 = plot_repr(student_test_result)[0]
     item2 = plot_repr(student_test_result_fail)[0]
     item3 = item1 + item2
@@ -183,19 +183,21 @@ def test_fplit_add(student_test_result, student_test_result_fail, plot_repr):
                     elements=integers(min_value=-10, max_value=10),
                     shape=array_shapes(min_dims=1, max_dims=2,
                                        min_side=1, max_side=5)))
-def test_plot_repr(gds):  # , plot_repr):
+def test_plot_repr(gds, caplog):  # , plot_repr):
     '''Test plot repr with various datasets.
 
     Maybe a docstring tests instead of a pytest with hypothesis...
     '''
     note(gds)
     dimss1 = tuple(d for d in gds.value.shape if d > 1)
+    idim = plt_elts.dimension(gds.bins, gds.value.shape)
     if len(dimss1) > 1:
-        with pytest.raises(TypeError):
-            plt_elts.dimension(gds.bins, gds.value.shape)
+        assert ('More than one non-trivial dimensions, N-dimensions '
+                'should be required or a dataset slice.' in caplog.text)
+        assert idim is None
     elif not dimss1 and gds.value.ndim > 1:
-        with pytest.raises(TypeError):
-            plt_elts.dimension(gds.bins, gds.value.shape)
+        assert ('Only trivial dimensions and more than one trivial dimensions,'
+                ' no dimension choice possible.' in caplog.text)
+        assert idim is None
     else:
-        idim = plt_elts.dimension(gds.bins, gds.value.shape)
         assert idim in list(gds.bins.keys())

@@ -11,7 +11,7 @@ class Formatter(ABC):
     @abstractmethod
     def header(self, result):
         '''Convert a result into a section header.'''
-        raise NotImplementedError('desc() method is not implemented')
+        raise NotImplementedError('header() method is not implemented')
 
     def __call__(self, item):
         '''Convert an item to the relevant format.'''

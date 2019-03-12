@@ -8,6 +8,7 @@ from hypothesis import given, note
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 from valjean import LOGGER
 from valjean.javert.rst import RstTable
+from valjean.javert.items import concatenate
 from .conftest import int_matrices
 from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  equal_test_result, equal_test_fail,
@@ -183,11 +184,11 @@ def test_tableitem_iadd(rstcheck, bonferroni_test_result,
     '''Test :meth:`~valjean.javert.items.TableItem.__iadd__`.'''
     items = table_repr(bonferroni_test_result)
     items_id = id(items[1])
-    LOGGER.debug("items = %s", str(items))
+    LOGGER.debug("items = %s", items)
     items2 = table_repr(bonferroni_test_result_fail)
-    LOGGER.debug("items2 = %s", str(items2))
+    LOGGER.debug("items2 = %s", items2)
     items[1] += items2[1]
-    LOGGER.debug("items+items2 = %s", str(items))
+    LOGGER.debug("items+items2 = %s", items)
     assert id(items[1]) != id(items2[1])
     assert id(items[1]) == items_id
     assert all(tuple((row[0] in items[1].columns[i]
@@ -198,11 +199,11 @@ def test_tableitem_add(rstcheck, bonferroni_test_result,
                        bonferroni_test_result_fail, rst_formatter, table_repr):
     '''Test  :meth:`~valjean.javert.items.TableItem.__add__`.'''
     items1 = table_repr(bonferroni_test_result)
-    LOGGER.debug("items1 = %s", str(items1))
+    LOGGER.debug("items1 = %s", items1)
     items2 = table_repr(bonferroni_test_result_fail)
-    LOGGER.debug("items2 = %s", str(items2))
+    LOGGER.debug("items2 = %s", items2)
     items3 = items1[1] + items2[1]
-    LOGGER.debug("items1+items2 = %s", str(items3))
+    LOGGER.debug("items1+items2 = %s", items3)
     assert id(items1[1]) != id(items2[1])
     assert id(items1[1]) != id(items3)
     assert id(items2[1]) != id(items3)
@@ -215,6 +216,15 @@ def test_tableitem_add(rstcheck, bonferroni_test_result,
     # items2 column elements are all in items3
     assert all(tuple((row[0] in items3.columns[i]
                       for i, row in enumerate(items2[1].columns))))
+    items4 = items1 + items2
+    LOGGER.debug("items1+items2 = %s", items4)
+    assert len(items4) == 4
+    items5 = concatenate(items1 + items2)
+    LOGGER.debug("items1+items2 = %s", items5)
+    assert len(items5) == 2
+    assert items5[0].headers[-1] == 'Student?'
+    assert items5[0].columns[0].size == 10
+    assert items5[1].headers[-1] == 'Bonferroni?'
 
 
 def test_tableitem_iadd_array(table_repr,
@@ -223,11 +233,11 @@ def test_tableitem_iadd_array(table_repr,
     '''Test iadd table items containing arrays (failing).'''
     item1 = table_repr(student_test_result)
     item1_cc = item1[0].copy()
-    LOGGER.debug('item1 = %s', str(item1))
+    LOGGER.debug('item1 = %s', item1)
     item2 = table_repr(student_test_result_fail)
-    LOGGER.debug('item2 = %s', str(item2))
+    LOGGER.debug('item2 = %s', item2)
     item1[0] += item2[0]
-    LOGGER.debug('after iadd: item1 = %s', str(item1))
+    LOGGER.debug('after iadd: item1 = %s', item1)
     assert item1[0].headers == item1_cc.headers
     assert item1[0].headers == item2[0].headers
     assert all(col.size == col1.size + col2.size

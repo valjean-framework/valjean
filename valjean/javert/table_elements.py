@@ -11,7 +11,7 @@ def repr_testresultequal(result):
     :param result: a test result.
     :type result: :class:`~.TestResultEqual`
     :returns: Representation of a :class:`~.TestResultEqual` as a table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     return repr_equal(result, 'equal?')
 
@@ -23,7 +23,7 @@ def repr_equal(result, result_header):
     :type result: :class:`~.TestResultEqual`
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultEqual` as a table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     LOGGER.debug('shape of the result: %s', result.equal.shape)
     table_item = TableItem(result.test.dataset1.value,
@@ -40,7 +40,7 @@ def repr_testresultapproxequal(result):
     :param  result: a test result.
     :type result: :class:`~.TestResultApproxEqual`
     :returns: Representation of a :class:`~.TestResultApproxEqual` as a table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     return repr_approx_equal(result, 'approx equal?')
 
@@ -52,7 +52,7 @@ def repr_approx_equal(result, result_header):
     :type result: :class:`~.TestResultApproxEqual`
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultApproxEqual` as a table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     LOGGER.debug('shape of the result: %s', result.approx_equal.shape)
     table_item = TableItem(result.test.dataset1.value,
@@ -69,7 +69,7 @@ def repr_testresultstudent(result):
     :param  result: a test result.
     :type result: :class:`~.TestResultStudent`
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     return repr_student(result, 'Student?')
 
@@ -81,7 +81,7 @@ def repr_student(result, result_header):
     :type result: :class:`~.TestResultStudent`
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     table_item = TableItem(
         result.test.ds1.value, result.test.ds1.error,
@@ -100,7 +100,7 @@ def repr_testresultbonferroni(result):
     :param  result: a test result.
     :type result: :class:`~.TestResultBonferroni`
     :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     return repr_bonferroni(result, 'Bonferroni?')
 
@@ -114,7 +114,7 @@ def repr_bonferroni(result, result_header):
     :type result: :class:`~.TestResultBonferroni`
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     table_item = TableItem(
         [result.first_test_res.test.name],
@@ -134,7 +134,7 @@ def repr_testresultholmbonferroni(result):
     :type result: :class:`~.TestResultHolmBonferroni`
     :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
         table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     return repr_holm_bonferroni(result, 'Holm-Bonferroni?')
 
@@ -149,7 +149,7 @@ def repr_holm_bonferroni(result, result_header):
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
         table.
-    :rtype: list(:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableItem`)
     '''
     table_item = TableItem(
         [result.first_test_res.test.name],
