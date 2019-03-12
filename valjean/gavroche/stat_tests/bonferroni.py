@@ -294,7 +294,7 @@ class TestResultBonferroni(TestResult):
     accepted) and ``False`` if it is rejected.
     '''
 
-    def __init__(self, test, first_test_res, rejected_hyp):
+    def __init__(self, test, first_test_res, rejected_null_hyp):
         '''Initialisation of :class:`~.TestResultBonferroni`
 
         :param test: the used Bonferroni test
@@ -307,7 +307,7 @@ class TestResultBonferroni(TestResult):
         '''
         super().__init__(test)
         self.first_test_res = first_test_res
-        self.rejected_null_hyp = rejected_hyp
+        self.rejected_null_hyp = rejected_null_hyp
 
     def __bool__(self):
         return not np.any(self.rejected_null_hyp)
@@ -388,7 +388,7 @@ class TestBonferroni(Test):
 class TestResultHolmBonferroni(TestResult):
     '''Result from the Holm-Bonferroni method.'''
 
-    def __init__(self, test, first_test_res, alphas_i, rejected_hyp):
+    def __init__(self, test, first_test_res, alphas_i, rejected_null_hyp):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`~.TestResultHolmBonferroni`
 
@@ -408,7 +408,7 @@ class TestResultHolmBonferroni(TestResult):
         super().__init__(test)
         # self.sorted_indices = sorted_indices
         self.alphas_i = alphas_i
-        self.rejected_null_hyp = rejected_hyp
+        self.rejected_null_hyp = rejected_null_hyp
         self.first_test_res = first_test_res
 
     def __bool__(self):
