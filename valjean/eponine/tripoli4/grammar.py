@@ -688,7 +688,7 @@ def _set_no_unit_case(toks):
     '''Deal with the "not unit" case'''
     if len(toks) == 1:
         return {'uscore': '', 'usigma': toks[0]}
-    LOGGER.warning("more than one unit, please check: %s", str(toks))
+    LOGGER.warning("more than one unit, please check: %s", toks)
     return None
 
 

@@ -586,11 +586,11 @@ class DictBuilder(ABC):
         :param int axis: axis of the dimension
                      (example: 'e' -> 3, 't' -> 4, 'mu' -> 5, 'phi' -> 6)
         '''
-        LOGGER.debug("Bins %s avant flip: %s", dim, str(self.bins[dim]))
+        LOGGER.debug("Bins %s avant flip: %s", dim, self.bins[dim])
         self.bins[dim] = np.flip(self.bins[dim], 0)
         for key, array in self.arrays.items():
             self.arrays[key] = np.flip(array, axis=axis)
-        LOGGER.debug("et apres: %s", str(self.bins[dim]))
+        LOGGER.debug("et apres: %s", self.bins[dim])
 
     def flip_bins(self):
         '''Flip bins if given in decreasing order in the output listing.
@@ -727,7 +727,7 @@ class MeshDictBuilder(KinematicDictBuilder):
     itime, imu, iphi = 0, 0, 0
 
     def __init__(self, colnames, lnbins):
-        '''Initialization of KinematicDictBuilder.
+        '''Initialization of MeshDictBuilder.
 
         :param list(str) colnames: name of the columns/results
            (e.g. ``'score'`` and ``'sigma'`` for mesh, or
@@ -995,7 +995,7 @@ def _get_number_of_space_bins(meshvals):
             if meshvals[-int(maxbins1)][0][1] > lastspacebin[1]:
                 LOGGER.debug("will use meshvals[-int(maxbins1)] = %s instead "
                              "of lastspacebin = %s",
-                             str(meshvals[-int(maxbins1)]), str(lastspacebin))
+                             meshvals[-int(maxbins1)], lastspacebin)
             else:
                 LOGGER.debug("will use lastspacebin = %s instead of "
                              "meshvals[-int(maxbins1)] = %s",
@@ -1050,7 +1050,7 @@ def convert_mesh(meshres):
     '''
     LOGGER.debug("In convert_mesh_class")
     LOGGER.debug("Number of mesh results: %d", len(meshres))
-    LOGGER.debug("keys of meshes: %s", str(list(meshres[0]['meshes'].keys())))
+    LOGGER.debug("keys of meshes: %s", list(meshres[0]['meshes'].keys()))
     LOGGER.debug("elts in meshes: %d", len(meshres[0]['meshes']))
     # dimensions/number of bins of space coordinates are given by last bin
     ns0bins, ns1bins, ns2bins = _get_number_of_space_bins(
@@ -1199,17 +1199,6 @@ def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
     return convspec
 
 
-def convert_integrated_result(result):
-    '''Convert the energy integrated result in NumPy structured array
-
-    :param list result: integrated results
-    :returns: NumPy structured array with (score, sigma)
-    '''
-    LOGGER.debug("[38;5;37m%s[0m", str(result))
-    dtir = np.dtype([('score', FTYPE), ('sigma', FTYPE)])
-    return np.array(tuple(result), dtype=dtir)
-
-
 @profile
 def convert_keff_with_matrix(res):
     '''Convert |keff| results in NumPy matrices.
@@ -1282,7 +1271,7 @@ def convert_keff(res):
 
     See :ref:`eponine-keff-stdarrays` for more details.
     '''
-    LOGGER.debug("[38;5;56mClefs:%s[0m", str(list(res.keys())))
+    LOGGER.debug("[38;5;56mClefs:%s[0m", list(res.keys()))
     usedbatchs = res['used_batch']
     if 'not_converged' in res:
         return {'used_batch': res['used_batch'],
@@ -1506,7 +1495,7 @@ class AdjointCritEdDictBuilder(KinematicDictBuilder):
             index = tuple(lindex)
             array = np.array(tuple(val), dtype=self.arrays['default'].dtype)
             self.arrays['default'][index] = array
-        LOGGER.debug("array.shape: %s", str(self.arrays['default'].shape))
+        LOGGER.debug("array.shape: %s", self.arrays['default'].shape)
 
     def fill_arrays_and_bins(self, data):
         '''Only fill array in IFP adjoint criticality edition case.'''
@@ -1527,9 +1516,9 @@ class VolAdjCritEdDictBuilder(DictBuilder):
         Caution: in that case bins are direclty sent, not 'only' their number
         as done per default in :class:`DictBuilder`.
         '''
-        LOGGER.debug("VolAdjCritEdDictBuilder: bins = %s", str(bins))
+        LOGGER.debug("VolAdjCritEdDictBuilder: bins = %s", bins)
         lnbins = [bins['Vol'].size, bins['E'].size-1]
-        LOGGER.debug("Number of bins per dimension: %s", str(lnbins))
+        LOGGER.debug("Number of bins per dimension: %s", lnbins)
         super().__init__(colnames, lnbins)
         self.bins = bins
         self.units = {'Vol': '', 'E': 'MeV', 'score': 'unknown', 'sigma': '%'}
@@ -1546,7 +1535,7 @@ class VolAdjCritEdDictBuilder(DictBuilder):
                      (_iv//self.bins['Vol'].size % (self.bins['E'].size-1)))
             self.arrays['default'][index] = np.array(
                 tuple(val), dtype=self.arrays['default'].dtype)
-        LOGGER.debug("array.shape: %s", str(self.arrays['default'].shape))
+        LOGGER.debug("array.shape: %s", self.arrays['default'].shape)
 
     def fill_arrays_and_bins(self, data):
         '''Only fill array in IFP adjoint criticality edition case.'''

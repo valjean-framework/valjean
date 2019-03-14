@@ -159,7 +159,7 @@ def convert_score(toks):
     :returns: dictionary using the previous keys and :obj:`numpy` objects as
       values.
     '''
-    LOGGER.debug("Keys in score: %s", str(list(toks.keys())))
+    LOGGER.debug("Keys in score: %s", list(toks.keys()))
     res = {}
     for score in toks:
         if 'mesh_res' in score and 'unit' in score:
