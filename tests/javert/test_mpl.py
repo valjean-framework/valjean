@@ -17,8 +17,7 @@ from hypothesis import given, settings, HealthCheck, note
 from hypothesis.strategies import just, integers
 from hypothesis.extra.numpy import array_shapes
 from valjean import LOGGER
-from valjean.javert.items import (PlotItem, concatenate, TableItem,
-                                  CurveElements)
+from valjean.javert.items import (PlotItem, join, TableItem, CurveElements)
 from valjean.javert.mpl import MplPlot
 from valjean.javert import plot_elements as plt_elts
 from ..gavroche.conftest import (some_1d_dataset, one_dim_dataset,
@@ -148,12 +147,12 @@ def test_fplit_cc(student_test_result, plot_repr):
     assert id(item.xname) != id(item2.xname) and item.xname != item2.xname
 
 
-def test_fplit_iadd(student_test_result, student_test_result_fail, plot_repr):
-    '''Test addition of FullPlotItem from Student result.'''
+def test_fplit_pjoin(student_test_result, student_test_result_fail, plot_repr):
+    '''Test concatenation of FullPlotItem from Student result.'''
     item = plot_repr(student_test_result)[0]
     item_cc = item.copy()
     item2 = plot_repr(student_test_result_fail)[0]
-    item += item2
+    item.join(item2)
     assert item.xname == item2.xname
     assert len(item.curves) == len(item_cc.curves) + len(item2.curves)
     assert ([c.yname for c in item.curves][:len(item_cc.curves)]
@@ -162,11 +161,11 @@ def test_fplit_iadd(student_test_result, student_test_result_fail, plot_repr):
 
 @pytest.mark.mpl_image_compare(filename='student_fplit_add.png',
                                baseline_dir='ref_plots')
-def test_fplit_add(student_test_result, student_test_result_fail, plot_repr):
-    '''Test addition of FullPlotItem from Student result.'''
+def test_fplit_join(student_test_result, student_test_result_fail, plot_repr):
+    '''Test concatenation of FullPlotItem from Student result.'''
     item1 = plot_repr(student_test_result)[0]
     item2 = plot_repr(student_test_result_fail)[0]
-    item3 = item1 + item2
+    item3 = join(item1, item2)
     assert item3.xname == item1.xname
     assert item3.xname == item2.xname
     assert len(item3.curves) == len(item1.curves) + len(item2.curves)

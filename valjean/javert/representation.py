@@ -39,7 +39,7 @@ An example of use of the ``Representation`` objects can be seen in the
 :class:`FullTableRepresentation`. For example, in this table representation for
 the Bonferroni test result, the input test result is first represented in a
 table, then the Bonferroni itself is represented in a second table (they cannot
-be combined as they have different headers, see :func:`.items.concatenate`).
+be combined as they have different headers, see :meth:`.items.TableItem.join`).
 
 
 Thus the use of the ``Representation`` is foreseen as:
@@ -93,7 +93,8 @@ class TableRepresentation(Representation):
             try:
                 meth = getattr(tab_elts, meth_name)
             except AttributeError:
-                LOGGER.debug('no representation for class %s', class_name)
+                LOGGER.debug('no table representation for class %s',
+                             class_name)
                 return None
             res = meth(result)
         return res
@@ -157,7 +158,11 @@ class PlotRepresentation(Representation):
         if res is None:
             class_name = result.__class__.__name__
             meth_name = 'repr_' + class_name.lower()
-            meth = getattr(plt_elts, meth_name)
+            try:
+                meth = getattr(plt_elts, meth_name)
+            except AttributeError:
+                LOGGER.debug('no plot representation for class %s', class_name)
+                return None
             res = meth(result)
         return res
 
@@ -202,14 +207,13 @@ class FullRepresentation(Representation):
         instance attributes of :class:`FullRepresentation`, based on the name
         of the class of `result`.'''
         class_name = result.__class__.__name__
+        res = []
         try:
-            table_res = self.table_repr(result)
+            res.extend(self.table_repr(result))
         except AttributeError:
             LOGGER.debug('no table representation for class %s', class_name)
-            table_res = []
         try:
-            plot_res = self.plot_repr(result)
+            res.extend(self.plot_repr(result))
         except AttributeError:
             LOGGER.debug('no plot representation for class %s', class_name)
-            plot_res = []
-        return table_res + plot_res
+        return res

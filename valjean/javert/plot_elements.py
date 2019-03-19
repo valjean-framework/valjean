@@ -2,7 +2,7 @@
 to be converted in rst.
 '''
 from .. import LOGGER
-from .items import PlotItem, CurveElements, concatenate
+from .items import PlotItem, CurveElements, join
 
 
 def dimension_from_array(array_shape):
@@ -63,8 +63,10 @@ def repr_testresultstudent(result):
     :type result: :class:`~.TestResultStudent`
     :returns: :class:`list` (:class:`~.items.PlotItem`)
     '''
-    return concatenate(repr_student_values(result)
-                       + repr_student_delta(result))
+    rstudent = [join(rvals, rdelta)
+                for rvals, rdelta in zip(repr_student_values(result),
+                                         repr_student_delta(result))]
+    return rstudent
 
 
 def repr_student_delta(result):

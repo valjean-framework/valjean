@@ -6,7 +6,7 @@ import pytest
 
 from ..context import valjean  # pylint: disable=unused-import
 from valjean import LOGGER
-from valjean.javert.items import TableItem, PlotItem, concatenate
+from valjean.javert.items import TableItem, PlotItem, join
 from valjean.javert.representation import (TableRepresentation,
                                            EmptyRepresentation)
 from valjean.javert.mpl import MplPlot
@@ -75,7 +75,7 @@ def test_full_concatenation(student_test_result, student_test_result_fail,
     '''Test concatenation of all items.'''
     item1 = full_repr(student_test_result)
     item2 = full_repr(student_test_result_fail)
-    items3 = concatenate(item1 + item2)
+    items3 = [join(it1, it2) for it1, it2 in zip(item1, item2)]
     assert len(items3) == 2
     assert [isinstance(it, TableItem) for it in items3] == [True, False]
     assert [isinstance(it, PlotItem) for it in items3] == [False, True]

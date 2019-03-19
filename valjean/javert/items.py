@@ -4,8 +4,6 @@ instance, in the case of tables this includes the column contents, the headers,
 etc.  It does **not** include any formatting information, such as column
 widths, floating-point precision, colours, etc.  Decisions about the formatting
 are handled by suitable formatting classes, such as :class:`~.Rst`.
-
-Examples are mainly given in the :func:`concatenate`.
 '''
 
 import numpy as np
@@ -14,7 +12,101 @@ import numpy as np
 
 class TableItem:
     '''A container class that encapsulates all the necessary information to
-    represent a table.'''
+    represent a table.
+
+    Examples of use of mainly show in context of concatentation of
+    :class:`TableItem`, obtained with the operators ``+=`` and ``+``.
+
+    >>> import numpy as np
+    >>> tit1 = TableItem(np.float_(1.5), np.float_(1.4),
+    ...                  headers=['egg', 'spam'])
+    >>> tit2 = TableItem(np.float_(1.2), np.float_(0.9),
+    ...                  headers=['egg', 'spam'])
+    >>> stab12 = join(tit1, tit2)
+    >>> print(len(tit1.columns), len(tit2.columns))
+    2 2
+    >>> print(tit1.columns[0].size, tit2.columns[0].size)
+    1 1
+    >>> print(len(stab12.columns))
+    2
+    >>> print(stab12.columns[0].size)
+    2
+    >>> print("{!r}".format(stab12))
+    class: <class 'valjean.javert.items.TableItem'>
+    headers: ['egg', 'spam']
+    egg: [1.5 1.2]
+    spam: [1.4 0.9]
+    <BLANKLINE>
+
+    ``stab12`` contained both ``tit1`` and ``tit2`` as expected. Headers of the
+    columns are the same, length of the columns is the sum of the two.
+
+    >>> tit3 = TableItem(np.float_(0.8), np.float_(1.1),
+    ...                  headers=['knight', 'parrot'])
+    >>> stab13 = join(tit1, tit3)
+    Traceback (most recent call last):
+        ...
+    ValueError: TableItems to add should have same headers
+
+    An error is raised as the two :class:`TableItem` don't contain the same
+    headers, so not the same kind of columns, thus they cannot be concatenated.
+
+    >>> tit4 = TableItem(np.arange(4), np.arange(4)*0.5,
+    ...                  headers=['egg', 'spam'])
+    >>> print(len(tit4.columns), tit4.columns[0].size)
+    2 4
+    >>> stab14 = join(tit1, tit4)
+    >>> print(len(stab14.columns), stab14.columns[0].size)
+    2 5
+    >>> stab14.columns[0].size == tit1.columns[0].size + tit4.columns[0].size
+    True
+    >>> print("{!r}".format(stab14))
+    class: <class 'valjean.javert.items.TableItem'>
+    headers: ['egg', 'spam']
+    egg: [1.5 0.  1.  2.  3. ]
+    spam: [1.4 0.  0.5 1.  1.5]
+    <BLANKLINE>
+
+    If the columns are the same format, concatenation of TableItems containing
+    arrays and numbers is possible.
+
+    It is also between arrays, a bigger array is obtained, without separation
+    between the initial :class:`TableItem`:
+
+    >>> tit5 = TableItem(np.arange(3)*0.1, np.arange(3)*0.05,
+    ...                  headers=['egg', 'spam'])
+    >>> stab45 = join(tit4, tit5)
+    >>> print(len(stab45.columns), len(stab45.columns[0]))
+    2 7
+    >>> print("{!r}".format(stab45))
+    class: <class 'valjean.javert.items.TableItem'>
+    headers: ['egg', 'spam']
+    egg: [0.  1.  2.  3.  0.  0.1 0.2]
+    spam: [0.   0.5  1.   1.5  0.   0.05 0.1 ]
+    <BLANKLINE>
+
+    Any number of :class:`TableItem` can be joined (if fulfilling the
+    requirements).
+
+    >>> stab124 = join(tit1, tit2, tit4)
+    >>> print("{!r}".format(stab124))
+    class: <class 'valjean.javert.items.TableItem'>
+    headers: ['egg', 'spam']
+    egg: [1.5 1.2 0.  1.  2.  3. ]
+    spam: [1.4 0.9 0.  0.5 1.  1.5]
+    <BLANKLINE>
+
+    The :meth:`join` method from in the :class:`TableItem` updates the left
+    :class:`TableItem` as expected:
+
+    >>> tit1.join(tit2, tit4)
+    >>> print("{!r}".format(tit1))
+    class: <class 'valjean.javert.items.TableItem'>
+    headers: ['egg', 'spam']
+    egg: [1.5 1.2 0.  1.  2.  3. ]
+    spam: [1.4 0.9 0.  0.5 1.  1.5]
+    <BLANKLINE>
+    '''
 
     def __init__(self, *columns, headers=None, units=None,
                  highlight=lambda *args: False):
@@ -88,12 +180,23 @@ class TableItem:
                          headers=self.headers.copy(),
                          units=self.units.copy(), highlight=self.highlight)
 
-    def __iadd__(self, other):
-        '''Implement ``+=`` operator.
+    def _binary_join(self, other):
+        '''Join another :class:`TableItem` to the current one.
+
+        This method **concatenates** :class:`TableItem` of the same number of
+        columns and same headers. It returns an update of the left one.
+
+        If the two :class:`TableItem` are not compatible an exception is
+        raised.
 
         :param other: :class:`TableItem` to add to the current one
         :returns: updated :class:`TableItem`
+        :raises TypeError: if the other parameter is not a :class:`TableItem`
+        :raises ValueError: if the TableItems don't have the same headers.
         '''
+        if not isinstance(other, TableItem):
+            raise TypeError("Only a TableItem can be joined to another "
+                            "TableItem")
         if self.headers != other.headers:
             raise ValueError("TableItems to add should have same headers")
         self.columns = tuple(
@@ -102,17 +205,19 @@ class TableItem:
             else np.hstack((self.columns[i], other.columns[i]))
             for i in range(len(self.columns)))
         self.units = other.units if self.units is None else self.units
-        return self
 
-    def __add__(self, other):
-        '''Implement ``+`` operator.
+    def join(self, *others):
+        '''Join a given number a :class:`TableItem` to the current one.
 
-        :param other: :class:`TableItem` to add to the current one
-        :returns: new :class:`TableItem`
+        Only :class:`TableItem` with the same number of columns and same
+        headers can be joined. The method returns the updated current one.
+
+        :param others: list of TableItems
+        :type others: :class:`list` (:class:`TableItem`)
+        :returns: updated :class:`TableItem`
         '''
-        copy = self.copy()
-        copy += other
-        return copy
+        for oti in others:
+            self._binary_join(oti)
 
     def __repr__(self):
         '''Print TableItem details.'''
@@ -178,6 +283,105 @@ class PlotItem:
     includes all the datasets and the test result. This can also include
     p-values or other test parameters, depending on what is given to the
     PlotItem.
+
+    Examples of use of mainly show in context of concatentation of
+    :class:`PlotItem`, obtained with the operators ``+=`` and ``+``.
+
+    >>> bins1, data11, data12 = np.arange(4), np.arange(4), np.arange(4)*10
+    >>> data13 = data11 + data12
+    >>> bins2, data2 = np.arange(5), np.arange(5)*0.5
+    >>> pit1 = PlotItem(bins=bins1, xname='egg',
+    ...                 curves=[CurveElements(data11, 'd11', yname='brandy')])
+    >>> pit2 = PlotItem(bins=bins1, xname='egg',
+    ...                 curves=[CurveElements(data12, 'd12', yname='beer')])
+    >>> pit3 = PlotItem(bins=bins1, xname='egg',
+    ...                 curves=[CurveElements(data13, 'd13', yname='beer')])
+
+    >>> splt12 = join(pit1, pit2)
+    >>> print("{!r}".format(splt12))
+    class: <class 'valjean.javert.items.PlotItem'>
+    bins: [0 1 2 3]
+    xname: egg
+    label:  d11
+    yname:  brandy
+    values: [0 1 2 3]
+    errors: None
+    label:  d12
+    yname:  beer
+    values: [ 0 10 20 30]
+    errors: None
+    <BLANKLINE>
+
+    We obtain a new :class:`PlotItem` containing two curves with different
+    ynames.
+
+    >>> splt123 = join(pit1, pit2, pit3)
+    >>> print("{!r}".format(splt123))
+    class: <class 'valjean.javert.items.PlotItem'>
+    bins: [0 1 2 3]
+    xname: egg
+    label:  d11
+    yname:  brandy
+    values: [0 1 2 3]
+    errors: None
+    label:  d12
+    yname:  beer
+    values: [ 0 10 20 30]
+    errors: None
+    label:  d13
+    yname:  beer
+    values: [ 0 11 22 33]
+    errors: None
+    <BLANKLINE>
+
+    As expected a new :class:`TableItem` is obtained, containing three curves.
+    The first and third ones have the same ynmes (can appear on the same
+    subplot).
+
+    Like in the TableItem case, the :meth:`join` method from in the
+    :class:`PlotItem` updates the left :class:`PlotItem` as expected:
+
+    >>> pit1.join(pit2, pit3)
+    >>> print("{!r}".format(pit1))
+    class: <class 'valjean.javert.items.PlotItem'>
+    bins: [0 1 2 3]
+    xname: egg
+    label:  d11
+    yname:  brandy
+    values: [0 1 2 3]
+    errors: None
+    label:  d12
+    yname:  beer
+    values: [ 0 10 20 30]
+    errors: None
+    label:  d13
+    yname:  beer
+    values: [ 0 11 22 33]
+    errors: None
+    <BLANKLINE>
+
+    >>> pit4 = PlotItem(bins=bins1, xname='spam',
+    ...                 curves=[CurveElements(data12, 'd12', yname='bacon')])
+    >>> splt14 = join(pit1, pit4)
+    Traceback (most recent call last):
+        ...
+    ValueError: PlotItems should have the same xname to be joined
+
+    An error is raised a the x-axis don't have the same name. In that case the
+    :class:`PlotItem` cannot be concatenated. They will have to be represented
+    on two different plots, even if the bins used (``bins1``) are the same
+    (they probably don't have the same meaning).
+
+    >>> pit5 = PlotItem(bins=bins2, xname='spam',
+    ...                 curves=[CurveElements(data2, 'd2', yname='bacon')])
+    >>> splt45 = join(pit4, pit5)
+    Traceback (most recent call last):
+        ...
+    ValueError: Bins should be the same in both PlotItems
+
+    An error is also raised: x-axis bins have the same names but not the same
+    number of bins. The two :class:`PlotItem` cannot represent the same
+    quantity so be represented on the same plot.
     '''
 
     def __init__(self, *, bins, curves, xname=''):
@@ -217,10 +421,10 @@ class PlotItem:
                         xname=self.xname,
                         curves=[pelt.copy() for pelt in self.curves])
 
-    def __iadd__(self, other):
-        '''Implement ``+=`` operator.
+    def _binary_join(self, other):
+        '''Join another :class:`PlotItem` to the current one.
 
-        This operator **concatenates** the current :class:`PlotItem` to the
+        This method **concatenates** the current :class:`PlotItem` to the
         ``other`` one, i.e., if they share the x-axis (bins and name), the
         curves list is extended.
 
@@ -230,29 +434,31 @@ class PlotItem:
 
         :param other: :class:`PlotItem` to add to the current one
         :returns: updated :class:`PlotItem`
+        :raises TypeError: if the other parameter is not a :class:`PlotItem`
+        :raises ValueError: if x-axes are not the same (``xname`` and ``bins``)
         '''
+        if not isinstance(other, PlotItem):
+            raise TypeError("Only a PlotItem can be joined to another "
+                            "PlotItem")
         if self.xname != other.xname:
-            raise ValueError("PlotItems should have the same xname")
+            raise ValueError("PlotItems should have the same xname to be "
+                             "joined")
         if not np.array_equal(self.bins, other.bins):
             raise ValueError("Bins should be the same in both PlotItems")
         self.curves.extend(other.curves)
-        return self
 
-    def __add__(self, other):
-        '''Implement ``+`` operator.
+    def join(self, *others):
+        '''Join a given number a :class:`PlotItem` to the current one.
 
-        This operator **concatenates** the current :class:`PlotItem` to the
-        ``other`` one, i.e., if they share the x-axis (bins and name), the
-        curves list is extended. A new :class:`PlotItem` is returned, the
-        current one is left intact.
+        Only :class:`PlotItem` with the same number of columns and same headers
+        can be joined. The method returns the updated current one.
 
-        :param other: :class:`PlotItem` to add to the current one
-        :type: :class:`PlotItem`
-        :returns: new :class:`PlotItem`
+        :param others: list of PlotItems
+        :type others: :class:`list` (:class:`PlotItem`)
+        :returns: updated :class:`PlotItem`
         '''
-        copy = self.copy()
-        copy += other
-        return copy
+        for oti in others:
+            self._binary_join(oti)
 
     def __repr__(self):
         '''Printing of :class:`PlotItem`.'''
@@ -269,146 +475,35 @@ class PlotItem:
         return ''.join(intro + elts)
 
 
-def concatenate(litems):
-    '''Concatenate a list of items containing TableItems, PlotItems.
+def join(*items):
+    '''Join a "list" of items of same kind, :class:`TableItem` or
+    :class:`PlotItem` using the related ``join`` methods.
 
-    This function concatenates the various items of same shape, following the
-    :meth:`TableItem.__iadd__` and :meth:`PlotItem.__iadd__` methods:
+    It returns a new items (:class:`TableItem` or :class:`PlotItem`).
 
-    * same number of columns and same headers for TableItems
-    * same bins and x-axis names for PlotItems
-
-    This means that the same list could be obtained in return if none of the
-    items are compatible.
-
-    :param litems: list of items
-    :type litems: :class:`list` (:class:`TableItem`, :class:`PlotItem`)
-    :returns: :class:`list` (:class:`TableItem`, :class:`PlotItem`)
+    :param items: list of items
+    :type items: :class:`list` (:class:`TableItem`)
+        or :class:`list` (:class:`PlotItem`)
+    :returns: :class:`TableItem` or :class:`PlotItem`
 
 
-    >>> import numpy as np
-    >>> litems = [TableItem(np.arange(4), np.arange(4)*0.5,
-    ...                     headers=['col1', 'col2']),
-    ...           TableItem(np.float_(1.5), np.float_(1.4),
-    ...                     headers=['col1', 'col2']),
-    ...           TableItem(np.float_(1.2), np.float_(0.9),
-    ...                     headers=['col1', 'col2']),
-    ...           TableItem(np.float_(0.8), np.float_(1.1),
-    ...                     headers=['valA', 'valB'])]
-    >>> conc_list = concatenate(litems)
-    >>> print(len(conc_list))
-    2
-    >>> for item in conc_list:
-    ...     print("{!r}".format(item))
-    class: <class 'valjean.javert.items.TableItem'>
-    headers: ['col1', 'col2']
-    col1: [0.  1.  2.  3.  1.5 1.2]
-    col2: [0.  0.5 1.  1.5 1.4 0.9]
-    <BLANKLINE>
-    class: <class 'valjean.javert.items.TableItem'>
-    headers: ['valA', 'valB']
-    valA: 0.8
-    valB: 1.1
-    <BLANKLINE>
-
-    In this case all :class:`TableItem` objects with same headers are
-    concatenated in one.
-
-    Concatenation is possible for arrays to provide a bigger array without
-    separation between each of them
-
-    >>> litems = [TableItem(np.arange(4), np.arange(4)*0.5,
-    ...                     headers=['col1', 'col2']),
-    ...           TableItem(np.arange(3)*0.1, np.arange(3)*0.05,
-    ...                     headers=['col1', 'col2']),]
-    >>> conc_items = concatenate(litems)
-    >>> for item in conc_items:
-    ...     print("{!r}".format(item))
-    class: <class 'valjean.javert.items.TableItem'>
-    headers: ['col1', 'col2']
-    col1: [0.  1.  2.  3.  0.  0.1 0.2]
-    col2: [0.   0.5  1.   1.5  0.   0.05 0.1 ]
-    <BLANKLINE>
-
-    With :class:`PlotItem` and :class:`TableItem` each own concatenation is
-    used:
+    See :class:`TableItem` and :class:`PlotItem` for examples of use. ONly few
+    error cases will be shown here:
 
     >>> bins1, data11, data12 = np.arange(4), np.arange(4), np.arange(4)*10
     >>> bins2, data2 = np.arange(5), np.arange(5)*0.5
-    >>> litems = [TableItem(bins1, data11,
-    ...                     headers=['col1', 'col2']),
-    ...           TableItem(bins1, data12,
-    ...                     headers=['valA', 'valB']),
-    ...           TableItem(bins2, data2,
-    ...                     headers=['col1', 'col2']),
-    ...           PlotItem(bins=bins1, xname='x1',
-    ...                    curves=[CurveElements(data11, 'd11', yname='y11')]),
-    ...           PlotItem(bins=bins1, xname='x1',
-    ...                    curves=[CurveElements(data12, 'd12', yname='y12')]),
-    ...           PlotItem(bins=bins2, xname='x2',
-    ...                    curves=[CurveElements(data2, 'd2', yname='y1')]),
-    ...           PlotItem(bins=bins1, xname='x2',
-    ...                    curves=[CurveElements(data12, 'd12', yname='y1')])]
-    >>> conc_items = concatenate(litems)
-    >>> print(len(conc_items))
-    5
-    >>> for item in conc_items:
-    ...     print("{!r}".format(item))
-    class: <class 'valjean.javert.items.TableItem'>
-    headers: ['col1', 'col2']
-    col1: [0 1 2 3 0 1 2 3 4]
-    col2: [0.  1.  2.  3.  0.  0.5 1.  1.5 2. ]
-    <BLANKLINE>
-    class: <class 'valjean.javert.items.TableItem'>
-    headers: ['valA', 'valB']
-    valA: [0 1 2 3]
-    valB: [ 0 10 20 30]
-    <BLANKLINE>
-    class: <class 'valjean.javert.items.PlotItem'>
-    bins: [0 1 2 3]
-    xname: x1
-    label:  d11
-    yname:  y11
-    values: [0 1 2 3]
-    errors: None
-    label:  d12
-    yname:  y12
-    values: [ 0 10 20 30]
-    errors: None
-    <BLANKLINE>
-    class: <class 'valjean.javert.items.PlotItem'>
-    bins: [0 1 2 3 4]
-    xname: x2
-    label:  d2
-    yname:  y1
-    values: [0.  0.5 1.  1.5 2. ]
-    errors: None
-    <BLANKLINE>
-    class: <class 'valjean.javert.items.PlotItem'>
-    bins: [0 1 2 3]
-    xname: x2
-    label:  d12
-    yname:  y1
-    values: [ 0 10 20 30]
-    errors: None
-    <BLANKLINE>
-
-    As soon as tables have the same headers they can be concatenated. For the
-    plots same bins and same name of x-axis are needed.
+    >>> tablit = TableItem(bins1, data11, headers=['egg', 'spam'])
+    >>> plotit = PlotItem(bins=bins1, xname='egg',
+    ...                   curves=[CurveElements(data11, 'd11', yname='spam')])
+    >>> tit = join(tablit, plotit)
+    Traceback (most recent call last):
+        ...
+    TypeError: Only a TableItem can be joined to another TableItem
+    >>> tit = join(plotit, tablit)
+    Traceback (most recent call last):
+        ...
+    TypeError: Only a PlotItem can be joined to another PlotItem
     '''
-    nitems = [litems[0].copy()]
-    for it1 in litems[1:]:
-        added = False
-        for it2 in nitems:
-            if isinstance(it1, type(it2)):
-                try:
-                    it2 += it1
-                except ValueError:
-                    continue
-                except TypeError:
-                    continue
-                added = True
-                break
-        if not added:
-            nitems.append(it1.copy())
-    return nitems
+    copy = items[0].copy()
+    copy.join(*items[1:])
+    return copy
