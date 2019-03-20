@@ -8,10 +8,9 @@ import pytest
 # pylint: disable=wrong-import-order,unused-import,no-value-for-parameter
 from ..context import valjean  # noqa: F401
 from ..gavroche.conftest import some_dataset, other_dataset
-from valjean.javert.representation import (FullRepresentation,
-                                           EmptyRepresentation,
-                                           FullTableRepresentation,
-                                           PlotRepresentation)
+from valjean.javert.representation import (FullRepresenter, EmptyRepresenter,
+                                           FullTableRepresenter,
+                                           PlotRepresenter, Representation)
 from valjean.javert.items import TableItem
 from valjean.javert.rst import RstFormatter
 from valjean.javert.mpl import MplPlot
@@ -43,26 +42,26 @@ def rst_formatter():
 
 @pytest.fixture
 def full_repr():
-    '''Create a :class:`~.FullRepresentation` object.'''
-    return FullRepresentation()
+    '''Create a :class:`~.FullRepresenter` object.'''
+    return Representation(FullRepresenter())
 
 
 @pytest.fixture
 def empty_repr():
-    '''Create an :class:`~.EmptyRepresentation` object.'''
-    return EmptyRepresentation()
+    '''Create an :class:`~.EmptyRepresenter` object.'''
+    return EmptyRepresenter()
 
 
 @pytest.fixture
 def table_repr():
-    '''Create a :class:`~.TableRepresentation` object.'''
-    return FullTableRepresentation()
+    '''Create a :class:`~.TableRepresenter` object.'''
+    return FullTableRepresenter()
 
 
 @pytest.fixture
 def plot_repr():
-    '''Create a :class:`~.PlotRepresentation` object.'''
-    return PlotRepresentation()
+    '''Create a :class:`~.PlotRepresenter` object.'''
+    return PlotRepresenter()
 
 
 @pytest.fixture

@@ -242,8 +242,9 @@ class CurveElements:
 
         The label is used in the legend.
 
-        Values and errors (if given) should be :obj:`numpy.ndarray` of same
-        shape.
+        Values and errors (if given) should be essentially one-dimension
+        :obj:`numpy.ndarray` of same shape (they must have only one non-trivial
+        dimension).
 
         :param values: array to be represented on the plot, **mandatory**
         :type values: :obj:`numpy.ndarray`
