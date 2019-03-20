@@ -2,7 +2,7 @@
 to be converted in rst.
 '''
 from .. import LOGGER
-from .items import PlotItem, CurveElements, join
+from .templates import PlotTemplate, CurveElements, join
 
 
 def dimension_from_array(array_shape):
@@ -55,13 +55,13 @@ def dimension(bins, array_shape):
 def repr_testresultstudent(result):
     '''Represent the Student test result as a plot.
 
-    By default two :class:`~.items.PlotItem` are returned in order to get a top
-    plot representing the two series of values and the bottom plot representing
-    the Δ from the Student test.
+    By default two :class:`~.templates.PlotTemplate` are returned in order to
+    get a top plot representing the two series of values and the bottom plot
+    representing the Δ from the Student test.
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: :class:`list` (:class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
     '''
     rstudent = [join(rvals, rdelta)
                 for rvals, rdelta in zip(repr_student_values(result),
@@ -74,7 +74,7 @@ def repr_student_delta(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: :class:`list` (:class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
 
     .. note::
         if we have a member ``units`` in base_dataset the axis names
@@ -86,7 +86,7 @@ def repr_student_delta(result):
     bins = result.test.ds1.bins[dim]
     curve = CurveElements(values=result.delta, label=result.test.name,
                           yname=r'$\Delta_{Student}$', errors=None)
-    return [PlotItem(bins=bins, xname=dim, curves=[curve])]
+    return [PlotTemplate(bins=bins, xname=dim, curves=[curve])]
 
 
 def repr_student_values(result):
@@ -95,7 +95,7 @@ def repr_student_values(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: :class:`list` (:class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
 
     .. note::
         if we have a member ``units`` in base_dataset the axis names
@@ -111,7 +111,7 @@ def repr_student_values(result):
     cds2 = CurveElements(values=result.test.ds2.value,
                          label=result.test.name+': dataset 2', yname='',
                          errors=result.test.ds2.error)
-    return [PlotItem(bins=bins, xname=dim, curves=[cds1, cds2])]
+    return [PlotTemplate(bins=bins, xname=dim, curves=[cds1, cds2])]
 
 
 def repr_student_pvalues(result):
@@ -119,7 +119,7 @@ def repr_student_pvalues(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultStudent`
-    :returns: :class:`list` (:class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
     '''
     if result.pvalue is None:
         LOGGER.error("p-value is None, won't be possible to plot it.")
@@ -130,7 +130,7 @@ def repr_student_pvalues(result):
     bins = result.test.ds1.bins[dim]
     curve = CurveElements(values=result.pvalue,
                           label=result.test.name, yname='p-value', errors=None)
-    return [PlotItem(bins=bins, xname=dim, curves=[curve])]
+    return [PlotTemplate(bins=bins, xname=dim, curves=[curve])]
 
 
 def repr_datasets_values(result):
@@ -142,7 +142,7 @@ def repr_datasets_values(result):
     :param result: test result
     :type result: :class:`~valjean.gavroche.test.TestResultEqual`,
         :class:`~valjean.gavroche.test.TestResultApproxEqual`
-    :returns: :class:`list` (:class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
     '''
     dim = dimension(result.test.dataset1.bins,
                     result.test.dataset1.value.shape)
@@ -155,7 +155,7 @@ def repr_datasets_values(result):
     cds2 = CurveElements(values=result.test.dataset2.value,
                          label=result.test.name+': dataset 2', yname='',
                          errors=result.test.dataset2.error)
-    return [PlotItem(bins=bins, xname=dim, curves=[cds1, cds2])]
+    return [PlotTemplate(bins=bins, xname=dim, curves=[cds1, cds2])]
 
 
 def repr_testresultequal(result):
@@ -163,7 +163,7 @@ def repr_testresultequal(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultEqual`
-    :returns: :class:`list` (:class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
     '''
     return repr_datasets_values(result)
 
@@ -173,6 +173,6 @@ def repr_testresultapproxequal(result):
 
     :param result:  a test result.
     :type result: :class:`~.TestResultApproxEqual`
-    :returns: :class:`list` (:class:`~.items.PlotItem`)
+    :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
     '''
     return repr_datasets_values(result)

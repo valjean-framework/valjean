@@ -14,7 +14,7 @@ javert — Journal Automatique de VÉRificaTion
 .. toctree::
    :caption: Submodules
 
-   javert/items
+   javert/templates
    javert/representation
    javert/table_elements
    javert/plot_elements

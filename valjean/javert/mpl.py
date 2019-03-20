@@ -2,8 +2,8 @@
 :mod:`matplotlib.pyplot`.
 
 
-:class:`MplPlot` objects take as input :class:`~.items.PlotItem` containing at
-least values and bins.
+:class:`MplPlot` objects take as input :class:`~.templates.PlotTemplate`
+containing at least values and bins.
 
 The format, or rendering, of the plot can be set using the rcParams but also
 some predefined parameters on which the class cycle like colors, markers shape
@@ -18,12 +18,12 @@ Plots can be obtained with the following for example:
     :include-source:
 
     >>> import numpy as np
-    >>> from valjean.javert.items import PlotItem, CurveElements
+    >>> from valjean.javert.templates import PlotTemplate, CurveElements
     >>> bins = np.array(np.arange(10))
     >>> lcurves = [CurveElements(values=bins*0.5*(icurve+1),
     ...                          label=str(icurve+1))
     ...            for icurve in range(20)]
-    >>> pltit = PlotItem(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
     >>> from valjean.javert.mpl import MplPlot
     >>> mplplt = MplPlot(pltit)
 
@@ -42,13 +42,13 @@ For example, we can have:
     :include-source:
 
     >>> import numpy as np
-    >>> from valjean.javert.items import PlotItem, CurveElements
+    >>> from valjean.javert.templates import PlotTemplate, CurveElements
     >>> bins = np.array(np.arange(10))
     >>> lcurves = []
     >>> for icurve in range(20):
     ...     lcurves.append(CurveElements(values=bins*0.5*(icurve+1),
     ...                                  label=str(icurve+1)))
-    >>> pltit = PlotItem(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
     >>> from valjean.javert import mpl
     >>> mpl.STYLE = 'Solarize_Light2'
     >>> mplplt = mpl.MplPlot(pltit)
@@ -60,13 +60,13 @@ Colors and markers can also be changed directly:
     :include-source:
 
     >>> import numpy as np
-    >>> from valjean.javert.items import PlotItem, CurveElements
+    >>> from valjean.javert.templates import PlotTemplate, CurveElements
     >>> bins = np.array(np.arange(10))
     >>> lcurves = []
     >>> for icurve in range(20):
     ...     lcurves.append(CurveElements(values=bins*0.5*(icurve+1),
     ...                                  label=str(icurve+1)))
-    >>> pltit = PlotItem(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
     >>> from valjean.javert import mpl
     >>> mpl.STYLE = 'default'  # needed here as persistent from above
     >>> mpl.COLORS = ['b', 'g', 'r', 'y', 'm']
@@ -90,14 +90,14 @@ STYLE = 'default'
 
 
 class MplPlot:
-    '''Convert a :class:`~.items.PlotItem` into a matplotlib plot.'''
+    '''Convert a :class:`~.templates.PlotTemplate` into a matplotlib plot.'''
 
     def __init__(self, data):
         '''Construct a :class:`MplPlot` from the given
-        :class:`~.items.PlotItem`..
+        :class:`~.templates.PlotTemplate`..
 
         :param data: the data to convert.
-        :type data: :class:`~.items.PlotItem`
+        :type data: :class:`~.templates.PlotTemplate`
         '''
         plt.style.use(STYLE)
         self.curve_format = (cycle(COLORS), cycle(MARKERS_SHAPE),
@@ -180,7 +180,6 @@ class MplPlot:
                 ynames[yax] += 1
             if self.data.curves[icv].label in self.legend['labels']:
                 ilab = self.legend['labels'].index(self.data.curves[icv].label)
-                print("le label existe deja c'est le", ilab)
                 icv_format = (self.legend['handles'][ilab][0].get_color(),
                               self.legend['handles'][ilab][0].get_marker(),
                               self.legend['handles'][ilab][0].get_fillstyle())

@@ -11,7 +11,7 @@ from ..gavroche.conftest import some_dataset, other_dataset
 from valjean.javert.representation import (FullRepresenter, EmptyRepresenter,
                                            FullTableRepresenter,
                                            PlotRepresenter, Representation)
-from valjean.javert.items import TableItem
+from valjean.javert.templates import TableTemplate
 from valjean.javert.rst import RstFormatter
 from valjean.javert.mpl import MplPlot
 
@@ -65,11 +65,12 @@ def plot_repr():
 
 
 @pytest.fixture
-def table_item(some_dataset, other_dataset):
+def table_template(some_dataset, other_dataset):
     # pylint: disable=redefined-outer-name
-    '''Create a simple :class:`~.TableItem` object.'''
-    return TableItem(some_dataset.value, other_dataset.value,
-                     headers=['some', 'other'], units=['furlong', 'fortnight'])
+    '''Create a simple :class:`~.TableTemplate` object.'''
+    return TableTemplate(some_dataset.value, other_dataset.value,
+                         headers=['some', 'other'],
+                         units=['furlong', 'fortnight'])
 
 
 @pytest.fixture

@@ -49,15 +49,15 @@ class Rst:
         :rtype: str
         '''
         lines = [self.formatter.header(result)]
-        lines.extend(fmt_item for items in self.representation(result)
-                     for item in items
-                     for fmt_item in self.formatter(item))
+        lines.extend(fmt_template for templates in self.representation(result)
+                     for template in templates
+                     for fmt_template in self.formatter(template))
         return '\n'.join(lines)
 
 
 class RstFormatter(Formatter):
-    '''Class that dispatches the task of formatting items as reStructuredText.
-    The concrete formatting is handled by separate classes
+    '''Class that dispatches the task of formatting templates as
+    reStructuredText. The concrete formatting is handled by separate classes
     (:class:`RstTable`...).
     '''
 
@@ -77,11 +77,11 @@ class RstFormatter(Formatter):
         return '\n'.join(lines)
 
     @staticmethod
-    def format_tableitem(table):
-        '''Format a :class:`~.TableItem`.
+    def format_tabletemplate(table):
+        '''Format a :class:`~.TableTemplate`.
 
         :param table: A table.
-        :type result: :class:`~.TableItem`
+        :type result: :class:`~.TableTemplate`
         :returns: the reST table.
         :rtype: str
         '''
@@ -89,17 +89,17 @@ class RstFormatter(Formatter):
 
 
 class RstTable:
-    '''Convert a :class:`~.TableItem` into a reStructuredText table.'''
+    '''Convert a :class:`~.TableTemplate` into a reStructuredText table.'''
 
     HIGHLIGHT_ROLE = 'hl'
     COL_SEP = '  '
 
     def __init__(self, table, num_fmt='{:13.8g}'):
         '''Construct an :class:`RstTable` from the given
-        :class:`~.items.TableItem`.
+        :class:`~.templates.TableTemplate`.
 
         :param table: The table to convert.
-        :type table: :class:`~.items.TableItem`
+        :type table: :class:`~.templates.TableTemplate`
         :param str num_fmt: A :func:`format` string to specify how numerical
                             table entries should be represented. The default
                             value for this option is ``'{:13.8g}'``.
@@ -114,8 +114,6 @@ class RstTable:
         highlights = self.gen_mask(self.table.highlight, columns)
         rows = list(self.format_rows(self.transpose(columns), highlights,
                                      self.num_fmt))
-        # rows = list(self.format_rows(columns, highlights, self.num_fmt))
-        # print("rows =", rows)
         return self.tabularize(self.table.headers, rows)
 
     @classmethod
@@ -129,7 +127,8 @@ class RstTable:
         or terrible things will happen.
 
         The column widths are automatically computed to accommodate the largest
-        item in each column. Smaller items are automatically right-justified.
+        template in each column. Smaller templates are automatically
+        right-justified.
 
             >>> headers = ['name', 'quest', 'favourite colour']
             >>> rows = [['Lancelot', 'to seek the Holy Grail', 'blue'],

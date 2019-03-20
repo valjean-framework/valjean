@@ -14,9 +14,13 @@ human-readable representation (table, plots, etc.).
     bugs.
 
 
-This module corresponds to the implementation of a `Strategy` design pattern
-with :class:`Representation` as ``Context`` and :class:`Representer` as
-`Strategy` and all its subclasses.
+This module uses the `Strategy` design pattern. The :class:`Representation`
+class plays the role of `Context`,  :class:`Representer` plays the role of
+`Strategy` and the classes derived from :class:`Representer` (such as
+:class:`TableRepresenter`, :class:`PlotRepresenter`, etc.) play the role of
+`ConcreteStrategy`. See E. Gamma et al., "Design Patterns" (1995),
+ISBN 0-201-63361-2, Addison-Weasley, USA.
+
 
 Currently we have 3 main ``Representer`` classes:
 
@@ -24,26 +28,21 @@ Currently we have 3 main ``Representer`` classes:
   :meth:`Representer.__call__` method, calling the class method named
   ``'repr_' + class.name`` of the test;
 * :class:`TableRepresenter`: inherited from :class:`Representer`,
-  designed as a parent class for user's own representations of tables. It's
-  :meth:`TableRepresenter.__call__` method first calls the class
-  representation method through the :meth:`Representer.__call__` one
-  (meaning it should also be named ``'repr_' + class.name``), if it does not
-  exist call the default method from the catalogue of table representation
-  accessible in :mod:`.table_elements`;
+  designed as a parent class for user's own representations of tables. Its
+  :meth:`TableRepresenter.__call__` method first looks for a method called
+  ``'repr_' + class.name``; if it does not exist call the default method from
+  the catalogue of table representation accessible in :mod:`.table_elements`;
 * :class:`PlotRepresenter`: inherited from :class:`Representer`, designed
-  as a parent class for user's own representations of plots. It's
-  :meth:`PlotRepresenter.__call__` method first calls the class
-  representation method through the :meth:`Representer.__call__` one
-  (meaning it should also be named ``'repr_' + class.name``), if it does not
-  exist call the default method from the catalogue of plot representation
-  accessible in :mod:`.plot_elements`.
+  as a parent class for user's own representations of plots. Its
+  :meth:`PlotRepresenter.__call__` method first looks for a method called
+  ``'repr_' + class.name``; if it does not exist call the default method from
+  the catalogue of plot representation accessible in :mod:`.plot_elements`.
 
 
 An example of use of the ``Representer`` objects can be seen in the
-:class:`FullTableRepresenter`. For example, in this table representation for
-the Bonferroni test result, the input test result is first represented in a
-table, then the Bonferroni itself is represented in a second table (they cannot
-be combined as they have different headers, see :meth:`.items.TableItem.join`).
+:class:`FullTableRepresenter`. In this table representation, for the Bonferroni
+test result, the input test result is first represented in a table, then the
+Bonferroni itself is represented in a second table.
 
 
 Thus the use of the ``Representer`` is foreseen as:
@@ -63,11 +62,11 @@ from . import plot_elements as plt_elts
 
 
 class Representation:
-    '''Class for representing test results as items calling the available
+    '''Class for representing test results as templates calling the available
     patterns (tables or plots).
 
-    This class corresponds to the ``Context`` class in the design pattern
-    `Stragegy`.
+    This class corresponds to the `Context` role in the `Strategy` design
+    pattern.
     '''
 
     def __init__(self, pattern):
@@ -90,12 +89,11 @@ class Representation:
 
 
 class Representer:
-    '''Base class for representing test results as items (in the sense of the
-    :mod:`~.items` module).
+    '''Base class for representing test results as templates (in the sense of
+    the :mod:`~.templates` module).
 
-    This class corresponds to the ``Strategy`` class in the `Strategy` design
-    pattern. Its subclasses corresponds to the subclasses of the ``Strategy``
-    class.
+    This class corresponds to the `Strategy` role in the `Strategy` design
+    pattern. Its subclasses play the role of `ConcreteStrategy`.
     '''
 
     def __call__(self, result):
@@ -155,7 +153,7 @@ class FullTableRepresenter(TableRepresenter):
         :type result: :class:`~.TestResultBonferroni`
         :returns: Representation of a :class:`~.TestResultBonferroni` as
             2 tables (the first test result and the Bonferroni result).
-        :rtype: list(:class:`~.TableItem`)
+        :rtype: list(:class:`~.TableTemplate`)
         '''
         LOGGER.debug("In FullTableRepresenter.repr_testresultbonferroni")
         return (super().__call__(result.first_test_res)
@@ -172,7 +170,7 @@ class FullTableRepresenter(TableRepresenter):
         :type result: :class:`~.TestResultHolmBonferroni`
         :returns: Representation of a :class:`~.TestResultHolmBonferroni` as
             2 tables (the first test result and the Holm-Bonferroni result).
-        :rtype: list(:class:`~.TableItem`)
+        :rtype: list(:class:`~.TableTemplate`)
         '''
         LOGGER.debug(
             "In FullTableRepresenter.repr_testresultholmbonferroni")
@@ -212,19 +210,12 @@ class FullPlotRepresenter(PlotRepresenter):
 
 
 class EmptyRepresenter(Representer):
-    '''Class that does not generate any items for any test result.'''
-
-    # def __call__(self, result):
-    #     '''Dispatch handling of `result` to all the Representer subclass
-    #     instance attributes of :class:`EmptyRepresenter`.
-    #     Always returns an empty list.
-    #     '''
-    #     return []
+    '''Class that does not generate any templates for any test result.'''
 
 
 class FullRepresenter(Representer):
     '''This class generates the fullest possible representation for test
-    results. If anything can be represented as an item,
+    results. If anything can be represented as an template,
     :class:`FullRepresenter` will do it.
     '''
 

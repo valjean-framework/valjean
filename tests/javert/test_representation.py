@@ -7,7 +7,7 @@ import logging
 
 from ..context import valjean  # pylint: disable=unused-import
 from valjean import LOGGER
-from valjean.javert.items import TableItem, PlotItem, join
+from valjean.javert.templates import TableTemplate, PlotTemplate, join
 from valjean.javert.representation import (TableRepresenter, EmptyRepresenter,
                                            PlotRepresenter)
 from valjean.javert.mpl import MplPlot
@@ -24,26 +24,27 @@ from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
 
 @pytest.mark.parametrize('test_name', ['equal_test', 'approx_equal_test'])
 def test_full_repr(test_name, request):
-    '''Test that :class:`~.FullRepresenter` yields all the expected items
+    '''Test that :class:`~.FullRepresenter` yields all the expected templates
     for equality tests.'''
     test = request.getfixturevalue(test_name)
     representer = TableRepresenter()
-    items = representer(test.evaluate())
-    assert isinstance(items, list)
-    assert any(isinstance(item, TableItem) for item in items)
+    templates = representer(test.evaluate())
+    assert isinstance(templates, list)
+    assert any(isinstance(template, TableTemplate) for template in templates)
 
 
 @pytest.mark.mpl_image_compare(filename='student_comp_points.png',
                                baseline_dir='ref_plots')
 def test_student_full(student_test_result, full_repr, rst_formatter, rstcheck):
     '''Test plot of student resultwhen  bins are given by centers of bins.'''
-    items = full_repr(student_test_result)
-    rst = '\n'.join(rst_formatter(item) for item in items
-                    if isinstance(item, TableItem))
+    templates = full_repr(student_test_result)
+    rst = '\n'.join(rst_formatter(template) for template in templates
+                    if isinstance(template, TableTemplate))
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
-    mplt = MplPlot([item for item in items if isinstance(item, PlotItem)][0])
+    mplt = MplPlot([template for template in templates
+                    if isinstance(template, PlotTemplate)][0])
     return mplt.fig
 
 
@@ -52,35 +53,36 @@ def test_student_full(student_test_result, full_repr, rst_formatter, rstcheck):
 def test_student_edges_full(student_test_edges_result, full_repr,
                             rst_formatter, rstcheck):
     '''Test plot of student result when bins are given by edges.'''
-    items = full_repr(student_test_edges_result)
-    rst = '\n'.join(rst_formatter(item) for item in items
-                    if isinstance(item, TableItem))
+    templates = full_repr(student_test_edges_result)
+    rst = '\n'.join(rst_formatter(template) for template in templates
+                    if isinstance(template, TableTemplate))
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
-    mplt = MplPlot([item for item in items if isinstance(item, PlotItem)][0])
+    mplt = MplPlot([template for template in templates
+                    if isinstance(template, PlotTemplate)][0])
     return mplt.fig
 
 
 @pytest.mark.parametrize('test_name', ['equal_test', 'approx_equal_test'])
 def test_empty_repr(test_name, request):
-    '''Test that :class:`~.EmptyRepresenter` yields no items for equality
+    '''Test that :class:`~.EmptyRepresenter` yields no templates for equality
     tests.'''
     test = request.getfixturevalue(test_name)
     representer = EmptyRepresenter()
-    items = representer(test.evaluate())
-    assert items is None
+    templates = representer(test.evaluate())
+    assert templates is None
 
 
 def test_full_concatenation(student_test_result, student_test_result_fail,
                             full_repr):
-    '''Test concatenation of all items.'''
-    item1 = full_repr(student_test_result)
-    item2 = full_repr(student_test_result_fail)
-    items3 = [join(it1, it2) for it1, it2 in zip(item1, item2)]
-    assert len(items3) == 2
-    assert [isinstance(it, TableItem) for it in items3] == [True, False]
-    assert [isinstance(it, PlotItem) for it in items3] == [False, True]
+    '''Test concatenation of all templates.'''
+    templ1 = full_repr(student_test_result)
+    templ2 = full_repr(student_test_result_fail)
+    templs3 = [join(it1, it2) for it1, it2 in zip(templ1, templ2)]
+    assert len(templs3) == 2
+    assert [isinstance(it, TableTemplate) for it in templs3] == [True, False]
+    assert [isinstance(it, PlotTemplate) for it in templs3] == [False, True]
 
 
 @pytest.fixture(scope='function', params=['spam', 'egg'])
@@ -130,17 +132,17 @@ def test_spam_repr(caplog, str_choice, full_repr):
     spam_test = TestSpam(str_choice, name='spam_test', description='desc')
     spamres = spam_test.evaluate()
     assert bool(spamres) == (str_choice == 'spam')
-    items = full_repr(spamres)
-    assert items == []
+    templates = full_repr(spamres)
+    assert templates == []
     loginfo_tabrepr = "no table representation for class TestResultSpam"
     loginfo_pltrepr = "no plot representation for class TestResultSpam"
     assert loginfo_tabrepr in caplog.text
     assert loginfo_pltrepr in caplog.text
     tabrepresenter = TableRepresenter()
-    items = tabrepresenter(spamres)
-    assert items is None
+    templates = tabrepresenter(spamres)
+    assert templates is None
     pltrepresenter = PlotRepresenter()
-    items = pltrepresenter(spamres)
-    assert items is None
+    templates = pltrepresenter(spamres)
+    assert templates is None
     assert caplog.text.count(loginfo_tabrepr) == 2
     assert caplog.text.count(loginfo_pltrepr) == 2

@@ -2,7 +2,7 @@
 to be converted in rst.
 '''
 from .. import LOGGER
-from .items import TableItem
+from .templates import TableTemplate
 
 
 def repr_testresultequal(result):
@@ -11,7 +11,7 @@ def repr_testresultequal(result):
     :param result: a test result.
     :type result: :class:`~.TestResultEqual`
     :returns: Representation of a :class:`~.TestResultEqual` as a table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     return repr_equal(result, 'equal?')
 
@@ -23,15 +23,16 @@ def repr_equal(result, result_header):
     :type result: :class:`~.TestResultEqual`
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultEqual` as a table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     LOGGER.debug('shape of the result: %s', result.equal.shape)
-    table_item = TableItem(result.test.dataset1.value,
-                           result.test.dataset2.value,
-                           result.equal,
-                           highlight=lambda _v1, _v2, eq: not eq,
-                           headers=['reference', 'dataset', result_header])
-    return [table_item]
+    table_template = TableTemplate(
+        result.test.dataset1.value,
+        result.test.dataset2.value,
+        result.equal,
+        highlight=lambda _v1, _v2, eq: not eq,
+        headers=['reference', 'dataset', result_header])
+    return [table_template]
 
 
 def repr_testresultapproxequal(result):
@@ -40,7 +41,7 @@ def repr_testresultapproxequal(result):
     :param  result: a test result.
     :type result: :class:`~.TestResultApproxEqual`
     :returns: Representation of a :class:`~.TestResultApproxEqual` as a table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     return repr_approx_equal(result, 'approx equal?')
 
@@ -52,15 +53,16 @@ def repr_approx_equal(result, result_header):
     :type result: :class:`~.TestResultApproxEqual`
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultApproxEqual` as a table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     LOGGER.debug('shape of the result: %s', result.approx_equal.shape)
-    table_item = TableItem(result.test.dataset1.value,
-                           result.test.dataset2.value,
-                           result.approx_equal,
-                           highlight=lambda _v1, _v2, eq: not eq,
-                           headers=['reference', 'dataset', result_header])
-    return [table_item]
+    table_template = TableTemplate(
+        result.test.dataset1.value,
+        result.test.dataset2.value,
+        result.approx_equal,
+        highlight=lambda _v1, _v2, eq: not eq,
+        headers=['reference', 'dataset', result_header])
+    return [table_template]
 
 
 def repr_testresultstudent(result):
@@ -69,7 +71,7 @@ def repr_testresultstudent(result):
     :param  result: a test result.
     :type result: :class:`~.TestResultStudent`
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     return repr_student(result, 'Student?')
 
@@ -81,15 +83,15 @@ def repr_student(result, result_header):
     :type result: :class:`~.TestResultStudent`
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    table_item = TableItem(
+    table_template = TableTemplate(
         result.test.ds1.value, result.test.ds1.error,
         result.test.ds2.value, result.test.ds2.error,
         result.delta, result.bool_array(),
         highlight=lambda _v1, _e1, _v2, _e2, _delta, eq: not eq,
         headers=['v1', 'σ1', 'v2', 'σ2', 'Δ', result_header])
-    return [table_item]
+    return [table_template]
 
 
 def repr_testresultbonferroni(result):
@@ -100,7 +102,7 @@ def repr_testresultbonferroni(result):
     :param  result: a test result.
     :type result: :class:`~.TestResultBonferroni`
     :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     return repr_bonferroni(result, 'Bonferroni?')
 
@@ -114,9 +116,9 @@ def repr_bonferroni(result, result_header):
     :type result: :class:`~.TestResultBonferroni`
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    table_item = TableItem(
+    table_template = TableTemplate(
         [result.first_test_res.test.name],
         [result.test.ntests],
         [result.test.alpha],
@@ -124,7 +126,7 @@ def repr_bonferroni(result, result_header):
         [bool(result)],
         highlight=lambda _t, _ndf, _sl, _min, rnh: not rnh,
         headers=['test', 'ndf', 'α', 'min(p-value)', result_header])
-    return [table_item]
+    return [table_template]
 
 
 def repr_testresultholmbonferroni(result):
@@ -134,7 +136,7 @@ def repr_testresultholmbonferroni(result):
     :type result: :class:`~.TestResultHolmBonferroni`
     :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
         table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     return repr_holm_bonferroni(result, 'Holm-Bonferroni?')
 
@@ -149,9 +151,9 @@ def repr_holm_bonferroni(result, result_header):
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
         table.
-    :rtype: :class:`list` (:class:`~.TableItem`)
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    table_item = TableItem(
+    table_template = TableTemplate(
         [result.first_test_res.test.name],
         [result.test.ntests],
         [result.test.alpha],
@@ -162,4 +164,4 @@ def repr_holm_bonferroni(result, result_header):
         highlight=lambda _t, _ndf, _sl, _min, _malp, _rej, rnh: not rnh,
         headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
                  'N rejected', result_header])
-    return [table_item]
+    return [table_template]

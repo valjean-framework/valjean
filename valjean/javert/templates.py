@@ -10,18 +10,18 @@ import numpy as np
 # from .. import LOGGER
 
 
-class TableItem:
+class TableTemplate:
     '''A container class that encapsulates all the necessary information to
     represent a table.
 
     Examples of use of mainly show in context of concatentation of
-    :class:`TableItem`, obtained with the operators ``+=`` and ``+``.
+    :class:`TableTemplate`, obtained with the :meth:`join` method.
 
     >>> import numpy as np
-    >>> tit1 = TableItem(np.float_(1.5), np.float_(1.4),
-    ...                  headers=['egg', 'spam'])
-    >>> tit2 = TableItem(np.float_(1.2), np.float_(0.9),
-    ...                  headers=['egg', 'spam'])
+    >>> tit1 = TableTemplate(np.float_(1.5), np.float_(1.4),
+    ...                      headers=['egg', 'spam'])
+    >>> tit2 = TableTemplate(np.float_(1.2), np.float_(0.9),
+    ...                      headers=['egg', 'spam'])
     >>> stab12 = join(tit1, tit2)
     >>> print(len(tit1.columns), len(tit2.columns))
     2 2
@@ -32,7 +32,7 @@ class TableItem:
     >>> print(stab12.columns[0].size)
     2
     >>> print("{!r}".format(stab12))
-    class: <class 'valjean.javert.items.TableItem'>
+    class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [1.5 1.2]
     spam: [1.4 0.9]
@@ -41,18 +41,18 @@ class TableItem:
     ``stab12`` contained both ``tit1`` and ``tit2`` as expected. Headers of the
     columns are the same, length of the columns is the sum of the two.
 
-    >>> tit3 = TableItem(np.float_(0.8), np.float_(1.1),
-    ...                  headers=['knight', 'parrot'])
+    >>> tit3 = TableTemplate(np.float_(0.8), np.float_(1.1),
+    ...                      headers=['knight', 'parrot'])
     >>> stab13 = join(tit1, tit3)
     Traceback (most recent call last):
         ...
-    ValueError: TableItems to add should have same headers
+    ValueError: TableTemplates to add should have same headers
 
-    An error is raised as the two :class:`TableItem` don't contain the same
+    An error is raised as the two :class:`TableTemplate` don't contain the same
     headers, so not the same kind of columns, thus they cannot be concatenated.
 
-    >>> tit4 = TableItem(np.arange(4), np.arange(4)*0.5,
-    ...                  headers=['egg', 'spam'])
+    >>> tit4 = TableTemplate(np.arange(4), np.arange(4)*0.5,
+    ...                      headers=['egg', 'spam'])
     >>> print(len(tit4.columns), tit4.columns[0].size)
     2 4
     >>> stab14 = join(tit1, tit4)
@@ -61,47 +61,47 @@ class TableItem:
     >>> stab14.columns[0].size == tit1.columns[0].size + tit4.columns[0].size
     True
     >>> print("{!r}".format(stab14))
-    class: <class 'valjean.javert.items.TableItem'>
+    class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [1.5 0.  1.  2.  3. ]
     spam: [1.4 0.  0.5 1.  1.5]
     <BLANKLINE>
 
-    If the columns are the same format, concatenation of TableItems containing
-    arrays and numbers is possible.
+    If the columns are the same format, concatenation of TableTemplates
+    containing arrays and numbers is possible.
 
     It is also between arrays, a bigger array is obtained, without separation
-    between the initial :class:`TableItem`:
+    between the initial :class:`TableTemplate`:
 
-    >>> tit5 = TableItem(np.arange(3)*0.1, np.arange(3)*0.05,
-    ...                  headers=['egg', 'spam'])
+    >>> tit5 = TableTemplate(np.arange(3)*0.1, np.arange(3)*0.05,
+    ...                      headers=['egg', 'spam'])
     >>> stab45 = join(tit4, tit5)
     >>> print(len(stab45.columns), len(stab45.columns[0]))
     2 7
     >>> print("{!r}".format(stab45))
-    class: <class 'valjean.javert.items.TableItem'>
+    class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [0.  1.  2.  3.  0.  0.1 0.2]
     spam: [0.   0.5  1.   1.5  0.   0.05 0.1 ]
     <BLANKLINE>
 
-    Any number of :class:`TableItem` can be joined (if fulfilling the
+    Any number of :class:`TableTemplate` can be joined (if fulfilling the
     requirements).
 
     >>> stab124 = join(tit1, tit2, tit4)
     >>> print("{!r}".format(stab124))
-    class: <class 'valjean.javert.items.TableItem'>
+    class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [1.5 1.2 0.  1.  2.  3. ]
     spam: [1.4 0.9 0.  0.5 1.  1.5]
     <BLANKLINE>
 
-    The :meth:`join` method from in the :class:`TableItem` updates the left
-    :class:`TableItem` as expected:
+    The :meth:`TableTemplate.join` method updates the left
+    :class:`TableTemplate` as expected:
 
     >>> tit1.join(tit2, tit4)
     >>> print("{!r}".format(tit1))
-    class: <class 'valjean.javert.items.TableItem'>
+    class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [1.5 1.2 0.  1.  2.  3. ]
     spam: [1.4 0.9 0.  0.5 1.  1.5]
@@ -169,63 +169,61 @@ class TableItem:
                 raise ValueError(err)
 
     def copy(self):
-        '''Copy a :class:`TableItem` object.
+        '''Copy a :class:`TableTemplate` object.
 
-        :returns: :class:`TableItem`
+        :returns: :class:`TableTemplate`
 
         .. note:: the highlignt function is not really copied, it has the same
             address as the self one. I don't know how to change that.
         '''
-        return TableItem(*tuple(col.copy() for col in self.columns),
-                         headers=self.headers.copy(),
-                         units=self.units.copy(), highlight=self.highlight)
+        return TableTemplate(*tuple(col.copy() for col in self.columns),
+                             headers=self.headers.copy(),
+                             units=self.units.copy(), highlight=self.highlight)
 
     def _binary_join(self, other):
-        '''Join another :class:`TableItem` to the current one.
+        '''Join another :class:`TableTemplate` to the current one.
 
-        This method **concatenates** :class:`TableItem` of the same number of
-        columns and same headers. It returns an update of the left one.
+        This method **concatenates** :class:`TableTemplate` of the same number
+        of columns and same headers. It returns an update of the left one.
 
-        If the two :class:`TableItem` are not compatible an exception is
+        If the two :class:`TableTemplate` are not compatible an exception is
         raised.
 
-        :param other: :class:`TableItem` to add to the current one
-        :returns: updated :class:`TableItem`
-        :raises TypeError: if the other parameter is not a :class:`TableItem`
-        :raises ValueError: if the TableItems don't have the same headers.
+        :param other: :class:`TableTemplate` to add to the current one
+        :returns: updated :class:`TableTemplate`
+        :raises TypeError: if the other parameter is not a
+            :class:`TableTemplate`
+        :raises ValueError: if the TableTemplates don't have the same headers.
         '''
-        if not isinstance(other, TableItem):
-            raise TypeError("Only a TableItem can be joined to another "
-                            "TableItem")
+        if not isinstance(other, TableTemplate):
+            raise TypeError("Only a TableTemplate can be joined to another "
+                            "TableTemplate")
         if self.headers != other.headers:
-            raise ValueError("TableItems to add should have same headers")
-        self.columns = tuple(
-            self.columns[i] + other.columns[i]
-            if isinstance(self.columns[i], list)
-            else np.hstack((self.columns[i], other.columns[i]))
-            for i in range(len(self.columns)))
+            raise ValueError("TableTemplates to add should have same headers")
+        self.columns = tuple(np.hstack((self.columns[i], other.columns[i]))
+                             for i in range(len(self.columns)))
         self.units = other.units if self.units is None else self.units
 
     def join(self, *others):
-        '''Join a given number a :class:`TableItem` to the current one.
+        '''Join a given number a :class:`TableTemplate` to the current one.
 
-        Only :class:`TableItem` with the same number of columns and same
+        Only :class:`TableTemplate` with the same number of columns and same
         headers can be joined. The method returns the updated current one.
 
-        :param others: list of TableItems
-        :type others: :class:`list` (:class:`TableItem`)
-        :returns: updated :class:`TableItem`
+        :param others: list of TableTemplates
+        :type others: :class:`list` (:class:`TableTemplate`)
+        :returns: updated :class:`TableTemplate`
         '''
         for oti in others:
             self._binary_join(oti)
 
     def __repr__(self):
-        '''Print TableItem details.'''
+        '''Print TableTemplate details.'''
         intro = ["class: {0}\n"
                  "headers: {1}\n".format(self.__class__, self.headers)]
         elts = []
-        for icol, col in enumerate(self.columns):
-            elts.append("{0}: {1}\n".format(self.headers[icol], col))
+        for header, col in zip(self.headers, self.columns):
+            elts.append("{0}: {1}\n".format(header, col))
         return ''.join(intro + elts)
 
 
@@ -279,28 +277,28 @@ class CurveElements:
                                      else self.errors.copy()))
 
 
-class PlotItem:
+class PlotTemplate:
     '''A container for full test result to be represented as a plot. This
     includes all the datasets and the test result. This can also include
     p-values or other test parameters, depending on what is given to the
-    PlotItem.
+    PlotTemplate.
 
     Examples of use of mainly show in context of concatentation of
-    :class:`PlotItem`, obtained with the operators ``+=`` and ``+``.
+    :class:`PlotTemplate`, obtained with the :meth:`join` method.
 
-    >>> bins1, data11, data12 = np.arange(4), np.arange(4), np.arange(4)*10
-    >>> data13 = data11 + data12
-    >>> bins2, data2 = np.arange(5), np.arange(5)*0.5
-    >>> pit1 = PlotItem(bins=bins1, xname='egg',
-    ...                 curves=[CurveElements(data11, 'd11', yname='brandy')])
-    >>> pit2 = PlotItem(bins=bins1, xname='egg',
-    ...                 curves=[CurveElements(data12, 'd12', yname='beer')])
-    >>> pit3 = PlotItem(bins=bins1, xname='egg',
-    ...                 curves=[CurveElements(data13, 'd13', yname='beer')])
+    >>> bins1, d11, d12 = np.arange(4), np.arange(4), np.arange(4)*10
+    >>> d13 = d11 + d12
+    >>> bins2, d2 = np.arange(5), np.arange(5)*0.5
+    >>> pit1 = PlotTemplate(bins=bins1, xname='egg',
+    ...                     curves=[CurveElements(d11, 'd11', yname='brandy')])
+    >>> pit2 = PlotTemplate(bins=bins1, xname='egg',
+    ...                     curves=[CurveElements(d12, 'd12', yname='beer')])
+    >>> pit3 = PlotTemplate(bins=bins1, xname='egg',
+    ...                     curves=[CurveElements(d13, 'd13', yname='beer')])
 
     >>> splt12 = join(pit1, pit2)
     >>> print("{!r}".format(splt12))
-    class: <class 'valjean.javert.items.PlotItem'>
+    class: <class 'valjean.javert.templates.PlotTemplate'>
     bins: [0 1 2 3]
     xname: egg
     label:  d11
@@ -313,12 +311,12 @@ class PlotItem:
     errors: None
     <BLANKLINE>
 
-    We obtain a new :class:`PlotItem` containing two curves with different
+    We obtain a new :class:`PlotTemplate` containing two curves with different
     ynames.
 
     >>> splt123 = join(pit1, pit2, pit3)
     >>> print("{!r}".format(splt123))
-    class: <class 'valjean.javert.items.PlotItem'>
+    class: <class 'valjean.javert.templates.PlotTemplate'>
     bins: [0 1 2 3]
     xname: egg
     label:  d11
@@ -335,16 +333,16 @@ class PlotItem:
     errors: None
     <BLANKLINE>
 
-    As expected a new :class:`TableItem` is obtained, containing three curves.
-    The first and third ones have the same ynmes (can appear on the same
-    subplot).
+    As expected a new :class:`TableTemplate` is obtained, containing three
+    curves. The first and third ones have the same ynmes (can appear on the
+    same subplot).
 
-    Like in the TableItem case, the :meth:`join` method from in the
-    :class:`PlotItem` updates the left :class:`PlotItem` as expected:
+    Like in the TableTemplate case, the :meth:`PlotTemplate.join` method
+    updates the left :class:`PlotTemplate` as expected:
 
     >>> pit1.join(pit2, pit3)
     >>> print("{!r}".format(pit1))
-    class: <class 'valjean.javert.items.PlotItem'>
+    class: <class 'valjean.javert.templates.PlotTemplate'>
     bins: [0 1 2 3]
     xname: egg
     label:  d11
@@ -361,32 +359,32 @@ class PlotItem:
     errors: None
     <BLANKLINE>
 
-    >>> pit4 = PlotItem(bins=bins1, xname='spam',
-    ...                 curves=[CurveElements(data12, 'd12', yname='bacon')])
+    >>> pit4 = PlotTemplate(bins=bins1, xname='spam',
+    ...                     curves=[CurveElements(d12, 'd12', yname='bacon')])
     >>> splt14 = join(pit1, pit4)
     Traceback (most recent call last):
         ...
-    ValueError: PlotItems should have the same xname to be joined
+    ValueError: PlotTemplates should have the same xname to be joined
 
     An error is raised a the x-axis don't have the same name. In that case the
-    :class:`PlotItem` cannot be concatenated. They will have to be represented
-    on two different plots, even if the bins used (``bins1``) are the same
-    (they probably don't have the same meaning).
+    :class:`PlotTemplate` cannot be concatenated. They will have to be
+    represented on two different plots, even if the bins used (``bins1``) are
+    the same (they probably don't have the same meaning).
 
-    >>> pit5 = PlotItem(bins=bins2, xname='spam',
-    ...                 curves=[CurveElements(data2, 'd2', yname='bacon')])
+    >>> pit5 = PlotTemplate(bins=bins2, xname='spam',
+    ...                     curves=[CurveElements(d2, 'd2', yname='bacon')])
     >>> splt45 = join(pit4, pit5)
     Traceback (most recent call last):
         ...
-    ValueError: Bins should be the same in both PlotItems
+    ValueError: Bins should be the same in both PlotTemplates
 
     An error is also raised: x-axis bins have the same names but not the same
-    number of bins. The two :class:`PlotItem` cannot represent the same
+    number of bins. The two :class:`PlotTemplate` cannot represent the same
     quantity so be represented on the same plot.
     '''
 
     def __init__(self, *, bins, curves, xname=''):
-        '''Construction of the PlotItem from x-bins and curves.
+        '''Construction of the PlotTemplate from x-bins and curves.
 
         The curves should be a list of :class:`CurveElements`.
 
@@ -414,18 +412,18 @@ class PlotItem:
                             "CurveElements.")
 
     def copy(self):
-        '''Copy a :class:`PlotItem` object.
+        '''Copy a :class:`PlotTemplate` object.
 
-        :returns: :class:`PlotItem`
+        :returns: :class:`PlotTemplate`
         '''
-        return PlotItem(bins=self.bins.copy(),
-                        xname=self.xname,
-                        curves=[pelt.copy() for pelt in self.curves])
+        return PlotTemplate(bins=self.bins.copy(),
+                            xname=self.xname,
+                            curves=[pelt.copy() for pelt in self.curves])
 
     def _binary_join(self, other):
-        '''Join another :class:`PlotItem` to the current one.
+        '''Join another :class:`PlotTemplate` to the current one.
 
-        This method **concatenates** the current :class:`PlotItem` to the
+        This method **concatenates** the current :class:`PlotTemplate` to the
         ``other`` one, i.e., if they share the x-axis (bins and name), the
         curves list is extended.
 
@@ -433,36 +431,37 @@ class PlotItem:
         really want to do, please add the datasets themselves before and
         probably redo the test.
 
-        :param other: :class:`PlotItem` to add to the current one
-        :returns: updated :class:`PlotItem`
-        :raises TypeError: if the other parameter is not a :class:`PlotItem`
+        :param other: :class:`PlotTemplate` to add to the current one
+        :returns: updated :class:`PlotTemplate`
+        :raises TypeError: if the other parameter is not a
+            :class:`PlotTemplate`
         :raises ValueError: if x-axes are not the same (``xname`` and ``bins``)
         '''
-        if not isinstance(other, PlotItem):
-            raise TypeError("Only a PlotItem can be joined to another "
-                            "PlotItem")
+        if not isinstance(other, PlotTemplate):
+            raise TypeError("Only a PlotTemplate can be joined to another "
+                            "PlotTemplate")
         if self.xname != other.xname:
-            raise ValueError("PlotItems should have the same xname to be "
+            raise ValueError("PlotTemplates should have the same xname to be "
                              "joined")
         if not np.array_equal(self.bins, other.bins):
-            raise ValueError("Bins should be the same in both PlotItems")
+            raise ValueError("Bins should be the same in both PlotTemplates")
         self.curves.extend(other.curves)
 
     def join(self, *others):
-        '''Join a given number a :class:`PlotItem` to the current one.
+        '''Join a given number a :class:`PlotTemplate` to the current one.
 
-        Only :class:`PlotItem` with the same number of columns and same headers
-        can be joined. The method returns the updated current one.
+        Only :class:`PlotTemplate` with the same number of columns and same
+        headers can be joined. The method returns the updated current one.
 
-        :param others: list of PlotItems
-        :type others: :class:`list` (:class:`PlotItem`)
-        :returns: updated :class:`PlotItem`
+        :param others: list of PlotTemplates
+        :type others: :class:`list` (:class:`PlotTemplate`)
+        :returns: updated :class:`PlotTemplate`
         '''
         for oti in others:
             self._binary_join(oti)
 
     def __repr__(self):
-        '''Printing of :class:`PlotItem`.'''
+        '''Printing of :class:`PlotTemplate`.'''
         intro = ["class: {0}\n"
                  "bins: {1}\n"
                  "xname: {2}\n".format(self.__class__, self.bins, self.xname)]
@@ -476,35 +475,36 @@ class PlotItem:
         return ''.join(intro + elts)
 
 
-def join(*items):
-    '''Join a "list" of items of same kind, :class:`TableItem` or
-    :class:`PlotItem` using the related ``join`` methods.
+def join(*templates):
+    '''Join a "list" of templates of same kind, :class:`TableTemplate` or
+    :class:`PlotTemplate` using the related ``join`` methods.
 
-    It returns a new items (:class:`TableItem` or :class:`PlotItem`).
+    It returns a new templates (:class:`TableTemplate` or
+    :class:`PlotTemplate`).
 
-    :param items: list of items
-    :type items: :class:`list` (:class:`TableItem`)
-        or :class:`list` (:class:`PlotItem`)
-    :returns: :class:`TableItem` or :class:`PlotItem`
+    :param templates: list of templates
+    :type templates: :class:`list` (:class:`TableTemplate`)
+        or :class:`list` (:class:`PlotTemplate`)
+    :returns: :class:`TableTemplate` or :class:`PlotTemplate`
 
 
-    See :class:`TableItem` and :class:`PlotItem` for examples of use. ONly few
-    error cases will be shown here:
+    See :class:`TableTemplate` and :class:`PlotTemplate` for examples of use.
+    Only few error cases will be shown here:
 
     >>> bins1, data11, data12 = np.arange(4), np.arange(4), np.arange(4)*10
     >>> bins2, data2 = np.arange(5), np.arange(5)*0.5
-    >>> tablit = TableItem(bins1, data11, headers=['egg', 'spam'])
-    >>> plotit = PlotItem(bins=bins1, xname='egg',
+    >>> tablit = TableTemplate(bins1, data11, headers=['egg', 'spam'])
+    >>> plotit = PlotTemplate(bins=bins1, xname='egg',
     ...                   curves=[CurveElements(data11, 'd11', yname='spam')])
     >>> tit = join(tablit, plotit)
     Traceback (most recent call last):
         ...
-    TypeError: Only a TableItem can be joined to another TableItem
+    TypeError: Only a TableTemplate can be joined to another TableTemplate
     >>> tit = join(plotit, tablit)
     Traceback (most recent call last):
         ...
-    TypeError: Only a PlotItem can be joined to another PlotItem
+    TypeError: Only a PlotTemplate can be joined to another PlotTemplate
     '''
-    copy = items[0].copy()
-    copy.join(*items[1:])
+    copy = templates[0].copy()
+    copy.join(*templates[1:])
     return copy
