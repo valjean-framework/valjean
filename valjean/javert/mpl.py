@@ -21,7 +21,8 @@ Plots can be obtained with the following for example:
     >>> from valjean.javert.templates import PlotTemplate, CurveElements
     >>> bins = np.array(np.arange(10))
     >>> lcurves = [CurveElements(values=bins*0.5*(icurve+1),
-    ...                          label=str(icurve+1))
+    ...                          label=str(icurve+1),
+    ...                          index=icurve)
     ...            for icurve in range(20)]
     >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
     >>> from valjean.javert.mpl import MplPlot
@@ -47,7 +48,7 @@ For example, we can have:
     >>> lcurves = []
     >>> for icurve in range(20):
     ...     lcurves.append(CurveElements(values=bins*0.5*(icurve+1),
-    ...                                  label=str(icurve+1)))
+    ...                                  label=str(icurve+1), index=icurve))
     >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
     >>> from valjean.javert import mpl
     >>> mpl.STYLE = 'Solarize_Light2'
@@ -65,7 +66,7 @@ Colors and markers can also be changed directly:
     >>> lcurves = []
     >>> for icurve in range(20):
     ...     lcurves.append(CurveElements(values=bins*0.5*(icurve+1),
-    ...                                  label=str(icurve+1)))
+    ...                                  label=str(icurve+1), index=icurve))
     >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
     >>> from valjean.javert import mpl
     >>> mpl.STYLE = 'default'  # needed here as persistent from above
@@ -94,7 +95,7 @@ class MplPlot:
 
     def __init__(self, data):
         '''Construct a :class:`MplPlot` from the given
-        :class:`~.templates.PlotTemplate`..
+        :class:`~.templates.PlotTemplate`.
 
         :param data: the data to convert.
         :type data: :class:`~.templates.PlotTemplate`
@@ -109,7 +110,7 @@ class MplPlot:
             figsize=(6.4, 4.8+1.2*(self.nb_splts-1)),
             gridspec_kw={'height_ratios': [4] + [1]*(self.nb_splts-1),
                          'hspace': 0.05})
-        self.legend = {'handles': [], 'labels': [], 'iplot': []}
+        self.legend = {'handles': [], 'labels': [], 'iplot': [], 'index': []}
         self.draw()
 
     def draw(self):
@@ -146,8 +147,9 @@ class MplPlot:
                 color=data_fmt[0], marker=data_fmt[1], fillstyle=data_fmt[2],
                 linestyle='')
             self.legend['handles'].append((steps, markers))
-            self.legend['labels'].append(self.data.curves[idata].label)
-            self.legend['iplot'].append(iplot)
+            # self.legend['labels'].append(self.data.curves[idata].label)
+            # self.legend['iplot'].append(iplot)
+            # self.legend['index'].append(self.data.curves[idata].index)
         else:
             linesty = '--' if len(self.data.curves) > 1 else ''
             eplt = splt.errorbar(
@@ -155,8 +157,9 @@ class MplPlot:
                 yerr=self.data.curves[idata].errors, linestyle=linesty,
                 color=data_fmt[0], marker=data_fmt[1], fillstyle=data_fmt[2])
             self.legend['handles'].append(eplt)
-            self.legend['labels'].append(self.data.curves[idata].label)
-            self.legend['iplot'].append(iplot)
+        self.legend['labels'].append(self.data.curves[idata].label)
+        self.legend['iplot'].append(iplot)
+        self.legend['index'].append(self.data.curves[idata].index)
 
     def error_plots(self):
         '''Plot errorbar plot (update the pyplot instance) and build the
@@ -178,12 +181,11 @@ class MplPlot:
                 ynames[curve.yname] = 0
             else:
                 ynames[curve.yname] += 1
-            if curve.label in self.legend['labels']:
-                ilab = self.legend['labels'].index(curve.label)
+            if curve.index in self.legend['index']:
                 prevc = (
-                    self.legend['handles'][ilab][1][0]
+                    self.legend['handles'][curve.index][1][0]
                     if self.data.bins.size == curve.values.size+1
-                    else self.legend['handles'][ilab][0])
+                    else self.legend['handles'][curve.index][0])
                 icv_format = (prevc.get_color(),
                               prevc.get_marker(),
                               prevc.get_fillstyle())

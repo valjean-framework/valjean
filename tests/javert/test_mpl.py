@@ -33,7 +33,7 @@ from ..gavroche.conftest import datasets
 def test_plot_1d_dataset(some_1d_dataset):
     '''Test plot of 1-D dataset.'''
     plti = PlotTemplate(bins=some_1d_dataset.bins['e'],
-                        curves=[CurveElements(some_1d_dataset.value, '')])
+                        curves=[CurveElements(some_1d_dataset.value, '', 0)])
     assert plti.curves[0].values.size == plti.bins.size
 
 
@@ -43,7 +43,7 @@ def test_plot_1d_dataset(some_1d_dataset):
 def test_plot_bins_edges(oneds):
     '''Test plot where bins are given by edges.'''
     dim = list(oneds.bins.keys())[0]
-    pelt = CurveElements(oneds.value, label='', yname='score')
+    pelt = CurveElements(oneds.value, label='', index=0, yname='score')
     plti = PlotTemplate(bins=oneds.bins[dim], curves=[pelt], xname=dim)
     assert (plti.curves[0].values.size == plti.bins.size
             or plti.curves[0].values.size+1 == plti.bins.size)
@@ -55,7 +55,7 @@ def test_plot_bins_edges(oneds):
 def test_plot_with_errors(oneds):
     '''Test plot where bins are given by edges.'''
     dim = list(oneds.bins.keys())[0]
-    pelt = CurveElements(oneds.value, label='', yname='score',
+    pelt = CurveElements(oneds.value, label='', index=0, yname='score',
                          errors=oneds.error)
     plti = PlotTemplate(bins=oneds.bins[dim], curves=[pelt], xname=dim)
     assert oneds.error.size == oneds.value.size
@@ -66,7 +66,7 @@ def test_plot_with_errors(oneds):
                                baseline_dir='ref_plots')
 def test_plot_show():
     '''Test with matplotlib test.'''
-    pelt = CurveElements(values=np.arange(5), label='', yname='Y')
+    pelt = CurveElements(values=np.arange(5), label='', index=0, yname='Y')
     plti = PlotTemplate(bins=np.arange(6), curves=[pelt], xname='X')
     mplt = MplPlot(plti)
     mplt.splt.set_title('Simple plot')
@@ -77,7 +77,7 @@ def test_plot_show():
                                baseline_dir='ref_plots')
 def test_plot_show_irreg_bins():
     '''Test with matplotlib test.'''
-    pelt = CurveElements(values=np.arange(5), label='', yname='Y')
+    pelt = CurveElements(values=np.arange(5), label='', index=0, yname='Y')
     plti = PlotTemplate(bins=np.array([0, 2, 3, 6, 7, 10]), xname='X',
                         curves=[pelt])
     mplt = MplPlot(plti)

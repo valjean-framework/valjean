@@ -253,7 +253,7 @@ class TableTemplate:
 class CurveElements:
     '''Define the characteristics of a curve to plot.'''
 
-    def __init__(self, values, label, *, yname='', errors=None):
+    def __init__(self, values, label, index, *, yname='', errors=None):
         '''Construction of :class:`CurveElements`: curve details (values,
         label, etc).
 
@@ -267,10 +267,20 @@ class CurveElements:
         :obj:`numpy.ndarray` of same shape (they must have only one non-trivial
         dimension).
 
+        The curve index is used to share the plotting style between curves that
+        should. For example, if on a plot there are the reference and two
+        curves representing different data, let's say 'egg' and 'spam', if we
+        also want to draw the ratio of these data with the reference, the same
+        style will be applied to 'egg vs reference' and 'egg' and to 'spam vs
+        reference' and 'spam'. In that case to ensure the same style 'egg vs
+        reference' and 'egg' should have the same index (same for the 'spam'
+        case). ``index=0`` will always be considered as reference.
+
         :param values: array to be represented on the plot, **mandatory**
         :type values: :obj:`numpy.ndarray`
         :param str label: label to be used in the legend to characterize the
             curve, **mandatory**
+        :param int index: index of the curve
         :param str yname: label of y-axis (used to determine the number of
             subplots on the plot)
         :param errors: errors associated to values (per default only on y-axis)
@@ -278,6 +288,7 @@ class CurveElements:
         '''
         self.values = values
         self.label = label
+        self.index = index
         self.yname = yname
         self.errors = errors
 
@@ -295,6 +306,7 @@ class CurveElements:
         '''
         return CurveElements(values=self.values.copy(),
                              label=self.label,
+                             index=self.index,
                              yname=self.yname,
                              errors=(None if self.errors is None
                                      else self.errors.copy()))
@@ -312,12 +324,15 @@ class PlotTemplate:
     >>> bins1, d11, d12 = np.arange(4), np.arange(4), np.arange(4)*10
     >>> d13 = d11 + d12
     >>> bins2, d2 = np.arange(5), np.arange(5)*0.5
-    >>> pit1 = PlotTemplate(bins=bins1, xname='egg',
-    ...                     curves=[CurveElements(d11, 'd11', yname='brandy')])
-    >>> pit2 = PlotTemplate(bins=bins1, xname='egg',
-    ...                     curves=[CurveElements(d12, 'd12', yname='beer')])
-    >>> pit3 = PlotTemplate(bins=bins1, xname='egg',
-    ...                     curves=[CurveElements(d13, 'd13', yname='beer')])
+    >>> pit1 = PlotTemplate(
+    ...     bins=bins1, xname='egg',
+    ...     curves=[CurveElements(d11, 'd11', 0, yname='brandy')])
+    >>> pit2 = PlotTemplate(
+    ...     bins=bins1, xname='egg',
+    ...     curves=[CurveElements(d12, 'd12', 1, yname='beer')])
+    >>> pit3 = PlotTemplate(
+    ...     bins=bins1, xname='egg',
+    ...     curves=[CurveElements(d13, 'd13', 2, yname='beer')])
 
     >>> splt12 = join(pit1, pit2)
     >>> print("{!r}".format(splt12))
@@ -325,10 +340,12 @@ class PlotTemplate:
     bins: [0 1 2 3]
     xname: egg
     label:  d11
+    index:  0
     yname:  brandy
     values: [0 1 2 3]
     errors: None
     label:  d12
+    index:  1
     yname:  beer
     values: [ 0 10 20 30]
     errors: None
@@ -343,14 +360,17 @@ class PlotTemplate:
     bins: [0 1 2 3]
     xname: egg
     label:  d11
+    index:  0
     yname:  brandy
     values: [0 1 2 3]
     errors: None
     label:  d12
+    index:  1
     yname:  beer
     values: [ 0 10 20 30]
     errors: None
     label:  d13
+    index:  2
     yname:  beer
     values: [ 0 11 22 33]
     errors: None
@@ -369,21 +389,25 @@ class PlotTemplate:
     bins: [0 1 2 3]
     xname: egg
     label:  d11
+    index:  0
     yname:  brandy
     values: [0 1 2 3]
     errors: None
     label:  d12
+    index:  1
     yname:  beer
     values: [ 0 10 20 30]
     errors: None
     label:  d13
+    index:  2
     yname:  beer
     values: [ 0 11 22 33]
     errors: None
     <BLANKLINE>
 
-    >>> pit4 = PlotTemplate(bins=bins1, xname='spam',
-    ...                     curves=[CurveElements(d12, 'd12', yname='bacon')])
+    >>> pit4 = PlotTemplate(
+    ...     bins=bins1, xname='spam',
+    ...     curves=[CurveElements(d12, 'd12', 0, yname='bacon')])
     >>> splt14 = join(pit1, pit4)
     Traceback (most recent call last):
         ...
@@ -395,7 +419,7 @@ class PlotTemplate:
     the same (they probably don't have the same meaning).
 
     >>> pit5 = PlotTemplate(bins=bins2, xname='spam',
-    ...                     curves=[CurveElements(d2, 'd2', yname='bacon')])
+    ...                     curves=[CurveElements(d2, 'd2', 0, yname='bacon')])
     >>> splt45 = join(pit4, pit5)
     Traceback (most recent call last):
         ...
@@ -468,7 +492,11 @@ class PlotTemplate:
                              "joined")
         if not np.array_equal(self.bins, other.bins):
             raise ValueError("Bins should be the same in both PlotTemplates")
-        self.curves.extend(other.curves)
+        up_ocurves = other.curves.copy()
+        if [c.yname for c in other.curves] == [c.yname for c in self.curves]:
+            for curve in up_ocurves:
+                curve.index += len(self.curves)
+        self.curves.extend(up_ocurves)
 
     def join(self, *others):
         '''Join a given number a :class:`PlotTemplate` to the current one.
@@ -491,9 +519,11 @@ class PlotTemplate:
         elts = []
         for curve in self.curves:
             elts.append("label:  {0}\n"
-                        "yname:  {1}\n"
-                        "values: {2}\n"
-                        "errors: {3}\n".format(curve.label, curve.yname,
+                        "index:  {1}\n"
+                        "yname:  {2}\n"
+                        "values: {3}\n"
+                        "errors: {4}\n".format(curve.label, curve.index,
+                                               curve.yname,
                                                curve.values, curve.errors))
         return ''.join(intro + elts)
 
@@ -517,8 +547,9 @@ def join(*templates):
     >>> bins1, data11, data12 = np.arange(4), np.arange(4), np.arange(4)*10
     >>> bins2, data2 = np.arange(5), np.arange(5)*0.5
     >>> tablit = TableTemplate(bins1, data11, headers=['egg', 'spam'])
-    >>> plotit = PlotTemplate(bins=bins1, xname='egg',
-    ...                   curves=[CurveElements(data11, 'd11', yname='spam')])
+    >>> plotit = PlotTemplate(
+    ...     bins=bins1, xname='egg',
+    ...     curves=[CurveElements(data11, 'd11', 0, yname='spam')])
     >>> tit = join(tablit, plotit)
     Traceback (most recent call last):
         ...

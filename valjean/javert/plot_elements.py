@@ -88,7 +88,8 @@ def repr_student_delta(result):
     bins = result.test.dsref.bins[dim]
     curves = [CurveElements(values=delta,
                             label=result.test.name+': dataset '+str(ind),
-                            yname=r'$\Delta_{Student}$', errors=None)
+                            index=ind+1, yname=r'$\Delta_{Student}$',
+                            errors=None)
               for ind, delta in enumerate(result.delta)]
     return [PlotTemplate(bins=bins, xname=dim, curves=curves)]
 
@@ -111,14 +112,13 @@ def repr_student_values(result):
     if dim is None:
         return []
     bins = result.test.dsref.bins[dim]
-    cdsref = CurveElements(values=result.test.dsref.value,
-                           label=result.test.name+': reference dataset',
-                           yname='', errors=result.test.dsref.error)
-    cds = [CurveElements(values=ds.value,
-                         label=result.test.name+': dataset '+str(ids),
-                         yname='', errors=ds.error)
-           for ids, ds in enumerate(result.test.datasets)]
-    cds.insert(0, cdsref)
+    cds = [CurveElements(values=result.test.dsref.value,
+                         label=result.test.name+': reference dataset',
+                         index=0, yname='', errors=result.test.dsref.error)]
+    cds.extend([CurveElements(values=ds.value,
+                              label=result.test.name+': dataset '+str(ids),
+                              index=ids+1, yname='', errors=ds.error)
+                for ids, ds in enumerate(result.test.datasets)])
     return [PlotTemplate(bins=bins, xname=dim, curves=cds)]
 
 
@@ -141,7 +141,7 @@ def repr_student_pvalues(result):
     bins = result.test.dsref.bins[dim]
     curves = [CurveElements(values=pval,
                             label=result.test.name+': dataset '+str(ind),
-                            yname='p-value', errors=None)
+                            index=ind+1, yname='p-value', errors=None)
               for ind, pval in enumerate(result.pvalue)]
     return [PlotTemplate(bins=bins, xname=dim, curves=curves)]
 
@@ -164,14 +164,13 @@ def repr_datasets_values(result):
     if dim is None:
         return []
     bins = result.test.dsref.bins[dim]
-    cdsref = CurveElements(values=result.test.dsref.value,
-                           label=result.test.name+': reference dataset',
-                           yname='', errors=result.test.dsref.error)
-    cds = [CurveElements(values=ds.value,
-                         label=result.test.name+': dataset '+str(ids),
-                         yname='', errors=ds.error)
-           for ids, ds in enumerate(result.test.datasets)]
-    cds.insert(0, cdsref)
+    cds = [CurveElements(values=result.test.dsref.value,
+                         label=result.test.name+': reference dataset',
+                         index=0, yname='', errors=result.test.dsref.error)]
+    cds.extend([CurveElements(values=ds.value,
+                              label=result.test.name+': dataset '+str(ids),
+                              index=ids+1, yname='', errors=ds.error)
+                for ids, ds in enumerate(result.test.datasets)])
     return [PlotTemplate(bins=bins, xname=dim, curves=cds)]
 
 
