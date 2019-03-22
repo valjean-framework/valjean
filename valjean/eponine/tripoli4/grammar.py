@@ -209,7 +209,8 @@ _inums = pyparscom.number.setParseAction(tokenMap(trans.common.ITYPE))
 
 # General keywords
 _integratedres_kw = (Keyword("ENERGY INTEGRATED RESULTS")
-                     | Keyword("NU INTEGRATED RESULTS"))
+                     | Keyword("NU INTEGRATED RESULTS")
+                     | Keyword("ZA INTEGRATED RESULTS"))
 _numbatchsused_kw = (Keyword("number of")
                      + (Keyword("batches") | Keyword("batch"))
                      + Optional(Keyword("used")))
@@ -329,6 +330,8 @@ _spscovlethargy_kw = Keyword("score/lethargy")
 _spvov_kw = Keyword("vov")
 _nuspectrum_kw = Keyword("NU RESULTS")
 _nusprange_kw = Keyword("range")
+_zaspectrum_kw = Keyword("ZA RESULTS")
+_zaspid_kw = Keyword("(Z,A)")
 _spscore_kw = Keyword("score")
 _spsigma_kw = Keyword("sigma_%")
 
@@ -808,6 +811,20 @@ _nuspectrum = (Suppress(_nuspectrum_kw)
 nuspectrumblock = Group(Group(_nuspectrum + integratedres))('nu_spectrum_res')
 
 
+# ZA spectrum
+_zaspectrumcols = Suppress(_zaspid_kw + _spscore_kw + _spsigma_kw)
+_zaspectrumbin = (Suppress('(') + _inums + Suppress(',')
+                  + _inums + Suppress(')'))
+_zaspectrumvals = (Group(_zaspectrumbin + _fnums + _fnums)
+                   .setFailAction(trans.fail_spectrum))
+_zaspectrum = (Suppress(_zaspectrum_kw)
+               + _numdiscbatch
+               + _zaspectrumcols
+               + Optional(_spectrumunits)
+               + OneOrMore(_zaspectrumvals, stopOn=_endtable)('spectrum_vals'))
+zaspectrumblock = Group(Group(_zaspectrum + integratedres))('za_spectrum_res')
+
+
 def _printtoks(toks):
     print(toks)
 
@@ -1186,6 +1203,7 @@ contribpartblock = (Group(Suppress(_nbcontribpart_kw)
 scoreblock = (Group(scoredesc + (OneOrMore(vovspectrumblock
                                            | spectrumblock
                                            | nuspectrumblock
+                                           | zaspectrumblock
                                            | meshblock
                                            | entropy
                                            | medfile

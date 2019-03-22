@@ -1199,6 +1199,134 @@ def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
     return convspec
 
 
+class ZASpectrumDictBuilder(DictBuilder):
+    '''Class specific to spectrum dictionary to parse arrays indexed by Z and A
+    numbers (isotopes).
+
+    This class inherites from DictBuilder, see :class:`DictBuilder` for
+    initialization and common methods.
+    '''
+
+    def __init__(self, colnames, bins):
+        '''Initialization of ZASpectrumDictBuilder.
+
+        :param list(str) colnames: name of the columns/results
+           (``'score'`` and ``'sigma'`` in the current case)
+        :param bins: Z, A bins
+        :type bins: :class:`collections.OrderedDict` of
+            (str, :obj:`numpy.ndarray` (int))
+        '''
+        super().__init__(colnames, [bins['Z'].size, bins['A'].size])
+        self.bins = bins  # OrderedDict([('Z', []), ('A', [])])
+        self.units = {'Z': '', 'A': '', 'score': 'unknown', 'sigma': '%'}
+
+    def fill_arrays_and_bins(self, data):
+        '''Fill arrays and bins for spectrum data.
+
+        :param list data: spectrum results
+
+        Current arrays possibly filled are:
+
+        * ``'default'`` (mandatory)
+        * ``'integrated_res'`` (over Z and A, i.e. all isotopes)
+        '''
+        LOGGER.debug("In ZASpectrumDictBuilder.fill_arrays_and_bins")
+        for ispec in data:
+            # Fill spectrum values
+            for ivals in ispec['spectrum_vals']:
+                # no energy bins for the moment
+                # self._check_bins(ispec['spectrum_vals'], inu)
+                index = (ivals[0]-np.min(self.bins['Z']),
+                         ivals[1]-np.min(self.bins['A']))
+                array = np.array(tuple(ivals[2:]),
+                                 dtype=self.arrays['default'].dtype)
+                try:
+                    self.arrays['default'][index] = array
+                except IndexError:
+                    LOGGER.error(
+                        "IndexError: your spectrum probably uses more than "
+                        "one dimension (X and Y), but the number of x bins "
+                        "may be different in the different y bins.\n"
+                        "Please make sure you run Tripoli-4 with option '-a'.")
+                    raise
+            # Fill integrated result if exist
+            if 'integrated_res' in ispec and 'integrated_res' in self.arrays:
+                iintres = ispec['integrated_res']
+                index = (0, )
+                self.arrays['integrated_res'][index] = (np.array(
+                    (iintres['score'], iintres['sigma']),
+                    dtype=self.arrays['integrated_res'].dtype))
+
+    def add_last_bins(self, data):
+        '''Add last bin in Z,A from spectrum, not applicable in this case.
+
+        :param list data: spectrum results
+        '''
+
+
+def _get_za_bins(values):
+    '''Determine the bins in Z, A before filling the array from the values.
+
+    :param list values: spectrum results
+    :returns: bins: Z, A bins as a  :class:`collections.OrderedDict` of
+            (str, :obj:`numpy.ndarray` (int))
+    '''
+    z_vals = [vals[0] for vals in values]
+    a_vals = [vals[1] for vals in values]
+    bins = OrderedDict()
+    bins['Z'] = np.array(np.unique(z_vals), dtype=ITYPE)
+    bins['A'] = np.array(np.unique(a_vals), dtype=ITYPE)
+    if bins['Z'].size * bins['A'].size != len(values):
+        LOGGER.warning("Length of the Z,A spectrum does not correspnds to "
+                       "len(Z) * len(A). This may be expected if values are "
+                       "required around expected isotopes.")
+    return bins
+
+
+def convert_za_spectrum(spectrum, colnames=('score', 'sigma')):
+    '''Convert nu spectrum results in 1D NumPy structured array.
+
+    :param list spectrum: list of spectra.
+     Accepts time and (direction) angular grids.
+    :param list(str) colnames: list of the names of the columns.
+      Default = ``['score', 'sigma']``
+    :returns: dictionary with keys and elements
+
+      * ``'array'``: 1 dimension NumPy structured array with related
+        binnings as NumPy arrays
+        ``v[Z, A] = ('score', 'sigma')``
+      * ``'disc_batchs'``: number of discarded batchs for the score
+      * ``'bins'``: :class:`collections.OrderedDict`, Z and A binnings
+      * ``'units'``: dict containing units of dimensions (bins), score and
+        sigma
+      * ``'integrated_res'``: 1 dimension NumPy structured array
+        ``v[Z, A] = ('score', 'sigma')``
+      * ``'used_batch'``: number of used batchs (only if integrated result)
+
+    Remark: no call to add_last_bins or flip_bins is done here as no energy,
+    time or space bins are given for the moment.
+    '''
+    LOGGER.debug("nzabins = %d", len(spectrum[0]["spectrum_vals"]))
+    bins = _get_za_bins(spectrum[0]["spectrum_vals"])
+    vals = ZASpectrumDictBuilder(colnames, bins)
+    if 'integrated_res' in spectrum[0]:
+        vals.add_array('integrated_res', ['score', 'sigma'], [1]*len(bins))
+    # Fill spectrum, bins and integrated result if exists
+    vals.fill_arrays_and_bins(spectrum)
+    # Build dictionary to be returned
+    convspec = {'disc_batch': spectrum[0]['disc_batch'],
+                'array': vals.arrays['default'],
+                'bins': vals.bins,
+                'units': vals.units}
+    if 'units' in spectrum[0]:
+        convspec['units']['score'] = spectrum[0]['units'][1]
+        convspec['units']['sigma'] = spectrum[0]['units'][2]
+    if 'integrated_res' in spectrum[0]:
+        convspec['integrated_res'] = vals.arrays['integrated_res']
+        convspec['used_batch'] = spectrum[0]['integrated_res']['used_batch']
+    return convspec
+
+
 @profile
 def convert_keff_with_matrix(res):
     '''Convert |keff| results in NumPy matrices.

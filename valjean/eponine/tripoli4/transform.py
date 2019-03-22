@@ -42,20 +42,22 @@ def compose(*fs):
     return reduce(compose2, fs)
 
 
-def convert_spectrum(toks, colnames):
+def convert_spectrum(toks, spectrum_type):
     '''Convert spectrum to :obj:`numpy` object using
     :mod:`~valjean.eponine.tripoli4.common`.
 
     :param toks: spectrum result
     :type toks: |parseres|
-    :param str colnames: names of the columns
+    :param str spectrum_type: type of spectrum that defines the names of the
+        columns
 
-    * Default **colnames**: ``['score', 'sigma', 'score/lethargy']``
-    * Other **colnames** taken into account:
+    * Default column names: ``['score', 'sigma', 'score/lethargy']``
+    * Other column names taken into account:
 
        - vov: adding ``'vov'`` to previous columns names
        - uncert: names are ``['sigma2(means)', 'mean(sigma_n2)',
          'sigma(sigma_n2)', 'fisher test']``
+       - nu and za: no ``'score/lethargy'`` is available
 
     :returns: dictionary containing spectrum as 7-dimensions `numpy structured
        array`_ for result, :obj:`numpy.ndarray` for binnings, discarded batchs,
@@ -68,14 +70,17 @@ def convert_spectrum(toks, colnames):
        and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
     spectrumcols = ['score', 'sigma', 'score/lethargy']
-    if "vov" in colnames:
+    if "vov" in spectrum_type:
         spectrumcols.append('vov')
-    if "uncert" in colnames:
+    if "uncert" in spectrum_type:
         spectrumcols = ['sigma2(means)', 'mean(sigma_n2)', 'sigma(sigma_n2)',
                         'fisher test']
-    if "nu" in colnames:
+    if "nu" in spectrum_type:
         spectrumcols.pop()
         return common.convert_nu_spectrum(toks, spectrumcols)
+    if "za" in spectrum_type:
+        spectrumcols.pop()
+        return common.convert_za_spectrum(toks, spectrumcols)
     return common.convert_spectrum(toks, spectrumcols)
 
 
