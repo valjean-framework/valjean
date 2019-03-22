@@ -352,3 +352,21 @@ def one_dim_dataset(draw):
     '''Strategy for generating 1-dimension datasets.'''
     return draw(datasets(elements=integers(min_value=-5, max_value=5),
                          shape=just(5)))
+
+
+@pytest.fixture(params=[['equal_test'],
+                        ['equal_test_fail'],
+                        ['equal_test', 'approx_equal_test']],
+                ids=['one successful test', 'one failing test', 'two tests'])
+def valid_tests(request):
+    '''Return lists of valid :class:`~.Test` objects.'''
+    fixtures = [request.getfixturevalue(fix_name)
+                for fix_name in request.param]
+    return fixtures
+
+
+@pytest.fixture(params=[[1, 2], 'pinicho oinichba'],
+                ids=['list of not tests', 'not even a list'])
+def invalid_tests(request):
+    '''Return invalid lists of :class:`~.Test` objects (or not even lists!).'''
+    return request.param

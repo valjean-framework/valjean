@@ -18,3 +18,4 @@ gavroche — Gestion AVancée de Routines et Oracles en CHaînE (nom temporaire)
    gavroche/test
    gavroche/dataset
    gavroche/stat_tests
+   gavroche/eval_test_task
