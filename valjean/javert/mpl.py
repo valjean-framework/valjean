@@ -1,6 +1,8 @@
 '''This module provides the classes to convert test results to plots using
 :mod:`matplotlib.pyplot`.
 
+.. _legend documentation:
+    https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.legend.html
 
 :class:`MplPlot` objects take as input :class:`~.templates.PlotTemplate`
 containing at least values and bins.
@@ -28,8 +30,54 @@ Plots can be obtained with the following for example:
     >>> from valjean.javert.mpl import MplPlot
     >>> mplplt = MplPlot(pltit)
 
-This example also show the default colors and markers used.
+Additional subplots can be drawn if they have different y-axis names (set using
+the ``yname`` argument in :class:`.CurveElements`). Style of the curves is
+fixed with the index (see :class:`.CurveElements`).
 
+.. plot::
+    :include-source:
+
+    >>> import numpy as np
+    >>> from valjean.javert.templates import PlotTemplate, CurveElements
+    >>> bins = np.array(np.arange(10))
+    >>> lcurves = []
+    >>> for icurve in range(3):
+    ...     lcurves.append(CurveElements(
+    ...         values=bins[1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
+    ...         label=str(icurve), index=icurve))
+    >>> for icurve in range(1, 3):
+    ...     lcurves.append(CurveElements(
+    ...         values=lcurves[icurve].values/lcurves[0].values,
+    ...         yname='C/ref', label=str(icurve+1), index=icurve))
+    >>> for icurve in range(1, 3):
+    ...     lcurves.append(CurveElements(
+    ...         values=((lcurves[icurve].values-lcurves[0].values)
+    ...                 /lcurves[0].values),
+    ...         yname='(C-ref)/ref', label=str(icurve+1), index=icurve))
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> from valjean.javert.mpl import MplPlot
+    >>> mplplt = MplPlot(pltit)
+
+These examples also show the default style of the plots.
+
+
+Style setup
+-----------
+
+Some **global** variables are available to customize the plots:
+
+* ``STYLE``: for the general style of the plots
+* ``COLORS``: for the list of the colors to be used to represent the curves
+    (they can also be changed by the style)
+* ``MARKERS_SHAPE``: for the shape of the markers (a preselection has been done
+    per default)
+* ``MARKERS_FILL``: for the fill of the markers, per default an alternance
+    between `full` and `empty` for the same same
+* ``LEGENDS``: for the legend customization
+
+
+General style
+`````````````
 
 It is possible to change the general style of plots using a predefined one
 or to use different markers. The predefined styles can be obtained thanks to
@@ -54,6 +102,8 @@ For example, we can have:
     >>> mpl.STYLE = 'Solarize_Light2'
     >>> mplplt = mpl.MplPlot(pltit)
 
+Colors and markers
+``````````````````
 
 Colors and markers can also be changed directly:
 
@@ -75,6 +125,73 @@ Colors and markers can also be changed directly:
     >>> mpl.MARKERS_FILL = ['top', 'full', 'right', 'none', 'bottom', 'left',
     ...                     'none']
     >>> mplplt = mpl.MplPlot(pltit)
+
+
+Legends
+```````
+
+Per default the legend is represented on the top panel (the larger one) at the
+best place **Matplotlib** determines itself. ``LEGENDS`` is a dictionary.
+Currently two keys are interpreted:
+
+* ``'all_subplots'``: to plot the legend on all subplots (or panels) of the
+    plot (expected a boolean, default: ``False``)
+* ``''position'``: to change the position of the legend, a dictionary is
+    expected. Its keys should correspond to legend keys which list is given in
+    the `legend documentation`_.
+
+.. plot::
+    :include-source:
+
+    >>> import numpy as np
+    >>> from valjean.javert.templates import PlotTemplate, CurveElements
+    >>> bins = np.array(np.arange(10))
+    >>> lcurves = []
+    >>> for icurve in range(3):
+    ...     lcurves.append(CurveElements(
+    ...         values=bins[1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
+    ...         label=str(icurve), index=icurve))
+    >>> for icurve in range(1, 3):
+    ...     lcurves.append(CurveElements(
+    ...         values=lcurves[icurve].values/lcurves[0].values,
+    ...         yname='C/ref', label=str(icurve+1)+' vs 0', index=icurve))
+    >>> for icurve in range(1, 3):
+    ...     lcurves.append(CurveElements(
+    ...         values=((lcurves[icurve].values-lcurves[0].values)
+    ...                 /lcurves[0].values),
+    ...         yname='(C-ref)/ref', label=str(icurve+1)+' vs 0',
+    ...         index=icurve))
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> from valjean.javert import mpl
+    >>> mpl.LEGENDS = {'position': {'loc': 3, 'bbox_to_anchor': (0., 1., 1, 1),
+    ...                             'mode': 'expand'}}
+    >>> mplplt = mpl.MplPlot(pltit)
+
+.. plot::
+    :include-source:
+
+    >>> import numpy as np
+    >>> from valjean.javert.templates import PlotTemplate, CurveElements
+    >>> bins = np.array(np.arange(10))
+    >>> lcurves = []
+    >>> for icurve in range(3):
+    ...     lcurves.append(CurveElements(
+    ...         values=bins[1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
+    ...         label=str(icurve), index=icurve))
+    >>> for icurve in range(1, 3):
+    ...     lcurves.append(CurveElements(
+    ...         values=lcurves[icurve].values/lcurves[0].values,
+    ...         yname='C/ref', label=str(icurve+1)+' vs 0', index=icurve))
+    >>> for icurve in range(1, 3):
+    ...     lcurves.append(CurveElements(
+    ...         values=((lcurves[icurve].values-lcurves[0].values)
+    ...                 /lcurves[0].values),
+    ...         yname='(C-ref)/ref', label=str(icurve+1)+' vs 0',
+    ...         index=icurve))
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> from valjean.javert import mpl
+    >>> mpl.LEGENDS = {'all_subplots': True}
+    >>> mplplt = mpl.MplPlot(pltit)
 '''
 from collections import OrderedDict
 from itertools import cycle
@@ -88,6 +205,7 @@ MARKERS_SHAPE = ['s', 's', 'H', 'H', 'D', 'D', 'o', 'o', 'X', 'X', 'h', 'h',
                  'P', 'P', '8', '8']
 MARKERS_FILL = ['full', 'none']
 STYLE = 'default'
+LEGENDS = {'all_subplots': False, 'position': {}}
 
 
 class MplPlot:
@@ -214,17 +332,18 @@ class MplPlot:
             ncol = len(self.legend['handles']) // 6 + 1
             self.splt.legend(self.legend['handles'],
                              self.legend['labels'],
-                             ncol=ncol)
+                             ncol=ncol, **LEGENDS.get('position'))
         else:
             for iyax, nplt in enumerate(ynames.values()):
-                if nplt > 0:
+                if nplt > 0 and (LEGENDS.get('all_subplots', False)
+                                 or iyax == 0):
                     ncol = nplt // 6 + 1
                     self.splt[iyax].legend(
                         [h for i, h in enumerate(self.legend['handles'])
                          if self.legend['iplot'][i] == iyax],
                         [l for i, l in enumerate(self.legend['labels'])
                          if self.legend['iplot'][i] == iyax],
-                        ncol=ncol)
+                        ncol=ncol, **LEGENDS.get('position', {}))
 
     def save(self, name='fig.png'):
         '''Save the plot under the given name.

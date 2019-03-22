@@ -86,11 +86,14 @@ def repr_student_delta(result):
     if dim is None:
         return []
     bins = result.test.dsref.bins[dim]
-    curves = [CurveElements(values=delta,
-                            label=result.test.name+': dataset '+str(ind),
-                            index=ind+1, yname=r'$\Delta_{Student}$',
-                            errors=None)
-              for ind, delta in enumerate(result.delta)]
+    curves = []
+    for ind, delta in enumerate(result.delta):
+        curves.append(CurveElements(
+            values=delta,
+            label=' '.join([(result.test.datasets[ind].name
+                             if result.test.datasets[ind].name
+                             else 'dataset '+str(ind)), 'vs', 'reference']),
+            index=ind+1, yname=r'$\Delta_{Student}$', errors=None))
     return [PlotTemplate(bins=bins, xname=dim, curves=curves)]
 
 
@@ -113,12 +116,14 @@ def repr_student_values(result):
         return []
     bins = result.test.dsref.bins[dim]
     cds = [CurveElements(values=result.test.dsref.value,
-                         label=result.test.name+': reference dataset',
+                         label=(result.test.dsref.name
+                                if result.test.dsref.name else 'reference'),
                          index=0, yname='', errors=result.test.dsref.error)]
-    cds.extend([CurveElements(values=ds.value,
-                              label=result.test.name+': dataset '+str(ids),
-                              index=ids+1, yname='', errors=ds.error)
-                for ids, ds in enumerate(result.test.datasets)])
+    for ids, tds in enumerate(result.test.datasets):
+        cds.append(CurveElements(
+            values=tds.value,
+            label=(tds.name if tds.name else 'dataset '+str(ids)),
+            index=ids+1, yname='', errors=tds.error))
     return [PlotTemplate(bins=bins, xname=dim, curves=cds)]
 
 
@@ -139,10 +144,14 @@ def repr_student_pvalues(result):
     if dim is None:
         return []
     bins = result.test.dsref.bins[dim]
-    curves = [CurveElements(values=pval,
-                            label=result.test.name+': dataset '+str(ind),
-                            index=ind+1, yname='p-value', errors=None)
-              for ind, pval in enumerate(result.pvalue)]
+    curves = []
+    for ind, pval in enumerate(result.pvalue):
+        curves.append(CurveElements(
+            values=pval,
+            label=' '.join([(result.test.datasets[ind].name
+                             if result.test.datasets[ind].name
+                             else 'dataset '+str(ind)), 'vs', 'reference']),
+            index=ind+1, yname='p-value', errors=None))
     return [PlotTemplate(bins=bins, xname=dim, curves=curves)]
 
 
@@ -165,10 +174,12 @@ def repr_datasets_values(result):
         return []
     bins = result.test.dsref.bins[dim]
     cds = [CurveElements(values=result.test.dsref.value,
-                         label=result.test.name+': reference dataset',
+                         label=(result.test.dsref.name
+                                if result.test.dsref.name else 'reference'),
                          index=0, yname='', errors=result.test.dsref.error)]
     cds.extend([CurveElements(values=ds.value,
-                              label=result.test.name+': dataset '+str(ids),
+                              label=(ds.name if ds.name
+                                     else 'dataset '+str(ids)),
                               index=ids+1, yname='', errors=ds.error)
                 for ids, ds in enumerate(result.test.datasets)])
     return [PlotTemplate(bins=bins, xname=dim, curves=cds)]
