@@ -10,6 +10,7 @@ from hypothesis.strategies import (integers, lists, composite, text, booleans,
                                    dictionaries, one_of, data, tuples,
                                    sampled_from)
 
+from valjean.cosette.env import Env
 from valjean.eponine.tripoli4 import accessor as acc
 from valjean.eponine.response_book import Index
 from ..context import valjean  # pylint: disable=unused-import
@@ -253,3 +254,18 @@ def test_strip_index(sampler):
         striped_index = index.keep_only(sids)
         sesd, ssids = empty_sets_and_ids(striped_index)
         assert poped_id not in ssids
+
+
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(respl=responses_lists())
+def test_respbook_serializable(respl, tmpdir):
+    '''Test that the :class:`~.ResponseBook` class is serializable when it
+    appears in the environment.'''
+    resp_book = acc.ResponseBook(respl)
+    env = Env({'task': {'resp_book': resp_book}})
+    env_file = str(tmpdir / 'env.pickle')
+    env.to_file(env_file)
+    env_roundtrip = Env.from_file(env_file)
+    note('env = {}'.format(env))
+    note('env_roundtrip = {}'.format(env_roundtrip))
+    assert env == env_roundtrip

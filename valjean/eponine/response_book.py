@@ -177,11 +177,19 @@ from collections import defaultdict, Mapping, Container
 LOGGER = logging.getLogger('valjean')
 
 
+def _make_defaultdict_set():
+    '''The sole purpose of this function is to give a name to the defaultdict
+    factory in :meth:`Index.index`. Without a name, the :class:`Index` class
+    cannot be serialized by :mod:`pickle`.
+    '''
+    return defaultdict(set)
+
+
 class Index(Mapping):
     '''Class to describe index used in ResponseBook.
 
-    Default structure of Index is a ``defaultdict(defaultdict(set))``.
-    This class was derived mainly for printing purposes.
+    The structure of Index is a ``defaultdict(defaultdict(set))``.  This class
+    was derived mainly for pretty-printing purposes.
 
     Quick example of index (menu for 4 persons, identified by numbers, one has
     no drink):
@@ -234,23 +242,15 @@ class Index(Mapping):
     The key ``'drink'`` has been removed from the last index as 2 did not
     required it.
 
-    To see the internal structure of the Index, use the :func:`__repr__`
-    method like in:
-
-    >>> "{0!r}".format(myindex)
-    "defaultdict(<function Index.__init__.<locals>.<lambda> at ...>, \
-{...: defaultdict(<class 'set'>, {...}), ...})"
-
-    The :func:`__str__` method can also be used (default call in ``print()``),
-    it looks like standard dictionary (``{ ... }`` instead of
-    ``defaultdict(...)``) but keys are not ordered:
+    If you print an :class:`Index`, it looks like a standard dictionary (``{
+    ... }`` instead of ``defaultdict(...)``) but the keys are not sorted:
 
     >>> print(myindex)
     {...: {...: {...}...}}
     '''
 
     def __init__(self):
-        self.index = defaultdict(lambda: defaultdict(set))
+        self.index = defaultdict(_make_defaultdict_set)
 
     def __str__(self):
         lstr = ["{"]
@@ -390,12 +390,6 @@ class ResponseBook(Container):
     >>> "{0!r}".format(so_rb)
     "<class 'valjean.eponine.response_book.ResponseBook'>, \
 (Responses: ..., Index: ...)"
-    >>> # prints in some order (for responses and index dicts)
-    >>> # "<class 'valjean.eponine.response_book.ResponseBook'>,
-    >>> # (Responses: [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}],
-    >>> # Index: defaultdict(<function Index.__init__.<locals>.<lambda> at ...>
-    >>> # {'drink': defaultdict(<class 'set'>, {'beer': {0}}),
-    >>> # , 'dessert': defaultdict(<class 'set'>, {1: {0}})}))"
     '''
 
     def __init__(self, resp, data_key='results'):
@@ -403,6 +397,13 @@ class ResponseBook(Container):
         self.data_key = data_key
         self.index = self._build_index()
         LOGGER.debug("Index: %s", self.index)
+
+    def __eq__(self, other):
+        return (self.responses == other.responses
+                and self.data_key == other.data_key)
+
+    def __ne__(self, other):
+        return not self == other
 
     def _build_index(self):
         '''Build index from all responses in the list.
