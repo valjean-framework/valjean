@@ -371,7 +371,7 @@ all know and love:
 so we can call :meth:`Use.get_task` to generate a task:
 
     >>> read_and_check_task = read_and_check_text.get_task()
-    >>> run_task = read_and_check_task.depends_on.pop()
+    >>> run_task = next(iter(read_and_check_task.depends_on))
 
 Since a picture is worth a thousand words, the objects have the following
 structure:
@@ -459,8 +459,8 @@ running the tasks via a dependency graph and we wouldn't need to worry about
 any of this:
 
     >>> check_task = check_text.get_task()
-    >>> slurp_task = check_task.depends_on.pop()
-    >>> run_task = slurp_task.depends_on.pop()
+    >>> slurp_task = next(iter(check_task.depends_on))
+    >>> run_task = next(iter(slurp_task.depends_on))
     >>> env = Env()
     >>> for task in [run_task, slurp_task, check_task]:
     ...     env_up, _ = task.do(env=env, config=config)
@@ -479,9 +479,9 @@ You can also chain :meth:`UseRun.map` calls:
 Proof that it works:
 
     >>> check_stripped_task = check_stripped_text.get_task()
-    >>> strip_task = check_stripped_task.depends_on.pop()
-    >>> slurp_task = strip_task.depends_on.pop()
-    >>> run_task = slurp_task.depends_on.pop()
+    >>> strip_task = next(iter(check_stripped_task.depends_on))
+    >>> slurp_task = next(iter(strip_task.depends_on))
+    >>> run_task = next(iter(slurp_task.depends_on))
     >>> env = Env()
     >>> for task in [run_task, slurp_task, strip_task, check_stripped_task]:
     ...     env_up, _ = task.do(env=env, config=config)
@@ -534,10 +534,9 @@ Module API
 ==========
 '''
 
-from uuid import uuid4
 from functools import update_wrapper
 
-from .task import TaskStatus
+from .task import TaskStatus, det_hash
 from .pythontask import PythonTask
 from .. import LOGGER
 
@@ -572,6 +571,9 @@ class Use:
     '''A function wrapper around a free Python function. Lifts the function
     into a :mod:`~.valjean` :class:`~.Task`.'''
 
+    _CACHE = {}
+    _USE_CACHING = True
+
     def __init__(self, *, func, task, key='result', kwarg=None):
         '''Create a :class:`Use` from a function.
 
@@ -605,14 +607,22 @@ class Use:
         else:
             self.inj_kwargs[kwarg] = (task, key)
         self.wrapped = func
-        self.pytask = None
         LOGGER.debug('inj_args = %s', self.inj_args)
         LOGGER.debug('inj_kwargs = %s', self.inj_kwargs)
 
-    def _make_task(self):
+    def get_task(self):
+        '''Return the task representing this decorated function.'''
         from itertools import chain
 
-        pytask_name = self.func_name + '-' + str(uuid4())
+        kwargs_names = {kwarg: (task.name, key)
+                        for kwarg, (task, key) in self.inj_kwargs.items()}
+        args_names = [(task.name, key) for task, key in self.inj_args]
+        uid = det_hash(kwargs_names, args_names)
+        pytask_name = self.func_name + '-' + uid
+
+        if self._USE_CACHING and pytask_name in self._CACHE:
+            LOGGER.debug('returning cached task %s', pytask_name)
+            return self._CACHE[pytask_name]
 
         LOGGER.debug('creating %s task', pytask_name)
         LOGGER.debug('  args: %s', self.inj_args)
@@ -645,18 +655,14 @@ class Use:
             env_up = {pytask_name: {'result': result}}
             return env_up, TaskStatus.DONE
 
-        return PythonTask(pytask_name, inject_from_env, deps=deps,
+        task = PythonTask(pytask_name, inject_from_env, deps=deps,
                           env_kwarg='env')
+        self._CACHE[pytask_name] = task
+        return task
 
     def __call__(self, *args, **kwargs):
         '''Redirect the call to the wrapped function.'''
         return self.wrapped(*args, **kwargs)
-
-    def get_task(self):
-        '''Return the task representing this decorated function.'''
-        if self.pytask is None:
-            self.pytask = self._make_task()
-        return self.pytask
 
     def map(self, func):
         '''Create a new :class:`Use` object that applies `func` to the result
@@ -711,6 +717,8 @@ class UseRun:
     def __call__(self, kwarg=None, **kwargs):
         task = self.factory.make(**kwargs)
         key = 'stdout'
+        LOGGER.debug('mapping %s functions on the output of %s',
+                     len(self.posts), task.name)
         for post in self.posts:
             use = Use(task=task, key=key, func=post)
             task = use.get_task()

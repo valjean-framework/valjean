@@ -557,6 +557,7 @@ class RunTaskFactory:
         # handle caching
         uid = det_hash(self.uid, e_args, kwargs_)
         if uid in self.cache:
+            LOGGER.debug('cache hit for uid %s', uid)
             cached_task = self.cache[uid]
             if name is not None and cached_task.name != name:
                 LOGGER.warning('task %r has already been cached under a '

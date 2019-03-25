@@ -124,14 +124,14 @@ depends on a task that actually does the parsing::
 
     >>> source_task.depends_on
     {Task('parse_output_file-...')}
-    >>> parse_task = source_task.depends_on.pop()
+    >>> parse_task = next(iter(source_task.depends_on))
 
 and `parse_task` in turn depends on the :class:`~.RunTask` that was generated
 by `echo_factory`::
 
     >>> parse_task.depends_on
-    {Task('run_...-...')}
-    >>> run_task = parse_task.depends_on.pop()
+    {Task('run#...')}
+    >>> run_task = next(iter(parse_task.depends_on))
 
 We manually execute the tasks in the correct order and we check that we recover
 the right result at the end::
@@ -165,9 +165,9 @@ We can again check that everything went as expected by manually unwrapping the
 sequence of tasks and running them::
 
     >>> extract_task = extract_simulation_time.get_task()
-    >>> access_task = extract_task.depends_on.pop()
-    >>> parse_task = access_task.depends_on.pop()
-    >>> run_task = parse_task.depends_on.pop()
+    >>> access_task = next(iter(extract_task.depends_on))
+    >>> parse_task = next(iter(access_task.depends_on))
+    >>> run_task = next(iter(parse_task.depends_on))
     >>> env = Env()
     >>> for task in [run_task, parse_task, access_task, extract_task]:
     ...     env_up, _ = task.do(env=env, config=config)
