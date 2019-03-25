@@ -109,3 +109,19 @@ class DelayTask(Task):
         sleep(self.delay)
         LOGGER.info('DelayTask %s waking up!', self)
         return dict(), TaskStatus.DONE
+
+
+def det_hash(*args):
+    '''Produce a deterministic hash for the collection of objects passed as
+    an argument.'''
+    from hashlib import sha256
+    import json
+    hasher = sha256()
+    for thing in args:
+        LOGGER.debug('hashing: %r', thing)
+        json_thing = json.dumps(thing, sort_keys=True)
+        LOGGER.debug('in json: %s', json_thing)
+        hasher.update(json_thing.encode('utf-8'))
+    digest = hasher.hexdigest()
+    LOGGER.debug('resulting hash: %s', digest)
+    return digest

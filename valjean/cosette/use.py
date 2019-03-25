@@ -709,8 +709,7 @@ class UseRun:
         self.posts = posts
 
     def __call__(self, kwarg=None, **kwargs):
-        uname = str(uuid4())
-        task = self.factory.make(name='run_' + uname, **kwargs)
+        task = self.factory.make(**kwargs)
         key = 'stdout'
         for post in self.posts:
             use = Use(task=task, key=key, func=post)
