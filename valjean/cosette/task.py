@@ -16,6 +16,14 @@ The :meth:`.Task.do()` method takes two arguments:
   module hierarchy expect `env` to be an :class:`~.Env` object.
 * `config` is a :class:`~.config.Config` object describing the configuration
   for the current run. Tasks may look up global configuration values here.
+
+If you derive a class derived from :class:`Task`, you may want to redefine the
+value of the ``PRIORITY`` class attribute to declare at which point in the
+conventional :program:`valjean` workflow your new task is expected to appear.
+For instance, classes :class:`~.CheckoutTask`, :class:`~.BuildTask` and
+:class:`~.RunTask` respectively have ``PRIORITY`` values of 10, 20 and 30; this
+reflects the fact that checkout tasks are expected to be executed *before*
+build tasks, which in turn are expected to be executed *before* run tasks.
 '''
 
 import enum
@@ -43,6 +51,12 @@ class TaskError(Exception):
 class Task(ABC):
     '''Base class for other task classes.'''
 
+    #: This class attribute is used to establish a partial order between task
+    #: types. Tasks with lower ``PRIORITY`` values are generally expected to
+    #: be executed before tasks with larger values, so that it should make
+    #: sense to limit the execution of the tasks based on a maximum
+    #: ``PRIORITY`` value. Subclasses of :class:`Task` may redefine the value
+    #: of this attribute.
     PRIORITY = 0
 
     def __init__(self, name, *, deps=None):
