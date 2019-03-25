@@ -31,8 +31,8 @@ Plots can be obtained with the following for example:
     >>> mplplt = MplPlot(pltit)
 
 Additional subplots can be drawn if they have different y-axis names (set using
-the ``yname`` argument in :class:`.CurveElements`). Style of the curves is
-fixed with the index (see :class:`.CurveElements`).
+the ``yname`` argument in :class:`.CurveElements`). The style of the curves is
+fixed by the index (see :class:`.CurveElements`).
 
 .. plot::
     :include-source:
@@ -67,12 +67,12 @@ Style setup
 Some **global** variables are available to customize the plots:
 
 * ``STYLE``: for the general style of the plots
-* ``COLORS``: for the list of the colors to be used to represent the curves
-    (they can also be changed by the style)
-* ``MARKERS_SHAPE``: for the shape of the markers (a preselection has been done
-    per default)
-* ``MARKERS_FILL``: for the fill of the markers, per default an alternance
-    between `full` and `empty` for the same same
+* ``COLORS``: for the list of the colors to be used to represent the curves \
+  (they can also be changed by the style)
+* ``MARKERS_SHAPE``: for the shape of the markers (a preselection has been \
+  done per default)
+* ``MARKERS_FILL``: for the fill of the markers, per default an alternance \
+  between `full` and `empty` for the same same
 * ``LEGENDS``: for the legend customization
 
 
@@ -130,15 +130,15 @@ Colors and markers can also be changed directly:
 Legends
 ```````
 
-Per default the legend is represented on the top panel (the larger one) at the
-best place **Matplotlib** determines itself. ``LEGENDS`` is a dictionary.
-Currently two keys are interpreted:
+By default the legend is represented on the top panel (the largest one) at the
+location **Matplotlib** determines. ``LEGENDS`` is a dictionary. Currently two
+keys are interpreted:
 
-* ``'all_subplots'``: to plot the legend on all subplots (or panels) of the
-    plot (expected a boolean, default: ``False``)
-* ``''position'``: to change the position of the legend, a dictionary is
-    expected. Its keys should correspond to legend keys which list is given in
-    the `legend documentation`_.
+* ``'all_subplots'``: to plot the legend on all subplots (or panels) of the \
+  plot (expected a boolean, default: ``False``)
+* ``''legend_kwargs'``: dictionary of keyword arguements to be passed to the \
+  legend, for example to change the position of the legend. The keys should \
+  correspond to legend keys which list is given in the `legend documentation`_.
 
 .. plot::
     :include-source:
@@ -163,8 +163,9 @@ Currently two keys are interpreted:
     ...         index=icurve))
     >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
     >>> from valjean.javert import mpl
-    >>> mpl.LEGENDS = {'position': {'loc': 3, 'bbox_to_anchor': (0., 1., 1, 1),
-    ...                             'mode': 'expand'}}
+    >>> mpl.LEGENDS = {'legend_kwargs': {'loc': 3,
+    ...                                  'bbox_to_anchor': (0., 1., 1, 1),
+    ...                                  'mode': 'expand'}}
     >>> mplplt = mpl.MplPlot(pltit)
 
 .. plot::
@@ -208,6 +209,27 @@ STYLE = 'default'
 LEGENDS = {'all_subplots': False, 'position': {}}
 
 
+class MplLegend:
+    '''Class to store the legend content.'''
+
+    def __init__(self, handle, label, iplot, index):
+        '''Initialisation of :class:`MplLegend`.
+
+        :param handle: curve to be stored (if the curve needs to be drawn in
+            twice a tuple should be given)
+        :type handle: :obj:`matplotlib.pyplot.errorbar`
+            or :obj:`tuple` (:obj:`matplotlib.pyplot.errorbar`)
+        :param str label: the curve label
+        :param int iplot: index of the subplot / panel on which the curve will
+            be drawn
+        :param int index: curve index, to identify its style
+        '''
+        self.handle = handle
+        self.label = label
+        self.iplot = iplot
+        self.index = index
+
+
 class MplPlot:
     '''Convert a :class:`~.templates.PlotTemplate` into a matplotlib plot.'''
 
@@ -217,6 +239,27 @@ class MplPlot:
 
         :param data: the data to convert.
         :type data: :class:`~.templates.PlotTemplate`
+
+        **Instance variables:**
+
+        `curve_format` (:class:`tuple`)
+            available formats (colors, markers_shape, markers_fill) for the
+            curves. They are determined using the chosen ``STYLE`` and cycling
+            on it using :obj:`itertools.cycle`.
+
+        `nb_splts` (:class:`int`)
+            number of subplots in the plot, initialised from ``data``
+
+        `fig` (:class:`matplotlib.figure.Figure`)
+            **Matplotlib** figure
+
+        `splt` (:class:`matplotlib.axes.Axes` or \
+            :class:`tuple` (:class:`~matplotlib.axes.Axes`))
+            the subplots on which will be drawn the curves, tuple if more than
+            one subplot
+
+        `legend` (:class:`list`)
+            list of :class:`MplLegend` (filled when curves are drawn)
         '''
         plt.style.use(STYLE)
         self.curve_format = (cycle(COLORS), cycle(MARKERS_SHAPE),
@@ -228,7 +271,7 @@ class MplPlot:
             figsize=(6.4, 4.8+1.2*(self.nb_splts-1)),
             gridspec_kw={'height_ratios': [4] + [1]*(self.nb_splts-1),
                          'hspace': 0.05})
-        self.legend = {'handles': [], 'labels': [], 'iplot': [], 'index': []}
+        self.legend = []
         self.draw()
 
     def draw(self):
@@ -264,20 +307,20 @@ class MplPlot:
                 yerr=self.data.curves[idata].errors,
                 color=data_fmt[0], marker=data_fmt[1], fillstyle=data_fmt[2],
                 linestyle='')
-            self.legend['handles'].append((steps, markers))
-            # self.legend['labels'].append(self.data.curves[idata].label)
-            # self.legend['iplot'].append(iplot)
-            # self.legend['index'].append(self.data.curves[idata].index)
+            self.legend.append(MplLegend((steps, markers),
+                                         self.data.curves[idata].label,
+                                         iplot,
+                                         self.data.curves[idata].index))
         else:
             linesty = '--' if len(self.data.curves) > 1 else ''
             eplt = splt.errorbar(
                 self.data.bins, self.data.curves[idata].values,
                 yerr=self.data.curves[idata].errors, linestyle=linesty,
                 color=data_fmt[0], marker=data_fmt[1], fillstyle=data_fmt[2])
-            self.legend['handles'].append(eplt)
-        self.legend['labels'].append(self.data.curves[idata].label)
-        self.legend['iplot'].append(iplot)
-        self.legend['index'].append(self.data.curves[idata].index)
+            self.legend.append(MplLegend(eplt,
+                                         self.data.curves[idata].label,
+                                         iplot,
+                                         self.data.curves[idata].index))
 
     def error_plots(self):
         '''Plot errorbar plot (update the pyplot instance) and build the
@@ -285,11 +328,6 @@ class MplPlot:
 
         Remark: datasets are supposed to be already consistent as coming from
         a single test. If we had them manually bins will need to be checked.
-
-        .. todo::
-
-            change logic of color/marker incrementing when reference will
-            be given (next PR)
         '''
         ynames = OrderedDict()
         icv_format = (('k', 'o', 'full') if len(self.data.curves) > 1
@@ -299,11 +337,11 @@ class MplPlot:
                 ynames[curve.yname] = 0
             else:
                 ynames[curve.yname] += 1
-            if curve.index in self.legend['index']:
+            if curve.index in set(l.index for l in self.legend):
                 prevc = (
-                    self.legend['handles'][curve.index][1][0]
+                    self.legend[curve.index].handle[1][0]
                     if self.data.bins.size == curve.values.size+1
-                    else self.legend['handles'][curve.index][0])
+                    else self.legend[curve.index].handle[0])
                 icv_format = (prevc.get_color(),
                               prevc.get_marker(),
                               prevc.get_fillstyle())
@@ -329,21 +367,20 @@ class MplPlot:
         if len(self.data.curves) == 1:
             return
         if self.nb_splts == 1:
-            ncol = len(self.legend['handles']) // 6 + 1
-            self.splt.legend(self.legend['handles'],
-                             self.legend['labels'],
-                             ncol=ncol, **LEGENDS.get('position'))
-        else:
-            for iyax, nplt in enumerate(ynames.values()):
-                if nplt > 0 and (LEGENDS.get('all_subplots', False)
-                                 or iyax == 0):
-                    ncol = nplt // 6 + 1
-                    self.splt[iyax].legend(
-                        [h for i, h in enumerate(self.legend['handles'])
-                         if self.legend['iplot'][i] == iyax],
-                        [l for i, l in enumerate(self.legend['labels'])
-                         if self.legend['iplot'][i] == iyax],
-                        ncol=ncol, **LEGENDS.get('position', {}))
+            ncol = len(self.legend) // 6 + 1
+            self.splt.legend([l.handle for l in self.legend],
+                             [l.label for l in self.legend],
+                             ncol=ncol, **LEGENDS.get('legend_kwargs', {}))
+            return
+        for iyax, nplt in enumerate(ynames.values()):
+            if nplt > 0 and (LEGENDS.get('all_subplots', False)
+                             or iyax == 0):
+                ncol = nplt // 6 + 1
+                self.splt[iyax].legend(
+                    [l.handle for l in self.legend if l.iplot == iyax],
+                    [l.label for l in self.legend if l.iplot == iyax],
+                    ncol=ncol, **LEGENDS.get('legend_kwargs', {}))
+            return
 
     def save(self, name='fig.png'):
         '''Save the plot under the given name.

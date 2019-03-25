@@ -253,7 +253,7 @@ class TableTemplate:
 class CurveElements:
     '''Define the characteristics of a curve to plot.'''
 
-    def __init__(self, values, label, index, *, yname='', errors=None):
+    def __init__(self, values, label, *, index, yname='', errors=None):
         '''Construction of :class:`CurveElements`: curve details (values,
         label, etc).
 
@@ -326,13 +326,13 @@ class PlotTemplate:
     >>> bins2, d2 = np.arange(5), np.arange(5)*0.5
     >>> pit1 = PlotTemplate(
     ...     bins=bins1, xname='egg',
-    ...     curves=[CurveElements(d11, 'd11', 0, yname='brandy')])
+    ...     curves=[CurveElements(d11, 'd11', index=0, yname='brandy')])
     >>> pit2 = PlotTemplate(
     ...     bins=bins1, xname='egg',
-    ...     curves=[CurveElements(d12, 'd12', 1, yname='beer')])
+    ...     curves=[CurveElements(d12, 'd12', index=1, yname='beer')])
     >>> pit3 = PlotTemplate(
     ...     bins=bins1, xname='egg',
-    ...     curves=[CurveElements(d13, 'd13', 2, yname='beer')])
+    ...     curves=[CurveElements(d13, 'd13', index=2, yname='wine')])
 
     >>> splt12 = join(pit1, pit2)
     >>> print("{!r}".format(splt12))
@@ -371,7 +371,7 @@ class PlotTemplate:
     errors: None
     label:  d13
     index:  2
-    yname:  beer
+    yname:  wine
     values: [ 0 11 22 33]
     errors: None
     <BLANKLINE>
@@ -400,14 +400,53 @@ class PlotTemplate:
     errors: None
     label:  d13
     index:  2
-    yname:  beer
+    yname:  wine
     values: [ 0 11 22 33]
     errors: None
     <BLANKLINE>
 
+
+    It is not possible to join a new curve with the same ``yname``. In that
+    case they must be added directly in the CurveElements list, preferably at
+    creation. As a consequence, only new subplots can be added, no new curve on
+    an existing plot.
+
+    >>> d14 = d11*2
+    >>> pit4 = PlotTemplate(
+    ...     bins=bins1, xname='egg',
+    ...     curves=[CurveElements(d14, 'd14', index=2, yname='beer')])
+    >>> split24 = join(pit2, pit4)
+    Traceback (most recent call last):
+        ...
+    ValueError: Only new subplots (ynames) can be joined to a previous \
+PlotTemplate.
+
+    At creation we get:
+
+    >>> pit24 = PlotTemplate(
+    ...     bins=bins1, xname='egg',
+    ...     curves=[CurveElements(d12, 'd12', index=1, yname='beer'),
+    ...             CurveElements(d14, 'd14', index=3, yname='beer')])
+    >>> print("{!r}".format(pit24))
+    class: <class 'valjean.javert.templates.PlotTemplate'>
+    bins: [0 1 2 3]
+    xname: egg
+    label:  d12
+    index:  1
+    yname:  beer
+    values: [ 0 10 20 30]
+    errors: None
+    label:  d14
+    index:  3
+    yname:  beer
+    values: [0 2 4 6]
+    errors: None
+    <BLANKLINE>
+
+
     >>> pit4 = PlotTemplate(
     ...     bins=bins1, xname='spam',
-    ...     curves=[CurveElements(d12, 'd12', 0, yname='bacon')])
+    ...     curves=[CurveElements(d12, 'd12', index=0, yname='bacon')])
     >>> splt14 = join(pit1, pit4)
     Traceback (most recent call last):
         ...
@@ -418,8 +457,9 @@ class PlotTemplate:
     represented on two different plots, even if the bins used (``bins1``) are
     the same (they probably don't have the same meaning).
 
-    >>> pit5 = PlotTemplate(bins=bins2, xname='spam',
-    ...                     curves=[CurveElements(d2, 'd2', 0, yname='bacon')])
+    >>> pit5 = PlotTemplate(
+    ...     bins=bins2, xname='spam',
+    ...     curves=[CurveElements(d2, 'd2', index=0, yname='bacon')])
     >>> splt45 = join(pit4, pit5)
     Traceback (most recent call last):
         ...
@@ -492,11 +532,11 @@ class PlotTemplate:
                              "joined")
         if not np.array_equal(self.bins, other.bins):
             raise ValueError("Bins should be the same in both PlotTemplates")
-        up_ocurves = other.curves.copy()
-        if [c.yname for c in other.curves] == [c.yname for c in self.curves]:
-            for curve in up_ocurves:
-                curve.index += len(self.curves)
-        self.curves.extend(up_ocurves)
+        if not set(c.yname for c in other.curves).isdisjoint(
+                set(c.yname for c in self.curves)):
+            raise ValueError("Only new subplots (ynames) can be joined to a "
+                             "previous PlotTemplate.")
+        self.curves.extend(other.curves)
 
     def join(self, *others):
         '''Join a given number a :class:`PlotTemplate` to the current one.
@@ -549,7 +589,7 @@ def join(*templates):
     >>> tablit = TableTemplate(bins1, data11, headers=['egg', 'spam'])
     >>> plotit = PlotTemplate(
     ...     bins=bins1, xname='egg',
-    ...     curves=[CurveElements(data11, 'd11', 0, yname='spam')])
+    ...     curves=[CurveElements(data11, 'd11', index=0, yname='spam')])
     >>> tit = join(tablit, plotit)
     Traceback (most recent call last):
         ...

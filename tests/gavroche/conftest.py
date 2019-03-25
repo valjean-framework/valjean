@@ -246,7 +246,25 @@ def student_test_result_fail(student_test_fail):
 
 
 @pytest.fixture
-def student_test_with_pvalues(some_1d_dataset, other_1d_dataset):
+def student_test_3ds(some_1d_dataset, other_1d_dataset, different_1d_dataset):
+    '''Return a Student test between one reference dataset, ``some_1d_dataset``
+    and two other ones (``other_1d_dataset``, ``different_1d_dataset``). First
+    one succeeds, second one fails.'''
+    return TestStudent(some_1d_dataset, other_1d_dataset, different_1d_dataset,
+                       name='Student test (3 datasets)',
+                       description='Do the datasets have the same mean taking '
+                                   'into account the errors? no...')
+
+
+@pytest.fixture
+def student_test_result_3ds(student_test_3ds):
+    '''Return a Student test result between one reference dataset and two
+    others.'''
+    return student_test_3ds.evaluate()
+
+
+@pytest.fixture
+def student_test_with_pvals(some_1d_dataset, other_1d_dataset):
     '''Return a Student test between datasets.'''
     return TestStudent(some_1d_dataset, other_1d_dataset,
                        name='A Student test',
@@ -256,7 +274,13 @@ def student_test_with_pvalues(some_1d_dataset, other_1d_dataset):
 
 
 @pytest.fixture
-def student_test_fail_with_pvalues(some_1d_dataset, different_1d_dataset):
+def student_test_result_with_pvals(student_test_with_pvals):
+    '''Return a Student test between datasets.'''
+    return student_test_with_pvals.evaluate()
+
+
+@pytest.fixture
+def student_test_fail_with_pvals(some_1d_dataset, different_1d_dataset):
     '''Return a Student test between datasets.'''
     return TestStudent(some_1d_dataset, different_1d_dataset,
                        name='A Student test failing',
@@ -266,11 +290,11 @@ def student_test_fail_with_pvalues(some_1d_dataset, different_1d_dataset):
 
 
 @pytest.fixture
-def bonferroni_test(student_test_with_pvalues):
+def bonferroni_test(student_test_with_pvals):
     '''Return a Bonferroni test based on a Student test.'''
     return TestBonferroni(name='A Bonferroni test',
                           description='Can we consider this distribution OK?',
-                          test=student_test_with_pvalues, alpha=0.05)
+                          test=student_test_with_pvals, alpha=0.05)
 
 
 @pytest.fixture
@@ -280,11 +304,11 @@ def bonferroni_test_result(bonferroni_test):
 
 
 @pytest.fixture
-def bonferroni_test_fail(student_test_fail_with_pvalues):
+def bonferroni_test_fail(student_test_fail_with_pvals):
     '''Return a Bonferroni test based on a Student test.'''
     return TestBonferroni(name='A Bonferroni test',
                           description='Can we consider this distribution OK?',
-                          test=student_test_fail_with_pvalues, alpha=0.05)
+                          test=student_test_fail_with_pvals, alpha=0.05)
 
 
 @pytest.fixture
@@ -294,12 +318,12 @@ def bonferroni_test_result_fail(bonferroni_test_fail):
 
 
 @pytest.fixture
-def holm_bonferroni_test(student_test_with_pvalues):
+def holm_bonferroni_test(student_test_with_pvals):
     '''Return a HolmBonferroni test based on a Student test.'''
     return TestHolmBonferroni(
         name='A Holm-Bonferroni test',
         description='Can we consider this distribution OK?',
-        test=student_test_with_pvalues, alpha=0.05)
+        test=student_test_with_pvals, alpha=0.05)
 
 
 @pytest.fixture
@@ -309,12 +333,12 @@ def holm_bonferroni_test_result(holm_bonferroni_test):
 
 
 @pytest.fixture
-def holm_bonferroni_test_fail(student_test_fail_with_pvalues):
+def holm_bonferroni_test_fail(student_test_fail_with_pvals):
     '''Return a Holm-Bonferroni test based on a Student test.'''
     return TestHolmBonferroni(
         name='A Holm-Bonferroni test',
         description='Can we consider this distribution OK?',
-        test=student_test_fail_with_pvalues, alpha=0.05)
+        test=student_test_fail_with_pvals, alpha=0.05)
 
 
 @pytest.fixture

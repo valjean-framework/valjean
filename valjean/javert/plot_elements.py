@@ -80,7 +80,7 @@ def repr_student_delta(result):
         if we have a member ``units`` in base_dataset the axis names
         would be constructed like ``name + units['name']``.
 
-    If the dimension cannot be determined a empty list is returned.
+    If the dimension cannot be determined an empty list is returned.
     '''
     dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
@@ -109,7 +109,7 @@ def repr_student_values(result):
         if we have a member ``units`` in base_dataset the axis names
         would be constructed like ``name + units['name']``.
 
-    If the dimension cannot be determined a empty list is returned.
+    If the dimension cannot be determined an empty list is returned.
     '''
     dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
@@ -134,7 +134,7 @@ def repr_student_pvalues(result):
     :type result: :class:`~.TestResultStudent`
     :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
 
-    If p-values were not calculated, no :class:`~.PlotTemplate` is build, so
+    If p-values were not calculated, no :class:`~.PlotTemplate` is built, so
     an empty list is returned.
     '''
     if result.pvalue is None:
@@ -166,7 +166,7 @@ def repr_datasets_values(result):
         :class:`~valjean.gavroche.test.TestResultApproxEqual`
     :returns: :class:`list` (:class:`~.PlotTemplate`)
 
-    If the dimension cannot be determined a empty list is returned.
+    If the dimension cannot be determined an empty list is returned.
     '''
     dim = dimension(result.test.dsref.bins,
                     result.test.dsref.value.shape)

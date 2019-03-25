@@ -26,14 +26,18 @@ from ..gavroche.conftest import (some_1d_dataset, one_dim_dataset,
                                  other_1d_dataset_edges, different_1d_dataset)
 from ..gavroche.conftest import (student_test, student_test_result,
                                  student_test_fail, student_test_result_fail,
-                                 student_test_edges, student_test_edges_result)
+                                 student_test_edges, student_test_edges_result,
+                                 student_test_3ds, student_test_result_3ds,
+                                 student_test_with_pvals,
+                                 student_test_result_with_pvals)
 from ..gavroche.conftest import datasets
 
 
 def test_plot_1d_dataset(some_1d_dataset):
     '''Test plot of 1-D dataset.'''
     plti = PlotTemplate(bins=some_1d_dataset.bins['e'],
-                        curves=[CurveElements(some_1d_dataset.value, '', 0)])
+                        curves=[CurveElements(some_1d_dataset.value, '',
+                                              index=0)])
     assert plti.curves[0].values.size == plti.bins.size
 
 
@@ -149,34 +153,39 @@ def test_fplit_cc(student_test_result, plot_repr):
             and template.xname != template2.xname)
 
 
-def test_fplit_pjoin(student_test_result, student_test_result_fail, plot_repr):
+@pytest.mark.mpl_image_compare(filename='student_fplit_3ds.png',
+                               baseline_dir='ref_plots')
+def test_fplit_3ds(student_test_result_3ds, plot_repr):
     '''Test concatenation of FullPlotTemplate from Student result.'''
-    templ = plot_repr(student_test_result)[0]
-    templ_cc = templ.copy()
-    templ2 = plot_repr(student_test_result_fail)[0]
-    templ.join(templ2)
-    assert templ.xname == templ2.xname
-    assert len(templ.curves) == len(templ_cc.curves) + len(templ2.curves)
-    assert ([c.yname for c in templ.curves][:len(templ_cc.curves)]
-            == [c.yname for c in templ2.curves])
+    templ = plot_repr(student_test_result_3ds)[0]
+    assert set(c.yname for c in templ.curves) == {'', r'$\Delta_{Student}$'}
+    assert len([c for c in templ.curves if c.yname == '']) == 3
+    assert (len([c for c in templ.curves if c.yname == r'$\Delta_{Student}$'])
+            == 2)
+    mplt = MplPlot(templ)
+    return mplt.fig
 
 
 @pytest.mark.mpl_image_compare(filename='student_fplit_add.png',
                                baseline_dir='ref_plots')
+def test_fplit_pjoin(student_test_result_with_pvals, plot_repr):
+    '''Test concatenation of PlotTemplate from Student result.'''
+    templ = plot_repr(student_test_result_with_pvals)[0]
+    assert 'p-value' not in tuple(c.yname for c in templ.curves)
+    pvaltempl = plt_elts.repr_student_pvalues(student_test_result_with_pvals)
+    templ.join(pvaltempl[0])
+    assert len(set(c.yname for c in templ.curves)) == 3
+    mplt = MplPlot(templ)
+    return mplt.fig
+
+
 def test_fplit_join(student_test_result, student_test_result_fail, plot_repr):
-    '''Test concatenation of FullPlotTemplate from Student result.'''
+    '''Test concatenation of FullPlotTemplate from Student result: fails as an
+    addition of new curves is required on an existing subplot.'''
     templ1 = plot_repr(student_test_result)[0]
     templ2 = plot_repr(student_test_result_fail)[0]
-    templ3 = join(templ1, templ2)
-    assert templ3.xname == templ1.xname
-    assert templ3.xname == templ2.xname
-    assert len(templ3.curves) == len(templ1.curves) + len(templ2.curves)
-    assert ([c.yname for c in templ3.curves][:len(templ1.curves)]
-            == [c.yname for c in templ2.curves])
-    assert ([c.yname for c in templ3.curves][len(templ1.curves):]
-            == [c.yname for c in templ1.curves])
-    mplt = MplPlot(templ3)
-    return mplt.fig
+    with pytest.raises(ValueError):
+        join(templ1, templ2)
 
 
 # @settings(max_examples=10)

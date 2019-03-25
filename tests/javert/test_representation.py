@@ -19,7 +19,8 @@ from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  some_1d_dataset_edges, other_1d_dataset_edges,
                                  student_test, student_test_result,
                                  student_test_edges, student_test_edges_result,
-                                 student_test_fail, student_test_result_fail)
+                                 student_test_fail, student_test_result_fail,
+                                 student_test_3ds, student_test_result_3ds)
 
 
 @pytest.mark.parametrize('test_name', ['equal_test', 'approx_equal_test'])
@@ -79,10 +80,33 @@ def test_full_concatenation(student_test_result, student_test_result_fail,
     '''Test concatenation of all templates.'''
     templ1 = full_repr(student_test_result)
     templ2 = full_repr(student_test_result_fail)
-    templs3 = [join(it1, it2) for it1, it2 in zip(templ1, templ2)]
-    assert len(templs3) == 2
-    assert [isinstance(it, TableTemplate) for it in templs3] == [True, False]
-    assert [isinstance(it, PlotTemplate) for it in templs3] == [False, True]
+    for it1, it2 in zip(templ1, templ2):
+        if isinstance(it1, TableTemplate) and isinstance(it2, TableTemplate):
+            conc = join(it1, it2)
+            assert (conc.columns[0].size
+                    == it1.columns[0].size + it2.columns[0].size)
+        else:
+            with pytest.raises(ValueError):
+                join(it1, it2)
+
+
+@pytest.mark.mpl_image_compare(filename='student_fplit_3ds.png',
+                               baseline_dir='ref_plots')
+def test_full_repr_3d(student_test_result_3ds, full_repr, rst_formatter,
+                      rstcheck):
+    '''Test full representation with 3 datasets (1 reference, 2 test datasets).
+    '''
+    templ = full_repr(student_test_result_3ds)
+    rst = '\n'.join(rst_formatter(template) for template in templ
+                    if isinstance(template, TableTemplate))
+    LOGGER.debug('generated rst:\n%s', rst)
+    rst = '.. role:: hl\n\n' + rst
+    errs = rstcheck.check(rst)
+    assert not list(errs)
+    assert len([_tp for _tp in templ if isinstance(_tp, PlotTemplate)]) == 1
+    mplt = MplPlot([template for template in templ
+                    if isinstance(template, PlotTemplate)][0])
+    return mplt.fig
 
 
 @pytest.fixture(scope='function', params=['spam', 'egg'])
