@@ -27,8 +27,9 @@ def main(argv=None):
         # collect stuff from valjean.py
         job_file = config.get('path', 'job-file')
         priority = getattr(args.func.__self__, 'PRIORITY', None)
+        targets = args.targets if hasattr(args, 'targets') else set()
         collected_tasks = _collect_tasks(priority, job_file, args.job_args,
-                                         args.targets)
+                                         targets)
         args.func(args, collected_tasks, config)
     else:
         parser.print_help()
