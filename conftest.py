@@ -20,11 +20,11 @@ def pytest_addoption(parser):
                      default=None, help="list of patterns to match in paths")
 
 
-def pytest_generate_tests(metafunc):
-    '''Handle the ``--valjean-verbose`` option.'''
+def pytest_collection_modifyitems(config, items):
+    '''Handle CLI options to pytest.'''
     import logging
     logger = logging.getLogger('valjean')
-    if metafunc.config.getoption('valjean_verbose'):
+    if config.getoption('valjean_verbose'):
         logger.setLevel(logging.DEBUG)
         for handler in logger.handlers:
             handler.setLevel(logging.DEBUG)
@@ -33,9 +33,6 @@ def pytest_generate_tests(metafunc):
         for handler in logger.handlers:
             handler.setLevel(logging.WARNING)
 
-
-def pytest_collection_modifyitems(config, items):
-    '''Handle the ``--runslow`` option.'''
     if config.getoption("--runslow"):
         # --runslow given in cli: do not skip slow tests
         return
@@ -83,12 +80,3 @@ def cwd_testing(tmpdir_factory):
         logger.debug("Look ma, I'm in %s!", os.getcwd())
         yield
     logger.debug("Oh noes, now I'm in %s...", os.getcwd())
-
-
-@pytest.fixture
-def verbose():
-    '''Fixture to use debug mode with pytest.'''
-    import logging
-    logger = logging.getLogger('valjean')
-    logger.setLevel(logging.DEBUG)
-    return True
