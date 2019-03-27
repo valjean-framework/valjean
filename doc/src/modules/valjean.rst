@@ -15,4 +15,5 @@ valjean — VALidation, Journal d'Évolution et ANalyse
    :caption: Submodules
 
    valjean/config
-   valjean/load
+   valjean/dyn_import
+   valjean/path

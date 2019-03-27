@@ -105,7 +105,8 @@ import logging
 from time import time
 
 from .task import TaskStatus
-from .run import sanitize_filename, run, ensure
+from ..path import sanitize_filename, ensure
+from .run import run
 from .pythontask import PythonTask
 from .. import LOGGER
 
