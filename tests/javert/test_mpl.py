@@ -11,10 +11,11 @@ To be sure the comparison with the reference plots is done, don't forget the
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-import
 
+from collections import namedtuple
 import pytest
 import numpy as np
 from hypothesis import given, settings, HealthCheck, note
-from hypothesis.strategies import just, integers
+from hypothesis.strategies import just, integers, data, lists, text
 from hypothesis.extra.numpy import array_shapes
 from valjean import LOGGER
 from valjean.javert.templates import (PlotTemplate, join, TableTemplate,
@@ -64,6 +65,38 @@ def test_plot_with_errors(oneds):
     plti = PlotTemplate(bins=oneds.bins[dim], curves=[pelt], xname=dim)
     assert oneds.error.size == oneds.value.size
     assert plti.xname == dim
+
+
+@given(sampler=data())
+def test_pack_by_index(sampler):
+    '''Test the :meth:`~valjean.javert.mpl.MplPlot.pack_by_index` static
+    method.'''
+    index = sampler.draw(lists(integers(min_value=0, max_value=5),
+                               min_size=2, max_size=5))
+    values = sampler.draw(lists(text(alphabet="AZERTYUIOP"), unique=True,
+                                min_size=len(index), max_size=len(index)))
+    ntcont = namedtuple('ntcont', ['index', 'value'])
+    tmpdict = [ntcont(index=ind, value=val) for ind, val in zip(index, values)]
+    packed_dict = MplPlot.pack_by_index(tmpdict)
+    for ind, pdict in packed_dict.items():
+        assert len(pdict) == len([i for i in index if i == ind])
+
+
+@given(sampler=data())
+def test_sbplts_by_yname(sampler):
+    '''Test the :meth:`~valjean.javert.mpl.MplPlot.sbplts_by_yname` static
+    method.'''
+    ynames = sampler.draw(lists(text(alphabet="AZ", min_size=2, max_size=2),
+                                min_size=2, max_size=5))
+    values = sampler.draw(lists(integers(min_value=0, max_value=5),
+                                min_size=len(ynames), max_size=len(ynames)))
+    ntcont = namedtuple('ntcont', ['yname', 'value'])
+    tmpdict = [ntcont(yname=yax, value=val)
+               for yax, val in zip(ynames, values)]
+    spltbn = MplPlot.sbplts_by_yname(tmpdict)
+    for yax, cyax in spltbn.items():
+        assert cyax[0] == ynames.count(yax)
+        assert cyax[1] < len(set(ynames))
 
 
 @pytest.mark.mpl_image_compare(filename='plot_reg_bins.png',

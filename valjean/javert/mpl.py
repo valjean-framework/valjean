@@ -194,8 +194,8 @@ keys are interpreted:
     >>> mpl.LEGENDS = {'all_subplots': True}
     >>> mplplt = mpl.MplPlot(pltit)
 '''
-from collections import OrderedDict
-from itertools import cycle
+from collections import OrderedDict, defaultdict
+from itertools import cycle, chain
 import numpy as np
 import matplotlib.pyplot as plt
 from .. import LOGGER
@@ -262,8 +262,12 @@ class MplPlot:
             list of :class:`MplLegend` (filled when curves are drawn)
         '''
         plt.style.use(STYLE)
-        self.curve_format = (cycle(COLORS), cycle(MARKERS_SHAPE),
-                             cycle(MARKERS_FILL))
+        ref_fmt = (('k', 'o', 'full') if len(data.curves) > 1
+                   else ('b', 'o', 'full'),)
+        self.curve_format = chain(ref_fmt,
+                                  zip(cycle(COLORS),
+                                      cycle(MARKERS_SHAPE),
+                                      cycle(MARKERS_FILL)))
         self.data = data
         self.nb_splts = len(set(c.yname for c in self.data.curves))
         self.fig, self.splt = plt.subplots(
@@ -278,7 +282,7 @@ class MplPlot:
         '''Draw method.'''
         return self.error_plots()
 
-    def ierror_plot(self, idata, iplot, data_fmt):
+    def ierror_plot(self, curve, iplot, data_fmt):
         '''Draw the plot with error bars on the plot (update the plot)
 
         If only one curve is represented and the bins are given by centers not
@@ -291,36 +295,63 @@ class MplPlot:
         :param tuple(str) data_fmt: data format tuple,
             i.e. (color, marker shape, marker filling)
         '''
-        LOGGER.debug("in ierror plot for plot %d on subplot %d", idata, iplot)
+        LOGGER.debug("in ierror plot for plot %d on subplot %d",
+                     curve.label, iplot)
         splt = self.splt if self.nb_splts == 1 else self.splt[iplot]
         if iplot == self.nb_splts-1:
             splt.set_xlabel(self.data.xname)
-        splt.set_ylabel(self.data.curves[idata].yname)
-        if self.data.bins.size == self.data.curves[idata].values.size+1:
+        splt.set_ylabel(curve.yname)
+        if self.data.bins.size == curve.values.size+1:
             steps = splt.errorbar(
-                self.data.bins,
-                np.append(self.data.curves[idata].values, [np.nan]),
+                self.data.bins, np.append(curve.values, [np.nan]),
                 linestyle='-', color=data_fmt[0], drawstyle='steps-post')
             markers = splt.errorbar(
                 (self.data.bins[1:] + self.data.bins[:-1])/2,
-                self.data.curves[idata].values,
-                yerr=self.data.curves[idata].errors,
+                curve.values, yerr=curve.errors,
                 color=data_fmt[0], marker=data_fmt[1], fillstyle=data_fmt[2],
                 linestyle='')
-            self.legend.append(MplLegend((steps, markers),
-                                         self.data.curves[idata].label,
-                                         iplot,
-                                         self.data.curves[idata].index))
+            self.legend.append(MplLegend((steps, markers), curve.label, iplot,
+                                         curve.index))
         else:
             linesty = '--' if len(self.data.curves) > 1 else ''
             eplt = splt.errorbar(
-                self.data.bins, self.data.curves[idata].values,
-                yerr=self.data.curves[idata].errors, linestyle=linesty,
-                color=data_fmt[0], marker=data_fmt[1], fillstyle=data_fmt[2])
-            self.legend.append(MplLegend(eplt,
-                                         self.data.curves[idata].label,
-                                         iplot,
-                                         self.data.curves[idata].index))
+                self.data.bins, curve.values, yerr=curve.errors,
+                linestyle=linesty, color=data_fmt[0], marker=data_fmt[1],
+                fillstyle=data_fmt[2])
+            self.legend.append(MplLegend(eplt, curve.label, iplot,
+                                         curve.index))
+
+    @staticmethod
+    def pack_by_index(curves):
+        '''Pack the curves by index.
+
+        :param curves: list of curves to be used
+        :type curves: :class:`.CurveElements`
+        :returns: :class:`collections.defaultdict` (:class:`list`)
+        '''
+        ind_dict = defaultdict(list)
+        for crv in curves:
+            ind_dict[crv.index].append(crv)
+        return ind_dict
+
+    @staticmethod
+    def sbplts_by_yname(curves):
+        '''Associate the subplots to the y-axis names.
+
+        The order is supposed to be fixed by the user earlier. The first
+        subplot will always be bigger (values per default).
+
+        :param curves: list of curves to be used
+        :type curves: :class:`.CurveElements`
+        :returns: :class:`collections.defaultdict` (:class:`list`)
+        '''
+        sbynames = OrderedDict()
+        for crv in curves:
+            if crv.yname not in sbynames:
+                sbynames[crv.yname] = [1, len(sbynames)]
+            else:
+                sbynames[crv.yname][0] += 1
+        return sbynames
 
     def error_plots(self):
         '''Plot errorbar plot (update the pyplot instance) and build the
@@ -329,29 +360,12 @@ class MplPlot:
         Remark: datasets are supposed to be already consistent as coming from
         a single test. If we had them manually bins will need to be checked.
         '''
-        ynames = OrderedDict()
-        icv_format = (('k', 'o', 'full') if len(self.data.curves) > 1
-                      else ('b', 'o', 'full'))
-        for icv, curve in enumerate(self.data.curves):
-            if curve.yname not in ynames:
-                ynames[curve.yname] = 0
-            else:
-                ynames[curve.yname] += 1
-            if curve.index in set(l.index for l in self.legend):
-                prevc = (
-                    self.legend[curve.index].handle[1][0]
-                    if self.data.bins.size == curve.values.size+1
-                    else self.legend[curve.index].handle[0])
-                icv_format = (prevc.get_color(),
-                              prevc.get_marker(),
-                              prevc.get_fillstyle())
-            else:
-                if self.nb_splts != len(self.data.curves) and icv > 0:
-                    icv_format = tuple(next(pf) for pf in self.curve_format)
-            self.ierror_plot(icv,
-                             list(ynames.keys()).index(curve.yname),
-                             icv_format)
-        self._build_legend(ynames)
+        crvs_by_index = self.pack_by_index(self.data.curves)
+        sbplts_by_ynames = self.sbplts_by_yname(self.data.curves)
+        for crvs, fmt in zip(crvs_by_index.values(), self.curve_format):
+            for crv in crvs:
+                self.ierror_plot(crv, sbplts_by_ynames[crv.yname][1], fmt)
+        self._build_legend(sbplts_by_ynames)
 
     def _build_legend(self, ynames):
         '''Build the legends from self.legend and add them to the figures.
@@ -372,7 +386,7 @@ class MplPlot:
                              [l.label for l in self.legend],
                              ncol=ncol, **LEGENDS.get('legend_kwargs', {}))
             return
-        for iyax, nplt in enumerate(ynames.values()):
+        for nplt, iyax in ynames.values():
             if nplt > 0 and (LEGENDS.get('all_subplots', False)
                              or iyax == 0):
                 ncol = nplt // 6 + 1
