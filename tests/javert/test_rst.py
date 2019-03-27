@@ -47,7 +47,7 @@ def test_rsttable_col_widths(matrix):
 
 def test_rst_table(rstcheck, table_template, rst_formatter):
     '''Test that :class:`~.RstFormatter` generates correct reST tables.'''
-    table = rst_formatter(table_template)
+    table = str(rst_formatter.template(table_template))
     LOGGER.debug('generated rst:\n%s', table)
     errs = rstcheck.check(table)
     assert not list(errs)
@@ -57,7 +57,8 @@ def test_rst_equal(rstcheck, equal_test_result, rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
     tables when formatting an equality test.'''
     templates = table_repr(equal_test_result)
-    rst = '\n'.join(rst_formatter(template) for template in templates)
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
@@ -68,7 +69,8 @@ def test_rst_equal_full(rstcheck, equal_test_result, rst_formatter,
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
     tables when formatting an equality test.'''
     templates = table_repr(equal_test_result)
-    rst = '\n'.join(rst_formatter(template) for template in templates)
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
@@ -79,7 +81,8 @@ def test_rst_equal_hl(rstcheck, equal_test_result_fail, rst_formatter,
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
     tables when formatting an equality test with highlighted elements.'''
     templates = table_repr(equal_test_result_fail)
-    rst = '\n'.join(rst_formatter(template) for template in templates)
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates)
     # patch the generated rst with a declaration for the highlight role
     rst = '.. role:: hl\n\n' + rst
     LOGGER.debug('generated rst:\n%s', rst)
@@ -92,7 +95,8 @@ def test_rst_approx_equal(rstcheck, approx_equal_test_result, rst_formatter,
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
     tables when formatting an approximate equality test.'''
     templates = table_repr(approx_equal_test_result)
-    rst = '\n'.join(rst_formatter(template) for template in templates)
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)
     # print()
     # print(rst)
@@ -103,7 +107,8 @@ def test_rst_approx_equal(rstcheck, approx_equal_test_result, rst_formatter,
 def test_rst_student(rstcheck, student_test_result, rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` generates correct reST table.'''
     templates = table_repr(student_test_result)
-    rst = '\n'.join(rst_formatter(template) for template in templates)
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)
     # print()
     # print(rst)
@@ -116,7 +121,8 @@ def test_rst_student_hl(rstcheck, student_test_result_fail, rst_formatter,
     '''Test that :class:`~.RstFormatter` generates correct reST table for
     Student results.'''
     templates = table_repr(student_test_result_fail)
-    rst = '\n'.join(rst_formatter(template) for template in templates)
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates)
     # patch the generated rst with a declaration for the highlight role
     rst = '.. role:: hl\n\n' + rst
     LOGGER.debug('generated rst:\n%s', rst)
@@ -129,7 +135,8 @@ def test_rst_bonferroni(rstcheck, bonferroni_test_result, rst_formatter,
     '''Test that :class:`~.RstFormatter` generates correct reST table for
     Bonferroni result.'''
     templates = table_repr(bonferroni_test_result)
-    rst = '\n'.join(rst_formatter(template) for template in templates)
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)
     # print()
     # print(rst)
@@ -142,7 +149,8 @@ def test_rst_holm_bonferroni(rstcheck, holm_bonferroni_test_result,
     '''Test that :class:`~.RstFormatter` generates correct reST table for
     Holm-Bonferroni results.'''
     templates = table_repr(holm_bonferroni_test_result)
-    rst = '\n'.join(rst_formatter(template) for template in templates)
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)
     # print()
     # print(rst)
@@ -158,7 +166,7 @@ def test_rst_more_bonferronis(rstcheck, bonferroni_test_result,
     templates = table_repr(bonferroni_test_result)
     templates2 = table_repr(bonferroni_test_result_fail)
     ntabtemplate = templates + templates2
-    rst = rst_formatter(ntabtemplate)
+    rst = str(rst_formatter.template(ntabtemplate))
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
@@ -172,13 +180,13 @@ def test_rst_holm_bonferronis(rstcheck, holm_bonferroni_test_result,
     templates = table_repr(holm_bonferroni_test_result)
     templates2 = table_repr(holm_bonf_test_result_fail)
     ntabtemplate = templates + templates2
-    rst = rst_formatter(ntabtemplate)
+    rst = str(rst_formatter.template(ntabtemplate))
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
 
 
-def test_tabletemplate_tjoin(rstcheck, rst_formatter, table_repr,
+def test_tabletemplate_tjoin(table_repr,
                              bonferroni_test_result,
                              bonferroni_test_result_fail):
     '''Test :meth:`~valjean.javert.templates.TableTemplate.join`.'''
@@ -195,7 +203,7 @@ def test_tabletemplate_tjoin(rstcheck, rst_formatter, table_repr,
                       for i, row in enumerate(templates2[1].columns))))
 
 
-def test_tabletemplate_join(rstcheck, rst_formatter, table_repr,
+def test_tabletemplate_join(table_repr,
                             bonferroni_test_result,
                             bonferroni_test_result_fail):
     '''Test  :meth:`~valjean.javert.templates.join`.'''
@@ -249,3 +257,15 @@ def test_tabletemplate_join_array(table_repr,
                        template2[0].columns[4]))
     assert all(np.isin(template1[0].columns[4][:template1_cc.columns[4].size],
                        template1_cc.columns[4]))
+
+
+def test_rst_report(rstcheck, report, rst_full, tmpdir):
+    '''Test that :class:`~.RstFormatter` correctly generates a report.'''
+    fmt_report = rst_full.format_report(report=report, author='pytest',
+                                        version='0.1')
+    LOGGER.debug('generated rst:\n%s', fmt_report)
+    fmt_report.write(str(tmpdir))
+    for path in tmpdir.visit(fil='*.rst'):
+        content = path.read()
+        errs = rstcheck.check(content)
+        assert not list(errs), content

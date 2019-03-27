@@ -50,7 +50,7 @@ def base_datasets(draw, elements=None, shape=None, dtype=None, coords=None):
         a_shape = draw(shape)
 
     if dtype is None:
-        a_dtype = draw(just(np.float64))
+        a_dtype = np.float64
     else:
         a_dtype = draw(dtype)
 

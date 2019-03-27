@@ -19,5 +19,6 @@ javert — Journal Automatique de VÉRificaTion
    javert/table_elements
    javert/plot_elements
    javert/formatter
-   javert/rst
    javert/mpl
+   javert/test_report
+   javert/rst

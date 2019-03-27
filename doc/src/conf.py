@@ -57,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 author = u'Ève Le Ménédeu, Davide Mancusi'
-copyright = u'2017, ' + author  # pylint: disable=redefined-builtin
+copyright = u'2017-2019, ' + author  # pylint: disable=redefined-builtin
 project = 'valjean'
 release = get_distribution(project).version
 version = '.'.join(release.split('.')[:2])
@@ -183,7 +183,6 @@ intersphinx_mapping = {
 # doctest
 doctest_test_doctest_blocks = ''
 
-
 # -- autodoc options ------------------------------------------------------
 
 # always list all class members
@@ -191,6 +190,7 @@ autodoc_default_flags = ['members', 'special-members']
 
 # list members by order of appearance in the source file
 autodoc_member_order = 'bysource'
+
 
 
 # pylint: disable=missing-docstring, unused-argument, too-many-arguments

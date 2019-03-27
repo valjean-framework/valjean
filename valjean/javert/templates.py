@@ -112,7 +112,7 @@ class TableTemplate:
     '''
 
     def __init__(self, *columns, headers=None, units=None,
-                 highlight=lambda *args: False):
+                 highlights=None):
         '''Construct a table from a set of columns. The columns must be
         :class:`numpy.ndarray` objects, and they must all contain the same
         number of elements (same array *size*).
@@ -123,28 +123,36 @@ class TableTemplate:
         Column units can also be specified using the `units` argument. Again,
         you must pass as many units as there are columns.
 
-        Finally, it is possible to specify which table rows should be
-        highlighted. This is done by passing a predicate (a closure returning a
-        bool) as the `highlight` argument. Formatters will call the closure
-        passing the contents of each row in turn, and will highlight those rows
-        for which the predicate returns `True`. What it means for a row to be
-        highlighted specifically depends on the chosen output format.
+        Finally, it is possible to specify which table elements should be
+        highlighted. This is done by passing a list of lists (or
+        :class:`numpy.ndarray`) to the `highlights` argument. Each element of
+        the `highlights` (outer) list represents a table column and therefore
+        must have the same shape as all the other columns; also, the length of
+        `highlights` must be equal to the number of columns. Elements of the
+        inner lists (or :class:`numpy.ndarray`) must be booleans and indicate
+        whether the corresponding table element must be highlighted.
 
         :param columns: a list of columns.
         :type columns: :class:`list` (:class:`numpy.ndarray`)
         :param list(str) headers: a list of headers.
         :param list(str) units: a list of measurement units.
-        :param highlight: a callable of the form `f(*row) -> bool`.
+        :param highlights: a list describing which table elements should be
+            highlighted.
+        :type highlights: list(list(bool)) or list(numpy.ndarray(bool))
         '''
         self.columns = columns
         n_columns = len(columns)
         self.headers = ['']*n_columns if headers is None else headers
         self.units = ['']*n_columns if units is None else units
-        self.highlight = highlight
 
-        # some sanity checks follow
         if not columns:
             raise ValueError('at least one column expected')
+
+        if highlights is None:
+            self.highlights = [np.full_like(self.columns[0], False)
+                               for _ in self.columns]
+        else:
+            self.highlights = highlights
 
         if len(self.headers) != len(self.columns):
             err = ('number of column headers ({}) must match number of '
@@ -155,6 +163,14 @@ class TableTemplate:
             err = ('number of column units ({}) must match number of '
                    'columns ({})'.format(len(self.units), len(self.columns)))
             raise ValueError(err)
+
+        if not isinstance(self.highlights, list):
+            raise TypeError('expected a list as the `highlights` argument, '
+                            'got a {} instead'.format(type(self.highlights)))
+        if len(self.highlights) != len(self.columns):
+            raise ValueError('expected a list of {} elements as the '
+                             '`highlights` argument, got {} elements instead'
+                             .format(len(self.columns), len(self.highlights)))
 
         for i, col in enumerate(self.columns):
             if not isinstance(col, (np.ndarray, np.generic, list)):
@@ -181,7 +197,8 @@ class TableTemplate:
         '''
         return TableTemplate(*tuple(col.copy() for col in self.columns),
                              headers=self.headers.copy(),
-                             units=self.units.copy(), highlight=self.highlight)
+                             units=self.units.copy(),
+                             highlights=self.highlights.copy())
 
     def _binary_join(self, other):
         '''Join another :class:`TableTemplate` to the current one.
@@ -247,7 +264,36 @@ class TableTemplate:
                             "TableItem are np.ndarray.")
         return TableTemplate(*tuple(col[index] for col in self.columns),
                              headers=self.headers.copy(),
-                             units=self.units.copy(), highlight=self.highlight)
+                             units=self.units.copy(),
+                             highlights=self.highlights.copy())
+
+    def fingerprint(self):
+        '''Compute a fingerprint (a SHA256 hash) for `self`. The fingerprint
+        depends only on the content of `self`. Two :class:`TableTemplate`
+        objects containing equal data have the same fingerprint. The converse
+        is not true, but very likely.'''
+        from hashlib import sha256
+        hasher = sha256()
+        for col, head, unit, high in zip(self.columns, self.headers,
+                                         self.units, self.highlights):
+            hasher.update(col.data.cast('b'))
+            hasher.update(head.encode('utf-8'))
+            hasher.update(unit.encode('utf-8'))
+            hasher.update(high.data.cast('b'))
+        return hasher.hexdigest()
+
+    def __eq__(self, other):
+        '''Test for equality of `self` and another :class:`TableTemplate`.'''
+        return (len(self.columns) == len(other.columns)
+                and all(np.array_equal(this, that)
+                        for this, that in zip(self.columns, other.columns))
+                and self.headers == other.headers
+                and self.units == other.units
+                and self.highlights == other.highlights)
+
+    def __ne__(self, other):
+        '''Test for inequality of `self` and another :class:`TableTemplate`.'''
+        return not self == other
 
 
 class CurveElements:
@@ -310,6 +356,28 @@ class CurveElements:
                              yname=self.yname,
                              errors=(None if self.errors is None
                                      else self.errors.copy()))
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield self.values.data.cast('b')
+        yield self.label.encode('utf-8')
+        yield bytes((self.index,))
+        yield self.yname.encode('utf-8')
+        if self.errors is not None:
+            yield self.errors.data.cast('b')
+
+    def __eq__(self, other):
+        '''Test for equality of `self` and another :class:`CurveElements`.'''
+        return (np.array_equal(self.values, other.values)
+                and self.label == other.label
+                and self.index == other.index
+                and self.yname == other.yname
+                and np.array_equal(self.errors, other.errors))
+
+    def __ne__(self, other):
+        '''Test for inequality of `self` and another :class:`CurveElements`.'''
+        return not self == other
 
 
 class PlotTemplate:
@@ -566,6 +634,30 @@ PlotTemplate.
                                                curve.yname,
                                                curve.values, curve.errors))
         return ''.join(intro + elts)
+
+    def fingerprint(self):
+        '''Compute a fingerprint (a SHA256 hash) for `self`. The fingerprint
+        depends only on the content of `self`. Two :class:`PlotTemplate`
+        objects containing equal data have the same fingerprint. The converse
+        is not true, but very likely.'''
+        from hashlib import sha256
+        hasher = sha256()
+        hasher.update(self.bins.data.cast('b'))
+        hasher.update(self.xname.encode('utf-8'))
+        for curve in self.curves:
+            for data in curve.data():
+                hasher.update(data)
+        return hasher.hexdigest()
+
+    def __eq__(self, other):
+        '''Test for equality of `self` and another :class:`PlotTemplate`.'''
+        return (np.array_equal(self.bins, other.bins)
+                and self.xname == other.xname
+                and self.curves == other.curves)
+
+    def __ne__(self, other):
+        '''Test for inequality of `self` and another :class:`PlotTemplate`.'''
+        return not self == other
 
 
 def join(*templates):

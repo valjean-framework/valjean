@@ -37,9 +37,10 @@ def test_full_repr(test_name, request):
 @pytest.mark.mpl_image_compare(filename='student_comp_points.png',
                                baseline_dir='ref_plots')
 def test_student_full(student_test_result, full_repr, rst_formatter, rstcheck):
-    '''Test plot of student resultwhen  bins are given by centers of bins.'''
+    '''Test plot of student result when bins are given by centers of bins.'''
     templates = full_repr(student_test_result)
-    rst = '\n'.join(rst_formatter(template) for template in templates
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates
                     if isinstance(template, TableTemplate))
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
@@ -55,7 +56,8 @@ def test_student_edges_full(student_test_edges_result, full_repr,
                             rst_formatter, rstcheck):
     '''Test plot of student result when bins are given by edges.'''
     templates = full_repr(student_test_edges_result)
-    rst = '\n'.join(rst_formatter(template) for template in templates
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates
                     if isinstance(template, TableTemplate))
     LOGGER.debug('generated rst:\n%s', rst)
     errs = rstcheck.check(rst)
@@ -97,7 +99,7 @@ def test_full_repr_3d(student_test_result_3ds, full_repr, rst_formatter,
     '''Test full representation with 3 datasets (1 reference, 2 test datasets).
     '''
     templ = full_repr(student_test_result_3ds)
-    rst = '\n'.join(rst_formatter(template) for template in templ
+    rst = '\n'.join(str(rst_formatter.template(template)) for template in templ
                     if isinstance(template, TableTemplate))
     LOGGER.debug('generated rst:\n%s', rst)
     rst = '.. role:: hl\n\n' + rst

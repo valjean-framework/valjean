@@ -373,7 +373,7 @@ class TestResultStudent(TestResult):
         '''
         if isinstance(self.delta, np.generic):
             return np.array([self.test_alpha(self.delta)])
-        return np.less(np.fabs(self.delta), self.test.threshold)
+        return self.test_alpha(self.delta)
 
     def __bool__(self):
         if len(self.test.datasets) == 1:

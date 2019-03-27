@@ -167,7 +167,7 @@ def equal_test_fail(some_dataset, different_dataset):
     '''Return an equality test between different datasets.'''
     return TestEqual(
         some_dataset, different_dataset,
-        name='An equality test',
+        name='Another equality test',
         description='Are these datasets equal? (Spoiler alert: no.)')
 
 
@@ -176,7 +176,7 @@ def approx_equal_test(some_dataset, other_dataset):
     '''Return an approx-equality test between datasets.'''
     return TestApproxEqual(
         some_dataset, other_dataset,
-        name='An equality test',
+        name='An approximate equality test',
         description='Are these datasets approximately equal?')
 
 

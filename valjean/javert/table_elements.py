@@ -2,6 +2,7 @@
 to be converted in rst.
 '''
 from itertools import chain
+import numpy as np
 from .. import LOGGER
 from .templates import TableTemplate
 
@@ -35,11 +36,14 @@ def repr_equal(result, result_header):
         heads.append(
             ('dataset'+str_ids, result_header.replace('?', str_ids+'?'))
             if len(dscols) > 1 else ('dataset', result_header))
+    falses = np.full_like(result.test.dsref.value, False)
+    highlights = [(falses,)]
+    for equal in result.equal:
+        highlights.append((falses, np.logical_not(equal)))
     table_template = TableTemplate(
         result.test.dsref.value,
         *chain.from_iterable(dscols),
-        highlight=lambda *cols: any([not col for col in cols
-                                     if col.dtype == 'bool']),
+        highlights=list(chain.from_iterable(highlights)),
         headers=list(chain.from_iterable(heads)))
     return [table_template]
 
@@ -74,11 +78,14 @@ def repr_approx_equal(result, result_header):
         heads.append(
             ('dataset'+str_ids, result_header.replace('?', str_ids+'?'))
             if len(dscols) > 1 else ('dataset', result_header))
+    falses = np.full_like(result.test.dsref.value, False)
+    highlights = [(falses,)]
+    for approx_equal in result.approx_equal:
+        highlights.append((falses, np.logical_not(approx_equal)))
     table_template = TableTemplate(
         result.test.dsref.value,
         *chain.from_iterable(dscols),
-        highlight=lambda *cols: any([not col for col in cols
-                                     if col.dtype == 'bool']),
+        highlights=list(chain.from_iterable(highlights)),
         headers=list(chain.from_iterable(heads)))
     return [table_template]
 
@@ -104,10 +111,11 @@ def repr_student(result, result_header):
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     LOGGER.debug("In repr_student")
+    oracles = result.oracles()
     dscols = tuple((ds.value, ds.error, delta, studbool)
                    for ds, delta, studbool in zip(result.test.datasets,
                                                   result.delta,
-                                                  result.oracles()))
+                                                  oracles))
     heads = [('v_ref', 'σ_ref')]
     for ids in range(len(dscols)):
         str_ids = str(ids)
@@ -115,11 +123,14 @@ def repr_student(result, result_header):
                       result_header.replace('?', str_ids+'?'))
                      if len(dscols) > 1
                      else ('v_test', 'σ_test', 'Δ_test', result_header))
+    falses = np.full_like(result.test.dsref.value, False)
+    highlights = [(falses, falses)]
+    for oracle in oracles:
+        highlights.append((falses, falses, falses, np.logical_not(oracle)))
     table_template = TableTemplate(
         result.test.dsref.value, result.test.dsref.error,
         *chain.from_iterable(dscols),
-        highlight=lambda *cols: any([not col for col in cols
-                                     if col.dtype == 'bool']),
+        highlights=list(chain.from_iterable(highlights)),
         headers=list(chain.from_iterable(heads)))
     return [table_template]
 
@@ -149,14 +160,17 @@ def repr_bonferroni(result, result_header):
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     ndatasets = len(result.first_test_res.test.datasets)
+    oracles = list(result.oracles())
+    highlights = [[False] * ndatasets] * 5  # 5 non-highlighted columns
+    highlights.append([not oracle for oracle in oracles])
     table_template = TableTemplate(
         [result.first_test_res.test.name] * ndatasets,
         [result.test.ntests] * ndatasets,
         [result.test.alpha] * ndatasets,
         [result.test.bonf_signi_level] * ndatasets,
         [min(pval) for pval in result.first_test_res.pvalue],
-        [res for res in result.oracles()],
-        highlight=lambda _t, _ndf, _sl, _bsl, _min, rnh: not rnh,
+        oracles,
+        highlights=highlights,
         headers=['test', 'ndf', 'α', 'α(Bonferroni)', 'min(p-value)',
                  result_header])
     return [table_template]
@@ -187,15 +201,18 @@ def repr_holm_bonferroni(result, result_header):
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     ndatasets = len(result.first_test_res.test.datasets)
+    oracles = list(result.oracles())
+    highlights = [[False] * ndatasets] * 6  # 6 non-highlighted columns
+    highlights.append([not oracle for oracle in oracles])
     table_template = TableTemplate(
         [result.first_test_res.test.name] * ndatasets,
         [result.test.ntests] * ndatasets,
         [result.test.alpha] * ndatasets,
         [min(pval) for pval in result.first_test_res.pvalue],
         [alpha_i[0] for alpha_i in result.alphas_i],
-        [nr for nr in result.nb_rejected],
-        [res for res in result.oracles()],
-        highlight=lambda _t, _ndf, _sl, _min, _malp, _rej, rnh: not rnh,
+        list(result.nb_rejected),
+        oracles,
+        highlights=highlights,
         headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
                  'N rejected', result_header])
     return [table_template]

@@ -1,10 +1,5 @@
 '''Collect tests from user files.
 
-This module provides tools to load test functions from user files. It imports
-Python source files and filters out functions (actually, any callable object)
-matching a specific regular expression. For instance, let us write some Python
-code to a test file:
-
 .. doctest:: harvest
    :hide:
 
@@ -27,6 +22,10 @@ code to a test file:
    ...         "    print(x)\\n"
    ...         "del test_in_loop  # required to remove the last function")
 
+This module provides tools to load test functions from user files. It imports
+Python source files and filters out functions (actually, any callable object)
+matching a specific regular expression. For instance, let us write some Python
+code to a test file:
 
    >>> print(code)
    def test_function():

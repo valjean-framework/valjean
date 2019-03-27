@@ -9,11 +9,15 @@ class Formatter(ABC):
     '''Abstract base class for any formatter.'''
 
     @abstractmethod
-    def header(self, result):
-        '''Convert a result into a section header.'''
+    def header(self, name, depth):
+        '''Format a section header.'''
         raise NotImplementedError('header() method is not implemented')
 
-    def __call__(self, item):
+    def text(self, text):
+        '''Format some text.'''
+        raise NotImplementedError('text() method is not implemented')
+
+    def template(self, item):
         '''Convert an item to the relevant format.'''
         class_name = item.__class__.__name__
         meth_name = 'format_' + class_name.lower()

@@ -63,28 +63,29 @@ from . import plot_elements as plt_elts
 
 class Representation:
     '''Class for representing test results as templates calling the available
-    patterns (tables or plots).
+    representers (tables or plots).
 
     This class corresponds to the `Context` role in the `Strategy` design
     pattern.
     '''
 
-    def __init__(self, pattern):
+    def __init__(self, representer):
         ''''Initilialisation of the :class:`Representation` class with the
-        pattern to use.
+        Representer to use.
 
-        :param pattern: pattern to be used (table, plots, both, etc)
-        :type pattern: :class:`Representer` or subclass from
-            :class:`Representer`.
+        :param Representer: representer to use (table, plots, both, etc)
+        :type representer: :class:`Representer`
         '''
-        self.pattern = pattern
+        self.representer = representer
 
     def __call__(self, result):
         '''Dispatch handling of `result` to the ``__call__`` methods of the
-        pattern class.'''
-        res = self.pattern(result)
+        representer class.'''
+        res = self.representer(result)
         if res is None:
             return []
+        LOGGER.debug('representing the result of test %s as %s',
+                     result.test.name, res)
         return res
 
 
