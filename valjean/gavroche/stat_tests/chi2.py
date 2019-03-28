@@ -244,7 +244,7 @@ True
 '''
 import numpy as np
 from scipy.stats import chi2 as schi2
-from ..test import Test, TestResult
+from ..test import TestDataset, TestResult
 
 
 class TestResultChi2(TestResult):
@@ -289,7 +289,7 @@ class TestResultChi2(TestResult):
         return [c2 / df for c2, df in zip(self.chi2, self.test.ndf)]
 
 
-class TestChi2(Test):
+class TestChi2(TestDataset):
     '''Test class for χ², inheritate from :class:`~valjean.gavroche.test.Test`.
     '''
 
@@ -312,8 +312,7 @@ class TestChi2(Test):
                                   array to sum will contain infinite terms.
                                   Default is ``False``.
         '''
-        self.dsref = dsref
-        self.datasets = datasets
+        super().__init__(dsref, *datasets, name=name, description=description)
         self.alpha = alpha
         self.ignore_empty = ignore_empty
         #: nonzero bins identification by True, False if zero
@@ -321,7 +320,6 @@ class TestChi2(Test):
         self.nonzero_bins = self._nonzero_bins()
         #: number of degrees of freedom (:class:`list` (:obj:`int`))
         self.ndf = [np.count_nonzero(nzb) for nzb in self.nonzero_bins]
-        super().__init__(name=name, description=description)
 
     def _nonzero_bins(self):
         '''Identify nonzero bins.

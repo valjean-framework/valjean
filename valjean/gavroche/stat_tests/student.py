@@ -325,7 +325,7 @@ within a user's loop
 '''
 import numpy as np
 from scipy.stats import t, norm
-from ..test import check_bins, Test, TestResult
+from ..test import check_bins, TestDataset, TestResult
 
 
 class TestResultStudentException(Exception):
@@ -399,7 +399,7 @@ class TestResultStudent(TestResult):
         return [pval > self.test.alpha/2 for pval in self.pvalue]
 
 
-class TestStudent(Test):
+class TestStudent(TestDataset):
     '''Class to build the Student's t-test.'''
 
     def __init__(self, dsref, *datasets, name, description='', alpha=0.01,
@@ -421,15 +421,10 @@ class TestStudent(Test):
                         (should correspond to number of batches),
                         otherwise ndf assumed infinite, normal approximation
         '''
-        self.dsref = dsref
-        self.datasets = datasets
-        if not datasets:
-            raise ValueError('At least one dataset expected to be compared to '
-                             'the reference one')
+        super().__init__(dsref, *datasets, name=name, description=description)
         self.alpha = alpha
         self.ndf = ndf
         self.threshold = self.student_threshold(self.alpha, self.ndf)
-        super().__init__(name=name, description=description)
 
     def evaluate(self):
         '''Evaluate Student's t-test method.

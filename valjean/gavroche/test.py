@@ -99,7 +99,7 @@ def check_bins(*datasets, rtol=1e-5, atol=1e-8):
 
 
 class Test(ABC):
-    '''Generic class for comparing datasets.
+    '''Generic class for comparing any kind of results.
 
     Base class for tests.
     '''
@@ -122,7 +122,7 @@ class Test(ABC):
 
     @abstractmethod
     def evaluate(self):
-        '''Evaluate the test on the given datasets.
+        '''Evaluate the test on the given inputs.
 
         Must return a subclass of :class:`~.TestResult`.
         '''
@@ -130,6 +130,34 @@ class Test(ABC):
     # tell pytest that this class and derived classes should NOT be collected
     # as tests
     __test__ = False
+
+
+class TestDataset(Test):
+    '''Generic class for comparing datasets.'''
+
+    def __init__(self, dsref, *datasets, name, description=''):
+        '''Initialisation of :class:`~.TestEqual`:
+
+        :param str name: name of the test (in analysis)
+        :param str description: specific description of the test
+        :param dsref: reference dataset
+        :type dsref: :class:`~.dataset.Dataset`
+        :param datasets: list of datasets to be compared to reference dataset
+        :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
+        '''
+        super().__init__(name=name, description=description)
+        self.dsref = dsref
+        self.datasets = datasets
+        if not datasets:
+            raise ValueError('At least one dataset expected to be compared to '
+                             'the reference one')
+
+    @abstractmethod
+    def evaluate(self):
+        '''Evaluate the test on the given datasets.
+
+        Must return a subclass of :class:`~.TestResult`.
+        '''
 
 
 class TestResult(ABC):
@@ -177,25 +205,8 @@ class TestResultEqual(TestResult):
         return bool(np.all(self.equal))
 
 
-class TestEqual(Test):
+class TestEqual(TestDataset):
     '''Test if the datasets values are equal. Errors are ignored.'''
-
-    def __init__(self, dsref, *datasets, name, description=''):
-        '''Initialisation of :class:`~.TestEqual`:
-
-        :param str name: name of the test (in analysis)
-        :param str description: specific description of the test
-        :param dsref: reference dataset
-        :type dsref: :class:`~.dataset.Dataset`
-        :param datasets: list of datasets to be compared to reference dataset
-        :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
-        '''
-        super().__init__(name=name, description=description)
-        self.dsref = dsref
-        self.datasets = datasets
-        if not datasets:
-            raise ValueError('At least one dataset expected to be compared to '
-                             'the reference one')
 
     def evaluate(self):
         '''Evaluation of :class:`~.TestEqual`.
@@ -230,7 +241,7 @@ class TestResultApproxEqual(TestResult):
         return bool(np.all(self.approx_equal))
 
 
-class TestApproxEqual(Test):
+class TestApproxEqual(TestDataset):
     '''Test if the datasets values are equal within the given tolerances.
     Errors are ignored.
     '''
@@ -252,14 +263,9 @@ class TestApproxEqual(Test):
         To get more details on `rtol` and `atol` parameters, see
         :func:`numpy.isclose`.
         '''
-        super().__init__(name=name, description=description)
-        self.dsref = dsref
-        self.datasets = datasets
+        super().__init__(dsref, *datasets, name=name, description=description)
         self.rtol = rtol
         self.atol = atol
-        if not datasets:
-            raise ValueError('At least one dataset expected to be compared to '
-                             'the reference one')
 
     def evaluate(self):
         '''Evaluation of :class:`~.TestApproxEqual`.
