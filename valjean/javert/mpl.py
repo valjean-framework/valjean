@@ -193,6 +193,10 @@ keys are interpreted:
     >>> from valjean.javert import mpl
     >>> mpl.LEGENDS = {'all_subplots': True}
     >>> mplplt = mpl.MplPlot(pltit)
+
+
+Module API
+----------
 '''
 from collections import OrderedDict, defaultdict
 from itertools import cycle, chain

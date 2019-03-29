@@ -13,8 +13,8 @@ even if they will be shown and used in our specific case: parsing results from
 Tripoli-4.
 
 
-:class:`Index`
---------------
+The :class:`Index` class
+------------------------
 
 This class is based on an inheritance from :class:`collections.abc.Mapping`
 from :mod:`collections`. It implements a ``defaultdict(defaultdict(set))`` from
@@ -27,11 +27,11 @@ the list of dictionaries.
 :class:`ResponseBook`, but this is still possible.
 
 
-:class:`ResponseBook`
-----------------------
+The :class:`ResponseBook` class
+-------------------------------
 
 This class is analogue to a phonebook: it contains an index and the content,
-here stored as a list of dictinaries. It commands the index (building and
+here stored as a list of dictionaries. It commands the index (building and
 selections). Examples are shown below.
 
 
@@ -68,6 +68,9 @@ as a list of orders, one order being a dictionary.
 ResponseBook object -> Number of responses: 5, data key: 'results', \
 available metadata keys: ['consumer', 'dessert', 'drink', 'response_function']
 
+
+Selection of a given response or of a list of responses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Various methods are available to select one order, depending on requirements:
 
@@ -161,6 +164,10 @@ ones are ['consumer', 'dessert', 'drink', 'response_function']
     >>> resps = com_rb.select_by(drink='beer', squeeze=True)
     >>> # prints  WARNING     accessor: Squeeze cannot be applied, more than \
 one response corresponds to your choice
+
+
+Module API
+----------
 '''
 
 import logging
@@ -168,18 +175,6 @@ from collections import defaultdict, Mapping, Container
 
 
 LOGGER = logging.getLogger('valjean')
-
-
-def merge_defaultdict(defd1, defd2):
-    '''Function to merge 2 dict of defaultdict(set).'''
-    mdefd = defd1.copy()
-    for key1, val1 in defd2.items():
-        if key1 in mdefd:
-            for key2, val2 in val1.items():
-                mdefd[key1][key2] |= val2
-        else:
-            mdefd[key1] = val1
-    return mdefd
 
 
 class Index(Mapping):

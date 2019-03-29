@@ -6,8 +6,8 @@ Module to access Tripoli-4 parsed results.
     classes;
 
 
-:class:`Accessor`
------------------
+Description of :class:`Accessor`
+--------------------------------
 
 The :class:`Accessor` class is the real access point to the list of responses
 but not only. The result from parsing is its default input. This parsing result
@@ -109,6 +109,10 @@ available metadata keys: ['consumer', 'dessert', 'drink', 'response_function']
 ... tested: ('list_responses', 'ifp_adjoint_crit_edition')
 >>> print(t4acc3.resp_book)
 None
+
+
+Module API
+----------
 '''
 
 import logging

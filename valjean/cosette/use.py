@@ -281,9 +281,9 @@ using the :meth:`Use.map` method:
     >>> intro_stars = introduce.map(lambda x: '★★★' + x + '★★★')
 
 Here `intro_stars` is a new :class:`Use` object that will apply the specified
-function (here, a lambda that surrounds its argument with ★★★cute little
-stars★★★) to the result of `intro_task` (see above). The task associated to
-`intro_stars` depends on `intro_task`:
+function (here, a lambda that surrounds its argument with ``★★★`` cute little
+stars ``★★★``) to the result of `intro_task` (see above). The task associated
+to `intro_stars` depends on `intro_task`:
 
     >>> intro_stars_task = intro_stars.get_task()
     >>> intro_task in intro_stars_task.depends_on

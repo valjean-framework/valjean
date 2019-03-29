@@ -37,7 +37,7 @@ The interpretation of the test is based on the χ² value and on the p-value.
 Usually it is expected that the χ²/ndf should be close to 1 (ndf = number of
 degrees of freedom), see `PDG, statistics chapter
 <http://pdg.lbl.gov/2018/reviews/rpp2018-rev-statistics.pdf>`_. The p-value can
-also be calculated from the probability density funciton of the χ²
+also be calculated from the probability density function of the χ²
 distribution, which is given by:
 
 .. math::

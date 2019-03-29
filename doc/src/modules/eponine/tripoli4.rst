@@ -39,42 +39,13 @@ the innest ones:
 Main modules
 ------------
 
-:mod:`~.data_convertor` – Convert TRIPOLI-4 results to :class:`~.eponine.base_dataset.BaseDataset`
-``````````````````````````````````````````````````````````````````````````````````````````````````
+.. toctree::
 
-.. automodule:: valjean.eponine.tripoli4.data_convertor
-   :synopsis: Module to convert TRIPOLI-4 results in
-      :class:`~.eponine.base_dataset.BaseDataset`
-   :private-members:
-
-
-:mod:`~.accessor` – Access TRIPOLI-4 results
-````````````````````````````````````````````
-
-.. automodule:: valjean.eponine.tripoli4.accessor
-   :synopsis: Access class to obtain TRIPOLI-4 results in easy way
-   :private-members:
-
-
-:mod:`~.parse` – Parse TRIPOLI-4 outputs
-````````````````````````````````````````
-
-.. automodule:: valjean.eponine.tripoli4.parse
-   :synopsis: Parse TRIPOLI-4 outputs
-
-
-:mod:`~.scan` – Scan TRIPOLI-4 outputs and select relevant results
-``````````````````````````````````````````````````````````````````
-
-.. automodule:: valjean.eponine.tripoli4.scan
-   :synopsis: Scan TRIPOLI-4 outputs and select relevant results
-
-
-:mod:`use <valjean.eponine.tripoli4.use>` – Inject parsing results into free functions
-``````````````````````````````````````````````````````````````````````````````````````
-
-.. automodule:: valjean.eponine.tripoli4.use
-   :synopsis: Inject parsing results into free functions
+   tripoli4/data_convertor
+   tripoli4/accessor
+   tripoli4/parse
+   tripoli4/scan
+   tripoli4/use
 
 
 More details on parsing
@@ -94,29 +65,9 @@ Tests should be performed in the code to take the latter case into account
 :func:`~valjean.eponine.tripoli4.parse.T4Parser.check_t4_times`).
 
 
-:mod:`~.grammar` – Pyparsing grammar
-````````````````````````````````````
+.. toctree::
 
-.. automodule:: valjean.eponine.tripoli4.grammar
-   :synopsis: Grammar for pyparsing parser
-
-:mod:`~.transform` – Transform pyparsing result
-```````````````````````````````````````````````
-
-.. automodule:: valjean.eponine.tripoli4.transform
-   :synopsis: Methods to transform pyparsing results into python standard
-      objects (dictionaries and lists) and numpy arrays
-
-:mod:`~valjean.eponine.tripoli4.common` – Common methods to build numpy arrays from dictionaries and lists
-````````````````````````````````````````````````````````````````````````````````````````````````````````````
-
-.. automodule:: valjean.eponine.tripoli4.common
-   :synopsis: Common methods to build numpy arrays from dictionaries and lists
-   :private-members:
-
-
-:mod:`~.parse_debug` – Debug parsing of TRIPOLI-4 outputs
-`````````````````````````````````````````````````````````
-
-.. automodule:: valjean.eponine.tripoli4.parse_debug
-   :synopsis: Debug parsing of TRIPOLI-4 outputs
+   tripoli4/grammar
+   tripoli4/transform
+   tripoli4/common
+   tripoli4/parse_debug

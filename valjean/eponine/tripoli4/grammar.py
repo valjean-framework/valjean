@@ -3,6 +3,9 @@
 r'''This module provides `pyparsing` grammar for Tripoli-4 output listings.
 
 .. role :: parsing_var(literal)
+.. |keff| replace:: k\ :sub:`eff`
+.. |kij| replace:: k\ :sub:`ij`
+.. _pyparsing: https://pythonhosted.org/pyparsing/
 
 Documentation on the ``pyparsing`` package can be found at `pyparsing`_.
 

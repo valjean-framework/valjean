@@ -39,7 +39,7 @@ Bonferroni correction
 `````````````````````
 
 The Bonferroni_ correction is used for multiple comparisons. It is based on a
-weighted comparison to the sognificance level α.
+weighted comparison to the significance level α.
 
 If we have :math:`m` different tests (for example a spectrum with :math:`m`
 bins), the significance level α will be weighted by :math:`m`. This p-value of
@@ -60,7 +60,7 @@ Conclusion of the test depends on what we want:
 * we can also choose a level of acceptance, for example "it is fine if 1 % of
   the null hypothesis are rejected"
 
-Par default, in our case the test is rejected if there is at least one null
+Per default, in our case the test is rejected if there is at least one null
 hypothesis rejected.
 
 

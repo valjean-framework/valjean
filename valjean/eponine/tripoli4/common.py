@@ -22,7 +22,7 @@ dictionary keys should be the same in all parsers...
    https://docs.scipy.org/doc/numpy/user/basics.rec.html
 
 Goal
-----
+====
 
 Parsing results are normally stored as lists and dictionaries but it could be
 easier to use other objects, as `NumPy` arrays. In our context these objects
@@ -33,22 +33,21 @@ are used to represent
 * mesh results, i.e. tables splitted in space (cartesian, cylindrical,
   spherical depending on case), sometimes with additional splittings in energy
   and/or time
-* |keff| results, especially the matrical ones
 * Green bands results
 * IFP results
+* |keff| results
 * k\ :sub:`ij` results (matrices, eigenvectors and eigenvalues)
 
 `NumPy` objects are useful for future calculations or plotting for example.
 
 
 Spectrum and meshes
--------------------
-
+===================
 
 .. _eponine-spectrummesh-intro:
 
 Generalities
-````````````
+------------
 
 .. _doc: https://docs.scipy.org/doc/numpy/user/basics.rec.html
 
@@ -58,12 +57,13 @@ array** from `NumPy`, see `doc`_ or `numpy structured array`_.
 
 Kinematic dimensions are:
 
-* **s0**, **s1**, **s2**: space coordinates (typically (x, y, z), (r, θ, z) or
-  (r, θ, ϕ), depending on frame reference)
-* **e**: energy
-* **t**: time
-* **mu, phi**: direction angles µ and φ whose definitions can vary depending on
-  the reference frame of direction [#dir_angles]_.
+:s0, s1, s2:
+    space coordinates (typically (x, y, z), (r, θ, z) or (r, θ, φ), depending
+    on frame reference)
+:e: energy
+:t: time
+:mu, phi: direction angles µ and φ whose definitions can vary depending on
+    the reference frame of direction [#dir_angles]_.
 
 Order should always be that one.
 
@@ -71,16 +71,16 @@ Order should always be that one.
 The result for each bin ``(s0, s1, s2, e, t, mu, phi)`` is filled in a
 `numpy structured array`_ whose :obj:`numpy.dtype` can be:
 
-* meshes: normally ``'score'`` and ``'sigma'`` where *sigma* is in % and
-  *score* in its unit (not necessarly precised in the listing)
-* default spectrum: ``'score'``, ``'sigma'``, ``'score/lethargy'`` where
-  *sigma* is in %, *score* and *score/lethargy* in the unit of the score (not
-  necessarly precised in the listing)
-* spectrum with variance of variance (vov): as default spectrum case + a
-  fourth element named ``'vov'`` (no unit)
-* uncertainties spectrum: in case of *covariance perturbations*, elements are
-  ``'sigma2(means)'``, ``'mean(sigma_n2)'``, ``'sigma(sigma_n2)'`` and
-  ``'fisher test'`` [#uncertainties]_
+:meshes: normally ``'score'`` and ``'sigma'`` where *sigma* is in % and
+    *score* in its unit (not necessarly precised in the listing)
+:default spectrum: ``'score'``, ``'sigma'``, ``'score/lethargy'`` where
+    *sigma* is in %, *score* and *score/lethargy* in the unit of the score (not
+    necessarly precised in the listing)
+:spectrum with variance of variance (vov): as default spectrum case + a
+    fourth element named ``'vov'`` (no unit)
+:uncertainties spectrum: in case of *covariance perturbations*, elements are
+    ``'sigma2(means)'``, ``'mean(sigma_n2)'``, ``'sigma(sigma_n2)'`` and
+    ``'fisher test'`` [#uncertainties]_
 
 
 Spectrum and mesh results don't only consist in arrays: binning (except in
@@ -92,7 +92,7 @@ The final result of spectrum and mesh is returned as a dictionary detailed in
 
 
 Initialization
-``````````````
+--------------
 
 :class:`DictBuilder` cannot be instantiated as it has abstract methods (pure
 virtual): :meth:`~DictBuilder.fill_arrays_and_bins` and
@@ -133,7 +133,7 @@ after flipping if needed.
 .. _eponine-spectrummesh-fill:
 
 Filling arrays and bins
-```````````````````````
+-----------------------
 
 Mesh and spectrum are read from the output listing and first stored as list and
 dictionary following listing structure. Building :obj:`numpy.ndarray` for
@@ -143,37 +143,40 @@ arrays and bins simplifies post-processing. It calls
 To fill arrays and bins needed objects are outputs from the chosen parser. Some
 dictionary keys may be needed:
 
-* mesh: data is a list of all meshes available. Each mesh is a dictionary that
-  can have the following keys:
+mesh:
+    data is a list of all meshes available. Each mesh is a dictionary that can
+    have the following keys:
 
-  * ``'meshes'``: list of dictionary containing the mesh results (mandatory),
-    dictionaries with keys:
+    :``'meshes'``: list of dictionary containing the mesh results (mandatory),
+      dictionaries with keys:
 
-    * ``{'mesh_energyrange': [], 'mesh_vals': [[], ]}`` to get mesh per energy
-      range (mandatory)
-    * ``{'mesh_energyintegrated':, 'mesh_vals': [[], ]}`` if result is also
-      available on the full range of energy but still splitted in space
-      (facultative)
+      * ``{'mesh_energyrange': [], 'mesh_vals': [[], ]}`` to get mesh per
+        energy range (mandatory)
+      * ``{'mesh_energyintegrated':, 'mesh_vals': [[], ]}`` if result is also
+        available on the full range of energy but still splitted in space
+        (facultative)
 
-    A mesh line in the list under ``'mesh_vals'`` key is constructed as a list
-    of ``[[s0, s1, s2], score, sigma]``. In ``'mesh_energyrange'``, energy
-    range is given as ``['unit', e1, e2]``.
+      A mesh line in the list under ``'mesh_vals'`` key is constructed as a
+      list of ``[[s0, s1, s2], score, sigma]``. In ``'mesh_energyrange'``,
+      energy range is given as ``['unit', e1, e2]``.
 
-  * ``'time_step'``: if a time splitting is available
-    Remark: for the moment, no splitting in µ or φ are available.
-  * ``'integrated result'``: if ``'time_step'`` exists, integrated result can
-    be available, meaning integrated over space and energy (not time)
+    :``'time_step'``: if a time splitting is available
+      Remark: for the moment, no splitting in µ or φ are available.
+    :``'integrated result'``: if ``'time_step'`` exists, integrated result can
+      be available, meaning integrated over space and energy (not time)
 
-* spectrum: data is a list of dictionaries containing spectrum results.
-  Possible keys are:
+spectrum:
+    data is a list of dictionaries containing spectrum results.
 
-  * ``'spectrum_vals'``: spectrum values, given in a list
-    ``[e1, e2, score, sigma, score/lethargy]`` (mandatory)
-  * ``'time_step'``: if result splitted in time
-  * ``'mu_angle_zone'``: if result splitted in µ angle
-  * ``'phi_angle_zone'``: if result splitted in φ angle
-  * ``'integrated_res'``: if ``'time_step'`` exits, integrated result can also
-    be given in time steps, so integrated over energy.
+    Possible keys are:
+
+    :``'spectrum_vals'``: spectrum values, given in a list
+      ``[e1, e2, score, sigma, score/lethargy]`` (mandatory)
+    :``'time_step'``: if result splitted in time
+    :``'mu_angle_zone'``: if result splitted in µ angle
+    :``'phi_angle_zone'``: if result splitted in φ angle
+    :``'integrated_res'``: if ``'time_step'`` exits, integrated result can
+      also be given in time steps, so integrated over energy.
 
 When arrays are filled, bins are also filled on their first appearance. At the
 end of the filling special care needs to be taken to bins. Indeed, as usual
@@ -193,8 +196,8 @@ one is not repeated at each step, so needs to be propagated to the next steps
 
 
 
-Result and use in global code
-`````````````````````````````
+Result and use in the framework
+-------------------------------
 
 In the framework, :class:`MeshDictBuilder` and :class:`SpectrumDictBuilder` are
 called in :meth:`convert_mesh` and :meth:`convert_spectrum`, themselves from
@@ -204,67 +207,133 @@ containers. Theses methods then returns dictionaries containing the
 
 .. _eponine-mesh-res:
 
-mesh
-....
-
+mesh:
    Default keys are:
 
-   * ``'mesh'``: 7-dimensions `numpy structured array`_ with :obj:`numpy.dtype`
-     ``('score', 'sigma')``
-   * ``'ebins'``: :obj:`numpy.ndarray` of edges of energy bins
-   * ``'eunit'``: energy unit
+   :``'array'``: 7-dimensions `numpy structured array`_ with
+     :obj:`numpy.dtype` ``('score', 'sigma')``
+   :``'bins'``: :class:`collections.OrderedDict` (str, :obj:`numpy.ndarray`),
+     order corresponds to the order of the shape in the array. Space are
+     normally at center of the bin, while E, t, μ and φ are given as edges. If
+     no binning is available an empty array is present.
+   :``'units'``: available limits (default set, including score and sigma)
 
    Other keys can be available:
 
-   * ``'tbins'``: :obj:`numpy.ndarray` of edges of time bins (if
-     ``'time_step'`` available)
-   * ``'mesh_energyintegrated'``: 7-dimensions `numpy structured array`_ with
+   :``'eintegrated_array'``: 7-dimensions `numpy structured array`_ with
      dtype ``('score', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[n_s0, n_s1, n_s2, 1, n_t, 1, 1]``
-   * ``'integrated_res'``: 7-dimensions `numpy structured array`_ with
+   :``'integrated_res'``: 7-dimensions `numpy structured array`_ with
      dtype ``('score', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[1, 1, 1, 1, n_t, 1, 1]``
-   * ``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
+   :``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
      also given
 
 
 .. _eponine-spectrum-res:
 
-spectrum
-........
-
+spectrum:
    Default keys are:
 
-   * ``'spectrum'``: 7-dimensions `numpy structured array`_ with
+   :``'spectrum'``: 7-dimensions `numpy structured array`_ with
      :obj:`numpy.dtype` ``('score', 'sigma', 'score/lethargy')`` if this is a
      default spectrum, :obj:`numpy.dtype` will change in some cases (vov,
      uncertainties), see :ref:`eponine-spectrummesh-intro`
-   * ``'ebins'``: :obj:`numpy.ndarray` of edges of energy bins
-   * ``'disc_batch'``: number of discarded batchs
+   :``'bins'``: :class:`collections.OrderedDict` (str, :obj:`numpy.ndarray`),
+     order corresponds to the order of the shape in the array. In spectrum no
+     space bins are given (corresponding to empty arrays), other dimensions are
+     normally given as edges when available, else as an empty array.
+   :``'disc_batch'``: number of discarded batchs
 
    Optional keys are:
 
-   * ``'tbins'``: :obj:`numpy.ndarray` of edges of time bins (if
-     ``'time_step'`` available)
-   * ``'mubins'``: :obj:`numpy.ndarray` of edges of µ angle bins (if
-     ``'mu_angle_zone'`` available)
-   * ``'phibins'``: :obj:`numpy.ndarray` of edges of φ angle bins (if
-     ``'phi_angle_zone'`` available)
-   * ``'integrated_res'``: 7-dimensions `numpy structured array`_ with same
-     :obj:`numpy.dtype` as ``'spectrum'`` and list of number of bins
+   :``'integrated_res'``: 7-dimensions `numpy structured array`_ with same
+     :obj:`numpy.dtype` as ``'array'`` and list of number of bins
      (``lnbins``) is ``[1, 1, 1, 1, n_t, 1, 1]`` (integrated over energy)
-   * ``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
+   :``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
      also given
 
 
-.. note::
+Other available arrays
+======================
 
-   If time, µ or φ are not required, their binnings are not available in the
-   final dictionary.
+Green bands
+-----------
+
+Green bands are stored in :obj:`numpy.ndarray` that look like the spectrum or
+mesh ones but with different bins and dtypes, these are 6-dimensions arrays.
+
+The 6 dimensions are given, in order, by:
+
+:se: ``'step'`` in input,  bin of the energy of source (source are treated in
+    energy steps)
+:ns: ``'source'`` in input, number of the source
+:u, v, w: coordinates of the source, ``(0, 0, 0)`` if not given
+:e: energy of the output neutron
+
+The result for each bin (se, ns, u, v, w, e) is filled in a
+`numpy structured array`_ whose :obj:`numpy.dtype` is the default spectrum one,
+``('score', 'sigma', 'score/lethargy')``.
+
+Bins are also stored for all the dimensions in same order as in the array.
+Empty array corresponds to unused dimensions. Like in spectrum, last bins of
+energy (source and followed particle) are added after the main loop.
+
+The returned dictionary contains:
+
+:``'disc_batch'``: number of discarded batchs
+:``'array'``: 6-dimension `numpy structured array`_
+:``'bins'``: :class:`collections.OrderedDict` (str, :obj:`numpy.ndarray`) of
+    bins in same order as array shape
+:``'units'``: dict of units
+
+
+Adjoint results
+---------------
+
+Results obtained from the calculation of the adjoint can beassociated to array
+like spectra or meshes or to more generic scores. Dimensions are usually a bit
+different. The output from Tripoli-4 is also different and has to be treated
+separately.
+
+Different knid of arrays are available, depending on the type of calculation:
+
+Generic adjoint result:
+    corresponds generic scores calculated by IFP or Wielandt methods. They are
+    returned as standard dictionary containing usual integrated results (pair
+    score, sigma), so no array. 'Dimensions' correspond to the dictionary keys
+    (like nucleus, family, length, etc.).
+
+Adjoint criticality results from specific edition:
+    only calculated with the IFP method. Two kind of results are for the moment
+    available: multi-dimensions arrays, close to meshes and arrays in (volume,
+    energy) where volume corresponds to the geometrical id of the volume. The
+    available dimension for the multi-dimensions arrays are: X, Y, Z (only
+    cartesian in space), φ and θ in direction, energy. No time is considered.
+    These spectra inherit from :class:`KinematicDictBuilder` but have a
+    different order of bins compared to spectra and meshes and time is
+    automatically set to 1 bin (integrated).
+
+More details and code are available in :func:`convert_generic_adjoint`,
+:class:`AdjointCritEdDictBuilder` and :class:`VolAdjCritEdDictBuilder`.
+
+
+Nu and (Z,A) spectrum
+---------------------
+
+Spectra indexed by the number of neutrons produced in fission (Nu) and indexed
+by the (Z,A) of the produced fission products (isotopes) as also available as
+spectra.
+
+The results are given as standard array results: a dictionary with the usual
+keys (``'array'``, ``'bins'``, ``'units'``, ``'integrated_res'``,
+``'disc_batch'``).
+
+More details in :func:`convert_nu_spectrum` and :func:`convert_za_spectrum`.
 
 
 |keff| results
---------------
+==============
 
 Only |keff| as generic response are converted in *NumPy* objects; historical
 |keff| block is stored in a dictionary (see
@@ -281,17 +350,17 @@ means that results given are in reality a matrix. One choice in order to store
 .. _eponine-keff-matrix:
 
 Conversion to matrices
-``````````````````````
+----------------------
 The 3 estimators are always considered in the listing order KSTEP, KCOLL,
 KTRACK, so KSTEP = 0, KCOLL = 1 and KTRACK = 2.
 
 Three arrays are filled:
 
-* ``'keff_matrix'``: symmetric matrix 3×3, with k\ :sub:`eff` result for each
+:``'keff_matrix'``: symmetric matrix 3×3, with k\ :sub:`eff` result for each
   estimator on diagonal and combined values off-diagonal (for 2 estimators)
-* ``'correlation_matrix'``: symmetric matrix 3×3, with 1 on diagonal and
+:``'correlation_matrix'``: symmetric matrix 3×3, with 1 on diagonal and
   correlation cofficient off-diagonal (for 2 estimators)
-* ``'sigma_matrix'``: symmetric matrix 3×3 with σ in % for each estimator on
+:``'sigma_matrix'``: symmetric matrix 3×3 with σ in % for each estimator on
   diagonal and combined σ in % off-diagonal (for 2 estimators)
 
 
@@ -347,16 +416,16 @@ Not converged cases are taken into account and return a key
 .. _eponine-keff-stdarrays:
 
 Conversion to standard arrays
-`````````````````````````````
+-----------------------------
 The conversion closer to the output listing is done in :meth:`convert_keff`. A
 dictionary is built with the following elements:
 
-* ``'used_batch'``: number of batchs used
-* ``'full_comb_estimation'``: full combination result (|keff| and σ in %), like
+:``'used_batch'``: number of batchs used
+:``'full_comb_estimation'``: full combination result (|keff| and σ in %), like
   in :ref:`eponine-keff-matrix`
-* ``'res_per_estimator'``: dictionary with estimator as key and `numpy
+:``'res_per_estimator'``: dictionary with estimator as key and `numpy
   structured array`_ with ``dtype = ('keff', 'sigma')`` as value
-* ``'correlation_matrix'``: dictionary with tuple as key and `numpy structured
+:``'correlation_matrix'``: dictionary with tuple as key and `numpy structured
   array`_ as value, ``('estimator1', 'estimator2'):
   numpy.array('correlations', 'combined values', 'combined sigma%')``
 
@@ -365,53 +434,8 @@ set to `numpy.nan`. If the full combination did not converged hte string is
 kept.
 
 
-Green bands
------------
-
-Green bands are stored in :obj:`numpy.ndarray` that look like the spectrum or
-mesh ones but with different bins and dtypes, these are 6-dimensions arrays.
-
-The 6 dimensions are given, in order, by:
-
-* **step**: bin of the energy of source (source are treated in energy steps)
-* **source**: number of the source
-* **u**, **v**, **w**: coordinates of the source, ``(0, 0, 0)`` if not given
-
-The result for each bin (step, source, u, v, w) is filled in a `numpy
-structured array`_ whose :obj:`numpy.dtype` is the default spectrum one,
-``('score', 'sigma', 'score/lethargy')``.
-
-Bins are also stored for the source and for the followed particles. Like in
-spectrum, last bins of energy (source and followed particle) are added after
-the main loop.
-
-.. todo::
-
-   No flip in (source) energy bins is performed for the moment, due to some
-   uncertainty in order of the energy steps for source (so how they are
-   defined).
-
-
-The returned dictionary contains:
-
-* ``'disc_batch'``: number of discarded batchs
-* ``'vals'``: 6-dimension `numpy structured array`_
-* ``'ebins'``: edges of energy bins (particles)
-* ``'sebins'``: edges of source energy bins
-
-
-IFP statistics results
-----------------------
-
-When using Itereted Fission Probability (IFP) method, it is possible to get
-results for each cycle. These results are converted in a `numpy structured
-array`_ with ``dtype = ('length', 'score', 'sigma')``. Dimension of the array
-corresponds to number of cycles used.
-
-
-
 |kij| results
--------------
+=============
 
 |kij| matrix gives the number of neutrons produced by fission in the volume i
 from a neutron emited in the volume j. Its highest eigenvalue is equal to the
@@ -428,7 +452,7 @@ Different |kij| results can be available:
 
 
 |kij| sources
-`````````````
+-------------
 In that case the input dictionary is returned with a conversion of the
 ``'kij_sources_vals'`` as a :obj:`numpy.ndarray`. Its length corresponds to the
 number of volumes.
@@ -437,7 +461,7 @@ number of volumes.
 .. _eponine-kij-result:
 
 |kij| matrix (result)
-`````````````````````
+---------------------
 The |kij| matrix results block contains various results including |kij|
 eigenvalues, |kij| eigenvectors and |kij| matrix that will be converted in
 :obj:`numpy.ndarray` or :obj:`numpy.matrix`. The size of the arrays depends on
@@ -445,22 +469,22 @@ the number of volumes containing fissle material, N.
 
 The returned object is a dictionary containing the following keys and objects:
 
-* ``'used_batch'``: number of batchs used (`int`)
-* ``'kijmkeff_res'``: result of |kij|-|keff| (`float`), where |kij| is the
+:``'used_batch'``: number of batchs used (`int`)
+:``'kijmkeff_res'``: result of |kij|-|keff| (`float`), where |kij| is the
   hightest eigenvalue of |kij|
-* ``'kijdomratio'``: dominant ratio (`float`), ratio between the hightest |kij|
+:``'kijdomratio'``: dominant ratio (`float`), ratio between the hightest |kij|
   eigenvalue and the next one
-* ``'kij_eigenval'``: :obj:`numpy.ndarray` of N **complex** numbers (real and
+:``'kij_eigenval'``: :obj:`numpy.ndarray` of N **complex** numbers (real and
   imaginary parts given in the listings) corresponding to the eigenvalues.
-* ``'kij_eigenvec'``: :obj:`numpy.ndarray` of N vectors of N elements
+:``'kij_eigenvec'``: :obj:`numpy.ndarray` of N vectors of N elements
   corresponding to eigenvectors.
-* ``'kij_matrix'``: :obj:`numpy.matrix` of N×N being the |kij| matrix.
+:``'kij_matrix'``: :obj:`numpy.matrix` of N×N being the |kij| matrix.
 
 
 .. _eponine-kij-in-keff:
 
 |kij| in |keff| block
-`````````````````````
+---------------------
 |kij| results are also present in the "historical" |keff| block, as an
 additional estimator. Results are presented in a different way and are
 different... Typical results are |kij| - |keff|, the eigenvector corresponding
@@ -470,26 +494,26 @@ sensibility matrix.
 The returned object is a dictionary with the following keys (faculative can be
 specified):
 
-* ``'estimator'``: name of the estimator (`str`), ``'KIJ'`` here
-* ``'batchs_kept'``: number of batchs used to calculate the |keff| from |kij|
-  (`int`)
-* ``'kij-keff'``: result of |kij|-|keff| (`float`), using the best estimation
+:``'estimator'``: name of the estimator (:class:`str`), ``'KIJ'`` here
+:``'batchs_kept'``: number of batchs used to calculate the |keff| from |kij|
+  (:class:`int`)
+:``'kij-keff'``: result of |kij|-|keff| (`float`), using the best estimation
   of |kij|
-* ``'nbins'``: **facultative**, number of volumes/mesh elements considered, or
-  N, (`int`)
-* ``'spacebins'``: **facultative**, list of N volumes/mesh elements considered
+:``'nbins'``: **facultative**, number of volumes/mesh elements considered, or
+  N, (:class:`int`)
+:``'spacebins'``: **facultative**, list of N volumes/mesh elements considered
   (:obj:`numpy.ndarray` of
 
-    * `int` for volumes,
-    * `tuple` (s0, s1, s2) for mesh elements with (`int`, `int`, `int`)),
+    * :class:`int` for volumes,
+    * :class:`tuple` of :class:`int` (s0, s1, s2) for mesh elements,
 
-* ``'eigenvector'``: eigenvector corresponding to best estimation
+:``'eigenvector'``: eigenvector corresponding to best estimation
   (:obj:`numpy.ndarray` of N elements)
-* ``'keff_KIJ_matrix'``: |kij| matrix for best estimation of |keff|
+:``'keff_KIJ_matrix'``: |kij| matrix for best estimation of |keff|
   (N×N :obj:`numpy.matrix`)
-* ``'keff_StdDev_matrix'``: standard deviation matrix for best estimation of
+:``'keff_StdDev_matrix'``: standard deviation matrix for best estimation of
   |keff| (N×N :obj:`numpy.matrix`)
-* ``'keff_sensibility_matrix'``: sensibility matrix for best estimation of
+:``'keff_sensibility_matrix'``: sensibility matrix for best estimation of
   |keff| (N×N :obj:`numpy.matrix`)
 
 .. rubric:: Footnotes
@@ -512,6 +536,11 @@ specified):
         - ``'fisher test'``: this is an estimator more than a test
         - Variance, or sigma_n2 is given by:
           :math:`v_n = \frac{\sum^n_i{(x_i -m)^2}}{n(n-1)}`
+
+
+
+Module API
+==========
 '''
 
 import logging
@@ -890,10 +919,10 @@ def _get_number_of_bins(spectrum):
                      dictionary may be needed.
     :returns: 4 integers in following order
 
-          - *nphibins* = number of bins in phi angle, default = 1
-          - *nmubins* = number of bins in mu angle, default = 1
-          - *ntbins* = number of bins in time, default = 1
-          - *nebins* = number of bins in energy, no default
+          :nphibins: number of bins in phi angle, default = 1
+          :nmubins: number of bins in mu angle, default = 1
+          :ntbins: number of bins in time, default = 1
+          :nebins: number of bins in energy, no default
 
     Mu and phi angle are angles relative to the direction of the particle.
     '''
@@ -928,10 +957,9 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
         binnings as NumPy arrays
         ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma', 'score/lethargy')``
       * ``'disc_batchs'``: number of discarded batchs for the score
-      * ``'ebins'``: energy binning
-      * ``'tbins'``: time binning if time grid required
-      * ``'mubins'``: mu binning if mu grid required
-      * ``'phibins'``: phi binning if phi grid required
+      * ``'bins'``: :class:`collections.OrderedDict` of the available bins
+      * ``'units'``: dict containing units of dimensions (bins), score and
+        sigma
       * ``'integrated_res'``: 7 dimensions NumPy structured array
         ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma')``;
         facultative, seen when time required alone and sometimes
@@ -978,9 +1006,9 @@ def _get_number_of_space_bins(meshvals):
                           s0, s1 and s2 being the space coordinates
     :returns: 3 integers in following order
 
-        - *ns0bins*: number of bins in the s0 dimension
-        - *ns1bins*: number of bins in the s1 dimension
-        - *ns2bins*: number of bins in the s2 dimension
+        :ns0bins: number of bins in the s0 dimension
+        :ns1bins: number of bins in the s1 dimension
+        :ns2bins: number of bins in the s2 dimension
     '''
     lastspacebin = meshvals[-1][0]
     ns0bins = lastspacebin[0]+1
@@ -1033,12 +1061,12 @@ def convert_mesh(meshres):
 
     :returns: python dictonary with keys
 
-        * ``'mesh'``: NumPy structured array of dimension 7
+        * ``'array'``: NumPy structured array of dimension 7
           ``v[s0, s1 ,s2, E, t, mu, phi] = ('score', 'sigma')``
-        * ``'eunit'``: energy unit
-        * ``'ebins'``: energy bin edges (size = number of bins + 1)
-        * ``'tbins'``: time binning if time grid required
-        * ``'eintegrated_mesh'``: 7-dimensions NumPy structured array
+        * ``'bins'``: :class:`collections.OrderedDict` of the available bins
+        * ``'units'``: dict containing units of dimensions (bins), score and
+          sigma
+        * ``'eintegrated_array'``: 7-dimensions NumPy structured array
           ``v[s0,s1,s2,E,t,mu,phi] = ('score', 'sigma')``
           corresponding to mesh integrated on energy (facultative)
         * ``'integrated_res'``: 7 dimensions NumPy structured array
@@ -1165,11 +1193,13 @@ def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
       Default = ``['score', 'sigma']``
     :returns: dictionary with keys and elements
 
-      * ``'spectrum'``: 1 dimension NumPy structured array with related
+      * ``'array'``: 1 dimension NumPy structured array with related
         binnings as NumPy arrays
         ``v[nu] = ('score', 'sigma')``
       * ``'disc_batchs'``: number of discarded batchs for the score
-      * ``'nubins'``: nu binning
+      * ``'bins'``: :class:`collections.OrderedDict`, nu binning
+      * ``'units'``: dict containing units of dimensions (bins), score and
+        sigma
       * ``'integrated_res'``: 1 dimension NumPy structured array
         ``v[nu] = ('score', 'sigma')``
       * ``'used_batch'``: number of used batchs (only if integrated result)
@@ -1592,7 +1622,14 @@ class AdjointCritEdDictBuilder(KinematicDictBuilder):
         as done per default in :class:`DictBuilder`.
 
         Order of the kinematic variables is also different from the usual
-        spectra or mesh.
+        spectra or mesh. Time is a 'fake' dimension (only one bin available, no
+        splitting allowed there).
+
+        Dimensions are then, in bins order and array order (seen in shape):
+        ``('X', 'Y', 'Z', 'Phi', 'Theta', 'E', 't')```.
+
+        Dimensions not present in the screened result are set to empty array in
+        the bins :class:`collections.OrderedDict` and to 1 in the array shape.
         '''
         lnbins, odbins = [], OrderedDict()
         for var in AdjointCritEdDictBuilder.VARS:
@@ -1643,6 +1680,9 @@ class VolAdjCritEdDictBuilder(DictBuilder):
 
         Caution: in that case bins are direclty sent, not 'only' their number
         as done per default in :class:`DictBuilder`.
+
+        Two kinds of bins are expected: Vol (volume id in geometry) and E
+        (energy).
         '''
         LOGGER.debug("VolAdjCritEdDictBuilder: bins = %s", bins)
         lnbins = [bins['Vol'].size, bins['E'].size-1]
