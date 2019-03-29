@@ -769,9 +769,35 @@ class MeshDictBuilder(KinematicDictBuilder):
         '''
         LOGGER.debug("Initialisation of MeshDictBuilder")
         super().__init__(colnames, lnbins)
-        self.bins['s0'] = np.arange(lnbins[0])
-        self.bins['s1'] = np.arange(lnbins[1])
-        self.bins['s2'] = np.arange(lnbins[2])
+
+    def _fill_space_bins(self, meshvals):
+        '''Fill the space bins.
+
+        Two different cases are possible:
+
+        * the default one, where only the cell indices are given: the space
+          bins are set to all possible cell index in the 3 dimensions. For
+          example: if there are 3 cells in `s0`, the bins will be 0, 1, 2.
+          Only center of bins are given here (no possibility of calculation of
+          a width).
+        * a standard MESH was required with the option ``MESH_INFO`` in
+          Tripoli-4: center of cells are given in all dimensions, the space
+          bins will be set to these values. Width can be calculated (regular
+          binning but possible in any case), but not done here. If needed for
+          plot representation this will be proposed at the plotting step.
+
+        :param list meshvals: mesh data for a given energy bin
+                         ``[[[s0, s1, s2], score, sigma],...]``
+        '''
+        LOGGER.debug("Filling space bins")
+        if isinstance(meshvals[0][1], float):
+            self.bins['s0'] = np.arange(self.arrays['default'].shape[0])
+            self.bins['s1'] = np.arange(self.arrays['default'].shape[1])
+            self.bins['s2'] = np.arange(self.arrays['default'].shape[2])
+        else:
+            self.bins['s0'] = np.unique([smesh[1][0] for smesh in meshvals])
+            self.bins['s1'] = np.unique([smesh[1][1] for smesh in meshvals])
+            self.bins['s2'] = np.unique([smesh[1][2] for smesh in meshvals])
 
     def _fill_mesh_array(self, meshvals, name, ebin):
         '''Fill mesh array.
@@ -785,7 +811,7 @@ class MeshDictBuilder(KinematicDictBuilder):
         for smesh in meshvals:
             index = (smesh[0][0], smesh[0][1], smesh[0][2],
                      ebin, self.itime, self.imu, self.iphi)
-            self.arrays[name][index] = np.array(tuple(smesh[1:]),
+            self.arrays[name][index] = np.array(tuple(smesh[-2:]),
                                                 dtype=self.arrays[name].dtype)
 
     def fill_arrays_and_bins(self, data):
@@ -800,6 +826,7 @@ class MeshDictBuilder(KinematicDictBuilder):
           (facultative, integrated over energy, still splitted in space)
         * ``'integrated_res'`` (over energy and space, splitted in time)
         '''
+        self._fill_space_bins(data[0]['meshes'][0]['mesh_vals'])
         for ires in data:
             LOGGER.debug("MeshDictBuilder.fill_arrays_bins, "
                          "keys: %s, number of elements: %d",
@@ -1011,6 +1038,9 @@ def _get_number_of_space_bins(meshvals):
         :ns2bins: number of bins in the s2 dimension
     '''
     lastspacebin = meshvals[-1][0]
+    # theoriquement impossible car dans T4...
+    # if len(lastspacebin) != 3:
+    #     raise IndexError("We should have 3 space coordinates.")
     ns0bins = lastspacebin[0]+1
     ns2bins = (meshvals[-int(lastspacebin[2]+2)][0][2]+1
                if lastspacebin[2]+1 < len(meshvals)
@@ -1304,8 +1334,8 @@ def _get_za_bins(values):
     z_vals = [vals[0] for vals in values]
     a_vals = [vals[1] for vals in values]
     bins = OrderedDict()
-    bins['Z'] = np.array(np.unique(z_vals), dtype=ITYPE)
-    bins['A'] = np.array(np.unique(a_vals), dtype=ITYPE)
+    bins['Z'] = np.unique(z_vals)
+    bins['A'] = np.unique(a_vals)
     if bins['Z'].size * bins['A'].size != len(values):
         LOGGER.warning("Length of the Z,A spectrum does not correspnds to "
                        "len(Z) * len(A). This may be expected if values are "
