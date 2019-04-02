@@ -16,7 +16,6 @@ Welcome to valjean's documentation!
    getting_started
    devs
    modules
-   tests
    changelog
 
 

@@ -77,8 +77,8 @@ offers a flexible and `well-documented API
 leverage :mod:`hypothesis` whenever possible.
 
 If you want some examples within :mod:`valjean`, a good place to start is the
-:mod:`~tests.cosette.test_depgraph` test module, which tests the invariants of
-the :class:`~valjean.cosette.depgraph.DepGraph` class.
+``tests.cosette.test_depgraph`` test module, which tests the invariants of the
+:class:`~valjean.cosette.depgraph.DepGraph` class.
 
 .. _doctest-tests:
 
