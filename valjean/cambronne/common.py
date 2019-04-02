@@ -25,29 +25,34 @@ class Command:
     def execute(self, args, collected_tasks, config):
         '''Execute a generic command.'''
 
-        LOGGER.debug('building graph for tasks: %s', collected_tasks)
-        graph = build_graph(collected_tasks)
-        LOGGER.debug('resulting graph: %s', graph)
-        LOGGER.info('graph contains %s tasks', len(graph))
+        LOGGER.debug('building graphs for tasks: %s', collected_tasks)
+        hard_graph, soft_graph = build_graphs(collected_tasks)
+        LOGGER.debug('resulting hard_graph: %s', hard_graph)
+        LOGGER.debug('resulting soft_graph: %s', soft_graph)
+        LOGGER.info('hard_graph contains %s tasks', len(hard_graph))
+        LOGGER.info('soft_graph contains %s tasks', len(soft_graph))
 
         env = init_env(path=args.env_path, skip_read=args.env_skip_read,
                        fmt=args.env_format)
-        new_env = schedule(graph, env=env, config=config)
+        new_env = schedule(hard_graph=hard_graph, soft_graph=soft_graph,
+                           env=env, config=config)
 
-        self.task_diagnostics(graph=graph, env=new_env, config=config)
+        self.task_diagnostics(tasks=collected_tasks,
+                              env=new_env, config=config)
 
         if not args.env_skip_write:
             write_env(env=env, path=args.env_path, fmt=args.env_format)
         return new_env
 
     @classmethod
-    def task_diagnostics(cls, *, graph, env, config):
+    def task_diagnostics(cls, *, tasks, env, config):
         '''Emit diagnostic messages about the status of the tasks. Count how
         many have succeeded, how many have failed, etc.  If any tasks have
         failed, this method writes their names in a file called 'failed_tasks'
         in the log directory.
 
-        :param DepGraph graph: the dependency graph.
+        :param tasks: the tasks that have been scheduled.
+        :type tasks: list(Task)
         :param Env env: the environment.
         :param Config config: the configuration object.
         '''
@@ -55,7 +60,7 @@ class Command:
         count_status = Counter()
         missing = []
         failed = []
-        for task in graph.nodes():
+        for task in tasks:
             task_name = task.name
             if task_name in env:
                 status = env[task.name]['status']
@@ -70,7 +75,7 @@ class Command:
                            'environment: %s',
                            len(missing), '\n  '.join(missing))
 
-        total_graph = len(graph)
+        total_graph = len(tasks)
         msgs = ('{:>7}: {}/{} ({:5.1f}%)'
                 .format(status.name, count, total_graph, 100*count/total_graph)
                 for status, count in count_status.items())
@@ -96,17 +101,21 @@ class Command:
                 failed_file.write(task + '\n')
 
 
-def build_graph(tasks):
-    '''Build a dependency graph according to the CLI parameters and the
+def build_graphs(tasks):
+    '''Build the dependency graphs according to the CLI parameters and the
     configuration.'''
 
-    graph = DepGraph()
+    hard_graph = DepGraph()
+    soft_graph = DepGraph()
     for task in tasks:
-        graph.add_node(task)
+        hard_graph.add_node(task)
+        soft_graph.add_node(task)
         for dep in task.depends_on:
-            graph.add_dependency(task, on=dep)
+            hard_graph.add_dependency(task, on=dep)
+        for dep in task.soft_depends_on:
+            soft_graph.add_dependency(task, on=dep)
 
-    return graph
+    return hard_graph, soft_graph
 
 
 def init_env(*, path, skip_read, fmt):
@@ -156,11 +165,11 @@ def write_env(env, *, path, fmt):
         LOGGER.debug('skipping environment serialization')
 
 
-def schedule(graph, *, env, config=None):
+def schedule(*, hard_graph, soft_graph, env, config=None):
     '''Schedule a graph for execution.
 
     '''
-    scheduler = Scheduler(graph)
+    scheduler = Scheduler(hard_graph=hard_graph, soft_graph=soft_graph)
     new_env = scheduler.schedule(env=env, config=config)
     LOGGER.debug('resulting environment: %s', new_env)
     return new_env

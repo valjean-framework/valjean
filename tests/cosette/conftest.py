@@ -285,9 +285,12 @@ def dep_dicts(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
     keys = draw(lists(elements, unique=True, **kwargs).map(sorted))
     dag = {}
     for i, key in enumerate(keys):
-        vals = draw(sets(sampled_from(keys[i+1:]),
-                         min_size=min_deps,
-                         max_size=max_deps))
+        if i == len(keys) - 1:
+            vals = set()
+        else:
+            vals = draw(sets(sampled_from(keys[i+1:]),
+                             min_size=min_deps,
+                             max_size=max_deps))
         dag[key] = vals
     return dag
 
@@ -456,3 +459,12 @@ def failing_tasks(draw, min_size=1, max_size=20):
     n_tasks = draw(integers(min_value=min_size, max_value=max_size))
     tasks = [FailingTask('FailingTask {}'.format(i)) for i in range(n_tasks)]
     return tasks
+
+
+@pytest.fixture(scope='function')
+def quiet(caplog):
+    '''This fixture will temporarily set the level of the ``valjean`` logger to
+    CRITICAL, in order to silence any warning/error that may be produced.'''
+    import logging
+    with caplog.at_level(logging.CRITICAL, logger='valjean'):
+        yield

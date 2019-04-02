@@ -188,7 +188,7 @@ dependency graph:
     >>> from valjean.cosette.depgraph import DepGraph
     >>> graph = DepGraph.from_dependency_dictionary(deps)
     >>> from valjean.cosette.scheduler import Scheduler
-    >>> scheduler = Scheduler(graph)
+    >>> scheduler = Scheduler(hard_graph=graph)
     >>> final_env = scheduler.schedule()
 
 And now we can extract the results from the final environment:
@@ -256,7 +256,7 @@ class PythonTask(Task):
     '''Task that executes specified Python code.'''
 
     def __init__(self, name, func, *, args=None, kwargs=None,
-                 env_kwarg=None, config_kwarg=None, deps=None):
+                 env_kwarg=None, config_kwarg=None, deps=None, soft_deps=None):
         '''Initialize the task with a function, a tuple of arguments and a
         dictionary of kwargs.
 
@@ -275,10 +275,14 @@ class PythonTask(Task):
         :param deps: If this task depends on other tasks (and valjean cannot
                      automatically discover this), pass them (as a list) to the
                      `deps` parameter.
-        :type deps: None or list of :class:`~.Task` objects.
+        :type deps: None or collection of :class:`~.Task` objects.
+        :param soft_deps: If this task has a soft dependency on other tasks
+                          (and valjean cannot automatically discover this),
+                          pass them (as a list) to the `soft_deps` parameter.
+        :type soft_deps: None or collection of :class:`~.Task` objects.
         '''
         import copy
-        super().__init__(name=name, deps=deps)
+        super().__init__(name=name, deps=deps, soft_deps=soft_deps)
         self.func = func
         self.args = copy.deepcopy(args) if args is not None else ()
         self.kwargs = copy.deepcopy(kwargs) if kwargs is not None else {}

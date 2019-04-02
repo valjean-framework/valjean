@@ -280,7 +280,8 @@ class RunTask(PythonTask):
                             'of lists (or tuples)')
         return cls(name, lambda _env, _config: clis, **kwargs)
 
-    def __init__(self, name, clis_closure, *, deps=None, **subprocess_args):
+    def __init__(self, name, clis_closure, *, deps=None, soft_deps=None,
+                 **subprocess_args):
         '''Initialize this task from a list of command lines.
 
         The `clis_closure` argument must be a closure. It will be invoked at
@@ -300,12 +301,19 @@ class RunTask(PythonTask):
                      :meth:`Task.__init__ <valjean.cosette.task.Task.__init__>`
                      for the format), or `None`.
         :type deps: list(Task) or None
+        :param soft_deps: The dependencies for this task (see
+                          :meth:`Task.__init__
+                          <valjean.cosette.task.Task.__init__>` for the
+                          format), or `None`.
+        :type soft_deps: list(Task) or None
         '''
         super().__init__(name, self.run_task(clis_closure, name,
                                              **subprocess_args),
-                         deps=deps, env_kwarg='env', config_kwarg='config')
+                         deps=deps, soft_deps=soft_deps,
+                         env_kwarg='env', config_kwarg='config')
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
         LOGGER.debug('  - deps = %s', deps)
+        LOGGER.debug('  - soft_deps = %s', soft_deps)
         LOGGER.debug('  - subprocess_args = %s', subprocess_args)
 
     # pylint: disable=unused-argument
@@ -491,16 +499,18 @@ class RunTaskFactory:
                                              **kwargs)
         return clis_closure
 
-    def __init__(self, make_closure, *, deps=None, uid, **kwargs):
+    def __init__(self, make_closure, *, deps=None, soft_deps=None, uid,
+                 **kwargs):
         self.make_closure = make_closure
         self.deps = [] if deps is None else deps
+        self.soft_deps = [] if soft_deps is None else soft_deps
         self.kwargs = kwargs
         self.cache = {}
         self.uid = uid
         LOGGER.debug('creating factory with UID: %s', self.uid)
 
     def make(self, *, name=None, extra_args=None,
-             subprocess_args=None, deps=None, **kwargs):
+             subprocess_args=None, deps=None, soft_deps=None, **kwargs):
         '''Create a :class:`RunTask` object.
 
         :param name: the name of the task to be generated, as a string. If
@@ -518,20 +528,23 @@ class RunTaskFactory:
                      :meth:`from_build` automatically inject dependencies on
                      the checkout and build tasks, respectively.
         :type deps: list(Task) or None
+        :param soft_deps: A list of soft dependencies for the generated task.
+        :type soft_deps: list(Task) or None
         :param kwargs: Any remaining keyword arguments will be used to format
                        the command line before execution. The environment and
                        the configuration are available at formatting time as
                        ``env`` and ``config``, respectively.
         '''
-        e_args = [] if extra_args is None else extra_args
-        sp_args = {} if subprocess_args is None else subprocess_args
-        deps_ = [] if deps is None else deps
+        extra_args = [] if extra_args is None else extra_args
+        subprocess_args = {} if subprocess_args is None else subprocess_args
+        deps = [] if deps is None else deps
+        soft_deps = [] if soft_deps is None else soft_deps
         kwargs_ = self.kwargs.copy()
         kwargs_.update(kwargs)
-        cli_closure = self.make_closure(e_args, **kwargs_)
+        cli_closure = self.make_closure(extra_args, **kwargs_)
 
         # handle caching
-        uid = det_hash(self.uid, e_args, kwargs_)
+        uid = det_hash(self.uid, extra_args, kwargs_)
         if uid in self.cache:
             LOGGER.debug('cache hit for uid %s', uid)
             cached_task = self.cache[uid]
@@ -543,11 +556,16 @@ class RunTaskFactory:
         LOGGER.debug('cache miss for uid %s', uid)
         name = name if name is not None else 'run#' + str(uid)
 
-        task = RunTask(name, cli_closure, deps=self.deps + deps_, **sp_args)
+        task = RunTask(name, cli_closure,
+                       deps=self.deps + deps,
+                       soft_deps=self.soft_deps + soft_deps,
+                       **subprocess_args)
         self.cache[uid] = task
         return task
 
     def copy(self):
         '''Return a copy of this object.'''
-        return self.__class__(self.make_closure, deps=self.deps.copy(),
+        return self.__class__(self.make_closure,
+                              deps=self.deps.copy(),
+                              soft_deps=self.soft_deps.copy(),
                               uid=self.uid, **self.kwargs)

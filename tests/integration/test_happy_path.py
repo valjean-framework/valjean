@@ -109,11 +109,15 @@ def test_run(job_config, target, env_path):
 
 @pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho'],
                          ids=['no target', 'checkout_cecho', 'build_cecho'])
-def test_graph(job_config, target, env_path, capsys):
+@pytest.mark.parametrize('dependencies', [None, 'hard', 'soft', 'both'])
+def test_graph(job_config, target, dependencies, env_path, capsys):
     '''Test that the `graph` command produces syntactically valid graphviz
     files.'''
     pydot = pytest.importorskip('pydot')
     args = ['graph']
+    if dependencies is not None:
+        args.append('--dependencies')
+        args.append(dependencies)
     if target is not None:
         args.append(target)
     run_valjean(args, job_config=job_config, env_path=env_path)
@@ -123,12 +127,16 @@ def test_graph(job_config, target, env_path, capsys):
 
 @pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho'],
                          ids=['no target', 'checkout_cecho', 'build_cecho'])
-def test_graph_on_file(job_config, target, env_path, tmpdir):
+@pytest.mark.parametrize('dependencies', [None, 'hard', 'soft', 'both'])
+def test_graph_on_file(job_config, target, dependencies, env_path, tmpdir):
     '''Test that the `graph` command produces syntactically valid graphviz
     files.'''
     pydot = pytest.importorskip('pydot')
     output_file = tmpdir / 'graph.dot'
     args = ['graph', '-o', str(output_file)]
+    if dependencies is not None:
+        args.append('--dependencies')
+        args.append(dependencies)
     if target is not None:
         args.append(target)
     run_valjean(args, job_config=job_config, env_path=env_path)

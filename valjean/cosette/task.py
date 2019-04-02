@@ -17,6 +17,14 @@ The :meth:`.Task.do()` method takes two arguments:
 * `config` is a :class:`~.config.Config` object describing the configuration
   for the current run. Tasks may look up global configuration values here.
 
+The :class:`Task` class models two types of inter-task dependencies. **Hard
+dependencies** represent dependencies that are crucial for the execution of the
+task at hand. If task `A` has a hard dependency on task `B`, it means that `A`
+cannot run unless `B` has successfully completed. If `B` fails, then it makes
+no sense to run `A`.  On the other hand, if task `A` has a **soft dependency**
+on task `B`, it means that `A` will not start before `B`'s termination, but it
+makes sense to run `A` even if `B` fails.
+
 If you derive a class derived from :class:`Task`, you may want to redefine the
 value of the ``PRIORITY`` class attribute to declare at which point in the
 conventional :program:`valjean` workflow your new task is expected to appear.
@@ -59,16 +67,21 @@ class Task(ABC):
     #: of this attribute.
     PRIORITY = 0
 
-    def __init__(self, name, *, deps=None):
+    def __init__(self, name, *, deps=None, soft_deps=None):
         '''Initialize the task.
 
         :param str name: The name of the task.
-        :param deps: The list of dependencies for this task. It must be either
-                     `None` (i.e. no dependencies) or list of :class:`Task`
-                     objects.
+        :param deps: The list of (hard) dependencies for this task. It must be
+                     either `None` (i.e. no dependencies) or list of
+                     :class:`Task` objects.
         :type deps: list(Task) or None
+        :param soft_deps: The list of soft dependencies for this task. It must
+                          be either `None` (i.e. no dependencies) or list of
+                          :class:`Task` objects.
+        :type soft_deps: list(Task) or None
         '''
         self.name = name
+
         self.depends_on = set()
         if deps is not None:
             if not isinstance(deps, (tuple, list, set)):
@@ -77,6 +90,15 @@ class Task(ABC):
                           'type {} found'.format(type(deps)))
                 raise TypeError(errmsg)
             self.depends_on.update(deps)
+
+        self.soft_depends_on = set()
+        if soft_deps is not None:
+            if not isinstance(soft_deps, (tuple, list, set)):
+                errmsg = ('The `soft_deps` task argument must '
+                          'be either a collection of tasks or None; '
+                          'type {} found'.format(type(soft_deps)))
+                raise TypeError(errmsg)
+            self.soft_depends_on.update(soft_deps)
 
     @abstractmethod
     def do(self, env, config):
@@ -95,6 +117,14 @@ class Task(ABC):
     def add_dependency(self, dep):
         '''Add an item to the list of dependencies of this task.'''
         self.depends_on.add(dep)
+
+    def depends(self, other):
+        '''Return `True` if `self` depends on `other`.'''
+        return other in self.depends_on
+
+    def soft_depends(self, other):
+        '''Return `True` if `self` has a soft dependency on `other`.'''
+        return other in self.soft_depends_on
 
 
 class DelayTask(Task):

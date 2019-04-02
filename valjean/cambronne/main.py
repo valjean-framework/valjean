@@ -176,8 +176,11 @@ def tasks_and_dependencies(tasks):
     while queue:
         deps = set(dep for task in queue for dep in task.depends_on
                    if task.depends_on is not None)
+        soft_deps = set(dep for task in queue for dep in task.soft_depends_on
+                        if task.soft_depends_on is not None)
         all_tasks.update(deps)
-        queue = deps
+        all_tasks.update(soft_deps)
+        queue = deps | soft_deps
     return list(all_tasks)
 
 

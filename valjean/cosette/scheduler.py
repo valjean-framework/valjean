@@ -17,7 +17,7 @@ Example usage:
    ...     })
 
    >>> from valjean.cosette.scheduler import Scheduler
-   >>> s = Scheduler(g)
+   >>> s = Scheduler(hard_graph=g)
    >>> env = s.schedule()  # executes the tasks in the correct order
 '''
 
@@ -36,40 +36,53 @@ class Scheduler:
     '''Schedule a number of tasks.
 
     The Scheduler class has the responsibility of scheduling and executing a
-    number of tasks.  Here `depgraph` is a :class:`~.depgraph.DepGraph`
-    describing the dependencies among the tasks to be executed, and `backend`
-    should be an instance of a `*Scheduling` class such as
-    :class:`.QueueScheduling`, or at any rate a class that exhibits an
-    :meth:`~.execute_tasks()` method with the correct signature (see
-    :meth:`.QueueScheduling.execute_tasks()`). If `backend` is `None`, the
-    default backend will be used.
+    number of tasks.  Here `hard_graph` is a :class:`~.depgraph.DepGraph`
+    describing the *hard* dependencies among the tasks to be executed (see
+    :mod:`~.task` for details about *hard* vs. *soft* dependencies);
+    `soft_graph` is a :class:`~.depgraph.DepGraph` describing the *soft*
+    dependencies alone; finally, `backend` should be an instance of a
+    `*Scheduling` class such as :class:`.QueueScheduling`, or at any rate a
+    class that exhibits an :meth:`~.execute_tasks()` method with the correct
+    signature (see :meth:`.QueueScheduling.execute_tasks()`). If `backend` is
+    `None`, the default backend will be used.
 
-    :param depgraph: The task dependency graph.
+    :param DepGraph hard_graph: The dependency graph for hard dependencies.
+    :param soft_graph: The dependency graph for soft dependencies.
+    :type soft_graph: DepGraph or None
     :param backend: The scheduling backend.
-    :type depgraph: DepGraph
     :type backend: None or QueueScheduling
     :raises ValueError: if `depgraph` is not an instance of
                         :class:`~.DepGraph`.
     :raises SchedulerError: if the tasks do not have any ``do()`` method.
     '''
 
-    def __init__(self, depgraph: DepGraph, backend=None):
+    def __init__(self, *, hard_graph, soft_graph=None, backend=None):
         '''Initialize the scheduler with a graph.'''
 
-        if not isinstance(depgraph, DepGraph):
+        if not isinstance(hard_graph, DepGraph):
             raise ValueError('Scheduler must be initialised with a '
-                             'DepGraph')
+                             'DepGraph (`hard_graph`)')
+
+        if not isinstance(soft_graph, (DepGraph, type(None))):
+            raise ValueError('Scheduler must be initialised with a '
+                             'DepGraph or None (`soft_graph`)')
+
+        soft_graph = DepGraph() if soft_graph is None else soft_graph.copy()
+        self.hard_graph = hard_graph.copy().flatten()
+        self.full_graph = (hard_graph + soft_graph).flatten()
+
+        # make sure that all nodes appear in the hard graph
+        for node in self.full_graph.nodes():
+            self.hard_graph.add_node(node)
 
         # check that all the nodes of the graph can be executed (i.e. they
         # should have a do() method)
-        for node in depgraph.nodes():
+        for node in self.full_graph.nodes():
             if not hasattr(node, 'do') or not hasattr(node.do, '__call__'):
                 raise SchedulerError('Cannot schedule tasks for execution: '
                                      'node {} does not have a do() method'
                                      .format(node))
 
-        self.depgraph = depgraph.copy().flatten()
-        self.sorted_list = depgraph.topological_sort()
         if backend is None:
             self.backend = QueueScheduling()
         else:
@@ -79,16 +92,20 @@ class Scheduler:
         '''Schedule the tasks!
 
         :param Env env: An initial environment for the scheduled tasks. This
-                        allows completed tasks to inform other, dependent tasks
-                        of e.g.  the location of interesting files.
+            allows completed tasks to inform other, dependent tasks of e.g.
+            the location of interesting files.
+        :param Config config: the configuration object.
         :returns: The modified environment.
         '''
 
         if env is None:
             env = Env()
         LOGGER.info('scheduling tasks')
-        LOGGER.debug('for graph %s', self.depgraph)
+        LOGGER.debug('for full graph %s', self.full_graph)
+        LOGGER.debug('for soft graph %s', self.hard_graph)
         LOGGER.debug('with env %s', env)
-        self.backend.execute_tasks(tasks=self.sorted_list, graph=self.depgraph,
+        LOGGER.debug('with config %s', config)
+        self.backend.execute_tasks(full_graph=self.full_graph,
+                                   hard_graph=self.hard_graph,
                                    env=env, config=config)
         return env

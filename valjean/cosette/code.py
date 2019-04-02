@@ -120,7 +120,7 @@ class CheckoutTask(PythonTask):
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, name, *, repository, checkout_root=None, log_root=None,
-                 flags=None, ref=None, vcs='git', deps=None):
+                 flags=None, ref=None, vcs='git', deps=None, soft_deps=None):
         '''Construct a :class:`CheckoutTask`.
 
         :param str name: The name of this task.
@@ -141,6 +141,10 @@ class CheckoutTask(PythonTask):
                :meth:`Task.__init__() <valjean.cosette.task.Task.__init__>`
                for the format), or `None`.
         :type deps: list(Task) or None
+        :param soft_deps: The soft dependencies for this task (see
+               :meth:`Task.__init__() <valjean.cosette.task.Task.__init__>`
+               for the format), or `None`.
+        :type soft_deps: list(Task) or None
         '''
 
         self.log_root = log_root
@@ -210,7 +214,8 @@ class CheckoutTask(PythonTask):
                                   'elapsed_time': elapsed}}
             return env_up, status
 
-        super().__init__(name, checkout, deps=deps, config_kwarg='config')
+        super().__init__(name, checkout, deps=deps, soft_deps=soft_deps,
+                         config_kwarg='config')
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
 
@@ -230,7 +235,7 @@ class BuildTask(PythonTask):
     # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
     def __init__(self, name, source, *, build_root=None, log_root=None,
                  targets=None, build_system='cmake', configure_flags=None,
-                 build_flags=None, deps=None):
+                 build_flags=None, deps=None, soft_deps=None):
         '''Construct a :class:`BuildTask`.
 
         :param str name: The name of this task.
@@ -258,6 +263,11 @@ class BuildTask(PythonTask):
                      <valjean.cosette.task.Task.__init__>` for the type), or
                      `None`.
         :type deps: list(Task) or None
+        :param soft_deps: The soft dependencies for this task (see
+                          :meth:`Task.__init__()
+                          <valjean.cosette.task.Task.__init__>` for the type),
+                          or `None`.
+        :type soft_deps: list(Task) or None
         '''
         assert isinstance(source, (str, CheckoutTask))
         self.source = source
@@ -347,7 +357,7 @@ class BuildTask(PythonTask):
                                   'elapsed_time': elapsed}}
             return env_up, status
 
-        super().__init__(name, build, deps=deps,
+        super().__init__(name, build, deps=deps, soft_deps=soft_deps,
                          env_kwarg='env', config_kwarg='config')
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)

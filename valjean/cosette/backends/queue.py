@@ -30,7 +30,7 @@ class QueueScheduling:
         self.n_workers = n_workers
         self.queue = queue.Queue(0)
 
-    def _enqueue(self, tasks, graph, env):
+    def _enqueue(self, tasks, full_graph, hard_graph, env):
         '''Enqueue as many tasks as the dependencies permit.'''
 
         n_tasks = len(tasks)
@@ -49,25 +49,39 @@ class QueueScheduling:
                 LOGGER.debug('master: task %s removed from queue', task)
                 continue
 
-            deps = graph.dependencies(task)
+            deps = full_graph.dependencies(task)
+            hard_deps = hard_graph.dependencies(task)
+            assert all(task in deps for task in hard_deps)
 
             def _check_deps(env_):
-                '''Check deps to see if there are failures or if we can run.'''
-                failed_deps = any(env_.is_failed(t) or env_.is_skipped(t)
-                                  for t in deps)
-                can_run = all(env_.is_done(t) for t in deps)
-                return failed_deps, can_run
+                '''Check dependencies of the current task and make a decision
+                about what we should do with this task.
 
-            failed_deps, can_run = env.atomically(_check_deps)
-            LOGGER.debug('master: task %s has failed deps: %s',
-                         task, failed_deps)
-            LOGGER.debug('master: task %s can run: %s', task, can_run)
-            if failed_deps:
+                This function returns the list of failed hard dependencies for
+                the task and a bool telling whether all the dependencies have
+                completed (regardless of their success).
+
+                :param Env env_: the environment.
+                :rtype: (list(Task), bool)
+                '''
+                hard_failed_deps = [t for t in hard_deps
+                                    if env_.is_failed(t) or env_.is_skipped(t)]
+                deps_finished = all(env_.is_done(t)
+                                    or env_.is_failed(t)
+                                    or env_.is_skipped(t) for t in deps)
+                return hard_failed_deps, deps_finished
+
+            hard_failed_deps, deps_finished = env.atomically(_check_deps)
+
+            if hard_failed_deps:
+                LOGGER.debug('master: task %s has failed deps: %s',
+                             task, hard_failed_deps)
                 env.set_skipped(task)
                 n_tasks -= 1
                 LOGGER.info('task %s cannot be run, %d left',
                             task, n_tasks)
-            elif can_run:
+            elif deps_finished:
+                LOGGER.debug('master: task %s can run', task)
                 self.queue.put(task)
                 n_tasks -= 1
                 LOGGER.debug('master: task %s scheduled, %d left',
@@ -78,13 +92,12 @@ class QueueScheduling:
 
         return tasks_left
 
-    def execute_tasks(self, *, tasks, graph, env, config):
+    def execute_tasks(self, *, full_graph, hard_graph, env, config):
         '''Execute the tasks.
 
-        :param tasks: Iterable over tasks to be executed, possibly sorted
-                      according to some order.
-        :type tasks: :term:`iterable`
-        :param DepGraph graph: Dependency graph for the tasks.
+        :param DepGraph full_graph: Full dependency graph for the tasks, i.e.
+                                    including both hard and soft dependencies.
+        :param DepGraph hard_graph: Hard-dependency graph for the tasks.
         :param env: An initial environment for the scheduled tasks.
         :type env: Env
         :param env: The configuration object (for things like paths, etc.).
@@ -106,12 +119,13 @@ class QueueScheduling:
             thread.start()
             threads.append(thread)
 
-        # process tasks
-        tasks_left = tasks
+        # process tasks; sort them in topological order
+        tasks_left = full_graph.topological_sort()
         while tasks_left:
             n_tasks_left = len(tasks_left)
             with cond_var:
-                tasks_left = self._enqueue(tasks_left, graph, env)
+                tasks_left = self._enqueue(tasks_left, full_graph, hard_graph,
+                                           env)
 
                 if not tasks_left:
                     # we're done!
@@ -172,7 +186,6 @@ class QueueScheduling:
                 start = time.time()
                 try:
                     env_update, status = task.do(self.env, self.config)
-                    end = time.clock()
                 except Exception as ex:  # pylint: disable=broad-except
                     LOGGER.exception('task %s on worker %s failed: %s',
                                      task, self.name, ex)

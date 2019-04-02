@@ -28,7 +28,7 @@ class EvalTestTask(PythonTask):
         eval_task_name = 'eval-' + test_task_name
         return cls(eval_task_name, test_task_name, deps=[test_task])
 
-    def __init__(self, name, test_task_name, *, deps=None):
+    def __init__(self, name, test_task_name, *, deps=None, soft_deps=None):
         '''Direct instantiation of an :class:`EvalTestTask`.
 
         :param str name: the name of this task.
@@ -36,6 +36,8 @@ class EvalTestTask(PythonTask):
                                    tests.
         :param deps: the list of dependencies for this task.
         :type deps: list(Task) or None
+        :param soft_deps: the list of soft dependencies for this task.
+        :type soft_deps: list(Task) or None
         '''
         def evaluate(*, env):
             tests = from_env(env=env, task_name=test_task_name, key='result')
@@ -55,4 +57,5 @@ class EvalTestTask(PythonTask):
             status = TaskStatus.DONE
             return env_up, status
 
-        super().__init__(name, evaluate, deps=deps, env_kwarg='env')
+        super().__init__(name, evaluate, deps=deps, soft_deps=soft_deps,
+                         env_kwarg='env')
