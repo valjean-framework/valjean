@@ -266,6 +266,12 @@ class Env(MutableMapping):
         with self.lock:
             _apply_worker(env_update, self)
 
+    def set_start_end_clock(self, task, *, start, end):
+        '''Set the start and end time for the given task.'''
+        env_update = {task.name: {'start_clock': start,
+                                  'end_clock': end}}
+        self.apply(env_update)
+
     def copy(self):
         '''Return a shallow copy of `self`.'''
         return Env(self.dictionary.copy())

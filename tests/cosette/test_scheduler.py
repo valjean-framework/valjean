@@ -25,6 +25,13 @@ def run(graph, n_workers):
     backend = QueueScheduling(n_workers=n_workers) if n_workers > 0 else None
     scheduler = Scheduler(graph, backend)
     env = scheduler.schedule()
+    for values in env.values():
+        if values['status'] == TaskStatus.SKIPPED:
+            continue
+        assert 'start_clock' in values
+        assert 'end_clock' in values
+        assert (values['end_clock'] is None
+                or values['end_clock'] >= values['start_clock'])
     return env
 
 

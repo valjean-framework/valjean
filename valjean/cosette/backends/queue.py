@@ -6,6 +6,7 @@ queues (:mod:`~queue` module).
 
 import threading
 import logging
+import time
 
 
 LOGGER = logging.getLogger('valjean')
@@ -168,8 +169,10 @@ class QueueScheduling:
                 # we start to work on the task
                 self.env.set_pending(task)
 
+                start = time.time()
                 try:
                     env_update, status = task.do(self.env, self.config)
+                    end = time.clock()
                 except Exception as ex:  # pylint: disable=broad-except
                     LOGGER.exception('task %s on worker %s failed: %s',
                                      task, self.name, ex)
@@ -185,6 +188,8 @@ class QueueScheduling:
                                  self.name, env_update)
                     self.env.set_status(task, status)
                     self.env.apply(env_update)
+                end = time.time()
+                self.env.set_start_end_clock(task, start=start, end=end)
 
                 LOGGER.debug('worker %s: wants more!', self.name)
                 self.queue.task_done()
