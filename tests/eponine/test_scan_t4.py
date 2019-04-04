@@ -653,10 +653,9 @@ def test_no_a_t4_opt_bad_bins_2(datadir, caplog):
     '''
     with pytest.raises(T4ParserException):
         T4Parser(str(datadir/"failure_noaopt_uniform_sources.d.res"))
-    assert ("IndexError: your spectrum probably uses more than one dimension "
-            "(X and Y), but the number of x bins may be different in the "
-            "different y bins.\nPlease make sure you run Tripoli-4 with "
-            "option '-a'." in caplog.text)
+    assert ("IndexError: all (sub-)spectra should have the same bins.\n"
+            "Please make sure you run Tripoli-4 with option '-a'."
+            in caplog.text)
 
 
 def test_bad_response_name(datadir, caplog):

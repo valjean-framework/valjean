@@ -910,9 +910,8 @@ class SpectrumDictBuilder(KinematicDictBuilder):
                     self.arrays['default'][index] = array
                 except IndexError:
                     LOGGER.error(
-                        "IndexError: your spectrum probably uses more than "
-                        "one dimension (X and Y), but the number of x bins "
-                        "may be different in the different y bins.\n"
+                        "IndexError: all (sub-)spectra should have the same "
+                        "bins.\n"
                         "Please make sure you run Tripoli-4 with option '-a'.")
                     raise
 
@@ -1038,9 +1037,6 @@ def _get_number_of_space_bins(meshvals):
         :ns2bins: number of bins in the s2 dimension
     '''
     lastspacebin = meshvals[-1][0]
-    # theoriquement impossible car dans T4...
-    # if len(lastspacebin) != 3:
-    #     raise IndexError("We should have 3 space coordinates.")
     ns0bins = lastspacebin[0]+1
     ns2bins = (meshvals[-int(lastspacebin[2]+2)][0][2]+1
                if lastspacebin[2]+1 < len(meshvals)
@@ -1185,9 +1181,8 @@ class NuSpectrumDictBuilder(DictBuilder):
                     self.arrays['default'][index] = array
                 except IndexError:
                     LOGGER.error(
-                        "IndexError: your spectrum probably uses more than "
-                        "one dimension (X and Y), but the number of x bins "
-                        "may be different in the different y bins.\n"
+                        "IndexError: all (sub-)spectra should have the same "
+                        "bins.\n"
                         "Please make sure you run Tripoli-4 with option '-a'.")
                     raise
 
@@ -1304,9 +1299,8 @@ class ZASpectrumDictBuilder(DictBuilder):
                     self.arrays['default'][index] = array
                 except IndexError:
                     LOGGER.error(
-                        "IndexError: your spectrum probably uses more than "
-                        "one dimension (X and Y), but the number of x bins "
-                        "may be different in the different y bins.\n"
+                        "IndexError: all (sub-)spectra should have the same "
+                        "bins.\n"
                         "Please make sure you run Tripoli-4 with option '-a'.")
                     raise
             # Fill integrated result if exist
