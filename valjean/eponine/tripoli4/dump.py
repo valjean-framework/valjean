@@ -10,6 +10,7 @@ Don't be surprised: colors are used for printing here :-)
 '''
 
 import logging
+from collections import OrderedDict
 import numpy as np
 from ... import LOGGER
 
@@ -73,11 +74,13 @@ def dict_to_str(diction, depth=0):
     '''
     lstr = []
     printedepth = "3"+str(depth) if depth < 8 else "9"+str(depth-7)
+    dictkeys = (list(diction.keys()) if isinstance(diction, OrderedDict)
+                else sorted(diction))
     lstr.append("\x1b[{0}mDict with keys = {1}\x1b[0m"
-                .format(printedepth, sorted(diction.keys())))
+                .format(printedepth, dictkeys))
     if depth > MAX_DEPTH:
         return "\x1b[1;31mMAX_DEPTH = {} reached\x1b[0m\n".format(MAX_DEPTH)
-    for key in sorted(diction):
+    for key in dictkeys:
         spaces = "  "*depth
         key_str = "\x1b[94m{0}{1}\x1b[0m".format(spaces, key)
         if isinstance(diction[key], (dict, list, np.ndarray, np.generic)):

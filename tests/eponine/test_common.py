@@ -891,7 +891,7 @@ def test_parse_keffs_roundtrip(corrmat, keffmat, sigmat, combination):
     assert list(keffres.keys()) == ['keff_res']
     assert (sorted(list(keffres['keff_res'].keys()))
             == ['keff_combination_res', 'keff_per_estimator_res',
-                'used_batch'])
+                'used_batches_res'])
     assert (sorted(list(keffres['keff_res']['keff_per_estimator_res']))
             == ['correlation_matrix', 'estimators', 'keff_matrix',
                 'sigma_matrix'])
@@ -906,8 +906,8 @@ def test_parse_keffs_roundtrip(corrmat, keffmat, sigmat, combination):
 
 
 @composite
-def keff_best_estimation(draw, n_estim):
-    r'''Composite Hypothesis strategy to generate best estimation of
+def keff_auto_estimation(draw, n_estim):
+    r'''Composite Hypothesis strategy to generate auto estimation of
     k\ :sub:`eff` for at least 3 estimators.
 
     Default estimators are: ``['KSTEP', 'KCOLL', 'KTRACK']``.
@@ -937,23 +937,23 @@ def keff_best_estimation(draw, n_estim):
                         min_size=n_estim, max_size=n_estim))
     keff_res = []
     for iestim, _ in enumerate(estimators):
-        keff_res.append({'estimator': estimators[iestim],
+        keff_res.append({'keff_estimator': estimators[iestim],
                          'best_disc_batchs': disc_batchs[iestim],
                          'used_batch': 100 - disc_batchs[iestim],
-                         'bestkeffres': {
-                             'keff': keffs[iestim],
-                             'sigma': sigmas[iestim],
-                             'sigma%': sigmas[iestim]/keffs[iestim]*100}})
+                         'keff': keffs[iestim],
+                         'sigma': sigmas[iestim],
+                         'sigma%': sigmas[iestim]/keffs[iestim]*100})
     return keff_res
 
 
 def bekeff_t4_output(be_keff):
-    r'''Print in a string the best estimation of k\ :sub:`eff` as in Tripoli-4
+    r'''Print in a string the auto estimation of k\ :sub:`eff` as in Tripoli-4
     outputs.
     '''
     t4out = []
     for bestim in be_keff:
-        t4out.append(" "*10 + "{0} ESTIMATOR\n".format(bestim['estimator']))
+        t4out.append(" "*10
+                     + "{0} ESTIMATOR\n".format(bestim['keff_estimator']))
         t4out.append(" "*9 + "-"*(len(t4out[-1])+4) + "\n\n\n")
         t4out.append(" "*9
                      + "best results are obtained with discarding {} batches"
@@ -962,35 +962,33 @@ def bekeff_t4_output(be_keff):
         t4out.append(" "*9
                      + "number of batch used: {}".format(bestim['used_batch'])
                      + " "*8
-                     + "keff = {0:.6e}".format(bestim['bestkeffres']['keff'])
+                     + "keff = {0:.6e}".format(bestim['keff'])
                      + " "*5
-                     + "sigma = {0:.6e}".format(bestim['bestkeffres']['sigma'])
+                     + "sigma = {0:.6e}".format(bestim['sigma'])
                      + " "*5
-                     + "sigma% = {0:.6e}"
-                     .format(bestim['bestkeffres']['sigma%'])
+                     + "sigma% = {0:.6e}".format(bestim['sigma%'])
                      + "\n\n\n")
     return ''.join(t4out)
 
 
-@given(keff_res=keff_best_estimation(5))
-def test_parse_best_keff_roundtrip(keff_res):
-    r'''Test printing k\ :sub:`eff` best estimation and optionally k\ :sub:`ij`
-    best estimation as Tripoli-4 output in a string.
+@given(keff_res=keff_auto_estimation(5))
+def test_parse_auto_keff_roundtrip(keff_res):
+    r'''Test printing k\ :sub:`eff` auto estimation and optionally k\ :sub:`ij`
+    auto estimation as Tripoli-4 output in a string.
     '''
     bekeff_t4_out = bekeff_t4_output(keff_res)
-    pres = pygram.defkeffblock.parseString(bekeff_t4_out)
+    pres = pygram.autokeffblock.parseString(bekeff_t4_out)
     assert pres
-    assert len(pres) == 1
     assert len(pres[0]) == len(keff_res)
-    assert sorted(list(pres[0][0].keys())) == sorted(list(keff_res[0].keys()))
+    assert (set(pres[0][0]['results']['auto_keff_res'].keys())
+            <= set(keff_res[0].keys()))
     for ikeff, bekeff in enumerate(keff_res):
-        for key in bekeff:
-            if key != 'bestkeffres':
-                assert bekeff[key] == pres[0][ikeff][key]
-            else:
-                for ikey in bekeff[key]:
-                    assert np.isclose(bekeff[key][ikey],
-                                      pres[0][ikeff][key][ikey])
+        assert bekeff['keff_estimator'] == pres[0][ikeff]['keff_estimator']
+        presires = pres[0][ikeff]['results']
+        assert bekeff['best_disc_batchs'] == presires['discarded_batches_res']
+        assert bekeff['used_batch'] == presires['used_batches_res']
+        for key, val in presires['auto_keff_res'].items():
+            assert np.isclose(bekeff[key], val)
 
 
 def kij_t4_output(evals, evecs, matrix):
@@ -1063,14 +1061,14 @@ def kij_results(draw, dimension):
     nevecs = evecs / np.linalg.norm(evecs, axis=1).reshape(dim, 1)
     assume(np.linalg.det(nevecs) != 0)
     matrix = np.dot(np.dot(nevecs, np.diag(evals)), np.linalg.inv(nevecs))
-    kijdict = draw(kij_best_estimation(evals, matrix))
+    kijdict = draw(kij_auto_estimation(evals, matrix))
     return evals, evecs, kijdict
 
 
 @composite
-def kij_best_estimation(draw, evals, kijmat):
+def kij_auto_estimation(draw, evals, kijmat):
     r'''Composite Hypothesis strategy to generate additional k\ :sub:`ij`
-    elements appearing in Tripoli-4 listing in the k\ :sub:`eff` best
+    elements appearing in Tripoli-4 listing in the k\ :sub:`eff` auto
     estimation block.
 
     Additional elements are:
@@ -1109,8 +1107,8 @@ def kij_best_estimation(draw, evals, kijmat):
                                unique=True))
     else:
         spacebins = list(range(kijmat.shape[0]))
-    kijdict = {'estimator': 'KIJ',
-               'batchs_kept': draw(integers(80, 99)),
+    kijdict = {'keff_estimator': 'KIJ',
+               'used_batch': draw(integers(80, 99)),
                'kij-keff': np.real(evals[0]),
                'nbins': evals.shape[0],
                'spacebins': np.array(spacebins),
@@ -1124,7 +1122,7 @@ def kij_best_estimation(draw, evals, kijmat):
 def kij_sources_t4_output(kijdict):
     r'''Print Tripoli-4 output in a string k\ :sub:`ij` sources.
 
-    Uses the *left* eigenvector calculated in :meth:`~kij_best_estimation` and
+    Uses the *left* eigenvector calculated in :meth:`~kij_auto_estimation` and
     stored in ``kijdict`` as sources. In a real T4 output this vector is
     supposed to be closed to the sources vector but different as evaluated from
     a different estimator.
@@ -1135,7 +1133,7 @@ def kij_sources_t4_output(kijdict):
     t4out = []
     t4out.append("{0:>8}ENERGY INTEGRATED RESULTS\n\n".format(""))
     t4out.append("number of batches used: {}\n\n"
-                 .format(kijdict['batchs_kept']))
+                 .format(kijdict['used_batch']))
     t4out.append("SOURCES VECTOR :\n\n")
     t4out.append("Sources are ordered following GEOMCOMP:\n\n")
     for source in kijdict['eigenvector']:
@@ -1146,7 +1144,7 @@ def kij_sources_t4_output(kijdict):
 
 def matrix_t4_output(matrix, spacebins):
     r'''Print Tripoli-4 output in a string for matrices as in k\ :sub:`ij` case
-    in k\ :sub:`eff` best estimation block.
+    in k\ :sub:`eff` auto estimation block.
 
     :param numpy.ndarray matrix: matrix to be printed
     :param numpy.ndarray spacebins: space bins corresponding to columns and
@@ -1177,7 +1175,7 @@ def matrix_t4_output(matrix, spacebins):
 
 
 def kijkeff_t4_output(kijdict):
-    r'''Print in a string the k\ :sub:`ij` best estimation of k\ :sub:`eff` as
+    r'''Print in a string the k\ :sub:`ij` auto estimation of k\ :sub:`eff` as
     in Tripoli-4 output. This includes k\ :sub:`ij` matrix, standard deviation
     matrix and sensibility matrix.
 
@@ -1185,10 +1183,11 @@ def kijkeff_t4_output(kijdict):
     :returns: string corresponding to the T4 output
     '''
     t4out = []
-    t4out.append("{0:>10}{1} ESTIMATOR\n".format("", kijdict['estimator']))
+    t4out.append("{0:>10}{1} ESTIMATOR\n".format("",
+                                                 kijdict['keff_estimator']))
     t4out.append("{0:>10}{1:->13}\n\n".format("", ""))
     t4out.append("{0:>12}number of last batches kept : {1}\n\n"
-                 .format("", kijdict['batchs_kept']))
+                 .format("", kijdict['used_batch']))
     t4out.append("{0:>12}kij-keff = {1:.6e}\n\n"
                  .format("", kijdict['kij-keff']))
     t4out.append("{0:>12}EIGENVECTOR :{0:>6}index{0:>6}source rate\n\n"
@@ -1226,11 +1225,11 @@ def extract_list_from_keff_res(keff_res, key):
     :param str key: dictionary key to match
     :returns: list of objects matching the given key
     '''
-    return list(map(lambda x: x[key], keff_res))
+    return list(map(lambda x: x['results']['auto_keff_res'][key], keff_res))
 
 
 @settings(deadline=None)
-@given(kij_res=kij_results(5), keff_res=keff_best_estimation(3))
+@given(kij_res=kij_results(5), keff_res=keff_auto_estimation(3))
 def test_parse_kij_roundtrip(kij_res, keff_res):
     r'''Test printing k\ :sub:`ij` results as Tripoli-4 output from random
     tuples and array got from Hypothesis.
@@ -1258,12 +1257,12 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
     pres = pygram.kijres.parseString(kij_t4_out)
     assert pres
     assert len(pres) == 1
-    assert sorted(list(pres[0].keys())) == ['kij_eigenval', 'kij_eigenvec',
-                                            'kij_matrix', 'kijdomratio',
-                                            'kijmkeff_res', 'used_batch']
-    assert np.allclose(pres[0]['kij_eigenval'], evals)
-    assert np.allclose(pres[0]['kij_eigenvec'], evecs)
-    assert np.allclose(pres[0]['kij_matrix'], matrix)
+    assert sorted(list(pres[0].keys())) == [
+        'kij_eigenval_res', 'kij_eigenvec_res', 'kij_matrix_res',
+        'kijdomratio_res', 'kijmkeff_res', 'used_batches_res']
+    assert np.allclose(pres[0]['kij_eigenval_res'], evals)
+    assert np.allclose(pres[0]['kij_eigenvec_res'], evecs)
+    assert np.allclose(pres[0]['kij_matrix_res'], matrix)
     # KIJ SOURCES block
     kij_sources_t4_out = kij_sources_t4_output(kijdict)
     pres = pygram.kijsources.parseString(kij_sources_t4_out)
@@ -1274,22 +1273,30 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
     # KEFF BEST ESTIMATION block
     kijkeff_t4_out = bekeff_t4_output(keff_res)
     kijkeff_t4_out = ''.join([kijkeff_t4_out, kijkeff_t4_output(kijdict)])
-    pres = pygram.defkeffblock.parseString(kijkeff_t4_out)
+    pres = pygram.autokeffblock.parseString(kijkeff_t4_out)
     assert pres
-    assert len(pres[0]) == len(keff_res+[kijdict]) == 4
-    assert (list(map(lambda x: x['estimator'], pres[0]))
-            == list(map(lambda x: x['estimator'], keff_res+[kijdict])))
-    # test keff_best_estimation
-    assert (extract_list_from_keff_res(pres[0][:-1], 'best_disc_batchs')
-            == extract_list_from_keff_res(keff_res, 'best_disc_batchs'))
+    assert len(pres) == 1
+    tres = pres[0]
+    assert len(tres) == len(keff_res+[kijdict]) == 4
+    assert (list(map(lambda x: x['keff_estimator'], tres))
+            == list(map(lambda x: x['keff_estimator'], keff_res+[kijdict])))
+    # test keff_auto_estimation
+    assert (
+        list(map(lambda x: x['results']['discarded_batches_res'], tres[:-1]))
+        == list(map(lambda x: x['best_disc_batchs'], keff_res)))
     for num in ['keff', 'sigma', 'sigma%']:
         assert (np.allclose(
-            list(map(lambda x, k=num: x['bestkeffres'][k], pres[0][:-1])),
-            list(map(lambda x, k=num: x['bestkeffres'][k], keff_res))))
+            list(map(lambda x, k=num: x['results']['auto_keff_res'][k],
+                     tres[:-1])),
+            list(map(lambda x, k=num: x[k], keff_res))))
     # test kij estimator
-    keys = [tkey for tkey in list(kijdict.keys()) if tkey != 'estimator']
+    keys = [tkey for tkey in list(kijdict.keys())
+            if tkey not in ('keff_estimator', 'used_batch')]
+    kijr = tres[-1]['results']
     for key in keys:
-        assert np.allclose(pres[0][-1][key], kijdict[key])
+        assert (kijr[key+'_res'] == kijdict[key]
+                if isinstance(kijdict[key], str)
+                else np.allclose(kijr[key+'_res'], kijdict[key]))
 
 
 @composite

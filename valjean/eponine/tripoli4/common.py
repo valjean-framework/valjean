@@ -401,13 +401,13 @@ but array is easier to initialized and more general.
 The method :meth:`convert_keff_with_matrix` takes as input the generic |keff|
 response as a dictionary and returns a dictinary containing different keys:
 
+* the number of batchs used under ``'used_batches_res'``;
 * the 3 matrices mentioned above (``'keff_matrix'``, ``'correlation_matrix'``
-  and ``'sigma_matrix'``)
-* the list of estimators names ``['KSTEP', 'KCOLL',' 'KTRACK']`` under
-  ``'estimators'`` key
+  and ``'sigma_matrix'``) and the list of estimators (``['KSTEP', 'KCOLL',
+  'KTRACK']`` by default) are stored under the common key
+  ``'keff_per_estimator_res'`` as a dictionary;
 * the full combination result (|keff| and σ in %) under
-  ``'full_comb_estimation'`` key
-* the number of batchs used under ``'used_batch'``
+  ``'keff_combination_res'`` key
 
 Not converged cases are taken into account and return a key
 ``'not_converged'``.
@@ -1384,11 +1384,12 @@ def convert_keff_with_matrix(res):
 
     ::
 
-        {'used_batch': int, 'estimators': [str],
-         'full_comb_estimation': numpy.array,
-         'keff_matrix': numpy.array,
-         'correlation_matrix': numpy.array,
-         'sigma_matrix': numpy.array}
+        {'used_batches_res': int,
+         'keff_per_estimaator_res': {'estimators': [str],
+                                     'keff_matrix': numpy.array,
+                                     'correlation_matrix': numpy.array,
+                                     'sigma_matrix': numpy.array},
+         'keff_combination_res': numpy.array}
 
     '''
     # not converged cases a tester...
@@ -1424,7 +1425,7 @@ def convert_keff_with_matrix(res):
                                          else np.nan)
             else:
                 continue
-    return {'used_batch': res['used_batch'],
+    return {'used_batches_res': res['used_batch'],
             'keff_per_estimator_res': {'estimators': keffnames,
                                        'keff_matrix': keffmat,
                                        'correlation_matrix': corrmat,
@@ -1838,12 +1839,12 @@ def convert_kij_result(res):
     kijmat = (np.array(res['kij_matrix'])
               if isinstance(res['kij_matrix'], list)
               else res['kij_matrix'])
-    return {'used_batch': res['used_batch'],
+    return {'used_batches_res': res['used_batch'],
             'kijmkeff_res': res['kijmkeff_res'][0],
-            'kijdomratio': res['kijmkeff_res'][1],
-            'kij_eigenval': egvals,
-            'kij_eigenvec': egvecs,
-            'kij_matrix': kijmat
+            'kijdomratio_res': res['kijmkeff_res'][1],
+            'kij_eigenval_res': egvals,
+            'kij_eigenvec_res': egvecs,
+            'kij_matrix_res': kijmat
             }
 
 
@@ -1856,7 +1857,7 @@ def convert_kij_keff(res):
 
     ::
 
-       {'estimator': str,
+       {'keff_estimator': str,
         'batchs_kept': int,
         'kij-keff': float,
         'nbins': int,
@@ -1875,15 +1876,15 @@ def convert_kij_keff(res):
     egvec = np.array(list(zip(*res['eigenvector']))[1])
     nbins = res['nb_fissile_vols'] if 'nb_fissile_vols' in res else len(egvec)
     if nbins != len(egvec):
-        LOGGER.warning("[31mIssue in number of fissile volumes "
-                       "and size of eigenvector[0m")
+        LOGGER.warning("\x1b[31mIssue in number of fissile volumes "
+                       "and size of eigenvector\x1b[0m")
     spacebins = np.array(res['keff_KIJ_matrix'][0])
     if spacebins.shape[0] != len(res['keff_KIJ_matrix'][1:]):
-        LOGGER.warning("[31mStrange: not the dimension in space mesh and "
-                       "matrix, matrix expected to be squared[0m")
+        LOGGER.warning("\x1b[31mStrange: not the dimension in space mesh and "
+                       "matrix, matrix expected to be square\x1b[0m")
     if spacebins.shape[0] != nbins:
-        LOGGER.warning("[31mStrange: not the same number of space bins and "
-                       "eigenvectors[0m")
+        LOGGER.warning("\x1b[31mStrange: not the same number of space bins "
+                       "and eigenvectors\x1b[0m")
     # Fill the 3 matrices
     kijmat = np.full([nbins, nbins], np.nan)
     for irow, row in enumerate(res['keff_KIJ_matrix'][1:]):
@@ -1894,15 +1895,15 @@ def convert_kij_keff(res):
     sensibmat = np.full([nbins, nbins], np.nan)
     for irow, row in enumerate(res['keff_sensibility_matrix'][1:]):
         sensibmat[irow] = np.array(tuple(row[1:]))
-    return {'estimator': res['estimator'],
-            'batchs_kept': res['batchs_kept'],
-            'kij-keff': res['kij-keff'],
-            'nbins': nbins,
-            'spacebins': spacebins,
-            'eigenvector': egvec,
-            'keff_KIJ_matrix': np.array(kijmat),
-            'keff_StdDev_matrix': np.array(stddevmat),
-            'keff_sensibility_matrix': np.array(sensibmat)}
+    return {'keff_estimator': res['estimator'],
+            'results': {'used_batches_res': res['batchs_kept'],
+                        'kij-keff_res': res['kij-keff'],
+                        'nbins_res': nbins,
+                        'spacebins_res': spacebins,
+                        'eigenvector_res': egvec,
+                        'keff_KIJ_matrix_res': np.array(kijmat),
+                        'keff_StdDev_matrix_res': np.array(stddevmat),
+                        'keff_sensibility_matrix_res': np.array(sensibmat)}}
 
 
 class SensitivityDictBuilder(DictBuilder):

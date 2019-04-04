@@ -101,7 +101,19 @@ def integrated_result(result, res_type='integrated_res'):
                        bins=OrderedDict(), name=res_type)
 
 
-def keff_estimator(result, res_type, estimator):
+def entropy(result, res_type):
+    '''Conversion of entropy in :class:`~.base_dataset.BaseDataset`.
+
+    :param dict result: results dictionary containing ``res_type`` key
+    :param str res_type: can be ``'shannon_entropy_res'`` or
+        ``'boltzmann_entropy_res'``
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
+    '''
+    LOGGER.debug("entropy result %s", result[res_type])
+    return BaseDataset(result[res_type], np.int_(0), name=res_type)
+
+
+def keff_estimator(result, res_type, *, estimator):
     '''Conversion of keff in :class:`~.base_dataset.BaseDataset` for a given
     estimator.
 
@@ -131,6 +143,20 @@ def keff_combination(result, res_type):
                        name='keff_combination')
 
 
+def best_keff(result, res_type, *, estimator):
+    '''Conversion of "best" keff estimation in
+    :class:`~.base_dataset.BaseDataset`.
+
+    :dict result: results dictionary containing ``res_type`` key
+    :param str res_type: should be ``'best_keff_res'``
+    :param str estimator: estimator name (to construct the dataset name)
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
+    '''
+    bkeff = result[res_type]
+    return BaseDataset(bkeff['keff'].copy(), bkeff['sigma'].copy(),
+                       name='best_keff_'+estimator)
+
+
 def value_wo_error(result, res_type):
     '''Conversion of a value provided without error in
     :class:`~.base_dataset.BaseDataset`.
@@ -143,7 +169,7 @@ def value_wo_error(result, res_type):
     :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
     LOGGER.debug("value without error %s", result[res_type])
-    return BaseDataset(result[res_type], np.int_(0), name=res_type)
+    return BaseDataset(result[res_type], np.float_(np.nan), name=res_type)
 
 
 def not_converged_result():
@@ -175,6 +201,7 @@ CONVERT_IN_DATASET = {
     'integrated_res': integrated_result,
     'keff_per_estimator_res': keff_estimator,
     'keff_combination_res': keff_combination,
+    'auto_keff_res': best_keff,
     'shannon_entropy_res': value_wo_error,
     'boltzmann_entropy_res': value_wo_error,
     'used_batches_res': value_wo_error,

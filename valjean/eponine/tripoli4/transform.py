@@ -332,6 +332,37 @@ def convert_kij_keff(toks):
     return kijkeff
 
 
+def convert_auto_keff(toks):
+    '''Convert auto keff estimation (old or default output, not printed as a
+    usual response) in standard python objects.
+
+    Add the ``'response_type'`` key to the dictionary with ``'auto_keff_res'``
+    as associated value (to match response book and data_convertor
+    requirements).
+    '''
+    assert len(toks) == 1, "Not correct number of elements in auto_keff toks"
+    akeff_res = toks[0]
+    akeff_key = 'auto_keff_res'
+    res = []
+    for akeff in akeff_res:
+        # if kij result always a dict at that step, not for auto keff
+        is_kij = isinstance(akeff, dict)
+        akeffd = {}
+        akeffd['response_type'] = akeff_key if not is_kij else 'kijkeff_res'
+        if 'results' not in akeff:  # some warning cases
+            continue
+        akeffd['keff_estimator'] = akeff['keff_estimator']
+        akeffr = akeff['results'].asDict() if not is_kij else akeff['results']
+        # may not be there for not converged results
+        if akeff_key in akeffr:
+            akeffra = akeffr[akeff_key]
+            akeffr['used_batches_res'] = akeffra.pop('used_batch')
+            akeffr['discarded_batches_res'] = akeffra.pop('best_disc_batchs')
+        akeffd['results'] = akeffr
+        res.append(akeffd)
+    return res
+
+
 def convert_sensitivities(toks):
     '''Convert sensitivity results to dictionary of :obj:`numpy` objects using
     :mod:`~valjean.eponine.tripoli4.common`.

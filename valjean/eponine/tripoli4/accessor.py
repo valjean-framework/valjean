@@ -151,7 +151,8 @@ class Accessor:
                 LOGGER.error("The required book_type apparently failed, "
                              "its shape might not be suitable, please check. "
                              "Currently available and tested: "
-                             "('list_responses', 'ifp_adjoint_crit_edition')")
+                             "('list_responses', 'ifp_adjoint_crit_edition',"
+                             "'default_keffs')")
 
     def get_by(self, **kwargs):
         '''Selection method based on kwargs corresponding to responses / scores

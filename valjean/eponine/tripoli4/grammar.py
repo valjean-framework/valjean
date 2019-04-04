@@ -166,9 +166,9 @@ level as the response block. These parsers and the associated dictionary key
 
 * :parsing_var:`ifpadjointcriticality`: edition of IFP adjoint criticality, key
   ``'ifp_adjoint_crit_edition'``;
-* :parsing_var:`defkeffblock`: "default" |keff| block, containing for example
+* :parsing_var:`autokeffblock`: "default" |keff| block, containing for example
   the best estimation of |keff| using variable number of discarded batches, key
-  ``'default_keffs'``;
+  ``'auto_keffs'``;
 * :parsing_var:`contribpartblock`: *contributing particles block*, key
   ``'contributing_particles'``
 * :parsing_var:`perturbation`: perturbation results, containing a description
@@ -966,40 +966,41 @@ _correlationblock = (Group(_correlationdesc + OneOrMore(_correlation))
 _fullcombestimation = (Group(Suppress(_fullcomb_kw)
                              + ((_fnums + _fnums) | _notconverged_kw))
                        ('full_comb_estimation'))
-_defkeffres = ((_keffresblock + _correlationblock + _fullcombestimation)
-               | _notconverged_kw('not_converged'))
+_autokeffres = ((_keffresblock + _correlationblock + _fullcombestimation)
+                | _notconverged_kw('not_converged'))
 _warnkeff = (Suppress(_warning_kw)
              + _warn_combkeff_kw.setParseAction(' '.join)('warning'))
 keffblock = Group(Suppress(_integratedres_kw)
                   + _numusedbatch
-                  + (_defkeffres | _warnkeff)
+                  + (_autokeffres | _warnkeff)
                   ).setParseAction(trans.convert_keff)('keff_res')
 
 
 # Keff as historical response
 _bestresestim = (OneOrMore(Word(alphas), stopOn=_estimator_kw)
-                 .setParseAction(' '.join)('estimator')
+                 .setParseAction(' '.join)('keff_estimator')
                  + Suppress(_estimator_kw))
 _bestresdiscbatch = (Suppress(_bestresdiscbatchs_kw)
                      + _inums('best_disc_batchs')
                      + Suppress("batches"))
-_bestkeff = (Group(Suppress(Keyword("keff") + '=') + _fnums('keff')
-                   + Suppress(Keyword("sigma") + '=') + _fnums('sigma')
-                   + Suppress(Keyword("sigma%") + '=') + _fnums('sigma%'))
-             ('bestkeffres'))
+_bestkeff = (Suppress(Keyword("keff") + '=') + _fnums('keff')
+             + Suppress(Keyword("sigma") + '=') + _fnums('sigma')
+             + Suppress(Keyword("sigma%") + '=') + _fnums('sigma%'))
 _equivkeff = Suppress(_equivkeff_kw) + _fnums('equivalent_keff')
-_bestkeffpestim = (_notconverged_kw('not_converged')
-                   | (_bestresdiscbatch
-                      + _numusedbatch
-                      + _bestkeff
-                      + Optional(_equivkeff)))
+_bestkeffpestim = (Group(_notconverged_kw('not_converged')
+                         | Group(_bestresdiscbatch
+                                 + _numusedbatch
+                                 + _bestkeff
+                                 + Optional(_equivkeff))('auto_keff_res'))
+                   ('results'))
 _bestreskeff = Group(_bestresestim + _minus_line + _bestkeffpestim)
 _warnfixedsources = Group(Suppress(_warning_kw) + _minus_line
                           + _warn_fixsourcekeff_kw('warning'))
 _bestresblock = OneOrMore(_bestreskeff, stopOn="KIJ")
-defkeffblock = Group(Optional(_warnfixedsources)
-                     + _bestresblock
-                     + Optional(_kijkeffblock))('default_keffs')
+autokeffblock = Group(Group(Optional(_warnfixedsources)
+                            + _bestresblock
+                            + Optional(_kijkeffblock))
+                      .setParseAction(trans.convert_auto_keff))('auto_keffs')
 
 
 # MED files
@@ -1253,7 +1254,7 @@ perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
 # debug grammar, to be used with parse_debug (only for parsing development)
 t4debug_gram = (OneOrMore((intro
                            + OneOrMore(listresponses | ifpadjointcriticality
-                                       | defkeffblock | contribpartblock
+                                       | autokeffblock | contribpartblock
                                        | perturbation | OneOrMore(runtime)))
                           .setParseAction(trans.to_dict))
                 .setParseAction(dump_in_logger)
@@ -1266,7 +1267,7 @@ t4debug_gram = (OneOrMore((intro
 
 t4gram = (OneOrMore((intro
                      + OneOrMore(listresponses | ifpadjointcriticality
-                                 | defkeffblock | contribpartblock
+                                 | autokeffblock | contribpartblock
                                  | perturbation)
                      + runtime)
                     .setParseAction(trans.to_dict))

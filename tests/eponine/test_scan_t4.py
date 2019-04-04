@@ -296,10 +296,10 @@ def check_last_entropy_result(entropy_acc):
     assert bd_mesh.shape == (24, 3, 1, 1, 1, 1, 1)
     bd_entropy = dcv.convert_data(resp['results'],
                                   data_type='shannon_entropy_res')
-    assert np.array_equal(bd_entropy.error, 0)
+    assert np.isnan(bd_entropy.error)
     bd_entropy = dcv.convert_data(resp['results'],
                                   data_type='boltzmann_entropy_res')
-    assert np.array_equal(bd_entropy.error, 0)
+    assert np.isnan(bd_entropy.error)
     bd_spectrum = dcv.convert_data(resp['results'], data_type='spectrum_res')
     assert bd_spectrum.shape == (1, 1, 1, 1, 1, 1, 1)
     assert bd_spectrum.bins['e'].size == 2
@@ -372,8 +372,6 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     t4_res = T4Parser(str(datadir/"entropy.d.res.ceav5"), -1, mesh_lim=10)
     assert t4_res
     assert t4_res.scan_res.normalend
-    # with open('/home/el220326/valjean/entropy.log', 'w') as ofile:
-    #     ofile.write(caplog.text)
     with open(str(datadir/"entropy_debug.log"), 'r') as ifile:
         for line in ifile:
             assert line in caplog.text, "Line %s not found in caplog." % line
