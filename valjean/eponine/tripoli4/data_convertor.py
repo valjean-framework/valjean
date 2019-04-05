@@ -101,18 +101,6 @@ def integrated_result(result, res_type='integrated_res'):
                        bins=OrderedDict(), name=res_type)
 
 
-def entropy(result, res_type):
-    '''Conversion of entropy in :class:`~.base_dataset.BaseDataset`.
-
-    :param dict result: results dictionary containing ``res_type`` key
-    :param str res_type: can be ``'shannon_entropy_res'`` or
-        ``'boltzmann_entropy_res'``
-    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
-    '''
-    LOGGER.debug("entropy result %s", result[res_type])
-    return BaseDataset(result[res_type], np.int_(0), name=res_type)
-
-
 def keff_estimator(result, res_type, estimator):
     '''Conversion of keff in :class:`~.base_dataset.BaseDataset` for a given
     estimator.
@@ -143,6 +131,21 @@ def keff_combination(result, res_type):
                        name='keff_combination')
 
 
+def value_wo_error(result, res_type):
+    '''Conversion of a value provided without error in
+    :class:`~.base_dataset.BaseDataset`.
+
+    This function will be used for example to obtain the number of batches
+    used, the number of discarded batches, the entropy, the various times, etc.
+
+    :dict result: results dictionary containing ``res_type`` key
+    :param str res_type: key in result allowing access to the desired quantity
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
+    '''
+    LOGGER.debug("value without error %s", result[res_type])
+    return BaseDataset(result[res_type], np.int_(0), name=res_type)
+
+
 def not_converged_result():
     '''Deals with not converged results return None instead of a dataset.'''
     LOGGER.warning('Result not converged, no dataset can be built')
@@ -169,11 +172,13 @@ CONVERT_IN_DATASET = {
     'greenbands_res': array_result,
     'sensitivity_spectrum_res': array_result,
     'adj_crit_ed_res': array_result,
-    'shannon_entropy_res': entropy,
-    'boltzmann_entropy_res': entropy,
     'integrated_res': integrated_result,
     'keff_per_estimator_res': keff_estimator,
-    'keff_combination_res': keff_combination
+    'keff_combination_res': keff_combination,
+    'shannon_entropy_res': value_wo_error,
+    'boltzmann_entropy_res': value_wo_error,
+    'used_batch': value_wo_error,
+    'best_disc_batchs': value_wo_error
 }
 
 
