@@ -33,6 +33,16 @@ def assert_task_done(env, name):
     assert env[name]['status'] == TaskStatus.DONE
 
 
+def assert_cecho_exists(env, name, subdir):
+    '''Assert that the cecho executable can be found in the subdir
+    directory.'''
+    from pathlib import Path
+    assert name in env
+    assert 'build_dir' in env[name]
+    cecho_path = Path(env[name]['build_dir']) / subdir / 'cecho'
+    assert cecho_path.exists()
+    assert cecho_path.is_file()
+
 @requires_git
 @pytest.mark.parametrize('target', [None, 'checkout_cecho'],
                          ids=['no target', 'checkout_cecho'])
@@ -50,7 +60,7 @@ def test_checkout(job_config, target, env_path):
 @requires_cmake
 @pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho'],
                          ids=['no target', 'checkout_cecho', 'build_cecho'])
-def test_build(job_config, target, env_path):
+def test_build(job_config, target, env_path, subdir):
     '''Test the `build` command.'''
     args = ['build']
     if target is not None:
@@ -59,13 +69,14 @@ def test_build(job_config, target, env_path):
     assert_task_done(env, 'checkout_cecho')
     if target != 'checkout_cecho':
         assert_task_done(env, 'build_cecho')
+        assert_cecho_exists(env, 'build_cecho', subdir)
     else:
         assert 'build_cecho' not in env
 
 
 @requires_git
 @requires_cmake
-def test_resume(job_config, env_path):
+def test_resume(job_config, env_path, subdir):
     '''Test that running `checkout` followed by `build` does not rerun
     `checkout`.'''
     env = run_valjean(['checkout'], job_config=job_config, env_path=env_path)
@@ -79,6 +90,7 @@ def test_resume(job_config, env_path):
     assert 'elapsed_time' in env['checkout_cecho']
     assert env['checkout_cecho']['elapsed_time'] == elapsed
     assert_task_done(env, 'build_cecho')
+    assert_cecho_exists(env, 'build_cecho', subdir)
 
 
 @requires_git
@@ -87,7 +99,7 @@ def test_resume(job_config, env_path):
                                     'pling', 'plong'],
                          ids=['no target', 'checkout_cecho', 'build_cecho',
                               'pling', 'plong'])
-def test_run(job_config, target, env_path):
+def test_run(job_config, target, env_path, subdir):
     '''Test the `run` command.'''
     args = ['run']
     if target is not None:
@@ -96,6 +108,7 @@ def test_run(job_config, target, env_path):
     assert_task_done(env, 'checkout_cecho')
     if target != 'checkout_cecho':
         assert_task_done(env, 'build_cecho')
+        assert_cecho_exists(env, 'build_cecho', subdir)
     if target == 'pling':
         assert_task_done(env, 'pling')
         assert 'plong' not in env

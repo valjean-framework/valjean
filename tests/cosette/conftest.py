@@ -128,7 +128,7 @@ def make_git_repo(path):
 #  fixtures for CheckoutTask/BuildTask  #
 #########################################
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def project(tmpdir_factory):
     '''Set up a git project with a CMake file.'''
     project_path = tmpdir_factory.mktemp('project')
@@ -211,7 +211,7 @@ def notimpl_build(request):
 #  fixtures for RunTask/RunTaskFactory  #
 #########################################
 
-@pytest.fixture(scope='session',
+@pytest.fixture(scope='function',
                 params=('', 'subdir'),
                 ids=('without relative_path', 'with relative_path'))
 def subdir(request):
@@ -222,7 +222,7 @@ def subdir(request):
     return request.param
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def git_myecho_repo(tmpdir_factory, subdir):
     '''Set up a git project with the :command:`echo` command.'''
     import py
@@ -241,8 +241,9 @@ def git_myecho_repo(tmpdir_factory, subdir):
 
 CECHO_CMAKE = r'''project(CEcho C)
 cmake_minimum_required(VERSION ''' + _CMAKE_VERSION + ''')
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${{PROJECT_BINARY_DIR}}/{}")
 add_executable(cecho "${{PROJECT_SOURCE_DIR}}/cecho.c")
+set_target_properties(cecho PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+                      "${{PROJECT_BINARY_DIR}}{}")
 '''
 CECHO_C = r'''#include <stdio.h>
 int main(int argc, char **argv)
@@ -257,12 +258,14 @@ int main(int argc, char **argv)
 '''
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def cmake_echo(tmpdir_factory, subdir):
     '''Set up a CMake project with a CMake file.'''
     project_path = tmpdir_factory.mktemp('project')
     project_path.chmod(0o700)
     cmakelists = project_path / 'CMakeLists.txt'
+    if subdir:
+        subdir = '/' + subdir
     cmakelists.ensure(file=True).write(CECHO_CMAKE.format(subdir))
     cecho = project_path / 'cecho.c'
     cecho.ensure(file=True).write(CECHO_C)

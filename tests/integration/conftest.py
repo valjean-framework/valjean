@@ -11,7 +11,7 @@ from valjean.cosette.run import RunTaskFactory
 def job():
     checkout = CheckoutTask(name='checkout_cecho', repository='{repo_path}')
     build = BuildTask(name='build_cecho', source=checkout)
-    factory = RunTaskFactory.from_build(build, relative_path='cecho',
+    factory = RunTaskFactory.from_build(build, relative_path='{subdir}cecho',
                                         default_args=['{{text}}'])
     pling = factory.make(name='pling', text='pling')
     plong = factory.make(name='plong', text='plong')
@@ -20,10 +20,16 @@ def job():
 
 
 @pytest.fixture(scope='function')
-def job_file(cmake_echo, tmpdir):
+def job_file(cmake_echo, tmpdir, subdir):
     '''Create a job file for valjean execution.'''
-    jfile = tmpdir.join('some_job.py')
-    jfile.write(JOB_FILE.format(repo_path=str(cmake_echo)), ensure=True)
+    from hashlib import sha256
+    if subdir:
+        subdir += '/'
+    content = JOB_FILE.format(repo_path=str(cmake_echo), subdir=subdir)
+    hasher = sha256()
+    hasher.update(content.encode('utf-8'))
+    jfile = tmpdir.join('some_job_{}.py'.format(hasher.hexdigest()))
+    jfile.write(content, ensure=True)
     yield jfile
 
 
