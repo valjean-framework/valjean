@@ -4,7 +4,7 @@
 
 import tempfile
 
-from hypothesis import given, event, note, settings, HealthCheck
+from hypothesis import given, event, note, settings, HealthCheck, assume
 from hypothesis.strategies import data, sampled_from, lists
 
 from .conftest import envs
@@ -47,6 +47,8 @@ def test_persistence_roundtrip(env, persistence_format):
 def test_updates(env, data):
     '''Test environment updates.'''
     # generate a new environment with keys taken from those of the first
+    env_keys = list(env.keys())
+    assume(env_keys)
     env_update = data.draw(envs(sampled_from(list(env.keys()))))
     old_env = env.copy()
     env.apply(env_update)
@@ -92,6 +94,7 @@ def test_merge_done_tasks(env, data):
     # generate a new environment with keys taken from those of the first
     env_keys = list(env.keys())
     note('env_keys: {}'.format(env_keys))
+    assume(env_keys)
     env_to_merge = data.draw(envs(lists(sampled_from(env_keys))))
     note('env_to_merge: {}'.format(env_to_merge))
     old_env = env.copy()

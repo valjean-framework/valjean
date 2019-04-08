@@ -120,7 +120,7 @@ def _add_enum_accessors(enum):
 
 
 @_add_enum_accessors(TaskStatus)
-class Env(dict):
+class Env(MutableMapping):
     '''The :class:`Env` class can be used to store and dynamically update
     information about concurrently running tasks, and offers thread-safety
     guarantees.
@@ -128,15 +128,30 @@ class Env(dict):
 
     def __init__(self, dictionary=None):
         '''Construct an object based on an existing dictionary.'''
-        super().__init__()
+        self.dictionary = {}
         self.lock = threading.RLock()
         if dictionary is not None:
             with self.lock:
                 self.update(dictionary)
 
+    def __getitem__(self, key):
+        return self.dictionary[key]
+
+    def __setitem__(self, key, value):
+        self.dictionary[key] = value
+
+    def __delitem__(self, key):
+        del self.dictionary[key]
+
+    def __iter__(self):
+        yield from self.dictionary
+
+    def __len__(self):
+        return len(self.dictionary)
+
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,
-                               super(Env, self).__repr__())
+                               repr(self.dictionary))
 
     @classmethod
     def from_file(cls, path, fmt='pickle'):
@@ -253,7 +268,7 @@ class Env(dict):
 
     def copy(self):
         '''Return a shallow copy of `self`.'''
-        return Env(super().copy())
+        return Env(self.dictionary.copy())
 
     def __getstate__(self):
         '''Do not serialize the lock, as doing so results in exceptions with
