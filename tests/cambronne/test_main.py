@@ -7,20 +7,20 @@ from ..cosette.conftest import dep_tasks, DoNothingTask
 from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
-from valjean.cambronne.main import (check_unique_task_names,
-                                    tasks_and_dependencies)
+from valjean.cosette.task import close_dependency_graph
+from valjean.cambronne.main import check_unique_task_names
 
 
 # pylint: disable=no-value-for-parameter
 @given(tasks=dep_tasks())
 def test_tasks_dependencies(tasks):
-    '''Check that :func:`~valjean.cambronne.main.tasks_and_dependencies`
+    '''Check that :func:`~valjean.cambronne.main.close_dependency_graph`
     correctly recovers all the dependencies.'''
     # if a task appears as a dependency, remove it from the list
     to_remove = set(dep for task in tasks for dep in task.depends_on)
     indep_tasks = list(set(tasks).difference(to_remove))
-    collected_tasks = tasks_and_dependencies(indep_tasks)
-    # check that tasks_and_dependencies has correctly recovered all the tasks
+    collected_tasks = close_dependency_graph(indep_tasks)
+    # check that close_dependency_graph has correctly recovered all the tasks
     assert len(collected_tasks) == len(tasks)
 
 

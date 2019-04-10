@@ -10,6 +10,7 @@ from . import commands
 from .. import LOGGER, LOG_FILE_FORMAT, __version__
 from ..config import Config
 from ..path import ensure
+from ..cosette.task import close_dependency_graph
 
 
 def main(argv=None):
@@ -77,7 +78,7 @@ def collect_tasks(job_file, job_args, priority, targets):
 
     # compute the transitive closure of the dependency graph for the tasks
     # returned by job()
-    tasks = tasks_and_dependencies(tasks)
+    tasks = close_dependency_graph(tasks)
     LOGGER.debug('all tasks: %s', tasks)
 
     check_unique_task_names(tasks)
@@ -85,9 +86,9 @@ def collect_tasks(job_file, job_args, priority, targets):
     # remove tasks that were not requested
     tasks = filter_tasks(tasks, targets, priority)
 
-    # call tasks_and_dependencies() again to close the dependency graph (some
+    # call close_dependency_graph() again to close the dependency graph (some
     # dependencies may have been suppressed by filtering)
-    tasks = tasks_and_dependencies(tasks)
+    tasks = close_dependency_graph(tasks)
     LOGGER.debug('collected tasks: %s', tasks)
     return tasks
 
@@ -164,27 +165,6 @@ def filter_tasks(tasks, targets, priority):
         for task in tasks:
             LOGGER.debug('  task %s has priority %d', task, task.PRIORITY)
     return tasks
-
-
-def tasks_and_dependencies(tasks):
-    '''Return the tasks along with all their dependencies.
-
-    :param list tasks: A list of tasks.
-    :returns: The list of tasks, their dependencies, the dependencies of their
-              dependencies and so on.
-    :rtype: list(Task)
-    '''
-    queue = set(tasks)
-    all_tasks = queue.copy()
-    while queue:
-        deps = set(dep for task in queue for dep in task.depends_on
-                   if task.depends_on is not None)
-        soft_deps = set(dep for task in queue for dep in task.soft_depends_on
-                        if task.soft_depends_on is not None)
-        all_tasks.update(deps)
-        all_tasks.update(soft_deps)
-        queue = deps | soft_deps
-    return list(all_tasks)
 
 
 def check_unique_task_names(tasks):

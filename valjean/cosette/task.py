@@ -169,3 +169,24 @@ def det_hash(*args):
     digest = hasher.hexdigest()
     LOGGER.debug('resulting hash: %s', digest)
     return digest
+
+
+def close_dependency_graph(tasks):
+    '''Return the tasks along with all their dependencies.
+
+    :param list tasks: A list of tasks.
+    :returns: The list of tasks, their dependencies, the dependencies of their
+              dependencies and so on.
+    :rtype: list(Task)
+    '''
+    queue = set(tasks)
+    all_tasks = queue.copy()
+    while queue:
+        deps = set(dep for task in queue for dep in task.depends_on
+                   if task.depends_on is not None)
+        soft_deps = set(dep for task in queue for dep in task.soft_depends_on
+                        if task.soft_depends_on is not None)
+        all_tasks.update(deps)
+        all_tasks.update(soft_deps)
+        queue = deps | soft_deps
+    return list(all_tasks)
