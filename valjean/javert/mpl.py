@@ -299,7 +299,7 @@ class MplPlot:
         :param tuple(str) data_fmt: data format tuple,
             i.e. (color, marker shape, marker filling)
         '''
-        LOGGER.debug("in ierror plot for plot %d on subplot %d",
+        LOGGER.debug("in ierror plot for plot %s on subplot %d",
                      curve.label, iplot)
         splt = self.splt if self.nb_splts == 1 else self.splt[iplot]
         if iplot == self.nb_splts-1:

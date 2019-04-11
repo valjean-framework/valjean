@@ -78,14 +78,13 @@ class QueueScheduling:
                              task, hard_failed_deps)
                 env.set_skipped(task)
                 n_tasks -= 1
-                LOGGER.info('task %s cannot be run, %d left',
-                            task, n_tasks)
+                LOGGER.info('task %s cannot be run because of dependencies, '
+                            '%d tasks left', task, n_tasks)
             elif deps_finished:
-                LOGGER.debug('master: task %s can run', task)
                 self.queue.put(task)
                 n_tasks -= 1
-                LOGGER.debug('master: task %s scheduled, %d left',
-                             task, n_tasks)
+                LOGGER.info('master: task %s scheduled, %d left',
+                            task, n_tasks)
             else:
                 LOGGER.debug('master: task %s blocked by dependencies', task)
                 tasks_left.append(task)
@@ -187,7 +186,8 @@ class QueueScheduling:
                 try:
                     env_update, status = task.do(self.env, self.config)
                 except Exception as ex:  # pylint: disable=broad-except
-                    LOGGER.exception('task %s on worker %s failed: %s',
+                    LOGGER.exception('task %s on worker %s failed with the '
+                                     'following exception:\n%s',
                                      task, self.name, ex)
                     LOGGER.debug('worker %s: setting FAILED status in the '
                                  'environment...', self.name)

@@ -159,7 +159,10 @@ def filter_tasks(tasks, targets, priority):
     tasks = [task for task in tasks
              if (priority is None or task.PRIORITY <= priority)
              and _filter(task)]
-    LOGGER.debug('filtered tasks: %s', tasks)
+    LOGGER.info('number of tasks after filtering: %s', len(tasks))
+    if LOGGER.isEnabledFor(logging.DEBUG):
+        for task in tasks:
+            LOGGER.debug('  task %s has priority %d', task, task.PRIORITY)
     return tasks
 
 

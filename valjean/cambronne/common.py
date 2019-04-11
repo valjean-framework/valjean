@@ -137,7 +137,7 @@ def init_env(*, path, skip_read, fmt):
     '''
     env = Env()
     if path is not None and not skip_read:
-        LOGGER.info('attempting to deserialize %s environment from file %s',
+        LOGGER.info('deserializing %s environment from file %s',
                     fmt, path)
         persistent_env = Env.from_file(path, fmt)
         if persistent_env is not None:
