@@ -15,9 +15,3 @@ class EvalCommand(Command):
     PRIORITY = EvalTestTask.PRIORITY
 
     HELP = 'evaluate the tests'
-
-
-def make_eval_test_task(test_task):
-    '''Generate an :class:`~.EvalTestTask` that acts on the result of the given
-    test task.'''
-    return EvalTestTask.from_test_task(test_task)

@@ -15,10 +15,12 @@ import numpy as np
 
 from .. import LOGGER
 from ..path import ensure, sanitize_filename
+from ..cosette.task import TaskStatus
+from ..cosette.pythontask import PythonTask
+from ..gavroche.test import TestResult
 from .formatter import Formatter
 from .mpl import MplPlot
-from .test_report import TestReport
-from ..gavroche.test import TestResult
+from .test_report import TestReport, TestReportTask
 
 
 class Rst:
@@ -671,3 +673,42 @@ class FormattedRst:
         res_str = res_template.format(**kwargs) if formatting else res_template
         with dest.open('w') as res_file:
             res_file.write(res_str)
+
+
+class RstTestReportTask(PythonTask):
+    '''Task class that transforms a list of tests into a test report.
+    :class:`~.TestResult` objects in the environment.'''
+
+    PRIORITY = 50
+
+    @classmethod
+    def from_tasks(cls, name, *, make_report, eval_tasks, representation,
+                   author, version):
+        '''Construct an :class:`RstTestReportTask` from a list of test
+        evaluation tasks and a function to classify test results and put them
+        in test reports.
+        '''
+        report_name = 'report-' + name
+        report_task = TestReportTask(report_name,
+                                     make_report=make_report,
+                                     eval_tasks=eval_tasks)
+        return cls(name, report_task=report_task,
+                   representation=representation, author=author,
+                   version=version)
+
+    def __init__(self, name, *, report_task, representation, author, version):
+
+        def write_rst(*, env, config):
+            report = env[report_task.name]['result']
+            rst = Rst(representation)
+            fmt_report = rst.format_report(report=report, author=author,
+                                           version=version)
+            report_root = Path(config.get('path', 'report-root'))
+            report_path = report_root / sanitize_filename(self.name)
+            ensure(report_path, is_dir=True)
+            fmt_report.write(report_path)
+            env_up = {self.name: {'result': fmt_report}}
+            return env_up, TaskStatus.DONE
+
+        super().__init__(name, write_rst, deps=[report_task],
+                         env_kwarg='env', config_kwarg='config')

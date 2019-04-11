@@ -7,7 +7,6 @@ import importlib
 import logging
 
 from . import commands
-from .commands.eval import make_eval_test_task
 from .. import LOGGER, LOG_FILE_FORMAT, __version__
 from ..config import Config
 
@@ -30,13 +29,13 @@ def main(argv=None):
         priority = getattr(args.func.__self__, 'PRIORITY', None)
         targets = args.targets if hasattr(args, 'targets') else set()
         collected_tasks = collect_tasks(job_file, args.job_args, priority,
-                                        targets, args.test_prefix)
+                                        targets)
         args.func(args, collected_tasks, config)
     else:
         parser.print_help()
 
 
-def collect_tasks(job_file, job_args, priority, targets, test_prefix):
+def collect_tasks(job_file, job_args, priority, targets):
     '''Collect tasks from a job file, respecting the constraints specified on
     the command line.
 
@@ -69,9 +68,6 @@ def collect_tasks(job_file, job_args, priority, targets, test_prefix):
     :param targets: a (possibly empty) collection of task names. This
         represents any task names that the user specifies on the command line.
     :type targets: set(str)
-    :param str test_prefix: tasks whose name starts with this prefix are
-        expected to produce tests (in the sense of the
-        :class:`~.gavroche.test.Test` class).
     :returns: the collected tasks.
     :rtype: list(Task)
     '''
@@ -85,10 +81,6 @@ def collect_tasks(job_file, job_args, priority, targets, test_prefix):
     LOGGER.debug('all tasks: %s', tasks)
 
     check_unique_task_names(tasks)
-
-    # detect tasks that produce Test objects and add an EvalTestTask for each
-    # of them
-    tasks = eval_test_tasks(tasks, test_prefix)
 
     # remove tasks that were not requested
     tasks = filter_tasks(tasks, targets, priority)
@@ -208,25 +200,6 @@ def check_unique_task_names(tasks):
         raise ValueError(err)
 
 
-def eval_test_tasks(tasks, test_prefix):
-    '''Create test-evaluation tasks for any task whose name starts with the
-    given prefix.
-
-    :param tasks: a list of tasks.
-    :type tasks: list(Task)
-    :param str test_prefix: a prefix identifying tasks that produce tests.
-    :returns: the tasks in `tasks`, plus one evaluation task for each task
-        whose name matches the given prefix.
-    :rtype: list(Task)
-    '''
-    ret_tasks = tasks.copy()
-    for task in tasks:
-        if task.name.startswith(test_prefix):
-            eval_task = make_eval_test_task(task)
-            ret_tasks.append(eval_task)
-    return ret_tasks
-
-
 def make_parser():
     '''Construct the argument parser.'''
     parser = argparse.ArgumentParser(prog='valjean')
@@ -246,9 +219,6 @@ def make_parser():
                         default=[], dest='job_args',
                         help='arguments that will be passed to the job() '
                         'function; may be specified multiple times')
-    parser.add_argument('--test-prefix', default='test_',
-                        help='valjean assumes that tasks whose name starts '
-                        'with this string produce tests')
     parser.add_argument('--env-path', action='store', default='valjean.tasks',
                         help='path to the file containing the persistent '
                         'environment (default: valjean.tasks)')
