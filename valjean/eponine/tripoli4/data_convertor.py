@@ -67,35 +67,54 @@ def integrated_result(result, res_type='integrated_res'):
     '''
     LOGGER.debug("In integrated_result")
     intres = result[res_type] if res_type in result else result
+    # print(intres)
     if isinstance(intres, dict) and 'not_converged' in intres:
         return not_converged_result()
     other_res = [x for x in result
                  if x != res_type and ('spectrum' in x or 'mesh' in x)]
-    if other_res:
-        if res_type not in result:
-            if res_type not in result[other_res[0]]:
-                if len(other_res) > 1:
-                    LOGGER.warning("More than one other result: %s, "
-                                   "case not foreseen", str(other_res))
-                    return None
-                LOGGER.warning('%s not found in %s, please check',
-                               res_type, other_res)
+    # if other_res:
+    if res_type not in result:
+        if res_type not in result[other_res[0]]:
+            if len(other_res) > 1:
+                LOGGER.warning("More than one other result: %s, "
+                               "case not foreseen", str(other_res))
                 return None
-            intres = result[other_res[0]].get(res_type)
-            bins = bins_reduction(result[other_res[0]]['bins'],
-                                  result[other_res[0]]['array'].shape,
-                                  intres.shape)
-            return BaseDataset(intres['score'],
-                               intres['sigma'] * intres['score'] * 0.01,
-                               bins=bins, name=res_type)
-        ishape = tuple([1]*result[other_res[0]]['array'].ndim)
+            LOGGER.warning('%s not found in %s, please check',
+                           res_type, other_res)
+            return None
+        intres = result[other_res[0]].get(res_type)
         bins = bins_reduction(result[other_res[0]]['bins'],
                               result[other_res[0]]['array'].shape,
-                              ishape)
-        return BaseDataset(
-            np.array([intres['score']]).reshape(ishape),
-            np.array([intres['sigma']*intres['score']*0.01]).reshape(ishape),
-            bins=bins, name=res_type)
+                              intres.shape)
+        return BaseDataset(intres['score'],
+                           intres['sigma'] * intres['score'] * 0.01,
+                           bins=bins, name=res_type)
+    ishape = tuple([1]*result[other_res[0]]['array'].ndim)
+    bins = bins_reduction(result[other_res[0]]['bins'],
+                          result[other_res[0]]['array'].shape,
+                          ishape)
+    return BaseDataset(
+        np.array([intres['score']]).reshape(ishape),
+        np.array([intres['sigma']*intres['score']*0.01]).reshape(ishape),
+        bins=bins, name=res_type)
+    # print("seul le dernier return compte...")
+    # return BaseDataset(intres['score'].copy(),
+    #                    intres['sigma'] * intres['score'] * 0.01,
+    #                    bins=OrderedDict(), name=res_type)
+
+
+def generic_score(result, res_type='generic_res'):
+    '''Conversion of generic score (or energy integrated result) in
+    :class:`~valjean.eponine.base_dataset.BaseDataset`.
+
+    :param dict result: results dictionary containing ``res_type`` key
+    :param str res_type: should be 'generic_res'
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
+    '''
+    LOGGER.debug("In generic_score")
+    intres = result[res_type]
+    if isinstance(intres, dict) and 'not_converged' in intres:
+        return not_converged_result()
     return BaseDataset(intres['score'].copy(),
                        intres['sigma'] * intres['score'] * 0.01,
                        bins=OrderedDict(), name=res_type)
@@ -199,6 +218,7 @@ CONVERT_IN_DATASET = {
     'sensitivity_spectrum_res': array_result,
     'adj_crit_ed_res': array_result,
     'integrated_res': integrated_result,
+    'generic_res': generic_score,
     'keff_per_estimator_res': keff_estimator,
     'keff_combination_res': keff_combination,
     'auto_keff_res': best_keff,
@@ -206,7 +226,6 @@ CONVERT_IN_DATASET = {
     'boltzmann_entropy_res': value_wo_error,
     'used_batches_res': value_wo_error,
     'discarded_batches_res': value_wo_error,
-    'best_disc_batchs': value_wo_error
 }
 
 
@@ -222,7 +241,7 @@ def convert_data(data, data_type, **kwargs):
     :param kwargs: keyword arguements if needed
     :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
-    if data_type != 'integrated_res' and data_type not in data:
+    if data_type not in ['integrated_res', 'generic_res']+list(data.keys()):
         if 'not_converged' in data:
             return not_converged_result()
         LOGGER.warning("%s not found in data", data_type)

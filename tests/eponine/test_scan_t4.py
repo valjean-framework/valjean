@@ -395,7 +395,7 @@ def test_ifp(datadir):
     assert (last_resp['response_function']
             == "IFP ADJOINT WEIGHTED MIGRATION AREA")
     assert last_resp['response_type'] == 'adjoint_res'
-    assert last_resp['results']['integrated_res']['used_batch'] == 81
+    assert last_resp['results']['used_batches_res'] == 81
     t4acc = Accessor(t4_res.result[-1])
     assert (len(list(t4acc.resp_book.available_values('response_function')))
             == 22)
@@ -406,7 +406,7 @@ def test_ifp(datadir):
                                              'response_index', 'response_type',
                                              'results']
     bd_cycle = dcv.convert_data(resps[0]['results'],
-                                data_type='integrated_res')
+                                data_type='generic_res')
     assert bd_cycle.shape == ()
     assert not bd_cycle.bins
     rb_betai = t4acc.resp_book.filter_by(
@@ -417,9 +417,10 @@ def test_ifp(datadir):
             == ['PU239', 'PU240', 'PU241'])
     resp = rb_betai.select_by(family=5, nucleus='PU239', squeeze=True)
     assert resp['response_type'] == 'adjoint_res'
-    assert list(resp['results'].keys()) == ['integrated_res']
-    assert resp['results']['integrated_res']['used_batch'] == 81
-    bd_pu239_f5 = dcv.convert_data(resp['results'], data_type='integrated_res')
+    assert (sorted(list(resp['results'].keys()))
+            == ['generic_res', 'used_batches_res'])
+    assert resp['results']['used_batches_res'] == 81
+    bd_pu239_f5 = dcv.convert_data(resp['results'], data_type='generic_res')
     assert bd_pu239_f5.shape == ()
     assert not bd_pu239_f5.bins
 

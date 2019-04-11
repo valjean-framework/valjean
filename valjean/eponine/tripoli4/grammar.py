@@ -748,7 +748,7 @@ genericscoreblock = (Group(Optional(Suppress(_integratedres_kw))
                                + _integratedres
                                + Optional(_unitsres))
                               | _notconverged_kw('not_converged')))
-                     ('integrated_res').setParseAction(trans.group_to_dict))
+                     ('generic_res').setParseAction(trans.group_to_dict))
 
 
 # Time steps
