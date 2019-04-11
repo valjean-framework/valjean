@@ -1,6 +1,7 @@
 '''Module for the ``tasks`` subcommand.'''
 
 
+from ... import LOGGER
 from ..common import Command, init_env, write_env
 
 
@@ -24,15 +25,16 @@ class TasksCommand(Command):
                      'specified, print only the corresponding environment '
                      'section.')
         show_cmd = env_subparsers.add_parser('show', help=show_help)
-        show_cmd.add_argument('name', metavar='NAME', nargs='?',
-                              help='The name of the environment section to '
-                              'show.')
+        show_cmd.add_argument('name', metavar='NAME', nargs='*',
+                              help='The names of the environment sections to '
+                              'show, or all of them if no argument is '
+                              'provided.')
         show_cmd.set_defaults(func=self.show)
 
         rm_help = 'Remove the given section from the environment.'
         rm_cmd = env_subparsers.add_parser('rm', help=rm_help)
-        rm_cmd.add_argument('name', metavar='NAME',
-                            help='the name of the environment section to '
+        rm_cmd.add_argument('name', metavar='NAME', nargs='+',
+                            help='the names of the environment sections to '
                             'delete.')
         rm_cmd.set_defaults(func=self.remove)
 
@@ -53,10 +55,16 @@ class TasksCommand(Command):
                        fmt=args.env_format)
 
         from pprint import pprint
-        if args.name is None:
+        if not args.name:
             pprint(env)
-        else:
-            pprint(env[args.name])
+            return
+
+        for name in args.name:
+            if name in env:
+                pprint(env[name])
+            else:
+                LOGGER.error('cannot show task %s (missing from the '
+                             'environment)', name)
 
     # pylint: disable=no-self-use
     def remove(self, args, _collected_tasks, _config):
@@ -64,5 +72,10 @@ class TasksCommand(Command):
         # deserialize the environment
         env = init_env(path=args.env_path, skip_read=False,
                        fmt=args.env_format)
-        del env[args.name]
+        for name in args.name:
+            if name in env:
+                del env[name]
+            else:
+                LOGGER.error('cannot delete task %s (missing from the '
+                             'environment)', name)
         write_env(env=env, path=args.env_path, fmt=args.env_format)
