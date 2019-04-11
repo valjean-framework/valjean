@@ -379,6 +379,8 @@ class Scan(Mapping):
             for line in fil:
                 if line.lstrip().startswith("//"):  # comment in the jdd
                     continue
+                if line.lstrip().startswith("!!!"):  # CARFEFUL point in output
+                    continue
                 elif _batch_scan:
                     _batch_scan.build_result(line)
                     end_flag = self._is_end_flag(line)
