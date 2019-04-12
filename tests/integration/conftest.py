@@ -34,9 +34,8 @@ def job_file(cmake_echo, tmpdir, subdir):
 
 
 @pytest.fixture(scope='function')
-def job_config(job_file, config_tmp, tmpdir):
+def job_config(config_tmp, tmpdir):
     '''Create a config file for valjean execution.'''
-    config_tmp.set('path', 'job-file', str(job_file))
     conf_file = tmpdir.join('valjean.cfg')
     conf_file.write(str(config_tmp))
     yield conf_file

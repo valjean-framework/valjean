@@ -25,10 +25,9 @@ def main(argv=None):
 
     if hasattr(args, 'func'):
         # collect stuff from valjean.py
-        job_file = config.get('path', 'job-file')
         priority = getattr(args.func.__self__, 'PRIORITY', None)
         targets = args.targets if hasattr(args, 'targets') else set()
-        collected_tasks = collect_tasks(job_file, args.job_args, priority,
+        collected_tasks = collect_tasks(args.job_file, args.job_args, priority,
                                         targets)
         args.func(args, collected_tasks, config)
     else:
@@ -221,10 +220,15 @@ def make_parser():
                         help='use the specified configuration file; '
                         'may be specified multiple times')
     parser.add_argument('-l', '--log', help='path to the log file')
+    parser.add_argument('-j', '--job-file', action='store',
+                        default='job.py',
+                        help='path to the job file (default: job.py)')
     parser.add_argument('-a', '--args', action='append',
                         default=[], dest='job_args',
                         help='arguments that will be passed to the job() '
                         'function; may be specified multiple times')
+    parser.add_argument('-w', '--workers', action='store', default=4, type=int,
+                        help='number of workers to use in parallel')
     parser.add_argument('--env-path', action='store', default='valjean.tasks',
                         help='path to the file containing the persistent '
                         'environment (default: valjean.tasks)')

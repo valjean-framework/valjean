@@ -14,9 +14,10 @@ from valjean.cosette.task import TaskStatus
 from ..cosette.conftest import requires_git, requires_cmake
 
 
-def run_valjean(*other_args, job_config, env_path):
+def run_valjean(*other_args, job_config, env_path, job_file):
     '''Run :command:`valjean` using the specified arguments.'''
-    args = ['-c', str(job_config), '--env-path', str(env_path)]
+    args = ['-c', str(job_config), '--env-path', str(env_path),
+            '-j', str(job_file)]
     if LOGGER.getEffectiveLevel() == logging.DEBUG:
         args.append('-v')
     args.extend(*other_args)
@@ -43,15 +44,17 @@ def assert_cecho_exists(env, name, subdir):
     assert cecho_path.exists()
     assert cecho_path.is_file()
 
+
 @requires_git
 @pytest.mark.parametrize('target', [None, 'checkout_cecho'],
                          ids=['no target', 'checkout_cecho'])
-def test_checkout(job_config, target, env_path):
+def test_checkout(job_config, target, env_path, job_file):
     '''Test the `checkout` command.'''
     args = ['checkout']
     if target is not None:
         args.append(target)
-    env = run_valjean(args, job_config=job_config, env_path=env_path)
+    env = run_valjean(args, job_config=job_config, env_path=env_path,
+                      job_file=job_file)
     assert_task_done(env, 'checkout_cecho')
     assert 'build_cecho' not in env
 
@@ -60,12 +63,13 @@ def test_checkout(job_config, target, env_path):
 @requires_cmake
 @pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho'],
                          ids=['no target', 'checkout_cecho', 'build_cecho'])
-def test_build(job_config, target, env_path, subdir):
+def test_build(job_config, target, env_path, subdir, job_file):
     '''Test the `build` command.'''
     args = ['build']
     if target is not None:
         args.append(target)
-    env = run_valjean(args, job_config=job_config, env_path=env_path)
+    env = run_valjean(args, job_config=job_config, env_path=env_path,
+                      job_file=job_file)
     assert_task_done(env, 'checkout_cecho')
     if target != 'checkout_cecho':
         assert_task_done(env, 'build_cecho')
@@ -76,16 +80,18 @@ def test_build(job_config, target, env_path, subdir):
 
 @requires_git
 @requires_cmake
-def test_resume(job_config, env_path, subdir):
+def test_resume(job_config, env_path, subdir, job_file):
     '''Test that running `checkout` followed by `build` does not rerun
     `checkout`.'''
-    env = run_valjean(['checkout'], job_config=job_config, env_path=env_path)
+    env = run_valjean(['checkout'], job_config=job_config, env_path=env_path,
+                      job_file=job_file)
     assert_task_done(env, 'checkout_cecho')
     assert 'elapsed_time' in env['checkout_cecho']
     assert 'build_cecho' not in env
     elapsed = env['checkout_cecho']['elapsed_time']
 
-    env = run_valjean(['build'], job_config=job_config, env_path=env_path)
+    env = run_valjean(['build'], job_config=job_config, env_path=env_path,
+                      job_file=job_file)
     assert_task_done(env, 'checkout_cecho')
     assert 'elapsed_time' in env['checkout_cecho']
     assert env['checkout_cecho']['elapsed_time'] == elapsed
@@ -99,12 +105,13 @@ def test_resume(job_config, env_path, subdir):
                                     'pling', 'plong'],
                          ids=['no target', 'checkout_cecho', 'build_cecho',
                               'pling', 'plong'])
-def test_run(job_config, target, env_path, subdir):
+def test_run(job_config, target, env_path, subdir, job_file):
     '''Test the `run` command.'''
     args = ['run']
     if target is not None:
         args.append(target)
-    env = run_valjean(args, job_config=job_config, env_path=env_path)
+    env = run_valjean(args, job_config=job_config, env_path=env_path,
+                      job_file=job_file)
     assert_task_done(env, 'checkout_cecho')
     if target != 'checkout_cecho':
         assert_task_done(env, 'build_cecho')
@@ -123,7 +130,8 @@ def test_run(job_config, target, env_path, subdir):
 @pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho'],
                          ids=['no target', 'checkout_cecho', 'build_cecho'])
 @pytest.mark.parametrize('dependencies', [None, 'hard', 'soft', 'both'])
-def test_graph(job_config, target, dependencies, env_path, capsys):
+def test_graph(job_config, target,  # pylint: disable=too-many-arguments
+               dependencies, env_path, job_file, capsys):
     '''Test that the `graph` command produces syntactically valid graphviz
     files.'''
     pydot = pytest.importorskip('pydot')
@@ -133,7 +141,8 @@ def test_graph(job_config, target, dependencies, env_path, capsys):
         args.append(dependencies)
     if target is not None:
         args.append(target)
-    run_valjean(args, job_config=job_config, env_path=env_path)
+    run_valjean(args, job_config=job_config, env_path=env_path,
+                job_file=job_file)
     captured = capsys.readouterr()
     pydot.graph_from_dot_data(captured.out)
 
@@ -141,7 +150,8 @@ def test_graph(job_config, target, dependencies, env_path, capsys):
 @pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho'],
                          ids=['no target', 'checkout_cecho', 'build_cecho'])
 @pytest.mark.parametrize('dependencies', [None, 'hard', 'soft', 'both'])
-def test_graph_on_file(job_config, target, dependencies, env_path, tmpdir):
+def test_graph_on_file(job_config,  # pylint: disable=too-many-arguments
+                       target, dependencies, env_path, job_file, tmpdir):
     '''Test that the `graph` command produces syntactically valid graphviz
     files.'''
     pydot = pytest.importorskip('pydot')
@@ -152,6 +162,7 @@ def test_graph_on_file(job_config, target, dependencies, env_path, tmpdir):
         args.append(dependencies)
     if target is not None:
         args.append(target)
-    run_valjean(args, job_config=job_config, env_path=env_path)
+    run_valjean(args, job_config=job_config, env_path=env_path,
+                job_file=job_file)
     graph = output_file.read()
     pydot.graph_from_dot_data(graph)

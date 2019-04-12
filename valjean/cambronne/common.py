@@ -5,6 +5,7 @@ import argparse
 from ..cosette.depgraph import DepGraph
 from ..cosette.env import Env
 from ..cosette.scheduler import Scheduler
+from ..cosette.backends.queue import QueueScheduling
 from ..cosette.task import TaskStatus
 from .. import LOGGER
 
@@ -31,11 +32,12 @@ class Command:
         LOGGER.debug('resulting soft_graph: %s', soft_graph)
         LOGGER.info('hard_graph contains %s tasks', len(hard_graph))
         LOGGER.info('soft_graph contains %s tasks', len(soft_graph))
+        LOGGER.info('will schedule up to %d tasks in parallel', args.workers)
 
         env = init_env(path=args.env_path, skip_read=args.env_skip_read,
                        fmt=args.env_format)
         new_env = schedule(hard_graph=hard_graph, soft_graph=soft_graph,
-                           env=env, config=config)
+                           env=env, config=config, workers=args.workers)
 
         self.task_diagnostics(tasks=collected_tasks,
                               env=new_env, config=config)
@@ -165,11 +167,12 @@ def write_env(env, *, path, fmt):
         LOGGER.debug('skipping environment serialization')
 
 
-def schedule(*, hard_graph, soft_graph, env, config=None):
+def schedule(*, hard_graph, soft_graph, env, config=None, workers=1):
     '''Schedule a graph for execution.
 
     '''
-    scheduler = Scheduler(hard_graph=hard_graph, soft_graph=soft_graph)
+    scheduler = Scheduler(hard_graph=hard_graph, soft_graph=soft_graph,
+                          backend=QueueScheduling(workers))
     new_env = scheduler.schedule(env=env, config=config)
     LOGGER.debug('resulting environment: %s', new_env)
     return new_env
