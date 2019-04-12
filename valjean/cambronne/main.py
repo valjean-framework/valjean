@@ -9,6 +9,7 @@ import logging
 from . import commands
 from .. import LOGGER, LOG_FILE_FORMAT, __version__
 from ..config import Config
+from ..path import ensure
 
 
 def main(argv=None):
@@ -294,6 +295,7 @@ def process_options(args):
     if args.log is not None:
         formatter = logging.Formatter(LOG_FILE_FORMAT,
                                       datefmt='%Y-%m-%d %H:%M:%S')
+        ensure(args.log)
         handler = logging.FileHandler(args.log)
         handler.setFormatter(formatter)
         handler.setLevel(log_level)
