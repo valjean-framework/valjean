@@ -43,7 +43,6 @@ A few options are set from the beginning:
     checkout-root = ${work-dir}/checkout
     build-root = ${work-dir}/build
     run-root = ${work-dir}/run
-    test-root = ${work-dir}/test
     report-root = ${work-dir}/report
     job-file = ${work-dir}/job.py
 
@@ -71,7 +70,6 @@ It also provides some additional convenience methods:
     path.checkout-root: ${work-dir}/checkout
     path.build-root: ${work-dir}/build
     path.run-root: ${work-dir}/run
-    path.test-root: ${work-dir}/test
     path.report-root: ${work-dir}/report
     path.job-file: ${work-dir}/job.py
 
@@ -142,7 +140,6 @@ class Config:
         self.set('path', 'checkout-root', '${work-dir}/checkout')
         self.set('path', 'build-root', '${work-dir}/build')
         self.set('path', 'run-root', '${work-dir}/run')
-        self.set('path', 'test-root', '${work-dir}/test')
         self.set('path', 'report-root', '${work-dir}/report')
         self.set('path', 'job-file', '${work-dir}/job.py')
 
