@@ -28,7 +28,8 @@ been executed, simply because its output (which is the input to
 The solution is to bridge the gap using an :class:`Use` object:
 
     >>> from valjean.cosette.use import Use
-    >>> use_arg_echo = Use(func=how_many_chars, task=run_task, key='stdout')
+    >>> use_arg_echo = Use.from_func(func=how_many_chars, task=run_task,
+    ...                              key='stdout')
 
 :class:`Use` lifts the naked function `how_many_chars` into the world of
 :mod:`valjean` dependency graphs. The `how_many_chars` function is wrapped in a
@@ -47,6 +48,17 @@ has failed, then of course `how_many_task` will fail, too.  The dependency of
 `how_many_task` on `run_task` is made explicit:
 
     >>> run_task in how_many_task.depends_on
+    True
+
+.. note::
+
+    If you want to introduce a **soft** dependency on `run_task` (instead of a
+    hard one), you can use the `deps_type` constructor argument:
+
+    >>> use_arg_echo_soft = Use.from_func(func=how_many_chars, task=run_task,
+    ...                                   key='stdout', deps_type='soft')
+    >>> how_many_task_soft = use_arg_echo_soft.get_task()
+    >>> run_task in how_many_task_soft.soft_depends_on
     True
 
 This allows :mod:`valjean` to seamlessly integrate the execution of
@@ -538,6 +550,7 @@ from functools import update_wrapper
 
 from .task import TaskStatus, det_hash
 from .pythontask import PythonTask
+from .run import RunTask
 from .. import LOGGER
 
 
@@ -548,7 +561,9 @@ def from_env(*, env, task_name, key):
     :param env: the environment.
     :type env: :class:`~.Env`
     :param str task_name: the name of the task to look up.
-    :param str key: the key to look up.
+    :param key: the key to look up. If `None` is given, return the whole
+        key-value pair associated to `task_name`.
+    :type key: str or None
     :raises KeyError: if the required task_name or key are not available.
     '''
     try:
@@ -557,6 +572,10 @@ def from_env(*, env, task_name, key):
         LOGGER.error('Task %r is required for argument injection, but the '
                      'task is not in the environment', task_name)
         raise
+
+    if key is None:
+        return task_name, task_env
+
     try:
         task_result = task_env[key]
     except KeyError:
@@ -574,50 +593,91 @@ class Use:
     _CACHE = {}
     _USE_CACHING = True
 
-    def __init__(self, *, func, task, key='result', kwarg=None):
+    @classmethod
+    def from_func(cls, *, func, task, key='result', kwarg=None, priority=0,
+                  deps_type='hard'):
         '''Create a :class:`Use` from a function.
 
         :param func: a function or a callable object.
         :param task: the task whose result should be injected as an argument to
-                     `func`.
+            `func`.
         :type task: :class:`~.Task`
         :param str key: the name of the key that contains the task result in
-                        the environment.
+            the environment.
         :param kwarg: the name of the keyword argument to `func` that must be
-                      fed with the `task` result. If None, the result of `task`
-                      will be passed as a positional argument.
+            fed with the `task` result. If None, the result of `task` will be
+            passed as a positional argument.
         :type kwarg: None or str
+        :param int priority: the priority value to be assigned to the produced
+            tasks. See :mod:`~.task` or :func:`~.collect_tasks` for more
+            information about the meaning of priority.
+        :param str deps_type: whether the created task should have a hard or a
+            soft dependency towards the injected tasks. Possible values are
+            ``'hard'`` and ``'soft'``.
         '''
-        if isinstance(func, self.__class__):
+        if isinstance(func, cls):
             # when we decorate another Use object, we just extend the decorated
             # object's inj_args list and inj_kwargs dictionary
-            LOGGER.debug('decorating a "%s" object', self.__class__.__name__)
-            self.inj_args = func.inj_args.copy()
-            self.inj_kwargs = func.inj_kwargs.copy()
-            self.func_name = func.func_name
+            LOGGER.debug('decorating a "%s" object', cls.__name__)
+            inj_args = func.inj_args.copy()
+            inj_kwargs = func.inj_kwargs.copy()
         else:
             LOGGER.debug('decorating a free function')
-            self.inj_args = []
-            self.inj_kwargs = {}
-            self.func_name = (func.__qualname__ if func.__name__ is None
-                              else func.__name__)
-            update_wrapper(self, func)
+            inj_args = []
+            inj_kwargs = {}
         if kwarg is None:
-            self.inj_args.append((task, key))
+            inj_args.append((task, key))
         else:
-            self.inj_kwargs[kwarg] = (task, key)
-        self.wrapped = func
-        LOGGER.debug('inj_args = %s', self.inj_args)
-        LOGGER.debug('inj_kwargs = %s', self.inj_kwargs)
+            inj_kwargs[kwarg] = (task, key)
+        LOGGER.debug('inj_args = %s', inj_args)
+        LOGGER.debug('inj_kwargs = %s', inj_kwargs)
+        return cls(inj_args=inj_args, inj_kwargs=inj_kwargs,
+                   wrapped=func, priority=priority, deps_type=deps_type)
+
+    def __init__(self, *, inj_args=None, inj_kwargs=None, wrapped, priority,
+                 deps_type='hard'):
+        '''Instantiate a :class:`Use` by providing all  the necessary
+        information.
+
+        :param inj_args: an iterable of `(task, key)` pairs specifying which
+            part of what task result should be injected as a positional
+            argument. See :class:`Use` for the meaning of `key`.
+        :type inj_args: tuple((Task, str or None)) or list((Task, str or None))
+        :param inj_kwargs: a dictionary associating any kwarg names to a
+            `(task, key)` pair. The specified task result will be injected as
+            the given kwarg.
+        :type inj_kwargs: dict(str, (Task, str or None))
+        :param wrapped: the function to wrap.
+        :param int priority: the priority to assign to the created task.
+        :param str deps_type: whether the created task should have a hard or a
+            soft dependency towards the injected tasks. Possible values are
+            ``'hard'`` and ``'soft'``.
+        '''
+        self.inj_args = () if inj_args is None else inj_args
+        self.inj_kwargs = {} if inj_kwargs is None else inj_kwargs
+        self.wrapped = wrapped
+        self.priority = priority
+        if isinstance(wrapped, self.__class__):
+            func_name = wrapped.func_name
+        else:
+            func_name = (wrapped.__qualname__ if wrapped.__name__ is None
+                         else wrapped.__name__)
+            update_wrapper(self, wrapped)
+        self.func_name = func_name
+        expected_deps_type = ['hard', 'soft']
+        if deps_type not in expected_deps_type:
+            raise ValueError('deps_type argument to Use must be one of {}'
+                             .format(expected_deps_type))
+        self.deps_type = deps_type
 
     def get_task(self):
-        '''Return the task representing this decorated function.'''
+        '''Return the task that executes the decorated function.'''
         from itertools import chain
 
         kwargs_names = {kwarg: (task.name, key)
                         for kwarg, (task, key) in self.inj_kwargs.items()}
         args_names = [(task.name, key) for task, key in self.inj_args]
-        uid = det_hash(kwargs_names, args_names)
+        uid = det_hash(kwargs_names, args_names, self.deps_type)
         pytask_name = self.func_name + '-' + uid
 
         if self._USE_CACHING and pytask_name in self._CACHE:
@@ -627,10 +687,19 @@ class Use:
         LOGGER.debug('creating %s task', pytask_name)
         LOGGER.debug('  args: %s', self.inj_args)
         LOGGER.debug('  kwargs: %s', self.inj_kwargs)
+        LOGGER.debug('  deps_type: %s', self.deps_type)
 
-        deps = set(value[0] for value in chain(self.inj_kwargs.values(),
+        if self.deps_type == 'soft':
+            soft_deps = set(value[0]
+                            for value in chain(self.inj_kwargs.values(),
                                                self.inj_args))
+            deps = set()
+        else:
+            deps = set(value[0] for value in chain(self.inj_kwargs.values(),
+                                                   self.inj_args))
+            soft_deps = set()
         LOGGER.debug('%s task will depend on %s', pytask_name, deps)
+        LOGGER.debug('%s task will soft-depend on %s', pytask_name, soft_deps)
 
         def inject_from_env(env):
             # Prepare the args for the function; we loop over self.inj_args in
@@ -655,8 +724,10 @@ class Use:
             env_up = {pytask_name: {'result': result}}
             return env_up, TaskStatus.DONE
 
-        task = PythonTask(pytask_name, inject_from_env, deps=deps,
+        task = PythonTask(pytask_name, inject_from_env,
+                          deps=deps, soft_deps=soft_deps,
                           env_kwarg='env')
+        task.priority = self.priority
         self._CACHE[pytask_name] = task
         return task
 
@@ -667,16 +738,20 @@ class Use:
     def map(self, func):
         '''Create a new :class:`Use` object that applies `func` to the result
         of the task defined by `self`.'''
-        return Use(func=func, task=self.get_task())
+        return Use.from_func(func=func, task=self.get_task(),
+                             priority=self.priority)
 
 
-def using(*, key='result', task, kwarg=None):
+def using(*, key='result', task, kwarg=None, priority=0):
     '''Make it possible to instantiate :class:`Use` as a decorator.
 
     See :meth:`Use.__init__` for a description of the parameters.
     '''
     def decorator(wrapped):
-        return Use(task=task, key=key, kwarg=kwarg, func=wrapped)
+        LOGGER.debug('wrapping %s into a Use with priority %d',
+                     wrapped, priority)
+        return Use.from_func(task=task, key=key, kwarg=kwarg, func=wrapped,
+                             priority=priority)
     return decorator
 
 
@@ -684,7 +759,7 @@ class UseRun:
     '''Produce :class:`Use` decorators from a :class:`~.RunTaskFactory`.'''
 
     @classmethod
-    def from_factory(cls, factory):
+    def from_factory(cls, factory, *, priority=RunTask.PRIORITY + 1):
         '''Create a :class:`UseRun` from a :class:`~.RunTaskFactory`.
 
         Given a :class:`~.RunTaskFactory`, the :class:`UseRun` class can be
@@ -692,10 +767,12 @@ class UseRun:
         results into the decorated function.
 
         :param RunTaskFactory factory: a :class:`~.RunTaskFactory` object.
+        :param int priority: the priority to assign to the tasks produced by
+            this factory.
         '''
-        return cls(factory, [])
+        return cls(factory, [], priority=priority)
 
-    def __init__(self, factory, posts):
+    def __init__(self, factory, posts, *, priority=0):
         '''Instantiate a :class:`UseRun` object.
 
         Given a :class:`~.RunTaskFactory`, the :class:`UseRun` class can be
@@ -710,9 +787,12 @@ class UseRun:
         :param RunTaskFactory factory: a :class:`~.RunTaskFactory` object.
         :param posts: a collection of post-processing functions. Each function
                       will be converted to a :class:`~.PythonTask` object.
+        :param int priority: the priority to assign to the tasks produced by
+            this factory.
         '''
         self.factory = factory
         self.posts = posts
+        self.priority = priority
 
     def __call__(self, kwarg=None, **kwargs):
         task = self.factory.make(**kwargs)
@@ -720,14 +800,16 @@ class UseRun:
         LOGGER.debug('mapping %s functions on the output of %s',
                      len(self.posts), task.name)
         for post in self.posts:
-            use = Use(task=task, key=key, func=post)
+            use = Use.from_func(task=task, key=key, func=post,
+                                priority=self.priority)
             task = use.get_task()
             key = 'result'
-        return using(kwarg=kwarg, task=task, key=key)
+        return using(kwarg=kwarg, task=task, key=key, priority=self.priority)
 
     def copy(self):
         '''Return a copy of this object.'''
-        return UseRun(self.factory.copy(), self.posts.copy())
+        return UseRun(self.factory.copy(), self.posts.copy(),
+                      priority=self.priority)
 
     def map(self, func):
         '''Create a new instance of :class:`UseRun` by extending the list of

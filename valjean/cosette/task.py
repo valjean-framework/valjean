@@ -67,7 +67,7 @@ class Task(ABC):
     #: of this attribute.
     PRIORITY = 0
 
-    def __init__(self, name, *, deps=None, soft_deps=None):
+    def __init__(self, name, *, deps=None, soft_deps=None, priority=None):
         '''Initialize the task.
 
         :param str name: The name of the task.
@@ -79,6 +79,8 @@ class Task(ABC):
                           be either `None` (i.e. no dependencies) or list of
                           :class:`Task` objects.
         :type soft_deps: list(Task) or None
+        :param int priority: the priority for this task. See
+            :func:`~.collect_tasks` for more information.
         '''
         self.name = name
 
@@ -99,6 +101,9 @@ class Task(ABC):
                           'type {} found'.format(type(soft_deps)))
                 raise TypeError(errmsg)
             self.soft_depends_on.update(soft_deps)
+
+        if priority is None:
+            self.priority = self.PRIORITY
 
     @abstractmethod
     def do(self, env, config):
