@@ -1,4 +1,5 @@
 '''Utility functions to access the filesystem.'''
+from pathlib import Path
 
 
 def ensure(path, *, is_dir=False):
@@ -7,6 +8,7 @@ def ensure(path, *, is_dir=False):
     :param pathlib.Path path: A path.
     :param bool is_dir: If `True`, the path will be constructed as a directory.
     '''
+    path = Path(path)
     if path.exists():
         return
     if is_dir:
