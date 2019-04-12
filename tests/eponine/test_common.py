@@ -1109,13 +1109,12 @@ def kij_auto_estimation(draw, evals, kijmat):
         spacebins = list(range(kijmat.shape[0]))
     kijdict = {'keff_estimator': 'KIJ',
                'used_batch': draw(integers(80, 99)),
-               'kij-keff': np.real(evals[0]),
-               'nbins': evals.shape[0],
+               'kij_mkeff': np.real(evals[0]),
                'spacebins': np.array(spacebins),
-               'eigenvector': np.real(levec[:, 0]),
-               'keff_KIJ_matrix': np.real(kijmat),
-               'keff_StdDev_matrix': stddevmat,
-               'keff_sensibility_matrix': sensibmat}
+               'kij_leigenvec': np.real(levec[:, 0]),
+               'kij_matrix': np.real(kijmat),
+               'kij_stddev_matrix': stddevmat,
+               'kij_sensibility_matrix': sensibmat}
     return kijdict
 
 
@@ -1136,7 +1135,7 @@ def kij_sources_t4_output(kijdict):
                  .format(kijdict['used_batch']))
     t4out.append("SOURCES VECTOR :\n\n")
     t4out.append("Sources are ordered following GEOMCOMP:\n\n")
-    for source in kijdict['eigenvector']:
+    for source in kijdict['kij_leigenvec']:
         t4out.append("{0:.6e}\n".format(source))
     t4out.append("\n")
     return ''.join(t4out)
@@ -1189,25 +1188,25 @@ def kijkeff_t4_output(kijdict):
     t4out.append("{0:>12}number of last batches kept : {1}\n\n"
                  .format("", kijdict['used_batch']))
     t4out.append("{0:>12}kij-keff = {1:.6e}\n\n"
-                 .format("", kijdict['kij-keff']))
+                 .format("", kijdict['kij_mkeff']))
     t4out.append("{0:>12}EIGENVECTOR :{0:>6}index{0:>6}source rate\n\n"
                  .format(""))
-    for ind, ivec in enumerate(kijdict['eigenvector']):
+    for ind, ivec in enumerate(kijdict['kij_leigenvec']):
         t4out.append("{0:>33}{1:<8}{2:.6e}\n\n".format("", ind, np.real(ivec)))
     t4out.append("\n")
     t4out.append("{0:>12}K-IJ MATRIX :\n\n".format(""))
     t4out.append("{0:>24}".format(""))
-    t4out.append(matrix_t4_output(kijdict['keff_KIJ_matrix'],
+    t4out.append(matrix_t4_output(kijdict['kij_matrix'],
                                   kijdict['spacebins']))
     t4out.append("\n\n\n")
     t4out.append("{0:>12}STANDARD DEVIATION MATRIX :\n\n".format(""))
     t4out.append("{0:>24}".format(""))
-    t4out.append(matrix_t4_output(kijdict['keff_StdDev_matrix'],
+    t4out.append(matrix_t4_output(kijdict['kij_stddev_matrix'],
                                   kijdict['spacebins']))
     t4out.append("\n\n\n")
     t4out.append("{0:>12}SENSIBILITY MATRIX :\n\n".format(""))
     t4out.append("{0:>24}".format(""))
-    t4out.append(matrix_t4_output(kijdict['keff_sensibility_matrix'],
+    t4out.append(matrix_t4_output(kijdict['kij_sensibility_matrix'],
                                   kijdict['spacebins']))
     t4out.append("\n\n\n")
     return ''.join(t4out)
@@ -1251,17 +1250,17 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
     '''
     evals, evecs, kijdict = kij_res
     # KIJ RESULT block
-    matrix = kijdict['keff_KIJ_matrix']
+    matrix = kijdict['kij_matrix']
     kij_t4_out = kij_t4_output(evals, evecs, matrix)
     note(kij_t4_out)
     pres = pygram.kijres.parseString(kij_t4_out)
     assert pres
     assert len(pres) == 1
     assert sorted(list(pres[0].keys())) == [
-        'kij_eigenval_res', 'kij_eigenvec_res', 'kij_matrix_res',
-        'kijdomratio_res', 'kijmkeff_res', 'used_batches_res']
-    assert np.allclose(pres[0]['kij_eigenval_res'], evals)
-    assert np.allclose(pres[0]['kij_eigenvec_res'], evecs)
+        'kij_domratio_res', 'kij_matrix_res', 'kij_mkeff_res',
+        'kij_reigenval_res', 'kij_reigenvec_res', 'used_batches_res']
+    assert np.allclose(pres[0]['kij_reigenval_res'], evals)
+    assert np.allclose(pres[0]['kij_reigenvec_res'], evecs)
     assert np.allclose(pres[0]['kij_matrix_res'], matrix)
     # KIJ SOURCES block
     kij_sources_t4_out = kij_sources_t4_output(kijdict)
@@ -1269,7 +1268,7 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
     assert pres
     assert sorted(list(pres[0].keys())) == ['kij_sources_order',
                                             'kij_sources_vals', 'used_batch']
-    assert np.allclose(pres[0]['kij_sources_vals'], kijdict['eigenvector'])
+    assert np.allclose(pres[0]['kij_sources_vals'], kijdict['kij_leigenvec'])
     # KEFF BEST ESTIMATION block
     kijkeff_t4_out = bekeff_t4_output(keff_res)
     kijkeff_t4_out = ''.join([kijkeff_t4_out, kijkeff_t4_output(kijdict)])

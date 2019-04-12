@@ -469,16 +469,17 @@ the number of volumes containing fissle material, N.
 
 The returned object is a dictionary containing the following keys and objects:
 
-:``'used_batch'``: number of batchs used (`int`)
-:``'kijmkeff_res'``: result of |kij|-|keff| (`float`), where |kij| is the
+:``'used_batches_res'``: number of batchs used (`int`)
+:``'kij_mkeff_res'``: result of |kij|-|keff| (`float`), where |kij| is the
   hightest eigenvalue of |kij|
-:``'kijdomratio'``: dominant ratio (`float`), ratio between the hightest |kij|
-  eigenvalue and the next one
-:``'kij_eigenval'``: :obj:`numpy.ndarray` of N **complex** numbers (real and
-  imaginary parts given in the listings) corresponding to the eigenvalues.
-:``'kij_eigenvec'``: :obj:`numpy.ndarray` of N vectors of N elements
-  corresponding to eigenvectors.
-:``'kij_matrix'``: :obj:`numpy.matrix` of N×N being the |kij| matrix.
+:``'kij_domratio_res'``: dominant ratio (`float`), ratio between the hightest
+  |kij| eigenvalue and the next one
+:``'kij_reigenval_res'``: :obj:`numpy.ndarray` of N **complex** numbers (real
+  and imaginary parts given in the listings) corresponding to the **right**
+  eigenvalues.
+:``'kij_reigenvec_res'``: :obj:`numpy.ndarray` of N vectors of N elements
+  corresponding to **right** eigenvectors.
+:``'kij_matrix_res'``: :obj:`numpy.matrix` of N×N being the |kij| matrix.
 
 
 .. _eponine-kij-in-keff:
@@ -494,27 +495,26 @@ sensibility matrix.
 The returned object is a dictionary with the following keys (faculative can be
 specified):
 
-:``'estimator'``: name of the estimator (:class:`str`), ``'KIJ'`` here
-:``'batchs_kept'``: number of batchs used to calculate the |keff| from |kij|
-  (:class:`int`)
-:``'kij-keff'``: result of |kij|-|keff| (`float`), using the best estimation
-  of |kij|
-:``'nbins'``: **facultative**, number of volumes/mesh elements considered, or
-  N, (:class:`int`)
-:``'spacebins'``: **facultative**, list of N volumes/mesh elements considered
-  (:obj:`numpy.ndarray` of
+:``'keff_estimator'``: name of the estimator (:class:`str`), ``'KIJ'`` here
+:``'results'``: usual results block, built here for once containing the
+  following dictionary (same keys as in the previous case when possible):
+
+  :``'used_batches_res'``: number of batchs used to calculate the |kij|
+    (:class:`int`)
+  :``'kij_mkeff_res'``: result of |kij|-|keff| (`float`)
+  :``'spacebins_res'``: **facultative**, list of N volumes/mesh elements
+    considered (:obj:`numpy.ndarray` of
 
     * :class:`int` for volumes,
     * :class:`tuple` of :class:`int` (s0, s1, s2) for mesh elements,
 
-:``'eigenvector'``: eigenvector corresponding to best estimation
-  (:obj:`numpy.ndarray` of N elements)
-:``'keff_KIJ_matrix'``: |kij| matrix for best estimation of |keff|
-  (N×N :obj:`numpy.matrix`)
-:``'keff_StdDev_matrix'``: standard deviation matrix for best estimation of
-  |keff| (N×N :obj:`numpy.matrix`)
-:``'keff_sensibility_matrix'``: sensibility matrix for best estimation of
-  |keff| (N×N :obj:`numpy.matrix`)
+  :``'kij_leigenvec_res'``: eigenvector corresponding dominant **left**
+    eigenvector (:obj:`numpy.ndarray` of N elements)
+  :``'kij_matrix_res'``: |kij| matrix (N×N :obj:`numpy.matrix`)
+  :``'kij_stddev_matrix_res'``: standard deviation matrix (N×N
+    :obj:`numpy.matrix`)
+  :``'kij_sensibility_matrix_res'``: sensibility matrix (N×N
+    :obj:`numpy.matrix`)
 
 .. rubric:: Footnotes
 
@@ -1822,11 +1822,14 @@ def convert_kij_result(res):
 
     ::
 
-      {'used_batch': int, 'kijmkeff_res': float, 'kijdomratio': float,
-      'kij_eigenval': numpy.array, 'kij_eigenvec': numpy.array,
-      'kij_matrix': numpy.array}
+      {'used_batches_res': int, 'kij_mkeff_res': float,
+       'kij_domratio_res': float, 'kij_reigenval_res': numpy.array,
+       'kij_reigenvec_res': numpy.array, 'kij_matrix_res': numpy.array}
 
     For more details see :ref:`eponine-kij-result`.
+
+    This result returns **right** eigenvalues and **right** eigenvectors
+    (meaning of the 'r' in the key).
     '''
     # eigen values (re, im) -> store as array of complex
     reegval = np.array(list(zip(*res['kij_eigenval']))[0])
@@ -1841,10 +1844,10 @@ def convert_kij_result(res):
               if isinstance(res['kij_matrix'], list)
               else res['kij_matrix'])
     return {'used_batches_res': res['used_batch'],
-            'kijmkeff_res': res['kijmkeff_res'][0],
-            'kijdomratio_res': res['kijmkeff_res'][1],
-            'kij_eigenval_res': egvals,
-            'kij_eigenvec_res': egvecs,
+            'kij_mkeff_res': res['kijmkeff_res'][0],
+            'kij_domratio_res': res['kijmkeff_res'][1],
+            'kij_reigenval_res': egvals,
+            'kij_reigenvec_res': egvecs,
             'kij_matrix_res': kijmat
             }
 
@@ -1859,28 +1862,29 @@ def convert_kij_keff(res):
     ::
 
        {'keff_estimator': str,
-        'batchs_kept': int,
-        'kij-keff': float,
-        'nbins': int,
-        'spacebins': numpy.array of int with shape (nbins,) or (nbins, 3), the
-            latter case corresponding to space mesh,
-        'eigenvector': numpy.array,
-        'keff_KIJ_matrix': numpy.array,
-        'keff_StdDev_matrix': numpy.array,
-        'keff_sensibility_matrix': numpy.array}
+        'results': {'used_batches_res': int,
+                    'kij_mkeff': float (kij result - keff),
+                    'spacebins_res': numpy.array of int with shape (nbins,) or
+                      (nbins, 3), the latter case corresponding to space mesh,
+                    'kij_leigenvec_res': numpy.array,
+                    'kij_matrix_res': numpy.array,
+                    'kij_stddev_matrix_res': numpy.array,
+                    'kij_sensibility_matrix_res': numpy.array}}
 
-    Keys ``'nbins'`` and ``'spacebins'`` are facultative.
+    Key ``'spacebins'`` is facultative.
 
     For more details see :ref:`eponine-kij-in-keff`.
+
+    The eigenvector is here the dominant **left** eigenvector.
     '''
     LOGGER.debug("Clefs: %s", str(list(res.keys())))
-    egvec = np.array(list(zip(*res['eigenvector']))[1])
+    egvec = np.array(list(zip(*res['kij_leigenvec']))[1])
     nbins = res['nb_fissile_vols'] if 'nb_fissile_vols' in res else len(egvec)
     if nbins != len(egvec):
         LOGGER.warning("\x1b[31mIssue in number of fissile volumes "
                        "and size of eigenvector\x1b[0m")
-    spacebins = np.array(res['keff_KIJ_matrix'][0])
-    if spacebins.shape[0] != len(res['keff_KIJ_matrix'][1:]):
+    spacebins = np.array(res['kij_matrix'][0])
+    if spacebins.shape[0] != len(res['kij_matrix'][1:]):
         LOGGER.warning("\x1b[31mStrange: not the dimension in space mesh and "
                        "matrix, matrix expected to be square\x1b[0m")
     if spacebins.shape[0] != nbins:
@@ -1888,23 +1892,22 @@ def convert_kij_keff(res):
                        "and eigenvectors\x1b[0m")
     # Fill the 3 matrices
     kijmat = np.full([nbins, nbins], np.nan)
-    for irow, row in enumerate(res['keff_KIJ_matrix'][1:]):
+    for irow, row in enumerate(res['kij_matrix'][1:]):
         kijmat[irow] = np.array(tuple(row[1:]))
     stddevmat = np.full([nbins, nbins], np.nan)
-    for irow, row in enumerate(res['keff_StdDev_matrix'][1:]):
+    for irow, row in enumerate(res['kij_stddev_matrix'][1:]):
         stddevmat[irow] = np.array(tuple(row[1:]))
     sensibmat = np.full([nbins, nbins], np.nan)
-    for irow, row in enumerate(res['keff_sensibility_matrix'][1:]):
+    for irow, row in enumerate(res['kij_sensibility_matrix'][1:]):
         sensibmat[irow] = np.array(tuple(row[1:]))
     return {'keff_estimator': res['estimator'],
             'results': {'used_batches_res': res['batchs_kept'],
-                        'kij-keff_res': res['kij-keff'],
-                        'nbins_res': nbins,
+                        'kij_mkeff_res': res['kij_mkeff'],
                         'spacebins_res': spacebins,
-                        'eigenvector_res': egvec,
-                        'keff_KIJ_matrix_res': np.array(kijmat),
-                        'keff_StdDev_matrix_res': np.array(stddevmat),
-                        'keff_sensibility_matrix_res': np.array(sensibmat)}}
+                        'kij_leigenvec_res': egvec,
+                        'kij_matrix_res': np.array(kijmat),
+                        'kij_stddev_matrix_res': np.array(stddevmat),
+                        'kij_sensibility_matrix_res': np.array(sensibmat)}}
 
 
 class SensitivityDictBuilder(DictBuilder):

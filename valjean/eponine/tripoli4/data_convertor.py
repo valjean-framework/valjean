@@ -176,6 +176,38 @@ def best_keff(result, res_type, *, estimator):
                        name='best_keff_'+estimator)
 
 
+def complex_values_wo_error(result, res_type):
+    '''Conversion of a result given with complex number without errors.
+
+    This is for example the case for kij eigen values.
+
+    :dict result: results dictionary containing ``res_type`` key
+    :param str res_type: data type, for example: ``'kij_eigenval_res'``
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
+    '''
+    cplxres = result[res_type]
+    return BaseDataset(cplxres, np.array([np.float_(np.nan)]*cplxres.size),
+                       name=res_type)
+
+
+def matrix_wo_error(result, res_type):
+    '''Conversion of a matrix in a :class:`~.base_dataset.BaseDataset` without
+    error.
+
+    No binning is given.
+
+    :dict result: results dictionary containing ``res_type`` key
+    :param str res_type: data type, for example: ``'kij_eigenval_res'`` or
+        ``'kij_matrix_res'``
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
+    '''
+    matrixres = result[res_type]
+    return BaseDataset(
+        matrixres,
+        np.array([np.float_(np.nan)]*matrixres.size).reshape(matrixres.shape),
+        name=res_type)
+
+
 def value_wo_error(result, res_type):
     '''Conversion of a value provided without error in
     :class:`~.base_dataset.BaseDataset`.
@@ -226,6 +258,15 @@ CONVERT_IN_DATASET = {
     'boltzmann_entropy_res': value_wo_error,
     'used_batches_res': value_wo_error,
     'discarded_batches_res': value_wo_error,
+    'kijmkeff_res': value_wo_error,
+    'kijdomratio_res': value_wo_error,
+    'kij_reigenval_res': complex_values_wo_error,
+    'kij_reigenvec_res': matrix_wo_error,
+    'kij_leigenvec_res': matrix_wo_error,
+    'kij_matrix_res': matrix_wo_error,
+    'spacebins_res': matrix_wo_error,
+    'kij_stddev_matrix_res': matrix_wo_error,
+    'kij_sensibility_matrix_res': matrix_wo_error,
 }
 
 
