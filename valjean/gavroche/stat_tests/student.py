@@ -140,7 +140,7 @@ calculated.
 Code implementation
 ```````````````````
 
-The Student's t-test variable is calculated for each pair of datasets. It is
+The Student's t-test statistic is calculated for each pair of datasets. It is
 per default compared to the threshold defined by a first kind error or α-error
 equal to 1 %, so, considering an infinite number of degrees (as it is
 usually at least 1000), a threshold around 2.576, obtained from the normal
@@ -220,18 +220,13 @@ Let's define 2 small datasets containing arrays:
 >>> tstudent_res = tstudent.evaluate()
 >>> print(np.array2string(tstudent_res.oracles()))
 [[ True  True  True  True  True]]
->>> bool(tstudent_res)  # doctest: +IGNORE_EXCEPTION_DETAIL
-Traceback (most recent call last):
-    ...
-TestResultStudentException: Not suitable to multi-dimension arrays, \
-except within a user's loop
+>>> bool(tstudent_res)
+True
 
-The test will always return false in a :obj:`numpy.ndarray` case as there are
-no acceptance limits on the number of good and bad comparisons based on Student
-test.
+In the case of multiple comparisons, the test will return `True` if *all* the
+individual comparisons succeed. This is the case here.
 
-It is still possible to get bin to bin comparisons, including bad bins, based
-on Student's t-test comparison:
+It is possible to get a detailed bin-by-bin comparisons, including bad bins:
 
 >>> ds5 = Dataset(np.array([5.1, 5.9, 5.8, 5.3, 4.5]),
 ...               np.array([0.1, 0.1, 0.05, 0.4, 0.1]))
@@ -243,7 +238,12 @@ on Student's t-test comparison:
 >>> print(np.array2string(tstudent_res.oracles()))
 [[ True  True False  True False]]
 
-Like in float case it is possible to require the p-values. In both cases the
+Since some of the comparisons failed here, the whole tests fails as well:
+
+>>> bool(tstudent_res)
+False
+
+Like in float case it is possible to ask for the p-values. In both cases the
 probability can be changed via the ``alpha`` argument, shown here in an array
 case:
 
@@ -309,11 +309,8 @@ Multiple dimensions datasets are also allowed:
 >>> tstudent = TestStudent(ds8, ds9, alpha=0.05, ndf=1000, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> bool(tstudent_res)  # doctest: +IGNORE_EXCEPTION_DETAIL
-Traceback (most recent call last):
-    ...
-TestResultStudentException: Not suitable to multi-dimension arrays, except \
-within a user's loop
+>>> bool(tstudent_res)
+True
 >>> print(np.array2string(tstudent_res.delta[0],
 ...                       formatter={'float_kind':'{:.7f}'.format}))
 [[0.4472136 -0.7682213 0.4472136]
@@ -376,14 +373,26 @@ class TestResultStudent(TestResult):
         return self.test_alpha(self.delta)
 
     def __bool__(self):
-        if len(self.test.datasets) == 1:
-            if isinstance(self.delta[0], np.generic):
-                return bool(self.test_alpha(self.delta[0]))
-            if self.delta[0].size == 1:
-                return bool(self.test_alpha(self.delta[0][0]))
-        raise TestResultStudentException(
-            "Not suitable to multi-dimension arrays, "
-            "except within a user's loop")
+        '''Has this test succeeded?
+
+        The policy for :class:`TestResultStudent` is that the test is
+        considered to fail if any of the p-values are below the given
+        significance level. This means that a test on a :class:`~.Dataset`
+        having multiple bins will fail if *any* of the bins exhibits large
+        fluctuations. You might want to use :class:`~.TestBonferroni` or
+        :class:`~.TestHolmBonferroni` to deal with such cases.
+
+        If this test concerns multiple datasets, the test is considered to
+        succeed if all the dataset individually pass the test against the
+        reference.
+        '''
+        result = True
+        for delta in self.delta:
+            if isinstance(delta, np.generic):
+                result = result and bool(self.test_alpha(delta))
+            else:
+                result = result and bool(self.test_alpha(delta).all())
+        return result
 
     def test_pvalue(self):
         '''Result of the test by testing p-value.
@@ -459,7 +468,7 @@ class TestStudent(TestDataset):
     def pvalue(delta, ndf):
         '''Calculation of the p-value (**static method**).
 
-        :param delta: Δ (Student's t-test variable)
+        :param delta: Δ (Student's t-test statistic)
         :type delta: :obj:`numpy.generic` (:obj:`float`) or
                      :obj:`numpy.ndarray` (:obj:`float`)
         :param ndf: number of degrees of freedom
