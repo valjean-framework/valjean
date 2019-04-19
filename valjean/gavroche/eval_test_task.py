@@ -59,3 +59,12 @@ class EvalTestTask(PythonTask):
 
         super().__init__(name, evaluate, deps=deps, soft_deps=soft_deps,
                          env_kwarg='env')
+
+
+def eval_tests(tests):
+    '''Create :class:`EvalTestTask` objects for each test in a collection.
+
+    :param tests: a collection of tests.
+    :type tests: list(EvalTestTask)
+    '''
+    return [EvalTestTask.from_test_task(test.get_task()) for test in tests]
