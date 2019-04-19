@@ -15,6 +15,7 @@ Some options for debugging are available (end flag).
 
 import time
 import logging
+import threading
 from pyparsing import ParseException
 
 from . import scan
@@ -23,6 +24,8 @@ from .common import SpectrumDictBuilderException
 
 
 LOGGER = logging.getLogger('valjean')
+
+PYPARSING_LOCK = threading.RLock()
 
 # in Eponine, profile is a key of globals
 if 'profile' not in globals()['__builtins__']:
@@ -129,7 +132,8 @@ class T4Parser():
     def _parse_t4_listing_worker(self, gram, str_to_parse):
         '''Parse the given string and raise exception if parsing failed.'''
         try:
-            self.result = gram.parseString(str_to_parse).asList()
+            with PYPARSING_LOCK:
+                self.result = gram.parseString(str_to_parse).asList()
         except ParseException:
             LOGGER.error("Parsing failed, you are probably trying to read a "
                          "new response. Please update the parser before "
