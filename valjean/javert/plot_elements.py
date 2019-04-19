@@ -19,17 +19,13 @@ def dimension_from_array(array_shape):
     non_trivial_dims = tuple(d for d, s in enumerate(array_shape) if s > 1)
     LOGGER.debug("Non-trivial dimensions: %s", non_trivial_dims)
     if len(non_trivial_dims) > 1:
-        LOGGER.error("More than one non-trivial dimensions, N-dimensions "
+        LOGGER.debug("More than one non-trivial dimensions, N-dimensions "
                      "should be required or a dataset slice.")
         return None
     if not non_trivial_dims:
-        LOGGER.info("Only trivial dimension, you may prefer a different kind "
-                    "of plot (PlotPoint).")
-        if len(array_shape) > 1:
-            LOGGER.error("Only trivial dimensions and more than one trivial"
-                         " dimensions, no dimension choice possible.")
-            return None
-        return 0
+        LOGGER.debug("Only trivial dimensions, you may prefer a different "
+                     "kind of plot (PlotPoint).")
+        return None
     return non_trivial_dims[0]
 
 

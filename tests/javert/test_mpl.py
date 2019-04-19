@@ -219,28 +219,3 @@ def test_fplit_join(student_test_result, student_test_result_fail, plot_repr):
     templ2 = plot_repr(student_test_result_fail)[0]
     with pytest.raises(ValueError):
         join(templ1, templ2)
-
-
-# @settings(max_examples=10)
-@given(gds=datasets(dtype=just(np.int64),
-                    elements=integers(min_value=-10, max_value=10),
-                    shape=array_shapes(min_dims=1, max_dims=2,
-                                       min_side=1, max_side=5)))
-def test_plot_repr(gds, caplog):  # , plot_repr):
-    '''Test plot repr with various datasets.
-
-    Maybe a docstring tests instead of a pytest with hypothesis...
-    '''
-    note(gds)
-    dimss1 = tuple(d for d in gds.value.shape if d > 1)
-    idim = plt_elts.dimension(gds.bins, gds.value.shape)
-    if len(dimss1) > 1:
-        assert ('More than one non-trivial dimensions, N-dimensions '
-                'should be required or a dataset slice.' in caplog.text)
-        assert idim is None
-    elif not dimss1 and gds.value.ndim > 1:
-        assert ('Only trivial dimensions and more than one trivial dimensions,'
-                ' no dimension choice possible.' in caplog.text)
-        assert idim is None
-    else:
-        assert idim in list(gds.bins.keys())
