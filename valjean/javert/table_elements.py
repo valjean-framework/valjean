@@ -4,6 +4,8 @@ to be converted in rst.
 from itertools import chain
 import numpy as np
 from .. import LOGGER
+from ..cosette.task import TaskStatus
+from ..gavroche.diagnostics.stats import TestOutcome
 from .templates import TableTemplate
 
 
@@ -216,3 +218,80 @@ def repr_holm_bonferroni(result, result_header):
         headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
                  'N rejected', result_header])
     return [table_template]
+
+
+def percent_fmt(num, den):
+    '''Format a fraction as a percentage. Example:
+
+    >>> percent_fmt(2, 4)
+    '2/4 (50.0%)'
+    >>> percent_fmt(0, 3)
+    '0/3 (0.0%)'
+    >>> percent_fmt(7, 7)
+    '7/7 (100.0%)'
+    >>> percent_fmt(0, 0)
+    '0/0 (???%)'
+
+    :param int num: the numerator.
+    :param int den: the denominator.
+    '''
+    if den != 0:
+        percent = 100.0 * num / den
+        return '{:d}/{:d} ({:.1f}%)'.format(num, den, percent)
+    return '{:d}/{:d} (???%)'.format(num, den)
+
+
+def repr_testresultstatstasks(result):
+    '''Represent a :class:`~.TestResultStatsTasks` as a table. The table
+    breaks down the tasks by status.
+
+    :param TestResultStatsTasks result: the test result to represent.
+    :returns: the tables representing the test result.
+    :rtype: list(TableTemplate)
+    '''
+    return repr_testresultstats(result, TaskStatus.DONE)
+
+
+def repr_testresultstatstests(result):
+    '''Represent a :class:`~.TestResultStatsTests` as a table. The table
+    breaks down the tests by success status.
+
+    :param TestResultStatsTests result: the test result to represent.
+    :returns: the tables representing the test result.
+    :rtype: list(TableTemplate)
+    '''
+    return repr_testresultstats(result, TestOutcome.SUCCESS)
+
+
+def repr_testresultstats(result, status_ok):
+    '''Helper function for :func:`repr_testresultstatstests` and
+    :func:`repr_testresultstatstasks`. It generates a table with the
+    `status_ok` value in the first row. Non-null results in other rows are
+    considered as failures, and are highlighted if the count is non-zero.
+
+    :param TestResultStatsTasks result: the test result to represent.
+    :param status_ok: the status value that must be considered as a success.
+    :returns: the tables representing the test result.
+    :rtype: list(TableTemplate)
+    '''
+    classify = result.classify
+
+    statuses = [status_ok]
+    statuses.extend(status for status in status_ok.__class__
+                    if status != status_ok)
+    statuses_txt = [status.name for status in statuses]
+
+    counts = [len(classify[status]) for status in statuses]
+    n_tasks = sum(counts)
+    percents = [percent_fmt(count, n_tasks) for count in counts]
+
+    statuses_txt.append('total')
+    counts.append(n_tasks)
+    percents.append(percent_fmt(n_tasks, n_tasks))
+
+    hl_column = [False]
+    hl_column.extend(count > 0 for count in counts[1:-1])
+    highlights = [hl_column, hl_column]
+    table = TableTemplate(statuses_txt, percents, headers=['status', 'counts'],
+                          highlights=highlights)
+    return [table]
