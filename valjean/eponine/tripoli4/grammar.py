@@ -1254,8 +1254,9 @@ perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
 # debug grammar, to be used with parse_debug (only for parsing development)
 t4debug_gram = (OneOrMore((intro
                            + OneOrMore(listresponses | ifpadjointcriticality
-                                       | autokeffblock | contribpartblock
-                                       | perturbation | OneOrMore(runtime)))
+                                       | autokeffblock | perturbation
+                                       | Suppress(contribpartblock)
+                                       | OneOrMore(runtime)))
                           .setParseAction(trans.to_dict))
                 .setParseAction(dump_in_logger)
                 | intro + OneOrMore(runtime)).setFailAction(trans.fail_parsing)
@@ -1267,8 +1268,8 @@ t4debug_gram = (OneOrMore((intro
 
 t4gram = (OneOrMore((intro
                      + OneOrMore(listresponses | ifpadjointcriticality
-                                 | autokeffblock | contribpartblock
-                                 | perturbation)
+                                 | autokeffblock | perturbation
+                                 | Suppress(contribpartblock))
                      + runtime)
                     .setParseAction(trans.to_dict))
           .setParseAction(dump_in_logger)
