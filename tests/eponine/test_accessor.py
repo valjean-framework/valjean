@@ -179,6 +179,9 @@ def test_selection(sampler, caplog):
             assert len(tmpl) == len(sresp)
             if not tmpl:
                 assert 'not a valid' in caplog.text
+    # all responses are supposed to contain 'drink', 'ingredient' and 'menu'
+    assert len(respb.select_by(include=('drink', 'ingredient'))) == len(fmdr)
+    assert not respb.select_by(exclude=('menu',))
 
 
 @composite

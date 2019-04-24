@@ -427,6 +427,9 @@ class ResponseBook(Container):
             return True
         return False
 
+    def __len__(self):
+        return len(self.responses)
+
     def keys(self):
         '''Get the available keys in the index (so in the responses list). As
         usual it returns a generator.
@@ -490,33 +493,47 @@ class ResponseBook(Container):
         respids = self._filter_resp_id_by(**kwargs)
         return self.index.keep_only(respids)
 
-    def filter_by(self, **kwargs):
+    def filter_by(self, include=(), exclude=(), **kwargs):
         '''Get a ResponseBook corresponding to selection from keyword
         arguments.
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.
+        :param tuple(str) include: metadata keys required in the responses but
+          for which the value is not necessarly known
+        :param tuple(str) exclude: metadata that should not be present in the
+          responses and for which the value is not necessarly known
         :returns: :class:`ResponseBook` (subset of the default one,
           corresponding to the selection)
         '''
         LOGGER.debug("in select_by, kwargs=%s", kwargs)
+        sincl, sexcl = set(include), set(exclude)
         respids = self._filter_resp_id_by(**kwargs)
-        lresp = [self.responses[i] for i in respids]
+        lresp = [self.responses[i] for i in respids
+                 if sincl.issubset(self.responses[i])
+                 and not sexcl.intersection(self.responses[i])]
         sub_rb = ResponseBook(lresp)
         return sub_rb
 
-    def select_by(self, *, squeeze=False, **kwargs):
+    def select_by(self, *, squeeze=False, include=(), exclude=(), **kwargs):
         '''Get a ResponseBook corresponding to selection from keyword
         arguments.
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.
         :param bool squeeze: named parameter
+        :param tuple(str) include: metadata keys required in the responses but
+          for which the value is not necessarly known
+        :param tuple(str) exclude: metadata that should not be present in the
+          responses and for which the value is not necessarly known
         :returns: first element of the list of responses if only one,
           else subset in :class:`ResponseBook` format
         '''
         respids = self._filter_resp_id_by(**kwargs)
-        lresp = [self.responses[i] for i in respids]
+        sincl, sexcl = set(include), set(exclude)
+        lresp = [self.responses[i] for i in respids
+                 if sincl.issubset(self.responses[i])
+                 and not sexcl.intersection(self.responses[i])]
         if squeeze:
             if not lresp:
                 LOGGER.warning("No response corresponding to the selection.")

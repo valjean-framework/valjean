@@ -1005,7 +1005,7 @@ autokeffblock = Group(Group(Optional(_warnfixedsources)
 
 # MED files
 medfile = (Suppress((_creationmedfile_kw | _creationfile_kw) + ':')
-           + Word(alphanums+'/_.')('med_file_res')
+           + Word(alphanums+'/_.')('med_file')
            + Suppress(_medmeshid_kw + Word(alphanums+'_.')))
 
 
