@@ -489,15 +489,20 @@ def finalize_response_dict(s, loc, toks):
 def extract_all_metadata(list_of_dicts):
     '''Extract metadata from nested lists of dictionaries.
     The metadata to be extracted are here in the second level of list of
-    dictionaries, i.e. in ``[{'bla': X, 'results': [{'data1_res': D1,
-    'data2_res': D2, 'md1': MD1, 'md2': MD2}, {'data1_res': D3, 'md1': MD1,
-    'md3': MD3}]}]`` in order to obtain
-    ``[{'bla': X, 'md1': MD1, 'md2': MD2, 'results': {'data1_res': D1,
-    'data2_res': D2}, {'bla': X, 'md1': MD1, 'md3': MD3, 'results':
-    {'data1_res': D3}}]}]``.
+    dictionaries as in the example:
+
+    >>> from pprint import pprint
+    >>> lod = [{'bla': 'X', 'results': [
+    ...     {'data1_res': 'D1', 'data2_res': 2, 'md1': 'MD1', 'md2': 'MD2'},
+    ...     {'data1_res': 'D3', 'md1': 'MD1', 'md3': 3}]}]
+    >>> pprint(extract_all_metadata(lod))  # doctest: +NORMALIZE_WHITESPACE
+    [{'bla': 'X', 'md1': 'MD1', 'md2': 'MD2', \
+'results': {'data1_res': 'D1', 'data2_res': 2}}, \
+{'bla': 'X', 'md1': 'MD1', 'md3': 3, 'results': {'data1_res': 'D3'}}]
 
     :param list(dict) list_of_dicts: list of dictionaries
-    :returns: list(dict) with no list of dict under 'results' key
+    :returns: list of dictionaries with no list of dict under 'results' key
+    :rtype: list(dict)
     '''
     LOGGER.debug("In extract_all_metadata")
     return [x for dict_ in list_of_dicts for x in extract_metadata(dict_)]
@@ -508,7 +513,7 @@ def extract_metadata(ldict):
     surrounding dictionary.
 
     :param dict ldict: dictionary corresponding to a response
-    :returns: list of dictionaries (list(dict))
+    :rtype: list(dict)
     '''
     LOGGER.debug("In extract_metadata")
     lscores = []
@@ -555,6 +560,64 @@ def index_elements(key):
             elem[key_name] = i
         return list_of_dicts
     return index_with_key
+
+
+def propagate_all_metadata(list_of_dicts):
+    '''Concatenate metadata from a list of dictionaries.
+
+    It applies :func:`propagate_top_metadata` for all dictionaries in the list
+    of dictionaries, one by one.
+
+    The metadata to be propagated are here in the first level of list of
+    dictionaries as in the example:
+
+    >>> from pprint import pprint
+    >>> lod = [{'ext_metadata': {'emd1': 'EMD1', 'emd2': 'EMD2'},
+    ...         'list_responses': [
+    ...     {'bla': 'X', 'md1': 'MD1', 'md2': 'MD2',
+    ...      'results': {'data1_res': 'D1', 'data2_res': 2}},
+    ...     {'bla': 'X', 'md1': 'MD1', 'md3': 3,
+    ...      'results': {'data1_res': 'D3'}}],
+    ...         'omd': 0}]
+    >>> pprint(propagate_all_metadata(lod))  # doctest: +NORMALIZE_WHITESPACE
+    [{'bla': 'X', 'emd1': 'EMD1', 'emd2': 'EMD2', 'md1': 'MD1', 'md2': 'MD2', \
+'omd': 0, 'results': {'data1_res': 'D1', 'data2_res': 2}}, \
+{'bla': 'X', 'emd1': 'EMD1', 'emd2': 'EMD2', 'md1': 'MD1', 'md3': 3, \
+'omd': 0, 'results': {'data1_res': 'D3'}}]
+
+
+    :param list(dict) list_of_dicts: list of dictionaries
+    :returns: list of dictionaries with common metadata in all responses
+    :rtype: list(dict)
+    '''
+    LOGGER.debug("In propagate_all_metadata")
+    return [x for dict_ in list_of_dicts
+            for x in propagate_top_metadata(dict_)]
+
+
+def propagate_top_metadata(ldict):
+    '''Extract metadata from a list of dictionaries to put them in the
+    surrounding dictionary.
+
+    One of the dictionary key has to be ``'list_responses'``, i.e. generic
+    scores or arrays built from a list of responses where metadata have already
+    been extracted. This case typically apply to perturbations (not IFP ones).
+
+    :param dict ldict: dictionary corresponding to a response
+    :rtype: list(dict)
+    '''
+    LOGGER.debug("In propagate_top_metadata")
+    if not isinstance(ldict, dict):
+        ldict = ldict.asDict()
+    assert 'list_responses' in ldict
+    lresps = ldict.pop('list_responses')
+    for resp in lresps:
+        for k, val in ldict.items():
+            if isinstance(val, dict):
+                resp.update(val)
+            else:
+                resp[k] = val
+    return lresps
 
 
 def group_to_dict(toks):

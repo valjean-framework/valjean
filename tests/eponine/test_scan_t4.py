@@ -573,14 +573,20 @@ def test_pertu(datadir):
                 'perturbation', 'simulation_time', 'source_intensity'])
     assert len(t4_res.result[-1]['list_responses']) == 3
     assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 0
-    assert len(t4_res.result[-1]['perturbation']) == 1
-    pertu0 = t4_res.result[-1]['perturbation'][0]
-    assert sorted(list(pertu0.keys())) == ['list_responses',
-                                           'perturbation_desc']
-    assert len(pertu0['list_responses']) == 3
-    assert pertu0['list_responses'][-1]['response_index'] == 0
-    assert pertu0['list_responses'][-1]['score_index'] == 2
-    assert pertu0['list_responses'][0]['response_type'] == 'score_res'
+    assert len(t4_res.result[-1]['perturbation']) == 3
+    t4acc = Accessor(t4_res.result[-1], book_type='perturbation')
+    slkeys = sorted(list(t4acc.resp_book.index.keys()))
+    assert slkeys == [
+        'energy_split_name', 'particle', 'perturbation_composition',
+        'perturbation_index', 'perturbation_method', 'perturbation_rank',
+        'perturbation_type', 'response_function', 'response_index',
+        'response_type', 'score_index', 'scoring_mode', 'scoring_zone_id',
+        'scoring_zone_type', 'scoring_zone_volsurf']
+    pertu_vol2 = t4acc.get_by(scoring_zone_id=2, squeeze=True)
+    assert pertu_vol2['response_index'] == 0
+    assert pertu_vol2['score_index'] == 0
+    assert pertu_vol2['response_type'] == 'score_res'
+    assert pertu_vol2['perturbation_rank'] == 0
 
 
 def test_vov(datadir):

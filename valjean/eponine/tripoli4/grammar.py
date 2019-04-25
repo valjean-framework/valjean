@@ -1153,21 +1153,20 @@ ifpadjointcriticality = (Group((_adjcrit_ed_intro + OneOrMore(_adjcritblock))
                          ('ifp_adjoint_crit_edition'))
 
 # Perturbations
-_perturank = Suppress(_perturank_kw) + _inums('rank')
+_perturank = Suppress(_perturank_kw) + _inums('perturbation_rank')
 _pertumethod = (Suppress(_pertumethod_kw)
-                + OneOrMore(Word(alphas), stopOn=LineEnd())('method')
-                .setParseAction(' '.join))
-_pertuorder = Suppress(_pertuorder_kw) + _inums('order')
-_pertutype = Suppress(_pertutype_kw) + Word(alphas)('type')
-_pertucompo = Suppress(_pertucompo_kw) + Word(alphanums+'_')('composition')
+                + OneOrMore(Word(alphas), stopOn=LineEnd())
+                .setParseAction(' '.join)('perturbation_method'))
+_pertuorder = Suppress(_pertuorder_kw) + _inums('perturbation_order')
+_pertutype = Suppress(_pertutype_kw) + Word(alphas)('perturbation_type')
+_pertucompo = (Suppress(_pertucompo_kw)
+               + Word(alphanums+'_')('perturbation_composition'))
 pertu_desc = (Group(Suppress(_perturbation_kw)
                     + _perturank
                     + _pertumethod
                     + Optional(_pertuorder)
                     + _pertutype
-                    + _pertucompo).setParseAction(trans.group_to_dict)
-              ('perturbation_desc'))
-
+                    + _pertucompo)('perturbation_desc'))
 
 # Uncertainties (linked to perturbations ?)
 _uncertcols = Suppress(_uncertgp_kw + _uncertsig2_kw
@@ -1244,7 +1243,10 @@ listresponses = Group(OneOrMore(response).setParseAction(
     compose2(trans.extract_all_metadata,
              trans.index_elements('response_index'))))('list_responses')
 
-perturbation = OneOrMore(Group(pertu_desc + listresponses))('perturbation')
+perturbation = (OneOrMore(Group(pertu_desc + listresponses)
+                          .setParseAction(trans.propagate_all_metadata))
+                .setParseAction(trans.index_elements('perturbation_index'))
+                ('perturbation'))
 
 
 ################################
