@@ -65,7 +65,7 @@ RESPONSE 0
 [94m      response_type[0m score_res
 [94m      score_index[0m 0
 [94m      scoring_mode[0m SCORE_COLL
-[94m      scoring_zone_type[0m Results on a mesh
+[94m      scoring_zone_type[0m Mesh
 [94m      temperature[0m (300.0,)
 [1;35m'results' [0;36m(<class 'dict'>)[0m -> [1mscore_res[0m
 [33mDict with keys = ['boltzmann_entropy_res', 'discarded_batches_res', 'integrated_res', 'mesh_res', 'shannon_entropy_res', 'spectrum_res', 'used_batches_res'][0m

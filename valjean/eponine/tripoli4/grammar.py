@@ -194,7 +194,7 @@ import logging
 from pyparsing import (Word, Keyword, White, alphas, alphanums,
                        Suppress, Optional, LineEnd, LineStart, CaselessKeyword,
                        Group, OneOrMore, ZeroOrMore, Forward,
-                       tokenMap, delimitedList, printables)
+                       tokenMap, delimitedList, printables, replaceWith)
 from pyparsing import pyparsing_common as pyparscom
 from . import transform as trans
 from .transform import compose2
@@ -267,10 +267,13 @@ _filters_kw = Keyword("Score filtered by volume")
 # Scoring description
 _scoremode_kw = Keyword("scoring mode")
 _scorezone_kw = Keyword("scoring zone")
-_scoremesh_kw = Keyword("Results on a mesh")
+_scoremesh_kw = (Keyword("Results on a mesh")
+                 .setParseAction(replaceWith('Mesh')))
 _scoremeshinfobins_kw = Keyword("(x,y,z)")
-_scoreallgeom_kw = Keyword("Results cumulated on all geometry")
-_scoreallsources_kw = Keyword("Results cumulated on all sources")
+_scoreallgeom_kw = (Keyword("Results cumulated on all geometry")
+                    .setParseAction(replaceWith('All geometry')))
+_scoreallsources_kw = (Keyword("Results cumulated on all sources")
+                       .setParseAction(replaceWith('All sources')))
 _scorevol_kw = Keyword("Volume")
 _scorevolvol_kw = Keyword("num of volume")
 _scorevolume_kw = Keyword("Volume in cm3")
