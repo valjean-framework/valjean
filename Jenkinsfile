@@ -49,10 +49,10 @@ pipeline {
       steps {
         echo "Starting build ${env.BUILD_ID} on ${env.JENKINS_URL}..."
         sh """
-        python3 -m venv "${VENV}"
+        python3.6 -m venv "${VENV}"
         source "${VENV}/bin/activate"
-        python3 -m pip install --upgrade pip setuptools
-        python3 -m pip install ${SRC}[dev]
+        python3.6 -m pip install --upgrade pip setuptools
+        python3.6 -m pip install ${SRC}[dev]
         """
       }
     }
