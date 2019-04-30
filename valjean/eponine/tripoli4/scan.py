@@ -40,7 +40,7 @@ containing at least the flags precised in :ref:`eponine-t4-scan-caveats`.
    True
    >>> len(results)
    1
-   >>> results.times['initialization time']
+   >>> results.times['initialization_time']
    7
    >>> 'simulation time' in results[-1]
    True
@@ -282,7 +282,7 @@ class Scan(Mapping):
     '''
 
     @profile
-    def __init__(self, fname, mesh_lim=-1, para=False, end_flag=""):
+    def __init__(self, fname, mesh_lim=-1, end_flag=""):
         '''Initialize the instance from the file `fname`, meaning reads the
         file and store the relevant parts of it, i.e. result block for each
         batch edition.
@@ -319,7 +319,7 @@ class Scan(Mapping):
         # keep mesh_lim as instance variable and not class variable to prevent
         # risk of changing its value for all instances of the class
         self.mesh_limit = mesh_lim
-        self.para = para
+        self.para = False
         self.countwarnings = 0
         self.counterrors = 0
         self.times = OrderedDict()
@@ -337,6 +337,7 @@ class Scan(Mapping):
                               if len(line.split()) > 1
                               else None)
         elif "number of tasks is" in line:
+            self.para = True
             self.tasks = int(line.split()[5])
         elif "BATCH_PER_SIMULATOR" in line:
             self.reqbatchs = (int(line.split()[1])
@@ -350,7 +351,7 @@ class Scan(Mapping):
                 self.reqbatchs //= int(line.split()[indpacket+1])
             LOGGER.debug("new number of batchs = %d", self.reqbatchs)
         elif "initialization time" in line:  # correspond to end of data file
-            self.times['initialization time'] = int(line.split()[3])
+            self.times['initialization_time'] = int(line.split()[3])
 
     def _is_end_flag(self, line):
         # len(end_flags) == 3: default list, no user's end flag added
@@ -362,9 +363,10 @@ class Scan(Mapping):
         return None
 
     def _add_time(self, end_flag, line):
-        self.times[end_flag] = (int(line.split()[-1])
-                                if line.split()[-1].isdigit()
-                                else "Not a time")
+        self.times.setdefault(
+            end_flag.replace(' ', '_'), []).append(
+                int(line.split()[-1]) if line.split()[-1].isdigit()
+                else "Not a time")
 
     @profile
     def _get_collres(self):
@@ -409,7 +411,8 @@ class Scan(Mapping):
                     self.countwarnings += 1
                 elif "ERROR" in line:
                     self.counterrors += 1
-                elif self._is_end_flag(line):
+                elif (self._is_end_flag(line) and self._collres
+                      and current_batch == list(self._collres.keys())[-1]):
                     # still needed to be sure "elapsed time" appears in
                     # parallel jobs
                     self._add_time(self._is_end_flag(line), line)
@@ -472,6 +475,10 @@ class Scan(Mapping):
         '''Reversed the `OrderedDict` order (easier to get last element).'''
         yield from self._collres.__reversed__()
 
+    def index(self, batch_number):
+        '''Get the index of the batch_number in the results list.'''
+        return list(self._collres.keys()).index(batch_number)
+
     @profile
     def get_last_edited_batch_number(self):
         '''Return last edited batch number'''
@@ -489,3 +496,33 @@ class Scan(Mapping):
         print("Normal end of the jdd:", self.normalend)
         print("Number of warnings found:", self.countwarnings)
         print("Number of errors found:", self.counterrors)
+
+    def check_times(self):
+        '''Check times.
+
+        If the results come from a parallel job, the *times* dictionary should
+        contain the ``'elapsed_time'`` key.
+        In all kind of outputs or ``'simulation_time'`` or
+        ``'exploitation_time'`` should be found (in parallel case the only
+        possibility is in reality ``'simulation_time'``).
+        Finally, while ``'initialization_time'`` value is an *int* as occuring
+        only once, the others are lists with length equal to the number of
+        batches in the edition for ``'simulation_time'`` and
+        ``'exploitation_time'`` and equal to the number of batches + 1 for
+        ``'elapsed_time'``.
+        If all these checks are successful True is returned, else False.
+
+        :rtype: bool
+        '''
+        if self.para:
+            if 'elapsed_time' not in self.times:
+                return False
+        setimes = {'simulation_time', 'exploitation_time'}
+        if not setimes.intersection(self.times):
+            return False
+        for time, times in self.times.items():
+            if time in setimes and len(times) != len(self):
+                return False
+            if time == 'elapsed_time' and len(times) != len(self)+1:
+                return False
+        return True

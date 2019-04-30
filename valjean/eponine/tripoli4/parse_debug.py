@@ -41,8 +41,7 @@ class T4ParserDebug(T4Parser):
 
     def scan_t4_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
-        self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para,
-                                  self.end_flag)
+        self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.end_flag)
 
     def parse_t4_listing(self):
         '''Parse Tripoli-4 results, calling pyparsing and

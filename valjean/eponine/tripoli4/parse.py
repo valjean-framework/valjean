@@ -46,7 +46,8 @@ class T4Parser():
         '''Initialize the :class:`T4Parser` object.
 
         :param str jddname: path to the Tripoli-4 output
-        :param int batch: batch to read (-1 = last, 0 = all, then X)
+        :param int batch: batch to read (-1 = last, 0 = all, then X where X is
+            the *edition batch number*)
         :param int mesh_lim: limit of meshes to read (-1 per default)
 
         It also initalize the result of :class:`.scan.Scan` to ``None`` and
@@ -82,7 +83,6 @@ class T4Parser():
         self.mesh_limit = mesh_lim
         self.scan_res = None
         self.result = None
-        self.para = "PARA" in jddname or "th_task" in jddname
         try:
             self.scan_then_parse(start_time)
         except T4ParserException as t4pe:
@@ -102,7 +102,7 @@ class T4Parser():
     @profile
     def scan_t4_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
-        self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.para)
+        self.scan_res = scan.Scan(self.jdd, self.mesh_limit)
 
     def check_t4_scan(self):
         '''Check existence of scan result and presence of normal end (per
@@ -165,14 +165,7 @@ class T4Parser():
           ``"exploitation time"`` is checked
         * else ``"simulation time"`` is checked
         '''
-        result = ((self.para and 'elapsed time' in self.scan_res.times
-                   and 'simulation time' in self.scan_res.times)
-                  or (not self.para
-                      and ('simulation time' in self.scan_res.times
-                           or 'exploitation time' in self.scan_res.times)))
-        LOGGER.debug('scan_res.times: %s', self.scan_res.times)
-        LOGGER.debug('check_t4_times() returns: %s', result)
-        return result
+        return self.scan_res.check_times()
 
     def print_t4_times(self):
         '''Print time characteristics of the Tripoli-4 result considered.

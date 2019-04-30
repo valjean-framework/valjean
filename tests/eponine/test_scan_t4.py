@@ -129,8 +129,8 @@ def test_gauss_spectrum(datadir):
     assert t4_res
     assert t4_res.check_t4_times()
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 2
-    assert t4_res.scan_res.times['initialization time'] == 0
+    assert t4_res.scan_res.times['initialization_time'] == 0
+    assert t4_res.scan_res.times['simulation_time'] == [1, 2]
     assert len(t4_res.scan_res) == 2
     assert len(t4_res.result) == 2
     assert len(t4_res.result[-1]['list_responses']) == 6
@@ -171,8 +171,8 @@ def test_tungstene_file(datadir):
     t4_res = T4Parser(str(datadir/"tungstene.d.res.ceav5"), -1)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 423
-    assert t4_res.scan_res.times['initialization time'] == 0
+    assert t4_res.scan_res.times['simulation_time'][-1] == 423
+    assert t4_res.scan_res.times['initialization_time'] == 0
     assert len(t4_res.scan_res) == 1
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 1
@@ -229,9 +229,9 @@ def test_tt_simple_packet20_para(datadir):
                       mesh_lim=-1)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 0
-    assert t4_res.scan_res.times['initialization time'] == 4
-    assert t4_res.scan_res.times['elapsed time'] == 250
+    assert t4_res.scan_res.times['simulation_time'][-1] == 0
+    assert t4_res.scan_res.times['initialization_time'] == 4
+    assert t4_res.scan_res.times['elapsed_time'][-1] == 250
     assert len(t4_res.scan_res) == 1
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 7
@@ -258,8 +258,8 @@ def test_debug_entropy(caplog, datadir):
                            ofile="debug_ent.log")
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 24
-    assert t4_res.scan_res.times['initialization time'] == 6
+    assert t4_res.scan_res.times['simulation_time'][-1] == 24
+    assert t4_res.scan_res.times['initialization_time'] == 6
     assert len(t4_res.scan_res) == 10
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 1
@@ -344,8 +344,9 @@ def test_entropy(datadir):
     t4_res = T4Parser(str(datadir/"entropy.d.res.ceav5"), 0)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 24
-    assert t4_res.scan_res.times['initialization time'] == 6
+    assert t4_res.check_t4_times()
+    assert t4_res.scan_res.times['simulation_time'][-1] == 24
+    assert t4_res.scan_res.times['initialization_time'] == 6
     assert len(t4_res.scan_res) == 10
     assert len(t4_res.result) == 10
     assert len(t4_res.result[-1]['list_responses']) == 2
@@ -385,8 +386,8 @@ def test_ifp(datadir):
         str(datadir/"pu_met_fast_001_decompose_list_small.d.res.ceav5"), -1)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 13
-    assert t4_res.scan_res.times['initialization time'] == 1
+    assert t4_res.scan_res.times['simulation_time'][-1] == 13
+    assert t4_res.scan_res.times['initialization_time'] == 1
     assert len(t4_res.result) == 1
     assert max([v['response_index']
                 for v in t4_res.result[-1]['list_responses']]) + 1 == 22
@@ -435,8 +436,8 @@ def test_ifp_adjoint_edition(datadir):
     t4_res = T4Parser(str(datadir/"test_adjoint_small.d.res"), -1)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 77
-    assert t4_res.scan_res.times['initialization time'] == 3
+    assert t4_res.scan_res.times['simulation_time'][-1] == 77
+    assert t4_res.scan_res.times['initialization_time'] == 3
     t4acc = Accessor(t4_res.result[-1])
     assert (list(t4acc.resp_book.available_values('response_type'))
             == ['keff_res', 'ifp_adj_crit_edition', 'auto_keff_res'])
@@ -472,8 +473,8 @@ def test_sensitivity(datadir):
     t4_res = T4Parser(str(datadir/"sensitivity_godiva.d.res"), -1)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 159
-    assert t4_res.scan_res.times['initialization time'] == 1
+    assert t4_res.scan_res.times['simulation_time'][-1] == 159
+    assert t4_res.scan_res.times['initialization_time'] == 1
     t4acc = Accessor(t4_res.result[-1])
     rb_sensitiv = t4acc.resp_book.filter_by(response_type='sensitivity_res')
     assert len(rb_sensitiv.responses) == 8
@@ -514,8 +515,8 @@ def test_kij(datadir):
         str(datadir/"cylindreDecR_with_kij_on_mesh.d.res.ceav5"), -1)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 69
-    assert t4_res.scan_res.times['initialization time'] == 1
+    assert t4_res.scan_res.times['simulation_time'][-1] == 69
+    assert t4_res.scan_res.times['initialization_time'] == 1
     assert len(t4_res.result) == 1
     assert len(t4_res.result[-1]['list_responses']) == 16
     resp_list = t4_res.result[-1]['list_responses']
@@ -532,8 +533,8 @@ def test_green_bands(datadir):
         str(datadir/"greenband_exploit_T410_contrib.d.res.ceav5"), -1)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['exploitation time'] == 2
-    assert t4_res.scan_res.times['initialization time'] == 2
+    assert t4_res.scan_res.times['exploitation_time'][-1] == 2
+    assert t4_res.scan_res.times['initialization_time'] == 2
     assert len(t4_res.result) == 1
     t4acc = Accessor(t4_res.result[-1])
     resp = t4acc.resp_book.select_by(response_function='FLUX', squeeze=True)
@@ -549,8 +550,9 @@ def test_tt_simple_packet20_mono(datadir):
     t4_res = T4Parser(str(datadir/"ttsSimplePacket20.d.res.ceav5"), 0)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 217
-    assert t4_res.scan_res.times['initialization time'] == 3
+    assert t4_res.check_t4_times()
+    assert t4_res.scan_res.times['simulation_time'][-1] == 217
+    assert t4_res.scan_res.times['initialization_time'] == 3
     assert len(t4_res.scan_res) == 2
     assert len(t4_res.result[-1]['list_responses']) == 7
     assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 3
@@ -567,8 +569,8 @@ def test_pertu(datadir):
     t4_res = T4Parser(str(datadir/"pertu_covariances.d.res.ceav5"), -1)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 27
-    assert t4_res.scan_res.times['initialization time'] == 0
+    assert t4_res.scan_res.times['simulation_time'][-1] == 27
+    assert t4_res.scan_res.times['initialization_time'] == 0
     assert len(t4_res.scan_res) == 1
     assert (sorted(list(t4_res.result[-1].keys()))
             == ['edition_batch_number', 'list_responses', 'mean_weight_leak',
@@ -598,8 +600,9 @@ def test_vov(datadir):
     t4_res = T4Parser(str(datadir/"vov.d.res.ceav5"), 0)
     assert t4_res
     assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation time'] == 33
-    assert t4_res.scan_res.times['initialization time'] == 6
+    assert t4_res.check_t4_times()
+    assert t4_res.scan_res.times['simulation_time'][-1] == 33
+    assert t4_res.scan_res.times['initialization_time'] == 6
     assert len(t4_res.scan_res) == 2
     list_resp = t4_res.result[-1]['list_responses']
     assert len(list_resp) == 8
