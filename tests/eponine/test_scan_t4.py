@@ -146,7 +146,7 @@ def test_gauss_spectrum(datadir):
     assert resp0['scoring_mode'] == "SCORE_SURF"
     assert all(x in resp0['results']
                for x in ('spectrum_res', 'integrated_res'))
-    t4acc = Accessor(t4_res.result[-1])
+    t4acc = Accessor(t4_res)
     assert len(t4acc.resp_book.keys()) == 14
     assert (list(t4acc.resp_book.available_values('response_function'))
             == ['COURANT'])
@@ -181,7 +181,7 @@ def test_tungstene_file(datadir):
     assert resp0['response_type'] == 'score_res'
     assert resp0['scoring_mode'] == "SCORE_TRACK"
     assert 'mesh_res' in resp0['results']
-    t4acc = Accessor(t4_res.result[-1])
+    t4acc = Accessor(t4_res)
     resp = t4acc.resp_book.select_by(response_function='FLUX', squeeze=True)
     bd_mesh = dcv.convert_data(resp['results'], data_type='mesh_res')
     bd_mesh_squeeze = bd_mesh.squeeze()
@@ -229,6 +229,7 @@ def test_tt_simple_packet20_para(datadir):
                       mesh_lim=-1)
     assert t4_res
     assert t4_res.scan_res.normalend
+    print(t4_res.scan_res.times)
     assert t4_res.scan_res.times['simulation_time'][-1] == 0
     assert t4_res.scan_res.times['initialization_time'] == 4
     assert t4_res.scan_res.times['elapsed_time'][-1] == 250
@@ -358,9 +359,9 @@ def test_entropy(datadir):
     assert 'not_converged' in firstres[1]['results']
     assert lastres[1]['response_type'] == 'keff_res'
     keffs_checks(lastres[1]['results'])
-    t4acc = Accessor(t4_res.result[-1])
+    t4acc = Accessor(t4_res)
     check_last_entropy_result(t4acc)
-    t4acc0 = Accessor(t4_res.result[0])
+    t4acc0 = Accessor(t4_res, batch_id=0)
     check_first_entropy_result(t4acc0)
 
 
@@ -397,7 +398,7 @@ def test_ifp(datadir):
             == "IFP ADJOINT WEIGHTED MIGRATION AREA")
     assert last_resp['response_type'] == 'adjoint_res'
     assert last_resp['results']['used_batches_res'] == 81
-    t4acc = Accessor(t4_res.result[-1])
+    t4acc = Accessor(t4_res)
     assert (len(list(t4acc.resp_book.available_values('response_function')))
             == 22)
     resps = t4acc.resp_book.select_by(
@@ -438,11 +439,11 @@ def test_ifp_adjoint_edition(datadir):
     assert t4_res.scan_res.normalend
     assert t4_res.scan_res.times['simulation_time'][-1] == 77
     assert t4_res.scan_res.times['initialization_time'] == 3
-    t4acc = Accessor(t4_res.result[-1])
+    t4acc = Accessor(t4_res)
     assert (list(t4acc.resp_book.available_values('response_type'))
             == ['keff_res', 'ifp_adj_crit_edition', 'auto_keff_res'])
-    t4acc = Accessor(t4_res.result[-1])
-    print(sorted(t4acc.resp_book.keys()))
+    # t4acc = Accessor(t4_res)
+    # print(sorted(t4acc.resp_book.keys()))
     assert (sorted(t4acc.resp_book.keys())
             == ['ifp_cycle_length', 'ifp_response', 'index', 'keff_estimator',
                 'response_function', 'response_index', 'response_type',
@@ -475,7 +476,7 @@ def test_sensitivity(datadir):
     assert t4_res.scan_res.normalend
     assert t4_res.scan_res.times['simulation_time'][-1] == 159
     assert t4_res.scan_res.times['initialization_time'] == 1
-    t4acc = Accessor(t4_res.result[-1])
+    t4acc = Accessor(t4_res)
     rb_sensitiv = t4acc.resp_book.filter_by(response_type='sensitivity_res')
     assert len(rb_sensitiv.responses) == 8
     assert (sorted(rb_sensitiv.keys())
@@ -536,7 +537,7 @@ def test_green_bands(datadir):
     assert t4_res.scan_res.times['exploitation_time'][-1] == 2
     assert t4_res.scan_res.times['initialization_time'] == 2
     assert len(t4_res.result) == 1
-    t4acc = Accessor(t4_res.result[-1])
+    t4acc = Accessor(t4_res)
     resp = t4acc.resp_book.select_by(response_function='FLUX', squeeze=True)
     bd_gb = dcv.convert_data(resp['results'], data_type='greenbands_res')
     assert bd_gb.shape == (2, 2, 1, 2, 4, 3)
@@ -578,7 +579,7 @@ def test_pertu(datadir):
     assert len(t4_res.result[-1]['list_responses']) == 3
     assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 0
     assert len(t4_res.result[-1]['perturbation']) == 3
-    t4acc = Accessor(t4_res.result[-1])
+    t4acc = Accessor(t4_res)
     slkeys = sorted(list(t4acc.resp_book.index.keys()))
     assert slkeys == [
         'energy_split_name', 'index', 'particle', 'perturbation_composition',

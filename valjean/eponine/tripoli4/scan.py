@@ -320,6 +320,7 @@ class Scan(Mapping):
         # risk of changing its value for all instances of the class
         self.mesh_limit = mesh_lim
         self.para = False
+        self.partial = False
         self.countwarnings = 0
         self.counterrors = 0
         self.times = OrderedDict()
@@ -411,8 +412,14 @@ class Scan(Mapping):
                     self.countwarnings += 1
                 elif "ERROR" in line:
                     self.counterrors += 1
-                elif (self._is_end_flag(line) and self._collres
-                      and current_batch == list(self._collres.keys())[-1]):
+                elif "PARTIAL EDITION" in line:
+                    self.partial = True
+                elif self._is_end_flag(line):
+                    check_current_batch = (
+                        current_batch == list(self._collres.keys())[-1]
+                        if self._collres else False)
+                    if not self.para and not check_current_batch:
+                        continue
                     # still needed to be sure "elapsed time" appears in
                     # parallel jobs
                     self._add_time(self._is_end_flag(line), line)
@@ -517,6 +524,9 @@ class Scan(Mapping):
         if self.para:
             if 'elapsed_time' not in self.times:
                 return False
+            if self.partial:
+                print(self.partial)
+                return True
         setimes = {'simulation_time', 'exploitation_time'}
         if not setimes.intersection(self.times):
             return False

@@ -98,7 +98,7 @@ it to a Python function::
     >>> using_parse_results = use.using_parse_results(echo_factory)
     >>> @using_parse_results(text=example)
     ... def source(results):
-    ...     return results[0]['source_intensity']
+    ...     return results.result[0]['source_intensity']
 
 If we inspect `source`, we can see that it is a :class:`~.Use` object::
 
@@ -210,7 +210,7 @@ def parse_output_file(filename, *, batch=-1):
         parser = T4Parser(filename, batch=batch)
     except T4ParserException as t4pe:
         raise TaskException('cannot parse {}: {}'.format(filename, t4pe))
-    return parser.result
+    return parser
 
 
 def access(parse_results, *, index):
@@ -220,7 +220,7 @@ def access(parse_results, *, index):
     :param int index: the index of the required parse result.
     :returns: an :class:`~.Accessor`.
     '''
-    return Accessor(parse_results[index])
+    return Accessor(parse_results, batch_id=index)
 
 
 def using_parse_results(factory, batch=-1):

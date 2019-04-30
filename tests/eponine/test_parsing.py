@@ -69,7 +69,7 @@ def accessor_test(res):
     A first check on the presence of the ``book_type`` is done in order to
     avoid a useless error here.
     '''
-    t4acc = Accessor(res.result[-1])
+    t4acc = Accessor(res)
     if t4acc.resp_book is None:
         return
     ids = set()
@@ -106,6 +106,7 @@ def loop_on_files(filelist, cfile):
         else:
             failed_jdds.append(ifile)
         # quick temporary test of accessor
+        assert res.check_t4_times()
         accessor_test(res)
     return nb_jdds_ok, failed_jdds
 
