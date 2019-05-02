@@ -1,7 +1,7 @@
 '''Tests for the :mod:`.depgraph` module.'''
 # pylint: disable=no-value-for-parameter
 
-from hypothesis import given, note, assume, event, settings
+from hypothesis import given, note, assume, event, settings, HealthCheck
 from hypothesis.strategies import text, booleans, integers
 import pytest
 
@@ -348,6 +348,7 @@ def test_terminal_initial_invert(graph):
     assert sorted(inits_inv) == sorted(terms)
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(graph=depgraphs(), new=integers())
 def test_add_remove_is_identity(graph, new):
     '''Test that adding and removing a node results in the same graph.'''
@@ -368,6 +369,7 @@ def test_add_remove_is_identity(graph, new):
     assert graph == graph_copy
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(graph1=depgraphs(min_size=2), graph2=depgraphs())
 def test_flatten_dependencies(graph1, graph2):
     '''Test that grafting one graph into another respects the dependency
@@ -386,6 +388,7 @@ def test_flatten_dependencies(graph1, graph2):
     event('min_graph_size={}'.format(min(len(graph1), len(graph2))))
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(graph1=depgraphs(min_size=2), graph2=depgraphs())
 def test_flatten_size(graph1, graph2):
     '''Test that grafting one graph into another yields a graph with the
@@ -408,6 +411,7 @@ def test_flatten_size(graph1, graph2):
     assert expected_n_nodes == observed_n_nodes
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(graph1=depgraphs(min_size=2), graph2=depgraphs(min_size=2),
        graph3=depgraphs())
 def test_flatten_size3(graph1, graph2, graph3):
@@ -435,6 +439,7 @@ def test_flatten_size3(graph1, graph2, graph3):
     assert expected_n_nodes == observed_n_nodes
 
 
+@settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(graph1=depgraphs(min_size=2), graph2=depgraphs(min_size=2),
        graph3=depgraphs())
 def test_recursive_flatten_size3(graph1, graph2, graph3):
