@@ -21,7 +21,6 @@ the innest ones:
      :mod:`~.use`;
    * Conversion of data to :class:`~.base_dataset.BaseDataset` in
      :mod:`~.data_convertor`;
-   * Easy access to TRIPOLI-4 results via metadata in :mod:`~.accessor`;
    * Parsing module :mod:`~.parse` calling the scanning one :mod:`~.scan`;
    * The parsing itself is done thanks to 3 modules:
 
@@ -42,7 +41,6 @@ Main modules
 .. toctree::
 
    tripoli4/data_convertor
-   tripoli4/accessor
    tripoli4/parse
    tripoli4/scan
    tripoli4/use
