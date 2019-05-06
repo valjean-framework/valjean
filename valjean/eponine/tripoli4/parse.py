@@ -198,7 +198,8 @@ class T4Parser():
                      'errors': self.scan_res.counterrors,
                      'number_of_tasks': self.scan_res.tasks,
                      'normal_end': self.scan_res.normalend,
-                     'required_batches': self.scan_res.reqbatchs}
+                     'required_batches': self.scan_res.reqbatchs,
+                     'partial': self.scan_res.partial}
         for ktime, val in self.scan_res.times.items():
             if ktime not in global_vars:
                 scan_vars[ktime] = val if isinstance(val, int) else val[batch]

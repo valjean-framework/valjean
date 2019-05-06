@@ -369,6 +369,16 @@ class Scan(Mapping):
                 int(line.split()[-1]) if line.split()[-1].isdigit()
                 else "Not a time")
 
+    def _set_counters_and_flags(self, line):
+        if "WARNING" in line:
+            self.countwarnings += 1
+        elif "ERROR" in line:
+            self.counterrors += 1
+        elif "PARTIAL EDITION" in line:
+            self.partial = True
+        elif "NORMAL COMPLETION" in line:
+            self.normalend = True
+
     @profile
     def _get_collres(self):
         # pylint: disable=too-many-branches
@@ -382,9 +392,10 @@ class Scan(Mapping):
             for line in fil:
                 if line.lstrip().startswith("//"):  # comment in the jdd
                     continue
-                if line.lstrip().startswith("!!!"):  # CARFEFUL point in output
+                elif line.lstrip().startswith("!!!"):
                     continue
-                elif _batch_scan:
+                self._set_counters_and_flags(line)
+                if _batch_scan:
                     _batch_scan.build_result(line)
                     end_flag = self._is_end_flag(line)
                     if end_flag:
@@ -408,12 +419,6 @@ class Scan(Mapping):
                         self.mesh_limit, self.para, line)
                 elif line.startswith(' batch number :'):
                     current_batch = int(line.split()[-1])
-                elif "WARNING" in line:
-                    self.countwarnings += 1
-                elif "ERROR" in line:
-                    self.counterrors += 1
-                elif "PARTIAL EDITION" in line:
-                    self.partial = True
                 elif self._is_end_flag(line):
                     check_current_batch = (
                         current_batch == list(self._collres.keys())[-1]
@@ -432,8 +437,6 @@ class Scan(Mapping):
                     if "COUNTER" in line:
                         self.last_generator_state = ''.join(generator_state)
                         generator_state = []
-                elif "NORMAL COMPLETION" in line:
-                    self.normalend = True
         if count_mesh_exceeding > 4:
             LOGGER.warning("Number of mesh exceeding mesh_limit arg: %d",
                            count_mesh_exceeding)

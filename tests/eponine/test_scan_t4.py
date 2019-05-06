@@ -702,6 +702,11 @@ def test_no_normal_completion(datadir, caplog):
     assert ("Tripoli-4 listing did not finish with NORMAL COMPLETION."
             in caplog.text)
     assert t4_res.scan_res.normalend is False
+    assert t4_res.scan_res.partial is True
+    t4rb = t4_res.build_response_book()
+    assert not t4rb.is_empty()
+    assert len(t4rb.globals) == 10
+    assert len(t4rb) == 1
 
 
 def test_no_simulation_time(datadir, caplog):

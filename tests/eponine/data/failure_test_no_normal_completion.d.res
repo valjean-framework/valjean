@@ -43,7 +43,8 @@ $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
 
 GEOMETRY
-TITRE from prob003 for geometrie, test no "NORMAL COMPLETION" in at the end
+TITRE from prob003 for geometrie
+// test no "NORMAL COMPLETION" in at the end
 // To obtain a "no NORMAL COMPLETION" case launch the job and stop it with Ctrl+C
 // A partial edition is obtained but not the final result.
 
