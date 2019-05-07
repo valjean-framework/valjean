@@ -5,7 +5,8 @@ Exclusion and matching are possible via ``--parsing-exclude`` and
 ``--parsing-match`` options.
 
 Tests are done on successful parsing of all the listed files and on possibility
-to access the results via the module :mod:`~valjean.eponine.tripoli4.accessor`.
+to access the results via the
+:class:`~valjean.eponine.response_book.ResponseBook`.
 
 Expected variables in the configuration file are:
   * PATH: path to the folder containing the screened folder structure
@@ -31,6 +32,7 @@ from glob import glob
 import logging
 import pytest
 from valjean.eponine.tripoli4.parse import T4Parser, T4ParserException
+import valjean.eponine.tripoli4.data_convertor as dcv
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=redefined-outer-name
@@ -57,16 +59,76 @@ def result_test(res):
     return res.scan_res.normalend
 
 
+def check_array_datasets(response, dname, data):
+    '''Check datasets for arrays.
+
+    This function is mainly meant to deal with the spectrum special cases as
+    spectra containing variance of variance or uncertainty spectra (subcase of
+    perturbations, old way). Related integrated results are also checked in
+    these special cases.
+    '''
+    if 'uncert' in response['array_type']:
+        if dname == 'uncert_spectrum':
+            for elt in data['array'].dtype.names:
+                assert dcv.convert_data(response['results'],
+                                        dname, score=elt)
+        if dname == 'uncert_integrated':
+            for elt in data:
+                assert dcv.convert_data(data, elt)
+    else:
+        if isinstance(data, dict) and 'array'in data:
+            for akey in data:
+                if 'array' not in akey:
+                    continue
+                assert dcv.convert_data(response['results'], dname,
+                                        array_type=akey)
+        else:
+            assert dcv.convert_data(response['results'], dname)
+    if 'vov' in response['array_type'] and dname == 'spectrum':
+        assert dcv.convert_data(response['results'], dname, score='vov')
+    if 'integrated' in dname and 'vov' in data:
+        assert dcv.convert_data(data, 'vov')
+
+
+def check_data(responses):
+    '''Check content of data and conversion fo dataset.
+
+    Check content of data: ``'results'`` key should be present in all the
+    responses of the *ResponseBook*, ``'_res'`` should have be removed from all
+    ``response_type``, no key under ``'results'`` should contain ``'_res'``.
+    Check the conversion in dataset: test conversion of all elements under
+    ``'results'`` in a dataset.
+
+    If the results is a string, it is highly probable not converged, so not
+    possible to be converted in a dataset.
+    '''
+    for iresp in responses:
+        assert 'results' in iresp
+        assert not all(['_res' in dtype for dtype in iresp['results']])
+        for dname, data in iresp['results'].items():
+            if isinstance(data, str):
+                continue
+            if dname == 'keff_per_estimator':
+                for kestim in data['estimators']:
+                    assert dcv.convert_data(iresp['results'], dname,
+                                            estimator=kestim)
+            elif dname == 'auto_keff':
+                assert dcv.convert_data(iresp['results'], dname,
+                                        estimator=iresp['keff_estimator'])
+            else:
+                if 'array_type' in iresp:
+                    check_array_datasets(iresp, dname, data)
+                else:
+                    assert dcv.convert_data(iresp['results'], dname)
+
+
 def response_book_test(res):
     '''Quick test of ResponseBook.
 
-    Main goal of this test is not apparent: it is to check if the accessor can
-    be built for all types of responses available in the T4 outputs given set,
-    else accessor has to be updated to probably take into account a new type of
-    response.
-
-    A first check on the presence of the ``book_type`` is done in order to
-    avoid a useless error here.
+    Main goal of this test is not apparent: it is to check if the
+    *ResponseBook* can be built for all types of responses available in the T4
+    outputs given set, else parsing, transform or common have to be updated to
+    probably take into account a new type of response.
     '''
     t4rb = res.build_response_book()
     if t4rb is None:
@@ -77,6 +139,10 @@ def response_book_test(res):
             ids |= _v1
     assert ids == set(range(len(t4rb.responses)))
     assert t4rb.globals
+    if t4rb.responses:
+        assert not all(['_res' in rtype
+                        for rtype in t4rb.available_values('response_type')])
+        check_data(t4rb.responses)
 
 
 def loop_on_files(filelist, cfile):
@@ -105,7 +171,6 @@ def loop_on_files(filelist, cfile):
             nb_jdds_ok += 1
         else:
             failed_jdds.append(ifile)
-        # quick temporary test of accessor
         assert res.check_t4_times()
         response_book_test(res)
     return nb_jdds_ok, failed_jdds
@@ -132,7 +197,7 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     By default all files are included, independent of the mode (MONO or PARA),
     and of the report section (main or aux). Restrictions are possible from
     command line, via options ``'--parsing-exclude='["spam", "egg"]'`` and
-    ``'--parsing-exclude-match='["bacon"]'``.
+    ``'--parsing-match='["bacon"]'``.
     Currently adapted to version 11 of Tripoli-4.
 
     Tests performed on number of input files used, excluded and failed.

@@ -393,11 +393,11 @@ def test_parse_mesh_roundtrip(array_bins):
             assert np.isclose(pres[0]['integrated_res']['sigma'],
                               larray['integrated'][:]['sigma'])
         else:
-            assert 'integrated_res' in list(parsed_mesh.keys())
+            assert 'seintegrated_array' in list(parsed_mesh.keys())
             assert np.allclose(larray['integrated'][:]['score'],
-                               parsed_mesh['integrated_res']['score'])
+                               parsed_mesh['seintegrated_array']['score'])
             assert np.allclose(larray['integrated'][:]['sigma'],
-                               parsed_mesh['integrated_res']['sigma'])
+                               parsed_mesh['seintegrated_array']['sigma'])
     if 'energy_integrated' in larray:
         assert 'eintegrated_array' in list(parsed_mesh.keys())
         for key in ['score', 'sigma']:
@@ -646,8 +646,8 @@ def test_parse_spectrum_roundtrip(array_bins, units):
                 assert np.isclose(pres[0]['integrated_res'][key],
                                   larray['integrated'][:][key])
         else:
-            assert 'integrated_res' in list(pres[0]['spectrum_res'].keys())
-            int_res = pres[0]['spectrum_res']['integrated_res']
+            assert 'eintegrated_array' in list(pres[0]['spectrum_res'].keys())
+            int_res = pres[0]['spectrum_res']['eintegrated_array']
             for key in ['score', 'sigma']:
                 assert np.allclose(larray['integrated'][:][key], int_res[key])
 
@@ -888,21 +888,20 @@ def test_parse_keffs_roundtrip(corrmat, keffmat, sigmat, combination):
     keff_t4_out = keff_t4_genoutput(keffmat, sigmat, corrmat, combination)
     keffres = pygram.keffblock.parseString(keff_t4_out)
     assert keffres
-    assert list(keffres.keys()) == ['keff_res']
-    assert (sorted(list(keffres['keff_res'].keys()))
-            == ['keff_combination_res', 'keff_per_estimator_res',
-                'used_batches_res'])
-    assert (sorted(list(keffres['keff_res']['keff_per_estimator_res']))
+    assert list(keffres.keys()) == ['keff']
+    assert (sorted(list(keffres['keff'].keys()))
+            == ['keff_combination', 'keff_per_estimator', 'used_batches'])
+    assert (sorted(list(keffres['keff']['keff_per_estimator']))
             == ['correlation_matrix', 'estimators', 'keff_matrix',
                 'sigma_matrix'])
-    keff_per_estim = keffres['keff_res']['keff_per_estimator_res']
+    keff_per_estim = keffres['keff']['keff_per_estimator']
     assert np.allclose(keff_per_estim['correlation_matrix'], corrmat)
     assert np.allclose(keff_per_estim['keff_matrix'], keffmat)
     assert np.allclose(keff_per_estim['sigma_matrix'], sigmat)
     assert np.isclose(
-        keffres['keff_res']['keff_combination_res']['keff'], combination[0])
+        keffres['keff']['keff_combination']['keff'], combination[0])
     assert np.isclose(
-        keffres['keff_res']['keff_combination_res']['sigma'], combination[1])
+        keffres['keff']['keff_combination']['sigma'], combination[1])
 
 
 @composite
@@ -939,7 +938,7 @@ def keff_auto_estimation(draw, n_estim):
     for iestim, _ in enumerate(estimators):
         keff_res.append({'keff_estimator': estimators[iestim],
                          'best_disc_batchs': disc_batchs[iestim],
-                         'used_batch': 100 - disc_batchs[iestim],
+                         'used_batches': 100 - disc_batchs[iestim],
                          'keff': keffs[iestim],
                          'sigma': sigmas[iestim],
                          'sigma%': sigmas[iestim]/keffs[iestim]*100})
@@ -959,15 +958,11 @@ def bekeff_t4_output(be_keff):
                      + "best results are obtained with discarding {} batches"
                      .format(bestim['best_disc_batchs'])
                      + "\n\n")
-        t4out.append(" "*9
-                     + "number of batch used: {}".format(bestim['used_batch'])
-                     + " "*8
-                     + "keff = {0:.6e}".format(bestim['keff'])
-                     + " "*5
-                     + "sigma = {0:.6e}".format(bestim['sigma'])
-                     + " "*5
-                     + "sigma% = {0:.6e}".format(bestim['sigma%'])
-                     + "\n\n\n")
+        t4out.append(
+            " "*9 + "number of batch used: {}".format(bestim['used_batches'])
+            + " "*8 + "keff = {0:.6e}".format(bestim['keff'])
+            + " "*5 + "sigma = {0:.6e}".format(bestim['sigma'])
+            + " "*5 + "sigma% = {0:.6e}".format(bestim['sigma%']) + "\n\n\n")
     return ''.join(t4out)
 
 
@@ -980,14 +975,14 @@ def test_parse_auto_keff_roundtrip(keff_res):
     pres = pygram.autokeffblock.parseString(bekeff_t4_out)
     assert pres
     assert len(pres[0]) == len(keff_res)
-    assert (set(pres[0][0]['results']['auto_keff_res'].keys())
+    assert (set(pres[0][0]['results']['auto_keff'].keys())
             <= set(keff_res[0].keys()))
     for ikeff, bekeff in enumerate(keff_res):
         assert bekeff['keff_estimator'] == pres[0][ikeff]['keff_estimator']
         presires = pres[0][ikeff]['results']
-        assert bekeff['best_disc_batchs'] == presires['discarded_batches_res']
-        assert bekeff['used_batch'] == presires['used_batches_res']
-        for key, val in presires['auto_keff_res'].items():
+        assert bekeff['best_disc_batchs'] == presires['discarded_batches']
+        assert bekeff['used_batches'] == presires['used_batches']
+        for key, val in presires['auto_keff'].items():
             assert np.isclose(bekeff[key], val)
 
 
@@ -1108,7 +1103,7 @@ def kij_auto_estimation(draw, evals, kijmat):
     else:
         spacebins = list(range(kijmat.shape[0]))
     kijdict = {'keff_estimator': 'KIJ',
-               'used_batch': draw(integers(80, 99)),
+               'used_batches': draw(integers(80, 99)),
                'kij_mkeff': np.real(evals[0]),
                'spacebins': np.array(spacebins),
                'kij_leigenvec': np.real(levec[:, 0]),
@@ -1132,7 +1127,7 @@ def kij_sources_t4_output(kijdict):
     t4out = []
     t4out.append("{0:>8}ENERGY INTEGRATED RESULTS\n\n".format(""))
     t4out.append("number of batches used: {}\n\n"
-                 .format(kijdict['used_batch']))
+                 .format(kijdict['used_batches']))
     t4out.append("SOURCES VECTOR :\n\n")
     t4out.append("Sources are ordered following GEOMCOMP:\n\n")
     for source in kijdict['kij_leigenvec']:
@@ -1186,7 +1181,7 @@ def kijkeff_t4_output(kijdict):
                                                  kijdict['keff_estimator']))
     t4out.append("{0:>10}{1:->13}\n\n".format("", ""))
     t4out.append("{0:>12}number of last batches kept : {1}\n\n"
-                 .format("", kijdict['used_batch']))
+                 .format("", kijdict['used_batches']))
     t4out.append("{0:>12}kij-keff = {1:.6e}\n\n"
                  .format("", kijdict['kij_mkeff']))
     t4out.append("{0:>12}EIGENVECTOR :{0:>6}index{0:>6}source rate\n\n"
@@ -1257,17 +1252,17 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
     assert pres
     assert len(pres) == 1
     assert sorted(list(pres[0].keys())) == [
-        'kij_domratio_res', 'kij_matrix_res', 'kij_mkeff_res',
-        'kij_reigenval_res', 'kij_reigenvec_res', 'used_batches_res']
-    assert np.allclose(pres[0]['kij_reigenval_res'], evals)
-    assert np.allclose(pres[0]['kij_reigenvec_res'], evecs)
-    assert np.allclose(pres[0]['kij_matrix_res'], matrix)
+        'kij_domratio', 'kij_matrix', 'kij_mkeff', 'kij_reigenval',
+        'kij_reigenvec', 'used_batches']
+    assert np.allclose(pres[0]['kij_reigenval'], evals)
+    assert np.allclose(pres[0]['kij_reigenvec'], evecs)
+    assert np.allclose(pres[0]['kij_matrix'], matrix)
     # KIJ SOURCES block
     kij_sources_t4_out = kij_sources_t4_output(kijdict)
     pres = pygram.kijsources.parseString(kij_sources_t4_out)
     assert pres
     assert sorted(list(pres[0].keys())) == ['kij_sources_order',
-                                            'kij_sources_vals', 'used_batch']
+                                            'kij_sources_vals', 'used_batches']
     assert np.allclose(pres[0]['kij_sources_vals'], kijdict['kij_leigenvec'])
     # KEFF BEST ESTIMATION block
     kijkeff_t4_out = bekeff_t4_output(keff_res)
@@ -1281,21 +1276,20 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
             == list(map(lambda x: x['keff_estimator'], keff_res+[kijdict])))
     # test keff_auto_estimation
     assert (
-        list(map(lambda x: x['results']['discarded_batches_res'], tres[:-1]))
+        list(map(lambda x: x['results']['discarded_batches'], tres[:-1]))
         == list(map(lambda x: x['best_disc_batchs'], keff_res)))
     for num in ['keff', 'sigma', 'sigma%']:
         assert (np.allclose(
-            list(map(lambda x, k=num: x['results']['auto_keff_res'][k],
+            list(map(lambda x, k=num: x['results']['auto_keff'][k],
                      tres[:-1])),
             list(map(lambda x, k=num: x[k], keff_res))))
     # test kij estimator
     keys = [tkey for tkey in list(kijdict.keys())
-            if tkey not in ('keff_estimator', 'used_batch')]
+            if tkey not in ('keff_estimator', 'used_batches')]
     kijr = tres[-1]['results']
     for key in keys:
-        assert (kijr[key+'_res'] == kijdict[key]
-                if isinstance(kijdict[key], str)
-                else np.allclose(kijr[key+'_res'], kijdict[key]))
+        assert (kijr[key] == kijdict[key] if isinstance(kijdict[key], str)
+                else np.allclose(kijr[key], kijdict[key]))
 
 
 @composite

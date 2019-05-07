@@ -160,25 +160,27 @@ def convert_batch_numbers(score):
 
     :param toks: score result interpreted as dictionary
     :type toks: |parseres|
-    :returns: dictionary with maximum 2 keys (``'used_batch_res'`` and
-        ``'disc_batch_res'``)
+    :returns: dictionary with maximum 2 keys (``'used_batches_res'`` and
+        ``'discarded_batches_res'``)
     :rtype: dict
     '''
     res = {}
+    is_uncert = any('uncert' in k for k in list(score.keys()))
     for key in score.keys():
-        # med_file_res -> str, greenbands: too complicated structure
+        # greenbands: too complicated structure
         if (('_res' in key and isinstance(score[key], Iterable)
-             and key not in ('med_file_res', 'greenbands_res'))):
+             and key != 'greenbands_res')):
             usc = (score[key]
                    if isinstance(score[key], dict) or score[key].asDict()
                    else score[key][0])
-            ubatch = usc.pop('used_batch', None)
-            dbatch = usc.pop('disc_batch', None)
+            ubatch = usc.pop('used_batches', None)
+            dbatch = usc.pop('discarded_batches', None)
             if ubatch is not None:
                 res['used_batches_res'] = ubatch
             if dbatch is not None:
                 res['discarded_batches_res'] = dbatch
-            if 'used_batches_res' in res and 'discarded_batches_res' in res:
+            if ('used_batches_res' in res and 'discarded_batches_res' in res
+                    and not is_uncert):
                 break
     return res
 
@@ -205,13 +207,17 @@ def convert_score(toks):
         for key in score.keys():
             if key == 'mesh_res':
                 res['mesh_res'] = convert_mesh(score['mesh_res'])
+                res['array_type'] = 'mesh'
             elif 'spectrum_res' in key:
-                res['spectrum_res'] = convert_spectrum(score[key], key)
+                keystr = 'spectrum_res' if 'uncert' not in key else key
+                res[keystr] = convert_spectrum(score[key], key)
+                res['array_type'] = key[:-4]
             elif 'integrated_res' in key:
                 res[key] = score[key].asDict()
             elif key == 'greenbands_res':
                 res[key] = convert_green_bands(score[key])
-                res['discarded_batches_res'] = res[key].pop('disc_batch')
+                res['discarded_batches_res'] = res[key].pop(
+                    'discarded_batches')
             elif key == 'scoring_zone_id':
                 res['scoring_zone_id'] = convert_scoring_zone_id(score[key])
             elif key == 'correspondence_table':
@@ -273,7 +279,7 @@ def convert_keff(toks):
        <valjean.eponine.tripoli4.common.convert_keff>` and more generally
        :mod:`~valjean.eponine.tripoli4.common`
     '''
-    keffmat = common.convert_keff_with_matrix(toks['keff_res'].asDict())
+    keffmat = common.convert_keff_with_matrix(toks['keff'].asDict())
     return keffmat
 
 
@@ -342,13 +348,13 @@ def convert_auto_keff(toks):
     '''
     assert len(toks) == 1, "Not correct number of elements in auto_keff toks"
     akeff_res = toks[0]
-    akeff_key = 'auto_keff_res'
+    akeff_key = 'auto_keff'
     res = []
     for akeff in akeff_res:
         # if kij result always a dict at that step, not for auto keff
         is_kij = isinstance(akeff, dict)
         akeffd = {}
-        akeffd['response_type'] = akeff_key if not is_kij else 'kijkeff_res'
+        akeffd['response_type'] = akeff_key if not is_kij else 'kijkeff'
         if 'results' not in akeff:  # some warning cases
             continue
         akeffd['keff_estimator'] = akeff['keff_estimator']
@@ -356,8 +362,8 @@ def convert_auto_keff(toks):
         # may not be there for not converged results
         if akeff_key in akeffr:
             akeffra = akeffr[akeff_key]
-            akeffr['used_batches_res'] = akeffra.pop('used_batch')
-            akeffr['discarded_batches_res'] = akeffra.pop('best_disc_batchs')
+            akeffr['used_batches'] = akeffra.pop('used_batches')
+            akeffr['discarded_batches'] = akeffra.pop('best_disc_batchs')
         akeffd['results'] = akeffr
         res.append(akeffd)
     return res
@@ -468,18 +474,11 @@ def finalize_response_dict(s, loc, toks):
     assert len(toks[0]['results'].asDict()) == 1, \
         "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
     res = toks[0]['results']
-    # print(list(res.keys()))
     key, val = next(res.items())
     assert isinstance(val, dict) or val.asList()
     mydict = toks[0].asDict()
     mydict['results'] = val if isinstance(val, dict) else val.asList()
-    # print("THE KEY =", key)
-    # print(type(mydict['results']))
-    # if key != 'score_res':
-    #     print(mydict['results'])
-    # if isinstance(mydict['results'], list):
-    #     print([list(mres.keys()) for mres in mydict['results']])
-    mydict['response_type'] = key
+    mydict['response_type'] = key[:-4] if '_res' in key else key
     mydict.update(mydict.pop('compos_details', {}))
     LOGGER.debug("Final response metadata: %s",
                  {k: v for k, v in mydict.items() if k != 'results'})
@@ -497,8 +496,8 @@ def extract_all_metadata(list_of_dicts):
     ...     {'data1_res': 'D3', 'md1': 'MD1', 'md3': 3}]}]
     >>> pprint(extract_all_metadata(lod))  # doctest: +NORMALIZE_WHITESPACE
     [{'bla': 'X', 'md1': 'MD1', 'md2': 'MD2', \
-'results': {'data1_res': 'D1', 'data2_res': 2}}, \
-{'bla': 'X', 'md1': 'MD1', 'md3': 3, 'results': {'data1_res': 'D3'}}]
+'results': {'data1': 'D1', 'data2': 2}}, \
+{'bla': 'X', 'md1': 'MD1', 'md3': 3, 'results': {'data1': 'D3'}}]
 
     :param list(dict) list_of_dicts: list of dictionaries
     :returns: list of dictionaries with no list of dict under 'results' key
@@ -518,9 +517,11 @@ def extract_metadata(ldict):
     LOGGER.debug("In extract_metadata")
     lscores = []
     assert 'results' in ldict
-    if isinstance(ldict['results'], dict):
-        return [ldict]
     res = ldict.pop('results')
+    if isinstance(res, dict):
+        res_dict = {(k[:-4] if '_res' in k else k): v for k, v in res.items()}
+        ldict['results'] = res_dict
+        return [ldict]
     assert isinstance(res, list)
     for score in res:
         ndict = ldict.copy()
@@ -528,7 +529,7 @@ def extract_metadata(ldict):
         for k, val in score.items():
             if k.endswith('_res'):
                 # these are the real data (the juice)
-                res_dict[k] = val
+                res_dict[k[:-4]] = val
             else:
                 # these are metadata
                 assert k not in ndict

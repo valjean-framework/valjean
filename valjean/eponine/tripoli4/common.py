@@ -223,7 +223,7 @@ mesh:
    :``'eintegrated_array'``: 7-dimensions `numpy structured array`_ with
      dtype ``('score', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[n_s0, n_s1, n_s2, 1, n_t, 1, 1]``
-   :``'integrated_res'``: 7-dimensions `numpy structured array`_ with
+   :``'integrated'``: 7-dimensions `numpy structured array`_ with
      dtype ``('score', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[1, 1, 1, 1, n_t, 1, 1]``
    :``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
@@ -243,11 +243,11 @@ spectrum:
      order corresponds to the order of the shape in the array. In spectrum no
      space bins are given (corresponding to empty arrays), other dimensions are
      normally given as edges when available, else as an empty array.
-   :``'disc_batch'``: number of discarded batchs
+   :``'discarded_batches'``: number of discarded batchs
 
    Optional keys are:
 
-   :``'integrated_res'``: 7-dimensions `numpy structured array`_ with same
+   :``'integrated'``: 7-dimensions `numpy structured array`_ with same
      :obj:`numpy.dtype` as ``'array'`` and list of number of bins
      (``lnbins``) is ``[1, 1, 1, 1, n_t, 1, 1]`` (integrated over energy)
    :``'used_batch'``: if ``'integrated_res'`` exists, number of used batch is
@@ -281,7 +281,6 @@ energy (source and followed particle) are added after the main loop.
 
 The returned dictionary contains:
 
-:``'disc_batch'``: number of discarded batchs
 :``'array'``: 6-dimension `numpy structured array`_
 :``'bins'``: :class:`collections.OrderedDict` (str, :obj:`numpy.ndarray`) of
     bins in same order as array shape
@@ -326,8 +325,7 @@ by the (Z,A) of the produced fission products (isotopes) as also available as
 spectra.
 
 The results are given as standard array results: a dictionary with the usual
-keys (``'array'``, ``'bins'``, ``'units'``, ``'integrated_res'``,
-``'disc_batch'``).
+keys (``'array'``, ``'bins'``, ``'units'``).
 
 More details in :func:`convert_nu_spectrum` and :func:`convert_za_spectrum`.
 
@@ -401,13 +399,13 @@ but array is easier to initialized and more general.
 The method :meth:`convert_keff_with_matrix` takes as input the generic |keff|
 response as a dictionary and returns a dictinary containing different keys:
 
-* the number of batchs used under ``'used_batches_res'``;
+* the number of batchs used under ``'used_batches'``;
 * the 3 matrices mentioned above (``'keff_matrix'``, ``'correlation_matrix'``
   and ``'sigma_matrix'``) and the list of estimators (``['KSTEP', 'KCOLL',
   'KTRACK']`` by default) are stored under the common key
-  ``'keff_per_estimator_res'`` as a dictionary;
+  ``'keff_per_estimator'`` as a dictionary;
 * the full combination result (|keff| and σ in %) under
-  ``'keff_combination_res'`` key
+  ``'keff_combination'`` key
 
 Not converged cases are taken into account and return a key
 ``'not_converged'``.
@@ -469,17 +467,17 @@ the number of volumes containing fissle material, N.
 
 The returned object is a dictionary containing the following keys and objects:
 
-:``'used_batches_res'``: number of batchs used (`int`)
-:``'kij_mkeff_res'``: result of |kij|-|keff| (`float`), where |kij| is the
+:``'used_batches'``: number of batchs used (`int`)
+:``'kij_mkeff'``: result of |kij|-|keff| (`float`), where |kij| is the
   hightest eigenvalue of |kij|
-:``'kij_domratio_res'``: dominant ratio (`float`), ratio between the hightest
+:``'kij_domratio'``: dominant ratio (`float`), ratio between the hightest
   |kij| eigenvalue and the next one
-:``'kij_reigenval_res'``: :obj:`numpy.ndarray` of N **complex** numbers (real
+:``'kij_reigenval'``: :obj:`numpy.ndarray` of N **complex** numbers (real
   and imaginary parts given in the listings) corresponding to the **right**
   eigenvalues.
-:``'kij_reigenvec_res'``: :obj:`numpy.ndarray` of N vectors of N elements
+:``'kij_reigenvec'``: :obj:`numpy.ndarray` of N vectors of N elements
   corresponding to **right** eigenvectors.
-:``'kij_matrix_res'``: :obj:`numpy.matrix` of N×N being the |kij| matrix.
+:``'kij_matrix'``: :obj:`numpy.matrix` of N×N being the |kij| matrix.
 
 
 .. _eponine-kij-in-keff:
@@ -499,21 +497,21 @@ specified):
 :``'results'``: usual results block, built here for once containing the
   following dictionary (same keys as in the previous case when possible):
 
-  :``'used_batches_res'``: number of batchs used to calculate the |kij|
+  :``'used_batches'``: number of batchs used to calculate the |kij|
     (:class:`int`)
-  :``'kij_mkeff_res'``: result of |kij|-|keff| (`float`)
-  :``'spacebins_res'``: **facultative**, list of N volumes/mesh elements
+  :``'kij_mkeff'``: result of |kij|-|keff| (`float`)
+  :``'spacebins'``: **facultative**, list of N volumes/mesh elements
     considered (:obj:`numpy.ndarray` of
 
     * :class:`int` for volumes,
     * :class:`tuple` of :class:`int` (s0, s1, s2) for mesh elements,
 
-  :``'kij_leigenvec_res'``: eigenvector corresponding dominant **left**
+  :``'kij_leigenvec'``: eigenvector corresponding dominant **left**
     eigenvector (:obj:`numpy.ndarray` of N elements)
-  :``'kij_matrix_res'``: |kij| matrix (N×N :obj:`numpy.matrix`)
-  :``'kij_stddev_matrix_res'``: standard deviation matrix (N×N
+  :``'kij_matrix'``: |kij| matrix (N×N :obj:`numpy.matrix`)
+  :``'kij_stddev_matrix'``: standard deviation matrix (N×N
     :obj:`numpy.matrix`)
-  :``'kij_sensibility_matrix_res'``: sensibility matrix (N×N
+  :``'kij_sensibility_matrix'``: sensibility matrix (N×N
     :obj:`numpy.matrix`)
 
 .. rubric:: Footnotes
@@ -979,18 +977,16 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
       Default = ``['score', 'sigma', 'score/lethargy']``
     :returns: dictionary with keys and elements
 
-      * ``'spectrum'``: 7 dimensions NumPy structured array with related
+      * ``'array'``: 7 dimensions NumPy structured array with related
         binnings as NumPy arrays
         ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma', 'score/lethargy')``
-      * ``'disc_batchs'``: number of discarded batchs for the score
       * ``'bins'``: :class:`collections.OrderedDict` of the available bins
       * ``'units'``: dict containing units of dimensions (bins), score and
         sigma
-      * ``'integrated_res'``: 7 dimensions NumPy structured array
+      * ``'eintegrated_array'``: 7 dimensions NumPy structured array
         ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma')``;
         facultative, seen when time required alone and sometimes
         when neither time nor mu nor phi are required
-      * ``'used_batch'``: number of used batchs (only if integrated result)
     '''
     nphibins, nmubins, ntbins, nebins = _get_number_of_bins(spectrum)
     LOGGER.debug("nebins = %d, ntbins = %d, nmubins = %d, nphibins = %d",
@@ -1014,7 +1010,7 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
         convspec['units']['score'] = spectrum[0]['units'][1]
         convspec['units']['sigma'] = spectrum[0]['units'][2]
     if 'integrated_res' in spectrum[0]:
-        convspec['integrated_res'] = vals.arrays['integrated_res']
+        convspec['eintegrated_array'] = vals.arrays['integrated_res']
     return convspec
 
 
@@ -1093,12 +1089,12 @@ def convert_mesh(meshres):
         * ``'eintegrated_array'``: 7-dimensions NumPy structured array
           ``v[s0,s1,s2,E,t,mu,phi] = ('score', 'sigma')``
           corresponding to mesh integrated on energy (facultative)
-        * ``'integrated_res'``: 7 dimensions NumPy structured array
+        * ``'integrated'``: 7 dimensions NumPy structured array
           ``v[s0,s1,s2,E,t,mu,phi] = (score, sigma)``
           corresponding to mesh integrated over energy and space;
           *facultative*, available when time grid is required (so
           corresponds to integrated results splitted in time)
-        * ``'used_batch'``: number of used batchs (only if integrated result)
+        * ``'used_batches'``: number of used batchs (only if integrated result)
     '''
     LOGGER.debug("In convert_mesh_class")
     LOGGER.debug("Number of mesh results: %d", len(meshres))
@@ -1138,8 +1134,7 @@ def convert_mesh(meshres):
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
         convmesh['eintegrated_array'] = vals.arrays['eintegrated_mesh']
     if 'integrated_res' in meshres[0]:
-        convmesh['integrated_res'] = vals.arrays['integrated_res']
-        convmesh['used_batch'] = meshres[0]['integrated_res']['used_batch']
+        convmesh['seintegrated_array'] = vals.arrays['integrated_res']
     return convmesh
 
 
@@ -1219,13 +1214,11 @@ def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
       * ``'array'``: 1 dimension NumPy structured array with related
         binnings as NumPy arrays
         ``v[nu] = ('score', 'sigma')``
-      * ``'disc_batchs'``: number of discarded batchs for the score
       * ``'bins'``: :class:`collections.OrderedDict`, nu binning
       * ``'units'``: dict containing units of dimensions (bins), score and
         sigma
-      * ``'integrated_res'``: 1 dimension NumPy structured array
+      * ``'integrated_array'``: 1 dimension NumPy structured array
         ``v[nu] = ('score', 'sigma')``
-      * ``'used_batch'``: number of used batchs (only if integrated result)
     '''
     nnubins = len(spectrum[0]["spectrum_vals"])
     LOGGER.debug("nnubins = %d", nnubins)
@@ -1246,7 +1239,7 @@ def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
         convspec['units']['score'] = spectrum[0]['units'][1]
         convspec['units']['sigma'] = spectrum[0]['units'][2]
     if 'integrated_res' in spectrum[0]:
-        convspec['integrated_res'] = vals.arrays['integrated_res']
+        convspec['integrated_array'] = vals.arrays['integrated_res']
     return convspec
 
 
@@ -1345,13 +1338,11 @@ def convert_za_spectrum(spectrum, colnames=('score', 'sigma')):
       * ``'array'``: 1 dimension NumPy structured array with related
         binnings as NumPy arrays
         ``v[Z, A] = ('score', 'sigma')``
-      * ``'disc_batchs'``: number of discarded batchs for the score
       * ``'bins'``: :class:`collections.OrderedDict`, Z and A binnings
       * ``'units'``: dict containing units of dimensions (bins), score and
         sigma
-      * ``'integrated_res'``: 1 dimension NumPy structured array
+      * ``'integrated_array'``: 1 dimension NumPy structured array
         ``v[Z, A] = ('score', 'sigma')``
-      * ``'used_batch'``: number of used batchs (only if integrated result)
 
     Remark: no call to add_last_bins or flip_bins is done here as no energy,
     time or space bins are given for the moment.
@@ -1371,7 +1362,7 @@ def convert_za_spectrum(spectrum, colnames=('score', 'sigma')):
         convspec['units']['score'] = spectrum[0]['units'][1]
         convspec['units']['sigma'] = spectrum[0]['units'][2]
     if 'integrated_res' in spectrum[0]:
-        convspec['integrated_res'] = vals.arrays['integrated_res']
+        convspec['integrated_array'] = vals.arrays['integrated_res']
     return convspec
 
 
@@ -1384,12 +1375,12 @@ def convert_keff_with_matrix(res):
 
     ::
 
-        {'used_batches_res': int,
-         'keff_per_estimaator_res': {'estimators': [str],
-                                     'keff_matrix': numpy.array,
-                                     'correlation_matrix': numpy.array,
-                                     'sigma_matrix': numpy.array},
-         'keff_combination_res': numpy.array}
+        {'used_batches': int,
+         'keff_per_estimator': {'estimators': [str],
+                                'keff_matrix': numpy.array,
+                                'correlation_matrix': numpy.array,
+                                'sigma_matrix': numpy.array},
+         'keff_combination': numpy.array}
 
     '''
     # not converged cases a tester...
@@ -1399,7 +1390,7 @@ def convert_keff_with_matrix(res):
     dtkeff = np.dtype([('keff', FTYPE), ('sigma', FTYPE)])
     fullcombres = (np.array(tuple(res['full_comb_estimation']), dtype=dtkeff)
                    if len(res['full_comb_estimation']) > 1
-                   else res['full_comb_estimation'][0])
+                   else 'not_converged')
     keffnames = list(zip(*res['res_per_estimator']))[0]
     nbkeff = len(res['res_per_estimator'])
     keffmat = np.full([nbkeff, nbkeff], np.nan)
@@ -1425,12 +1416,12 @@ def convert_keff_with_matrix(res):
                                          else np.nan)
             else:
                 continue
-    return {'used_batches_res': res['used_batch'],
-            'keff_per_estimator_res': {'estimators': keffnames,
-                                       'keff_matrix': keffmat,
-                                       'correlation_matrix': corrmat,
-                                       'sigma_matrix': sigmat},
-            'keff_combination_res': fullcombres}
+    return {'used_batches': res['used_batches'],
+            'keff_per_estimator': {'estimators': keffnames,
+                                   'keff_matrix': keffmat,
+                                   'correlation_matrix': corrmat,
+                                   'sigma_matrix': sigmat},
+            'keff_combination': fullcombres}
 
 
 def convert_keff(res):
@@ -1441,7 +1432,7 @@ def convert_keff(res):
 
     ::
 
-     {'used_batch': int, 'estimators': [str, ],
+     {'used_batches': int, 'estimators': [str, ],
       'full_comb_estimation': numpy.array,
       'res_per_estimator': {'estimator': numpy.array, },
       'correlation_matrix': {('estimator1', 'estimator2'): numpy.array, }}
@@ -1449,9 +1440,9 @@ def convert_keff(res):
     See :ref:`eponine-keff-stdarrays` for more details.
     '''
     LOGGER.debug("[38;5;56mClefs:%s[0m", list(res.keys()))
-    usedbatchs = res['used_batch']
+    usedbatchs = res['used_batches']
     if 'not_converged' in res:
-        return {'used_batch': res['used_batch'],
+        return {'used_batches': res['used_batches'],
                 'not_converged': res['not_converged']}
     keffnames = list(zip(*res['res_per_estimator']))[0]
     keffres = {}
@@ -1470,7 +1461,7 @@ def convert_keff(res):
                    if all(isinstance(ielt, FTYPE) for ielt in elt[1:])
                    else [np.nan if isinstance(x, str) else x for x in elt[1:]])
         corrres[tuple(elt[0])] = np.array(tuple(corrval), dtype=dtcorr)
-    return {'used_batch': usedbatchs,
+    return {'used_batches': usedbatchs,
             'estimators': keffnames,
             'res_per_estimator': keffres,
             'full_comb_estimation': fullcombres,
@@ -1571,7 +1562,7 @@ def convert_green_bands(gbs):
     return {'array': gbdb.arrays['default'],
             'bins': gbdb.bins,
             'units': gbdb.units,
-            'disc_batch': spectrum['disc_batch']}
+            'discarded_batches': spectrum['discarded_batches']}
 
 
 def convert_generic_adjoint(res):
@@ -1597,9 +1588,9 @@ def convert_generic_adjoint(res):
     adjres = res.pop('adj_res')
     if len(adjres.asDict()) != 1:
         LOGGER.warning("Issue: more than one key for adjoint result")
-    ubatch = res.get('used_batch', None)
+    ubatch = res.get('used_batches', None)
     assert len(res.asDict()) == 1, \
-        "used_batch should be the only remaining key in the dict"
+        "used_batches should be the only remaining key in the dict"
     assert ubatch is not None, "used batches should not the None"
     for ires in adjres[loctype]:
         mydict = {'used_batches_res': ubatch}
@@ -1793,7 +1784,7 @@ def convert_crit_edition(res):
     convres = {'array': acedb.arrays['default'],
                'bins': acedb.bins,
                'units': acedb.units}
-    return {'adj_crit_ed_res': convres}
+    return {'adj_crit_ed': convres}
 
 
 def convert_kij_sources(res):
@@ -1816,7 +1807,7 @@ def convert_kij_sources(res):
 def convert_kij_result(res):
     '''Convert |kij| result in NumPy objects and return a dictionary.
 
-    :param dict res: |kij| result with keys ``'used_batch'``,
+    :param dict res: |kij| result with keys ``'used_batches'``,
       ``'kij_eigenval'``, ``'kij_eigenvec'``, ``'kij_matrix'``
     :returns: dictionary containing the same keys but with different types:
 
@@ -1843,12 +1834,12 @@ def convert_kij_result(res):
     kijmat = (np.array(res['kij_matrix'])
               if isinstance(res['kij_matrix'], list)
               else res['kij_matrix'])
-    return {'used_batches_res': res['used_batch'],
-            'kij_mkeff_res': res['kijmkeff_res'][0],
-            'kij_domratio_res': res['kijmkeff_res'][1],
-            'kij_reigenval_res': egvals,
-            'kij_reigenvec_res': egvecs,
-            'kij_matrix_res': kijmat
+    return {'used_batches': res['used_batches'],
+            'kij_mkeff': res['kijmkeff_res'][0],
+            'kij_domratio': res['kijmkeff_res'][1],
+            'kij_reigenval': egvals,
+            'kij_reigenvec': egvecs,
+            'kij_matrix': kijmat
             }
 
 
@@ -1901,13 +1892,13 @@ def convert_kij_keff(res):
     for irow, row in enumerate(res['kij_sensibility_matrix'][1:]):
         sensibmat[irow] = np.array(tuple(row[1:]))
     return {'keff_estimator': res['estimator'],
-            'results': {'used_batches_res': res['batchs_kept'],
-                        'kij_mkeff_res': res['kij_mkeff'],
-                        'spacebins_res': spacebins,
-                        'kij_leigenvec_res': egvec,
-                        'kij_matrix_res': np.array(kijmat),
-                        'kij_stddev_matrix_res': np.array(stddevmat),
-                        'kij_sensibility_matrix_res': np.array(sensibmat)}}
+            'results': {'used_batches': res['batchs_kept'],
+                        'kij_mkeff': res['kij_mkeff'],
+                        'spacebins': spacebins,
+                        'kij_leigenvec': egvec,
+                        'kij_matrix': np.array(kijmat),
+                        'kij_stddev_matrix': np.array(stddevmat),
+                        'kij_sensibility_matrix': np.array(sensibmat)}}
 
 
 class SensitivityDictBuilder(DictBuilder):
@@ -2019,12 +2010,12 @@ def convert_sensitivities(res):
             datadict = {
                 'array': sensidb.arrays['default'],
                 'bins': sensidb.bins,
-                'used_batch': res['used_batch'],
                 'units': sensidb.units}
             resdict = iindex['charac'].asDict()
             resdict['sensitivity_type'] = itype
             resdict['sensitivity_spectrum_res'] = datadict
             resdict['integrated_res'] = sensidb.arrays['integrated_res']
+            resdict['used_batches_res'] = res['used_batches']
             thelist.append(resdict)
     return thelist
 

@@ -709,8 +709,8 @@ def _rm_blanks(toks):
 
 # Default integrated result
 _numdiscbatch = (Suppress(_numbatchs1stdiscarded_kw + ':')
-                 + _inums('disc_batch'))
-_numusedbatch = Suppress(_numbatchsused_kw + ':') + _inums('used_batch')
+                 + _inums('discarded_batches'))
+_numusedbatch = Suppress(_numbatchsused_kw + ':') + _inums('used_batches')
 _integratedres = _fnums('score') + _fnums('sigma')
 _unitsres = (Suppress(_units_kw)
              + (Word('%').setParseAction(_set_no_unit_case)
@@ -975,7 +975,7 @@ _warnkeff = (Suppress(_warning_kw)
 keffblock = Group(Suppress(_integratedres_kw)
                   + _numusedbatch
                   + (_autokeffres | _warnkeff)
-                  ).setParseAction(trans.convert_keff)('keff_res')
+                  ).setParseAction(trans.convert_keff)('keff')
 
 
 # Keff as historical response
@@ -993,7 +993,7 @@ _bestkeffpestim = (Group(_notconverged_kw('not_converged')
                          | Group(_bestresdiscbatch
                                  + _numusedbatch
                                  + _bestkeff
-                                 + Optional(_equivkeff))('auto_keff_res'))
+                                 + Optional(_equivkeff))('auto_keff'))
                    ('results'))
 _bestreskeff = Group(_bestresestim + _minus_line + _bestkeffpestim)
 _warnfixedsources = Group(Suppress(_warning_kw) + _minus_line
@@ -1069,7 +1069,7 @@ adjointres = (Group(Group(Suppress(_integratedres_kw)
                                   | _cvgstat)('adj_res')
                           + Optional(_unitsres)('units')
                           ).setParseAction(trans.convert_generic_adjoint))
-              )('adjoint_res')
+              )('adjoint')
 # sensitivities
 _sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
                      + OneOrMore(Word(alphas + '_,()'),
@@ -1109,7 +1109,7 @@ sensitivityres = Group(Group(Optional(Suppress(_integratedres_kw))
                              + Group(_sensitivity)('sensit_res')
                              + Optional(_unitsres)('units'))
                        .setParseAction(trans.convert_sensitivities)
-                       )('sensitivity_res')
+                       )('sensitivity')
 
 
 def _rename_norm_kw():
