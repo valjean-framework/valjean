@@ -67,14 +67,12 @@ def check_array_datasets(response, dname, data):
     perturbations, old way). Related integrated results are also checked in
     these special cases.
     '''
-    if 'uncert' in response['array_type']:
-        if dname == 'uncert_spectrum':
-            for elt in data['array'].dtype.names:
-                assert dcv.convert_data(response['results'],
-                                        dname, score=elt)
-        if dname == 'uncert_integrated':
-            for elt in data:
-                assert dcv.convert_data(data, elt)
+    if dname == 'uncert_spectrum':
+        for elt in data['array'].dtype.names:
+            assert dcv.convert_data(response['results'], dname, score=elt)
+    elif dname == 'uncert_integrated':
+        for elt in data:
+            assert dcv.convert_data(data, elt)
     else:
         if isinstance(data, dict) and 'array'in data:
             for akey in data:
@@ -84,7 +82,7 @@ def check_array_datasets(response, dname, data):
                                         array_type=akey)
         else:
             assert dcv.convert_data(response['results'], dname)
-    if 'vov' in response['array_type'] and dname == 'spectrum':
+    if dname == 'spectrum' and 'vov' in data['array'].dtype.names:
         assert dcv.convert_data(response['results'], dname, score='vov')
     if 'integrated' in dname and 'vov' in data:
         assert dcv.convert_data(data, 'vov')
@@ -116,7 +114,7 @@ def check_data(responses):
                 assert dcv.convert_data(iresp['results'], dname,
                                         estimator=iresp['keff_estimator'])
             else:
-                if 'array_type' in iresp:
+                if iresp['response_type'] == 'score':
                     check_array_datasets(iresp, dname, data)
                 else:
                     assert dcv.convert_data(iresp['results'], dname)

@@ -150,7 +150,7 @@ def test_gauss_spectrum(datadir):
     assert all(x in resp0['results']
                for x in ('spectrum', 'integrated'))
     t4rb = t4_res.build_response_book()
-    assert len(t4rb.keys()) == 15
+    assert len(t4rb.keys()) == 14
     assert (list(t4rb.available_values('response_function'))
             == ['COURANT'])
     assert len(list(t4rb.available_values('response_index'))) == 6
@@ -595,12 +595,11 @@ def test_pertu(datadir):
     t4rb = t4_res.build_response_book()
     slkeys = sorted(list(t4rb.index.keys()))
     assert slkeys == [
-        'array_type', 'energy_split_name', 'index', 'particle',
-        'perturbation_composition', 'perturbation_index',
-        'perturbation_method', 'perturbation_rank', 'perturbation_type',
-        'response_function', 'response_index', 'response_type', 'score_index',
-        'scoring_mode', 'scoring_zone_id', 'scoring_zone_type',
-        'scoring_zone_volsurf']
+        'energy_split_name', 'index', 'particle', 'perturbation_composition',
+        'perturbation_index', 'perturbation_method', 'perturbation_rank',
+        'perturbation_type', 'response_function', 'response_index',
+        'response_type', 'score_index', 'scoring_mode', 'scoring_zone_id',
+        'scoring_zone_type', 'scoring_zone_volsurf']
     pertu_vol2 = t4rb.select_by(scoring_zone_id=2,
                                 include=('perturbation_rank',), squeeze=True)
     assert pertu_vol2['response_index'] == 0

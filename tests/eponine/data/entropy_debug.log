@@ -53,8 +53,7 @@ Number of responses: 2
 
 RESPONSE 0
 [1;35m'response metadata'[0m
-[33mDict with keys = ['array_type', 'composition', 'concentration', 'energy_split_name', 'particle', 'reaction', 'reaction_on_nucleus', 'response_function', 'response_index', 'response_type', 'score_index', 'scoring_mode', 'scoring_zone_type', 'temperature'][0m
-[94m      array_type[0m spectrum
+[33mDict with keys = ['composition', 'concentration', 'energy_split_name', 'particle', 'reaction', 'reaction_on_nucleus', 'response_function', 'response_index', 'response_type', 'score_index', 'scoring_mode', 'scoring_zone_type', 'temperature'][0m
 [94m      composition[0m ('FUEL',)
 [94m      concentration[0m (0.00082213,)
 [94m      energy_split_name[0m DEC_INTEG4

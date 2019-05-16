@@ -207,11 +207,9 @@ def convert_score(toks):
         for key in score.keys():
             if key == 'mesh_res':
                 res['mesh_res'] = convert_mesh(score['mesh_res'])
-                res['array_type'] = 'mesh'
             elif 'spectrum_res' in key:
                 keystr = 'spectrum_res' if 'uncert' not in key else key
                 res[keystr] = convert_spectrum(score[key], key)
-                res['array_type'] = key[:-4]
             elif 'integrated_res' in key:
                 res[key] = score[key].asDict()
             elif key == 'greenbands_res':
