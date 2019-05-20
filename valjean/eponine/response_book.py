@@ -68,6 +68,7 @@ as a list of orders, one order being a dictionary.
 ResponseBook object -> Number of responses: 5, data key: 'results', \
 available metadata keys: ['consumer', 'dessert', 'drink', 'index', \
 'response_function']
+                    -> Number of globals: 0
 
 
 Selection of a given response or of a list of responses
@@ -443,6 +444,13 @@ class ResponseBook(Container):
     def __len__(self):
         return len(self.responses)
 
+    def is_empty(self):
+        '''Check if the ResponseBook is empty or not.
+
+        Empty meaning no responses AND no globals.
+        '''
+        return not self.responses and not self.globals
+
     def join(self, other):
         '''Join two ResponseBook.
 
@@ -484,9 +492,11 @@ class ResponseBook(Container):
 
     def __str__(self):
         return ("{0} object -> Number of responses: {1}, "
-                "data key: {2!r}, available metadata keys: {3}"
+                "data key: {2!r}, available metadata keys: {3}\n"
+                "{4:>{5}}        -> Number of globals: {6}"
                 .format(self.__class__.__name__, len(self.responses),
-                        self.data_key, sorted(self.keys())))
+                        self.data_key, sorted(self.keys()), "",
+                        len(self.__class__.__name__), len(self.globals)))
 
     def __repr__(self):
         return ("{0}, (Responses: {1!r}, Index: {2!r})"
@@ -561,7 +571,7 @@ class ResponseBook(Container):
         :param tuple(str) exclude: metadata that should not be present in the
           responses and for which the value is not necessarly known
         :returns: first element of the list of responses if only one,
-          else subset in :class:`ResponseBook` format
+          else list of responses matching the requirements
         '''
         respids = self._filter_resp_id_by(**kwargs)
         sincl, sexcl = set(include), set(exclude)

@@ -70,13 +70,14 @@ the needed members). This also means a Scan matching class:
 Construction accessor and responses book:
 
 >>> t4acc = Accessor(ntres)
->>> if t4acc.resp_book:
+>>> if not t4acc.resp_book.is_empty():
 ...    print("Found a responses book")
 Found a responses book
 >>> print(t4acc.resp_book)
 ResponseBook object -> Number of responses: 5, data key: 'results', \
 available metadata keys: ['consumer', 'dessert', 'drink', 'index', \
 'response_function']
+                    -> Number of globals: 8
 
 Examples of use:
 
@@ -102,11 +103,11 @@ some creation runs):
 >>> t4acc = Accessor(ntres)
 >>> # An error is emitted as no list is available under the keys (so no
 >>> # possible result)
->>> if t4acc.resp_book:
-...    print("Found a responses book")
-... else:
+>>> if t4acc.resp_book.is_empty():
 ...    print("Did not found a responses book")
-Did not found a responses book
+... else:
+...    print("Found a responses book")
+Found a responses book
 >>> t4acc.edition_batch_number()
 42
 >>> t4acc.simulation_time()
@@ -130,6 +131,7 @@ list of dictinary are stored under the ``globals`` of the ResponseBook.
 ResponseBook object -> Number of responses: 5, data key: 'results', \
 available metadata keys: ['consumer', 'dessert', 'drink', 'index', \
 'response_function']
+                    -> Number of globals: 9
 >>> pprint(t4acc2.resp_book.globals)  # doctest: +NORMALIZE_WHITESPACE
 {'edition_batch_number': 42, 'errors': 0, 'normal_end': True,\
  'number_of_tasks': 1, 'order_time': 120, 'required_batches': 42,\
