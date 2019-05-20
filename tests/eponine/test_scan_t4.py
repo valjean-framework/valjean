@@ -147,7 +147,7 @@ def test_gauss_spectrum(datadir):
     assert all(x in resp0['results']
                for x in ('spectrum_res', 'integrated_res'))
     t4acc = Accessor(t4_res.result[-1])
-    assert len(t4acc.resp_book.keys()) == 13
+    assert len(t4acc.resp_book.keys()) == 14
     assert (list(t4acc.resp_book.available_values('response_function'))
             == ['COURANT'])
     assert len(list(t4acc.resp_book.available_values('response_index'))) == 6
@@ -402,7 +402,8 @@ def test_ifp(datadir):
     resps = t4acc.resp_book.select_by(
         response_function="IFP ADJOINT WEIGHTED ROSSI ALPHA")
     assert len(resps) == 20  # number of IFP cycles
-    assert sorted(list(resps[0].keys())) == ['length', 'response_function',
+    assert sorted(list(resps[0].keys())) == ['index', 'length',
+                                             'response_function',
                                              'response_index', 'response_type',
                                              'results']
     bd_cycle = dcv.convert_data(resps[0]['results'],
@@ -438,10 +439,12 @@ def test_ifp_adjoint_edition(datadir):
     assert t4_res.scan_res.times['initialization time'] == 3
     t4acc = Accessor(t4_res.result[-1])
     assert (list(t4acc.resp_book.available_values('response_type'))
-            == ['keff_res'])
-    t4acc = Accessor(t4_res.result[-1], book_type='ifp_adjoint_crit_edition')
-    assert (sorted(list(t4acc.resp_book.keys()))
-            == ['ifp_cycle_length', 'ifp_response', 'response_type',
+            == ['keff_res', 'ifp_adj_crit_edition', 'auto_keff_res'])
+    t4acc = Accessor(t4_res.result[-1])
+    print(sorted(t4acc.resp_book.keys()))
+    assert (sorted(t4acc.resp_book.keys())
+            == ['ifp_cycle_length', 'ifp_response', 'index', 'keff_estimator',
+                'response_function', 'response_index', 'response_type',
                 'score_name'])
     resp = t4acc.resp_book.select_by(score_name='FluxAdj_1', squeeze=True)
     bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed_res')
@@ -474,11 +477,10 @@ def test_sensitivity(datadir):
     t4acc = Accessor(t4_res.result[-1])
     rb_sensitiv = t4acc.resp_book.filter_by(response_type='sensitivity_res')
     assert len(rb_sensitiv.responses) == 8
-    assert (sorted(list(rb_sensitiv.keys()))
-            == ['response_function', 'response_index', 'response_type',
-                'sensitivity_index', 'sensitivity_nucleus',
+    assert (sorted(rb_sensitiv.keys())
+            == ['index', 'response_function', 'response_index',
+                'response_type', 'sensitivity_index', 'sensitivity_nucleus',
                 'sensitivity_reaction', 'sensitivity_type'])
-    print(list(rb_sensitiv.available_values('sensitivity_type')))
     resp = rb_sensitiv.select_by(sensitivity_nucleus='U235',
                                  sensitivity_reaction='TOTAL FISSION_NU',
                                  squeeze=True)
@@ -574,17 +576,19 @@ def test_pertu(datadir):
     assert len(t4_res.result[-1]['list_responses']) == 3
     assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 0
     assert len(t4_res.result[-1]['perturbation']) == 3
-    t4acc = Accessor(t4_res.result[-1], book_type='perturbation')
+    t4acc = Accessor(t4_res.result[-1])
     slkeys = sorted(list(t4acc.resp_book.index.keys()))
     assert slkeys == [
-        'energy_split_name', 'particle', 'perturbation_composition',
+        'energy_split_name', 'index', 'particle', 'perturbation_composition',
         'perturbation_index', 'perturbation_method', 'perturbation_rank',
         'perturbation_type', 'response_function', 'response_index',
         'response_type', 'score_index', 'scoring_mode', 'scoring_zone_id',
         'scoring_zone_type', 'scoring_zone_volsurf']
-    pertu_vol2 = t4acc.get_by(scoring_zone_id=2, squeeze=True)
+    pertu_vol2 = t4acc.get_by(scoring_zone_id=2,
+                              include=('perturbation_rank',), squeeze=True)
     assert pertu_vol2['response_index'] == 0
     assert pertu_vol2['score_index'] == 0
+    assert pertu_vol2['index'] == 3
     assert pertu_vol2['response_type'] == 'score_res'
     assert pertu_vol2['perturbation_rank'] == 0
 

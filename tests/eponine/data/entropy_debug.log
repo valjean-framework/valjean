@@ -186,10 +186,10 @@ squeezed: [[7.773594e-01 7.761104e-01 7.687564e-01]
 [94m      used_batches_res[0m 9, dtype: int64
 
 [32mmean_weight_leak[0m 
-[33mDict with keys = ['sigma', 'sigma%', 'val'][0m
+[33mDict with keys = ['score', 'sigma', 'sigma%'][0m
+[94m      score[0m 1.990297e+00, dtype: float64
 [94m      sigma[0m 4.771245e-01, dtype: float64
 [94m      sigma%[0m 2.397252e+01, dtype: float64
-[94m      val[0m 1.990297e+00, dtype: float64
 
 [32msimulation_time[0m 
 24, dtype: int64

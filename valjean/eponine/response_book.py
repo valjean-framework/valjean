@@ -66,7 +66,8 @@ as a list of orders, one order being a dictionary.
 >>> com_rb = ResponseBook(orders)
 >>> print(com_rb)
 ResponseBook object -> Number of responses: 5, data key: 'results', \
-available metadata keys: ['consumer', 'dessert', 'drink', 'response_function']
+available metadata keys: ['consumer', 'dessert', 'drink', 'index', \
+'response_function']
 
 
 Selection of a given response or of a list of responses
@@ -78,7 +79,8 @@ Various methods are available to select one order, depending on requirements:
 
     >>> sel_rb = com_rb.filter_by(response_function='menu1', drink='beer')
     >>> pprint(sel_rb.responses)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Terry',  'drink': 'beer', 'response_function': 'menu1', \
+    [{'consumer': 'Terry',  'drink': 'beer', 'index': 0, \
+'response_function': 'menu1', \
 'results': {'ingredients_res': ['egg', 'bacon']}}]
 
     * check if a key is present or not:
@@ -97,15 +99,15 @@ Various methods are available to select one order, depending on requirements:
     list is enough):
 
     >>> sorted(sel_rb.keys())
-    ['consumer', 'drink', 'response_function']
+    ['consumer', 'drink', 'index', 'response_function']
     >>> sorted(com_rb.keys())
-    ['consumer', 'dessert', 'drink', 'response_function']
+    ['consumer', 'dessert', 'drink', 'index', 'response_function']
 
   * if the required key doesn't exist a warning is emitted:
 
     >>> sel_rb = com_rb.filter_by(quantity=5)
     >>> # prints  WARNING     accessor: quantity not a valid key. Possible \
-ones are ['consumer', 'dessert', 'drink', 'response_function']
+ones are ['consumer', 'dessert', 'drink', 'index', 'response_function']
     >>> 'quantity' in com_rb
     False
 
@@ -135,16 +137,19 @@ ones are ['consumer', 'dessert', 'drink', 'response_function']
     >>> len(sel_rb)
     1
     >>> pprint(sel_rb)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Graham', 'drink': 'coffee', 'response_function': 'menu1', \
+    [{'consumer': 'Graham', 'drink': 'coffee', 'index': 2, \
+'response_function': 'menu1', \
 'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}]
 
   * this also work when more than one response corresponds to the selection:
 
     >>> sel_rb = com_rb.select_by(drink='beer')
     >>> pprint(sel_rb)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Terry', 'drink': 'beer', 'response_function': 'menu1', \
+    [{'consumer': 'Terry', 'drink': 'beer', 'index': 0, \
+'response_function': 'menu1', \
 'results': {'ingredients_res': ['egg', 'bacon']}}, \
-{'consumer': 'Eric', 'drink': 'beer', 'response_function': 'menu3', \
+{'consumer': 'Eric', 'drink': 'beer', 'index': 3, \
+'response_function': 'menu3', \
 'results': {'ingredients_res': ['sausage'], 'side_res': 'baked beans'}}]
     >>> len(sel_rb)
     2
@@ -155,7 +160,8 @@ ones are ['consumer', 'dessert', 'drink', 'response_function']
 
     >>> resp = com_rb.select_by(consumer='Graham', squeeze=True)
     >>> pprint(resp)  # doctest: +NORMALIZE_WHITESPACE
-    {'consumer': 'Graham', 'drink': 'coffee', 'response_function': 'menu1', \
+    {'consumer': 'Graham', 'drink': 'coffee', 'index': 2, \
+'response_function': 'menu1', \
 'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}
 
   * squeeze is not possible if more than one result corresponds to the
@@ -337,6 +343,9 @@ class ResponseBook(Container):
     :param str data_key: key in list of responses corresponding to results or
       data, that should not be used in index (as always present and mandatory)
 
+    An additional key is added at the Index construction: ``'index'`` in order
+    to keep track of the order of the list and being able to do selection on
+    it.
 
     Examples on development / debugging methods:
 
@@ -376,7 +385,8 @@ class ResponseBook(Container):
       True
       >>> ind.dump(sort=True)  # doctest: +NORMALIZE_WHITESPACE
       "{'consumer': {'Graham': {2}, 'Terry': {0}}, \
-'drink': {'beer': {0}, 'coffee': {2}}, 'response_function': {'menu1': {0, 2}}}"
+'drink': {'beer': {0}, 'coffee': {2}}, 'index': {0: {0}, 2: {2}}, \
+'response_function': {'menu1': {0, 2}}}"
 
       The 'dessert' key has been stripped from the index:
 
@@ -392,15 +402,17 @@ class ResponseBook(Container):
 (Responses: ..., Index: ...)"
     '''
 
-    def __init__(self, resp, data_key='results'):
+    def __init__(self, resp, data_key='results', global_vars=None):
         self.responses = resp
         self.data_key = data_key
         self.index = self._build_index()
         LOGGER.debug("Index: %s", self.index)
+        self.globals = global_vars if isinstance(global_vars, dict) else {}
 
     def __eq__(self, other):
         return (self.responses == other.responses
-                and self.data_key == other.data_key)
+                and self.data_key == other.data_key
+                and self.globals == other.globals)
 
     def __ne__(self, other):
         return not self == other
@@ -417,6 +429,7 @@ class ResponseBook(Container):
         '''
         index = Index()
         for iresp, resp in enumerate(self.responses):
+            resp['index'] = iresp
             for key in resp:
                 if key != self.data_key:
                     index[key][resp[key]].add(iresp)
@@ -429,6 +442,27 @@ class ResponseBook(Container):
 
     def __len__(self):
         return len(self.responses)
+
+    def join(self, other):
+        '''Join two ResponseBook.
+
+        This junction is based on the global variables and on the list of
+        responses, then the index is rebuilt on the top of it.
+
+        :param ResponseBook other: another ResponseBook
+        :rtype: ResponseBook
+        '''
+        if self.data_key != other.data_key:
+            raise ValueError('Same data_key is required to join ResponseBooks')
+        if self.globals != other.globals:
+            LOGGER.warning('globals will be updated with other values')
+        new_glob = self.globals.copy()
+        new_glob.update(other.globals)
+        new_resps = self.responses + other.responses
+        LOGGER.debug("Nb self resps (%d) + Nb other resps (%d) = %d",
+                     len(self), len(other), len(new_resps))
+        return ResponseBook(new_resps, data_key=self.data_key,
+                            global_vars=new_glob)
 
     def keys(self):
         '''Get the available keys in the index (so in the responses list). As

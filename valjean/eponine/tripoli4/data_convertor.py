@@ -115,6 +115,10 @@ def generic_score(result, res_type='generic_res'):
     intres = result[res_type]
     if isinstance(intres, dict) and 'not_converged' in intres:
         return not_converged_result()
+    if set(('sigma', 'sigma%')).issubset(intres):
+        # used for mean weight leakage for example
+        return BaseDataset(intres['score'].copy(), intres['sigma'].copy(),
+                           bins=OrderedDict(), name=res_type)
     return BaseDataset(intres['score'].copy(),
                        intres['sigma'] * intres['score'] * 0.01,
                        bins=OrderedDict(), name=res_type)
@@ -240,7 +244,7 @@ def convert_data_in_dataset(data, data_type):
     return BaseDataset(
         data[data_type]['score'].copy(),
         data[data_type]['sigma'] * data[data_type]['score'] * 0.01,
-        bins=data['bins'], name=data_type)
+        bins=data.get('bins', OrderedDict()), name=data_type)
 
 
 CONVERT_IN_DATASET = {
@@ -267,6 +271,7 @@ CONVERT_IN_DATASET = {
     'spacebins_res': matrix_wo_error,
     'kij_stddev_matrix_res': matrix_wo_error,
     'kij_sensibility_matrix_res': matrix_wo_error,
+    'mean_weight_leak': generic_score,
 }
 
 
@@ -287,5 +292,6 @@ def convert_data(data, data_type, **kwargs):
             return not_converged_result()
         LOGGER.warning("%s not found in data", data_type)
         return None
+    # DEFAULT TO BE CHANGED TO GENERIC SCORE (more general probably)
     return CONVERT_IN_DATASET.get(data_type, convert_data_in_dataset)(
         data, data_type, **kwargs)

@@ -58,7 +58,7 @@ def result_test(res):
     return res.scan_res.normalend
 
 
-def accessor_test(res, book_type='list_responses'):
+def accessor_test(res):
     '''Quick test of accessor.
 
     Main goal of this test is not apparent: it is to check if the accessor can
@@ -69,11 +69,8 @@ def accessor_test(res, book_type='list_responses'):
     A first check on the presence of the ``book_type`` is done in order to
     avoid a useless error here.
     '''
-    if book_type not in res.result[-1]:
-        return
-    t4acc = Accessor(res.result[-1], book_type=book_type)
+    t4acc = Accessor(res.result[-1])
     if t4acc.resp_book is None:
-        assert all(book_type not in x for x in t4acc.parsed_res)
         return
     ids = set()
     for _v0 in t4acc.resp_book.index.values():
@@ -110,7 +107,6 @@ def loop_on_files(filelist, cfile):
             failed_jdds.append(ifile)
         # quick temporary test of accessor
         accessor_test(res)
-        accessor_test(res, 'ifp_adjoint_crit_edition')
     return nb_jdds_ok, failed_jdds
 
 

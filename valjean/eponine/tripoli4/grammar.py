@@ -460,7 +460,7 @@ _sourceintensity = (Suppress(_sourceintensity_kw + ':')
                     + (_fnums | _unavailable_kw)
                     ('source_intensity'))
 # unkown -> string not in a list, while list of float per default
-_meanweightleakvals = Group(_fnums('val')
+_meanweightleakvals = Group(_fnums('score')
                             + Suppress("sigma =") + _fnums('sigma')
                             + Suppress('sigma% =') + _fnums('sigma%'))
 _meanweightleak = (Suppress(_meanweightleakage_kw)
@@ -477,7 +477,6 @@ _meanweightrestartpart = (Suppress(_meanweightrestartpart_kw)
 _introelts = (_meanweightleak | _meanweightleakin | _edbatchnum
               | _meanweightrestartpart)
 intro = _sourceintensity + _star_line + OneOrMore(_introelts)
-
 
 # Conclusion parser
 _simutime = Suppress(_simulationtime_kw + ':') + _inums('simulation_time')
