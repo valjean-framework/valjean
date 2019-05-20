@@ -267,7 +267,8 @@ def test_debug_entropy(caplog, datadir):
     assert resp0['response_type'] == 'score_res'
     res0 = resp0['results']
     scorecontent = ['mesh_res', 'boltzmann_entropy_res', 'shannon_entropy_res',
-                    'spectrum_res', 'integrated_res']
+                    'spectrum_res', 'integrated_res', 'discarded_batches_res',
+                    'used_batches_res']
     assert "{0:6e}".format(res0['boltzmann_entropy_res']) == "8.342621e-01"
     assert sorted(list(res0.keys())) == sorted(scorecontent)
     assert "You are running with an end flag" in caplog.text
@@ -288,8 +289,9 @@ def check_last_entropy_result(entropy_acc):
     resp = entropy_acc.resp_book.select_by(response_function='REACTION',
                                            squeeze=True)
     assert (sorted(list(resp['results'].keys()))
-            == ['boltzmann_entropy_res', 'integrated_res', 'mesh_res',
-                'shannon_entropy_res', 'spectrum_res'])
+            == ['boltzmann_entropy_res', 'discarded_batches_res',
+                'integrated_res', 'mesh_res', 'shannon_entropy_res',
+                'spectrum_res', 'used_batches_res'])
     bd_mesh = dcv.convert_data(resp['results'], data_type='mesh_res')
     assert bd_mesh.shape == (24, 3, 1, 1, 1, 1, 1)
     bd_entropy = dcv.convert_data(resp['results'],
@@ -370,6 +372,8 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     t4_res = T4Parser(str(datadir/"entropy.d.res.ceav5"), -1, mesh_lim=10)
     assert t4_res
     assert t4_res.scan_res.normalend
+    # with open('/home/el220326/valjean/entropy.log', 'w') as ofile:
+    #     ofile.write(caplog.text)
     with open(str(datadir/"entropy_debug.log"), 'r') as ifile:
         for line in ifile:
             assert line in caplog.text, "Line %s not found in caplog." % line

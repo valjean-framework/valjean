@@ -16,6 +16,7 @@ module :mod:`~valjean.eponine.tripoli4.common`.
 '''
 
 import logging
+from collections import Iterable
 import numpy as np
 from . import common
 
@@ -154,6 +155,34 @@ def convert_list_to_tuple(toks):
     return cv_toks
 
 
+def convert_batch_numbers(score):
+    '''Convert batch numbers (used and discarded) in proper results.
+
+    :param toks: score result interpreted as dictionary
+    :type toks: |parseres|
+    :returns: dictionary with maximum 2 keys (``'used_batch_res'`` and
+        ``'disc_batch_res'``)
+    :rtype: dict
+    '''
+    res = {}
+    for key in score.keys():
+        # med_file_res -> str, greenbands: too complicated structure
+        if (('_res' in key and isinstance(score[key], Iterable)
+             and key not in ('med_file_res', 'greenbands_res'))):
+            usc = (score[key]
+                   if isinstance(score[key], dict) or score[key].asDict()
+                   else score[key][0])
+            ubatch = usc.pop('used_batch', None)
+            dbatch = usc.pop('disc_batch', None)
+            if ubatch is not None:
+                res['used_batches_res'] = ubatch
+            if dbatch is not None:
+                res['discarded_batches_res'] = dbatch
+            if 'used_batches_res' in res and 'discarded_batches_res' in res:
+                break
+    return res
+
+
 def convert_score(toks):
     '''Convert score to :obj:`numpy` and python objects.
     Calls various conversion functions depending on input key (mesh, spectrum,
@@ -165,8 +194,10 @@ def convert_score(toks):
       values.
     '''
     LOGGER.debug("Keys in score: %s", list(toks.keys()))
+    assert len(toks) == 1, "We should have only one score here"
     res = {}
     for score in toks:
+        res.update(convert_batch_numbers(score))
         if 'mesh_res' in score and 'unit' in score:
             unit = score.pop('unit')
             for mesh in score['mesh_res']:
@@ -180,6 +211,7 @@ def convert_score(toks):
                 res[key] = score[key].asDict()
             elif key == 'greenbands_res':
                 res[key] = convert_green_bands(score[key])
+                res['discarded_batches_res'] = res[key].pop('disc_batch')
             elif key == 'scoring_zone_id':
                 res['scoring_zone_id'] = convert_scoring_zone_id(score[key])
             elif key == 'correspondence_table':
@@ -405,10 +437,17 @@ def finalize_response_dict(s, loc, toks):
     assert len(toks[0]['results'].asDict()) == 1, \
         "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
     res = toks[0]['results']
+    # print(list(res.keys()))
     key, val = next(res.items())
     assert isinstance(val, dict) or val.asList()
     mydict = toks[0].asDict()
     mydict['results'] = val if isinstance(val, dict) else val.asList()
+    # print("THE KEY =", key)
+    # print(type(mydict['results']))
+    # if key != 'score_res':
+    #     print(mydict['results'])
+    # if isinstance(mydict['results'], list):
+    #     print([list(mres.keys()) for mres in mydict['results']])
     mydict['response_type'] = key
     mydict.update(mydict.pop('compos_details', {}))
     LOGGER.debug("Final response metadata: %s",
@@ -500,12 +539,18 @@ def group_to_dict(toks):
     :returns: python dict corresponding to input `pyparsing` named group
     '''
     assert len(toks) == 1
+    # print(toks)
+    # print(type(toks))
     key = next(toks.keys())
     tmpdict = toks.asDict()
+    # print("tmpdict=", tmpdict)
+    tmpdict.update(convert_batch_numbers(tmpdict))
+    # print("tmpdict", tmpdict)
     for elt in toks[0]:
         if isinstance(elt, dict):
             tmpdict[key].update(elt)
-    return tmpdict[key]
+    # print("will return:", tmpdict[key])
+    return tmpdict
 
 
 def fail_spectrum(s, loc, expr, err):

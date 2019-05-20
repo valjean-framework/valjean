@@ -177,7 +177,8 @@ CONVERT_IN_DATASET = {
     'keff_combination_res': keff_combination,
     'shannon_entropy_res': value_wo_error,
     'boltzmann_entropy_res': value_wo_error,
-    'used_batch': value_wo_error,
+    'used_batches_res': value_wo_error,
+    'discarded_batches_res': value_wo_error,
     'best_disc_batchs': value_wo_error
 }
 

@@ -371,11 +371,13 @@ def test_parse_mesh_roundtrip(array_bins):
     note('mesh output:\n' + mesh_t4_out)
     pres = pygram.scoreblock.parseString(mesh_t4_out)
     assert pres
-    keys = ['integrated_res', 'mesh_res', 'scoring_mode', 'scoring_zone_type']
+    keys = {'mesh_res', 'scoring_mode', 'scoring_zone_type'}
+    skeys = set(pres[0].keys())
+    assert keys <= skeys
     if 'integrated' in larray and array.shape[4] == 1:
-        assert sorted(list(pres[0].keys())) == keys
-    else:
-        assert sorted(list(pres[0].keys())) == keys[1:]
+        assert 'used_batches_res' in skeys
+        if 'energy_integrated' not in larray:
+            assert 'discarded_batches_res' in skeys
     parsed_mesh = pres[0]['mesh_res']
     assert np.allclose(parsed_mesh['bins']['e'], lbins['e'])
     if len(lbins['t']) > 2:
@@ -403,11 +405,8 @@ def test_parse_mesh_roundtrip(array_bins):
                                parsed_mesh['eintegrated_array'][key])
     pres2 = pygram.listscoreblock.parseString(mesh_t4_out)
     pres2d = pres2.asDict()
-    keys.insert(2, 'score_index')
-    if 'integrated' in larray and array.shape[4] == 1:
-        assert sorted(list(pres2d['score_res'][0].keys())) == keys
-    else:
-        assert sorted(list(pres2d['score_res'][0].keys())) == keys[1:]
+    skeys.add('score_index')
+    assert skeys <= set(pres2d['score_res'][0].keys())
 
 
 def score_str():
@@ -629,12 +628,12 @@ def test_parse_spectrum_roundtrip(array_bins, units):
     spectrum_t4out = spectrum_t4_output(larray, bins, units)
     pres = pygram.scoreblock.parseString(spectrum_t4out)
     assert pres
-    keys = ['integrated_res', 'scoring_mode', 'scoring_zone_id',
-            'scoring_zone_type', 'spectrum_res']
+    keys = {'scoring_mode', 'scoring_zone_id', 'scoring_zone_type',
+            'spectrum_res'}
+    skeys = set(pres[0].keys())
+    assert keys <= skeys
     if 'integrated' in larray and array.shape[4] == 1:
-        assert sorted(list(pres[0].keys())) == keys
-    else:
-        assert sorted(list(pres[0].keys())) == keys[1:]
+        assert {'discarded_batches_res', 'used_batches_res'} <= skeys
     compare_bins(bins, pres[0]['spectrum_res'])
     spectrum = pres[0]['spectrum_res']['array']
     assert array.dtype == spectrum.dtype
@@ -812,11 +811,11 @@ def test_parse_greenbands_roundtrip(array_bins, disc_batch):
     assert pres
     assert len(pres) == 1
     assert (sorted(list(pres[0].keys()))
-            == ['greenbands_res', 'scoring_mode', 'scoring_zone_id',
-                'scoring_zone_type'])
+            == ['discarded_batches_res', 'greenbands_res', 'scoring_mode',
+                'scoring_zone_id', 'scoring_zone_type'])
     gbres = pres[0]['greenbands_res']
     assert (sorted(list(gbres.keys()))
-            == ['array', 'bins', 'disc_batch', 'units'])
+            == ['array', 'bins', 'units'])
     incr = dict(map(
         lambda i: (i[0], 1 if len(i[1]) > 1 and i[1][1] > i[1][0] else -1),
         bins.items()))
@@ -827,7 +826,7 @@ def test_parse_greenbands_roundtrip(array_bins, disc_batch):
     for comp in array.dtype.names:
         assert np.allclose(gbres['array'][:][comp],
                            array[::incr['se'], ..., ::incr['e']][comp])
-    assert gbres['disc_batch'] == disc_batch
+    assert pres[0]['discarded_batches_res'] == disc_batch
 
 
 def keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb):

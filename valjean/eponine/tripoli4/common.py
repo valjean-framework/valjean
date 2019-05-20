@@ -1006,8 +1006,7 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
     # Flip bins
     vals.flip_bins()
     # Build dictionary to be returned
-    convspec = {'disc_batch': spectrum[0]['disc_batch'],
-                'array': vals.arrays['default'],
+    convspec = {'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
     if 'units' in spectrum[0]:
@@ -1016,7 +1015,6 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
         convspec['units']['sigma'] = spectrum[0]['units'][2]
     if 'integrated_res' in spectrum[0]:
         convspec['integrated_res'] = vals.arrays['integrated_res']
-        convspec['used_batch'] = spectrum[0]['integrated_res']['used_batch']
     return convspec
 
 
@@ -1240,8 +1238,7 @@ def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
     # Flip bins
     vals.flip_bins()
     # Build dictionary to be returned
-    convspec = {'disc_batch': spectrum[0]['disc_batch'],
-                'array': vals.arrays['default'],
+    convspec = {'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
     if 'units' in spectrum[0]:
@@ -1250,7 +1247,6 @@ def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
         convspec['units']['sigma'] = spectrum[0]['units'][2]
     if 'integrated_res' in spectrum[0]:
         convspec['integrated_res'] = vals.arrays['integrated_res']
-        convspec['used_batch'] = spectrum[0]['integrated_res']['used_batch']
     return convspec
 
 
@@ -1368,8 +1364,7 @@ def convert_za_spectrum(spectrum, colnames=('score', 'sigma')):
     # Fill spectrum, bins and integrated result if exists
     vals.fill_arrays_and_bins(spectrum)
     # Build dictionary to be returned
-    convspec = {'disc_batch': spectrum[0]['disc_batch'],
-                'array': vals.arrays['default'],
+    convspec = {'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
     if 'units' in spectrum[0]:
@@ -1377,7 +1372,6 @@ def convert_za_spectrum(spectrum, colnames=('score', 'sigma')):
         convspec['units']['sigma'] = spectrum[0]['units'][2]
     if 'integrated_res' in spectrum[0]:
         convspec['integrated_res'] = vals.arrays['integrated_res']
-        convspec['used_batch'] = spectrum[0]['integrated_res']['used_batch']
     return convspec
 
 
