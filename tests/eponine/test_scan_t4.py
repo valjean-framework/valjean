@@ -12,7 +12,6 @@ import logging
 import pytest
 from valjean.eponine.tripoli4.parse import T4Parser, T4ParserException
 from valjean.eponine.tripoli4.parse_debug import T4ParserDebug
-from valjean.eponine.tripoli4.accessor import Accessor
 import valjean.eponine.tripoli4.data_convertor as dcv
 
 
@@ -146,21 +145,21 @@ def test_gauss_spectrum(datadir):
     assert resp0['scoring_mode'] == "SCORE_SURF"
     assert all(x in resp0['results']
                for x in ('spectrum_res', 'integrated_res'))
-    t4acc = Accessor(t4_res)
-    assert len(t4acc.resp_book.keys()) == 14
-    assert (list(t4acc.resp_book.available_values('response_function'))
+    t4rb = t4_res.build_response_book()
+    assert len(t4rb.keys()) == 14
+    assert (list(t4rb.available_values('response_function'))
             == ['COURANT'])
-    assert len(list(t4acc.resp_book.available_values('response_index'))) == 6
+    assert len(list(t4rb.available_values('response_index'))) == 6
     # use response 0: usual spectrum
-    selresp0 = t4acc.resp_book.select_by(response_index=0, squeeze=True)
+    selresp0 = t4rb.select_by(response_index=0, squeeze=True)
     check_gauss_e_spectrum(selresp0)
     # use response 1: spectrum in energy and time
     # speciticity: integrated result in energy per time bin
-    selresp1 = t4acc.resp_book.select_by(response_index=1, squeeze=True)
+    selresp1 = t4rb.select_by(response_index=1, squeeze=True)
     check_gauss_et_spectrum(selresp1)
     # use response 4: spectrum in e, t, mu and phi
     # no integral available
-    selresp = t4acc.resp_book.select_by(response_index=4, squeeze=True)
+    selresp = t4rb.select_by(response_index=4, squeeze=True)
     check_gauss_etmuphi_spectrum(selresp)
 
 
@@ -181,8 +180,10 @@ def test_tungstene_file(datadir):
     assert resp0['response_type'] == 'score_res'
     assert resp0['scoring_mode'] == "SCORE_TRACK"
     assert 'mesh_res' in resp0['results']
-    t4acc = Accessor(t4_res)
-    resp = t4acc.resp_book.select_by(response_function='FLUX', squeeze=True)
+    t4rb = t4_res.build_response_book()
+    assert t4rb.globals['simulation_time'] == 423
+    assert t4rb.globals['initialization_time'] == 0
+    resp = t4rb.select_by(response_function='FLUX', squeeze=True)
     bd_mesh = dcv.convert_data(resp['results'], data_type='mesh_res')
     bd_mesh_squeeze = bd_mesh.squeeze()
     assert bd_mesh.shape == (1, 1, 17, 3, 1, 1, 1)
@@ -284,11 +285,11 @@ def test_debug_entropy(caplog, datadir):
     #     ofile.write(caplog.text)
 
 
-def check_last_entropy_result(entropy_acc):
+def check_last_entropy_result(entropy_rb):
     '''Check last entropy result (all converged).'''
     # response_function = reaction
-    resp = entropy_acc.resp_book.select_by(response_function='REACTION',
-                                           squeeze=True)
+    resp = entropy_rb.select_by(response_function='REACTION',
+                                squeeze=True)
     assert (sorted(list(resp['results'].keys()))
             == ['boltzmann_entropy_res', 'discarded_batches_res',
                 'integrated_res', 'mesh_res', 'shannon_entropy_res',
@@ -308,8 +309,8 @@ def check_last_entropy_result(entropy_acc):
     bd_int = dcv.convert_data(resp['results'], data_type='integrated_res')
     assert np.array_equal(bd_spectrum.bins['e'], bd_int.bins['e'])
     # response_function = keff
-    resp = entropy_acc.resp_book.select_by(response_type='keff_res',
-                                           squeeze=True)
+    resp = entropy_rb.select_by(response_type='keff_res',
+                                squeeze=True)
     bd_keff = dcv.convert_data(resp['results'],
                                data_type='keff_per_estimator_res',
                                estimator='KSTEP')
@@ -321,14 +322,14 @@ def check_last_entropy_result(entropy_acc):
     assert not bd_keff.bins
 
 
-def check_first_entropy_result(entropy_acc):
+def check_first_entropy_result(entropy_rb):
     '''Check first entropy result (not converged).'''
-    resp0 = entropy_acc.resp_book.select_by(response_function='REACTION',
-                                            squeeze=True)
+    resp0 = entropy_rb.select_by(response_function='REACTION',
+                                 squeeze=True)
     bd_int0 = dcv.convert_data(resp0['results'], data_type='integrated_res')
     assert bd_int0 is None
-    resp0 = entropy_acc.resp_book.select_by(response_type='keff_res',
-                                            squeeze=True)
+    resp0 = entropy_rb.select_by(response_type='keff_res',
+                                 squeeze=True)
     bd_keff = dcv.convert_data(resp0['results'],
                                data_type='keff_per_estimator_res',
                                estimator='KSTEP')
@@ -359,10 +360,14 @@ def test_entropy(datadir):
     assert 'not_converged' in firstres[1]['results']
     assert lastres[1]['response_type'] == 'keff_res'
     keffs_checks(lastres[1]['results'])
-    t4acc = Accessor(t4_res)
-    check_last_entropy_result(t4acc)
-    t4acc0 = Accessor(t4_res, batch_id=0)
-    check_first_entropy_result(t4acc0)
+    t4rb = t4_res.build_response_book()
+    assert t4rb.globals['simulation_time'] == 24
+    assert t4rb.globals['initialization_time'] == 6
+    check_last_entropy_result(t4rb)
+    t4rb_b0 = t4_res.build_response_book(batch_index=0)
+    assert t4rb_b0.globals['simulation_time'] == 2
+    assert t4rb_b0.globals['initialization_time'] == 6
+    check_first_entropy_result(t4rb_b0)
 
 
 def test_verbose_entropy(datadir, caplog, monkeypatch):
@@ -398,10 +403,10 @@ def test_ifp(datadir):
             == "IFP ADJOINT WEIGHTED MIGRATION AREA")
     assert last_resp['response_type'] == 'adjoint_res'
     assert last_resp['results']['used_batches_res'] == 81
-    t4acc = Accessor(t4_res)
-    assert (len(list(t4acc.resp_book.available_values('response_function')))
+    t4rb = t4_res.build_response_book()
+    assert (len(list(t4rb.available_values('response_function')))
             == 22)
-    resps = t4acc.resp_book.select_by(
+    resps = t4rb.select_by(
         response_function="IFP ADJOINT WEIGHTED ROSSI ALPHA")
     assert len(resps) == 20  # number of IFP cycles
     assert sorted(list(resps[0].keys())) == ['index', 'length',
@@ -412,7 +417,7 @@ def test_ifp(datadir):
                                 data_type='generic_res')
     assert bd_cycle.shape == ()
     assert not bd_cycle.bins
-    rb_betai = t4acc.resp_book.filter_by(
+    rb_betai = t4rb.filter_by(
         response_function="BETA_i (DELAYED NEUTRON FRACTION FOR i-th FAMILY): "
                           "NUCLEI CONTRIBUTIONS")
     assert len(rb_betai.responses) == 24
@@ -439,27 +444,25 @@ def test_ifp_adjoint_edition(datadir):
     assert t4_res.scan_res.normalend
     assert t4_res.scan_res.times['simulation_time'][-1] == 77
     assert t4_res.scan_res.times['initialization_time'] == 3
-    t4acc = Accessor(t4_res)
-    assert (list(t4acc.resp_book.available_values('response_type'))
+    t4rb = t4_res.build_response_book()
+    assert (list(t4rb.available_values('response_type'))
             == ['keff_res', 'ifp_adj_crit_edition', 'auto_keff_res'])
-    # t4acc = Accessor(t4_res)
-    # print(sorted(t4acc.resp_book.keys()))
-    assert (sorted(t4acc.resp_book.keys())
+    assert (sorted(t4rb.keys())
             == ['ifp_cycle_length', 'ifp_response', 'index', 'keff_estimator',
                 'response_function', 'response_index', 'response_type',
                 'score_name'])
-    resp = t4acc.resp_book.select_by(score_name='FluxAdj_1', squeeze=True)
+    resp = t4rb.select_by(score_name='FluxAdj_1', squeeze=True)
     bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed_res')
     assert bd_adj.shape == (2, 2, 2, 1, 1, 3, 1)
     assert (list(bd_adj.bins.keys())
             == ['X', 'Y', 'Z', 'Phi', 'Theta', 'E', 'T'])
     assert bd_adj.bins['X'].size == bd_adj.shape[0]+1
-    resp = t4acc.resp_book.select_by(score_name='FluxAdj_ang_1', squeeze=True)
+    resp = t4rb.select_by(score_name='FluxAdj_ang_1', squeeze=True)
     bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed_res')
     assert bd_adj.shape == (2, 2, 2, 2, 2, 3, 1)
     assert (list(bd_adj.bins.keys())
             == ['X', 'Y', 'Z', 'Phi', 'Theta', 'E', 'T'])
-    resp = t4acc.resp_book.select_by(score_name='flux_vol', squeeze=True)
+    resp = t4rb.select_by(score_name='flux_vol', squeeze=True)
     bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed_res')
     assert bd_adj.shape == (2, 3)
     assert list(bd_adj.bins.keys()) == ['Vol', 'E']
@@ -476,8 +479,8 @@ def test_sensitivity(datadir):
     assert t4_res.scan_res.normalend
     assert t4_res.scan_res.times['simulation_time'][-1] == 159
     assert t4_res.scan_res.times['initialization_time'] == 1
-    t4acc = Accessor(t4_res)
-    rb_sensitiv = t4acc.resp_book.filter_by(response_type='sensitivity_res')
+    t4rb = t4_res.build_response_book()
+    rb_sensitiv = t4rb.filter_by(response_type='sensitivity_res')
     assert len(rb_sensitiv.responses) == 8
     assert (sorted(rb_sensitiv.keys())
             == ['index', 'response_function', 'response_index',
@@ -537,8 +540,8 @@ def test_green_bands(datadir):
     assert t4_res.scan_res.times['exploitation_time'][-1] == 2
     assert t4_res.scan_res.times['initialization_time'] == 2
     assert len(t4_res.result) == 1
-    t4acc = Accessor(t4_res)
-    resp = t4acc.resp_book.select_by(response_function='FLUX', squeeze=True)
+    t4rb = t4_res.build_response_book()
+    resp = t4rb.select_by(response_function='FLUX', squeeze=True)
     bd_gb = dcv.convert_data(resp['results'], data_type='greenbands_res')
     assert bd_gb.shape == (2, 2, 1, 2, 4, 3)
     assert list(bd_gb.bins.keys()) == ['se', 'ns', 'u', 'v', 'w', 'e']
@@ -579,16 +582,16 @@ def test_pertu(datadir):
     assert len(t4_res.result[-1]['list_responses']) == 3
     assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 0
     assert len(t4_res.result[-1]['perturbation']) == 3
-    t4acc = Accessor(t4_res)
-    slkeys = sorted(list(t4acc.resp_book.index.keys()))
+    t4rb = t4_res.build_response_book()
+    slkeys = sorted(list(t4rb.index.keys()))
     assert slkeys == [
         'energy_split_name', 'index', 'particle', 'perturbation_composition',
         'perturbation_index', 'perturbation_method', 'perturbation_rank',
         'perturbation_type', 'response_function', 'response_index',
         'response_type', 'score_index', 'scoring_mode', 'scoring_zone_id',
         'scoring_zone_type', 'scoring_zone_volsurf']
-    pertu_vol2 = t4acc.get_by(scoring_zone_id=2,
-                              include=('perturbation_rank',), squeeze=True)
+    pertu_vol2 = t4rb.select_by(scoring_zone_id=2,
+                                include=('perturbation_rank',), squeeze=True)
     assert pertu_vol2['response_index'] == 0
     assert pertu_vol2['score_index'] == 0
     assert pertu_vol2['index'] == 3
@@ -709,3 +712,19 @@ def test_no_simulation_time(datadir, caplog):
     with pytest.raises(T4ParserException):
         T4Parser(str(datadir/"failure_test_no_simu_time.d.res"))
     assert "No result found in Tripoli-4 listing." in caplog.text
+
+
+def test_no_simulation_time_debug(datadir, caplog):
+    '''Use Tripoli-4 result from failure_test_no_simu_time.d.res as example of
+    lack of the end flag. In this case "NORMAL COMPLETION" is also missing but
+    as pyparsing cannot find the end flag no parsing result can be built.
+    '''
+    t4_res = T4ParserDebug(str(datadir/"failure_test_no_simu_time.d.res"),
+                           end_flag='ENERGY INTEGRATED RESULTS')
+    with pytest.raises(ValueError):
+        t4_res.build_response_book()
+        assert ('No "time" variable found in the TRIPOLI-4 output, '
+                'please check it.\n'
+                'Remark: you may be in parsing debug mode with an end flag '
+                'not containing "time" where this behaviour is expected.'
+                in caplog.text)

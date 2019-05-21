@@ -70,6 +70,19 @@ available metadata keys: ['consumer', 'dessert', 'drink', 'index', \
 'response_function']
                     -> Number of globals: 0
 
+Some global variables can be added, as a dictionary, normally common to all the
+results sent under the argument ``resp``.
+
+>>> global_vars = {'table': 42, 'service_time': 300, 'priority': -1}
+>>> com_rb = ResponseBook(orders, global_vars=global_vars)
+>>> print(com_rb)
+ResponseBook object -> Number of responses: 5, data key: 'results', \
+available metadata keys: ['consumer', 'dessert', 'drink', 'index', \
+'response_function']
+                    -> Number of globals: 3
+>>> pprint(com_rb.globals)
+{'priority': -1, 'service_time': 300, 'table': 42}
+
 
 Selection of a given response or of a list of responses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -332,17 +345,20 @@ class Index(Mapping):
 class ResponseBook(Container):
     '''Class to perform selections on results.
 
-    This class is based on two objects:
+    This class is based on four objects:
 
       * the responses, as a list of dictionaries (containing data and metadata)
       * the key corresponding to data in the dictionary (default='results')
-      * an index based on responses allowing easy selections on each metadata.
+      * an index based on responses allowing easy selections on each metadata
+      * a dictionary corresponding to global variables (common to all
+        responses).
 
     Initialization parameters:
 
     :param list(dict) resp: list of responses
     :param str data_key: key in list of responses corresponding to results or
       data, that should not be used in index (as always present and mandatory)
+    :param dict global_vars: global variables (optional, default=None)
 
     An additional key is added at the Index construction: ``'index'`` in order
     to keep track of the order of the list and being able to do selection on
@@ -404,11 +420,12 @@ class ResponseBook(Container):
     '''
 
     def __init__(self, resp, data_key='results', global_vars=None):
-        self.responses = resp
+        self.responses = [r.copy() for r in resp]
         self.data_key = data_key
         self.index = self._build_index()
         LOGGER.debug("Index: %s", self.index)
-        self.globals = global_vars if isinstance(global_vars, dict) else {}
+        self.globals = (global_vars.copy() if isinstance(global_vars, dict)
+                        else {})
 
     def __eq__(self, other):
         return (self.responses == other.responses
@@ -451,19 +468,21 @@ class ResponseBook(Container):
         '''
         return not self.responses and not self.globals
 
-    def join(self, other):
-        '''Join two ResponseBook.
+    def merge(self, other):
+        '''Merge two ResponseBooks.
 
-        This junction is based on the global variables and on the list of
-        responses, then the index is rebuilt on the top of it.
+        This method merge 2 ResponseBooks: the *other* one appears then at the
+        end of the *self* one. Global variables are also merged. The new index
+        correspond to the merged case.
 
         :param ResponseBook other: another ResponseBook
         :rtype: ResponseBook
         '''
         if self.data_key != other.data_key:
-            raise ValueError('Same data_key is required to join ResponseBooks')
+            raise ValueError('Same data_key is required to '
+                             'merge ResponseBooks')
         if self.globals != other.globals:
-            LOGGER.warning('globals will be updated with other values')
+            LOGGER.info('globals will be updated with other values')
         new_glob = self.globals.copy()
         new_glob.update(other.globals)
         new_resps = self.responses + other.responses
@@ -560,8 +579,8 @@ class ResponseBook(Container):
         return sub_rb
 
     def select_by(self, *, squeeze=False, include=(), exclude=(), **kwargs):
-        '''Get a ResponseBook corresponding to selection from keyword
-        arguments.
+        '''Get a the response or the list of responses corresponding to
+        selection from keyword arguments.
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.

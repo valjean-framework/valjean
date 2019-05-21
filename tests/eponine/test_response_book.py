@@ -1,6 +1,6 @@
-'''Tests for the :mod:`~valjean.eponine.tripoli4.accessor` module using
-`pytest`_: random generation of data thanks to :mod:`hypothesis` then test
-access to various objects typically coming from parsing result.
+'''Tests for the :mod:`~valjean.eponine.resp_book` module using `pytest`_:
+random generation of data thanks to :mod:`hypothesis` then test access to
+various objects typically coming from parsing result.
 '''
 
 # pylint: disable=no-value-for-parameter
@@ -11,8 +11,7 @@ from hypothesis.strategies import (integers, lists, composite, text, booleans,
                                    sampled_from)
 
 from valjean.cosette.env import Env
-from valjean.eponine.tripoli4 import accessor as acc
-from valjean.eponine.response_book import Index
+from valjean.eponine.response_book import Index, ResponseBook
 from ..context import valjean  # pylint: disable=unused-import
 
 
@@ -100,13 +99,13 @@ def test_build_index(respl):
         responses list (considering category is first level of Index and key is
         second one, e.g. category='response_function' and key='FLUX')
     '''
-    lrb = acc.ResponseBook(respl)  # lrb = local responses book
+    lrb = ResponseBook(respl)  # lrb = local responses book
     note(sorted([y for x in respl for y in x if y != 'results']))
-    note(sorted(lrb.index.keys()))
+    note(sorted(k for k in lrb.index.keys() if k != 'index'))
     note(lrb.index)
     assert (sorted(set((y for x in respl for y in x if y != 'results')))
-            == sorted(lrb.index.keys()))
-    assert all(k1 in respl[ind] for k1, y in lrb.index.items()
+            == sorted(k for k in lrb.index.keys() if k != 'index'))
+    assert all(k1 in respl[ind] for k1, y in lrb.index.items() if k1 != 'index'
                for k, v in y.items() for ind in v)
     assert all(respl[ind][k1] == k for k1, y in lrb.index.items()
                for k, v in y.items() for ind in v if k1 in respl[ind])
@@ -170,7 +169,7 @@ def test_selection(sampler, caplog):
                'ingredient': [('spam', 'egg'), 'spam']}
     mdd, fmdr = sampler.draw(fixed_metadata_responses(choices))
     assert fmdr
-    respb = acc.ResponseBook(fmdr)
+    respb = ResponseBook(fmdr)
     for key, lval in choices.items():
         for val in lval:
             caplog.clear()
@@ -264,7 +263,7 @@ def test_strip_index(sampler):
 def test_respbook_serializable(respl, tmpdir):
     '''Test that the :class:`~.ResponseBook` class is serializable when it
     appears in the environment.'''
-    resp_book = acc.ResponseBook(respl)
+    resp_book = ResponseBook(respl)
     env = Env({'task': {'resp_book': resp_book}})
     env_file = str(tmpdir / 'env.pickle')
     env.to_file(env_file)
@@ -272,3 +271,36 @@ def test_respbook_serializable(respl, tmpdir):
     note('env = {}'.format(env))
     note('env_roundtrip = {}'.format(env_roundtrip))
     assert env == env_roundtrip
+
+
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(respl1=responses_lists(), respl2=responses_lists(),
+       glob1=dictionaries(
+           keys=text(alphabet=DEF_ALPHABET, min_size=1, max_size=5),
+           values=integers(0, 10), max_size=5),
+       glob2=dictionaries(
+           keys=text(alphabet=DEF_ALPHABET, min_size=1, max_size=5),
+           values=integers(0, 10), max_size=5))
+def test_respbook_merge(respl1, respl2, glob1, glob2):
+    '''The concatenation / addition of 2 ResponseBooks, with possible global
+    variables.'''
+    rb1 = ResponseBook(respl1, global_vars=glob1)
+    rb2 = ResponseBook(respl2, global_vars=glob2)
+    note('rb1: {!r}'.format(rb1))
+    note('rb2: {!r}'.format(rb2))
+    assert len(rb1.globals) == len(glob1)
+    assert sorted(glob2) == sorted(rb2.globals)
+    jrb = rb1.merge(rb2)
+    note('jrb: {!r}'.format(jrb))
+    assert len(jrb) == len(rb1) + len(rb2)
+    assert len(jrb.globals) == len(set(glob1).union(glob2))
+    if glob1 == glob2:
+        assert len(jrb.globals) == len(rb1.globals) == len(rb2.globals)
+    assert rb2.responses[0]['index'] == 0
+    # first element of rb2 should have index of len(rb1)
+    assert jrb.responses[len(rb1)]['index'] == len(rb1)
+    jr20 = {k: v for k, v in jrb.responses[len(rb1)].items() if k != 'index'}
+    r20 = {k: v for k, v in rb2.responses[0].items() if k != 'index'}
+    note('jr20: {}'.format(jr20))
+    note('r20: {}'.format(r20))
+    assert jr20 == r20

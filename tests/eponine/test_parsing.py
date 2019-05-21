@@ -31,7 +31,6 @@ from glob import glob
 import logging
 import pytest
 from valjean.eponine.tripoli4.parse import T4Parser, T4ParserException
-from valjean.eponine.tripoli4.accessor import Accessor
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
 # pylint: disable=redefined-outer-name
@@ -58,8 +57,8 @@ def result_test(res):
     return res.scan_res.normalend
 
 
-def accessor_test(res):
-    '''Quick test of accessor.
+def response_book_test(res):
+    '''Quick test of ResponseBook.
 
     Main goal of this test is not apparent: it is to check if the accessor can
     be built for all types of responses available in the T4 outputs given set,
@@ -69,14 +68,15 @@ def accessor_test(res):
     A first check on the presence of the ``book_type`` is done in order to
     avoid a useless error here.
     '''
-    t4acc = Accessor(res)
-    if t4acc.resp_book is None:
+    t4rb = res.build_response_book()
+    if t4rb is None:
         return
     ids = set()
-    for _v0 in t4acc.resp_book.index.values():
+    for _v0 in t4rb.index.values():
         for _v1 in _v0.values():
             ids |= _v1
-    assert ids == set(range(len(t4acc.resp_book.responses)))
+    assert ids == set(range(len(t4rb.responses)))
+    assert t4rb.globals
 
 
 def loop_on_files(filelist, cfile):
@@ -107,7 +107,7 @@ def loop_on_files(filelist, cfile):
             failed_jdds.append(ifile)
         # quick temporary test of accessor
         assert res.check_t4_times()
-        accessor_test(res)
+        response_book_test(res)
     return nb_jdds_ok, failed_jdds
 
 

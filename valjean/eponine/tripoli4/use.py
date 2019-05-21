@@ -1,9 +1,9 @@
 '''This module extends the functionalities provided by :mod:`~.cosette.use` to
 the commonplace task of parsing TRIPOLI-4 output files. The decorators defined
-by this module, :func:`using_parse_results` and :func:`using_accessor`, can be
-used to remove boilerplate code that parses and accesses the TRIPOLI-4 results.
-At the same time, they simplify the integration of user-defined post-processing
-(tests) into the :mod:`valjean` workflow.
+by this module, :func:`using_parse_results` and :func:`using_response_book`,
+can be used to remove boilerplate code that parses and accesses the TRIPOLI-4
+results. At the same time, they simplify the integration of user-defined
+post-processing (tests) into the :mod:`valjean` workflow.
 
 .. doctest:: eponine_use
     :hide:
@@ -145,31 +145,32 @@ the right result at the end::
     81114.52
 
 
-Injecting an :class:`~.Accessor`
-================================
+Using a :class:`~.response_book.ResponseBook`
+=============================================
 
 The raw parse results are useful in some situations, but most of the time you
 probably want to work with a higher-level representation of the calculation
-result, such as an :class:`~.Accessor`. This module provides a function to
-construct a decorator that automatically creates the :class:`~.RunTask` from
-the :class:`~.RunTaskFactory`, runs the task, parses the resulting output and
-wraps the parse results in an :class:`~.Accessor`::
+result, such as an :class:`~.response_book.ResponseBook`. This module provides
+a function to construct a decorator that automatically creates the
+:class:`~.RunTask` from the :class:`~.RunTaskFactory`, runs the task, parses
+the resulting output and wraps the parse results in an
+:class:`~.response_book.ResponseBook`::
 
 
-    >>> using_accessor = use.using_accessor(echo_factory)
-    >>> @using_accessor(text=example)
-    ... def extract_simulation_time(accessor):
-    ...     return accessor.simulation_time()
+    >>> using_response_book = use.using_response_book(echo_factory)
+    >>> @using_response_book(text=example)
+    ... def extract_simulation_time(resp_book):
+    ...     return resp_book.globals['simulation_time']
 
 We can again check that everything went as expected by manually unwrapping the
 sequence of tasks and running them::
 
     >>> extract_task = extract_simulation_time.get_task()
-    >>> access_task = next(iter(extract_task.depends_on))
-    >>> parse_task = next(iter(access_task.depends_on))
+    >>> response_book_task = next(iter(extract_task.depends_on))
+    >>> parse_task = next(iter(response_book_task.depends_on))
     >>> run_task = next(iter(parse_task.depends_on))
     >>> env = Env()
-    >>> for task in [run_task, parse_task, access_task, extract_task]:
+    >>> for task in [run_task, parse_task, response_book_task, extract_task]:
     ...     env_up, _ = task.do(env=env, config=config)
     ...     env.apply(env_up)
     >>> print(env[extract_task.name]['result'])
@@ -180,7 +181,6 @@ Module API
 ==========
 '''
 
-from .accessor import Accessor
 from .parse import T4Parser
 from ...cosette.use import UseRun
 from ...cosette.pythontask import TaskException
@@ -213,14 +213,17 @@ def parse_output_file(filename, *, batch=-1):
     return parser
 
 
-def access(parse_results, *, index):
-    '''Construct an :class:`~.Accessor` to a given TRIPOLI-4 parse result.
+def access(parse_results, *, index=-1, batch_number=None):
+    '''Construct an :class:`~.response_book.ResponseBook` to a given TRIPOLI-4
+    parse result.
 
     :param parse_results: the list of raw parse results.
     :param int index: the index of the required parse result.
-    :returns: an :class:`~.Accessor`.
+    :param int batch_number: edited batch number.
+    :rtype: ResponseBook
     '''
-    return Accessor(parse_results, batch_id=index)
+    return parse_results.build_response_book(batch_index=index,
+                                             batch_number=batch_number)
 
 
 def using_parse_results(factory, batch=-1):
@@ -237,9 +240,10 @@ def using_parse_results(factory, batch=-1):
     return use_run.map(partial(parse_output_file, batch=batch))
 
 
-def using_accessor(factory, index=-1):
-    '''Construct a decorator that injects an :class:`~.Accessor` to the
-    TRIPOLI-4 parse results into a Python function.
+def using_response_book(factory, index=-1, batch_number=None):
+    '''Construct a decorator that injects an
+    :class:`~.response_book.ResponseBook` to the TRIPOLI-4 parse results into a
+    Python function.
 
     :param factory: a factory producing TRIPOLI-4 runs.
     :type factory: :class:`~.RunTaskFactory`
@@ -247,4 +251,5 @@ def using_accessor(factory, index=-1):
     :returns: a decorator (see the module docstring for more information).
     '''
     use_parse_results = using_parse_results(factory)
-    return use_parse_results.map(partial(access, index=index))
+    return use_parse_results.map(partial(access, index=index,
+                                         batch_number=batch_number))

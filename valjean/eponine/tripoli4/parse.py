@@ -21,6 +21,7 @@ from pyparsing import ParseException
 from . import scan
 from .grammar import t4gram
 from .common import SpectrumDictBuilderException
+from ..response_book import ResponseBook
 
 
 LOGGER = logging.getLogger('valjean')
@@ -144,6 +145,64 @@ class T4Parser():
         except SpectrumDictBuilderException as sdbe:
             LOGGER.error(sdbe)
             raise T4ParserException("Error in parsing") from None
+
+    def build_response_book(self, *, batch_index=-1, batch_number=None):
+        '''Build a :class:`~valjean.eponine.response_book.ResponseBook` from
+        the :class:`T4Parser` object.
+
+        Responses (so results) are expected to be lists, they are used to build
+        the index in ResponseBook. The additional elements in the dictionary
+        are considered as **global variables**. Additional global variables are
+        obtained from the result from :class:`~.scan.Scan` (times, warnings,
+        etc).
+
+        :param int batch_index: index of the batch in the list of edited
+            batches, default: -1, i.e. the last batch
+        :param int batch_number: number of the edited batch to be used to build
+            the ResponseBook, supersedes ``batch_index``, default: None
+        :rtype: ResponseBook
+        '''
+        if batch_number:
+            batch_index = (-1 if len(self.result) == 1
+                           else self.scan_res.index(batch_number))
+        parsed_res = self.result[batch_index]
+        glob_vars = {k: v for k, v in parsed_res.items()
+                     if not isinstance(v, list)}
+        # sanity check
+        try:
+            time_key = next(k for k in glob_vars if 'time' in k)
+        except StopIteration:
+            raise ValueError('No "time" variable found in the TRIPOLI-4 '
+                             'output, please check it.\n'
+                             'Remark: you may be in parsing debug mode with '
+                             'an end flag not containing "time" where this '
+                             'behaviour is expected.')
+        if glob_vars[time_key] != self.scan_res.times[time_key][batch_index]:
+            raise ValueError('{} looks inconsistent between parsing and '
+                             'scanning'.format(time_key))
+        glob_vars.update(self._add_scan_vars(batch_index, glob_vars))
+        list_resps = [resp for key, lresp in parsed_res.items()
+                      if key not in glob_vars for resp in lresp]
+        resp_book = ResponseBook(list_resps, global_vars=glob_vars)
+        if resp_book.is_empty():
+            LOGGER.error('ResponseBook creation failed, please check what')
+        else:
+            LOGGER.debug("List of responses gave a ResponseBook.")
+        return resp_book
+
+    def _add_scan_vars(self, batch, global_vars):
+        '''Obtain the variables from :class:`~.scan.Scan` that will be stored
+        in the :class:`~valjean.eponine.response_book.ResponseBook`.
+        '''
+        scan_vars = {'warnings': self.scan_res.countwarnings,
+                     'errors': self.scan_res.counterrors,
+                     'number_of_tasks': self.scan_res.tasks,
+                     'normal_end': self.scan_res.normalend,
+                     'required_batches': self.scan_res.reqbatchs}
+        for ktime, val in self.scan_res.times.items():
+            if ktime not in global_vars:
+                scan_vars[ktime] = val if isinstance(val, int) else val[batch]
+        return scan_vars
 
     def print_t4_stats(self):
         '''Print Tripoli-4 statistics (warnings and errors).'''
