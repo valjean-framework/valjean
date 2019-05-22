@@ -260,8 +260,8 @@ class TableTemplate:
         '''
         LOGGER.debug("In TableTemplate.__getitem__")
         if not isinstance(self.columns[0], np.ndarray):
-            raise TypeError("Slicing is only possible when the values in the "
-                            "TableItem are np.ndarray.")
+            raise TypeError("Slicing is only possible when the values if the "
+                            "TableTemplate is np.ndarray.")
         return TableTemplate(*tuple(col[index] for col in self.columns),
                              headers=self.headers.copy(),
                              units=self.units.copy(),

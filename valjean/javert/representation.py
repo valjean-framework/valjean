@@ -209,6 +209,33 @@ class FullPlotRepresenter(PlotRepresenter):
     method like in Bonferroni and Holm-Bonferroni test results.
     '''
 
+    def repr_testresultbonferroni(self, result):
+        '''Represent the result of a :class:`~.TestBonferroni` test one a plot
+        (only the input test for the moment) (Student, equal, etc)
+
+        :param  result: a test result.
+        :type result: :class:`~.TestResultBonferroni`
+        :returns: Representation of a :class:`~.TestResultBonferroni` as
+            1 plot (the first test result).
+        :rtype: list(:class:`~.PlotTemplate`)
+        '''
+        LOGGER.debug("In FullPlotRepresenter.repr_testresultbonferroni")
+        return self(result.first_test_res)
+
+    def repr_testresultholmbonferroni(self, result):
+        '''Represent the result of a :class:`~.TestHolmBonferroni` test as a
+        plot (Student, equal, etc)
+
+        :param  result: a test result.
+        :type result: :class:`~.TestResultHolmBonferroni`
+        :returns: Representation of a :class:`~.TestResultHolmBonferroni` as
+            a plot (the first test result).
+        :rtype: list(:class:`~.PlotTemplate`)
+        '''
+        LOGGER.debug(
+            "In FullPlotRepresenter.repr_testresultholmbonferroni")
+        return self(result.first_test_res)
+
 
 class EmptyRepresenter(Representer):
     '''Class that does not generate any templates for any test result.'''
@@ -228,7 +255,7 @@ class FullRepresenter(Representer):
         '''
         LOGGER.debug("In initialisation of FullRepresenter")
         self.table_repr = FullTableRepresenter()
-        self.plot_repr = PlotRepresenter()
+        self.plot_repr = FullPlotRepresenter()
 
     def __call__(self, result):
         '''Dispatch handling of `result` to all the Representer subclass
