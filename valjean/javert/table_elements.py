@@ -295,3 +295,25 @@ def repr_testresultstats(result, status_ok):
     table = TableTemplate(statuses_txt, percents, headers=['status', 'counts'],
                           highlights=highlights)
     return [table]
+
+
+def repr_testresultsmetadata(result):
+    '''Represent the result of a :class:`~.TestMetadata` test.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultMetadata`
+    :returns: Representation of a :class:`~.TestResultMetadata` as a
+        table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+
+    Different levels of verbosity should be allowed.
+    '''
+    return repr_metadata(result, 'Metadata?')
+
+
+def repr_metadata(result, result_header):
+    '''Function to generate a table from the metadata test results.
+
+    Different levels of verbosity should be allowed.
+    '''
+    table_template = TableTemplate()
