@@ -632,17 +632,12 @@ def group_to_dict(toks):
     :returns: python dict corresponding to input `pyparsing` named group
     '''
     assert len(toks) == 1
-    # print(toks)
-    # print(type(toks))
     key = next(toks.keys())
     tmpdict = toks.asDict()
-    # print("tmpdict=", tmpdict)
     tmpdict.update(convert_batch_numbers(tmpdict))
-    # print("tmpdict", tmpdict)
     for elt in toks[0]:
         if isinstance(elt, dict):
             tmpdict[key].update(elt)
-    # print("will return:", tmpdict[key])
     return tmpdict
 
 

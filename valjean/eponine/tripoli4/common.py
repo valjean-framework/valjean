@@ -1589,14 +1589,17 @@ def convert_generic_adjoint(res):
     if len(adjres.asDict()) != 1:
         LOGGER.warning("Issue: more than one key for adjoint result")
     ubatch = res.get('used_batches', None)
+    # deal with units (stored in all results)
+    units = {}
+    if 'uscore' in res:
+        units['uscore'] = res.pop('uscore')
+        units['usigma'] = res.pop('usigma')
     assert len(res.asDict()) == 1, \
         "used_batches should be the only remaining key in the dict"
     assert ubatch is not None, "used batches should not the None"
     for ires in adjres[loctype]:
         mydict = {'used_batches_res': ubatch}
-        find = ires[0]
-        nindex = index[0]
-        mydict[nindex] = find
+        mydict[index[0]] = ires[0]
         if len(ires) == 1:
             mydict['generic_res'] = {
                 'not_converged': "No result available"}
@@ -1604,14 +1607,14 @@ def convert_generic_adjoint(res):
             continue
         if isinstance(ires[1], FTYPE):
             mydict['generic_res'] = dict(zip(keys, tuple(ires[1:])))
+            mydict['generic_res'].update(units)
             tlist.append(mydict)
         else:
             for iires in ires[1:]:
                 myrdict = mydict.copy()
-                lind = iires[0]
-                nindex2 = index[1]
-                myrdict[nindex2] = lind
+                myrdict[index[1]] = iires[0]
                 myrdict['generic_res'] = dict(zip(keys, tuple(iires[1:])))
+                myrdict['generic_res'].update(units)
                 tlist.append(myrdict)
     return tlist
 

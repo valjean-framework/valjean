@@ -1067,7 +1067,7 @@ adjointres = (Group(Group(Suppress(_integratedres_kw)
                                   | _familyorder
                                   | _perturborder
                                   | _cvgstat)('adj_res')
-                          + Optional(_unitsres)('units')
+                          + Optional(_unitsres)
                           ).setParseAction(trans.convert_generic_adjoint))
               )('adjoint')
 # sensitivities
