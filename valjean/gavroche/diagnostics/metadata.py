@@ -4,7 +4,10 @@ from ..test import Test, TestResult
 
 
 class Missing:
-    pass
+    '''Class for missing metadata.'''
+
+    def __str__(self):
+        return 'MISSING'
 
 
 MISSING = Missing()

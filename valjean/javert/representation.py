@@ -78,6 +78,12 @@ class Representation:
         '''
         self.representer = representer
 
+    # @classmethod
+    # def from_verbosity(cls, verbosity=func):
+    #     def __call__(cls, result):
+    #         verb = self.verbosity.func(result)
+    #         self.representer(verb, result)
+
     def __call__(self, result):
         '''Dispatch handling of `result` to the ``__call__`` methods of the
         representer class.'''
