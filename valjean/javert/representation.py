@@ -56,9 +56,22 @@ Thus the use of the ``Representer`` is foreseen as:
 * :mod:`valjean` calls the ``Representer`` classes through the
   :class:`Representation` class.
 '''
+from enum import Enum
 from .. import LOGGER
 from . import table_elements as tab_elts
 from . import plot_elements as plt_elts
+
+
+class Verbosity(Enum):
+    '''Verbosity enum.
+
+    Four levels are currently available: SILENT, SUMMARY, INTERMEDIATE,
+    FULL_DETAILS.
+    '''
+    SILENT = 0
+    SUMMARY = 1
+    INTERMEDIATE = 2
+    FULL_DETAILS = 3
 
 
 class Representation:
@@ -69,7 +82,7 @@ class Representation:
     pattern.
     '''
 
-    def __init__(self, representer):
+    def __init__(self, representer, verbosity=None):
         ''''Initilialisation of the :class:`Representation` class with the
         Representer to use.
 
@@ -77,17 +90,18 @@ class Representation:
         :type representer: :class:`Representer`
         '''
         self.representer = representer
+        self.verbosity = verbosity
 
     # @classmethod
     # def from_verbosity(cls, verbosity=func):
     #     def __call__(cls, result):
     #         verb = self.verbosity.func(result)
-    #         self.representer(verb, result)
+    #         self.representer(result, verb) ou verb, result
 
     def __call__(self, result):
         '''Dispatch handling of `result` to the ``__call__`` methods of the
         representer class.'''
-        res = self.representer(result)
+        res = self.representer(result, self.verbosity)
         if res is None:
             return []
         LOGGER.debug('representing the result of test %s as %s',
@@ -103,7 +117,7 @@ class Representer:
     pattern. Its subclasses play the role of `ConcreteStrategy`.
     '''
 
-    def __call__(self, result):
+    def __call__(self, result, verbosity=None):
         '''Dispatch handling of `result` to the appropriate subclass method,
         based on the name of the class of `result`. This methods essentially
         implements a simplified, run-time version of the Visitor pattern.
@@ -111,10 +125,14 @@ class Representer:
         LOGGER.debug("In Representer.__call__")
         class_name = result.__class__.__name__
         meth_name = 'repr_' + class_name.lower()
+        if verbosity:
+            meth_name += '_' + verbosity.name.lower()
+        LOGGER.debug("Trying to use %s", meth_name)
         try:
             meth = getattr(self, meth_name)
         except AttributeError:
-            LOGGER.debug('no representation for class %s', class_name)
+            LOGGER.debug('no representation for class %s with name %s',
+                         class_name, meth_name)
             return None
         return meth(result)
 
@@ -128,16 +146,20 @@ class TableRepresenter(Representer):
     relevant ``repr_*`` methods.
     '''
 
-    def __call__(self, result):
+    def __call__(self, result, verbosity=None):
         LOGGER.debug("In TableRepresenter.__call__")
-        res = super().__call__(result)
+        res = super().__call__(result, verbosity)
         if res is None:
             class_name = result.__class__.__name__
             meth_name = 'repr_' + class_name.lower()
+            if verbosity:
+                meth_name += '_' + verbosity.name.lower()
             try:
                 meth = getattr(tab_elts, meth_name)
             except AttributeError:
-                LOGGER.info('no table representation for class %s', class_name)
+                LOGGER.info('no table representation %s', meth_name)
+                if verbosity is not None and verbosity != Verbosity.SILENT:
+                    return self.__call__(result, Verbosity(verbosity.value-1))
                 return None
             res = meth(result)
         return res
@@ -194,9 +216,9 @@ class PlotRepresenter(Representer):
     :class:`PlotRepresenter` and define the relevant ``repr_*`` methods.
     '''
 
-    def __call__(self, result):
+    def __call__(self, result, verbosity=None):
         LOGGER.debug("In PlotRepresenter.__call__")
-        res = super().__call__(result)
+        res = super().__call__(result, verbosity)
         if res is None:
             class_name = result.__class__.__name__
             meth_name = 'repr_' + class_name.lower()
@@ -263,7 +285,7 @@ class FullRepresenter(Representer):
         self.table_repr = FullTableRepresenter()
         self.plot_repr = FullPlotRepresenter()
 
-    def __call__(self, result):
+    def __call__(self, result, verbosity=None):
         '''Dispatch handling of `result` to all the Representer subclass
         instance attributes of :class:`FullRepresenter`, based on the name of
         the class of `result`.
@@ -274,10 +296,10 @@ class FullRepresenter(Representer):
         list (no ``None`` returned from this step).
         '''
         res = []
-        tabres = self.table_repr(result)
+        tabres = self.table_repr(result, verbosity)
         if tabres is not None:
             res.extend(tabres)
-        pltres = self.plot_repr(result)
+        pltres = self.plot_repr(result, verbosity)
         if pltres is not None:
             res.extend(pltres)
         return res

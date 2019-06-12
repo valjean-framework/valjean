@@ -12,19 +12,19 @@ class Missing:
 
 MISSING = Missing()
 
+
 class TestResultMetadata(TestResult):
     '''Results of metadata comparisons.'''
 
-    def __init__(self, test, dict_res):  # , comp_md_num, comp_md_names, comp_md_values):
+    def __init__(self, test, dict_res):
         '''Initialisation of TestResultMetadata.'''
         super().__init__(test)
         self.dict_res = dict_res
 
     def __bool__(self):
         aresp = []
-        for key, val in self.dict_res.items():
+        for val in self.dict_res.values():
             aresp.append(all(val.values()))
-            # print(key, aresp[-1])
         return all(aresp)
 
     def per_key(self):
@@ -48,6 +48,7 @@ class TestMetadata(Test):
     '''A test that compares metadata.
     '''
 
+    # pylint: disable=too-many-arguments
     def __init__(self, dmd, name, description='',
                  exclude=('results', 'index', 'score_index', 'response_index',
                           'response_type'),
@@ -70,7 +71,7 @@ class TestMetadata(Test):
                     .difference(self.exclude))
         cdict = {}
         for key in all_keys:
-            for name, tmd in self.dmd.items(): #sorted(self.dmd.items())[1:]:
+            for name, tmd in self.dmd.items():
                 if key not in tmd:
                     cdict.setdefault(key, {}).update({name: MISSING})
                 else:

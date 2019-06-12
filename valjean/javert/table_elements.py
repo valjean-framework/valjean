@@ -7,7 +7,6 @@ from .. import LOGGER
 from ..cosette.task import TaskStatus
 from ..gavroche.diagnostics.stats import TestOutcome
 from .templates import TableTemplate
-from ..gavroche.diagnostics.metadata import MISSING
 
 
 def repr_testresultequal(result):
@@ -298,7 +297,7 @@ def repr_testresultstats(result, status_ok):
     return [table]
 
 
-def repr_testresultmetadata(result, verbosity=0):
+def repr_testresultmetadata(result):
     '''Represent the result of a :class:`~.TestMetadata` test.
 
     :param  result: a test result.
@@ -309,47 +308,52 @@ def repr_testresultmetadata(result, verbosity=0):
 
     Different levels of verbosity should be allowed.
     '''
-    return repr_metadata(result, verbosity)
+    return repr_metadata(result)
 
 
-def repr_metadata(result, verbosity):
+def repr_metadata(result):
     '''Function to generate a table from the metadata test results.
 
     Different levels of verbosity should be allowed.
     '''
-    if verbosity == 0:
-        if bool(result):
-            return [TableTemplate(["Metadata:"], ["OK"],
-                                  highlights=[[False], [False]])]
-        else:
-            return [TableTemplate(["Metadata:"], ["KO"],
-                                  highlights=[[False], [True]])]
-    if verbosity == 1:
-        keys = list(result.per_key().keys())
-        vals = ["OK" if res else "KO" for res in result.per_key().values()]
-        highl = [[False]*len(keys)]
-        highl.extend([[not res for res in result.per_key().values()]])
-        table = TableTemplate(
-            keys, vals,
-            highlights=highl,
-            headers=['metadata', '?'])
-        return [table]
+    if bool(result):
+        return [TableTemplate(["Metadata:"], ["OK"],
+                              highlights=[[False], [False]])]
+    ko_list = list(result.only_failed_comparisons().keys())
+    return [TableTemplate(["Failed metadata:"], [', '.join(ko_list)],
+                          highlights=[[False], [True]])]
+
+
+def repr_testresultmetadata_full_details(result):
+    # pylint: disable=invalid-name
+    '''Represent the result of a :class:`~.TestMetadata` test with all details.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultMetadata`
+    :returns: Representation of a :class:`~.TestResultMetadata` as a
+        table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+
+    "All details" means the full list of metadata will be represented, the
+    missing ones and the different ones should be highlighted.
+    '''
+    return repr_metadata_full_details(result)
+
+
+def repr_metadata_full_details(result):
+    '''Function to generate a table from the metadata test results.
+
+    Different levels of verbosity should be allowed.
+    '''
     samp_names = [name for name in result.test.dmd.keys()]
     keys = []
     tdict = {name: [] for name in samp_names}
     hdict = {name: [] for name in samp_names}
-    if verbosity == 2:
-        for dkey in result.only_failed_comparisons():
-            keys.append(dkey)
-            for nam in samp_names:
-                tdict[nam].append(str(result.only_failed_comparisons()[dkey][nam]))
-                hdict[nam].append(not result.dict_res[dkey][nam])
-    if verbosity == 3:
-        for dkey in result.test.all_md.keys():
-            keys.append(dkey)
-            for nam in samp_names:
-                tdict[nam].append(str(result.test.all_md[dkey][nam]))
-                hdict[nam].append(not result.dict_res[dkey][nam])
+    for dkey in result.test.all_md.keys():
+        keys.append(dkey)
+        for nam in samp_names:
+            tdict[nam].append(str(result.test.all_md[dkey][nam]))
+            hdict[nam].append(not result.dict_res[dkey][nam])
     ocols = [col for col in tdict.values()]
     highl = [[False]*len(keys)]
     highl.extend([hl for hl in hdict.values()])
@@ -360,3 +364,106 @@ def repr_metadata(result, verbosity):
                           headers=heads)
     return [table]
 
+
+def repr_testresultmetadata_intermediate(result):
+    # pylint: disable=invalid-name
+    '''Represent the result of a :class:`~.TestMetadata` test with an
+    intermediate level of verbosity.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultMetadata`
+    :returns: Representation of a :class:`~.TestResultMetadata` as a
+        table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+
+    "Intermediate level of verbosity" means the list of metadata failing
+    comparison will be represented. The comparison can fail for example if one
+    is missing or if an name changed.
+    '''
+    return repr_metadata_intermediate(result)
+
+
+def repr_metadata_intermediate(result):
+    '''Function to generate a table from the metadata test results.
+
+    Different levels of verbosity should be allowed.
+    '''
+    samp_names = [name for name in result.test.dmd.keys()]
+    keys = []
+    tdict = {name: [] for name in samp_names}
+    hdict = {name: [] for name in samp_names}
+    for dkey in result.only_failed_comparisons():
+        keys.append(dkey)
+        for nam in samp_names:
+            tdict[nam].append(str(result.only_failed_comparisons()[dkey][nam]))
+            hdict[nam].append(not result.dict_res[dkey][nam])
+    ocols = [col for col in tdict.values()]
+    highl = [[False]*len(keys)]
+    highl.extend([hl for hl in hdict.values()])
+    heads = ['key']
+    heads.extend([name for name in result.test.dmd.keys()])
+    table = TableTemplate(keys, *ocols,
+                          highlights=highl,
+                          headers=heads)
+    return [table]
+
+
+def repr_testresultmetadata_summary(result):
+    '''Represent the result of a :class:`~.TestMetadata` with a summary over
+    all metadata.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultMetadata`
+    :returns: Representation of a :class:`~.TestResultMetadata` as a
+        table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+
+    "Summary over all metadata" means the list of metadata with OK if
+    comparison was successful else KO.
+    '''
+    return repr_metadata_summary(result)
+
+
+def repr_metadata_summary(result):
+    '''Function to generate a table from the metadata test results.
+
+    Different levels of verbosity should be allowed.
+    '''
+    keys = list(result.per_key().keys())
+    vals = ["OK" if res else "KO" for res in result.per_key().values()]
+    highl = [[False]*len(keys)]
+    highl.extend([[not res for res in result.per_key().values()]])
+    table = TableTemplate(
+        keys, vals,
+        highlights=highl,
+        headers=['metadata', '?'])
+    return [table]
+
+
+def repr_testresultmetadata_silent(result):
+    '''Represent the result of a :class:`~.TestMetadata` with silent verbosity
+    level.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultMetadata`
+    :returns: Representation of a :class:`~.TestResultMetadata` as a
+        table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+
+    "Silent verbosity level" means that the comparison of all metadata gives a
+    OK if everything was fine, else a KO. To get more details, please use a
+    different level of verbosity.
+    '''
+    return repr_metadata_silent(result)
+
+
+def repr_metadata_silent(result):
+    '''Function to generate a table from the metadata test results.
+
+    Different levels of verbosity should be allowed.
+    '''
+    if bool(result):
+        return [TableTemplate(["Metadata:"], ["OK"],
+                              highlights=[[False], [False]])]
+    return [TableTemplate(["Metadata:"], ["KO"],
+                          highlights=[[False], [True]])]
