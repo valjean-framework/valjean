@@ -16,4 +16,4 @@ Test of metadata
 ----------------
 
 .. automodule:: valjean.gavroche.diagnostics.metadata
-   :synopsis: Test of all metadta were consistent for the compared metadata sets
+   :synopsis: Test of all metadata were consistent for the compared metadata sets

@@ -158,8 +158,12 @@ class TableRepresenter(Representer):
                 meth = getattr(tab_elts, meth_name)
             except AttributeError:
                 LOGGER.info('no table representation %s', meth_name)
-                if verbosity is not None and verbosity != Verbosity.SILENT:
-                    return self.__call__(result, Verbosity(verbosity.value-1))
+                if verbosity is not None:
+                    if verbosity != Verbosity.SILENT:
+                        return self.__call__(result,
+                                             Verbosity(verbosity.value-1))
+                    else:
+                        return self.__call__(result, verbosity=None)
                 return None
             res = meth(result)
         return res

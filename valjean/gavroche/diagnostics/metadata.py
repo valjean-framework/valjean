@@ -22,25 +22,20 @@ class TestResultMetadata(TestResult):
         self.dict_res = dict_res
 
     def __bool__(self):
-        aresp = []
-        for val in self.dict_res.values():
-            aresp.append(all(val.values()))
+        aresp = [all(val.values()) for val in self.dict_res.values()]
         return all(aresp)
 
     def per_key(self):
-        '''Test result ordered per key.'''
-        dresp = {}
-        for key, val in self.dict_res.items():
-            dresp[key] = all(val.values())
+        '''Test result sorted by key.'''
+        dresp = {key: all(val.values()) for key, val in self.dict_res.items()}
         return dresp
 
     def only_failed_comparisons(self):
         '''Return only the failed comparisons. Structure is the same as the
         ``dict_res``.'''
-        dresp = {}
-        for key, val in self.dict_res.items():
-            if not all(val.values()):
-                dresp[key] = self.test.all_md[key]
+        dresp = {key: self.test.all_md[key]
+                 for key, val in self.dict_res.items() 
+                 if not all(val.values())}
         return dresp
 
 

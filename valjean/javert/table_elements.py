@@ -388,6 +388,8 @@ def repr_metadata_intermediate(result):
 
     Different levels of verbosity should be allowed.
     '''
+    if not result.only_failed_comparisons():
+        return repr_metadata_silent(result)
     samp_names = [name for name in result.test.dmd.keys()]
     keys = []
     tdict = {name: [] for name in samp_names}
