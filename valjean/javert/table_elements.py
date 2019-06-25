@@ -137,6 +137,65 @@ def repr_student(result, result_header):
     return [table_template]
 
 
+def repr_testresultstudent_silent(result):
+    '''Represent the result of a :class:`~.TestStudent` test for the SILENT
+    level of verbosity.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultStudent`
+    :returns: Representation of a :class:`~.TestResultStudent` as a table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    '''
+    return repr_student_silent(result)
+
+
+def repr_student_silent(result):
+    '''Function to generate a silent table for the Student test (only tells if
+    the test was successful or not).
+
+    Different levels of verbosity should be allowed.
+    '''
+    return []
+
+
+def repr_testresultstudent_summary(result):
+    '''Represent the result of a :class:`~.TestStudent` test for the SUMMARY
+    level of verbosity.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultStudent`
+    :returns: Representation of a :class:`~.TestResultStudent` as a table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    '''
+    return repr_student_summary(result)
+
+
+def repr_student_summary(result):
+    '''Function to generate a summary table for the Student test (only tells if
+    the test was successful or not).
+
+    Different levels of verbosity should be allowed.
+    '''
+    if bool(result):
+        return [TableTemplate(["Holm-Bonferroni test:"], ["OK"],
+                              highlights=[[False], [False]])]
+    return [TableTemplate(["Holm-Bonferroni test:"], ["KO"],
+                          highlights=[[False], [True]])]
+
+
+def repr_testresultstudent_full_details(result):
+    '''Represent the result of a :class:`~.TestStudent` test for the
+    FULL_DETAILS level of verbosity.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultStudent`
+    :returns: Representation of a :class:`~.TestResultStudent` as a
+        table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    '''
+    return repr_student(result, 'Student?')
+
+
 def repr_testresultbonferroni(result):
     '''Represent the result of a :class:`~.TestBonferroni` test.
 
@@ -202,6 +261,7 @@ def repr_holm_bonferroni(result, result_header):
         table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
+    print("\x1b[31mOn est ici !\x1b[0m")
     ndatasets = len(result.first_test_res.test.datasets)
     oracles = list(result.oracles())
     highlights = [[False] * ndatasets] * 6  # 6 non-highlighted columns
@@ -217,7 +277,49 @@ def repr_holm_bonferroni(result, result_header):
         highlights=highlights,
         headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
                  'N rejected', result_header])
+    print(table_template)
     return [table_template]
+
+
+def repr_testresultholmbonferroni_silent(result):
+    '''Represent the result of a :class:`~.TestHolmBonferroni` test for the
+    SILENT level of verbosity.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultHolmBonferroni`
+    :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
+        table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    '''
+    print("C'est silent qui est choisi...")
+    return repr_holm_bonferroni_silent(result)
+
+
+def repr_holm_bonferroni_silent(result):
+    '''Function to generate a silent table for the Holm-Bonferroni test (only
+    tells if the test was successful or not).
+
+    Different levels of verbosity should be allowed.
+    '''
+    if bool(result):
+        return [TableTemplate(["Holm-Bonferroni test:"], ["OK"],
+                              highlights=[[False], [False]])]
+    return [TableTemplate(["Holm-Bonferroni test:"], ["KO"],
+                          highlights=[[False], [True]])]
+
+
+def repr_testresultholmbonferroni_summary(result):
+    '''Represent the result of a :class:`~.TestHolmBonferroni` test for the
+    SUMMARY level of verbosity.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultHolmBonferroni`
+    :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
+        table.
+    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    '''
+    print("C'est summary qui est choisi")
+    return repr_holm_bonferroni(result, 'Holm-Bonferroni?')
 
 
 def percent_fmt(num, den):

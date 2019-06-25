@@ -175,7 +175,7 @@ class FullTableRepresenter(TableRepresenter):
     method like in Bonferroni and Holm-Bonferroni test results.
     '''
 
-    def repr_testresultbonferroni(self, result):
+    def repr_testresultbonferroni(self, result, verbosity=None):
         '''Represent the result of a :class:`~.TestBonferroni` test in two
         tables:
 
@@ -189,10 +189,11 @@ class FullTableRepresenter(TableRepresenter):
         :rtype: list(:class:`~.TableTemplate`)
         '''
         LOGGER.debug("In FullTableRepresenter.repr_testresultbonferroni")
-        return (super().__call__(result.first_test_res)
-                + tab_elts.repr_testresultbonferroni(result))
+        return (super().__call__(result.first_test_res, verbosity)
+                + super().__call__(result, verbosity))
+                # + tab_elts.repr_testresultbonferroni(result))
 
-    def repr_testresultholmbonferroni(self, result):
+    def repr_testresultholmbonferroni(self, result, verbosity=None):
         '''Represent the result of a :class:`~.TestHolmBonferroni` test in two
         tables:
 
@@ -207,8 +208,9 @@ class FullTableRepresenter(TableRepresenter):
         '''
         LOGGER.debug(
             "In FullTableRepresenter.repr_testresultholmbonferroni")
-        return (super().__call__(result.first_test_res)
-                + tab_elts.repr_testresultholmbonferroni(result))
+        return (super().__call__(result.first_test_res, verbosity)
+                + super().__call__(result, verbosity))
+                # + tab_elts.repr_testresultholmbonferroni(result))
 
 
 class PlotRepresenter(Representer):
