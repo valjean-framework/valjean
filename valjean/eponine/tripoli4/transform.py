@@ -18,6 +18,7 @@ module :mod:`~valjean.eponine.tripoli4.common`.
 import logging
 from collections import Iterable
 import numpy as np
+from pyparsing import ParseException
 from . import common
 
 
@@ -654,6 +655,7 @@ def fail_spectrum(s, loc, expr, err):
 def fail_parsing(s, loc, expr, err):
     '''Parsing error with clear message of failing line.'''
     # pylint: disable=invalid-name, unused-argument
-    LOGGER.error("Parsing error located at line: %s, col: %s,\n"
-                 "\t\tcorresponding to line: '%s' in file",
-                 err.lineno, err.col, err.line)
+    if isinstance(err, ParseException):
+        LOGGER.error("Parsing error located at line: %s, col: %s,\n"
+                     "\t\tcorresponding to line: '%s' in file",
+                     err.lineno, err.col, err.line)
