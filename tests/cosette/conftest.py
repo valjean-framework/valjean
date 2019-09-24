@@ -1,9 +1,12 @@
 '''Fixtures for the :mod:`~.valjean.cosette` tests.'''
 # pylint: disable=redefined-outer-name
 
+import logging
+import locale
 import re
 from subprocess import check_call, check_output, DEVNULL, CalledProcessError
 
+import py
 import pytest
 from hypothesis.strategies import (integers, sets, lists, composite,
                                    sampled_from, text, dictionaries, one_of,
@@ -30,7 +33,6 @@ def make_skip_marker(command, regex):
                       the output of ``command --version``. The version number
                       must appear in the first capture group.
     '''
-    import locale
     has = False
     try:
         encoding = locale.getpreferredencoding(False)
@@ -225,7 +227,6 @@ def subdir(request):
 @pytest.fixture(scope='function')
 def git_myecho_repo(tmpdir_factory, subdir):
     '''Set up a git project with the :command:`echo` command.'''
-    import py
     project_path = tmpdir_factory.mktemp('project')
     project_path.chmod(0o700)
     myecho_dir = project_path / subdir
@@ -468,6 +469,5 @@ def failing_tasks(draw, min_size=1, max_size=20):
 def quiet(caplog):
     '''This fixture will temporarily set the level of the ``valjean`` logger to
     CRITICAL, in order to silence any warning/error that may be produced.'''
-    import logging
     with caplog.at_level(logging.CRITICAL, logger='valjean'):
         yield

@@ -4,6 +4,8 @@ These tests should cover most of functionalities of :mod:`~.scan` and main
 ones for :mod:`~.parse`.
 '''
 
+import os
+
 from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
@@ -277,7 +279,6 @@ def test_debug_entropy(caplog, datadir):
     assert "{0:6e}".format(res0['boltzmann_entropy']) == "8.342621e-01"
     assert sorted(list(res0.keys())) == sorted(scorecontent)
     assert "You are running with an end flag" in caplog.text
-    import os
     assert "debug_ent.log" in os.listdir()
     with open("debug_ent.log") as ofile:
         lines = ofile.readlines()

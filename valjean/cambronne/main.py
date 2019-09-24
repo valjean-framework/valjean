@@ -5,6 +5,7 @@ import argparse
 import pkgutil
 import importlib
 import logging
+import inspect
 
 from . import commands
 from .. import LOGGER, LOG_FILE_FORMAT, __version__
@@ -116,7 +117,6 @@ def run_job(job_file, job_args):
         tasks = module.job(*job_args)
     except TypeError as err:
         if str(err).startswith('job()'):
-            import inspect
             signature = inspect.getfullargspec(module.job)
             n_args = len(signature.args)
             new_msg = ('This valjean job expects exactly {} -a/--args '

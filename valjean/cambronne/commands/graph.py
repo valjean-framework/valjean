@@ -41,12 +41,12 @@ class GraphCommand(Command):
             _, ext = os.path.splitext(args.output)
             if ext:
                 try:
-                    import pydot
+                    from pydot import graph_from_dot_data
                 except ImportError:
                     LOGGER.critical('you need to install pydot to use the '
                                     '--output option.')
                     raise
-                graph_pydot = pydot.graph_from_dot_data(graph_str)[0]
+                graph_pydot = graph_from_dot_data(graph_str)[0]
                 try:
                     writer = getattr(graph_pydot, 'write_' + ext[1:].lower())
                 except AttributeError:

@@ -1,6 +1,7 @@
 '''This module contains somme common utility functions for dynamically
 importing Python source files as modules.'''
 
+import sys
 from pathlib import Path
 
 from . import LOGGER
@@ -28,7 +29,6 @@ def dyn_import(file_name):
     :returns: the loaded module.
     '''
     from importlib import import_module, invalidate_caches
-    import sys
     LOGGER.debug("dyn_import(file_name='%s')", file_name)
     sfile_name = str(file_name)
     module_path, module_name = split_module_path(sfile_name)

@@ -181,6 +181,7 @@ Module API
 ==========
 '''
 
+import functools
 from .parse import T4Parser
 from ...cosette.use import UseRun
 from ...cosette.pythontask import TaskException
@@ -191,7 +192,6 @@ def partial(func, *args, **kwargs):
     '''An improved version of :func:`functools.partial` that calls
     :func:`functools.update_wrapper` on the partially applied function in order
     to update its metadata (name, etc.).'''
-    import functools
     partial_func = functools.partial(func, *args, **kwargs)
     functools.update_wrapper(partial_func, func)
     return partial_func

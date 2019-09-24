@@ -249,6 +249,9 @@ Some things you should be aware of when using :class:`DepGraph`:
   crash, but you will not get what you expect.
 '''
 
+import itertools
+import copy
+import enum
 import logging
 from .rlist import RList
 
@@ -276,8 +279,6 @@ class DepGraph:
     if it is available to the caller as a dictionary; if not, it will be
     constructed internally.
     '''
-
-    import enum
     _Marks = enum.Enum('Marks', 'TEMP PERM')
 
     @classmethod
@@ -300,8 +301,6 @@ class DepGraph:
     @staticmethod
     def _complete(dct):
         '''Add singleton nodes to the dictionary.'''
-
-        import copy
         complete_dct = copy.copy(dct)
         for vals in dct.values():
             for val in vals:
@@ -757,8 +756,6 @@ class DepGraph:
         :returns: ``True`` if `node1` directly (``recurse == False``) or
                   indirectly (``recurse == True``) depends on `node2`.
         '''
-
-        import itertools
         ind1 = self._nodes.index(node1)
         ind2 = self._nodes.index(node2)
         deps1 = self._edges[ind1]

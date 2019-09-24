@@ -183,7 +183,7 @@ class BaseDataset:
         Edges, if only one bin are not kept. Example: spectrum with one bin in
         energy (quite common)
         '''
-        key_axis = {i: k for i, k in enumerate(self.bins)}
+        key_axis = dict(enumerate(self.bins))
         lbins = self.bins.copy()
         for axis, dim in enumerate(self.shape):
             if dim < 2:

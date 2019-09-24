@@ -7,6 +7,7 @@ queues (:mod:`~queue` module).
 import threading
 import logging
 import time
+from queue import Queue
 
 
 LOGGER = logging.getLogger('valjean')
@@ -25,10 +26,8 @@ class QueueScheduling:
 
         :param int n_workers: The number of worker threads to use.
         '''
-
-        import queue
         self.n_workers = n_workers
-        self.queue = queue.Queue(0)
+        self.queue = Queue(0)
 
     def _enqueue(self, tasks, full_graph, hard_graph, env):
         '''Enqueue as many tasks as the dependencies permit.'''

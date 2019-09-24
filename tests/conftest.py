@@ -3,6 +3,7 @@
 
 from string import ascii_lowercase
 
+import py
 import pytest
 from hypothesis.strategies import text, dictionaries, composite, lists
 
@@ -125,7 +126,6 @@ def foreach_data(*args, **kwargs):
         fix_name, fil = next(iter(kwargs.items()))
 
     def _decorator(wrapped):
-        import py
         from inspect import getfile
         module_dir = py.path.local(getfile(wrapped))
         test_dir = module_dir.dirpath('data')

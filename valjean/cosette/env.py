@@ -74,6 +74,7 @@ read-and-modify trip above is implemented as follows:
 """
 
 import threading
+import pickle
 from collections.abc import MutableMapping
 
 from .. import LOGGER
@@ -162,8 +163,6 @@ class Env(MutableMapping):
                         for the moment).
         :returns: The deserialized object.
         '''
-        import pickle
-
         def deserializer(file_):
             return pickle.load(file_)
         mode = 'rb'
@@ -192,8 +191,6 @@ class Env(MutableMapping):
         :param str fmt: Serialization format (only ``'pickle'`` is supported
                         for the moment).
         '''
-        import pickle
-
         def serializer(file_):
             pickle.dump(self, file_)
         mode = 'wb'

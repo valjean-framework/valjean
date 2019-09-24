@@ -392,7 +392,7 @@ class Scan(Mapping):
             for line in fil:
                 if line.lstrip().startswith("//"):  # comment in the jdd
                     continue
-                elif line.lstrip().startswith("!!!"):
+                if line.lstrip().startswith("!!!"):
                     continue
                 self._set_counters_and_flags(line)
                 if _batch_scan:

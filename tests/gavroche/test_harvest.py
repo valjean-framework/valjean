@@ -1,6 +1,8 @@
 # pylint: disable=redefined-outer-name,no-value-for-parameter
 '''Tests for the :mod:`~.harvest` module.'''
 
+import re
+
 from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
@@ -20,8 +22,6 @@ def test_harvest_something(datadir):
 
 def test_harvest_export(datadir):
     '''Test that 'test_export.py' is correctly harvested.'''
-    import re
-
     tests = harvest(datadir / 'test_export.py')
     assert len(tests) == 5
     assert 'test_with_name' in tests

@@ -240,6 +240,7 @@ feel the need to refactor some of your tests.
 '''
 
 import logging
+import re
 from pathlib import Path
 
 from .. import LOGGER
@@ -256,7 +257,6 @@ def harvest(file_name, *, test_regex=None):
     :returns: the harvested tests, as a dictionary mapping test names to test
               functions.
     '''
-    import re
     regex = 'test_.*' if test_regex is None else test_regex
     compiled = re.compile(regex)
     LOGGER.debug('filtering tests with regex: %s', compiled)
@@ -324,7 +324,6 @@ def _walk_dir(dir_name, file_regex, recurse):
 
     The parameters have the same meaning as in harvest_dir.
     '''
-    import re
     regex = r'test_.*\.py$' if file_regex is None else file_regex
     compiled = re.compile(regex)
 

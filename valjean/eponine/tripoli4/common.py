@@ -1878,10 +1878,12 @@ def convert_kij_keff(res):
         LOGGER.warning("Issue in number of fissile volumes "
                        "and size of eigenvector")
     spacebins = np.array(res['kij_matrix'][0])
-    if spacebins.shape[0] != len(res['kij_matrix'][1:]):
+    if (spacebins.shape[0]  # pylint: disable=unsubscriptable-object
+            != len(res['kij_matrix'][1:])):
         LOGGER.warning("Strange: not the dimension in space mesh and "
                        "matrix, matrix expected to be square")
-    if spacebins.shape[0] != nbins:
+    if (spacebins.shape[0]  # pylint: disable=unsubscriptable-object
+            != nbins):
         LOGGER.warning("Strange: not the same number of space bins "
                        "and eigenvectors")
     # Fill the 3 matrices

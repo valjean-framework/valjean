@@ -11,6 +11,7 @@ syntax.
 
 from collections import defaultdict
 from pathlib import Path
+import pkg_resources as pkg
 import numpy as np
 
 from .. import LOGGER
@@ -666,7 +667,6 @@ class FormattedRst:
         :param dict kwargs: any additional keyword arguments will be passed to
                             the formatting.
         '''
-        import pkg_resources as pkg
         assert pkg.resource_exists('valjean.javert.resources.rst', resource)
         res_template = pkg.resource_string('valjean.javert.resources.rst',
                                            resource).decode('utf-8')

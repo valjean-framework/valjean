@@ -235,6 +235,7 @@ Module API
 ----------
 '''
 
+import copy
 from .task import Task, TaskStatus
 from .. import LOGGER
 
@@ -281,7 +282,6 @@ class PythonTask(Task):
                           pass them (as a list) to the `soft_deps` parameter.
         :type soft_deps: None or collection of :class:`~.Task` objects.
         '''
-        import copy
         super().__init__(name=name, deps=deps, soft_deps=soft_deps)
         self.func = func
         self.args = copy.deepcopy(args) if args is not None else ()

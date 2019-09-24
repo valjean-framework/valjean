@@ -35,6 +35,7 @@ build tasks, which in turn are expected to be executed *before* run tasks.
 '''
 
 import enum
+import json
 from abc import ABC, abstractmethod
 
 from .. import LOGGER
@@ -164,7 +165,6 @@ def det_hash(*args):
     '''Produce a deterministic hash for the collection of objects passed as
     an argument.'''
     from hashlib import sha256
-    import json
     hasher = sha256()
     for thing in args:
         LOGGER.debug('hashing: %r', thing)
