@@ -448,8 +448,8 @@ def test_ifp_adjoint_edition(datadir):
     assert t4_res.scan_res.times['simulation_time'][-1] == 77
     assert t4_res.scan_res.times['initialization_time'] == 3
     t4rb = t4_res.build_response_book()
-    assert (list(t4rb.available_values('response_type'))
-            == ['keff', 'ifp_adj_crit_edition', 'auto_keff'])
+    assert (set(t4rb.available_values('response_type'))
+            == set(('keff', 'ifp_adj_crit_edition', 'auto_keff')))
     assert (sorted(t4rb.keys())
             == ['ifp_cycle_length', 'ifp_response', 'index', 'keff_estimator',
                 'response_function', 'response_index', 'response_type',
@@ -604,7 +604,6 @@ def test_pertu(datadir):
                                 include=('perturbation_rank',), squeeze=True)
     assert pertu_vol2['response_index'] == 0
     assert pertu_vol2['score_index'] == 0
-    assert pertu_vol2['index'] == 3
     assert pertu_vol2['response_type'] == 'score'
     assert pertu_vol2['perturbation_rank'] == 0
 
