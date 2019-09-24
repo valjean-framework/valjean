@@ -1439,7 +1439,7 @@ def convert_keff(res):
 
     See :ref:`eponine-keff-stdarrays` for more details.
     '''
-    LOGGER.debug("[38;5;56mClefs:%s[0m", list(res.keys()))
+    LOGGER.debug("Clefs:%s", list(res.keys()))
     usedbatchs = res['used_batches']
     if 'not_converged' in res:
         return {'used_batches': res['used_batches'],
@@ -1513,8 +1513,8 @@ class GreenBandsDictBuilder(DictBuilder):
                         self.bins['v'].append(isource[1][1])
                         self.bins['w'].append(isource[1][2])
                 if len(gbres['spectrum_res']) > 1:
-                    LOGGER.warning("\x1b[31mMore than one spectrum_res while "
-                                   "only one foreseen for the moment\x1b[0m")
+                    LOGGER.warning("More than one spectrum_res while "
+                                   "only one foreseen for the moment")
                 ispectrum = gbres['spectrum_res'][0]['spectrum_vals']
                 for iebin, ivals in enumerate(ispectrum):
                     if ist == 0 and ires == 0:
@@ -1875,15 +1875,15 @@ def convert_kij_keff(res):
     egvec = np.array(list(zip(*res['kij_leigenvec']))[1])
     nbins = res['nb_fissile_vols'] if 'nb_fissile_vols' in res else len(egvec)
     if nbins != len(egvec):
-        LOGGER.warning("\x1b[31mIssue in number of fissile volumes "
-                       "and size of eigenvector\x1b[0m")
+        LOGGER.warning("Issue in number of fissile volumes "
+                       "and size of eigenvector")
     spacebins = np.array(res['kij_matrix'][0])
     if spacebins.shape[0] != len(res['kij_matrix'][1:]):
-        LOGGER.warning("\x1b[31mStrange: not the dimension in space mesh and "
-                       "matrix, matrix expected to be square\x1b[0m")
+        LOGGER.warning("Strange: not the dimension in space mesh and "
+                       "matrix, matrix expected to be square")
     if spacebins.shape[0] != nbins:
-        LOGGER.warning("\x1b[31mStrange: not the same number of space bins "
-                       "and eigenvectors\x1b[0m")
+        LOGGER.warning("Strange: not the same number of space bins "
+                       "and eigenvectors")
     # Fill the 3 matrices
     kijmat = np.full([nbins, nbins], np.nan)
     for irow, row in enumerate(res['kij_matrix'][1:]):

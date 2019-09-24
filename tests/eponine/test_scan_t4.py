@@ -683,8 +683,9 @@ def test_no_a_t4_opt_bad_bins_2(datadir, caplog):
     '''
     with pytest.raises(T4ParserException):
         T4Parser(str(datadir/"failure_noaopt_uniform_sources.d.res"))
-    assert ("IndexError: all (sub-)spectra should have the same bins.\n"
-            "Please make sure you run Tripoli-4 with option '-a'."
+    assert ("IndexError: all (sub-)spectra should have the same bins."
+            in caplog.text)
+    assert ("Please make sure you run Tripoli-4 with option '-a'."
             in caplog.text)
 
 

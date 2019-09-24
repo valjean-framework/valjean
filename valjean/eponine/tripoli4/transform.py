@@ -226,7 +226,7 @@ def convert_score(toks):
 
 
 def _debug_print(toks):
-    print("\x1b[1;35mFOUND THE POINT\x1b[0m")
+    print("FOUND THE POINT")
     # print(toks)
     print("List:", toks.asList())
     print("Dict:", toks.asDict())

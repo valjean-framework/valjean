@@ -142,8 +142,8 @@ class BatchResultScanner:
             if self.nb_mesh_lines == self.mesh_limit+1:
                 self.count_mesh_exceeding += 1
                 if self.count_mesh_exceeding < 5:
-                    LOGGER.warning("[31mToo much mesh lines, keeping %d "
-                                   "lines, if needed change mesh_limit [0m",
+                    LOGGER.warning("Too much mesh lines, keeping %d "
+                                   "lines, if needed change mesh_limit ",
                                    self.mesh_limit)
         else:
             self.result.append(line)
@@ -213,8 +213,8 @@ class BatchResultScanner:
 
         :return: string build from list of strings junction
         '''
-        LOGGER.debug("[1;31mEND FLAG found, batch number = %d, "
-                     "current batch = %d, greater batch = %d[0m",
+        LOGGER.debug("END FLAG found, batch number = %d, "
+                     "current batch = %d, greater batch = %d",
                      self.batch_counts['number'],
                      self.batch_counts['current'],
                      self.batch_counts['greater'])
@@ -344,9 +344,9 @@ class Scan(Mapping):
             self.reqbatchs = (int(line.split()[1])
                               * (self.tasks-2 if self.tasks > 1 else 1))
         elif "PACKET_LENGTH" in line:
-            LOGGER.info("[1mBatchs grouped by packets -> "
+            LOGGER.info("Batchs grouped by packets -> "
                         "number of batchs expected divided "
-                        "by PACKET_LENGTH in PARA[0m")
+                        "by PACKET_LENGTH in PARA")
             indpacket = line.split().index('PACKET_LENGTH')
             if self.para:
                 self.reqbatchs //= int(line.split()[indpacket+1])
@@ -465,7 +465,7 @@ class Scan(Mapping):
             message = ("Wrong batch number required, {} doesn't exist, "
                        "please change it to an existing one"
                        .format(batch_number))
-            LOGGER.error("[1;31m%s[0m", message)
+            LOGGER.error(message)
             raise
             # raise type(err)(message).with_traceback(sys.exc_info()[2])
 

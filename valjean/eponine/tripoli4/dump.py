@@ -51,7 +51,7 @@ def result_to_str_according_type(res, depth=0):
     :const MAX_DEPTH: maximum of prints level
     '''
     if depth > MAX_DEPTH:
-        return "\x1b[1;31mMAX_DEPTH = {} reached\x1b[0m\n".format(MAX_DEPTH)
+        return "MAX_DEPTH = {} reached\n".format(MAX_DEPTH)
     lstr = []
     if isinstance(res, dict):
         lstr.append(dict_to_str(res, depth+1))
@@ -73,16 +73,15 @@ def dict_to_str(diction, depth=0):
     :returns: str
     '''
     lstr = []
-    printedepth = "3"+str(depth) if depth < 8 else "9"+str(depth-7)
     dictkeys = (list(diction.keys()) if isinstance(diction, OrderedDict)
                 else sorted(diction))
-    lstr.append("\x1b[{0}mDict with keys = {1}\x1b[0m"
-                .format(printedepth, dictkeys))
+    lstr.append("Dict with keys = {}"
+                .format(dictkeys))
     if depth > MAX_DEPTH:
-        return "\x1b[1;31mMAX_DEPTH = {} reached\x1b[0m\n".format(MAX_DEPTH)
+        return "MAX_DEPTH = {} reached\n".format(MAX_DEPTH)
     for key in dictkeys:
         spaces = "  "*depth
-        key_str = "\x1b[94m{0}{1}\x1b[0m".format(spaces, key)
+        key_str = spaces + key
         if isinstance(diction[key], (dict, list, np.ndarray, np.generic)):
             lstr.append("{0} {1}".format(
                 key_str, result_to_str_according_type(diction[key], depth)))
@@ -105,7 +104,7 @@ def list_to_str(liste, depth=0):
     #     return "\n"
     if isinstance(liste[0], (dict, list, np.ndarray)):
         if depth > MAX_DEPTH:
-            lstr.append("\x1b[1;31mMAX_DEPTH = {} reached\x1b[0m"
+            lstr.append("MAX_DEPTH = {} reached"
                         .format(MAX_DEPTH))
             return '\n'.join(lstr)
         for elt in liste:
@@ -133,12 +132,11 @@ def response_to_str(res, depth=0):
     assert 'results' in res.keys()
     lstr = []
     # First print the metadata (in alphabetic order)
-    lstr.append("\x1b[1;35m'response metadata'\x1b[0m")
+    lstr.append("'response metadata'")
     lstr.append(dict_to_str({k: v for k, v in res.items() if k != 'results'},
                             depth))
     # Then print the results
-    lstr.append("\x1b[1;35m'results' \x1b[0;36m({0})\x1b[0m"
-                " -> \x1b[1m{1}\x1b[0m"
+    lstr.append("'results' ({}) -> {}"
                 .format(type(res['results']), res['response_type']))
     rres = res['results']
     if not isinstance(rres, (list, dict)):
@@ -163,33 +161,31 @@ def parsing_result_to_str(toks):
     '''
     depth = 0
     lstr = []
-    lstr.append("\n\x1b[1m--------------------- "
+    lstr.append("\n--------------------- "
                 "Structured parsed result"
-                " ----------------------\x1b[0m")
+                " ----------------------")
     for res in toks:
         depth += 1
         if depth > MAX_DEPTH:
             break
-        lstr.append("\n\x1b[3{0}mKeys: {1}\x1b[0m"
-                    .format(depth, sorted(list(res.keys()))))
+        lstr.append("\nKeys: {}".format(sorted(list(res.keys()))))
         for key in sorted(res):
             depth += 1
             if depth > MAX_DEPTH:
                 break
-            lstr.append("\n\x1b[3{0}m{1}\x1b[0m ".format(depth, key))
+            lstr.append("\n{} ".format(key))
             if key == 'list_responses':
-                lstr.append("Number of responses: {0}".format(len(res[key])))
+                lstr.append("Number of responses: {}".format(len(res[key])))
                 for iresp, resp in enumerate(res[key]):
                     depth += 1
-                    lstr.append("\nRESPONSE {0}".format(iresp))
+                    lstr.append("\nRESPONSE {}".format(iresp))
                     lstr.append(response_to_str(resp, depth))
                     depth -= 1
             else:
                 lstr.append(result_to_str_according_type(res[key], depth))
             depth -= 1
         depth -= 1
-    lstr.append("\x1b[1m------------------------------------------------------"
-                "\x1b[0m")
+    lstr.append("------------------------------------------------------")
     return '\n'.join(lstr)
 
 
