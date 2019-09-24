@@ -149,7 +149,7 @@ def repr_testresultstudent_silent(result):
     return repr_student_silent(result)
 
 
-def repr_student_silent(result):
+def repr_student_silent(_result):
     '''Function to generate a silent table for the Student test (only tells if
     the test was successful or not).
 
@@ -447,7 +447,7 @@ def repr_metadata_full_details(result):
 
     Different levels of verbosity should be allowed.
     '''
-    samp_names = [name for name in result.test.dmd.keys()]
+    samp_names = list(result.test.dmd)
     keys = []
     tdict = {name: [] for name in samp_names}
     hdict = {name: [] for name in samp_names}
@@ -456,11 +456,11 @@ def repr_metadata_full_details(result):
         for nam in samp_names:
             tdict[nam].append(str(result.test.all_md[dkey][nam]))
             hdict[nam].append(not result.dict_res[dkey][nam])
-    ocols = [col for col in tdict.values()]
+    ocols = list(tdict.values())
     highl = [[False]*len(keys)]
-    highl.extend([hl for hl in hdict.values()])
+    highl.extend(hdict.values())
     heads = ['key']
-    heads.extend([name for name in result.test.dmd.keys()])
+    heads.extend(result.test.dmd)
     table = TableTemplate(keys, *ocols,
                           highlights=highl,
                           headers=heads)
@@ -492,7 +492,7 @@ def repr_metadata_intermediate(result):
     '''
     if not result.only_failed_comparisons():
         return repr_metadata_silent(result)
-    samp_names = [name for name in result.test.dmd.keys()]
+    samp_names = list(result.test.dmd)
     keys = []
     tdict = {name: [] for name in samp_names}
     hdict = {name: [] for name in samp_names}
@@ -501,11 +501,11 @@ def repr_metadata_intermediate(result):
         for nam in samp_names:
             tdict[nam].append(str(result.only_failed_comparisons()[dkey][nam]))
             hdict[nam].append(not result.dict_res[dkey][nam])
-    ocols = [col for col in tdict.values()]
+    ocols = list(tdict.values())
     highl = [[False]*len(keys)]
-    highl.extend([hl for hl in hdict.values()])
+    highl.extend(hdict.values())
     heads = ['key']
-    heads.extend([name for name in result.test.dmd.keys()])
+    heads.extend(result.test.dmd)
     table = TableTemplate(keys, *ocols,
                           highlights=highl,
                           headers=heads)
