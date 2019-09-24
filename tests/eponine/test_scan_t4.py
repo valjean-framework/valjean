@@ -384,7 +384,7 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     assert t4_res.scan_res.normalend
     with open(str(datadir/"entropy_debug.log"), 'r') as ifile:
         for line in ifile:
-            assert line in caplog.text, "Line %s not found in caplog." % line
+            assert line in caplog.text, "Line %r not found in caplog." % line
 
 
 def test_ifp(datadir):
