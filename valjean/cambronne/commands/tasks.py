@@ -1,6 +1,7 @@
 '''Module for the ``tasks`` subcommand.'''
 
 
+import re
 from ... import LOGGER
 from ..common import Command, init_env, write_env
 
@@ -36,6 +37,9 @@ class TasksCommand(Command):
         rm_cmd.add_argument('name', metavar='NAME', nargs='+',
                             help='the names of the environment sections to '
                             'delete.')
+        rm_cmd.add_argument('-e', '--regexp', action='store_true',
+                            help='interpret the arguments as regular '
+                            'expressions')
         rm_cmd.set_defaults(func=self.remove)
 
     # pylint: disable=no-self-use
@@ -73,9 +77,17 @@ class TasksCommand(Command):
         env = init_env(path=args.env_path, skip_read=False,
                        fmt=args.env_format)
         for name in args.name:
-            if name in env:
-                del env[name]
+            if args.regexp:
+                regexp = re.compile(name)
+                to_delete = set(task_name for task_name in env
+                                if re.search(regexp, task_name))
+                for task_name in to_delete:
+                    LOGGER.info('deleting task %s', task_name)
+                    del env[task_name]
             else:
-                LOGGER.error('cannot delete task %s (missing from the '
-                             'environment)', name)
+                if name in env:
+                    del env[name]
+                else:
+                    LOGGER.error('cannot delete task %s (missing from the '
+                                 'environment)', name)
         write_env(env=env, path=args.env_path, fmt=args.env_format)
