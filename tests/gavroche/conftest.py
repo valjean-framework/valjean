@@ -2,10 +2,11 @@
 
 # pylint: disable=wrong-import-order,no-value-for-parameter
 # pylint: disable=redefined-outer-name
+import string
 from collections import OrderedDict
 
 import pytest
-from hypothesis.strategies import composite, just, integers
+from hypothesis.strategies import composite, just, integers, dictionaries, text
 import numpy as np
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
@@ -370,3 +371,15 @@ def valid_tests(request):
 def invalid_tests(request):
     '''Return invalid lists of :class:`~.Test` objects (or not even lists!).'''
     return request.param
+
+
+############################################
+#  fixtures for the diagnostics submodule  #
+############################################
+
+@composite
+def metadata_dicts(draw, min_size=1):
+    '''Generate a dictionary of metadata (string to string).'''
+    return draw(dictionaries(keys=text(alphabet=string.printable),
+                             values=text(alphabet=string.printable),
+                             min_size=min_size))
