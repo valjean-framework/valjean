@@ -17,6 +17,9 @@ import numpy as np
 from hypothesis import given, settings, HealthCheck, note
 from hypothesis.strategies import just, integers, data, lists, text
 from hypothesis.extra.numpy import array_shapes
+
+from ..context import valjean  # pylint: disable=wrong-import-order
+
 from valjean import LOGGER
 from valjean.javert.templates import (PlotTemplate, join, TableTemplate,
                                       CurveElements)

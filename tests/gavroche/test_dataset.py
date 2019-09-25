@@ -9,6 +9,8 @@ import numpy as np
 from hypothesis import given, note, settings, HealthCheck
 from hypothesis.strategies import data, floats, one_of
 
+from ..context import valjean  # pylint: disable=unused-import,C0411
+
 from valjean.gavroche import dataset as gd
 
 from ..eponine.conftest import repeat, slice_tuples
