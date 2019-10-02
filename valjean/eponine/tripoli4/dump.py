@@ -5,8 +5,6 @@ Each function returns a string that is printed in the LOGGER in the main
 function, :func:`print_result` that acts directly on the
 ``pyparsing.ParseResults``. This main function is called in a
 ``pyparsing.ParseElement.setParseAction`` in :mod:`~grammar`.
-
-Don't be surprised: colors are used for printing here :-)
 '''
 
 import logging
@@ -16,6 +14,7 @@ from ... import LOGGER
 
 
 MAX_DEPTH = 0
+MAX_DEPTH_STR = "MAX_DEPTH = {} reached\n".format(MAX_DEPTH)
 
 
 def array_to_str(array):
@@ -26,14 +25,11 @@ def array_to_str(array):
     '''
     lstr = []
     if array.shape != ():
-        lstr.append("{0}".format(type(array)))
-        lstr.append("shape: {0}".format(array.shape))
-        lstr.append("squeezed: {0}".format(
-            np.array2string(np.squeeze(array), precision=6,
-                            suppress_small=True,
-                            formatter={'float_kind': '{:.6e}'.format})))
-        if array.dtype.names:
-            lstr.append("dtype: {0}".format(array.dtype))
+        lstr.append("{}, shape: {}, dtype: {}, squeezed:"
+                    .format(type(array), array.shape, array.dtype))
+        lstr.append(np.array2string(np.squeeze(array), precision=6,
+                                    suppress_small=True,
+                                    formatter={'float_kind': '{:.6e}'.format}))
     else:
         lstr.append("{0}, dtype: {1}".format(
             np.array2string(array, precision=6, suppress_small=True,
@@ -51,16 +47,17 @@ def result_to_str_according_type(res, depth=0):
     :const MAX_DEPTH: maximum of prints level
     '''
     if depth > MAX_DEPTH:
-        return "MAX_DEPTH = {} reached\n".format(MAX_DEPTH)
+        return MAX_DEPTH_STR
+    spaces = "  "*depth
     lstr = []
     if isinstance(res, dict):
-        lstr.append(dict_to_str(res, depth+1))
+        lstr.append(dict_to_str(res, depth))
     elif isinstance(res, list):
-        lstr.append(list_to_str(res, depth+1))
+        lstr.append(list_to_str(res, depth))
     elif isinstance(res, (np.ndarray, np.generic)):
         lstr.append(array_to_str(res))
     else:
-        lstr.append("{!s}".format(res))
+        lstr.append("{}{!s}".format(spaces, res))
     return '\n'.join(lstr)
 
 
@@ -72,14 +69,15 @@ def dict_to_str(diction, depth=0):
     :const MAX_DEPTH: maximum of prints level
     :returns: str
     '''
+    spaces = "  "*depth
     lstr = []
     dictkeys = (list(diction.keys()) if isinstance(diction, OrderedDict)
                 else sorted(diction))
-    lstr.append("Dict with keys = {}"
-                .format(dictkeys))
+    lstr.append("{}Dict with keys = {}".format(spaces, dictkeys))
     if depth > MAX_DEPTH:
-        return "MAX_DEPTH = {} reached\n".format(MAX_DEPTH)
+        return MAX_DEPTH_STR
     for key in dictkeys:
+        depth += 1
         spaces = "  "*depth
         key_str = spaces + key
         if isinstance(diction[key], (dict, list, np.ndarray, np.generic)):
@@ -87,6 +85,7 @@ def dict_to_str(diction, depth=0):
                 key_str, result_to_str_according_type(diction[key], depth)))
         else:
             lstr.append("{0} {1}".format(key_str, diction[key]))
+        depth -= 1
     return '\n'.join(lstr)
 
 
@@ -98,19 +97,23 @@ def list_to_str(liste, depth=0):
     :const MAX_DEPTH: maximum of prints level
     :returns: str
     '''
+    spaces = "  "*depth
     lstr = []
-    lstr.append("list of {0} elements -> ".format(len(liste)))
+    lstr.append("{}list of {} elements -> ".format(spaces, len(liste)))
     # if not liste:
     #     return "\n"
     if isinstance(liste[0], (dict, list, np.ndarray)):
         if depth > MAX_DEPTH:
-            lstr.append("MAX_DEPTH = {} reached"
-                        .format(MAX_DEPTH))
+            lstr.append(MAX_DEPTH_STR)
             return '\n'.join(lstr)
-        for elt in liste:
-            lstr.append(result_to_str_according_type(elt, depth))
+        for ielt, elt in enumerate(liste):
+            depth += 1
+            lstr.append("{}elt {}: {}"
+                        .format(spaces, ielt,
+                                result_to_str_according_type(elt, depth)))
+            depth -= 1
     else:
-        lstr.append("{}".format(liste))
+        lstr.append("{}{}".format(spaces, liste))
     return '\n'.join(lstr)
 
 
@@ -128,17 +131,20 @@ def response_to_str(res, depth=0):
     :returns: str
     '''
     if depth > MAX_DEPTH:
-        return "MAX_DEPTH = {} reached".format(MAX_DEPTH)
+        return MAX_DEPTH_STR
     assert 'results' in res.keys()
+    spaces = "  "*depth
     lstr = []
     # First print the metadata (in alphabetic order)
-    lstr.append("'response metadata'")
+    lstr.append(spaces + "'response metadata'")
     lstr.append(dict_to_str({k: v for k, v in res.items() if k != 'results'},
                             depth))
     # Then print the results
-    lstr.append("'results' ({}) -> {}"
-                .format(type(res['results']), res['response_type']))
+    lstr.append("{}{} ({}) -> {}".format(spaces, 'results',
+                                         type(res['results']),
+                                         res['response_type']))
     rres = res['results']
+    depth += 1
     if not isinstance(rres, (list, dict)):
         if isinstance(rres, np.ndarray):
             lstr.append(array_to_str(rres))
@@ -149,6 +155,7 @@ def response_to_str(res, depth=0):
         lstr.append(list_to_str(rres, depth))
     else:
         lstr.append(dict_to_str(rres, depth))
+    depth -= 1
     return '\n'.join(lstr)
 
 
@@ -161,9 +168,8 @@ def parsing_result_to_str(toks):
     '''
     depth = 0
     lstr = []
-    lstr.append("\n--------------------- "
-                "Structured parsed result"
-                " ----------------------")
+    intro_str = "\n" + "-"*30 + " Structured parsed result " + "-"*30
+    lstr.append(intro_str)
     for res in toks:
         depth += 1
         if depth > MAX_DEPTH:
@@ -175,18 +181,20 @@ def parsing_result_to_str(toks):
                 break
             lstr.append("\n{} ".format(key))
             if key == 'list_responses':
-                lstr.append("Number of responses: {}".format(len(res[key])))
+                lstr.append("\nNumber of responses: {}".format(len(res[key])))
                 for iresp, resp in enumerate(res[key]):
                     depth += 1
-                    lstr.append("\nRESPONSE {}".format(iresp))
+                    spaces = "  "*depth
+                    lstr.append("\n\n{}RESPONSE {}".format(spaces, iresp))
                     lstr.append(response_to_str(resp, depth))
                     depth -= 1
             else:
                 lstr.append(result_to_str_according_type(res[key], depth))
             depth -= 1
+            lstr.append('\n')
         depth -= 1
-    lstr.append("------------------------------------------------------")
-    return '\n'.join(lstr)
+    lstr.append("-"*80)
+    return ''.join(lstr)
 
 
 def dump_in_logger(toks):

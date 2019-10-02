@@ -379,7 +379,7 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     in same jdd), but long.
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
-    monkeypatch.setattr("valjean.eponine.tripoli4.dump.MAX_DEPTH", 6)
+    monkeypatch.setattr("valjean.eponine.tripoli4.dump.MAX_DEPTH", 8)
     t4_res = T4Parser(str(datadir/"entropy.d.res.ceav5"), -1, mesh_lim=10)
     assert t4_res
     assert t4_res.scan_res.normalend
