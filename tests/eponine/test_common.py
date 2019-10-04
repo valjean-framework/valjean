@@ -4,6 +4,7 @@
 parsing and building output objects (typically from :mod:`numpy`).
 '''
 
+import string
 import numpy as np
 from hypothesis import given, note, settings, assume, event
 from hypothesis.strategies import (integers, lists, composite, tuples, text,
@@ -925,7 +926,7 @@ def keff_auto_estimation(draw, n_estim):
         estimators.append("MACRO KCOLL")
         if n_estim > 4:
             estimators.append(' '.join(draw(
-                lists(elements=text(alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                lists(elements=text(alphabet=string.ascii_uppercase,
                                     min_size=3, max_size=8),
                       min_size=1, max_size=3))))
     disc_batchs = draw(lists(elements=integers(1, 20),

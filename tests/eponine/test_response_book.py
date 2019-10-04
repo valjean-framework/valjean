@@ -5,6 +5,7 @@ various objects typically coming from parsing result.
 
 # pylint: disable=no-value-for-parameter
 
+import string
 from hypothesis import given, note, settings, HealthCheck
 from hypothesis.strategies import (integers, lists, composite, text, booleans,
                                    dictionaries, one_of, data, tuples,
@@ -15,16 +16,13 @@ from valjean.eponine.response_book import Index, ResponseBook
 from ..context import valjean  # pylint: disable=unused-import
 
 
-DEF_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'
-
-
 @composite
 def non_empty_dicts(draw, elts):
     '''Strategy for generating non empty dictionaries.'''
     return draw(dictionaries(
-        keys=text(alphabet=DEF_ALPHABET, min_size=1, max_size=10),
+        keys=text(alphabet=string.printable, min_size=1, max_size=10),
         values=one_of(integers(0, 10),
-                      text(alphabet=DEF_ALPHABET, min_size=1),
+                      text(alphabet=string.printable, min_size=1),
                       elts),
         min_size=1, max_size=5))
 
@@ -200,11 +198,11 @@ def indexes(draw):
     index = Index()
     nb_ext_keys = draw(integers(3, 6))
     for _ in range(nb_ext_keys):
-        ekey = draw(text(alphabet=DEF_ALPHABET, min_size=2, max_size=6))
+        ekey = draw(text(alphabet=string.printable, min_size=2, max_size=6))
         nb_int_keys = draw(integers(0, 5))
         for _ in range(nb_int_keys):
             ikey = draw(one_of(
-                text(alphabet=DEF_ALPHABET, min_size=2, max_size=6),
+                text(alphabet=string.printable, min_size=2, max_size=6),
                 integers(0, 10),
                 tuples(integers(0, 10), integers(0, 10))))
             index[ekey][ikey] = set(draw(lists(integers(0, 5),
@@ -276,10 +274,10 @@ def test_respbook_serializable(respl, tmpdir):
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(respl1=responses_lists(), respl2=responses_lists(),
        glob1=dictionaries(
-           keys=text(alphabet=DEF_ALPHABET, min_size=1, max_size=5),
+           keys=text(alphabet=string.printable, min_size=1, max_size=5),
            values=integers(0, 10), max_size=5),
        glob2=dictionaries(
-           keys=text(alphabet=DEF_ALPHABET, min_size=1, max_size=5),
+           keys=text(alphabet=string.printable, min_size=1, max_size=5),
            values=integers(0, 10), max_size=5))
 def test_respbook_merge(respl1, respl2, glob1, glob2):
     '''The concatenation / addition of 2 ResponseBooks, with possible global

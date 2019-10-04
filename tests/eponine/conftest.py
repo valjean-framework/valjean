@@ -5,6 +5,7 @@ import pytest
 import os
 import sys
 import numpy as np
+import string
 from hypothesis import note
 from hypothesis.strategies import (lists, floats, composite, just, booleans,
                                    integers, text, none, one_of)
@@ -14,9 +15,6 @@ from collections import OrderedDict
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.eponine.base_dataset import BaseDataset
 from valjean.dyn_import import dyn_import
-
-
-DEF_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
 
 def finite():
@@ -82,7 +80,7 @@ def base_datasets(draw, elements=None, shape=None, dtype=None, coords=None):
 
 def cnames():
     '''Strategy fro generating names for coordinates.'''
-    return text(alphabet=DEF_ALPHABET, min_size=1, max_size=5)
+    return text(alphabet=string.printable, min_size=1, max_size=5)
 
 
 @composite
