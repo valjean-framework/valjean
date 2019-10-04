@@ -8,6 +8,12 @@ from ..cosette.task import TaskStatus
 from ..gavroche.diagnostics.stats import TestOutcome
 from .templates import TableTemplate
 
+# turn off pylint warnings about invalid names in this file; there are just too
+# many long function names and they cannot be renamed because
+# javert.representation looks for them by programmatically constructing their
+# name based on the name of the test result class, the verbosity, etc.
+# pylint: disable=invalid-name
+
 
 def repr_testresultequal(result):
     '''Represent the result of a :class:`~.TestEqual` test.
