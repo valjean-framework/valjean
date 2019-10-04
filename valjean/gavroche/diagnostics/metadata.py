@@ -34,13 +34,17 @@ class TestResultMetadata(TestResult):
         '''Return only the failed comparisons. Structure is the same as the
         ``dict_res``.'''
         dresp = {key: self.test.all_md[key]
-                 for key, val in self.dict_res.items() 
+                 for key, val in self.dict_res.items()
                  if not all(val.values())}
         return dresp
 
 
 class TestMetadata(Test):
     '''A test that compares metadata.
+
+    .. todo::
+
+        Document the parameters...
     '''
 
     # pylint: disable=too-many-arguments
@@ -62,15 +66,14 @@ class TestMetadata(Test):
 
         Contains all the metadata for all samples.
         '''
-        all_keys = (set().union(*[set(md) for md in self.dmd.values()])
+        all_keys = (set(key for md in self.dmd.values() for key in md)
                     .difference(self.exclude))
+        # we could write the whole following loop as a nested dict
+        # comprehension, but let's not
         cdict = {}
         for key in all_keys:
-            for name, tmd in self.dmd.items():
-                if key not in tmd:
-                    cdict.setdefault(key, {}).update({name: MISSING})
-                else:
-                    cdict.setdefault(key, {}).update({name: tmd[key]})
+            cdict[key] = {name: tmd[key] if key in tmd else MISSING
+                          for name, tmd in self.dmd.items()}
         return cdict
 
     def compare_metadata(self):
@@ -78,7 +81,7 @@ class TestMetadata(Test):
         bdict = {}
         t0name = sorted(self.dmd)[0]
         for key, kdict in self.all_md.items():
-            bdict[key] = {_n: _v == kdict[t0name] for _n, _v in kdict.items()}
+            bdict[key] = {n: v == kdict[t0name] for n, v in kdict.items()}
         return bdict
 
     def evaluate(self):
