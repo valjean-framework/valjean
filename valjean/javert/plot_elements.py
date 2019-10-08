@@ -48,7 +48,7 @@ def dimension(bins, array_shape):
     return dim_name
 
 
-def repr_testresultstudent(result):
+def repr_testresultstudent(result, verbosity=None):
     '''Represent the Student test result as a plot.
 
     By default two :class:`~.templates.PlotTemplate` are returned in order to
@@ -178,10 +178,11 @@ def repr_datasets_values(result):
                                      else 'dataset '+str(ids)),
                               index=ids+1, yname='', errors=ds.error)
                 for ids, ds in enumerate(result.test.datasets)])
+    LOGGER.info("bins %s", bins)
     return [PlotTemplate(bins=bins, xname=dim, curves=cds)]
 
 
-def repr_testresultequal(result):
+def repr_testresultequal(result, verbosity=None):
     '''Represent the equal test result as a plot.
 
     :param result:  a test result.
@@ -191,7 +192,7 @@ def repr_testresultequal(result):
     return repr_datasets_values(result)
 
 
-def repr_testresultapproxequal(result):
+def repr_testresultapproxequal(result, verbosity=None):
     '''Represent the approx equal test result as a plot.
 
     :param result:  a test result.
@@ -199,3 +200,20 @@ def repr_testresultapproxequal(result):
     :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
     '''
     return repr_datasets_values(result)
+
+
+# def repr_testresultholmbonferroni(result):
+#     '''Represent the result of a :class:`~.TestHolmBonferroni` test as a
+#     plot (Student, equal, etc)
+
+#     :param  result: a test result.
+#     :type result: :class:`~.TestResultHolmBonferroni`
+#     :returns: Representation of a :class:`~.TestResultHolmBonferroni` as
+#         a plot (the first test result).
+#     :rtype: list(:class:`~.PlotTemplate`)
+#     '''
+#     LOGGER.info("In FullPlotRepresenter.repr_testresultholmbonferroni")
+#     class_name = result.__class__.__name__
+#     meth_name = 'repr_' + class_name.lower()
+#     LOGGER.info("current module:", )
+#     # return (result.first_test_res)
