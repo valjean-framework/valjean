@@ -60,6 +60,7 @@ from .. import LOGGER
 from . import table_elements as tab_elts
 from . import plot_elements as plt_elts
 
+
 class Representation:
     '''Class for representing test results as templates calling the available
     representers (tables or plots).
@@ -78,18 +79,16 @@ class Representation:
         self.representer = representer
         self.verbosity = verbosity
 
-    # @classmethod
-    # def from_verbosity(cls, verbosity=func):
-    #     def __call__(cls, result):
-    #         verb = self.verbosity.func(result)
-    #         self.representer(result, verb) ou verb, result
-
     def __call__(self, result):
         '''Dispatch handling of `result` to the ``__call__`` methods of the
         representer class.'''
+        if callable(self.verbosity):
+            verbosity = self.verbosity(result)
+        else:
+            verbosity = self.verbosity
         LOGGER.info("DANS LE CALL DE REPRESENTATION, verbosity = %s",
-                    self.verbosity)
-        res = self.representer(result, self.verbosity)
+                    verbosity)
+        res = self.representer(result, verbosity)
         if res is None:
             return []
         LOGGER.debug('representing the result of test %s as %s',
