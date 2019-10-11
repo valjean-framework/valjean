@@ -165,7 +165,7 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
-    'sphinx': ('https://www.sphinx-doc.org/en/stable/', None),
+    'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
     'pytest': ('https://docs.pytest.org/en/latest/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
@@ -186,16 +186,14 @@ doctest_test_doctest_blocks = ''
 # -- autodoc options ------------------------------------------------------
 
 # always list all class members
-autodoc_default_flags = ['members', 'special-members']
-
-# list members by order of appearance in the source file
-autodoc_member_order = 'bysource'
-
+autodoc_default_options = {'members': True,
+                           'member-order': 'bysource',
+                           'special-members': True}
 
 
 # pylint: disable=missing-docstring, unused-argument, too-many-arguments
 def skip_weakref(app, what, name, obj, skip, options):
-    if name == '__weakref__' or name == '__dict__' or name == '__module__':
+    if name in ('__weakref__', '__dict__', '__module__'):
         return True
     return skip
 

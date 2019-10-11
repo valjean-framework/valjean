@@ -1,5 +1,5 @@
-Welcome to valjean's documentation!
-===================================
+Welcome to the valjean documentation!
+=====================================
 
 .. figure:: images/valjean.jpg
    :align: center
@@ -13,6 +13,7 @@ Welcome to valjean's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   what
    getting_started
    devs
    modules
