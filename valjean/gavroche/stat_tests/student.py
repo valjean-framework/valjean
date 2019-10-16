@@ -319,10 +319,28 @@ True
 [[[ True  True  True]
   [ True  True  True]]]
 
+
+.. warning::
+    If the errors are equal to 0, so the Student denominator is 0, AND the
+    values are equal, so the numerator is also 0, the Student value is set to
+    0. In that case the comparison is considered as OK (boolean returning
+    True).
+
+    >>> ds10 = Dataset(np.array([3.2, 0, 5]), np.array([0, 0.5, 0]))
+    >>> ds11 = Dataset(np.array([3.2, 0, 5.2]), np.array([0, 0.5, 0]))
+    >>> tstudent = TestStudent(ds10, ds11, name='zeros')
+    >>> tstudent_res = tstudent.evaluate()
+    >>> bool(tstudent_res)
+    False
+    >>> print(np.array2string(tstudent_res.delta[0]))
+    [  0.   0. -inf]
+    >>> print(np.array2string(tstudent_res.oracles()))
+    [[ True  True False]]
 '''
 import numpy as np
 from scipy.stats import t, norm
 from ..test import check_bins, TestDataset, TestResult
+from ... import LOGGER
 
 
 class TestResultStudentException(Exception):
@@ -462,7 +480,14 @@ class TestStudent(TestDataset):
                   :class:`~valjean.gavroche.dataset.Dataset` type
         '''
         diff = ds1 - ds2
-        return diff.value / diff.error
+        studentt = diff.value / diff.error
+        if isinstance(diff.error, np.generic):
+            if diff.error == 0 and diff.value == 0:
+                LOGGER.debug('Student test set to 0 as giving 0 / 0')
+                return 0
+            return studentt
+        studentt[(diff.value == 0) & (diff.error == 0)] = 0
+        return studentt
 
     @staticmethod
     def pvalue(delta, ndf):
