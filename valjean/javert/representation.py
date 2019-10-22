@@ -86,8 +86,6 @@ class Representation:
             verbosity = self.verbosity(result)
         else:
             verbosity = self.verbosity
-        LOGGER.info("DANS LE CALL DE REPRESENTATION, verbosity = %s",
-                    verbosity)
         res = self.representer(result, verbosity)
         if res is None:
             return []
@@ -109,18 +107,15 @@ class Representer:
         based on the name of the class of `result`. This methods essentially
         implements a simplified, run-time version of the Visitor pattern.
         '''
-        LOGGER.info("In Representer.__call__")
+        LOGGER.debug("In Representer.__call__")
         class_name = result.__class__.__name__
         meth_name = 'repr_' + class_name.lower()
-        LOGGER.info("Trying to use %s", meth_name)
-        LOGGER.info("self = %s", self.__class__.__name__)
         try:
             meth = getattr(self, meth_name)
         except AttributeError:
-            LOGGER.info('\x1b[33mno representer for class %s with name %s\x1b[0m',
-                        class_name, meth_name)
+            LOGGER.debug('no representer for class %s with name %s',
+                         class_name, meth_name)
             return None
-        LOGGER.info("method was found for %s in %s", meth_name, self.__class__.__name__)
         return meth(result, verbosity)
 
 
@@ -134,20 +129,16 @@ class TableRepresenter(Representer):
     '''
 
     def __call__(self, result, verbosity=None):
-        LOGGER.info("\x1b[31mIn TableRepresenter.__call__, %s \x1b[0m",
-                    verbosity)
+        LOGGER.debug("In TableRepresenter.__call__, %s", verbosity)
         res = super().__call__(result, verbosity)
         if res is None:
-            LOGGER.info("res is NONE")
             class_name = result.__class__.__name__
             meth_name = 'repr_' + class_name.lower()
-            LOGGER.info("Looking for TR for %s", meth_name)
             try:
                 meth = getattr(tab_elts, meth_name)
             except AttributeError:
-                LOGGER.info('no table representer for %s', meth_name)
+                LOGGER.info('no table representer %s', meth_name)
                 return None
-            LOGGER.info("method was found for %s", meth_name)
             res = meth(result, verbosity)
         return res
 
@@ -188,7 +179,7 @@ class FullTableRepresenter(TableRepresenter):
             2 tables (the first test result and the Holm-Bonferroni result).
         :rtype: list(:class:`~.TableTemplate`)
         '''
-        LOGGER.info(
+        LOGGER.debug(
             "In FullTableRepresenter.repr_testresultholmbonferroni")
         return (super().__call__(result.first_test_res, verbosity)
                 + tab_elts.repr_testresultholmbonferroni(result, verbosity))
@@ -204,7 +195,7 @@ class PlotRepresenter(Representer):
     '''
 
     def __call__(self, result, verbosity=None):
-        LOGGER.info("\x1b[35mIn PlotRepresenter.__call__\x1b[0m")
+        LOGGER.debug("In PlotRepresenter.__call__")
         res = super().__call__(result, verbosity)
         if res is None:
             class_name = result.__class__.__name__
@@ -212,10 +203,8 @@ class PlotRepresenter(Representer):
             try:
                 meth = getattr(plt_elts, meth_name)
             except AttributeError:
-                LOGGER.info('no plot representation for class %s', meth_name)
-                LOGGER.info("returning None")
+                LOGGER.info('no plot representer %s', meth_name)
                 return None
-            LOGGER.info("Getting the method, so the plot")
             res = meth(result, verbosity)
         return res
 
@@ -242,9 +231,7 @@ class PlotRepresenter(Representer):
             a plot (the first test result).
         :rtype: list(:class:`~.PlotTemplate`)
         '''
-        LOGGER.info(
-            "In PlotRepresenter.repr_testresultholmbonferroni, %s",
-            verbosity)
+        LOGGER.debug("In PlotRepresenter.repr_testresultholmbonferroni")
         return self(result.first_test_res, verbosity)
 
 
@@ -277,7 +264,7 @@ class FullPlotRepresenter(PlotRepresenter):
             a plot (the first test result).
         :rtype: list(:class:`~.PlotTemplate`)
         '''
-        LOGGER.info(
+        LOGGER.debug(
             "In FullPlotRepresenter.repr_testresultholmbonferroni")
         return self(result.first_test_res, verbosity)
 

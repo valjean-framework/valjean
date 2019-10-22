@@ -22,8 +22,9 @@ class TestResultMetadata(TestResult):
         self.dict_res = dict_res
 
     def __bool__(self):
-        aresp = [all(val.values()) for val in self.dict_res.values()]
-        return all(aresp)
+        # aresp = [all(val.values()) for val in self.dict_res.values()]
+        # return all(aresp)
+        return all(v for val in self.dict_res.values() for v in val.values())
 
     def per_key(self):
         '''Test result sorted by key.'''
@@ -48,15 +49,15 @@ class TestMetadata(Test):
     '''
 
     # pylint: disable=too-many-arguments
-    def __init__(self, dmd, name, description='',
+    def __init__(self, dict_md, name, description='',
                  exclude=('results', 'index', 'score_index', 'response_index',
                           'response_type'),
                  include=None):
         super().__init__(name=name, description=description)
-        if not isinstance(dmd, dict):
+        if not isinstance(dict_md, dict):
             raise TypeError('Metadata should be given as a dictionary '
                             'name: dict of metadata')
-        self.dmd = dmd
+        self.dmd = dict_md
         self.exclude = exclude
         self.include = include if include is not None else []
         self.all_md = self.build_metadata_dict()

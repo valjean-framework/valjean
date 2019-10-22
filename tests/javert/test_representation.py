@@ -160,8 +160,8 @@ def test_spam_repr(caplog, str_choice, full_repr):
     assert bool(spamres) == (str_choice == 'spam')
     templates = full_repr(spamres)
     assert templates == []
-    loginfo_tabrepr = "no table representation for class TestResultSpam"
-    loginfo_pltrepr = "no plot representation for class TestResultSpam"
+    loginfo_tabrepr = "no table representer repr_testresultspam"
+    loginfo_pltrepr = "no plot representer repr_testresultspam"
     assert loginfo_tabrepr in caplog.text
     assert loginfo_pltrepr in caplog.text
     tabrepresenter = TableRepresenter()

@@ -24,8 +24,8 @@ def repr_testresultequal(result, verbosity=None):
     :returns: Representation of a :class:`~.TestResultEqual` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    LOGGER.info("\x1b[34mIN repr_testresultequal, %s, res = %s\x1b[0m",
-                verbosity, bool(result))
+    LOGGER.debug("IN repr_testresultequal, %s, res = %s",
+                 verbosity, bool(result))
     if verbosity == Verbosity.SILENT and bool(result):
         return []
     return repr_equal(result, 'equal?')
@@ -40,7 +40,7 @@ def repr_equal(result, result_header):
     :returns: Representation of a :class:`~.TestResultEqual` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    LOGGER.info("In repr_equal")
+    LOGGER.debug("In repr_equal")
     dscols = tuple((ds.value, eq)
                    for ds, eq in zip(result.test.datasets, result.equal))
     heads = [('reference',)]
@@ -113,8 +113,7 @@ def repr_testresultstudent(result, verbosity=None):
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    LOGGER.info("\x1b[34mstudent repr, %s, res = %s\x1b[0m",
-                verbosity, bool(result))
+    LOGGER.debug("student repr, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT and bool(result):
         return []
     if verbosity == Verbosity.SUMMARY:
@@ -131,7 +130,7 @@ def repr_student(result, result_header):
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    LOGGER.info("In repr_student")
+    LOGGER.debug("In repr_student")
     oracles = result.oracles()
     dscols = tuple((ds.value, ds.error, delta, studbool)
                    for ds, delta, studbool in zip(result.test.datasets,
@@ -174,7 +173,7 @@ def repr_student_silent(_result):
 
     Different levels of verbosity should be allowed.
     '''
-    LOGGER.info("sudent silent")
+    LOGGER.debug("sudent silent")
     return []
 
 
@@ -187,7 +186,7 @@ def repr_testresultstudent_summary(result):
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    LOGGER.info("repr_testresultstudent_summary found")
+    LOGGER.debug("repr_testresultstudent_summary found")
     return repr_student_summary(result)
 
 
@@ -197,8 +196,8 @@ def repr_student_summary(result):
 
     Different levels of verbosity should be allowed.
     '''
-    LOGGER.info("repr_student_summary found")
-    if bool(result):
+    LOGGER.debug("repr_student_summary found")
+    if result:
         return [TableTemplate(["Student test:"], ["OK"],
                               highlights=[[False], [False]])]
     return [TableTemplate(["Student test:"], ["KO"],
@@ -228,8 +227,7 @@ def repr_testresultbonferroni(result, verbosity=None):
     :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    LOGGER.info("\x1b[34mbonf repr, %s, res = %s\x1b[0m",
-                verbosity, bool(result))
+    LOGGER.debug("bonf repr, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT and bool(result):
         return []
     return repr_bonferroni(result, 'Bonferroni?')
@@ -272,7 +270,7 @@ def repr_testresultholmbonferroni(result, verbosity=None):
         table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    LOGGER.info("\x1b[34mHB res, %s, res = %s\x1b[0m", verbosity, bool(result))
+    LOGGER.debug("HB res, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT:
         if bool(result):
             return []
@@ -294,7 +292,6 @@ def repr_holm_bonferroni(result, result_header):
         table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    print("\x1b[31mOn est ici !\x1b[0m")
     ndatasets = len(result.first_test_res.test.datasets)
     oracles = list(result.oracles())
     highlights = [[False] * ndatasets] * 6  # 6 non-highlighted columns
@@ -310,7 +307,6 @@ def repr_holm_bonferroni(result, result_header):
         highlights=highlights,
         headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
                  'N rejected', result_header])
-    print(table_template)
     return [table_template]
 
 
@@ -324,7 +320,6 @@ def repr_testresultholmbonferroni_silent(result):
         table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    print("C'est silent qui est choisi...")
     return repr_holm_bonferroni_silent(result)
 
 
@@ -334,7 +329,7 @@ def repr_holm_bonferroni_silent(result):
 
     Different levels of verbosity should be allowed.
     '''
-    if bool(result):
+    if result:
         return [TableTemplate(["Holm-Bonferroni test:"], ["OK"],
                               highlights=[[False], [False]])]
     return [TableTemplate(["Holm-Bonferroni test:"], ["KO"],
@@ -351,8 +346,7 @@ def repr_holm_bonferroni_summary(result):
         table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    print("C'est summary qui est choisi")
-    if bool(result):
+    if result:
         return [TableTemplate(["Holm-Bonferroni test:"], ["OK"],
                               highlights=[[False], [False]])]
     return [TableTemplate(["Holm-Bonferroni test:"], ["KO"],
@@ -451,8 +445,7 @@ def repr_testresultmetadata(result, verbosity=None):
 
     Different levels of verbosity should be allowed.
     '''
-    LOGGER.info("\x1b[34mmetadata res, %s, res = %s\x1b[0m",
-                verbosity, bool(result))
+    LOGGER.debug("metadata res, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT:
         return []
     if verbosity == Verbosity.SUMMARY:
@@ -469,7 +462,7 @@ def repr_metadata(result):
 
     Different levels of verbosity should be allowed.
     '''
-    if bool(result):
+    if result:
         return [TableTemplate(["Metadata:"], ["OK"],
                               highlights=[[False], [False]])]
     ko_list = list(result.only_failed_comparisons().keys())
@@ -478,7 +471,6 @@ def repr_metadata(result):
 
 
 def repr_testresultmetadata_full_details(result):
-    # pylint: disable=invalid-name
     '''Represent the result of a :class:`~.TestMetadata` test with all details.
 
     :param  result: a test result.
@@ -498,7 +490,7 @@ def repr_metadata_full_details(result):
 
     Different levels of verbosity should be allowed.
     '''
-    LOGGER.info("repr_metadata_full_details")
+    LOGGER.debug("repr_metadata_full_details")
     samp_names = list(result.test.dmd)
     keys = []
     tdict = {name: [] for name in samp_names}
@@ -534,7 +526,7 @@ def repr_testresultmetadata_intermediate(result):
     comparison will be represented. The comparison can fail for example if one
     is missing or if an name changed.
     '''
-    LOGGER.info("in repr_testresultmetadata_intermediate")
+    LOGGER.debug("in repr_testresultmetadata_intermediate")
     return repr_metadata_intermediate(result)
 
 
@@ -543,7 +535,7 @@ def repr_metadata_intermediate(result):
 
     Different levels of verbosity should be allowed.
     '''
-    LOGGER.info("repr_metadata_intermediate")
+    LOGGER.debug("repr_metadata_intermediate")
     if not result.only_failed_comparisons():
         return repr_metadata_silent(result)
     samp_names = list(result.test.dmd)
@@ -587,8 +579,8 @@ def repr_metadata_summary(result):
 
     Different levels of verbosity should be allowed.
     '''
-    LOGGER.info("repr_metadata_summary")
-    if bool(result):
+    LOGGER.debug("repr_metadata_summary")
+    if result:
         return [TableTemplate(["Metadata:"], ["OK"],
                               highlights=[[False], [False]])]
     return [TableTemplate(["Metadata:"], ["KO"],
@@ -612,10 +604,10 @@ def repr_testresultmetadata_silent(result):
     return repr_metadata_silent(result)
 
 
-def repr_metadata_silent(result):
+def repr_metadata_silent(_result):
     '''Function to generate a table from the metadata test results.
 
     Different levels of verbosity should be allowed.
     '''
-    LOGGER.info("repr_metadata_silent")
+    LOGGER.debug("repr_metadata_silent")
     return []
