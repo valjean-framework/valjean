@@ -249,6 +249,8 @@ _respname_kw = Keyword("RESPONSE NAME")
 _scorename_kw = Keyword("SCORE NAME")
 _energysplitname_kw = Keyword("ENERGY DECOUPAGE NAME")
 _nusplitname_kw = Keyword("DECOUPAGE NAME")
+_respfiltered_kw = Keyword("RESPONSE FILTERED BY")
+_respfiltcompos_kw = Keyword("COMPOSITIONS")
 _particule_kw = Keyword("PARTICULE")
 _incparticle_kw = Keyword("INCIDENT PARTICULE")
 _reactiononnucl_kw = Keyword("reaction on nucleus")
@@ -385,6 +387,7 @@ _gbsourcenum_kw = Keyword("SOURCE NUMBER :")
 _gbsourcetab_kw = Keyword("SOURCE TABULATION :")
 
 # KIJ matrix
+_kijlefteigenval_kw = Keyword("left_eigenvalues called")
 _kijmkeff_kw = Keyword("kij-keff =")
 _kijdomratio_kw = Keyword("dominant ratio =")
 _kijeigenval_kw = Keyword("eigenvalues (re, im)")
@@ -503,6 +506,12 @@ _nusplit = (Suppress(_nusplitname_kw + ':')
 respdesc = (_respfunc + Optional(_respname) + Optional(_scorename)
             + Optional(_energysplit | _nusplit))
 
+_respfilter = (Suppress(_respfiltered_kw) + _inums('nb_filtered_compos')
+               + Suppress(_respfiltcompos_kw + ':')
+               + Group(OneOrMore(Word(printables), stopOn=LineEnd()))
+               .setParseAction(trans.convert_list_to_tuple)
+               ('filtered_compositions'))
+
 _particle = (Suppress(_particule_kw + ':')
              + OneOrMore(Word(alphas+','), stopOn=LineEnd())
              .setParseAction(' '.join)('particle'))
@@ -582,7 +591,8 @@ _filters = (Suppress(_filters_kw + ':')
             ('filter_volumes'))
 
 
-respcarac = (_particle
+respcarac = (_respfilter
+             | _particle
              | _incparticle
              | _nuclflags
              | _filters
@@ -869,7 +879,8 @@ def _set_kijdim(toks):
     _kijmatrix << Group(_fnums * _kijdim)  # pylint: disable=W0106
 
 
-_kijsum = Group(Suppress(_kijmkeff_kw) + _fnums
+_kijsum = Group(Optional(Suppress(_kijlefteigenval_kw))
+                + Suppress(_kijmkeff_kw) + _fnums
                 + Suppress(_kijdomratio_kw) + _fnums)('kijmkeff_res')
 _kijeigenval = Group(_fnums + _fnums)
 _kijeigenvec = Forward()
@@ -898,7 +909,7 @@ _kijsourcesval = Group(OneOrMore(_fnums))('kij_sources_vals')
 kijsources = (Group(Suppress(_integratedres_kw)
                     + _numusedbatch
                     + Suppress(_kijsources_kw)
-                    + _kijsourcesorder
+                    + Optional(_kijsourcesorder)
                     + _kijsourcesval)
               .setParseAction(trans.convert_kij_sources)('kij_sources'))
 
