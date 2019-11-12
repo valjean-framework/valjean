@@ -535,7 +535,12 @@ class Scan(Mapping):
             return False
         for time, times in self.times.items():
             if time in setimes and len(times) != len(self):
+                LOGGER.error("Number of %s not matching: %d for %d editions",
+                             time, len(times), len(self))
                 return False
             if time == 'elapsed_time' and len(times) != len(self)+1:
+                LOGGER.error("Number of elasped_time not matching: %d"
+                             "(N+1 editions expected, %d editions)",
+                             len(times), len(self))
                 return False
         return True

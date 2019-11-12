@@ -155,7 +155,7 @@ def loop_on_files(filelist, cfile):
              * **failed_jdds**, `list of string`: list of the failed jdds
     '''
     nb_jdds_ok = 0
-    failed_jdds = []
+    failed_jdds, failed_time_jdds, failed_rb_jdds = [], [], []
     for ifile in filelist:
         print("Reading:", ifile)
         try:
@@ -169,22 +169,41 @@ def loop_on_files(filelist, cfile):
             nb_jdds_ok += 1
         else:
             failed_jdds.append(ifile)
-        assert res.check_t4_times()
-        response_book_test(res)
-    return nb_jdds_ok, failed_jdds
+        if not res.check_t4_times():
+            print("Issue with times, please check")
+            failed_time_jdds.append(ifile)
+        try:
+            response_book_test(res)
+        except AssertionError as aerb:
+            print("Error in responsbook: {}".format(aerb))
+            failed_rb_jdds.append(ifile)
+    return {'jdds_ok': nb_jdds_ok,
+            'failed_jdds': failed_jdds,
+            'failed_time': failed_time_jdds,
+            'failed_respb': failed_rb_jdds}
 
 
-def print_summary(nb_ok, nb_used, failed, excluded):
+def print_summary(nb_used, excluded, summary):
     '''Print the summary of the parsing, especially lists of failed and
     excluded files.
     '''
-    print("Jdds well passed:", nb_ok, "/", nb_used)
+    print("Jdds well passed:", summary['jdds_ok'], "/", nb_used)
     print("Failed jdds:")
-    for ifile in failed:
+    for ifile in summary['failed_jdds']:
         print(ifile)
     print("Excluded files:")
     for ifile in excluded:
         print(ifile)
+    if summary['failed_time']:
+        print("Jdds where times check failed: {}"
+              .format(len(summary['failed_time'])))
+        for ifile in summary['failed_time']:
+            print(ifile)
+    if summary['failed_respb']:
+        print("Jdds where response book failed: {}"
+              .format(len(summary['failed_respb'])))
+        for ifile in summary['failed_respb']:
+            print(ifile)
 
 
 @pytest.mark.slow
@@ -220,10 +239,13 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     excluded_files = [
         fil for fil in excluded_files
         if not any(pat in fil for pat in vv_file.EXCLUDED_STRINGS)]
-    jdds_ok, failed_jdds = loop_on_files(used_files, vv_file)
-    print_summary(jdds_ok, len(used_files), failed_jdds, excluded_files)
+    summary = loop_on_files(used_files, vv_file)
+    print_summary(len(used_files), excluded_files, summary)
     category = used_files[0].split('/')[-4]
     mode = vv_file.MONO if vv_file.MONO in folder else vv_file.PARA
     assert len(used_files) == vv_file.EXPECTED_RESULTS[(category, mode)][0]
-    assert len(failed_jdds) == vv_file.EXPECTED_RESULTS[(category, mode)][1]
+    assert (len(summary['failed_jdds'])
+            == vv_file.EXPECTED_RESULTS[(category, mode)][1])
     assert len(excluded_files) == vv_file.EXPECTED_RESULTS[(category, mode)][2]
+    assert not summary['failed_time']
+    assert not summary['failed_respb']
