@@ -247,5 +247,8 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     assert (len(summary['failed_jdds'])
             == vv_file.EXPECTED_RESULTS[(category, mode)][1])
     assert len(excluded_files) == vv_file.EXPECTED_RESULTS[(category, mode)][2]
-    assert not summary['failed_time']
-    assert not summary['failed_respb']
+    if len(vv_file.EXPECTED_RESULTS) > 3:
+        assert (len(summary['failed_time'])
+                == vv_file.EXPECTED_RESULTS[(category, mode)][3])
+        assert (len(summary['failed_respb'])
+                == vv_file.EXPECTED_RESULTS[(category, mode)][4])
