@@ -250,7 +250,7 @@ class TableTemplate:
         '''Build a sliced :class:`TableTemplate` from the current
         :class:`TableTemplate`.
 
-        Slicing is done lilke in the usual `NumPy` arrays, see:
+        Slicing is done like in the usual `NumPy` arrays, see:
         `numpy indexing`_ for more informations. No treatment like in
         :mod:`~valjean.gavroche.dataset` is done.
 
@@ -657,6 +657,55 @@ PlotTemplate.
 
     def __ne__(self, other):
         '''Test for inequality of `self` and another :class:`PlotTemplate`.'''
+        return not self == other
+
+
+class RstTextTemplate:
+    '''A container class that encapsulates text for the report in rst format.
+    The user has to write himself the text in rst, else will just be printed as
+    text.
+    '''
+
+    def __init__(self, text, title=None):
+        '''Construct the rst text to be sent to the report.'''
+        self.text = text.replace('\n', '\n\n') + '\n'
+        self.title = title
+
+    def __repr__(self):
+        '''Print RstTemplate details.'''
+        return ('{}(text={!r}, title={!r})'
+                .format(self.__class__, self.text, self.title))
+
+    def _binary_join(self, other):
+        if self.title != other.title:
+            raise ValueError("RstTextTemplate can only be added "
+                             "with same titles")
+        self.text += other.text
+
+    def join(self, *others):
+        '''Join a given number of :class:`RstTextTemplate` to the current one.
+        '''
+        for oti in others:
+            self._binary_join(oti)
+
+    def fingerprint(self):
+        '''Compute a fingerprint (a SHA256 hash) for `self`. The fingerprint
+        depends only on the content of `self`. Two :class:`RstTextTemplate`
+        objects containing equal data have the same fingerprint. The converse
+        is not true, but very likely.'''
+        from hashlib import sha256
+        hasher = sha256()
+        hasher.update(self.text.encode('utf-8'))
+        hasher.update(self.title.encode('utf-8'))
+        return hasher.hexdigest()
+
+    def __eq__(self, other):
+        '''Test for equality of `self` and another :class:`RstTextTemplate`.'''
+        return self.text == other.text and self.title == other.title
+
+    def __ne__(self, other):
+        '''Test for inequality of `self` and another :class:`RstTextTemplate`.
+        '''
         return not self == other
 
 

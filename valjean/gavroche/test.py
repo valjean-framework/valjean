@@ -46,6 +46,10 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
+class CheckBinsException(Exception):
+    '''An error is raised when check bins fails.'''
+
+
 def same_arrays(arr1, arr2, *, rtol=1e-5, atol=1e-8):
     '''Return `True` if `arr1` and `arr2` are equal within the accuracy.
 
@@ -94,8 +98,9 @@ def check_bins(*datasets, rtol=1e-5, atol=1e-8):
     :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
     '''
     if not same_bins_datasets(*datasets, rtol=rtol, atol=atol):
-        msg = 'Inconsistent coordinates: {}'.format(*datasets)
-        raise ValueError(msg)
+        msg = 'Inconsistent coordinates: \n{}'.format(
+            '\n'.join(["{}".format(dat) for dat in datasets]))
+        raise CheckBinsException(msg)
 
 
 class Test(ABC):
@@ -181,6 +186,24 @@ class TestResult(ABC):
     # tell pytest that this class and derived classes should NOT be collected
     # as tests
     __test__ = False
+
+
+class TestResultFailed(TestResult):
+    '''Class for failed TestResults when an exception was raised during the
+    evaluation.
+    '''
+
+    def __init__(self, test, msg):
+        '''Initialisation of :class:`~.TestResult`.
+
+        :param test: the used test
+        :type test: :class:`~.Test` used
+        '''
+        super().__init__(test)
+        self.msg = msg
+
+    def __bool__(self):
+        return False
 
 
 class TestResultEqual(TestResult):

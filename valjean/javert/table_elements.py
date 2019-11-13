@@ -6,7 +6,7 @@ import numpy as np
 from .. import LOGGER
 from ..cosette.task import TaskStatus
 from ..gavroche.diagnostics.stats import TestOutcome
-from .templates import TableTemplate
+from .templates import TableTemplate, RstTextTemplate
 from .verbosity import Verbosity
 
 # turn off pylint warnings about invalid names in this file; there are just too
@@ -611,3 +611,11 @@ def repr_metadata_silent(_result):
     '''
     LOGGER.debug("repr_metadata_silent")
     return []
+
+
+def repr_testresultfailed(result, _verbosity=None):
+    '''Represent a failed result as rst text.'''
+    LOGGER.debug("In repr_testresultfailed")
+    cname = result.test.__class__.__name__
+    return [RstTextTemplate(':hl:`{} failed with message:` \n{}'
+                            .format(cname, result.msg))]

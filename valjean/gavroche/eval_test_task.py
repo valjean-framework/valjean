@@ -7,7 +7,17 @@ subsequently processed for inclusion in a test report.
 from ..cosette.task import TaskStatus
 from ..cosette.use import from_env
 from ..cosette.pythontask import PythonTask
-from ..gavroche.test import Test
+from ..gavroche.test import Test, TestResultFailed, CheckBinsException
+
+
+def eval_test(test):
+    '''Test evaluation with call to TestResultFailed if an exception is raised.
+    '''
+    try:
+        res = test.evaluate()
+    except CheckBinsException as cbe:
+        return TestResultFailed(test, cbe)
+    return res
 
 
 class EvalTestTask(PythonTask):
@@ -51,7 +61,7 @@ class EvalTestTask(PythonTask):
                                     '{!r}, but one of the list elements is a '
                                     '{}'.format(self.name, type(test)))
 
-            results = [test.evaluate() for test in tests]
+            results = [eval_test(test) for test in tests]
 
             env_up = {self.name: {'result': results}}
             status = TaskStatus.DONE

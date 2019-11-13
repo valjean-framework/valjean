@@ -39,7 +39,7 @@ def test_different_bins_raises():
     bins2 = OrderedDict([('e', coords2)])
     dataset1 = Dataset(coords1, error, bins=bins1, name='dataset1')
     dataset2 = Dataset(coords2, error, bins=bins2, name='dataset2')
-    with pytest.raises(ValueError):
+    with pytest.raises(test.CheckBinsException):
         test.check_bins(dataset1, dataset2)
 
 
@@ -77,7 +77,7 @@ def test_equal_bins_raises(dataset):
     note('modified.bins: {}'.format(modified.bins))
     thetest = test.TestEqual(dataset, modified, name="equal",
                              description="dataset equality")
-    with pytest.raises(ValueError):
+    with pytest.raises(test.CheckBinsException):
         thetest.evaluate()
 
 
@@ -92,7 +92,7 @@ def test_approx_equal_bins_raises(dataset):
     note('modified.bins: {}'.format(modified.bins))
     thetest = test.TestApproxEqual(dataset, modified, name="approx_equal",
                                    description="dataset approx equality")
-    with pytest.raises(ValueError):
+    with pytest.raises(test.CheckBinsException):
         thetest.evaluate()
 
 

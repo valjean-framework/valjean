@@ -17,7 +17,7 @@ from valjean.eponine.base_dataset import BaseDataset
 from valjean.dyn_import import dyn_import
 
 
-def finite():
+def finite(width=64):
     '''Create a strategy for generating reasonable floating-point values.
 
     The definition of "reasonable" here excludes NaN, ±∞ and values larger than
@@ -26,7 +26,7 @@ def finite():
     :returns: a `hypothesis` strategy.
     '''
     return floats(min_value=-1e5, max_value=1e5,
-                  allow_nan=False, allow_infinity=False)
+                  allow_nan=False, allow_infinity=False, width=width)
 
 
 @composite
@@ -48,12 +48,12 @@ def base_datasets(draw, elements=None, shape=None, dtype=None, coords=None):
         a_shape = draw(shape)
 
     if dtype is None:
-        a_dtype = np.float64
+        a_dtype = np.dtype(np.float64)
     else:
-        a_dtype = draw(dtype)
+        a_dtype = np.dtype(draw(dtype))
 
     if elements is None:
-        a_elements = finite()
+        a_elements = finite(width=a_dtype.itemsize*8)
     else:
         a_elements = elements
 
@@ -101,12 +101,12 @@ def coord_odicts(draw, *, shape=None, dtype=None, edges=None, elements=None):
         a_shape = draw(shape)
 
     if dtype is None:
-        a_dtype = draw(floating_dtypes(sizes=(32, 64)))
+        a_dtype = np.dtype(draw(floating_dtypes(sizes=(32, 64))))
     else:
-        a_dtype = draw(dtype)
+        a_dtype = np.dtype(draw(dtype))
 
     if elements is None:
-        a_elements = finite()
+        a_elements = finite(width=a_dtype.itemsize*8)
     else:
         a_elements = elements
 
@@ -174,11 +174,20 @@ def perturb(draw, array, *, absolute=None, atol=1e-8, rtol=1e-5):
                      default.
     :param float atol: the size of absolute perturbations.
     :param float rtol: the size of relative perturbations.
+
+    .. warning::
+
+        Tolerance is filled in an array of one dimension as no way found at
+        the correction time to create a generic giving the dtype (like
+        np.float(tol, dtype)), float is per default float64, which raises (or
+        will) an error in hypothesis
     '''
     abs_pert = draw(booleans()) if absolute is None else draw(absolute)
-    tol = 0.9*atol if abs_pert else 0.9*rtol
+    tol = (array.dtype.type(0.9*atol) if abs_pert
+           else array.dtype.type(0.9*rtol))
+    width = array.dtype.itemsize*8
     pert = draw(arrays(array.dtype, array.shape,
-                       elements=floats(-tol, tol)))
+                       elements=floats(-tol, tol, width=width)))
     note('perturbation: {}'.format(pert))
     note('is absolute: {}'.format(abs_pert))
     if abs_pert:

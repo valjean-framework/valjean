@@ -260,6 +260,17 @@ class RstFormatter(Formatter):
         '''
         return RstPlot(plot)
 
+    # @staticmethod
+    def format_rsttexttemplate(self, ltext):
+        '''Format a :class:`~.RstTextTemplate`.
+
+        :param ltext: A text in reStructuredText format (already).
+        :type ltext: :class:`~.RstTextTemplate`
+        :returns: the formatted text (text itself)
+        :rtype: str
+        '''
+        return self.text(ltext.text)
+
 
 class RstTable:
     '''Convert a :class:`~.TableTemplate` into a `reStructuredText`_ table.'''
