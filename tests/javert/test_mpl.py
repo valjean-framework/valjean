@@ -194,9 +194,9 @@ def test_fplit_cc(student_test_result, plot_repr):
 def test_fplit_3ds(student_test_result_3ds, plot_repr):
     '''Test concatenation of FullPlotTemplate from Student result.'''
     templ = plot_repr(student_test_result_3ds)[0]
-    assert set(c.yname for c in templ.curves) == {'', r'$\Delta_{Student}$'}
+    assert set(c.yname for c in templ.curves) == {'', r'$t_{Student}$'}
     assert len([c for c in templ.curves if c.yname == '']) == 3
-    assert (len([c for c in templ.curves if c.yname == r'$\Delta_{Student}$'])
+    assert (len([c for c in templ.curves if c.yname == r'$t_{Student}$'])
             == 2)
     mplt = MplPlot(templ)
     return mplt.fig

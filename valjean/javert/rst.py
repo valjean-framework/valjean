@@ -278,7 +278,7 @@ class RstTable:
     HIGHLIGHT_ROLE = 'hl'
     COL_SEP = '  '
 
-    def __init__(self, table, num_fmt='{:13.8g}'):
+    def __init__(self, table, num_fmt='{:11.6g}'):
         '''Construct an :class:`RstTable` from the given
         :class:`~.templates.TableTemplate`.
 
@@ -286,7 +286,7 @@ class RstTable:
         :type table: :class:`~.templates.TableTemplate`
         :param str num_fmt: A :func:`format` string to specify how numerical
                             table entries should be represented. The default
-                            value for this option is ``'{:13.8g}'``.
+                            value for this option is ``'{:11.6g}'``.
         '''
         self.table = table
         self.num_fmt = num_fmt

@@ -16,6 +16,87 @@ from .verbosity import Verbosity
 # pylint: disable=invalid-name
 
 
+def repr_bins(dsref):
+    '''Representation of bins in tables.
+
+    When bins are given by edges, representation is ``min - max``, when they
+    are given at center, representation is ``center``.
+
+    Trivial dimensions are not represented, i.e. dimensions where there is only
+    one bin.
+
+    If there are more than one non-trivial dimensions, some repetition is
+    expected. For example with two non-trivial dimensions of two bins each one
+    point will be defined by its coordinated in the two dimensions and we
+    expect all the bins to possibily be shown in a table. We expected 4 bins
+    and their associated values in that case.
+
+    Let's consider the following dataset:
+    >>> from valjean.eponine.base_dataset import BaseDataset
+    >>> import numpy as np
+    >>> from collections import OrderedDict
+
+    >>> vals = np.arange(6).reshape(1, 2, 1, 3)
+    >>> errs = np.array([0.1]*6).reshape(1, 2, 1, 3)
+    >>> bins = OrderedDict([('bacon', np.array([0, 1])),
+    ...                     ('egg', np.array([0, 2, 4])),
+    ...                     ('sausage', np.array([10, 20])),
+    ...                     ('spam', np.array([-5, 0, 5]))])
+    >>> ds = BaseDataset(vals, errs, bins=bins, name="ds_to_squeeze")
+    >>> names, rbins = repr_bins(ds)
+    >>> print(list(ds.bins.keys()))
+    ['bacon', 'egg', 'sausage', 'spam']
+    >>> print(names)
+    ['egg', 'spam']
+    >>> print(ds.shape)
+    (1, 2, 1, 3)
+    >>> print([rb.shape for rb in rbins])
+    [(1, 2, 1, 3), (1, 2, 1, 3)]
+
+    ``'bacon'`` and ``'sausage'`` are trivial dimensions, so won't be
+    represented in the table, but we expect 6 values corresponding to 2 bins in
+    ``'egg'`` and 3 in ``'spam'``. Each value corresponds to a line in the
+    table so each columns should have the same size and the same shape, the
+    shape of the given dataset without trivial dimensions. We then have 3
+    ``'spam'`` bins in each ``'egg'`` bins or 2 ``'egg'`` bins in each
+    ``'spam'`` bins. Each couple appears only once.
+
+    >>> for name, rbin in zip(names, rbins):
+    ...     print(name, ':', rbin.flatten())
+    egg : ['0 - 2' '0 - 2' '0 - 2' '2 - 4' '2 - 4' '2 - 4']
+    spam : ['-5' '0' '5' '-5' '0' '5']
+
+    As expected from the bins, ``'egg'`` bins are given by edges
+    (``min - max``) while ``'spam'`` bins are given by center (``center``).
+
+    :param dsref: dataset
+    :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
+    :returns: list of the non-trivial dimensions and a tuple of the bins
+
+    The tuple should have the same length as the list of dimensions and the
+    bins insdide should have the same shape as ``dsref.value``.
+    '''
+    bins, dim_names = [], []
+    for idim, dim in enumerate(dsref.bins.keys()):
+        # reject trivial dimensions (1 bin or no bin)
+        if dsref.value.shape[idim] < 2:
+            continue
+        dim_names.append(dim)
+        dims_af = int(np.prod(dsref.value.shape[idim+1:]))
+        dims_bf = int(np.prod(dsref.value.shape[:idim]))
+        if dsref.bins[dim].size == dsref.value.shape[idim]+1:
+            dbins = [["{0:.4g} - {1:.4g}".format(a, b)] * dims_af
+                     for a, b in zip(dsref.bins[dim][:-1],
+                                     dsref.bins[dim][1:])]
+        else:
+            dbins = [["{0:.4g}".format(a)] * dims_af
+                     for a in dsref.bins[dim]]
+        dbins = [dbins] * dims_bf
+        bins.append(np.array(dbins).squeeze().reshape(dsref.shape))
+    assert all(abin.shape == dsref.shape for abin in bins)
+    return dim_names, tuple(bins)
+
+
 def repr_testresultequal(result, verbosity=None):
     '''Represent the result of a :class:`~.TestEqual` test.
 
@@ -132,6 +213,7 @@ def repr_student(result, result_header):
     '''
     LOGGER.debug("In repr_student")
     oracles = result.oracles()
+    nbins, bins = repr_bins(result.test.dsref)
     dscols = tuple((ds.value, ds.error, delta, studbool)
                    for ds, delta, studbool in zip(result.test.datasets,
                                                   result.delta,
@@ -139,16 +221,19 @@ def repr_student(result, result_header):
     heads = [('v_ref', 'σ_ref')]
     for ids in range(len(dscols)):
         str_ids = str(ids)
-        heads.append(('v'+str_ids, 'σ'+str_ids, 'Δ'+str_ids,
+        heads.append(('v'+str_ids, 'σ'+str_ids, 't'+str_ids,
                       result_header.replace('?', str_ids+'?'))
                      if len(dscols) > 1
-                     else ('v_test', 'σ_test', 'Δ_test', result_header))
+                     else ('v_test', 'σ_test', 't_test', result_header))
     falses = np.full_like(result.test.dsref.value, False)
     highlights = [(falses, falses)]
+    if nbins:
+        heads.insert(0, nbins)
+        highlights.insert(0, [(falses,)]*len(nbins))
     for oracle in oracles:
         highlights.append((falses, falses, falses, np.logical_not(oracle)))
     table_template = TableTemplate(
-        result.test.dsref.value, result.test.dsref.error,
+        *bins, result.test.dsref.value, result.test.dsref.error,
         *chain.from_iterable(dscols),
         highlights=list(chain.from_iterable(highlights)),
         headers=list(chain.from_iterable(heads)))
@@ -300,8 +385,8 @@ def repr_holm_bonferroni(result, result_header):
         [result.first_test_res.test.name] * ndatasets,
         [result.test.ntests] * ndatasets,
         [result.test.alpha] * ndatasets,
-        [min(pval) for pval in result.first_test_res.pvalue],
-        [alpha_i[0] for alpha_i in result.alphas_i],
+        [np.amin(pval) for pval in result.first_test_res.pvalue],
+        [np.amin(alpha_i) for alpha_i in result.alphas_i],
         list(result.nb_rejected),
         oracles,
         highlights=highlights,

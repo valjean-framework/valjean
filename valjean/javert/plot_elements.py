@@ -89,7 +89,7 @@ def repr_student_delta(result):
             label=' '.join([(result.test.datasets[ind].name
                              if result.test.datasets[ind].name
                              else 'dataset '+str(ind)), 'vs', 'reference']),
-            index=ind+1, yname=r'$\Delta_{Student}$', errors=None))
+            index=ind+1, yname=r'$t_{Student}$', errors=None))
     return [PlotTemplate(bins=bins, xname=dim, curves=curves)]
 
 

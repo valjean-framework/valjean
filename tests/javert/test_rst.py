@@ -9,6 +9,7 @@ from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 from valjean import LOGGER
 from valjean.javert.rst import RstTable
 from valjean.javert.templates import join
+from valjean.javert.table_elements import repr_bins
 from .conftest import int_matrices
 from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  equal_test_result, equal_test_fail,
@@ -26,7 +27,7 @@ from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  holm_bonferroni_test,
                                  holm_bonferroni_test_result,
                                  holm_bonferroni_test_fail,
-                                 holm_bonf_test_result_fail)
+                                 holm_bonf_test_result_fail, datasets)
 
 
 @given(matrix=int_matrices())  # pylint: disable=no-value-for-parameter
@@ -269,3 +270,16 @@ def test_rst_report(rstcheck, report, rst_full, tmpdir):
         content = path.read()
         errs = rstcheck.check(content)
         assert not list(errs), content
+
+
+@given(dset=datasets())  # pylint: disable=no-value-for-parameter
+def test_repr_bins(dset):
+    '''Check bins representation'''
+    note('dataset: {}'.format(dset))
+    names, bins = repr_bins(dset)
+    dset_squeezed = dset.squeeze()
+    note('squeezed dataset: {}'.format(dset_squeezed))
+    squeezed_ndim = len(dset.shape) - dset.shape.count(1)
+    assert len(names) == squeezed_ndim
+    assert len(bins) == squeezed_ndim
+    assert all(dset.shape == abin.shape for abin in bins)
