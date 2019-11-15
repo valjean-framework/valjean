@@ -484,7 +484,7 @@ class TestStudent(TestDataset):
         if isinstance(diff.error, np.generic):
             if diff.error == 0 and diff.value == 0:
                 LOGGER.debug('Student test set to 0 as giving 0 / 0')
-                return 0
+                return np.zeros_like(ds1.value)
             return studentt
         studentt[(diff.value == 0) & (diff.error == 0)] = 0
         return studentt
