@@ -92,6 +92,8 @@ def check_gauss_e_spectrum(resp):
     assert bdsi.bins['e'].size == 2
     assert bds.bins['e'].size == 5
     assert np.array_equal(bdsi.bins['e'], bds.bins['e'][::4])
+    assert 'discarded_batches' in resp['results']
+    assert 'used_batches' in resp['results']
 
 
 def check_gauss_et_spectrum(resp):
@@ -107,6 +109,8 @@ def check_gauss_et_spectrum(resp):
     assert bds.bins['e'].size == 5
     assert bdsi.bins['t'].size == bdsi.shape[4]+1 == 5
     assert np.array_equal(bdsi.bins['e'], bds.bins['e'][::4])
+    assert 'discarded_batches' in resp['results']
+    assert 'used_batches' in resp['results']
 
 
 def check_gauss_etmuphi_spectrum(resp):
@@ -124,6 +128,8 @@ def check_gauss_etmuphi_spectrum(resp):
     bdsei = dcv.convert_data(resp['results'], data_type='spectrum',
                              array_type='eintegrated_array')
     assert bdsei is None
+    assert 'discarded_batches' in resp['results']
+    assert 'used_batches' not in resp['results']
 
 
 def test_gauss_spectrum(datadir):

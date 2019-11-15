@@ -156,6 +156,16 @@ def convert_list_to_tuple(toks):
     return cv_toks
 
 
+def _extract_batch_numbers(score, res):
+    ubatch = score.pop('used_batches', None)
+    dbatch = score.pop('discarded_batches', None)
+    if ubatch is not None:
+        res['used_batches_res'] = ubatch
+    if dbatch is not None:
+        res['discarded_batches_res'] = dbatch
+    return res
+
+
 def convert_batch_numbers(score):
     '''Convert batch numbers (used and discarded) in proper results.
 
@@ -174,15 +184,12 @@ def convert_batch_numbers(score):
             usc = (score[key]
                    if isinstance(score[key], dict) or score[key].asDict()
                    else score[key][0])
-            ubatch = usc.pop('used_batches', None)
-            dbatch = usc.pop('discarded_batches', None)
-            if ubatch is not None:
-                res['used_batches_res'] = ubatch
-            if dbatch is not None:
-                res['discarded_batches_res'] = dbatch
+            _extract_batch_numbers(usc, res)
             if ('used_batches_res' in res and 'discarded_batches_res' in res
                     and not is_uncert):
                 break
+            if 'integrated_res' in usc:
+                _extract_batch_numbers(usc['integrated_res'], res)
     return res
 
 
@@ -196,7 +203,7 @@ def convert_score(toks):
     :returns: dictionary using the previous keys and :obj:`numpy` objects as
       values.
     '''
-    LOGGER.debug("Keys in score: %s", list(toks.keys()))
+    LOGGER.debug("%s scores", len(toks))
     assert len(toks) == 1, "We should have only one score here"
     res = {}
     for score in toks:
