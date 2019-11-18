@@ -560,9 +560,12 @@ class Dataset(BaseDataset):
     operations.'''
 
     @classmethod
-    def from_dataset(cls, dataset):
+    def from_dataset(cls, dataset, name=None):
         '''Construct a :class:`Dataset` from an instance of a
         :class:`~valjean.eponine.base_dataset.BaseDataset`.'''
+        if name is not None:
+            return cls(value=dataset.value, error=dataset.error,
+                       bins=dataset.bins, name=name)
         return cls(value=dataset.value, error=dataset.error,
                    bins=dataset.bins, name=dataset.name)
 
