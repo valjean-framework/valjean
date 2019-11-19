@@ -384,7 +384,8 @@ def repr_bonferroni(result, result_header):
     highlights = [[False] * ndatasets] * 5  # 5 non-highlighted columns
     highlights.append([not oracle for oracle in oracles])
     table_template = TableTemplate(
-        [result.first_test_res.test.name] * ndatasets,
+        ["{0} vs {1}".format(result.first_test_res.test.dsref.name, dtest.name)
+         for dtest in result.first_test_res.test.datasets],
         [result.test.ntests] * ndatasets,
         [result.test.alpha] * ndatasets,
         [result.test.bonf_signi_level] * ndatasets,
@@ -432,7 +433,8 @@ def repr_holm_bonferroni(result, result_header):
     highlights = [[False] * ndatasets] * 6  # 6 non-highlighted columns
     highlights.append([not oracle for oracle in oracles])
     table_template = TableTemplate(
-        [result.first_test_res.test.name] * ndatasets,
+        ["{0} vs {1}".format(result.first_test_res.test.dsref.name, dtest.name)
+         for dtest in result.first_test_res.test.datasets],
         [result.test.ntests] * ndatasets,
         [result.test.alpha] * ndatasets,
         [np.amin(pval) for pval in result.first_test_res.pvalue],
