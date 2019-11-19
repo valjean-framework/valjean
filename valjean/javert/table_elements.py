@@ -199,6 +199,8 @@ def repr_testresultstudent(result, verbosity=None):
         return []
     if verbosity == Verbosity.SUMMARY:
         return repr_student_summary(result)
+    if verbosity == Verbosity.INTERMEDIATE:
+        return repr_student_intermediate(result)
     return repr_student(result, 'Student?')
 
 
@@ -287,6 +289,54 @@ def repr_student_summary(result):
                               highlights=[[False], [False]])]
     return [TableTemplate(["Student test:"], ["KO"],
                           highlights=[[False], [True]])]
+
+
+def repr_student_intermediate(result):
+    '''Function to generate an intermediate table for the Student test: print
+    all the failing results.
+    '''
+    LOGGER.debug("repr_student_intermediate found")
+    if result:
+        return repr_student_summary(result)
+    if result.test.dsref.shape == ():
+        return repr_student(result, "bla")
+    oracles = result.oracles()
+    falses_ind = np.ones_like(result.test.dsref.value)
+    for oracle in oracles:
+        falses_ind[np.where(oracle == 0)] = 0
+    nbins, bins = repr_bins(result.test.dsref)
+    dscols = tuple((ds.value[np.where(falses_ind == 0)],
+                    ds.error[np.where(falses_ind == 0)],
+                    delta[np.where(falses_ind == 0)],
+                    studbool[np.where(falses_ind == 0)])
+                   for ds, delta, studbool in zip(result.test.datasets,
+                                                  result.delta,
+                                                  oracles))
+    heads = [('v_ref', 'σ_ref')]
+    for ids in range(len(dscols)):
+        str_ids = str(ids)
+        heads.append(('v'+str_ids, 'σ'+str_ids, 't'+str_ids,
+                      'Student'+str_ids+'?')
+                     if len(dscols) > 1
+                     else ('v_test', 'σ_test', 't_test', 'Student?'))
+    falses = np.full_like(result.test.dsref.value[np.where(falses_ind == 0)],
+                          False)
+    highlights = [(falses, falses)]
+    if nbins:
+        heads.insert(0, nbins)
+        highlights.insert(0, [(falses,)]*len(nbins))
+    for oracle in oracles:
+        highlights.append((falses, falses, falses,
+                           np.logical_not(oracle[np.where(falses_ind == 0)])))
+    cols = (list((b[np.where(falses_ind == 0)],) for b in bins)
+            + [(result.test.dsref.value[np.where(falses_ind == 0)],
+                result.test.dsref.error[np.where(falses_ind == 0)])])
+    table_template = TableTemplate(
+        *chain.from_iterable(cols),
+        *chain.from_iterable(dscols),
+        highlights=list(chain.from_iterable(highlights)),
+        headers=list(chain.from_iterable(heads)))
+    return [table_template]
 
 
 def repr_testresultstudent_full_details(result):
@@ -622,7 +672,7 @@ def repr_metadata_intermediate(result):
     '''
     LOGGER.debug("repr_metadata_intermediate")
     if not result.only_failed_comparisons():
-        return repr_metadata_silent(result)
+        return repr_metadata_summary(result)
     samp_names = list(result.test.dmd)
     keys = []
     tdict = {name: [] for name in samp_names}
