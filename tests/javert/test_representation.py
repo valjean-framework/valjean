@@ -80,6 +80,7 @@ def test_empty_repr(test_name, request):
 def test_full_concatenation(student_test_result, student_test_result_fail,
                             full_repr):
     '''Test concatenation of all templates.'''
+    student_test_result_fail.test.datasets[0].name = "other 1D dataset"
     templ1 = full_repr(student_test_result)
     templ2 = full_repr(student_test_result_fail)
     for it1, it2 in zip(templ1, templ2):

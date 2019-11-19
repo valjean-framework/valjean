@@ -201,11 +201,30 @@ def repr_testresultstudent(result, verbosity=None):
         return repr_student_summary(result)
     if verbosity == Verbosity.INTERMEDIATE:
         return repr_student_intermediate(result)
-    return repr_student(result, 'Student?')
+    return repr_student(result)
 
 
-def repr_student(result, result_header):
-    '''Reprensetation of Student test result.
+def _student_heads(test_res, bin_names):
+    '''Build the column names for Student test representation.
+
+    Reference appears first then all the tested datasets. They are identified
+    by their name if unique, else their index in the list of datasets is used.
+
+    :param test_res: the test (not the result)
+    :type test_res: :class:`~.TestStudent`
+    :returns: list of headers
+    '''
+    heads = [('v_'+test_res.dsref.name, 'σ_'+test_res.dsref.name)]
+    for _ds in test_res.datasets:
+        heads.append(('v_'+_ds.name, 'σ_'+_ds.name, 't_'+_ds.name,
+                      'Student('+_ds.name+')?'))
+    if bin_names:
+        heads.insert(0, bin_names)
+    return heads
+
+
+def repr_student(result):
+    '''Representation of Student test result.
 
     :param result: a test result.
     :type result: :class:`~.TestResultStudent`
@@ -220,17 +239,11 @@ def repr_student(result, result_header):
                    for ds, delta, studbool in zip(result.test.datasets,
                                                   result.delta,
                                                   oracles))
-    heads = [('v_ref', 'σ_ref')]
-    for ids in range(len(dscols)):
-        str_ids = str(ids)
-        heads.append(('v'+str_ids, 'σ'+str_ids, 't'+str_ids,
-                      result_header.replace('?', str_ids+'?'))
-                     if len(dscols) > 1
-                     else ('v_test', 'σ_test', 't_test', result_header))
+
     falses = np.full_like(result.test.dsref.value, False)
     highlights = [(falses, falses)]
+    heads = _student_heads(result.test, nbins)
     if nbins:
-        heads.insert(0, nbins)
         highlights.insert(0, [(falses,)]*len(nbins))
     for oracle in oracles:
         highlights.append((falses, falses, falses, np.logical_not(oracle)))
@@ -299,7 +312,7 @@ def repr_student_intermediate(result):
     if result:
         return repr_student_summary(result)
     if result.test.dsref.shape == ():
-        return repr_student(result, "bla")
+        return repr_student(result)
     oracles = result.oracles()
     falses_ind = np.ones_like(result.test.dsref.value)
     for oracle in oracles:
@@ -312,18 +325,11 @@ def repr_student_intermediate(result):
                    for ds, delta, studbool in zip(result.test.datasets,
                                                   result.delta,
                                                   oracles))
-    heads = [('v_ref', 'σ_ref')]
-    for ids in range(len(dscols)):
-        str_ids = str(ids)
-        heads.append(('v'+str_ids, 'σ'+str_ids, 't'+str_ids,
-                      'Student'+str_ids+'?')
-                     if len(dscols) > 1
-                     else ('v_test', 'σ_test', 't_test', 'Student?'))
+    heads = _student_heads(result.test, nbins)
     falses = np.full_like(result.test.dsref.value[np.where(falses_ind == 0)],
                           False)
     highlights = [(falses, falses)]
     if nbins:
-        heads.insert(0, nbins)
         highlights.insert(0, [(falses,)]*len(nbins))
     for oracle in oracles:
         highlights.append((falses, falses, falses,
@@ -349,7 +355,7 @@ def repr_testresultstudent_full_details(result):
         table.
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
-    return repr_student(result, 'Student?')
+    return repr_student(result)
 
 
 def repr_testresultbonferroni(result, verbosity=None):

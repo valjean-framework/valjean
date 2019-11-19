@@ -210,6 +210,8 @@ def test_tabletemplate_join(table_repr,
     '''Test  :meth:`~valjean.javert.templates.join`.'''
     templates1 = table_repr(bonferroni_test_result)
     LOGGER.debug("templates1 = %s", templates1)
+    first_test = bonferroni_test_result_fail.first_test_res
+    first_test.test.datasets[0].name = "other 1D dataset"
     templates2 = table_repr(bonferroni_test_result_fail)
     LOGGER.debug("templates2 = %s", templates2)
     templates3 = join(templates1[1], templates2[1])
@@ -232,7 +234,7 @@ def test_tabletemplate_join(table_repr,
     templates5 = [join(it1, it2) for it1, it2 in zip(templates1, templates2)]
     LOGGER.debug("templates1+templates2 = %s", templates5)
     assert len(templates5) == 2
-    assert templates5[0].headers[-1] == 'Student?'
+    assert templates5[0].headers[-1] == 'Student(other 1D dataset)?'
     assert templates5[0].columns[0].size == 10
     assert templates5[1].headers[-1] == 'Bonferroni?'
 
@@ -244,6 +246,7 @@ def test_tabletemplate_join_array(table_repr,
     template1 = table_repr(student_test_result)
     template1_cc = template1[0].copy()
     LOGGER.debug('template1 = %s', template1)
+    student_test_result_fail.test.datasets[0].name = "other 1D dataset"
     template2 = table_repr(student_test_result_fail)
     LOGGER.debug('template2 = %s', template2)
     template1[0].join(template2[0])
