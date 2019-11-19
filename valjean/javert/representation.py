@@ -59,6 +59,7 @@ Thus the use of the ``Representer`` is foreseen as:
 from .. import LOGGER
 from . import table_elements as tab_elts
 from . import plot_elements as plt_elts
+from .verbosity import Verbosity
 
 
 class Representation:
@@ -163,7 +164,12 @@ class FullTableRepresenter(TableRepresenter):
         :rtype: list(:class:`~.TableTemplate`)
         '''
         LOGGER.debug("In FullTableRepresenter.repr_testresultbonferroni")
-        return (super().__call__(result.first_test_res, verbosity)
+        if verbosity == Verbosity.SILENT:
+            return tab_elts.repr_testresultholmbonferroni(result, verbosity)
+        ftest_verb = (Verbosity(verbosity.value-1)
+                      if verbosity not in (Verbosity.SILENT, None)
+                      else verbosity)
+        return (super().__call__(result.first_test_res, ftest_verb)
                 + tab_elts.repr_testresultbonferroni(result, verbosity))
 
     def repr_testresultholmbonferroni(self, result, verbosity=None):
@@ -181,7 +187,12 @@ class FullTableRepresenter(TableRepresenter):
         '''
         LOGGER.debug(
             "In FullTableRepresenter.repr_testresultholmbonferroni")
-        return (super().__call__(result.first_test_res, verbosity)
+        if verbosity == Verbosity.SILENT:
+            return tab_elts.repr_testresultholmbonferroni(result, verbosity)
+        ftest_verb = (Verbosity(verbosity.value-1)
+                      if verbosity not in (Verbosity.SILENT, None)
+                      else verbosity)
+        return (super().__call__(result.first_test_res, ftest_verb)
                 + tab_elts.repr_testresultholmbonferroni(result, verbosity))
 
 
