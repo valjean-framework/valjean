@@ -110,7 +110,9 @@ class T4Parser():
         default NORMAL COMPLETION).
         '''
         if not self.scan_res:
-            raise T4ParserException("No result found in Tripoli-4 listing.")
+            raise T4ParserException(
+                "No result found in Tripoli-4 listing.\n{}"
+                .format(self.scan_res.fatal_error()))
         if not self.scan_res.normalend:
             LOGGER.warning("Tripoli-4 listing did not finish with "
                            "NORMAL COMPLETION.")

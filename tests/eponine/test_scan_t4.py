@@ -663,6 +663,8 @@ def test_no_usual_output(datadir, caplog):
     with pytest.raises(T4ParserException):
         T4Parser(str(datadir/"failure_test_segFault.d.res"))
     assert "No result found in Tripoli-4 listing." in caplog.text
+    assert "FATAL ERROR" in caplog.text
+    assert "error message" in caplog.text
 
 
 def test_no_a_t4_opt_no_spectrum(datadir, caplog):

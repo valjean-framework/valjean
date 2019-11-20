@@ -325,6 +325,7 @@ class Scan(Mapping):
         self.counterrors = 0
         self.times = OrderedDict()
         self.last_generator_state = ""
+        self._fatal_error = []
         self._collres = OrderedDict()
         self._get_collres()
 
@@ -374,6 +375,8 @@ class Scan(Mapping):
             self.countwarnings += 1
         elif "ERROR" in line:
             self.counterrors += 1
+            if "FATAL ERROR" in line:
+                self._fatal_error = ["fatal error in TRIPOLI-4:\n\n"]
         elif "PARTIAL EDITION" in line:
             self.partial = True
         elif "NORMAL COMPLETION" in line:
@@ -410,6 +413,8 @@ class Scan(Mapping):
                         # ordered dictionary -> unique keys, so only last kept
                         self._add_time(end_flag, line)
                         continue
+                elif self._fatal_error:
+                    self._fatal_error.append(line)
                 elif not self.times:
                     self._check_input_data(line)
                     continue
@@ -498,6 +503,10 @@ class Scan(Mapping):
     def get_all_batch_results(self):
         '''Return all batchs results in one string, to be parsed in once.'''
         return ''.join(self._collres.values())
+
+    def fatal_error(self):
+        '''Return the fatal error message if found.'''
+        return ''.join(self._fatal_error)
 
     def print_statistics(self):
         '''Print statistics of the listing scanned: normal end, number of
