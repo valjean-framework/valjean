@@ -378,6 +378,21 @@ def test_entropy(datadir):
     assert t4rb_b0.globals['simulation_time'] == 2
     assert t4rb_b0.globals['initialization_time'] == 6
     check_first_entropy_result(t4rb_b0)
+    t4rb_b5 = t4_res.build_response_book(batch_index=5)
+    assert t4rb_b5
+    assert t4rb_b5.globals['simulation_time'] == 14
+    assert t4rb_b5.globals['edition_batch_number'] == 6
+    t4rb_bn6 = t4_res.build_response_book(batch_number=6)
+    assert t4rb_bn6
+    assert t4rb_bn6.globals['simulation_time'] == 14
+    assert t4rb_b5 == t4rb_bn6
+    t4_res = T4Parser(str(datadir/"entropy.d.res.ceav5"), batch=2)
+    assert t4_res
+    assert len(t4_res.scan_res) == 10
+    assert len(t4_res.result) == 1
+    t4_rb = t4_res.build_response_book()
+    assert t4_rb
+    assert t4_rb.globals['simulation_time'] == 5
 
 
 def test_verbose_entropy(datadir, caplog, monkeypatch):

@@ -162,10 +162,12 @@ class T4Parser():
             the ResponseBook, supersedes ``batch_index``, default: None
         :rtype: ResponseBook
         '''
-        if batch_number:
-            batch_index = (-1 if len(self.result) == 1
-                           else self.scan_res.index(batch_number))
-        parsed_res = self.result[batch_index]
+        if self.batch_number not in (-1, 0):
+            batch_index = self.scan_res.index(self.batch_number)
+        if batch_number and len(self.scan_res) != 1:
+            batch_index = self.scan_res.index(batch_number)
+        parsed_res = (self.result[batch_index] if len(self.result) > 1
+                      else self.result[-1])
         glob_vars = {k: v for k, v in parsed_res.items()
                      if not isinstance(v, list)}
         # sanity check
