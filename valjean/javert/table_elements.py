@@ -298,10 +298,8 @@ def repr_student_summary(result):
     '''
     LOGGER.debug("repr_student_summary found")
     if result:
-        return [TableTemplate(["Student test:"], ["OK"],
-                              highlights=[[False], [False]])]
-    return [TableTemplate(["Student test:"], ["KO"],
-                          highlights=[[False], [True]])]
+        return [RstTextTemplate('Student test: OK')]
+    return [RstTextTemplate('Student test: :hl:`KO`')]
 
 
 def repr_student_intermediate(result):
@@ -473,10 +471,8 @@ def repr_holm_bonferroni_silent(result):
     Different levels of verbosity should be allowed.
     '''
     if result:
-        return [TableTemplate(["Holm-Bonferroni test:"], ["OK"],
-                              highlights=[[False], [False]])]
-    return [TableTemplate(["Holm-Bonferroni test:"], ["KO"],
-                          highlights=[[False], [True]])]
+        return [RstTextTemplate('Holm-Bonferroni test: OK')]
+    return [RstTextTemplate('Holm-Bonferroni test: :hl:`KO`')]
 
 
 def repr_holm_bonferroni_summary(result):
@@ -490,10 +486,8 @@ def repr_holm_bonferroni_summary(result):
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     if result:
-        return [TableTemplate(["Holm-Bonferroni test:"], ["OK"],
-                              highlights=[[False], [False]])]
-    return [TableTemplate(["Holm-Bonferroni test:"], ["KO"],
-                          highlights=[[False], [True]])]
+        return [RstTextTemplate('Holm-Bonferroni test: OK')]
+    return [RstTextTemplate('Holm-Bonferroni test: :hl:`KO`')]
 
 
 def percent_fmt(num, den):
