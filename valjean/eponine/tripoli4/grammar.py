@@ -213,7 +213,8 @@ _inums = pyparscom.number.setParseAction(tokenMap(trans.common.ITYPE))
 # General keywords
 _integratedres_kw = (Keyword("ENERGY INTEGRATED RESULTS")
                      | Keyword("NU INTEGRATED RESULTS")
-                     | Keyword("ZA INTEGRATED RESULTS"))
+                     | Keyword("ZA INTEGRATED RESULTS")
+                     | Keyword("INTEGRATED RESULTS"))
 _numbatchsused_kw = (Keyword("number of")
                      + (Keyword("batches") | Keyword("batch"))
                      + Optional(Keyword("used")))
@@ -588,7 +589,8 @@ _spectrumresp = Suppress(_spectrumresp_kw + ':') + Word(alphas)('spectrum')
 _filters = (Suppress(_filters_kw + ':')
             + Group(OneOrMore(_inums))
             .setParseAction(trans.convert_list_to_tuple)
-            ('filter_volumes'))
+            ('filtered_volumes')
+            + Optional(Suppress('With') + Word(alphas+'_')('filter_type')))
 
 
 respcarac = (_respfilter
