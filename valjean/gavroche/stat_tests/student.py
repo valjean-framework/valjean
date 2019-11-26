@@ -422,13 +422,16 @@ class TestResultStudent(TestResult):
 class TestStudent(TestDataset):
     '''Class to build the Student's t-test.'''
 
-    def __init__(self, dsref, *datasets, name, description='', alpha=0.01,
-                 ndf=None):
+    def __init__(self, dsref, *datasets, name, description='', labels=None,
+                 alpha=0.01, ndf=None):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`TestStudent`
 
         :param str name: local name of the test
         :param str description: specific description of the test
+        :param dict labels: labels to be used for test classification in
+                            reports (for example category, input file name,
+                            type of result, ...)
         :param dsref: reference dataset
         :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
         :param datasets: list of datasets to be compared to reference dataset
@@ -441,7 +444,8 @@ class TestStudent(TestDataset):
                         (should correspond to number of batches),
                         otherwise ndf assumed infinite, normal approximation
         '''
-        super().__init__(dsref, *datasets, name=name, description=description)
+        super().__init__(dsref, *datasets,
+                         name=name, description=description, labels=labels)
         self.alpha = alpha
         self.ndf = ndf
         self.threshold = self.student_threshold(self.alpha, self.ndf)

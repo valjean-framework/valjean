@@ -59,9 +59,21 @@ class TableTemplate:
     >>> print(len(tit4.columns), tit4.columns[0].size)
     2 4
     >>> stab14 = join(tit1, tit4)
+    Traceback (most recent call last):
+        ...
+    ValueError: all the input arrays must have same number of dimensions, \
+but the array at index 0 has 1 dimension(s) \
+and the array at index 1 has 2 dimension(s)
+
+    It is still possible to join these tables if *tit1* columns are declared as
+    arrays:
+
+    >>> tit1b = TableTemplate(np.array([1.5]), np.array([1.4]),
+    ...                       headers=['egg', 'spam'])
+    >>> stab14 = join(tit1b, tit4)
     >>> print(len(stab14.columns), stab14.columns[0].size)
     2 5
-    >>> stab14.columns[0].size == tit1.columns[0].size + tit4.columns[0].size
+    >>> stab14.columns[0].size == tit1b.columns[0].size + tit4.columns[0].size
     True
     >>> print("{!r}".format(stab14))
     class: <class 'valjean.javert.templates.TableTemplate'>
@@ -91,23 +103,23 @@ class TableTemplate:
     Any number of :class:`TableTemplate` can be joined (if fulfilling the
     requirements).
 
-    >>> stab124 = join(tit1, tit2, tit4)
-    >>> print("{!r}".format(stab124))
+    >>> stab145 = join(tit1b, tit4, tit5)
+    >>> print("{!r}".format(stab145))
     class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
-    egg: [1.5 1.2 0.  1.  2.  3. ]
-    spam: [1.4 0.9 0.  0.5 1.  1.5]
+    egg: [1.5 0.  1.  2.  3.  0.  0.1 0.2]
+    spam: [1.4  0.   0.5  1.   1.5  0.   0.05 0.1 ]
     <BLANKLINE>
 
     The :meth:`TableTemplate.join` method updates the left
     :class:`TableTemplate` as expected:
 
-    >>> tit1.join(tit2, tit4)
-    >>> print("{!r}".format(tit1))
+    >>> tit1b.join(tit4, tit5)
+    >>> print("{!r}".format(tit1b))
     class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
-    egg: [1.5 1.2 0.  1.  2.  3. ]
-    spam: [1.4 0.9 0.  0.5 1.  1.5]
+    egg: [1.5 0.  1.  2.  3.  0.  0.1 0.2]
+    spam: [1.4  0.   0.5  1.   1.5  0.   0.05 0.1 ]
     <BLANKLINE>
     '''
 
@@ -223,6 +235,7 @@ class TableTemplate:
         self.columns = tuple(np.hstack((self.columns[i], other.columns[i]))
                              for i in range(len(self.columns)))
         self.units = other.units if self.units is None else self.units
+        self.highlights = list(np.hstack((self.highlights, other.highlights)))
 
     def join(self, *others):
         '''Join a given number a :class:`TableTemplate` to the current one.
@@ -754,7 +767,10 @@ highlight=[(2, 3), (-31, 2), (30, 3), (-3, 2)])
 
         :returns: :class:`TextTemplate`
         '''
-        return TextTemplate(text=self.text, highlight=self.highlight.copy())
+        return TextTemplate(text=self.text,
+                            highlight=(self.highlight.copy()
+                                       if self.highlight is not None
+                                       else None))
 
     def join(self, *others):
         '''Join a given number of :class:`TextTemplate` to the current one.

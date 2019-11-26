@@ -5,6 +5,12 @@ from .. import LOGGER
 from .templates import PlotTemplate, CurveElements, join
 from .verbosity import Verbosity
 
+# turn off pylint warnings about invalid names in this file; there are just too
+# many long function names and they cannot be renamed because
+# javert.representation looks for them by programmatically constructing their
+# name based on the name of the test result class, the verbosity, etc.
+# pylint: disable=invalid-name
+
 
 def dimension_from_array(array_shape):
     '''Check if array is consistent with 1D plot.
@@ -172,7 +178,7 @@ def repr_student_pvalues(result):
     an empty list is returned.
     '''
     if result.pvalue is None:
-        LOGGER.info("p-value is None, won't be possible to plot it.")
+        LOGGER.debug("p-value is None, won't be possible to plot it.")
         return []
     dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
@@ -247,4 +253,9 @@ def repr_testresultmetadata(_result, _verbosity=None):
 
 def repr_testresultfailed(_result, _verbosity=None):
     '''Plot failed test -> no plot done.'''
+    return []
+
+
+def repr_testresultstatstestsperflags(_result, _verbosity=None):
+    '''Plot statistics on the tests classified per flags -> no plot done.'''
     return []

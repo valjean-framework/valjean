@@ -293,13 +293,16 @@ class TestChi2(TestDataset):
     '''Test class for χ², inheritate from :class:`~valjean.gavroche.test.Test`.
     '''
 
-    def __init__(self, dsref, *datasets, name, description='', alpha=0.01,
-                 ignore_empty=False):
+    def __init__(self, dsref, *datasets, name, description='', labels=None,
+                 alpha=0.01, ignore_empty=False):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`TestChi2`
 
         :param str name: local name of the test
         :param str description: specific description of the test
+        :param dict labels: labels to be used for test classification in
+                            reports (for example category, input file name,
+                            type of result, ...)
         :param dsref: reference dataset
         :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
         :param datasets: list of datasets  to be compared to reference dataset
@@ -312,7 +315,8 @@ class TestChi2(TestDataset):
                                   array to sum will contain infinite terms.
                                   Default is ``False``.
         '''
-        super().__init__(dsref, *datasets, name=name, description=description)
+        super().__init__(dsref, *datasets,
+                         name=name, description=description, labels=labels)
         self.alpha = alpha
         self.ignore_empty = ignore_empty
         #: nonzero bins identification by True, False if zero

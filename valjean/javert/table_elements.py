@@ -100,10 +100,9 @@ def repr_bins(dsref):
 def repr_testresultequal(result, verbosity=None):
     '''Represent the result of a :class:`~.TestEqual` test.
 
-    :param result: a test result.
-    :type result: :class:`~.TestResultEqual`
-    :returns: Representation of a :class:`~.TestResultEqual` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :param TestResultEqual result: a test result.
+    :param Verbosity verbosity: verbosity level
+    :returns: list of templates representing a :class:`~.TestResultEqual`
     '''
     LOGGER.debug("IN repr_testresultequal, %s, res = %s",
                  verbosity, bool(result))
@@ -120,7 +119,8 @@ def repr_equal_summary(result):
     '''Function to generate a summary table for the equal test (only tells if
     the test was successful or not).
 
-    Different levels of verbosity should be allowed.
+    :param TestResultEqual result: a test result.
+    :rtype: list(TextTemplate)
     '''
     LOGGER.debug("repr_equal_summary found")
     if result:
@@ -131,11 +131,10 @@ def repr_equal_summary(result):
 def repr_equal(result, result_header):
     '''Representation of equal test.
 
-    :param result: a test result.
-    :type result: :class:`~.TestResultEqual`
+    :param TestResultEqual result: a test result.
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultEqual` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :rtype: list(TableTemplate)
     '''
     LOGGER.debug("In repr_equal")
     dscols = tuple((ds.value, eq)
@@ -161,10 +160,9 @@ def repr_equal(result, result_header):
 def repr_testresultapproxequal(result, verbosity=None):
     '''Represent the result of a :class:`~.TestApproxEqual` test.
 
-    :param  result: a test result.
-    :type result: :class:`~.TestResultApproxEqual`
-    :returns: Representation of a :class:`~.TestResultApproxEqual` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :param TestResultApproxEqual result: a test result.
+    :param Verbosity verbosity: verbosity level
+    :returns: list of templates representing a :class:`~.TestResultApproxEqual`
     '''
     if verbosity == Verbosity.SILENT and bool(result):
         return []
@@ -177,7 +175,8 @@ def repr_approx_equal_summary(result):
     '''Function to generate a summary table for the approx equal test (only
     tells if the test was successful or not).
 
-    Different levels of verbosity should be allowed.
+    :param TestResultApproxEqual result: a test result.
+    :rtype: list(TextTemplate)
     '''
     LOGGER.debug("repr_approx_equal_summary found")
     if result:
@@ -188,11 +187,10 @@ def repr_approx_equal_summary(result):
 def repr_approx_equal(result, result_header):
     '''Representation of approx equal test.
 
-    :param result: a test result.
-    :type result: :class:`~.TestResultApproxEqual`
+    :param TestResultApproxEqual result: a test result.
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultApproxEqual` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :rtype: list(TableTemplate)
     '''
     LOGGER.debug("In repr_approx_equal")
     dscols = tuple((ds.value, eq)
@@ -219,10 +217,9 @@ def repr_approx_equal(result, result_header):
 def repr_testresultstudent(result, verbosity=None):
     '''Represent the result of a :class:`~.TestStudent` test.
 
-    :param  result: a test result.
-    :type result: :class:`~.TestResultStudent`
-    :returns: Representation of a :class:`~.TestResultStudent` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :param TestResultStudent result: a test result.
+    :param Verbosity verbosity: verbosity level
+    :returns: list of templates representing a :class:`~.TestResultStudent`
     '''
     LOGGER.debug("student repr, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT:
@@ -240,8 +237,8 @@ def _student_heads(test_res, bin_names):
     Reference appears first then all the tested datasets. They are identified
     by their name if unique, else their index in the list of datasets is used.
 
-    :param test_res: the test (not the result)
-    :type test_res: :class:`~.TestStudent`
+    :param TestStudent test_res: the test (not the result)
+    :param list(str) bin_names: names of the bins (dimensions)
     :returns: list of headers
     '''
     heads = [('v_'+test_res.dsref.name, 'σ_'+test_res.dsref.name)]
@@ -256,11 +253,10 @@ def _student_heads(test_res, bin_names):
 def repr_student(result):
     '''Representation of Student test result.
 
-    :param result: a test result.
-    :type result: :class:`~.TestResultStudent`
+    :param TestResultStudent result: a test result.
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :rtype: list(TableTemplate)
     '''
     LOGGER.debug("In repr_student")
     oracles = result.oracles()
@@ -289,7 +285,8 @@ def repr_student_silent(_result):
     '''Function to generate a silent table for the Student test (only tells if
     the test was successful or not).
 
-    Different levels of verbosity should be allowed.
+    :param TestResultStudent result: a Student test result.
+    :returns: empty list
     '''
     LOGGER.debug("student silent")
     return []
@@ -299,7 +296,8 @@ def repr_student_summary(result):
     '''Function to generate a summary table for the Student test (only tells if
     the test was successful or not).
 
-    Different levels of verbosity should be allowed.
+    :param TestResultStudent result: a Student test result.
+    :rtype: list(TextTemplate)
     '''
     LOGGER.debug("repr_student_summary found")
     if result:
@@ -310,6 +308,9 @@ def repr_student_summary(result):
 def repr_student_intermediate(result):
     '''Function to generate an intermediate table for the Student test: print
     all the failing results.
+
+    :param TestResultStudent result: a Student test result.
+    :rtype: list(TableTemplate)
     '''
     LOGGER.debug("repr_student_intermediate found")
     if result:
@@ -351,12 +352,11 @@ def repr_student_intermediate(result):
 def repr_testresultbonferroni(result, verbosity=None):
     '''Represent the result of a :class:`~.TestBonferroni` test.
 
-    Only reprensents the Bonferroni result, not the input test result.
+    Only represents the Bonferroni result, not the input test result.
 
-    :param  result: a test result.
-    :type result: :class:`~.TestResultBonferroni`
-    :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :param TestResultBonferroni result: a test result.
+    :param Verbosity verbosity: verbosity level
+    :returns: list of templates representing a :class:`~.TestResultBonferroni`
     '''
     LOGGER.debug("bonf repr, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT and bool(result):
@@ -367,13 +367,12 @@ def repr_testresultbonferroni(result, verbosity=None):
 def repr_bonferroni(result):
     '''Reprensetation of Bonferroni test result.
 
-    Only reprensents the Bonferroni result, not the input test result.
+    Only represents the Bonferroni result, not the input test result.
 
-    :param result: a test result.
-    :type result: :class:`~.TestResultBonferroni`
+    :param TestResultBonferroni result: a test result.
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :rtype: list(TableTemplate)
     '''
     ndatasets = len(result.first_test_res.test.datasets)
     oracles = list(result.oracles())
@@ -396,11 +395,10 @@ def repr_bonferroni(result):
 def repr_testresultholmbonferroni(result, verbosity=None):
     '''Represent the result of a :class:`~.TestHolmBonferroni` test.
 
-    :param  result: a test result.
-    :type result: :class:`~.TestResultHolmBonferroni`
-    :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
-        table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :param TestResultHolmBonferroni result: a test result.
+    :param Verbosity verbosity: verbosity level
+    :returns: list of templates representing a
+        :class:`~.TestResultHolmBonferroni`
     '''
     LOGGER.debug("HB res, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT:
@@ -415,14 +413,13 @@ def repr_testresultholmbonferroni(result, verbosity=None):
 def repr_holm_bonferroni(result):
     '''Reprensetation of Holm-Bonferroni test result.
 
-    Only reprensents the Holm-Bonferroni result, not the input test result.
+    Only represents the Holm-Bonferroni result, not the input test result.
 
-    :param result: a test result.
-    :type result: :class:`~.TestResultHolmBonferroni`
+    :param TestResultHolmBonferroni result: a test result.
     :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
         table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :rtype: list(TableTemplate)
     '''
     ndatasets = len(result.first_test_res.test.datasets)
     oracles = list(result.oracles())
@@ -447,11 +444,10 @@ def repr_holm_bonferroni_summary(result):
     '''Represent the result of a :class:`~.TestHolmBonferroni` test for the
     SUMMARY level of verbosity.
 
-    :param  result: a test result.
-    :type result: :class:`~.TestResultHolmBonferroni`
+    :param TestResultHolmBonferroni result: a test result.
     :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
         table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
+    :rtype: list(TextTemplate)
     '''
     if result:
         return [TextTemplate('Holm-Bonferroni test: OK')]
@@ -462,16 +458,17 @@ def percent_fmt(num, den):
     '''Format a fraction as a percentage. Example:
 
     >>> percent_fmt(2, 4)
-    '2/4 (50.0%)'
+    '2/4 (50.0%)'
     >>> percent_fmt(0, 3)
-    '0/3 (0.0%)'
+    '0/3 (0.0%)'
     >>> percent_fmt(7, 7)
-    '7/7 (100.0%)'
+    '7/7 (100.0%)'
     >>> percent_fmt(0, 0)
-    '0/0 (???%)'
+    '0/0 (???%)'
 
     :param int num: the numerator.
     :param int den: the denominator.
+    :rtype: str
     '''
     if den != 0:
         percent = 100.0 * num / den
@@ -484,9 +481,10 @@ def repr_testresultstatstasks(result, verbosity=None):
     breaks down the tasks by status.
 
     :param TestResultStatsTasks result: the test result to represent.
-    :returns: the tables representing the test result.
-    :rtype: list(TableTemplate)
+    :param Verbosity verbosity: verbosity level
+    :returns: list of templates representing the test result.
     '''
+    LOGGER.debug("In repr_testresultstatstasks")
     if verbosity == Verbosity.SILENT and bool(result):
         return []
     return repr_testresultstats(result, TaskStatus.DONE)
@@ -497,9 +495,11 @@ def repr_testresultstatstests(result, verbosity=None):
     breaks down the tests by success status.
 
     :param TestResultStatsTests result: the test result to represent.
+    :param Verbosity verbosity: verbosity level
     :returns: the tables representing the test result.
     :rtype: list(TableTemplate)
     '''
+    LOGGER.debug("In repr_testresultstatstests")
     if verbosity == Verbosity.SILENT and bool(result):
         return []
     return repr_testresultstats(result, TestOutcome.SUCCESS)
@@ -539,16 +539,129 @@ def repr_testresultstats(result, status_ok):
     return [table]
 
 
+def repr_testresultstatstestsbylabels(result, verbosity=None):
+    '''Represent a :class:`~.TestResultStatsTestsByLabels` as tables. Shape of
+    the table may change according to the number of flags required.
+
+    :param TestResultStatsTestsByLabels result: the test result to represent.
+    :param Verbosity verbosity: verbosity level
+    :returns: the tables representing the test result.
+    :rtype: list(TableTemplate)
+    '''
+    LOGGER.debug("In repr_testresultstatstestsbylabels")
+    if verbosity == Verbosity.SILENT and bool(result):
+        return []
+    if verbosity == Verbosity.SUMMARY:
+        return repr_testresultstatsbylabels_summary(result)
+    return repr_testresultstatsbylabels(result)
+
+
+def _sbl_labels_1column(labels, results, oracles):
+    '''Build a :class:`TableTemplate` from the results where labels are
+    concantenated in one column.
+
+    :param tuple(str) labels: labels used to make statistics
+    :param dict results: result from :class:`TestResultStatsTestsByLabels`
+    :param list(bool) oracles: result of each individual test
+    :rtype: TableTemplate
+    '''
+    lnames, lok, lko, hlight = [], [], [], []
+    for res, ora in zip(results, oracles):
+        lnames.append('/'.join(res['labels']))
+        lok.append(percent_fmt(res['OK'], res['total']))
+        lko.append(percent_fmt(res['KO'], res['total']))
+        hlight.append([not ora])
+    return TableTemplate(
+        lnames, lok, lko,
+        headers=['/'.join(labels), r'% success', r'% failure'],
+        highlights=[hlight]*3)
+
+
+def _sbl_1colbylabel(labels, results, oracles):
+    '''Build a :class:`TableTemplate` from the results where each label will be
+    represented in a separate column.
+
+    :param tuple(str) labels: labels used to make statistics
+    :param dict results: result from :class:`TestResultStatsTestsByLabels`
+    :param list(bool) oracles: result of each individual test
+    :rtype: TableTemplate
+    '''
+    lnames = [[] for _ in range(len(labels))]
+    lok, lko, hlight = [], [], []
+    for res, ora in zip(results, oracles):
+        for i, lab in enumerate(res['labels']):
+            lnames[i].append(lab)
+        lok.append(percent_fmt(res['OK'], res['total']))
+        lko.append(percent_fmt(res['KO'], res['total']))
+        hlight.append([not ora])
+    return TableTemplate(
+        *lnames, lok, lko,
+        headers=[*labels] + [r'% success', r'% failure'],
+        highlights=[hlight]*(len(labels)+2))
+
+
+def repr_testresultstatsbylabels(result):
+    '''Function to print detailed statistics on tests, per category and sample
+    run.
+
+    :param TestResultStatsTestsByLabels result: the test result to represent.
+    :returns: the tables representing the test result.
+    :rtype: list(TableTemplate)
+    '''
+    LOGGER.debug("In repr_testresultstatsbylabels")
+    res = []
+    res.append(_sbl_1colbylabel(
+        result.test.by_labels, result.classify, result.oracles()))
+    if result.nb_missing_labels() != 0:
+        res.append(TextTemplate('At least one of the labels used for sorting '
+                                '{} is missing in {} tests'
+                                .format(result.test.by_labels,
+                                        result.nb_missing_labels())))
+    return res
+
+
+def repr_testresultstatsbylabels_summary(result):
+    '''Function to print detailed statistics on tests, per category and sample
+    run in summary case: only print failed cases.
+
+    :param TestResultStatsTestsByLabels result: the test result to represent.
+    :returns: the tables representing the test result.
+    :rtype: list(TableTemplate), list(TextTemplate)
+    '''
+    LOGGER.debug("In repr_testresultstatsbylabels")
+    res = []
+    lnames = [[] for _ in range(len(result.test.by_labels))]
+    lok, lko, hlight = [], [], []
+    for resu, ora in zip(result.classify, result.oracles()):
+        if ora:
+            continue
+        for i, lab in enumerate(resu['labels']):
+            lnames[i].append(lab)
+        lok.append(percent_fmt(resu['OK'], resu['total']))
+        lko.append(percent_fmt(resu['KO'], resu['total']))
+        hlight.append([not ora])
+    tabtemp = TableTemplate(
+        *lnames, lok, lko,
+        headers=[*result.test.by_labels] + [r'% success', r'% failure'],
+        highlights=[hlight]*(len(result.test.by_labels)+2))
+    if lok:
+        res.append(tabtemp)
+    else:
+        res.append(TextTemplate('No failed test found.'))
+    if result.nb_missing_labels() != 0:
+        res.append(TextTemplate('At least one of the labels used for sorting '
+                                '{} is missing in {} tests'
+                                .format(result.test.by_labels,
+                                        result.nb_missing_labels())))
+    return res
+
+
 def repr_testresultmetadata(result, verbosity=None):
     '''Represent the result of a :class:`~.TestMetadata` test.
 
-    :param  result: a test result.
-    :type result: :class:`~.TestResultMetadata`
-    :returns: Representation of a :class:`~.TestResultMetadata` as a
-        table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
-
-    Different levels of verbosity should be allowed.
+    :param TestResultMetadata result: a test result.
+    :param Verbosity verbosity: verbosity level
+    :returns: list of templates representing a :class:`~.TestResultMetadata`
     '''
     LOGGER.debug("metadata res, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT:
@@ -565,7 +678,8 @@ def repr_testresultmetadata(result, verbosity=None):
 def repr_metadata(result):
     '''Function to generate a table from the metadata test results.
 
-    Different levels of verbosity should be allowed.
+    :param TestResultMetadata result: a test result.
+    :rtype: list(TableTemplate)
     '''
     if result:
         return [TableTemplate(["Metadata:"], ["OK"],
@@ -578,7 +692,8 @@ def repr_metadata(result):
 def repr_metadata_full_details(result):
     '''Function to generate a table from the metadata test results.
 
-    Different levels of verbosity should be allowed.
+    :param TestResultMetadata result: a test result.
+    :rtype: list(TableTemplate)
     '''
     LOGGER.debug("repr_metadata_full_details")
     samp_names = list(result.test.dmd)
@@ -604,7 +719,8 @@ def repr_metadata_full_details(result):
 def repr_metadata_intermediate(result):
     '''Function to generate a table from the metadata test results.
 
-    Different levels of verbosity should be allowed.
+    :param TestResultMetadata result: a test result.
+    :rtype: list(TableTemplate)
     '''
     LOGGER.debug("repr_metadata_intermediate")
     if not result.only_failed_comparisons():
@@ -632,7 +748,8 @@ def repr_metadata_intermediate(result):
 def repr_metadata_summary(result):
     '''Function to generate a table from the metadata test results.
 
-    Different levels of verbosity should be allowed.
+    :param TestResultMetadata result: a test result.
+    :rtype: list(TextTemplate)
     '''
     LOGGER.debug("repr_metadata_summary")
     if result:
@@ -643,14 +760,19 @@ def repr_metadata_summary(result):
 def repr_metadata_silent(_result):
     '''Function to generate a table from the metadata test results.
 
-    Different levels of verbosity should be allowed.
+    :param TestResultMetadata result: a test result.
+    :returns: empty list
     '''
     LOGGER.debug("repr_metadata_silent")
     return []
 
 
 def repr_testresultfailed(result, _verbosity=None):
-    '''Represent a failed result as rst text.'''
+    '''Represent a failed result as rst text.
+
+    :param TestResultFailed result: a failed test result.
+    :rtype: list(TextTemplate)
+    '''
     LOGGER.debug("In repr_testresultfailed")
     defmsg = ' failed with message:'
     cname = result.test.__class__.__name__

@@ -49,17 +49,25 @@ class TestMetadata(Test):
     '''
 
     # pylint: disable=too-many-arguments
-    def __init__(self, dict_md, name, description='',
+    def __init__(self, dict_md, name, description='', labels=None,
                  exclude=('results', 'index', 'score_index', 'response_index',
-                          'response_type'),
-                 include=None):
-        super().__init__(name=name, description=description)
+                          'response_type')):
+        '''Initialisation of :class:`TestMetadata`.
+
+        :param str name: local name of the test
+        :param str description: specific description of the test
+        :param dict labels: labels to be used for test classification in
+            reports, for example category, input file name, type of result, ...
+        :param tuple exclude: a tuple of keys that will not be considered as
+            metadata. Default: ``('results', 'index', 'score_index',
+            'response_index', 'response_type')``
+        '''
+        super().__init__(name=name, description=description, labels=labels)
         if not isinstance(dict_md, dict):
             raise TypeError('Metadata should be given as a dictionary '
                             'name: dict of metadata')
         self.dmd = dict_md
         self.exclude = exclude
-        self.include = include if include is not None else []
         self.all_md = self.build_metadata_dict()
 
     def build_metadata_dict(self):

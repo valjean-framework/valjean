@@ -109,7 +109,7 @@ class Test(ABC):
     Base class for tests.
     '''
 
-    def __init__(self, *, name, description=''):
+    def __init__(self, *, name, description='', labels=None):
         '''Initialize the :class:`~.Test` object with a name, a description of
         the test (may be long) and the test type (equality, Student, χ², etc.).
 
@@ -121,9 +121,13 @@ class Test(ABC):
         :param str description: description of the test exepcted with context,
                                 this string will typically end up in the test
                                 report.
+        :param dict labels: labels to be used for test classification in
+                            reports (for example category, input file name,
+                            type of result, ...)
         '''
         self.name = name
         self.description = description
+        self.labels = {} if labels is None else labels.copy()
 
     @abstractmethod
     def evaluate(self):
@@ -140,17 +144,20 @@ class Test(ABC):
 class TestDataset(Test):
     '''Generic class for comparing datasets.'''
 
-    def __init__(self, dsref, *datasets, name, description=''):
+    def __init__(self, dsref, *datasets, name, description='', labels=None):
         '''Initialisation of :class:`~.TestEqual`:
 
         :param str name: name of the test (in analysis)
         :param str description: specific description of the test
+        :param dict labels: labels to be used for test classification in
+                            reports (for example category, input file name,
+                            type of result, ...)
         :param dsref: reference dataset
         :type dsref: :class:`~.dataset.Dataset`
         :param datasets: list of datasets to be compared to reference dataset
         :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
         '''
-        super().__init__(name=name, description=description)
+        super().__init__(name=name, description=description, labels=labels)
         self.dsref = dsref
         self.datasets = datasets
         if not datasets:
@@ -269,13 +276,16 @@ class TestApproxEqual(TestDataset):
     Errors are ignored.
     '''
 
-    def __init__(self, dsref, *datasets, name, description='',
+    def __init__(self, dsref, *datasets, name, description='', labels=None,
                  rtol=1e-5, atol=1e-8):
         # pylint: disable=too-many-arguments
         '''Initialisation of :class:`~.TestApproxEqual`:
 
         :param str name: local name of the test
         :param str description: specific description of the test
+        :param dict labels: labels to be used for test classification in
+                            reports (for example category, input file name,
+                            type of result, ...)
         :param dsref: reference dataset
         :type dsref: :class:`~.dataset.Dataset`
         :param datasets: list of datasets to be compared to reference dataset
@@ -286,7 +296,8 @@ class TestApproxEqual(TestDataset):
         To get more details on `rtol` and `atol` parameters, see
         :func:`numpy.isclose`.
         '''
-        super().__init__(dsref, *datasets, name=name, description=description)
+        super().__init__(dsref, *datasets,
+                         name=name, description=description, labels=labels)
         self.rtol = rtol
         self.atol = atol
 

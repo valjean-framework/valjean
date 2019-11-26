@@ -350,12 +350,15 @@ class TestResultBonferroni(TestResult):
 class TestBonferroni(Test):
     '''Bonferroni correction for multiple tests of the same hypothesis.'''
 
-    def __init__(self, *, name, description, test, alpha=0.01):
+    def __init__(self, *, name, description, labels=None, test, alpha=0.01):
         '''Initialisation of TestBonferroni.
 
 
         :param str name: local name of the test
         :param str description: specific description of the test
+        :param dict labels: labels to be used for test classification in
+                            reports (for example category, input file name,
+                            type of result, ...)
         :param test: test from which pvalues will be extracted
         :type test: :class:`valjean.gavroche.test.Test` child class
         :param float alpha: required significance level
@@ -363,7 +366,7 @@ class TestBonferroni(Test):
         The significance level is considered two-sided here, so divide by 2.
         It is the significance level for the whole test.
         '''
-        super().__init__(name=name, description=description)
+        super().__init__(name=name, description=description, labels=labels)
         self.test = test
         self.alpha = np.float_(alpha / 2)
         self.bonf_signi_level = self.alpha / self.ntests
@@ -475,11 +478,14 @@ class TestResultHolmBonferroni(TestResult):
 class TestHolmBonferroni(Test):
     '''Holm-Bonferroni method for multiple tests of the same hypothesis.'''
 
-    def __init__(self, *, name, description, test, alpha=0.01):
+    def __init__(self, *, name, description, labels=None, test, alpha=0.01):
         '''Initialisation of TestHolmBonferroni.
 
         :param str name: local name of the test
         :param str description: specific description of the test
+        :param dict labels: labels to be used for test classification in
+                            reports (for example category, jdd name, type of
+                            result, ...)
         :param test: test from which pvalues will be extracted
         :type test: :class:`valjean.gavroche.test.Test` child class
         :param float alpha: significance level
@@ -487,7 +493,7 @@ class TestHolmBonferroni(Test):
         The significance level is also considered two-sided here, so divide by
         2. This is the overall significance level.
         '''
-        super().__init__(name=name, description=description)
+        super().__init__(name=name, description=description, labels=labels)
         self.test = test
         self.alpha = alpha / 2
 

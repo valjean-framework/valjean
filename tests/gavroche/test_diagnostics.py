@@ -3,11 +3,18 @@
 # pylint: disable=unused-import,wrong-import-order,no-value-for-parameter
 from ..context import valjean
 
+import pytest
 from hypothesis import given, event
 from hypothesis.strategies import shared, one_of
 
 from valjean.gavroche.diagnostics.metadata import TestMetadata
 from .conftest import metadata_dicts
+from valjean.cosette.pythontask import PythonTask
+from valjean.cosette.task import TaskStatus
+from valjean.gavroche.diagnostics.stats import test_stats_by_labels
+from valjean.gavroche.test import TestResultFailed
+from valjean.config import Config
+from valjean.cosette.env import Env
 
 
 @given(metadata1=shared(metadata_dicts(), key='metadata'),
@@ -44,3 +51,114 @@ def test_metadata_exclude(metadata):
                         exclude=(first_key,))
     # the test should succeed
     assert test.evaluate()
+
+
+def generate_test_tasks():
+    '''Generate :class:`~.TestMetadata` to test the statistics diagnostics
+    based on labels.'''
+    menu1 = {'food': 'egg + spam', 'drink': 'beer'}
+    menu2 = {'food': 'egg + bacon', 'drink': 'beer'}
+    menu3 = {'food': 'lobster thermidor', 'drink': 'brandy'}
+
+    def test_generator():
+        result = [TestMetadata({'Graham': menu1, 'Terry': menu1},
+                               name='gt_wday_lunch',
+                               labels={'day': 'Wednesday', 'meal': 'lunch'}
+                               ).evaluate(),
+                  TestMetadata({'Michael': menu1, 'Eric': menu2},
+                               name='me_wday_dinner',
+                               labels={'day': 'Wednesday', 'meal': 'dinner'}
+                               ).evaluate(),
+                  TestMetadata({'John': menu2, 'Terry': menu2},
+                               name='jt_wday',
+                               labels={'day': 'Wednesday'}).evaluate(),
+                  TestMetadata({'Terry': menu3, 'John': menu3},
+                               name='Xmasday',
+                               labels={'day': "Christmas Eve"}).evaluate()]
+        return {'test_generator': {'result': result}}, TaskStatus.DONE
+
+    return PythonTask('test_generator', test_generator)
+
+
+def generate_stats_tasks(name, test_task, labels):
+    '''Generate to tasks to make the diagnostic based on tests' labels.'''
+    stats = test_stats_by_labels(name=name, tasks=[test_task],
+                                 by_labels=labels)
+    create_stats = next(task for task in stats.depends_on)
+    return [create_stats, stats]
+
+
+def run_tasks(tasks, env):
+    '''Run the tasls and update the environnment.'''
+    config = Config(paths=[])
+    for task in tasks:
+        env_up, status = task.do(env=env, config=config)
+        env.apply(env_up)
+    return env, status
+
+
+def one_label_case(ttask, env):
+    '''Statistics based on one label.'''
+    tasks = generate_stats_tasks('stats_day', ttask, labels=('day',))
+    tasks.extend(generate_stats_tasks('stats_meal', ttask, labels=('meal',)))
+    env, status = run_tasks(tasks, env)
+    assert status == TaskStatus.DONE
+    assert len(env[tasks[1].name]['result']) == 1
+    stats_day_res = env[tasks[1].name]['result'][0]
+    assert not stats_day_res
+    assert len(stats_day_res.test.labels_lod) == 4
+    assert (list(stats_day_res.test.index.keys())
+            == ['day', 'meal', '_test_name', '_result'])
+    assert (stats_day_res.classify == [
+        {'KO': 0, 'OK': 1, 'labels': ('Christmas Eve',), 'total': 1},
+        {'KO': 1, 'OK': 2, 'labels': ('Wednesday',), 'total': 3}])
+    assert stats_day_res.nb_missing_labels() == 0
+    stats_meal_res = env[tasks[3].name]['result'][0]
+    assert stats_day_res.test.index.keys() == stats_meal_res.test.index.keys()
+    assert (stats_meal_res.classify == [
+        {'KO': 1, 'OK': 0, 'labels': ('dinner',), 'total': 1},
+        {'KO': 0, 'OK': 1, 'labels': ('lunch',), 'total': 1}])
+    assert stats_meal_res.nb_missing_labels() == 2
+
+
+def two_labels_case(ttask, env):
+    '''Statistics based on two labels.'''
+    tasks_md = generate_stats_tasks('stats_md', ttask, labels=('meal', 'day'))
+    env, status = run_tasks(tasks_md, env)
+    assert status == TaskStatus.DONE
+    stats_md_res = env[tasks_md[1].name]['result'][0]
+    assert stats_md_res.test.by_labels == ('meal', 'day')
+    assert (stats_md_res.classify == [
+        {'KO': 1, 'OK': 0, 'labels': ('dinner', 'Wednesday'), 'total': 1},
+        {'KO': 0, 'OK': 1, 'labels': ('lunch', 'Wednesday'), 'total': 1}])
+    assert stats_md_res.nb_missing_labels() == 2
+    tasks_dm = generate_stats_tasks('stats_dm', ttask, labels=('day', 'meal'))
+    env, status = run_tasks(tasks_dm, env)
+    assert status == TaskStatus.DONE
+    stats_dm_res = env[tasks_dm[1].name]['result'][0]
+    assert (stats_dm_res.classify == [
+        {'KO': 1, 'OK': 0, 'labels': ('Wednesday', 'dinner'), 'total': 1},
+        {'KO': 0, 'OK': 1, 'labels': ('Wednesday', 'lunch'), 'total': 1}])
+
+
+def exception_case(ttask, env):
+    '''Test raising an exception that is caught during the evaluation and
+    stored in a :class:`~.TestResultFailed`.'''
+    task_badlab = generate_stats_tasks('stats_bl', ttask, labels=('consumer',))
+    env, status = run_tasks(task_badlab, env)
+    assert status == TaskStatus.DONE
+    badlab_res = env[task_badlab[1].name]['result'][0]
+    assert isinstance(badlab_res, TestResultFailed)
+    assert ("TestStatsTestsByLabels: ('consumer',) not found in tests labels"
+            in str(badlab_res.msg))
+
+
+def test_stats_diagnostic():
+    '''Test the statistics test by labels using a common set of tests.'''
+    tasks = [generate_test_tasks()]
+    env = Env()
+    env, status = run_tasks(tasks, env)
+    assert status == TaskStatus.DONE
+    one_label_case(tasks[0], env)
+    two_labels_case(tasks[0], env)
+    exception_case(tasks[0], env)

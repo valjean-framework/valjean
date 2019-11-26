@@ -22,3 +22,4 @@ javert — Journal Automatique de VÉRificaTion
    javert/mpl
    javert/test_report
    javert/rst
+   javert/verbosity
