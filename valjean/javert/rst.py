@@ -22,6 +22,7 @@ from ..gavroche.test import TestResult
 from .formatter import Formatter
 from .mpl import MplPlot
 from .test_report import TestReport, TestReportTask
+from .verbosity import Verbosity
 
 
 class Rst:
@@ -195,7 +196,12 @@ six-cent-six cyprès.
         '''
         lines = [self.formatter.header(result.test.name, depth),
                  self.formatter.text(result.test.description), '']
-        for template in self.representation(result):
+        res_repr = self.representation(result)
+        if (not res_repr
+                and self.representation.verbosity in (Verbosity.SILENT,
+                                                      Verbosity.SUMMARY)):
+            return []
+        for template in res_repr:
             fmt = self.formatter.template(template)
             lines.append(str(fmt))
             if isinstance(fmt, RstPlot):
