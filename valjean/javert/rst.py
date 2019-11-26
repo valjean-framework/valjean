@@ -269,7 +269,8 @@ class RstFormatter(Formatter):
         :returns: the formatted text (text itself)
         :rtype: str
         '''
-        return self.text(ltext.text)
+        header = ('.. role:: ' + RstTable.HIGHLIGHT_ROLE + '\n\n')
+        return self.text(header + ltext.text)
 
 
 class RstTable:

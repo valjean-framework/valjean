@@ -107,9 +107,25 @@ def repr_testresultequal(result, verbosity=None):
     '''
     LOGGER.debug("IN repr_testresultequal, %s, res = %s",
                  verbosity, bool(result))
-    if verbosity == Verbosity.SILENT and bool(result):
-        return []
+    if bool(result):
+        if verbosity != Verbosity.FULL_DETAILS:
+            return []
+        return repr_equal(result, 'equal?')
+    if verbosity not in (Verbosity.INTERMEDIATE, Verbosity.FULL_DETAILS):
+        return repr_equal_summary(result)
     return repr_equal(result, 'equal?')
+
+
+def repr_equal_summary(result):
+    '''Function to generate a summary table for the equal test (only tells if
+    the test was successful or not).
+
+    Different levels of verbosity should be allowed.
+    '''
+    LOGGER.debug("repr_equal_summary found")
+    if result:
+        return [RstTextTemplate('Equal test: OK')]
+    return [RstTextTemplate('Equal test: :hl:`KO`')]
 
 
 def repr_equal(result, result_header):
@@ -152,7 +168,21 @@ def repr_testresultapproxequal(result, verbosity=None):
     '''
     if verbosity == Verbosity.SILENT and bool(result):
         return []
+    if verbosity == Verbosity.SUMMARY:
+        return repr_approx_equal_summary(result)
     return repr_approx_equal(result, 'approx equal?')
+
+
+def repr_approx_equal_summary(result):
+    '''Function to generate a summary table for the approx equal test (only
+    tells if the test was successful or not).
+
+    Different levels of verbosity should be allowed.
+    '''
+    LOGGER.debug("repr_approx_equal_summary found")
+    if result:
+        return [RstTextTemplate('Approx equal test: OK')]
+    return [RstTextTemplate('Approx equal test: :hl:`KO`')]
 
 
 def repr_approx_equal(result, result_header):
@@ -195,7 +225,7 @@ def repr_testresultstudent(result, verbosity=None):
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     LOGGER.debug("student repr, %s, res = %s", verbosity, bool(result))
-    if verbosity == Verbosity.SILENT and bool(result):
+    if verbosity == Verbosity.SILENT:
         return []
     if verbosity == Verbosity.SUMMARY:
         return repr_student_summary(result)
@@ -255,39 +285,14 @@ def repr_student(result):
     return [table_template]
 
 
-def repr_testresultstudent_silent(result):
-    '''Represent the result of a :class:`~.TestStudent` test for the SILENT
-    level of verbosity.
-
-    :param  result: a test result.
-    :type result: :class:`~.TestResultStudent`
-    :returns: Representation of a :class:`~.TestResultStudent` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
-    '''
-    return repr_student_silent(result)
-
-
 def repr_student_silent(_result):
     '''Function to generate a silent table for the Student test (only tells if
     the test was successful or not).
 
     Different levels of verbosity should be allowed.
     '''
-    LOGGER.debug("sudent silent")
+    LOGGER.debug("student silent")
     return []
-
-
-def repr_testresultstudent_summary(result):
-    '''Represent the result of a :class:`~.TestStudent` test for the SUMMARY
-    level of verbosity.
-
-    :param  result: a test result.
-    :type result: :class:`~.TestResultStudent`
-    :returns: Representation of a :class:`~.TestResultStudent` as a table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
-    '''
-    LOGGER.debug("repr_testresultstudent_summary found")
-    return repr_student_summary(result)
 
 
 def repr_student_summary(result):
@@ -343,19 +348,6 @@ def repr_student_intermediate(result):
     return [table_template]
 
 
-def repr_testresultstudent_full_details(result):
-    '''Represent the result of a :class:`~.TestStudent` test for the
-    FULL_DETAILS level of verbosity.
-
-    :param  result: a test result.
-    :type result: :class:`~.TestResultStudent`
-    :returns: Representation of a :class:`~.TestResultStudent` as a
-        table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
-    '''
-    return repr_student(result)
-
-
 def repr_testresultbonferroni(result, verbosity=None):
     '''Represent the result of a :class:`~.TestBonferroni` test.
 
@@ -369,10 +361,10 @@ def repr_testresultbonferroni(result, verbosity=None):
     LOGGER.debug("bonf repr, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT and bool(result):
         return []
-    return repr_bonferroni(result, 'Bonferroni?')
+    return repr_bonferroni(result)
 
 
-def repr_bonferroni(result, result_header):
+def repr_bonferroni(result):
     '''Reprensetation of Bonferroni test result.
 
     Only reprensents the Bonferroni result, not the input test result.
@@ -397,7 +389,7 @@ def repr_bonferroni(result, result_header):
         oracles,
         highlights=highlights,
         headers=['test', 'ndf', 'α', 'α(Bonferroni)', 'min(p-value)',
-                 result_header])
+                 'Bonferroni?'])
     return [table_template]
 
 
@@ -417,10 +409,10 @@ def repr_testresultholmbonferroni(result, verbosity=None):
         return repr_holm_bonferroni_summary(result)
     if verbosity == Verbosity.SUMMARY:
         return repr_holm_bonferroni_summary(result)
-    return repr_holm_bonferroni(result, 'Holm-Bonferroni?')
+    return repr_holm_bonferroni(result)
 
 
-def repr_holm_bonferroni(result, result_header):
+def repr_holm_bonferroni(result):
     '''Reprensetation of Holm-Bonferroni test result.
 
     Only reprensents the Holm-Bonferroni result, not the input test result.
@@ -447,32 +439,8 @@ def repr_holm_bonferroni(result, result_header):
         oracles,
         highlights=highlights,
         headers=['test', 'ndf', 'α', 'min(p-value)', 'min(α)',
-                 'N rejected', result_header])
+                 'N rejected', 'Holm-Bonferroni?'])
     return [table_template]
-
-
-def repr_testresultholmbonferroni_silent(result):
-    '''Represent the result of a :class:`~.TestHolmBonferroni` test for the
-    SILENT level of verbosity.
-
-    :param  result: a test result.
-    :type result: :class:`~.TestResultHolmBonferroni`
-    :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
-        table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
-    '''
-    return repr_holm_bonferroni_silent(result)
-
-
-def repr_holm_bonferroni_silent(result):
-    '''Function to generate a silent table for the Holm-Bonferroni test (only
-    tells if the test was successful or not).
-
-    Different levels of verbosity should be allowed.
-    '''
-    if result:
-        return [RstTextTemplate('Holm-Bonferroni test: OK')]
-    return [RstTextTemplate('Holm-Bonferroni test: :hl:`KO`')]
 
 
 def repr_holm_bonferroni_summary(result):
@@ -607,21 +575,6 @@ def repr_metadata(result):
                           highlights=[[False], [True]])]
 
 
-def repr_testresultmetadata_full_details(result):
-    '''Represent the result of a :class:`~.TestMetadata` test with all details.
-
-    :param  result: a test result.
-    :type result: :class:`~.TestResultMetadata`
-    :returns: Representation of a :class:`~.TestResultMetadata` as a
-        table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
-
-    "All details" means the full list of metadata will be represented, the
-    missing ones and the different ones should be highlighted.
-    '''
-    return repr_metadata_full_details(result)
-
-
 def repr_metadata_full_details(result):
     '''Function to generate a table from the metadata test results.
 
@@ -646,25 +599,6 @@ def repr_metadata_full_details(result):
                           highlights=highl,
                           headers=heads)
     return [table]
-
-
-def repr_testresultmetadata_intermediate(result):
-    # pylint: disable=invalid-name
-    '''Represent the result of a :class:`~.TestMetadata` test with an
-    intermediate level of verbosity.
-
-    :param  result: a test result.
-    :type result: :class:`~.TestResultMetadata`
-    :returns: Representation of a :class:`~.TestResultMetadata` as a
-        table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
-
-    "Intermediate level of verbosity" means the list of metadata failing
-    comparison will be represented. The comparison can fail for example if one
-    is missing or if an name changed.
-    '''
-    LOGGER.debug("in repr_testresultmetadata_intermediate")
-    return repr_metadata_intermediate(result)
 
 
 def repr_metadata_intermediate(result):
@@ -695,22 +629,6 @@ def repr_metadata_intermediate(result):
     return [table]
 
 
-def repr_testresultmetadata_summary(result):
-    '''Represent the result of a :class:`~.TestMetadata` with a summary over
-    all metadata.
-
-    :param  result: a test result.
-    :type result: :class:`~.TestResultMetadata`
-    :returns: Representation of a :class:`~.TestResultMetadata` as a
-        table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
-
-    "Summary over all metadata" means the list of metadata with OK if
-    comparison was successful else KO.
-    '''
-    return repr_metadata_summary(result)
-
-
 def repr_metadata_summary(result):
     '''Function to generate a table from the metadata test results.
 
@@ -718,27 +636,8 @@ def repr_metadata_summary(result):
     '''
     LOGGER.debug("repr_metadata_summary")
     if result:
-        return [TableTemplate(["Metadata:"], ["OK"],
-                              highlights=[[False], [False]])]
-    return [TableTemplate(["Metadata:"], ["KO"],
-                          highlights=[[False], [True]])]
-
-
-def repr_testresultmetadata_silent(result):
-    '''Represent the result of a :class:`~.TestMetadata` with silent verbosity
-    level.
-
-    :param  result: a test result.
-    :type result: :class:`~.TestResultMetadata`
-    :returns: Representation of a :class:`~.TestResultMetadata` as a
-        table.
-    :rtype: :class:`list` (:class:`~.TableTemplate`)
-
-    "Silent verbosity level" means that the comparison of all metadata gives a
-    OK if everything was fine, else a KO. To get more details, please use a
-    different level of verbosity.
-    '''
-    return repr_metadata_silent(result)
+        return [RstTextTemplate('Metadata: OK')]
+    return [RstTextTemplate('Metadata: :hl:`KO`')]
 
 
 def repr_metadata_silent(_result):

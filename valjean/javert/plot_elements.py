@@ -3,6 +3,7 @@ to be converted in rst.
 '''
 from .. import LOGGER
 from .templates import PlotTemplate, CurveElements, join
+from .verbosity import Verbosity
 
 
 def dimension_from_array(array_shape):
@@ -48,7 +49,26 @@ def dimension(bins, array_shape):
     return dim_name
 
 
-def repr_testresultstudent(result, _verbosity=None):
+def repr_testresultstudent(result, verbosity=None):
+    '''Plot the Student results according to verbosity.
+
+    :param  result: a test result.
+    :type result: :class:`~.TestResultStudent`
+    :returns: Representation of a :class:`~.TestResultStudent` as a plot.
+    :rtype: :class:`list` (:class:`~.PlotTemplate`)
+    '''
+    LOGGER.debug("PLOT student repr, %s, res = %s", verbosity, bool(result))
+    # faire une condition sur le bool dans le cas de SUMMARY ?
+    if verbosity in (Verbosity.SILENT, Verbosity.SUMMARY):
+        return []
+    if verbosity == Verbosity.INTERMEDIATE:
+        return repr_student_intermediate(result)
+    if verbosity == Verbosity.FULL_DETAILS:
+        return repr_student_full_details(result)
+    return repr_student_intermediate(result)
+
+
+def repr_student_intermediate(result):
     '''Represent the Student test result as a plot.
 
     By default two :class:`~.templates.PlotTemplate` are returned in order to
@@ -62,6 +82,24 @@ def repr_testresultstudent(result, _verbosity=None):
     rstudent = [join(rvals, rdelta)
                 for rvals, rdelta in zip(repr_student_values(result),
                                          repr_student_delta(result))]
+    return rstudent
+
+
+def repr_student_full_details(result):
+    '''Represent the Student test result as a plot.
+
+    By default two :class:`~.templates.PlotTemplate` are returned in order to
+    get a top plot representing the two series of values and the bottom plot
+    representing the Δ from the Student test.
+
+    :param result:  a test result.
+    :type result: :class:`~.TestResultStudent`
+    :returns: :class:`list` (:class:`~.PlotTemplate`)
+    '''
+    rstudent = [join(rvals, rdelta, rpvals)
+                for rvals, rdelta, rpvals in zip(repr_student_values(result),
+                                                 repr_student_delta(result),
+                                                 repr_student_pvalues(result))]
     return rstudent
 
 
@@ -134,7 +172,7 @@ def repr_student_pvalues(result):
     an empty list is returned.
     '''
     if result.pvalue is None:
-        LOGGER.error("p-value is None, won't be possible to plot it.")
+        LOGGER.info("p-value is None, won't be possible to plot it.")
         return []
     dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
@@ -200,3 +238,13 @@ def repr_testresultapproxequal(result, _verbosity=None):
     :returns: :class:`list` (:class:`~.templates.PlotTemplate`)
     '''
     return repr_datasets_values(result)
+
+
+def repr_testresultmetadata(_result, _verbosity=None):
+    '''Plot metadata test -> no plot done.'''
+    return []
+
+
+def repr_testresultfailed(_result, _verbosity=None):
+    '''Plot failed test -> no plot done.'''
+    return []

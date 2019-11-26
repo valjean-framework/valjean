@@ -11,6 +11,7 @@ from valjean.javert.templates import TableTemplate, PlotTemplate, join
 from valjean.javert.representation import (TableRepresenter, EmptyRepresenter,
                                            PlotRepresenter)
 from valjean.javert.mpl import MplPlot
+from valjean.javert.verbosity import Verbosity
 from valjean.gavroche.test import Test, TestResult
 
 from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
@@ -29,7 +30,7 @@ def test_full_repr(test_name, request):
     for equality tests.'''
     test = request.getfixturevalue(test_name)
     representer = TableRepresenter()
-    templates = representer(test.evaluate())
+    templates = representer(test.evaluate(), Verbosity.FULL_DETAILS)
     assert isinstance(templates, list)
     assert any(isinstance(template, TableTemplate) for template in templates)
 
