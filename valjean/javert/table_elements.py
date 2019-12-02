@@ -6,7 +6,7 @@ import numpy as np
 from .. import LOGGER
 from ..cosette.task import TaskStatus
 from ..gavroche.diagnostics.stats import TestOutcome
-from .templates import TableTemplate, RstTextTemplate
+from .templates import TableTemplate, TextTemplate
 from .verbosity import Verbosity
 
 # turn off pylint warnings about invalid names in this file; there are just too
@@ -124,8 +124,8 @@ def repr_equal_summary(result):
     '''
     LOGGER.debug("repr_equal_summary found")
     if result:
-        return [RstTextTemplate('Equal test: OK')]
-    return [RstTextTemplate('Equal test: :hl:`KO`')]
+        return [TextTemplate('Equal test: OK')]
+    return [TextTemplate('Equal test: KO', highlight=[(-2, 2)])]
 
 
 def repr_equal(result, result_header):
@@ -181,8 +181,8 @@ def repr_approx_equal_summary(result):
     '''
     LOGGER.debug("repr_approx_equal_summary found")
     if result:
-        return [RstTextTemplate('Approx equal test: OK')]
-    return [RstTextTemplate('Approx equal test: :hl:`KO`')]
+        return [TextTemplate('Approx equal test: OK')]
+    return [TextTemplate('Approx equal test: KO', highlight=[(-2, 2)])]
 
 
 def repr_approx_equal(result, result_header):
@@ -303,8 +303,8 @@ def repr_student_summary(result):
     '''
     LOGGER.debug("repr_student_summary found")
     if result:
-        return [RstTextTemplate('Student test: OK')]
-    return [RstTextTemplate('Student test: :hl:`KO`')]
+        return [TextTemplate('Student test: OK')]
+    return [TextTemplate('Student test: KO', highlight=[(-2, 2)])]
 
 
 def repr_student_intermediate(result):
@@ -454,8 +454,8 @@ def repr_holm_bonferroni_summary(result):
     :rtype: :class:`list` (:class:`~.TableTemplate`)
     '''
     if result:
-        return [RstTextTemplate('Holm-Bonferroni test: OK')]
-    return [RstTextTemplate('Holm-Bonferroni test: :hl:`KO`')]
+        return [TextTemplate('Holm-Bonferroni test: OK')]
+    return [TextTemplate('Holm-Bonferroni test: KO', highlight=[(-2, 2)])]
 
 
 def percent_fmt(num, den):
@@ -636,8 +636,8 @@ def repr_metadata_summary(result):
     '''
     LOGGER.debug("repr_metadata_summary")
     if result:
-        return [RstTextTemplate('Metadata: OK')]
-    return [RstTextTemplate('Metadata: :hl:`KO`')]
+        return [TextTemplate('Metadata: OK')]
+    return [TextTemplate('Metadata: KO', highlight=[(-2, 2)])]
 
 
 def repr_metadata_silent(_result):
@@ -652,6 +652,7 @@ def repr_metadata_silent(_result):
 def repr_testresultfailed(result, _verbosity=None):
     '''Represent a failed result as rst text.'''
     LOGGER.debug("In repr_testresultfailed")
+    defmsg = ' failed with message:'
     cname = result.test.__class__.__name__
-    return [RstTextTemplate(':hl:`{} failed with message:` \n{}'
-                            .format(cname, result.msg))]
+    return [TextTemplate('{}{} \n{}'.format(cname, defmsg, result.msg),
+                         highlight=[(0, len(defmsg) + len(cname))])]
