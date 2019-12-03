@@ -122,22 +122,27 @@ class TestResultStatsTasks(TestResult):
         return TaskStatus.DONE in self.classify and len(self.classify) == 1
 
 
-#: An enumeration that represents the possible outcomes of a test:
-#:
-#: `SUCCESS`
-#:   represents tests that have been evaluated and have succeeded;
-#:
-#: `FAILURE`
-#:    represents tests that have been evaluated and have failed;
-#:
-#: `MISSING`
-#:   represents tasks that did not generate any ``'result'`` key;
-#:
-#: `NOT_A_TEST`
-#:   represents tasks that did not generate a :class:`~.TestResult` object as a
-#:   result;
-TestOutcome = IntEnum('TestOutcome',  # pylint: disable=invalid-name
-                      'SUCCESS FAILURE MISSING NOT_A_TEST')
+class TestOutcome(IntEnum):
+    '''An enumeration that represents the possible outcomes of a test:
+
+    `SUCCESS`
+        represents tests that have been evaluated and have succeeded;
+
+    `FAILURE`
+        represents tests that have been evaluated and have failed;
+
+    `MISSING`
+        represents tasks that did not generate any ``'result'`` key;
+
+    `NOT_A_TEST`
+        represents tasks that did not generate a :class:`~.TestResult` object
+        as a result;
+    '''
+    SUCCESS = 0
+    FAILURE = 1
+    MISSING = 2
+    NOT_A_TEST = 3
+    __test__ = False
 
 
 def test_stats(*, name, description='', tasks):
