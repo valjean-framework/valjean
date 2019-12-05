@@ -184,7 +184,7 @@ class T4Parser():
         if glob_vars[time_key] != self.scan_res.times[time_key][batch_index]:
             raise ValueError('{} looks inconsistent between parsing and '
                              'scanning'.format(time_key))
-        glob_vars.update(self._add_scan_vars(batch_index, glob_vars))
+        glob_vars.update(self.scan_res.global_variables(batch_index))
         list_resps = [resp for key, lresp in parsed_res.items()
                       if key not in glob_vars for resp in lresp]
         resp_book = ResponseBook(list_resps, global_vars=glob_vars)
@@ -193,21 +193,6 @@ class T4Parser():
         else:
             LOGGER.debug("List of responses gave a ResponseBook.")
         return resp_book
-
-    def _add_scan_vars(self, batch, global_vars):
-        '''Obtain the variables from :class:`~.scan.Scan` that will be stored
-        in the :class:`~valjean.eponine.response_book.ResponseBook`.
-        '''
-        scan_vars = {'warnings': self.scan_res.countwarnings,
-                     'errors': self.scan_res.counterrors,
-                     'number_of_tasks': self.scan_res.tasks,
-                     'normal_end': self.scan_res.normalend,
-                     'required_batches': self.scan_res.reqbatchs,
-                     'partial': self.scan_res.partial}
-        for ktime, val in self.scan_res.times.items():
-            if ktime not in global_vars:
-                scan_vars[ktime] = val if isinstance(val, int) else val[batch]
-        return scan_vars
 
     def print_t4_stats(self):
         '''Print Tripoli-4 statistics (warnings and errors).'''

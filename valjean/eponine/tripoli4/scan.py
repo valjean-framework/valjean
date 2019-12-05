@@ -508,6 +508,32 @@ class Scan(Mapping):
         '''Return the fatal error message if found.'''
         return ''.join(self._fatal_error)
 
+    def global_variables(self, batch_index):
+        '''Return a dictionary of the global quantities in the TRIPOILI-4
+        output:
+
+        * warnings
+        * errors
+        * number of tasks (to distinguish MONO and PARA for example)
+        * normal end
+        * required batches
+        * partial (if the job as been stopped)
+        * times of the required batch (can be simulation time, initialisation
+          time, elapsed time)
+
+        :param int batch_index: index of the batch in the list (used for times)
+        :returns: dict
+        '''
+        gvars = {'warnings': self.countwarnings,
+                 'errors': self.counterrors,
+                 'number_of_tasks': self.tasks,
+                 'normal_end': self.normalend,
+                 'required_batches': self.reqbatchs,
+                 'partial': self.partial}
+        for ktime, val in self.times.items():
+            gvars[ktime] = val if isinstance(val, int) else val[batch_index]
+        return gvars
+
     def print_statistics(self):
         '''Print statistics of the listing scanned: normal end, number of
         warnings and errors.
