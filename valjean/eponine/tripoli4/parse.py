@@ -39,73 +39,59 @@ class T4ParserException(Exception):
     '''An error that may be raised by the :class:`T4Parser` class.'''
 
 
-class T4Parser():
+class T4Parser:
     '''Scan Tripoli-4 listings, then parse the required batches.'''
 
     @profile
-    def __init__(self, jddname, batch=-1, *, mesh_lim=-1):
+    def __init__(self, jddname, *, mesh_lim=-1):
         '''Initialize the :class:`T4Parser` object.
 
         :param str jddname: path to the Tripoli-4 output
-        :param int batch: batch to read (-1 = last, 0 = all, then X where X is
-            the *edition batch number*)
         :param int mesh_lim: limit of meshes to read (-1 per default)
 
-        It also initalize the result of :class:`.scan.Scan` to ``None`` and
-        the parsing result, from *pyparsing*, to ``None``.
+        It also initalizes the result of :class:`.scan.T4Scan` to ``None``,
+        then executes the scan. If this step fails an exception is raised.
 
-        If the path contains the ``"PARA"`` string, the checks will be done for
-        parallel mode.
+        The T4Parser main object instance variable is:
 
-        The T4Parser object instance variables are:
-
-        `scan_res` (:class:`~.scan.Scan`)
+        `scan_res` (:class:`~.scan.T4Scan`)
             result from the scan of the Tripoli-4 output. See in the related
             documentation the various instance variables available (like
             ``times``). Inheriting from :class:`collections.abc.Mapping`
             various default methods are available like ``len``, ``[]``, etc.
-            The keys of :class:`~.scan.Scan` are the batch numbers available
-            from the Tripoli-4 output. To get their list, use the ``keys``
-            method.
+            The keys of :class:`~.scan.T4Scan` are the batch numbers available
+            from the Tripoli-4 output. To get their list, use
+            :meth:`batch_numbers`.
 
-        `result` (:class:`list` (:class:`dict`))
-            stores the result from *pyparsing*. Each item of the list (most
-            external one) corresponds to a batch, i.e. to all results available
-            for that batch.
-
-        This class takes care of the scanning of the Tripoli-4 output, then of
-        its parsing if the first step was successful. If one of these steps
-        fails, exceptions will be raised.
+        Parsing (e.g. :meth:`parse_from_number`) returns a
+        :class:`T4ParseResult`.
         '''
-        LOGGER.info("Parsing %s (batch %d)", jddname, batch)
+        LOGGER.info("Parsing %s", jddname)
         start_time = time.time()
         self.jdd = jddname
-        self.batch_number = batch
         self.mesh_limit = mesh_lim
         self.scan_res = None
-        self.result = None
         try:
-            self.scan_then_parse(start_time)
+            self._scan(start_time)
+        except scan.T4ScanException as t4se:
+            LOGGER.error(t4se)
+            raise T4ParserException("Scan failed.") from None
         except T4ParserException as t4pe:
             LOGGER.error(t4pe)
-            raise T4ParserException("Scanning or parsing failed.") from None
+            raise T4ParserException("Scan failed.") from None
 
-    def scan_then_parse(self, start_time):
+    def _scan(self, start_time):
         '''Scan the parse the given jdd.'''
-        self.scan_t4_listing()
-        self.check_t4_scan()
+        self._scan_listing()
+        self._check_scan()
         LOGGER.info("Successful scan in %f s", time.time()-start_time)
-        start_parse = time.time()
-        self.parse_t4_listing()
-        LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
-        LOGGER.info("Time (scan + parse) = %f s", time.time()-start_time)
 
     @profile
-    def scan_t4_listing(self):
+    def _scan_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
-        self.scan_res = scan.Scan(self.jdd, self.mesh_limit)
+        self.scan_res = scan.T4Scan(self.jdd, self.mesh_limit)
 
-    def check_t4_scan(self):
+    def _check_scan(self):
         '''Check existence of scan result and presence of normal end (per
         default NORMAL COMPLETION).
         '''
@@ -117,26 +103,19 @@ class T4Parser():
             LOGGER.warning("Tripoli-4 listing did not finish with "
                            "NORMAL COMPLETION.")
 
-    def _str_to_parse(self):
-        '''Return string to parse (depends on the required batches).
+    def batch_numbers(self):
+        '''Help method to get the available batch numbers.
 
-        :returns: str
+        :rtype: list(int)
         '''
-        if self.batch_number == 0:
-            return self.scan_res.get_all_batch_results()
-        return self.scan_res[self.batch_number]
+        return list(self.scan_res.keys())
 
-    def parse_t4_listing(self):
-        '''Parse Tripoli-4 results, calling pyparsing and
-        :mod:`~valjean.eponine.tripoli4`. Use the default grammar.
-        '''
-        self._parse_t4_listing_worker(t4gram, self._str_to_parse())
-
-    def _parse_t4_listing_worker(self, gram, str_to_parse):
+    @staticmethod
+    def _parse_listing_worker(gram, str_to_parse):
         '''Parse the given string and raise exception if parsing failed.'''
         try:
             with PYPARSING_LOCK:
-                self.result = gram.parseString(str_to_parse).asList()
+                result = gram.parseString(str_to_parse).asList()
         except ParseException:
             LOGGER.error("Parsing failed, you are probably trying to read a "
                          "new response. Please update the parser before "
@@ -147,58 +126,59 @@ class T4Parser():
         except SpectrumDictBuilderException as sdbe:
             LOGGER.error(sdbe)
             raise T4ParserException("Error in parsing") from None
+        return result
 
-    def build_response_book(self, *, batch_index=-1, batch_number=None):
-        '''Build a :class:`~valjean.eponine.response_book.ResponseBook` from
-        the :class:`T4Parser` object.
-
-        Responses (so results) are expected to be lists, they are used to build
-        the index in ResponseBook. The additional elements in the dictionary
-        are considered as **global variables**. Additional global variables are
-        obtained from the result from :class:`~.scan.Scan` (times, warnings,
-        etc).
-
-        :param int batch_index: index of the batch in the list of edited
-            batches, default: -1, i.e. the last batch
-        :param int batch_number: number of the edited batch to be used to build
-            the ResponseBook, supersedes ``batch_index``, default: None
-        :rtype: ResponseBook
-        '''
-        if self.batch_number not in (-1, 0):
-            batch_index = self.scan_res.index(self.batch_number)
-        if batch_number and len(self.scan_res) != 1:
-            batch_index = self.scan_res.index(batch_number)
-        parsed_res = (self.result[batch_index] if len(self.result) > 1
-                      else self.result[-1])
-        glob_vars = {k: v for k, v in parsed_res.items()
-                     if not isinstance(v, list)}
-        # sanity check
+    def _time_consistency(self, pres, batch_number):
+        '''Check time consistency between parsed result and scan.'''
+        if 'batch_data' not in pres:
+            raise T4ParserException('No batch_data in parsed result, '
+                                    'something looks wrong in the T4 output.')
+        bdata = pres['batch_data']
         try:
-            time_key = next(k for k in glob_vars if 'time' in k)
+            time_key = next(k for k in bdata if 'time' in k)
         except StopIteration:
-            raise ValueError('No "time" variable found in the TRIPOLI-4 '
-                             'output, please check it.\n'
-                             'Remark: you may be in parsing debug mode with '
-                             'an end flag not containing "time" where this '
-                             'behaviour is expected.')
-        if glob_vars[time_key] != self.scan_res.times[time_key][batch_index]:
-            raise ValueError('{} looks inconsistent between parsing and '
-                             'scanning'.format(time_key))
-        glob_vars.update(self.scan_res.global_variables(batch_index))
-        list_resps = [resp for key, lresp in parsed_res.items()
-                      if key not in glob_vars for resp in lresp]
-        resp_book = ResponseBook(list_resps, global_vars=glob_vars)
-        if resp_book.is_empty():
-            LOGGER.error('ResponseBook creation failed, please check what')
-        else:
-            LOGGER.debug("List of responses gave a ResponseBook.")
-        return resp_book
+            raise KeyError(
+                'No "time" variable found in the TRIPOLI-4 output, '
+                'please check it.\n'
+                'Remark: you may be in parsing debug mode with an end flag '
+                'not containing "time" where this behaviour is expected.')
+        if bdata[time_key] != self.scan_res.times[time_key][batch_number]:
+            raise ValueError(
+                '{} looks inconsistent between parsing ({}) and scanning ({})'
+                .format(time_key, bdata[time_key],
+                        self.scan_res.times[time_key][batch_number]))
 
-    def print_t4_stats(self):
+    def parse_from_number(self, batch_number):
+        '''Parse from batch index or batch number.
+
+        :param int batch_number: number of the batch to parse
+        :rtype: T4ParseResult
+        '''
+        LOGGER.debug('Using parse from T4Parser')
+        start_parse = time.time()
+        pres, = self._parse_listing_worker(
+            t4gram, self.scan_res[batch_number])
+        LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
+        self._time_consistency(pres, batch_number)
+        scan_vars = self.scan_res.global_variables(batch_number)
+        return T4ParseResult(pres, scan_vars)
+
+    def parse_from_index(self, batch_index=-1):
+        '''Parse from batch index or batch number.
+
+        Per default the last batch is parsed (index = -1).
+
+        :param int batch_index: index of the batch in the list of batches
+        :rtype: T4ParseResult
+        '''
+        batch_number = self.scan_res.batch_number(batch_index)
+        return self.parse_from_number(batch_number)
+
+    def print_stats(self):
         '''Print Tripoli-4 statistics (warnings and errors).'''
         self.scan_res.print_statistics()
 
-    def check_t4_times(self):
+    def check_times(self):
         '''Check if running times are well written in Tripoli-4 listings.
         These times are at the end of the result block and mark the end flag.
 
@@ -216,10 +196,94 @@ class T4Parser():
         '''
         return self.scan_res.check_times()
 
-    def print_t4_times(self):
+    def print_times(self):
         '''Print time characteristics of the Tripoli-4 result considered.
         This print includes initialization time, simulation time, exploitation
         time and elapsed time.
         '''
         for stime, vtime in self.scan_res.times.items():
             print(stime.capitalize(), "=", vtime)
+
+
+class T4ParseResult:
+    '''Class containing a parsing result from TRIPOLI-4 output for one batch.
+
+
+        The :class:`T4ParseResult` object is accessible from the instance
+        attribute
+
+        `res`
+            that is a unique dictionary containing all the results from
+            scanning and parsing steps. Variables characteristic to a batch are
+            stored under the key ``'batch_data'`` no matter if they come from
+            :class:`.T4Scan` or from :class:`T4Parser`. Variables
+            characteristic to a run (= one execution of TRIPOLI-4) are stored
+            under ``'run_data'``, coming from the scanning step.
+
+        It is possible to transform the ``res`` dictionary in a
+        :class:`~valjean.eponine.response_book.ResponseBook` thanks to the
+        method :meth:`to_response_book`.
+    '''
+
+    def __init__(self, parse_res, scan_vars):
+        '''Initialize the :class:`T4ParseResult` from:
+
+        :param dict parse_res: result from T4 parsing (for 1 batch)
+        :param dict scan_vars: variables coming from :class:`.T4Scan` global to
+            job or specific to the batch.
+
+        Fill the `res` object.
+        '''
+        self._check_batch_number(parse_res, scan_vars)
+        self.res = self._build_unique_dict(parse_res, scan_vars)
+
+    @staticmethod
+    def _check_batch_number(pres, svars):
+        '''Check that batch number from scan variables and edition batch number
+        if exists are the same, else emit a warning.
+        '''
+        ebn = pres.get('edition_batch_number')
+        sbn = svars.get('batch_number')
+        if sbn is None:
+            LOGGER.warning('No batch number was set in T4Scan, please check.')
+        if ebn is not None and ebn != sbn:
+            LOGGER.warning('Edition batch number different from batch number')
+
+    @staticmethod
+    def _build_unique_dict(pres, svars):
+        '''Build a unique dictionary from parsed result and globl variables
+        from T4Scan.
+
+        Variables specific to batch are added to the already existing
+        dictionary under the key ``'batch_data'`` from parsed result, while a
+        new item is created for the run data (key: ``'run_data'``).
+
+        :param dict pres: parsed result
+        :param dict svars: global variables from T4Scan
+        :returns: updated parsed result
+        '''
+        gvars = svars.copy()
+        bdata_keys = {'batch_number', 'simulation_time', 'elapsed_time',
+                      'exploitation_time'}
+        for key in bdata_keys & set(gvars.keys()):
+            pres['batch_data'].update({key: gvars.pop(key)})
+        pres['run_data'] = gvars
+        return pres
+
+    def to_response_book(self):
+        '''Get a :class:`~valjean.eponine.response_book.ResponseBook` from the
+        :class:`T4ParseResult`.
+
+        The global variables in ResponseBook are the batch data. You can access
+        the `run data` only from the parsed result.
+
+        :rtype: ResponseBook
+        '''
+        list_resps = [resp for key, lresp in self.res.items()
+                      for resp in lresp
+                      if key not in ('batch_data', 'run_data')]
+        resp_book = ResponseBook(list_resps,
+                                 global_vars=self.res['batch_data'])
+        if resp_book.is_empty():
+            LOGGER.error('ResponseBook creation failed, please check what')
+        return resp_book

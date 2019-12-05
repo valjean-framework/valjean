@@ -401,7 +401,7 @@ def convert_ifp_adj_crit_ed(toks):
     return lced
 
 
-def to_dict(toks):
+def to_final_dict(toks):
     '''Convert to dictionary result of `pyparsing`.
 
     :param toks: `pyparsing` element
@@ -409,6 +409,8 @@ def to_dict(toks):
     :returns: python dictionary corresponding to input `pyparsing` dictionary
     '''
     res = toks.asDict()
+    res['batch_data'] = res.pop('intro')
+    res['batch_data'].update(res.pop('conclu', {}))
     return res
 
 

@@ -6,7 +6,7 @@ Main difference is the possibility of using the ``end_flag`` parameter in the
 
 import logging
 
-from .parse import T4Parser
+from .parse import T4Parser, T4ParseResult
 from . import scan
 from .grammar import t4debug_gram
 
@@ -17,8 +17,7 @@ LOGGER = logging.getLogger('valjean')
 class T4ParserDebug(T4Parser):
     '''Scan up to the end flag then parse. For parsing debugging.'''
 
-    def __init__(self, jddname, batch=-1, *,
-                 mesh_lim=-1, end_flag="", ofile=""):
+    def __init__(self, jddname, *, mesh_lim=-1, end_flag="", ofile=""):
         # pylint: disable=too-many-arguments
         '''Initialize the :class:`T4ParserDebug` object.
 
@@ -28,7 +27,7 @@ class T4ParserDebug(T4Parser):
         :param str end_flag: optional end flag to stop scanning and parsing
                              (empty string per default)
 
-        It also initalize the result of :class:`.scan.Scan` to ``None`` and
+        It also initalize the result of :class:`.scan.T4Scan` to ``None`` and
         the parsing result, from *pyparsing*, to ``None``.
 
         If the path contains the ``"PARA"`` string, the checks will be done for
@@ -36,27 +35,39 @@ class T4ParserDebug(T4Parser):
         '''
         self.end_flag = end_flag
         self.ofile = ofile
-        super().__init__(jddname, batch, mesh_lim=mesh_lim)
-        self.check_t4_parsing()
+        super().__init__(jddname, mesh_lim=mesh_lim)
 
-    def scan_t4_listing(self):
+    def _scan_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
-        self.scan_res = scan.Scan(self.jdd, self.mesh_limit, self.end_flag)
+        self.scan_res = scan.T4Scan(self.jdd, self.mesh_limit, self.end_flag)
 
-    def parse_t4_listing(self):
-        '''Parse Tripoli-4 results, calling pyparsing and
-        :mod:`~valjean.eponine.tripoli4`. Use the debug grammar.
+    def parse_from_number(self, batch_number=None):
+        '''Parse from batch index or batch number.
 
-        If debugging is activated in the logger and if an output file is given,
-        the string sent to the parser is printed in a file.
+        Per default the last batch is parsed (index = -1).
+
+        :param int batch_number: batch number (default = ``None``)
+        :param int batch_index: batch index (default = ``None``)
+        :returns: list(dict)
         '''
-        str_to_parse = self._str_to_parse()
+        LOGGER.debug('Using parse from T4ParserDebug')
+        batch_edition = self.scan_res[batch_number]
         if LOGGER.isEnabledFor(logging.DEBUG) and self.ofile:
             with open(self.ofile, 'w') as fout:
-                fout.write(str_to_parse)
-        self._parse_t4_listing_worker(t4debug_gram, str_to_parse)
+                fout.write(batch_edition)
+        pres, = self._parse_listing_worker(
+            t4debug_gram, self.scan_res[batch_number])
+        self.check_parsing(pres)
+        try:
+            self._time_consistency(pres, batch_number)
+        except KeyError as tcve:
+            if not self.end_flag:
+                raise KeyError(tcve) from None
+            LOGGER.warning(tcve)
+        scan_vars = self.scan_res.global_variables(batch_number)
+        return T4ParseResult(pres, scan_vars)
 
-    def check_t4_parsing(self):
+    def check_parsing(self, parsed_res):
         '''Check if parsing went to the end:
 
         * if the end flag was not precised, a time should appear in the last
@@ -68,7 +79,7 @@ class T4ParserDebug(T4Parser):
         parsing result (this can help to find the issue).
         '''
         if not self.end_flag:
-            if not any("_time" in s for s in self.result[-1].keys()):
+            if not any("_time" in s for s in parsed_res.keys()):
                 LOGGER.error("Time not found in the parsing result, "
                              "parsing probably stopped before end, "
                              "please check.")

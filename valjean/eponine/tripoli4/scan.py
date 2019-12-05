@@ -14,36 +14,47 @@ Use of :mod:`~valjean.eponine.tripoli4.scan`
 -----------------------------------------------
 
 .. doctest:: scan
-   :hide:
+    :hide:
 
-   >>> import os
-   >>> work_dir = 'scan'
-   >>> os.mkdir(work_dir)
-   >>> with open(os.path.join(work_dir, 'spam.res'), 'w') as tmpfile:
-   ...     print("BATCH 10\\n"
-   ...           "initialization time (s): 7\\n"
-   ...           " batch number : 10\\n"
-   ...           "RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00\\n"
-   ...           "Edition after batch number : 10\\n"
-   ...           "simulation time (s) : 1\\n"
-   ...           "NORMAL COMPLETION",
-   ...           file=tmpfile)
+    >>> import os
+    >>> work_dir = 'scan'
+    >>> os.mkdir(work_dir)
+    >>> with open(os.path.join(work_dir, 'spam.res'), 'w') as tmpfile:
+    ...     print("BATCH 10\\n"
+    ...           "initialization time (s): 7\\n"
+    ...           " batch number : 10\\n"
+    ...           "RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00\\n"
+    ...           "Edition after batch number : 10\\n"
+    ...           "simulation time (s) : 1\\n"
+    ...           "NORMAL COMPLETION",
+    ...           file=tmpfile)
 
-To use this module you need to create a :class:`Scan` object giving at least
+To use this module you need to create a :class:`T4Scan` object giving at least
 the path to the file you want to read. This file should be a Tripoli-4 output
 containing at least the flags precised in :ref:`eponine-t4-scan-caveats`.
 
-   >>> import os
-   >>> from valjean.eponine.tripoli4.scan import Scan
-   >>> results = Scan(os.path.join(work_dir, 'spam.res'))
-   >>> results.normalend
-   True
-   >>> len(results)
-   1
-   >>> results.times['initialization_time']
-   7
-   >>> 'simulation time' in results[-1]
-   True
+    >>> import os
+    >>> from valjean.eponine.tripoli4.scan import T4Scan
+    >>> results = T4Scan(os.path.join(work_dir, 'spam.res'))
+    >>> results.normalend
+    True
+    >>> len(results)
+    1
+    >>> results.times['initialization_time']
+    7
+
+    The expected key of the :class:`T4Scan` object is the batch number, not an
+    index. If you have the index you need to obtain the corresponding batch
+    number first.
+
+    >>> 'simulation time' in results[10]  # batch number = 10
+    True
+    >>> 'simulation time' in results[-1]  # -1 can only be an index, like 0
+    Traceback (most recent call last):
+        ...
+    KeyError: -1
+    >>> 'simulation time' in results[results.batch_number(-1)]
+    True
 
 .. note::
 
@@ -60,7 +71,7 @@ Beginning and end of results sections
 Important for the scan: results will be kept
 
 * **from** "RESULTS ARE GIVEN"
-* **to** an end flag available in the list ``Scan.end_flags``.
+* **to** an end flag available in the list ``T4Scan.end_flags``.
   Possibilities are:
 
   * Default end flag is ``"simulation time"``;
@@ -221,15 +232,19 @@ class BatchResultScanner:
         return ''.join(self.result)
 
 
-class Scan(Mapping):
+class T4ScanException(Exception):
+    '''An error that may be raised by the :class:`T4Scan` class.'''
+
+
+class T4Scan(Mapping):
     # pylint: disable=too-many-instance-attributes
     '''Class to scan the Tripoli-4 listing and keep the relevant parts of it
     like results per batch used for edition or times.
 
     There are no class variables, but instance variables (initialized when
     the object is built or when the file is read). They are directly accessible
-    from the object. Main results are accessible directly from the :obj:`Scan`
-    object.
+    from the object. Main results are accessible directly from the
+    :obj:`T4Scan` object.
 
     **Instance variables:**
 
@@ -270,8 +285,8 @@ class Scan(Mapping):
 
     **Available methods:**
 
-    :class:`Scan` inherits from :class:`collections.abc.Mapping` so many
-    methods are implemented or available per default: ``keys``, ``items``,
+    :class:`T4Scan` inherits from :class:`collections.abc.Mapping` so many
+    methods are implemented or available by default: ``keys``, ``items``,
     ``values``, ``get``, ``__contains__`` (used via ``in``). ``__getitem``
     (used with ``[]``), ``__iter__`` (when iterators are required), ``__len__``
     and ``__reversed__`` are redefined.
@@ -365,8 +380,10 @@ class Scan(Mapping):
         return None
 
     def _add_time(self, end_flag, line):
+        batch_number = next(reversed(self._collres)) if self._collres else 0
         self.times.setdefault(
-            end_flag.replace(' ', '_'), []).append(
+            end_flag.replace(' ', '_'), {}).setdefault(
+                batch_number,
                 int(line.split()[-1]) if line.split()[-1].isdigit()
                 else "Not a time")
 
@@ -422,7 +439,8 @@ class Scan(Mapping):
                     _batch_scan = BatchResultScanner(
                         count_mesh_exceeding, current_batch,
                         self.mesh_limit, self.para, line)
-                elif line.startswith(' batch number :'):
+                elif (self.partial and line.startswith(' number of batch')
+                      or line.startswith(' batch number :')):
                     current_batch = int(line.split()[-1])
                 elif self._is_end_flag(line):
                     check_current_batch = (
@@ -445,38 +463,37 @@ class Scan(Mapping):
         if count_mesh_exceeding > 4:
             LOGGER.warning("Number of mesh exceeding mesh_limit arg: %d",
                            count_mesh_exceeding)
+        if not self._collres and _batch_scan:
+            raise T4ScanException("No scan result built: "
+                                  "no end flag found in the file")
 
     def __getitem__(self, batch_number):
         '''Get result corresponding to batch_number.
 
-        If `batch_number` == -1 return the last result.
         A warning is printed if the last batch_number doesn't correspond to
         the number of batchs required.
 
-        Use: ``Scan[X]``
+        :param int batch_number: batch number (>0), corresponding the keys of
+            T4Scan.
+        :raises KeyError: if ``batch_number`` does not exist (for example if
+            confusion between ``batch_number`` and ``batch_index`` using -1 or
+            0)
+
+        Use: ``T4Scan[X]``
         '''
         LOGGER.debug("__getitem__, batch number = %d", batch_number)
-        if batch_number == -1:
-            last_batch = next(reversed(self._collres))
-            LOGGER.info("last batch number = %d", last_batch)
-            if last_batch != self.reqbatchs:
-                LOGGER.warning("last batch number %d != required number of "
-                               "batchs %s", last_batch, self.reqbatchs)
-            return self._collres[last_batch]
-
         try:
             return self._collres[batch_number]
-        except KeyError:  # as err:
-            message = ("Wrong batch number required, {} doesn't exist, "
-                       "please change it to an existing one"
+        except KeyError:
+            message = ("Wrong batch number required, batch number {} doesn't "
+                       "exist, please change it to an existing one."
                        .format(batch_number))
             LOGGER.error(message)
             raise
-            # raise type(err)(message).with_traceback(sys.exc_info()[2])
 
     def __iter__(self):
         '''Iteration over the collection of results, on the keys to match
-        `dict` and `OrderedDict` behaviour.
+        :obj:`dict` and :obj:`collections.OrderedDict` behaviour.
         '''
         yield from self._collres.__iter__()
 
@@ -487,28 +504,24 @@ class Scan(Mapping):
         return len(self._collres)
 
     def __reversed__(self):
-        '''Reversed the `OrderedDict` order (easier to get last element).'''
+        '''Reversed the :obj:`collections.OrderedDict` order (easier to get
+        last element).
+        '''
         yield from self._collres.__reversed__()
 
-    def index(self, batch_number):
+    def batch_index(self, batch_number):
         '''Get the index of the batch_number in the results list.'''
         return list(self._collres.keys()).index(batch_number)
 
-    @profile
-    def get_last_edited_batch_number(self):
-        '''Return last edited batch number'''
-        return list(self._collres.keys())[-1]
-
-    @profile
-    def get_all_batch_results(self):
-        '''Return all batchs results in one string, to be parsed in once.'''
-        return ''.join(self._collres.values())
+    def batch_number(self, batch_index):
+        '''Get the batch number from the batch index.'''
+        return list(self.keys())[batch_index]
 
     def fatal_error(self):
         '''Return the fatal error message if found.'''
         return ''.join(self._fatal_error)
 
-    def global_variables(self, batch_index):
+    def global_variables(self, batch_number):
         '''Return a dictionary of the global quantities in the TRIPOILI-4
         output:
 
@@ -518,20 +531,25 @@ class Scan(Mapping):
         * normal end
         * required batches
         * partial (if the job as been stopped)
+        * batch number, especially when 'edition after batch number' is not in
+          the TRIPOLI-4 output
+        * t4_file: path to the scanned file
         * times of the required batch (can be simulation time, initialisation
           time, elapsed time)
 
-        :param int batch_index: index of the batch in the list (used for times)
-        :returns: dict
+        :param int batch_number: batch number (used for times)
+        :rtype: dict
         '''
         gvars = {'warnings': self.countwarnings,
                  'errors': self.counterrors,
                  'number_of_tasks': self.tasks,
                  'normal_end': self.normalend,
                  'required_batches': self.reqbatchs,
-                 'partial': self.partial}
+                 'partial': self.partial,
+                 'batch_number': batch_number,
+                 't4_file': self.fname}
         for ktime, val in self.times.items():
-            gvars[ktime] = val if isinstance(val, int) else val[batch_index]
+            gvars[ktime] = val if isinstance(val, int) else val[batch_number]
         return gvars
 
     def print_statistics(self):

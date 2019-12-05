@@ -1,5 +1,5 @@
 ------------------------------ Structured parsed result ------------------------------
-Keys: ['auto_keffs', 'edition_batch_number', 'list_responses', 'mean_weight_leak', 'simulation_time', 'source_intensity']
+Keys: ['auto_keffs', 'batch_data', 'list_responses']
 auto_keffs     list of 4 elements -> 
     elt 0:       Dict with keys = ['keff_estimator', 'response_type', 'results']
         keff_estimator KSTEP
@@ -42,7 +42,14 @@ auto_keffs     list of 4 elements ->
           discarded_batches 2, dtype: int64
           used_batches 8, dtype: int64
 
-edition_batch_number 10, dtype: int64
+batch_data     Dict with keys = ['edition_batch_number', 'mean_weight_leak', 'simulation_time', 'source_intensity']
+      edition_batch_number 10, dtype: int64
+      mean_weight_leak       Dict with keys = ['score', 'sigma', 'sigma%']
+        score 1.990297e+00, dtype: float64
+        sigma 4.771245e-01, dtype: float64
+        sigma% 2.397252e+01, dtype: float64
+      simulation_time 24, dtype: int64
+      source_intensity 1.000000e+00, dtype: float64
 
 list_responses 
 Number of responses: 2
@@ -157,13 +164,5 @@ Number of responses: 2
  [7.761104e-01 7.875050e-01 7.666668e-01]
  [7.687564e-01 7.666668e-01 1.129290e+00]]
           used_batches 9, dtype: int64
-
-mean_weight_leak     Dict with keys = ['score', 'sigma', 'sigma%']
-      score 1.990297e+00, dtype: float64
-      sigma 4.771245e-01, dtype: float64
-      sigma% 2.397252e+01, dtype: float64
-
-simulation_time 24, dtype: int64
-
-source_intensity 1.000000e+00, dtype: float64
 --------------------------------------------------------------------------------
+

@@ -136,28 +136,28 @@ def test_gauss_spectrum(datadir):
     '''Test Tripoli-4 listing with spectrum in output depending on time, µ and
     φ angles. Also control number of batchs.
     '''
-    t4_res = T4Parser(str(datadir/"gauss_time_mu_phi_E.d.res.ceav5"), 0)
-    assert t4_res
-    assert t4_res.check_t4_times()
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['initialization_time'] == 0
-    assert t4_res.scan_res.times['simulation_time'] == [1, 2]
-    assert len(t4_res.scan_res) == 2
-    assert len(t4_res.result) == 2
-    assert len(t4_res.result[-1]['list_responses']) == 6
-    assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 5
-    for ibatch, batch in enumerate(t4_res.scan_res):
+    t4p = T4Parser(str(datadir/"gauss_time_mu_phi_E.d.res.ceav5"))
+    assert t4p
+    assert t4p.check_times()
+    assert t4p.scan_res.normalend
+    assert t4p.scan_res.times['initialization_time'] == 0
+    assert t4p.scan_res.times['simulation_time'] == {200: 1, 400: 2}
+    assert len(t4p.scan_res) == 2
+    t4_res = t4p.parse_from_index(-1)
+    assert len(t4_res.res['list_responses']) == 6
+    assert t4_res.res['list_responses'][-1]['response_index'] == 5
+    for ibatch, batch in enumerate(t4p.scan_res):
         assert batch == 200*(ibatch+1)
-    for rbatch, batch in enumerate(reversed(t4_res.scan_res)):
-        assert batch == 200*(len(t4_res.scan_res)-rbatch)
-    assert t4_res.scan_res.get_last_edited_batch_number() == 400
-    resp0 = t4_res.result[-1]['list_responses'][0]
+    for rbatch, batch in enumerate(reversed(t4p.scan_res)):
+        assert batch == 200*(len(t4p.scan_res)-rbatch)
+    assert t4p.scan_res.batch_number(-1) == 400
+    resp0 = t4_res.res['list_responses'][0]
     assert resp0['response_function'] == "COURANT"
     assert resp0['response_type'] == 'score'
     assert resp0['scoring_mode'] == "SCORE_SURF"
     assert all(x in resp0['results']
                for x in ('spectrum', 'integrated'))
-    t4rb = t4_res.build_response_book()
+    t4rb = t4_res.to_response_book()
     assert len(t4rb.keys()) == 14
     assert (list(t4rb.available_values('response_function'))
             == ['COURANT'])
@@ -179,22 +179,24 @@ def test_tungstene_file(datadir):
     '''Use Tripoli-4 output from tungstene.d to test meshes (also depending on
     energy).
     '''
-    t4_res = T4Parser(str(datadir/"tungstene.d.res.ceav5"), -1)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation_time'][-1] == 423
-    assert t4_res.scan_res.times['initialization_time'] == 0
-    assert len(t4_res.scan_res) == 1
-    assert len(t4_res.result) == 1
-    assert len(t4_res.result[-1]['list_responses']) == 1
-    resp0 = t4_res.result[-1]['list_responses'][0]
+    t4p = T4Parser(str(datadir/"tungstene.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert list(t4p.scan_res.keys())[-1] == 1000
+    assert t4p.scan_res.times['simulation_time'][1000] == 423
+    assert t4p.scan_res.times['initialization_time'] == 0
+    assert len(t4p.scan_res) == 1
+    t4_res = t4p.parse_from_index(-1)
+    assert t4_res.res['batch_data']['batch_number'] == 1000
+    assert t4_res.res['run_data']['initialization_time'] == 0
+    assert len(t4_res.res['list_responses']) == 1
+    resp0 = t4_res.res['list_responses'][0]
     assert resp0['particle'] == "PHOTON"
     assert resp0['response_type'] == 'score'
     assert resp0['scoring_mode'] == "SCORE_TRACK"
     assert 'mesh' in resp0['results']
-    t4rb = t4_res.build_response_book()
+    t4rb = t4_res.to_response_book()
     assert t4rb.globals['simulation_time'] == 423
-    assert t4rb.globals['initialization_time'] == 0
     resp = t4rb.select_by(response_function='FLUX', squeeze=True)
     bd_mesh = dcv.convert_data(resp['results'], data_type='mesh')
     bd_mesh_squeeze = bd_mesh.squeeze()
@@ -238,22 +240,23 @@ def test_tt_simple_packet20_para(datadir):
     test parallel mode specific features (number of batchs used for edition,
     number of batchs required in case PACKET_LENGTH case, etc.
     '''
-    t4_res = T4Parser(str(datadir/"ttsSimplePacket20.d.PARA.res.ceav5"), -1,
-                      mesh_lim=-1)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation_time'][-1] == 0
-    assert t4_res.scan_res.times['initialization_time'] == 4
-    assert t4_res.scan_res.times['elapsed_time'][-1] == 250
-    assert len(t4_res.scan_res) == 1
-    assert len(t4_res.result) == 1
-    assert len(t4_res.result[-1]['list_responses']) == 7
-    assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 3
-    assert (t4_res.result[-1]['list_responses'][-1]['response_function']
-            == 'KEFFS')
+    t4p = T4Parser(str(datadir/"ttsSimplePacket20.d.PARA.res.ceav5"),
+                   mesh_lim=-1)
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert list(t4p.scan_res.keys())[-1] == 10
+    assert t4p.scan_res.times['simulation_time'][10] == 0
+    assert t4p.scan_res.times['initialization_time'] == 4
+    assert t4p.scan_res.times['elapsed_time'][10] == 250
+    assert len(t4p.scan_res) == 1
+    t4_res = t4p.parse_from_index(-1)
+    assert t4_res.res['batch_data']['batch_number'] == 10
+    assert len(t4_res.res['list_responses']) == 7
+    assert t4_res.res['list_responses'][-1]['response_index'] == 3
+    assert t4_res.res['list_responses'][-1]['response_function'] == 'KEFFS'
     assert ['score_index' in x
-            for x in t4_res.result[-1]['list_responses']].count(True) == 6
-    resp5 = t4_res.result[-1]['list_responses'][4]
+            for x in t4_res.res['list_responses']].count(True) == 6
+    resp5 = t4_res.res['list_responses'][4]
     assert resp5['response_function'] == 'REACTION'
     assert resp5['reaction_on_nucleus'] == ("U235",)
     assert resp5['temperature'] == (300,)
@@ -265,18 +268,20 @@ def test_debug_entropy(caplog, datadir):
     debug mode.
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
-    t4_res = T4ParserDebug(str(datadir/"entropy.d.res.ceav5"), -1,
-                           mesh_lim=10,
-                           end_flag="number of batches used",
-                           ofile="debug_ent.log")
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation_time'][-1] == 24
-    assert t4_res.scan_res.times['initialization_time'] == 6
-    assert len(t4_res.scan_res) == 10
-    assert len(t4_res.result) == 1
-    assert len(t4_res.result[-1]['list_responses']) == 1
-    resp0 = t4_res.result[-1]['list_responses'][0]
+    t4p = T4ParserDebug(str(datadir/"entropy.d.res.ceav5"),
+                        mesh_lim=10,
+                        end_flag="number of batches used",
+                        ofile="debug_ent.log")
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert list(t4p.scan_res.keys())[-1] == 10
+    assert t4p.scan_res.times['simulation_time'][10] == 24
+    assert t4p.scan_res.times['initialization_time'] == 6
+    assert len(t4p.scan_res) == 10
+    t4_res = t4p.parse_from_index(-1)
+    assert t4_res.res['batch_data']['batch_number'] == 10
+    assert len(t4_res.res['list_responses']) == 1
+    resp0 = t4_res.res['list_responses'][0]
     assert resp0['response_type'] == 'score'
     res0 = resp0['results']
     scorecontent = ['mesh', 'boltzmann_entropy', 'shannon_entropy',
@@ -353,44 +358,44 @@ def test_entropy(datadir):
     '''Use Tripoli-4 result from entropy.d to test entropy, mesh, spectrum with
     progressively converging results.
     '''
-    t4_res = T4Parser(str(datadir/"entropy.d.res.ceav5"), 0)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.check_t4_times()
-    assert t4_res.scan_res.times['simulation_time'][-1] == 24
-    assert t4_res.scan_res.times['initialization_time'] == 6
-    assert len(t4_res.scan_res) == 10
-    assert len(t4_res.result) == 10
-    assert len(t4_res.result[-1]['list_responses']) == 2
-    lastres = t4_res.result[-1]['list_responses']
-    for ires in lastres:
+    t4p = T4Parser(str(datadir/"entropy.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert t4p.check_times()
+    assert list(t4p.scan_res.keys())[-1] == 10
+    assert t4p.scan_res.times['simulation_time'][10] == 24
+    assert t4p.scan_res.times['initialization_time'] == 6
+    assert len(t4p.scan_res) == 10
+    lastres = t4p.parse_from_number(10)
+    assert len(lastres.res['list_responses']) == 2
+    lastresps = lastres.res['list_responses']
+    for ires in lastresps:
         assert ires['response_function'] in ['REACTION', 'KEFFS']
-    firstres = t4_res.result[0]['list_responses']
-    assert firstres[1]['response_type'] == 'keff'
-    assert 'not_converged' in firstres[1]['results']
-    assert lastres[1]['response_type'] == 'keff'
-    keffs_checks(lastres[1]['results'])
-    t4rb = t4_res.build_response_book()
+    assert lastresps[1]['response_type'] == 'keff'
+    keffs_checks(lastresps[1]['results'])
+    t4rb = lastres.to_response_book()
     assert t4rb.globals['simulation_time'] == 24
-    assert t4rb.globals['initialization_time'] == 6
     check_last_entropy_result(t4rb)
-    t4rb_b0 = t4_res.build_response_book(batch_index=0)
+    firstres = t4p.parse_from_index(0)
+    firstresps = firstres.res['list_responses']
+    assert firstresps[1]['response_type'] == 'keff'
+    assert 'not_converged' in firstresps[1]['results']
+    t4rb_b0 = firstres.to_response_book()
     assert t4rb_b0.globals['simulation_time'] == 2
-    assert t4rb_b0.globals['initialization_time'] == 6
     check_first_entropy_result(t4rb_b0)
-    t4rb_b5 = t4_res.build_response_book(batch_index=5)
+    t4rb_b5 = t4p.parse_from_index(5).to_response_book()
     assert t4rb_b5
     assert t4rb_b5.globals['simulation_time'] == 14
     assert t4rb_b5.globals['edition_batch_number'] == 6
-    t4rb_bn6 = t4_res.build_response_book(batch_number=6)
+    t4rb_bn6 = t4p.parse_from_number(6).to_response_book()
     assert t4rb_bn6
     assert t4rb_bn6.globals['simulation_time'] == 14
-    assert t4rb_b5 == t4rb_bn6
-    t4_res = T4Parser(str(datadir/"entropy.d.res.ceav5"), batch=2)
+    assert t4rb_b5.globals == t4rb_bn6.globals
+    t4_res = t4p.parse_from_number(batch_number=2)
     assert t4_res
-    assert len(t4_res.scan_res) == 10
-    assert len(t4_res.result) == 1
-    t4_rb = t4_res.build_response_book()
+    assert len(t4p.scan_res) == 10
+    assert t4_res.res['batch_data']['batch_number'] == 2
+    t4_rb = t4_res.to_response_book()
     assert t4_rb
     assert t4_rb.globals['simulation_time'] == 5
 
@@ -401,9 +406,10 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
     monkeypatch.setattr("valjean.eponine.tripoli4.dump.MAX_DEPTH", 8)
-    t4_res = T4Parser(str(datadir/"entropy.d.res.ceav5"), -1, mesh_lim=10)
+    t4p = T4Parser(str(datadir/"entropy.d.res.ceav5"), mesh_lim=10)
+    t4_res = t4p.parse_from_index(batch_index=-1)
     assert t4_res
-    assert t4_res.scan_res.normalend
+    assert t4p.scan_res.normalend
     with open(str(datadir/"entropy_debug.log"), 'r') as ifile:
         for line in ifile:
             assert line in caplog.text, "Line %r not found in caplog." % line
@@ -413,22 +419,24 @@ def test_ifp(datadir):
     '''Use Tripoli-4 result from  pu_met_fast_001_decompose_list_small.d to
     test IFP parsing.
     '''
-    t4_res = T4Parser(
-        str(datadir/"pu_met_fast_001_decompose_list_small.d.res.ceav5"), -1)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation_time'][-1] == 13
-    assert t4_res.scan_res.times['initialization_time'] == 1
-    assert len(t4_res.result) == 1
+    t4p = T4Parser(
+        str(datadir/"pu_met_fast_001_decompose_list_small.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert list(t4p.scan_res.keys())[-1] == 200
+    assert t4p.scan_res.times['simulation_time'][200] == 13
+    assert t4p.scan_res.times['initialization_time'] == 1
+    t4_res = t4p.parse_from_index(-1)
+    assert t4_res.res['batch_data']['batch_number'] == 200
     assert max([v['response_index']
-                for v in t4_res.result[-1]['list_responses']]) + 1 == 22
-    assert len(t4_res.result[-1]['list_responses']) == 192
-    last_resp = t4_res.result[-1]['list_responses'][-1]
+                for v in t4_res.res['list_responses']]) + 1 == 22
+    assert len(t4_res.res['list_responses']) == 192
+    last_resp = t4_res.res['list_responses'][-1]
     assert (last_resp['response_function']
             == "IFP ADJOINT WEIGHTED MIGRATION AREA")
     assert last_resp['response_type'] == 'adjoint'
     assert last_resp['results']['used_batches'] == 81
-    t4rb = t4_res.build_response_book()
+    t4rb = t4_res.to_response_book()
     assert (len(list(t4rb.available_values('response_function')))
             == 22)
     resps = t4rb.select_by(
@@ -464,12 +472,14 @@ def test_ifp_adjoint_edition(datadir):
 
     Caution: T4 output has been modified due to a bug in Equivalent keff.
     '''
-    t4_res = T4Parser(str(datadir/"test_adjoint_small.d.res"), -1)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation_time'][-1] == 77
-    assert t4_res.scan_res.times['initialization_time'] == 3
-    t4rb = t4_res.build_response_book()
+    t4p = T4Parser(str(datadir/"test_adjoint_small.d.res"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert list(t4p.scan_res.keys())[-1] == 20
+    assert t4p.scan_res.times['simulation_time'][20] == 77
+    assert t4p.scan_res.times['initialization_time'] == 3
+    t4_res = t4p.parse_from_index(-1)
+    t4rb = t4_res.to_response_book()
     assert (set(t4rb.available_values('response_type'))
             == set(('keff', 'ifp_adj_crit_edition', 'auto_keff')))
     assert (sorted(t4rb.keys())
@@ -499,12 +509,14 @@ def test_sensitivity(datadir):
     '''Use Tripoli-4 result from sensitivity_godiva.d to test sensitivity
     parsing and dataset construction.
     '''
-    t4_res = T4Parser(str(datadir/"sensitivity_godiva.d.res"), -1)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation_time'][-1] == 159
-    assert t4_res.scan_res.times['initialization_time'] == 1
-    t4rb = t4_res.build_response_book()
+    t4p = T4Parser(str(datadir/"sensitivity_godiva.d.res"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert list(t4p.scan_res.keys())[-1] == 120
+    assert t4p.scan_res.times['simulation_time'][120] == 159
+    assert t4p.scan_res.times['initialization_time'] == 1
+    t4_res = t4p.parse_from_index(-1)
+    t4rb = t4_res.to_response_book()
     rb_sensitiv = t4rb.filter_by(response_type='sensitivity')
     assert len(rb_sensitiv.responses) == 8
     assert (sorted(rb_sensitiv.keys())
@@ -540,19 +552,21 @@ def test_kij(datadir):
     r'''Use tripoli-4 result from cylindreDecR_with_kij_on_mesh.d to test
     k\ :sub:`ij` matrix parsing.
     '''
-    t4_res = T4Parser(
-        str(datadir/"cylindreDecR_with_kij_on_mesh.d.res.ceav5"), -1)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation_time'][-1] == 69
-    assert t4_res.scan_res.times['initialization_time'] == 1
-    assert len(t4_res.result) == 1
-    assert len(t4_res.result[-1]['list_responses']) == 16
-    resp_list = t4_res.result[-1]['list_responses']
+    t4p = T4Parser(
+        str(datadir/"cylindreDecR_with_kij_on_mesh.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert list(t4p.scan_res.keys())[-1] == 100
+    assert t4p.scan_res.times['simulation_time'][100] == 69
+    assert t4p.scan_res.times['initialization_time'] == 1
+    t4_res = t4p.parse_from_number(100)
+    assert t4_res.res['batch_data']['batch_number'] == 100
+    assert len(t4_res.res['list_responses']) == 16
+    resp_list = t4_res.res['list_responses']
     assert resp_list[13]['response_function'] == "KIJ_MATRIX"
     assert resp_list[14]['response_function'] == "KIJ_SOURCES"
     assert resp_list[15]['response_function'] == "KEFFS"
-    t4rb = t4_res.build_response_book()
+    t4rb = t4_res.to_response_book()
     kijmat = t4rb.select_by(response_function='KIJ_MATRIX', squeeze=True)
     for res in kijmat['results']:
         assert dcv.convert_data(kijmat['results'], data_type=res)
@@ -565,14 +579,16 @@ def test_green_bands(datadir):
     '''Use Tripoli-4 result from greenband_exploit_T410_contrib.d to test Green
     bands parsing and exploitation jobs.
     '''
-    t4_res = T4Parser(
-        str(datadir/"greenband_exploit_T410_contrib.d.res.ceav5"), -1)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['exploitation_time'][-1] == 2
-    assert t4_res.scan_res.times['initialization_time'] == 2
-    assert len(t4_res.result) == 1
-    t4rb = t4_res.build_response_book()
+    t4p = T4Parser(
+        str(datadir/"greenband_exploit_T410_contrib.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert list(t4p.scan_res.keys())[-1] == 500
+    assert t4p.scan_res.times['exploitation_time'][500] == 2
+    assert t4p.scan_res.times['initialization_time'] == 2
+    t4_res = t4p.parse_from_number(500)
+    assert t4_res.res['batch_data']['batch_number'] == 500
+    t4rb = t4_res.to_response_book()
     resp = t4rb.select_by(response_function='FLUX', squeeze=True)
     bd_gb = dcv.convert_data(resp['results'], data_type='greenbands')
     assert bd_gb.shape == (2, 2, 1, 2, 4, 3)
@@ -583,38 +599,40 @@ def test_tt_simple_packet20_mono(datadir):
     '''Use Tripoli-4 result from ttsSimplePacket20.d run in mono-processor
     mode to test PACKET_LENGTH feature in MONO case.
     '''
-    t4_res = T4Parser(str(datadir/"ttsSimplePacket20.d.res.ceav5"), 0)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.check_t4_times()
-    assert t4_res.scan_res.times['simulation_time'][-1] == 217
-    assert t4_res.scan_res.times['initialization_time'] == 3
-    assert len(t4_res.scan_res) == 2
-    assert len(t4_res.result[-1]['list_responses']) == 7
-    assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 3
-    assert (t4_res.result[-1]['list_responses'][-1]['response_function']
-            == 'KEFFS')
+    t4p = T4Parser(str(datadir/"ttsSimplePacket20.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert t4p.check_times()
+    assert list(t4p.scan_res.keys())[-1] == 200
+    assert t4p.scan_res.times['simulation_time'][200] == 217
+    assert t4p.scan_res.times['initialization_time'] == 3
+    assert len(t4p.scan_res) == 2
+    t4_res = t4p.parse_from_index()
+    assert len(t4_res.res['list_responses']) == 7
+    assert t4_res.res['list_responses'][-1]['response_index'] == 3
+    assert t4_res.res['list_responses'][-1]['response_function'] == 'KEFFS'
     assert ['score_index' in x
-            for x in t4_res.result[-1]['list_responses']].count(True) == 6
+            for x in t4_res.res['list_responses']].count(True) == 6
 
 
 def test_pertu(datadir):
     '''Use Tripoli-4 result from pertu_covariances.d to test perturbations and
     uncertainty spectrum.
     '''
-    t4_res = T4Parser(str(datadir/"pertu_covariances.d.res.ceav5"), -1)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.scan_res.times['simulation_time'][-1] == 27
-    assert t4_res.scan_res.times['initialization_time'] == 0
-    assert len(t4_res.scan_res) == 1
-    assert (sorted(list(t4_res.result[-1].keys()))
-            == ['edition_batch_number', 'list_responses', 'mean_weight_leak',
-                'perturbation', 'simulation_time', 'source_intensity'])
-    assert len(t4_res.result[-1]['list_responses']) == 3
-    assert t4_res.result[-1]['list_responses'][-1]['response_index'] == 0
-    assert len(t4_res.result[-1]['perturbation']) == 3
-    t4rb = t4_res.build_response_book()
+    t4p = T4Parser(str(datadir/"pertu_covariances.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert list(t4p.scan_res.keys())[-1] == 100
+    assert t4p.scan_res.times['simulation_time'][100] == 27
+    assert t4p.scan_res.times['initialization_time'] == 0
+    assert len(t4p.scan_res) == 1
+    t4_res = t4p.parse_from_index(batch_index=-1)
+    assert (sorted(list(t4_res.res.keys()))
+            == ['batch_data', 'list_responses', 'perturbation', 'run_data'])
+    assert len(t4_res.res['list_responses']) == 3
+    assert t4_res.res['list_responses'][-1]['response_index'] == 0
+    assert len(t4_res.res['perturbation']) == 3
+    t4rb = t4_res.to_response_book()
     slkeys = sorted(list(t4rb.index.keys()))
     assert slkeys == [
         'energy_split_name', 'index', 'particle', 'perturbation_composition',
@@ -632,14 +650,16 @@ def test_pertu(datadir):
 
 def test_vov(datadir):
     '''Use Tripoli-4 result from vov.d to test vov spectra.'''
-    t4_res = T4Parser(str(datadir/"vov.d.res.ceav5"), 0)
-    assert t4_res
-    assert t4_res.scan_res.normalend
-    assert t4_res.check_t4_times()
-    assert t4_res.scan_res.times['simulation_time'][-1] == 33
-    assert t4_res.scan_res.times['initialization_time'] == 6
-    assert len(t4_res.scan_res) == 2
-    list_resp = t4_res.result[-1]['list_responses']
+    t4p = T4Parser(str(datadir/"vov.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert t4p.check_times()
+    assert list(t4p.scan_res.keys())[-1] == 400
+    assert t4p.scan_res.times['simulation_time'][400] == 33
+    assert t4p.scan_res.times['initialization_time'] == 6
+    assert len(t4p.scan_res) == 2
+    t4_res = t4p.parse_from_index(batch_index=-1)
+    list_resp = t4_res.res['list_responses']
     assert len(list_resp) == 8
     assert list_resp[-1]['response_index'] == 1
     assert list_resp[-1]['score_index'] == 2
@@ -674,8 +694,9 @@ def test_no_a_t4_opt_no_spectrum(datadir, caplog):
     the output. Parsing succeeds to parse the spectrum columns (and units here)
     but fails after as it cannot find any row from the spectrum.
     '''
+    t4p = T4Parser(str(datadir/"failure_test_no_spec_res.d.res"))
     with pytest.raises(T4ParserException):
-        T4Parser(str(datadir/"failure_test_no_spec_res.d.res"))
+        t4p.parse_from_index(batch_index=-1)
     assert ("Parsing error in spectrum (_spectrumvals), "
             "please check you run Tripoli-4 with '-a' option"
             in caplog.text)
@@ -689,8 +710,9 @@ def test_no_a_t4_opt_bad_bins(datadir, caplog):
     time for example an new energy bin could appear in the next time step). A
     specific error is sent.
     '''
+    t4p = T4Parser(str(datadir/"failure_test_no_a_opt.d.res"))
     with pytest.raises(T4ParserException):
-        T4Parser(str(datadir/"failure_test_no_a_opt.d.res"))
+        t4p.parse_from_index(-1)
     assert ("Problem with energy bins: some bins are probably missing. "
             "Please make sure you run Tripoli-4 with '-a' option."
             in caplog.text)
@@ -704,8 +726,9 @@ def test_no_a_t4_opt_bad_bins_2(datadir, caplog):
     higher than in the first one, we get missing bins in the second step due to
     the use of '-a' optoin. A specific error is sent.
     '''
+    t4p = T4Parser(str(datadir/"failure_noaopt_uniform_sources.d.res"))
     with pytest.raises(T4ParserException):
-        T4Parser(str(datadir/"failure_noaopt_uniform_sources.d.res"))
+        t4p.parse_from_index(-1)
     assert ("IndexError: all (sub-)spectra should have the same bins."
             in caplog.text)
     assert ("Please make sure you run Tripoli-4 with option '-a'."
@@ -717,11 +740,12 @@ def test_bad_response_name(datadir, caplog):
     failing parsing. In this case a not foreseen character, @, has been used in
     a response name. Pyparsing does not know to do with it and fails.
     '''
+    t4p = T4Parser(str(datadir/"failure_test_bad_resp_name.d.res"))
     with pytest.raises(T4ParserException):
-        T4Parser(str(datadir/"failure_test_bad_resp_name.d.res"))
-    assert "Error in parsing" in caplog.text
-    assert ("corresponding to line: "
-            "'RESPONSE NAME : flux_@_neutron' in file" in caplog.text)
+        t4p.parse_from_index(-1)
+        assert "Error in parsing" in caplog.text
+        assert ("corresponding to line: "
+                "'RESPONSE NAME : flux_@_neutron' in file" in caplog.text)
 
 
 def test_no_normal_completion(datadir, caplog):
@@ -731,15 +755,17 @@ def test_no_normal_completion(datadir, caplog):
     In this case parsing is successful: its result exists, but the
     ``normalend`` boolean in scan is ``False``.
     '''
-    t4_res = T4Parser(str(datadir/"failure_test_no_normal_completion.d.res"))
-    assert t4_res
+    t4p = T4Parser(str(datadir/"failure_test_no_normal_completion.d.res"))
+    assert t4p
     assert ("Tripoli-4 listing did not finish with NORMAL COMPLETION."
             in caplog.text)
-    assert t4_res.scan_res.normalend is False
-    assert t4_res.scan_res.partial is True
-    t4rb = t4_res.build_response_book()
+    assert t4p.scan_res.normalend is False
+    assert t4p.scan_res.partial is True
+    t4_res = t4p.parse_from_index(-1)
+    assert t4_res.res['batch_data']['batch_number'] == 37
+    t4rb = t4_res.to_response_book()
     assert not t4rb.is_empty()
-    assert len(t4rb.globals) == 10
+    assert len(t4rb.globals) == 4
     assert len(t4rb) == 1
 
 
@@ -750,7 +776,7 @@ def test_no_simulation_time(datadir, caplog):
     '''
     with pytest.raises(T4ParserException):
         T4Parser(str(datadir/"failure_test_no_simu_time.d.res"))
-    assert "No result found in Tripoli-4 listing." in caplog.text
+    assert "No scan result built: no end flag found in the file" in caplog.text
 
 
 def test_no_simulation_time_debug(datadir, caplog):
@@ -758,12 +784,12 @@ def test_no_simulation_time_debug(datadir, caplog):
     lack of the end flag. In this case "NORMAL COMPLETION" is also missing but
     as pyparsing cannot find the end flag no parsing result can be built.
     '''
-    t4_res = T4ParserDebug(str(datadir/"failure_test_no_simu_time.d.res"),
-                           end_flag='ENERGY INTEGRATED RESULTS')
-    with pytest.raises(ValueError):
-        t4_res.build_response_book()
-        assert ('No "time" variable found in the TRIPOLI-4 output, '
-                'please check it.\n'
-                'Remark: you may be in parsing debug mode with an end flag '
-                'not containing "time" where this behaviour is expected.'
-                in caplog.text)
+    t4p = T4ParserDebug(str(datadir/"failure_test_no_simu_time.d.res"),
+                        end_flag='ENERGY INTEGRATED RESULTS')
+    _t4_res = t4p.parse_from_index(-1)
+    assert ('No "time" variable found in the TRIPOLI-4 output, '
+            'please check it.' in caplog.text)
+    assert ('Remark: you may be in parsing debug mode with an end flag '
+            'not containing "time" where this behaviour is expected.'
+            in caplog.text)
+    _t4_res.to_response_book()

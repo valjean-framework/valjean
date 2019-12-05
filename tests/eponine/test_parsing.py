@@ -38,25 +38,27 @@ from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 # pylint: disable=redefined-outer-name
 
 
-def result_test(res):
+def result_test(t4pres):
     '''Test content of the parsing result: presence of times, ``'results'`` key
     if ``'list_responses'`` is found in the parsing result.
+
+    :param res: T4ParseResult
 
     :retrns: bool if time was found (but should always happen as there is an
              assert before)
     '''
     # get last result (default returns list if more than one batch required)
     # elapsed_time needed for cases with PARTIAL EDITION (not correct end)
-    assert any("_time" in s for s in res.result[-1].keys())
-    print("keys =", list(res.result[-1].keys()))
-    if 'list_responses' in res.result[-1].keys():
-        lresp = res.result[-1]['list_responses']
+    assert any("_time" in s for s in t4pres.res['batch_data'].keys())
+    print("keys =", list(t4pres.res.keys()))
+    if 'list_responses' in t4pres.res.keys():
+        lresp = t4pres.res['list_responses']
         assert isinstance(lresp, list)
         for resp in lresp:
             assert 'results' in resp
             assert isinstance(resp['results'], dict)
             assert isinstance(resp['response_type'], str)
-    return res.scan_res.normalend
+    return t4pres.res['run_data']['normal_end']
 
 
 def check_array_datasets(response, dname, data):
@@ -128,7 +130,7 @@ def response_book_test(res):
     outputs given set, else parsing, transform or common have to be updated to
     probably take into account a new type of response.
     '''
-    t4rb = res.build_response_book()
+    t4rb = res.to_response_book()
     if t4rb is None:
         return
     ids = set()
@@ -159,21 +161,26 @@ def loop_on_files(filelist, cfile):
     for ifile in filelist:
         print("Reading:", ifile)
         try:
-            res = (T4Parser(ifile, -1)
+            res = (T4Parser(ifile)
                    if os.path.basename(ifile) not in cfile.MESH_LIM_FILES
-                   else T4Parser(ifile, -1, mesh_lim=2))
+                   else T4Parser(ifile, mesh_lim=2))
         except T4ParserException:
             failed_jdds.append(ifile)
             continue
-        if result_test(res):
-            nb_jdds_ok += 1
-        else:
-            failed_jdds.append(ifile)
-        if not res.check_t4_times():
+        if not res.check_times():
             print("Issue with times, please check")
             failed_time_jdds.append(ifile)
         try:
-            response_book_test(res)
+            pres = res.parse_from_index(-1)
+        except T4ParserException:
+            failed_jdds.append(ifile)
+            continue
+        if result_test(pres):
+            nb_jdds_ok += 1
+        else:
+            failed_jdds.append(ifile)
+        try:
+            response_book_test(pres)
         except AssertionError as aerb:
             print("Error in responsbook: {}".format(aerb))
             failed_rb_jdds.append(ifile)

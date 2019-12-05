@@ -480,14 +480,14 @@ _meanweightrestartpart = (Suppress(_meanweightrestartpart_kw)
                           + _fnums('mean_weight_restart_particle'))
 _introelts = (_meanweightleak | _meanweightleakin | _edbatchnum
               | _meanweightrestartpart)
-intro = _sourceintensity + _star_line + OneOrMore(_introelts)
+intro = Group(_sourceintensity + _star_line + OneOrMore(_introelts))('intro')
 
 # Conclusion parser
 _simutime = Suppress(_simulationtime_kw + ':') + _inums('simulation_time')
 _exploitime = (Suppress(_exploitationtime_kw + ':')
                + _inums('exploitation_time'))
 _elapsedtime = Suppress(_elapsedtime_kw + ':') + _inums('elapsed_time')
-runtime = _simutime | _elapsedtime | _exploitime
+runtime = Group(_simutime | _elapsedtime | _exploitime)('conclu')
 
 # Response parser
 # Description of the response
@@ -1274,7 +1274,7 @@ t4debug_gram = (OneOrMore((intro
                                        | autokeffblock | perturbation
                                        | Suppress(contribpartblock)
                                        | OneOrMore(runtime)))
-                          .setParseAction(trans.to_dict))
+                          .setParseAction(trans.to_final_dict))
                 .setParseAction(dump_in_logger)
                 | intro + OneOrMore(runtime)).setFailAction(trans.fail_parsing)
 
@@ -1284,11 +1284,10 @@ t4debug_gram = (OneOrMore((intro
 ################################
 
 t4gram = (OneOrMore((intro
-                     + OneOrMore(listresponses | ifpadjointcriticality
-                                 | autokeffblock | perturbation
-                                 | Suppress(contribpartblock))
+                     + ZeroOrMore(listresponses | ifpadjointcriticality
+                                  | autokeffblock | perturbation
+                                  | Suppress(contribpartblock))
                      + runtime)
-                    .setParseAction(trans.to_dict))
+                    .setParseAction(trans.to_final_dict))
           .setParseAction(dump_in_logger)
-          | (intro + runtime).setParseAction(trans.to_dict)
           ).setFailAction(trans.fail_parsing)

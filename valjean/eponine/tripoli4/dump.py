@@ -204,9 +204,9 @@ def dump_in_logger(toks):
 
     .. todo:: link to logger documentation
     '''
-    LOGGER.info("Nbre de resultats: %d", len(toks))
     if not LOGGER.isEnabledFor(logging.DEBUG):
         return
+    LOGGER.debug("Number of results: %d", len(toks))
     LOGGER.debug(parsing_result_to_str(toks))
 
 
