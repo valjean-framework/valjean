@@ -61,17 +61,15 @@ pipeline {
         stage('Lint') {
           steps {
             echo 'Linting...'
-            dir("${SRC}") {
-              sh """
-                  source "${VENV}/bin/activate"
-                  pylint -f parseable valjean/ tests/ | tee pylint.out
-                  # flake8 returns 1 in case of warnings and that would stop the
-                  # build
-                  flake8 --tee --output-file flake8.out || true
-                  # avoid empty flake8.out files, Jenkins complains 
-                  echo "end of flake8 file" >> flake8.out
-                  """
-            }
+            sh """
+               source "${VENV}/bin/activate"
+               pylint -f parseable --rcfile "${SRC}/pylintrc" "${SRC}/valjean/" "${SRC}/tests/" | tee "${SRC}/pylint.out"
+               # flake8 returns 1 in case of warnings and that would stop the
+               # build
+               flake8 --tee --output-file "${SRC}/flake8.out" --config "${SRC}/setup.cfg" "${SRC}" || true
+               # avoid empty flake8.out files, Jenkins complains 
+               echo "end of flake8 file" >> "${SRC}/flake8.out"
+               """
           }
         }
         stage('Build and check HTML doc') {
