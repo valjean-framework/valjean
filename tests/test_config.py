@@ -58,7 +58,9 @@ def test_merge_with_empty(conf):
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
-@given(conf1=configs(), conf2=configs(), conf3=configs())
+@given(conf1=configs(max_size=3),
+       conf2=configs(max_size=3),
+       conf3=configs(max_size=3))
 def test_merge_associative(conf1, conf2, conf3):
     '''Test that merging configurations is associative.'''
     assert (conf1 + conf2) + conf3 == conf1 + (conf2 + conf3)
