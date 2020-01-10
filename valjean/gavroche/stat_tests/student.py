@@ -343,13 +343,6 @@ from ..test import check_bins, TestDataset, TestResult
 from ... import LOGGER
 
 
-class TestResultStudentException(Exception):
-    '''Exception happening in the Student test.'''
-    # tell pytest that this class and derived classes should NOT be collected
-    # as tests
-    __test__ = False
-
-
 class TestResultStudent(TestResult):
     '''Result from Student's t-test.'''
 

@@ -7,7 +7,8 @@ subsequently processed for inclusion in a test report.
 from ..cosette.task import TaskStatus
 from ..cosette.use import from_env
 from ..cosette.pythontask import PythonTask
-from ..gavroche.test import Test, TestResultFailed, CheckBinsException
+from ..gavroche.test import Test, TestResultFailed
+from .. import LOGGER
 
 
 def eval_test(test):
@@ -15,8 +16,9 @@ def eval_test(test):
     '''
     try:
         res = test.evaluate()
-    except CheckBinsException as cbe:
-        return TestResultFailed(test, cbe)
+    except Exception as ex:  # pylint: disable=broad-except
+        LOGGER.error('The test failed with error: \n%s', ex)
+        return TestResultFailed(test, ex)
     return res
 
 

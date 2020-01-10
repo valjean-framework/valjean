@@ -180,7 +180,7 @@ class BaseDataset:
             return ("name: {0}, with shape {1}, dim {2}, type {3}, bins: {4}"
                     .format(self.name, self.value.shape, self.value.ndim,
                             type(self.value),
-                            ["{}: {}".format(k, v)
+                            ["{}: {}".format(k, str(v).replace('\n', ''))
                              for k, v in self.bins.items()]))
         return (
             "name: {0}, value: {1:6e}, error: {2:6e}, bins: {3}, type: {4}"
