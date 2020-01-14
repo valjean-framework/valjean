@@ -242,6 +242,7 @@ CONVERT_IN_DATASET = {
     'sensitivity_spectrum': array_result,
     'adj_crit_ed': array_result,
     'integrated': integrated_result,
+    'bestresult': integrated_result,
     'generic': generic_score,
     'keff_per_estimator': keff_estimator,
     'keff_combination': keff_combination,

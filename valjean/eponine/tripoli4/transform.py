@@ -220,6 +220,8 @@ def convert_score(toks):
                 res[keystr] = convert_spectrum(score[key], key)
             elif 'integrated_res' in key:
                 res[key] = score[key].asDict()
+            elif 'bestresult_res' in key:
+                res[key] = score[key].asDict()
             elif key == 'greenbands_res':
                 res[key] = convert_green_bands(score[key])
                 res['discarded_batches_res'] = res[key].pop(

@@ -88,6 +88,8 @@ def check_array_datasets(response, dname, data):
         assert dcv.convert_data(response['results'], dname, score='vov')
     if 'integrated' in dname and 'vov' in data:
         assert dcv.convert_data(data, 'vov')
+    if 'bestresult' in dname and 'discarded_batches' in data:
+        assert dcv.convert_data(data, 'discarded_batches')
 
 
 def check_data(responses):
@@ -254,7 +256,7 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     assert (len(summary['failed_jdds'])
             == vv_file.EXPECTED_RESULTS[(category, mode)][1])
     assert len(excluded_files) == vv_file.EXPECTED_RESULTS[(category, mode)][2]
-    if len(vv_file.EXPECTED_RESULTS) > 3:
+    if len(vv_file.EXPECTED_RESULTS[(category, mode)]) > 3:
         assert (len(summary['failed_time'])
                 == vv_file.EXPECTED_RESULTS[(category, mode)][3])
         assert (len(summary['failed_respb'])

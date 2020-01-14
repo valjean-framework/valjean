@@ -137,16 +137,17 @@ class T4Parser:
         try:
             time_key = next(k for k in bdata if 'time' in k)
         except StopIteration:
-            raise KeyError(
+            raise T4ParserException(
                 'No "time" variable found in the TRIPOLI-4 output, '
-                'please check it.\n'
-                'Remark: you may be in parsing debug mode with an end flag '
-                'not containing "time" where this behaviour is expected.')
+                'please check it.')
         if bdata[time_key] != self.scan_res.times[time_key][batch_number]:
-            raise ValueError(
-                '{} looks inconsistent between parsing ({}) and scanning ({})'
-                .format(time_key, bdata[time_key],
-                        self.scan_res.times[time_key][batch_number]))
+            msg = ('{} looks inconsistent between parsing ({}) and scanning '
+                   '({})'.format(time_key, bdata[time_key],
+                                 self.scan_res.times[time_key][batch_number]))
+            if self.scan_res.partial:
+                LOGGER.warning(msg)
+            else:
+                raise T4ParserException(msg)
 
     def parse_from_number(self, batch_number):
         '''Parse from batch index or batch number.

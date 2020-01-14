@@ -381,11 +381,17 @@ class T4Scan(Mapping):
 
     def _add_time(self, end_flag, line):
         batch_number = next(reversed(self._collres)) if self._collres else 0
-        self.times.setdefault(
-            end_flag.replace(' ', '_'), {}).setdefault(
-                batch_number,
-                int(line.split()[-1]) if line.split()[-1].isdigit()
+        eflag = end_flag.replace(' ', '_')
+        time = (int(line.split()[-1]) if line.split()[-1].isdigit()
                 else "Not a time")
+        self.times.setdefault(eflag, {}).setdefault(batch_number, time)
+        if self.times[eflag][batch_number] != time:
+            if self.partial:
+                LOGGER.warning("Partial edition: %s set to last found", eflag)
+                self.times[eflag][batch_number] = time
+            else:
+                LOGGER.warning("More than one %s found for the same batch, %s",
+                               eflag, batch_number)
 
     def _set_counters_and_flags(self, line):
         if "WARNING" in line:
@@ -581,7 +587,6 @@ class T4Scan(Mapping):
             if 'elapsed_time' not in self.times:
                 return False
             if self.partial:
-                print(self.partial)
                 return True
         setimes = {'simulation_time', 'exploitation_time'}
         if not setimes.intersection(self.times):

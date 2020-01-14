@@ -742,18 +742,18 @@ _sensibtomaxval = Group(Suppress(_sensibtomaxval_kw)
                         + Optional(_rejection))('sensibility_max_val')
 _vov = (_vovnostar | _vovstar + _sensibtomaxval)
 # best result
-_bres = (Group(Suppress(_bestresdiscbatchs_kw) + _inums + Suppress("batches")
-               + _minus_line
-               + _numusedbatch + _fnums('score') + _fnums('sigma'))
-         .setParseAction(trans.group_to_dict)('bestresult'))
+bestres = (Group(Suppress(_bestresdiscbatchs_kw) + _inums('discarded_batches')
+                 + Suppress("batches")
+                 + _minus_line
+                 + _numusedbatch + _fnums('score') + _fnums('sigma'))
+           ('bestresult_res'))
 
 
 integratedres = (Group(Optional(Suppress(_integratedres_kw))
                        + Optional(_numdiscbatch)
                        + ((_numusedbatch
                            + _integratedres
-                           + Optional(_vov)
-                           + Optional(_bres))
+                           + Optional(_vov))
                           | _notconverged_kw('not_converged')
                           ))('integrated_res'))
 
@@ -1229,6 +1229,7 @@ scoreblock = (Group(scoredesc + (OneOrMore(vovspectrumblock
                                            | entropy
                                            | medfile
                                            | integratedres
+                                           | bestres
                                            | uncertblock
                                            | uncertintegblock
                                            | gbblock

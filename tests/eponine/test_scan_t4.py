@@ -784,12 +784,13 @@ def test_no_simulation_time_debug(datadir, caplog):
     lack of the end flag. In this case "NORMAL COMPLETION" is also missing but
     as pyparsing cannot find the end flag no parsing result can be built.
     '''
+    caplog.set_level(logging.DEBUG, logger='valjean')
     t4p = T4ParserDebug(str(datadir/"failure_test_no_simu_time.d.res"),
                         end_flag='ENERGY INTEGRATED RESULTS')
     _t4_res = t4p.parse_from_index(-1)
     assert ('No "time" variable found in the TRIPOLI-4 output, '
             'please check it.' in caplog.text)
-    assert ('Remark: you may be in parsing debug mode with an end flag '
-            'not containing "time" where this behaviour is expected.'
+    assert ('Remark: you are in parsing debug mode with an end flag not '
+            'containing "time", this is expected.'
             in caplog.text)
     _t4_res.to_response_book()

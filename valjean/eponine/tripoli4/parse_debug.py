@@ -6,7 +6,7 @@ Main difference is the possibility of using the ``end_flag`` parameter in the
 
 import logging
 
-from .parse import T4Parser, T4ParseResult
+from .parse import T4Parser, T4ParseResult, T4ParserException
 from . import scan
 from .grammar import t4debug_gram
 
@@ -60,10 +60,12 @@ class T4ParserDebug(T4Parser):
         self.check_parsing(pres)
         try:
             self._time_consistency(pres, batch_number)
-        except KeyError as tcve:
+        except T4ParserException as tcve:
             if not self.end_flag:
-                raise KeyError(tcve) from None
-            LOGGER.warning(tcve)
+                raise T4ParserException(tcve) from None
+            LOGGER.info(tcve)
+            LOGGER.info('Remark: you are in parsing debug mode with an end '
+                        'flag not containing "time", this is expected.')
         scan_vars = self.scan_res.global_variables(batch_number)
         return T4ParseResult(pres, scan_vars)
 
