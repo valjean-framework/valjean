@@ -287,6 +287,16 @@ def using_last_parse_result(factory):
     return use_parser.map(partial(parse_batch_index, batch_index=-1))
 
 
+def to_response_book(result):
+    '''Create a :class:`~.ResponseBook` from the parsing result.
+
+    :param T4ParseResult result: result from T4 parser
+    :returns: the response book
+    :rtype: ResponseBook
+    '''
+    return result.to_response_book()
+
+
 def using_response_book(factory, batch_number):
     '''Construct a decorator that injects an
     :class:`~.response_book.ResponseBook` to the TRIPOLI-4 parse results into a
@@ -299,7 +309,7 @@ def using_response_book(factory, batch_number):
     :returns: a decorator (see the module docstring for more information).
     '''
     use_parse_result = using_parse_result(factory, batch_number=batch_number)
-    return use_parse_result.map(lambda result: result.to_response_book())
+    return use_parse_result.map(to_response_book)
 
 
 def using_last_response_book(factory):
@@ -312,4 +322,4 @@ def using_last_response_book(factory):
     :returns: a decorator (see the module docstring for more information).
     '''
     use_parse_result = using_last_parse_result(factory)
-    return use_parse_result.map(lambda result: result.to_response_book())
+    return use_parse_result.map(to_response_book)
