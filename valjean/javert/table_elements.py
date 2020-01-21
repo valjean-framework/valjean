@@ -470,10 +470,11 @@ def percent_fmt(num, den):
     :param int den: the denominator.
     :rtype: str
     '''
+    nbsp = ' '
     if den != 0:
         percent = 100.0 * num / den
-        return '{:d}/{:d} ({:.1f}%)'.format(num, den, percent)
-    return '{:d}/{:d} (???%)'.format(num, den)
+        return '{:d}/{:d}{}({:.1f}%)'.format(num, den, nbsp, percent)
+    return '{:d}/{:d}{}(???%)'.format(num, den, nbsp)
 
 
 def repr_testresultstatstasks(result, verbosity=None):
