@@ -97,8 +97,8 @@ class T4Parser:
         '''
         if not self.scan_res:
             raise T4ParserException(
-                "No result found in Tripoli-4 listing.\n{}"
-                .format(self.scan_res.fatal_error()))
+                "No result found in Tripoli-4 listing {}\n{}"
+                .format(self.jdd, self.scan_res.fatal_error()))
         if not self.scan_res.normalend:
             LOGGER.warning("Tripoli-4 listing did not finish with "
                            "NORMAL COMPLETION.")
@@ -110,16 +110,15 @@ class T4Parser:
         '''
         return list(self.scan_res.keys())
 
-    @staticmethod
-    def _parse_listing_worker(gram, str_to_parse):
+    def _parse_listing_worker(self, gram, str_to_parse):
         '''Parse the given string and raise exception if parsing failed.'''
         try:
             with PYPARSING_LOCK:
                 result = gram.parseString(str_to_parse).asList()
         except ParseException:
-            LOGGER.error("Parsing failed, you are probably trying to read a "
-                         "new response. Please update the parser before "
-                         "re-running.")
+            LOGGER.error("Parsing failed in %s, you are probably trying to "
+                         "read a new response. Please update the parser "
+                         "before re-running.", self.jdd)
             # from None allows to raise a new exception without traceback and
             # message of the previous one here.
             raise T4ParserException("Error in parsing") from None

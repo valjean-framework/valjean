@@ -672,7 +672,8 @@ def test_empty_file(caplog):
         ofile.write("")
     with pytest.raises(T4ParserException):
         T4Parser('empty_file.txt')
-    assert "No result found in Tripoli-4 listing." in caplog.text
+    assert ("No result found in Tripoli-4 listing empty_file.txt"
+            in caplog.text)
 
 
 def test_no_usual_output(datadir, caplog):
@@ -680,9 +681,11 @@ def test_no_usual_output(datadir, caplog):
     "failed" jobs: response required in a neutron flux from a neutron source
     while the particles tracked are photons, so Tripoli-4 fails at execution.
     '''
+    tfile = str(datadir/"failure_test_segFault.d.res")
     with pytest.raises(T4ParserException):
-        T4Parser(str(datadir/"failure_test_segFault.d.res"))
-    assert "No result found in Tripoli-4 listing." in caplog.text
+        T4Parser(tfile)
+    assert ("No result found in Tripoli-4 listing {}".format(tfile)
+            in caplog.text)
     assert "FATAL ERROR" in caplog.text
     assert "error message" in caplog.text
 
