@@ -335,6 +335,12 @@ def check_last_entropy_result(entropy_rb):
                                data_type='keff_combination')
     assert bd_keff.name == 'keff_combination'
     assert not bd_keff.bins
+    resps = entropy_rb.select_by(response_type='auto_keff')
+    for resp in resps:
+        bd_keff = dcv.convert_data(resp['results'], data_type='auto_keff',
+                                   estimator=resp['keff_estimator'])
+        assert bd_keff.name == 'auto_keff_'+ resp['keff_estimator']
+        assert bd_keff.shape == ()
 
 
 def check_first_entropy_result(entropy_rb):
