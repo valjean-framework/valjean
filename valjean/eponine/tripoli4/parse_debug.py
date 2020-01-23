@@ -4,6 +4,7 @@ Main difference is the possibility of using the ``end_flag`` parameter in the
 :mod:`~.scan`.
 '''
 
+import time
 import logging
 
 from .parse import T4Parser, T4ParseResult, T4ParserException
@@ -51,12 +52,14 @@ class T4ParserDebug(T4Parser):
         :returns: list(dict)
         '''
         LOGGER.debug('Using parse from T4ParserDebug')
+        start_time = time.time()
         batch_edition = self.scan_res[batch_number]
         if LOGGER.isEnabledFor(logging.DEBUG) and self.ofile:
             with open(self.ofile, 'w') as fout:
                 fout.write(batch_edition)
         pres, = self._parse_listing_worker(
             t4debug_gram, self.scan_res[batch_number])
+        LOGGER.info("Successful parsing in %f s", time.time()-start_time)
         self.check_parsing(pres)
         try:
             self._time_consistency(pres, batch_number)
@@ -81,7 +84,7 @@ class T4ParserDebug(T4Parser):
         parsing result (this can help to find the issue).
         '''
         if not self.end_flag:
-            if not any("_time" in s for s in parsed_res.keys()):
+            if not any("_time" in s for s in parsed_res['batch_data']):
                 LOGGER.error("Time not found in the parsing result, "
                              "parsing probably stopped before end, "
                              "please check.")
