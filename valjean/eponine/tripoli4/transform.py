@@ -152,7 +152,11 @@ def convert_list_to_tuple(toks):
     list and send it to convert_list_to_tuple in
     :mod:`~valjean.eponine.tripoli4.common`.
     '''
-    cv_toks = common.convert_list_to_tuple(toks.asList())
+    ltoks = toks.asList()
+    # in reaction case, e.g. [[104]] while [[21, 104]] is fine
+    if isinstance(ltoks[0], list) and len(ltoks) == 1 and len(ltoks[0]) == 1:
+        ltoks = ltoks[0]
+    cv_toks = common.convert_list_to_tuple(ltoks)
     return cv_toks
 
 

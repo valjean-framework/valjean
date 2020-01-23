@@ -529,11 +529,12 @@ _temperature = Suppress(_temperature_kw + ':') + _fnums('temperature')
 _composition = (Suppress(_composition_kw + ':')
                 + Word(alphanums + ".e+-_")('composition'))
 _concentration = Suppress(_concentration_kw + ':') + _fnums('concentration')
-# remark: join with whitespace is not working here, no idea why
-#         -> whitespace replaced by _ in the string
 _reaction = (Suppress(_reaction_kw)
-             + OneOrMore(Word(alphanums+':+'), stopOn=_endtable)
-             .setParseAction('_'.join)('reaction'))
+             + ((Suppress(Word(alphas) + ':')
+                 + Group(delimitedList(_inums, delim='+')))
+                | OneOrMore(Word(alphas), stopOn=LineEnd())
+                .setParseAction(' '.join))
+             .setParseAction(trans.convert_list_to_tuple)('reaction'))
 
 
 # Goal: when more than one reaction are required, keep characteristics grouped

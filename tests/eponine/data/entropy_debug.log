@@ -60,7 +60,7 @@ Number of responses: 2
         concentration (0.00082213,)
         energy_split_name DEC_INTEG4
         particle NEUTRON
-        reaction ('codes_:_33',)
+        reaction (33,)
         reaction_on_nucleus ('U235',)
         response_function REACTION
         response_index 0
