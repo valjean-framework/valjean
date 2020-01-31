@@ -61,6 +61,7 @@ def section_names(draw, sec_ids):
 @composite
 def configs(draw, keys=IDS, vals=IDS, sec_names=section_names(IDS),
             min_size=0, max_size=None):
+    # pylint: disable=too-many-arguments
     '''Composite Hypothesis strategy to generate Config objects.'''
     secs = dictionaries(keys, vals, min_size=min_size, max_size=max_size)
     as_dict = draw(dictionaries(sec_names, secs,
