@@ -2,7 +2,7 @@
 
 import pytest
 
-# pylint: disable=unused-import,redefined-outer-name
+# pylint: disable=unused-import
 from ..cosette.conftest import subdir, cmake_echo, config_tmp
 
 

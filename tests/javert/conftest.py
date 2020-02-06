@@ -38,7 +38,7 @@ def int_matrices(draw, min_rows=2, max_rows=10, min_cols=2, max_cols=10):
 
 
 @pytest.fixture
-def rst_full(full_repr):  # pylint: disable=redefined-outer-name
+def rst_full(full_repr):
     '''Create an :class:`~.Rst` object with full representation.'''
     return Rst(representation=full_repr)
 
@@ -85,7 +85,6 @@ def valid_index(draw, *, shape):
 
 @pytest.fixture
 def table_template(some_dataset, other_dataset):
-    # pylint: disable=redefined-outer-name
     '''Create a simple :class:`~.TableTemplate` object.'''
     return TableTemplate(some_dataset.value, other_dataset.value,
                          headers=['some', 'other'],
@@ -151,7 +150,7 @@ def plot_templates(draw, n_curves=integers(1, 5), size=integers(1, 10),
 
 @pytest.fixture
 def report_section1(equal_test_result, equal_test_result_fail,
-                    report_section3):  # pylint: disable=redefined-outer-name
+                    report_section3):
     '''Create a simple :class:`~.TestReport` object.'''
     return TestReport(title='A section title',
                       content=[equal_test_result,
@@ -179,7 +178,6 @@ def report_section3(approx_equal_test_result):
 @pytest.fixture
 def report(report_section1, report_section2,
            holm_bonf_test_result_fail):
-    # pylint: disable=redefined-outer-name
     '''Create a :class:`~.TestReport` object aggregating two other test
     reports and a test result.'''
     return TestReport(title='The report title! Too many exclamation marks!!!',

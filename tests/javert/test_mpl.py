@@ -8,7 +8,6 @@ To be sure the comparison with the reference plots is done, don't forget the
 ``--mpl`` option:
 ``pytest --mpl tests/javert/test_mpl.py``.
 '''
-# pylint: disable=redefined-outer-name
 # pylint: disable=unused-import
 
 from collections import namedtuple

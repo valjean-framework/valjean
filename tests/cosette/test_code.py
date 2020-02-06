@@ -1,6 +1,4 @@
 '''Tests for the :mod:`~.code` module.'''
-# pylint: disable=redefined-outer-name
-
 import os
 from subprocess import check_call
 

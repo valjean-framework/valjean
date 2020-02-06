@@ -15,7 +15,6 @@ from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 # pylint: disable=no-value-for-parameter
-# pylint: disable=redefined-outer-name
 
 from valjean.eponine.tripoli4.common import (
     MeshDictBuilder, SpectrumDictBuilder, FTYPE, convert_list_to_tuple)

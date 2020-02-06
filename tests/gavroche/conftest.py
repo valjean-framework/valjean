@@ -1,7 +1,6 @@
 '''Fixtures for the :mod:`gavroche` module.'''
 
 # pylint: disable=wrong-import-order,no-value-for-parameter
-# pylint: disable=redefined-outer-name
 import string
 from collections import OrderedDict
 

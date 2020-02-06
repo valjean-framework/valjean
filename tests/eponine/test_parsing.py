@@ -35,8 +35,6 @@ from valjean.eponine.tripoli4.parse import T4Parser, T4ParserException
 import valjean.eponine.tripoli4.data_convertor as dcv
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
-# pylint: disable=redefined-outer-name
-
 
 def result_test(t4pres):
     '''Test content of the parsing result: presence of times, ``'results'`` key

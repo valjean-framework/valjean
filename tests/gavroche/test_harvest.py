@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name,no-value-for-parameter
+# pylint: disable=no-value-for-parameter
 '''Tests for the :mod:`~.harvest` module.'''
 
 import re

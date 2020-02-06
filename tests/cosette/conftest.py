@@ -1,6 +1,4 @@
 '''Fixtures for the :mod:`~.valjean.cosette` tests.'''
-# pylint: disable=redefined-outer-name
-
 import logging
 import locale
 import re

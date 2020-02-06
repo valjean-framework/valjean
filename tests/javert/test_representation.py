@@ -1,5 +1,4 @@
 '''Tests for the :mod:`~valjean.javert.representation` module.'''
-# pylint: disable=redefined-outer-name
 # pylint: disable=wrong-import-order
 
 import pytest

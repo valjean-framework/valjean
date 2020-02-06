@@ -1,5 +1,5 @@
 '''Tests for the :mod:`~valjean.javert.rst` module.'''
-# pylint: disable=unused-argument,redefined-outer-name
+# pylint: disable=unused-argument
 
 import numpy as np
 from hypothesis import given, note
