@@ -246,6 +246,9 @@ class Env(MutableMapping):
     def apply(self, env_update):
         '''Apply un update to the dictionary.'''
 
+        if env_update is None:
+            return
+
         def _apply_worker(update, old):
             for key, val in update.items():
                 if isinstance(val, MutableMapping):
@@ -257,9 +260,6 @@ class Env(MutableMapping):
                 else:
                     old[key] = val
 
-        if env_update is None:
-            return
-
         with self.lock:
             _apply_worker(env_update, self)
 
@@ -268,6 +268,14 @@ class Env(MutableMapping):
         env_update = {task.name: {'start_clock': start,
                                   'end_clock': end}}
         self.apply(env_update)
+
+    def get_start_clock(self, task):
+        '''Return the start time for the given task.'''
+        return self.dictionary.get(task.name, None).get('start_clock', None)
+
+    def get_end_clock(self, task):
+        '''Return the end time for the given task.'''
+        return self.dictionary.get(task.name, None).get('end_clock', None)
 
     def copy(self):
         '''Return a shallow copy of `self`.'''

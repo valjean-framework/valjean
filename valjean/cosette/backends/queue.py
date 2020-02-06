@@ -8,6 +8,9 @@ import threading
 import logging
 import time
 from queue import Queue
+from functools import partial
+
+from ..task import TaskStatus
 
 
 LOGGER = logging.getLogger('valjean')
@@ -37,58 +40,102 @@ class QueueScheduling:
         LOGGER.debug('master: %d tasks left to schedule', n_tasks)
         for task in tasks:
             if LOGGER.isEnabledFor(logging.DEBUG):
-                LOGGER.debug('master: status of task %s: %s',
+                LOGGER.debug('master: considering task %s for scheduling: %s',
                              task, env.get_status(task))
-
-            # skip failed/notrun/completed tasks
-            if not env.is_waiting(task):
-                if env.is_done(task):
-                    LOGGER.info("task %s is already done and won't be rerun",
-                                task)
-                LOGGER.debug('master: task %s removed from queue', task)
-                continue
 
             deps = full_graph.dependencies(task)
             hard_deps = hard_graph.dependencies(task)
-            assert all(task in deps for task in hard_deps)
 
-            def _check_deps(env_):
-                '''Check dependencies of the current task and make a decision
-                about what we should do with this task.
+            new_state = env.atomically(partial(self.decide_new_state,
+                                               task, deps, hard_deps))
 
-                This function returns the list of failed hard dependencies for
-                the task and a bool telling whether all the dependencies have
-                completed (regardless of their success).
-
-                :param Env env_: the environment.
-                :rtype: (list(Task), bool)
-                '''
-                hard_failed_deps = [t for t in hard_deps
-                                    if env_.is_failed(t) or env_.is_skipped(t)]
-                deps_finished = all(env_.is_done(t)
-                                    or env_.is_failed(t)
-                                    or env_.is_skipped(t) for t in deps)
-                return hard_failed_deps, deps_finished
-
-            hard_failed_deps, deps_finished = env.atomically(_check_deps)
-
-            if hard_failed_deps:
-                LOGGER.debug('master: task %s has failed deps: %s',
-                             task, hard_failed_deps)
-                env.set_skipped(task)
+            if new_state == TaskStatus.SKIPPED:
+                LOGGER.debug('master: task %s has failed deps', task)
                 n_tasks -= 1
-                LOGGER.info('task %s cannot be run because of dependencies, '
-                            '%d tasks left', task, n_tasks)
-            elif deps_finished:
+            elif new_state == TaskStatus.PENDING:
+                # we start to work on the task
                 self.queue.put(task)
                 n_tasks -= 1
-                LOGGER.info('master: task %s scheduled, %d left',
-                            task, n_tasks)
-            else:
+            elif new_state == TaskStatus.WAITING:
                 LOGGER.debug('master: task %s blocked by dependencies', task)
                 tasks_left.append(task)
+            elif new_state is None:
+                # intentionally leave the task out of the queue
+                pass
 
         return tasks_left
+
+    @classmethod
+    def decide_new_state(cls, task, deps, hard_deps, env):
+        '''Look at the dependencies of the current task and make a decision
+        about what we should do with this task.
+
+        This function returns a :class:`~.TaskStatus` that represents the
+        suggested new state for this task, or `None` in case the task should be
+        ignored and removed from the queue.
+
+        :param Task task: the task
+        :param list(Task) deps: the dependencies of `task`
+        :param list(Task) hard_deps: the hard dependencies of `task`
+        :param Env env: the environment.
+        :rtype: TaskStatus or None
+        '''
+        LOGGER.debug('env in decide: %s', env)
+        if any(t.name not in env or env.is_pending(t) for t in deps):
+            LOGGER.debug('some of the dependencies of task %s are missing or '
+                         'pending; waiting', task)
+            env.set_waiting(task)
+            return TaskStatus.WAITING
+
+        if env.is_done(task):
+            last_dep_end = cls.last_end_time(deps, env)
+            if last_dep_end is None:
+                LOGGER.info('task %s has no dependencies and is already done; '
+                            'removing from queue', task)
+                return None
+            task_start = env.get_start_clock(task)
+            if task_start is not None and last_dep_end <= task_start:
+                LOGGER.info('task %s is newer than its dependencies and is '
+                            'already done; removing from queue', task)
+                return None
+            LOGGER.info('task %s is already done but some if its dependencies '
+                        'are newer; scheduling', task)
+            env.set_pending(task)
+            return TaskStatus.PENDING
+
+        assert env.is_waiting(task)
+        return cls.decide_new_state_waiting(task, deps, hard_deps, env)
+
+    @classmethod
+    def last_end_time(cls, tasks, env):
+        '''Return the latest ``end_clock`` time of the given tasks, or `None`
+        if some of the tasks do not have an ``end_clock``.'''
+        ends = []
+        for task in tasks:
+            task_end = env.get_end_clock(task)
+            if task_end is None:
+                return None
+            ends.append(task_end)
+        return max(ends, default=None)
+
+    @classmethod
+    def decide_new_state_waiting(cls, task, deps, hard_deps, env):
+        '''Decide what to do with a task that is in `WAITING` state.'''
+        if any(env.is_failed(t) or env.is_skipped(t) for t in hard_deps):
+            LOGGER.info('some of the hard dependencies of task %s failed; '
+                        'skipping', task)
+            env.set_skipped(task)
+            return TaskStatus.SKIPPED
+
+        if all(env.is_done(t) or env.is_failed(t) or env.is_skipped(t)
+               for t in deps):
+            LOGGER.debug('all the dependencies of task %s are done; '
+                         'scheduling', task)
+            env.set_pending(task)
+            return TaskStatus.PENDING
+
+        env.set_waiting(task)
+        return TaskStatus.WAITING
 
     def execute_tasks(self, *, full_graph, hard_graph, env, config):
         '''Execute the tasks.
@@ -177,9 +224,6 @@ class QueueScheduling:
                     break
                 LOGGER.debug('worker %s: got task %s', self.name, task)
                 LOGGER.info('task %s starts', task)
-
-                # we start to work on the task
-                self.env.set_pending(task)
 
                 start = time.time()
                 try:

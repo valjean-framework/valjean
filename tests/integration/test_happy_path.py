@@ -1,6 +1,8 @@
 '''Integration tests for the happy path of :command:`valjean` execution.'''
 
 import logging
+from shutil import rmtree
+from pathlib import Path
 
 import pytest
 
@@ -21,8 +23,11 @@ def run_valjean(*other_args, job_config, env_path, job_file):
     if LOGGER.getEffectiveLevel() == logging.DEBUG:
         args.append('-v')
     args.extend(*other_args)
+    LOGGER.info('******** Starting valjean run')
+    LOGGER.info('******** args: %s', args)
     main(args)
     env = Env.from_file(str(env_path))
+    LOGGER.info('******** End of the valjean run')
     return env
 
 
@@ -37,7 +42,6 @@ def assert_task_done(env, name):
 def assert_cecho_exists(env, name, subdir):
     '''Assert that the cecho executable can be found in the subdir
     directory.'''
-    from pathlib import Path
     assert name in env
     assert 'build_dir' in env[name]
     cecho_path = Path(env[name]['build_dir']) / subdir / 'cecho'
@@ -86,16 +90,57 @@ def test_resume(job_config, env_path, subdir, job_file):
     env = run_valjean(['checkout'], job_config=job_config, env_path=env_path,
                       job_file=job_file)
     assert_task_done(env, 'checkout_cecho')
-    assert 'elapsed_time' in env['checkout_cecho']
     assert 'build_cecho' not in env
+    assert 'start_clock' in env['checkout_cecho']
+    assert 'end_clock' in env['checkout_cecho']
+    assert 'elapsed_time' in env['checkout_cecho']
     elapsed = env['checkout_cecho']['elapsed_time']
+    start_clock = env['checkout_cecho']['start_clock']
+    end_clock = env['checkout_cecho']['end_clock']
 
     env = run_valjean(['build'], job_config=job_config, env_path=env_path,
                       job_file=job_file)
     assert_task_done(env, 'checkout_cecho')
     assert 'elapsed_time' in env['checkout_cecho']
     assert env['checkout_cecho']['elapsed_time'] == elapsed
+    assert 'start_clock' in env['checkout_cecho']
+    assert env['checkout_cecho']['start_clock'] == start_clock
+    assert 'end_clock' in env['checkout_cecho']
+    assert env['checkout_cecho']['end_clock'] == end_clock
     assert_task_done(env, 'build_cecho')
+    assert_cecho_exists(env, 'build_cecho', subdir)
+
+
+@requires_git
+@requires_cmake
+def test_resume_newer(job_config, env_path, subdir, job_file):
+    '''Test that running `checkout` followed by `build`, followed by a forced
+    `checkout` again triggers a new `build` run.'''
+    env = run_valjean(['checkout'], job_config=job_config, env_path=env_path,
+                      job_file=job_file)
+    assert_task_done(env, 'checkout_cecho')
+    env = run_valjean(['build'], job_config=job_config, env_path=env_path,
+                      job_file=job_file)
+    assert_task_done(env, 'checkout_cecho')
+    assert_task_done(env, 'build_cecho')
+    assert 'start_clock' in env['build_cecho']
+    assert 'end_clock' in env['build_cecho']
+    start_clock = env['build_cecho']['start_clock']
+    end_clock = env['build_cecho']['end_clock']
+
+    # remove the checkout directory, too, otherwise the new checkout_cecho will
+    # fail
+    rmtree(env['checkout_cecho']['checkout_dir'])
+    # remove checkout_echo from the env, so that it is rerun
+    del env['checkout_cecho']
+    env.to_file(env_path)
+    env = run_valjean(['build'], job_config=job_config, env_path=env_path,
+                      job_file=job_file)
+    assert_task_done(env, 'build_cecho')
+    assert 'start_clock' in env['build_cecho']
+    assert 'end_clock' in env['build_cecho']
+    assert start_clock < env['build_cecho']['start_clock']
+    assert end_clock < env['build_cecho']['end_clock']
     assert_cecho_exists(env, 'build_cecho', subdir)
 
 
