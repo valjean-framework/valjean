@@ -16,7 +16,7 @@ module :mod:`~valjean.eponine.tripoli4.common`.
 '''
 
 import logging
-from collections import Iterable
+from collections.abc import Iterable
 import numpy as np
 from pyparsing import ParseException
 from . import common

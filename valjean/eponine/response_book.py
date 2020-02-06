@@ -191,7 +191,8 @@ Module API
 '''
 
 import logging
-from collections import defaultdict, Mapping, Container
+from collections import defaultdict
+from collections.abc import Mapping, Container
 
 
 LOGGER = logging.getLogger('valjean')
