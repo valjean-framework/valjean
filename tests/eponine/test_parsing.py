@@ -88,7 +88,7 @@ def check_array_datasets(response, dname, data):
         assert dcv.convert_data(response['results'], dname, score='vov')
     if 'integrated' in dname and 'vov' in data:
         assert dcv.convert_data(data, 'vov')
-    if 'bestresult' in dname and 'discarded_batches' in data:
+    if 'best_result' in dname and 'discarded_batches' in data:
         assert dcv.convert_data(data, 'discarded_batches')
 
 
@@ -114,7 +114,7 @@ def check_data(responses):
                 for kestim in data['estimators']:
                     assert dcv.convert_data(iresp['results'], dname,
                                             estimator=kestim)
-            elif dname == 'auto_keff':
+            elif dname == 'keff_auto':
                 assert dcv.convert_data(iresp['results'], dname,
                                         estimator=iresp['keff_estimator'])
             else:

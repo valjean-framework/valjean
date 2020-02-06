@@ -335,11 +335,11 @@ def check_last_entropy_result(entropy_rb):
                                data_type='keff_combination')
     assert bd_keff.name == 'keff_combination'
     assert not bd_keff.bins
-    resps = entropy_rb.select_by(response_type='auto_keff')
+    resps = entropy_rb.select_by(response_type='keff_auto')
     for resp in resps:
-        bd_keff = dcv.convert_data(resp['results'], data_type='auto_keff',
+        bd_keff = dcv.convert_data(resp['results'], data_type='keff_auto',
                                    estimator=resp['keff_estimator'])
-        assert bd_keff.name == 'auto_keff_'+ resp['keff_estimator']
+        assert bd_keff.name == 'keff_auto_' + resp['keff_estimator']
         assert bd_keff.shape == ()
 
 
@@ -487,7 +487,7 @@ def test_ifp_adjoint_edition(datadir):
     t4_res = t4p.parse_from_index(-1)
     t4rb = t4_res.to_response_book()
     assert (set(t4rb.available_values('response_type'))
-            == set(('keff', 'ifp_adj_crit_edition', 'auto_keff')))
+            == set(('keff', 'ifp_adj_crit_edition', 'keff_auto')))
     assert (sorted(t4rb.keys())
             == ['ifp_cycle_length', 'ifp_response', 'index', 'keff_estimator',
                 'response_function', 'response_index', 'response_type',
@@ -596,7 +596,7 @@ def test_green_bands(datadir):
     assert t4_res.res['batch_data']['batch_number'] == 500
     t4rb = t4_res.to_response_book()
     resp = t4rb.select_by(response_function='FLUX', squeeze=True)
-    bd_gb = dcv.convert_data(resp['results'], data_type='greenbands')
+    bd_gb = dcv.convert_data(resp['results'], data_type='green_bands')
     assert bd_gb.shape == (2, 2, 1, 2, 4, 3)
     assert list(bd_gb.bins.keys()) == ['se', 'ns', 'u', 'v', 'w', 'e']
 

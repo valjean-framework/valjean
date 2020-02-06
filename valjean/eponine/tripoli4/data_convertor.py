@@ -168,18 +168,18 @@ def keff_combination(result, res_type):
                        name='keff_combination')
 
 
-def auto_keff(result, res_type, *, estimator):
+def keff_auto(result, res_type, *, estimator):
     '''Conversion of "automatic" keff estimation in
     :class:`~.base_dataset.BaseDataset`.
 
     :dict result: results dictionary containing ``res_type`` key
-    :param str res_type: should be ``'auto_keff'``
+    :param str res_type: should be ``'keff_auto'``
     :param str estimator: estimator name (to construct the dataset name)
     :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
     akeff = result[res_type]
     return BaseDataset(akeff['keff'].copy(), akeff['sigma'].copy(),
-                       name='auto_keff_'+estimator)
+                       name='keff_auto_'+estimator)
 
 
 def complex_values_wo_error(result, res_type):
@@ -238,15 +238,15 @@ CONVERT_IN_DATASET = {
     'spectrum': array_result,
     'uncert_spectrum': array_result,
     'mesh': array_result,
-    'greenbands': array_result,
+    'green_bands': array_result,
     'sensitivity_spectrum': array_result,
     'adj_crit_ed': array_result,
     'integrated': integrated_result,
-    'bestresult': integrated_result,
+    'best_result': integrated_result,
     'generic': generic_score,
     'keff_per_estimator': keff_estimator,
     'keff_combination': keff_combination,
-    'auto_keff': auto_keff,
+    'keff_auto': keff_auto,
     'shannon_entropy': value_wo_error,
     'boltzmann_entropy': value_wo_error,
     'used_batches': value_wo_error,
@@ -257,7 +257,7 @@ CONVERT_IN_DATASET = {
     'kij_reigenvec': matrix_wo_error,
     'kij_leigenvec': matrix_wo_error,
     'kij_matrix': matrix_wo_error,
-    'spacebins': matrix_wo_error,
+    'space_bins': matrix_wo_error,
     'kij_stddev_matrix': matrix_wo_error,
     'kij_sensibility_matrix': matrix_wo_error,
     'kij_sources_vals': matrix_wo_error,

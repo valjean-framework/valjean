@@ -812,9 +812,9 @@ def test_parse_greenbands_roundtrip(array_bins, disc_batch):
     assert pres
     assert len(pres) == 1
     assert (sorted(list(pres[0].keys()))
-            == ['discarded_batches_res', 'greenbands_res', 'scoring_mode',
+            == ['discarded_batches_res', 'green_bands_res', 'scoring_mode',
                 'scoring_zone_id', 'scoring_zone_type'])
-    gbres = pres[0]['greenbands_res']
+    gbres = pres[0]['green_bands_res']
     assert (sorted(list(gbres.keys()))
             == ['array', 'bins', 'units'])
     incr = dict(map(
@@ -968,7 +968,7 @@ def bekeff_t4_output(be_keff):
 
 
 @given(keff_res=keff_auto_estimation(5))
-def test_parse_auto_keff_roundtrip(keff_res):
+def test_parse_keff_auto_roundtrip(keff_res):
     r'''Test printing k\ :sub:`eff` auto estimation and optionally k\ :sub:`ij`
     auto estimation as Tripoli-4 output in a string.
     '''
@@ -976,14 +976,14 @@ def test_parse_auto_keff_roundtrip(keff_res):
     pres = pygram.autokeffblock.parseString(bekeff_t4_out)
     assert pres
     assert len(pres[0]) == len(keff_res)
-    assert (set(pres[0][0]['results']['auto_keff'].keys())
+    assert (set(pres[0][0]['results']['keff_auto'].keys())
             <= set(keff_res[0].keys()))
     for ikeff, bekeff in enumerate(keff_res):
         assert bekeff['keff_estimator'] == pres[0][ikeff]['keff_estimator']
         presires = pres[0][ikeff]['results']
         assert bekeff['best_disc_batchs'] == presires['discarded_batches']
         assert bekeff['used_batches'] == presires['used_batches']
-        for key, val in presires['auto_keff'].items():
+        for key, val in presires['keff_auto'].items():
             assert np.isclose(bekeff[key], val)
 
 
@@ -1073,7 +1073,7 @@ def kij_auto_estimation(draw, evals, kijmat):
       X **A** = λX)
     * standard deviation matrix, squared matrix containing positive floats
     * sensibility matrix, squared matrix containing positive floats
-    * spacebins, corresponding to columns and rows of all the matrices
+    * space bins, corresponding to columns and rows of all the matrices
       (including k\ :sub:`ij` matrix)
 
     Spacebins can be volume numbers (so a `numpy.array` of int with (nbins,)
@@ -1083,7 +1083,7 @@ def kij_auto_estimation(draw, evals, kijmat):
     :param numpy.ndarray evals: eigenvalues of k\ :sub:`ij` matrix
     :param numpy.ndarray kijmat: k\ :sub:`ij` matrix
     :returns: dictionary corresponding to parsing output with keys
-              ``['estimator', 'batchs_kept', 'kij-keff', 'nbins', 'spacebins',
+              ``['estimator', 'batchs_kept', 'kij-keff', 'nbins', 'space_bins',
               'eigenvector', 'keff_KIJ_matrix', 'keff_StdDev_matrix',
               'keff_sensibility_matrix']``.
     '''
@@ -1106,7 +1106,7 @@ def kij_auto_estimation(draw, evals, kijmat):
     kijdict = {'keff_estimator': 'KIJ',
                'used_batches': draw(integers(80, 99)),
                'kij_mkeff': np.real(evals[0]),
-               'spacebins': np.array(spacebins),
+               'space_bins': np.array(spacebins),
                'kij_leigenvec': np.real(levec[:, 0]),
                'kij_matrix': np.real(kijmat),
                'kij_stddev_matrix': stddevmat,
@@ -1193,17 +1193,17 @@ def kijkeff_t4_output(kijdict):
     t4out.append("{0:>12}K-IJ MATRIX :\n\n".format(""))
     t4out.append("{0:>24}".format(""))
     t4out.append(matrix_t4_output(kijdict['kij_matrix'],
-                                  kijdict['spacebins']))
+                                  kijdict['space_bins']))
     t4out.append("\n\n\n")
     t4out.append("{0:>12}STANDARD DEVIATION MATRIX :\n\n".format(""))
     t4out.append("{0:>24}".format(""))
     t4out.append(matrix_t4_output(kijdict['kij_stddev_matrix'],
-                                  kijdict['spacebins']))
+                                  kijdict['space_bins']))
     t4out.append("\n\n\n")
     t4out.append("{0:>12}SENSIBILITY MATRIX :\n\n".format(""))
     t4out.append("{0:>24}".format(""))
     t4out.append(matrix_t4_output(kijdict['kij_sensibility_matrix'],
-                                  kijdict['spacebins']))
+                                  kijdict['space_bins']))
     t4out.append("\n\n\n")
     return ''.join(t4out)
 
@@ -1220,7 +1220,7 @@ def extract_list_from_keff_res(keff_res, key):
     :param str key: dictionary key to match
     :returns: list of objects matching the given key
     '''
-    return list(map(lambda x: x['results']['auto_keff_res'][key], keff_res))
+    return list(map(lambda x: x['results']['keff_auto_res'][key], keff_res))
 
 
 @settings(deadline=None)
@@ -1281,7 +1281,7 @@ def test_parse_kij_roundtrip(kij_res, keff_res):
         == list(map(lambda x: x['best_disc_batchs'], keff_res)))
     for num in ['keff', 'sigma', 'sigma%']:
         assert (np.allclose(
-            list(map(lambda x, k=num: x['results']['auto_keff'][k],
+            list(map(lambda x, k=num: x['results']['keff_auto'][k],
                      tres[:-1])),
             list(map(lambda x, k=num: x[k], keff_res))))
     # test kij estimator

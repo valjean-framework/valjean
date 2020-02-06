@@ -182,9 +182,9 @@ def convert_batch_numbers(score):
     res = {}
     is_uncert = any('uncert' in k for k in list(score.keys()))
     for key in score.keys():
-        # greenbands: too complicated structure
+        # green bands: too complicated structure
         if (('_res' in key and isinstance(score[key], Iterable)
-             and key != 'greenbands_res')):
+             and key != 'green_bands_res')):
             usc = (score[key]
                    if isinstance(score[key], dict) or score[key].asDict()
                    else score[key][0])
@@ -224,9 +224,9 @@ def convert_score(toks):
                 res[keystr] = convert_spectrum(score[key], key)
             elif 'integrated_res' in key:
                 res[key] = score[key].asDict()
-            elif 'bestresult_res' in key:
+            elif 'best_result_res' in key:
                 res[key] = score[key].asDict()
-            elif key == 'greenbands_res':
+            elif key == 'green_bands_res':
                 res[key] = convert_green_bands(score[key])
                 res['discarded_batches_res'] = res[key].pop(
                     'discarded_batches')
@@ -350,17 +350,17 @@ def convert_kij_keff(toks):
     return kijkeff
 
 
-def convert_auto_keff(toks):
+def convert_keff_auto(toks):
     '''Convert auto keff estimation (old or default output, not printed as a
     usual response) in standard python objects.
 
-    Add the ``'response_type'`` key to the dictionary with ``'auto_keff_res'``
+    Add the ``'response_type'`` key to the dictionary with ``'keff_auto_res'``
     as associated value (to match response book and data_convertor
     requirements).
     '''
-    assert len(toks) == 1, "Not correct number of elements in auto_keff toks"
+    assert len(toks) == 1, "Not correct number of elements in keff_auto toks"
     akeff_res = toks[0]
-    akeff_key = 'auto_keff'
+    akeff_key = 'keff_auto'
     res = []
     for akeff in akeff_res:
         # if kij result always a dict at that step, not for auto keff

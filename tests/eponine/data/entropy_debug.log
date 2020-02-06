@@ -1,47 +1,5 @@
 ------------------------------ Structured parsed result ------------------------------
-Keys: ['auto_keffs', 'batch_data', 'list_responses']
-auto_keffs     list of 4 elements -> 
-    elt 0:       Dict with keys = ['keff_estimator', 'response_type', 'results']
-        keff_estimator KSTEP
-        response_type auto_keff
-        results         Dict with keys = ['auto_keff', 'discarded_batches', 'used_batches']
-          auto_keff           Dict with keys = ['keff', 'sigma', 'sigma%']
-            keff 9.122718e-01, dtype: float64
-            sigma 6.131945e-03, dtype: float64
-            sigma% 6.721621e-01, dtype: float64
-          discarded_batches 2, dtype: int64
-          used_batches 8, dtype: int64
-    elt 1:       Dict with keys = ['keff_estimator', 'response_type', 'results']
-        keff_estimator KCOLL
-        response_type auto_keff
-        results         Dict with keys = ['auto_keff', 'discarded_batches', 'used_batches']
-          auto_keff           Dict with keys = ['keff', 'sigma', 'sigma%']
-            keff 9.121435e-01, dtype: float64
-            sigma 6.034187e-03, dtype: float64
-            sigma% 6.615392e-01, dtype: float64
-          discarded_batches 2, dtype: int64
-          used_batches 8, dtype: int64
-    elt 2:       Dict with keys = ['keff_estimator', 'response_type', 'results']
-        keff_estimator KTRACK
-        response_type auto_keff
-        results         Dict with keys = ['auto_keff', 'discarded_batches', 'used_batches']
-          auto_keff           Dict with keys = ['keff', 'sigma', 'sigma%']
-            keff 9.082232e-01, dtype: float64
-            sigma 7.976384e-03, dtype: float64
-            sigma% 8.782405e-01, dtype: float64
-          discarded_batches 2, dtype: int64
-          used_batches 8, dtype: int64
-    elt 3:       Dict with keys = ['keff_estimator', 'response_type', 'results']
-        keff_estimator MACRO KCOLL
-        response_type auto_keff
-        results         Dict with keys = ['auto_keff', 'discarded_batches', 'used_batches']
-          auto_keff           Dict with keys = ['keff', 'sigma', 'sigma%']
-            keff 9.130250e-01, dtype: float64
-            sigma 5.407199e-03, dtype: float64
-            sigma% 5.922290e-01, dtype: float64
-          discarded_batches 2, dtype: int64
-          used_batches 8, dtype: int64
-
+Keys: ['batch_data', 'keff_auto', 'list_responses']
 batch_data     Dict with keys = ['edition_batch_number', 'mean_weight_leak', 'simulation_time', 'source_intensity']
       edition_batch_number 10, dtype: int64
       mean_weight_leak       Dict with keys = ['score', 'sigma', 'sigma%']
@@ -50,6 +8,48 @@ batch_data     Dict with keys = ['edition_batch_number', 'mean_weight_leak', 'si
         sigma% 2.397252e+01, dtype: float64
       simulation_time 24, dtype: int64
       source_intensity 1.000000e+00, dtype: float64
+
+keff_auto     list of 4 elements -> 
+    elt 0:       Dict with keys = ['keff_estimator', 'response_type', 'results']
+        keff_estimator KSTEP
+        response_type keff_auto
+        results         Dict with keys = ['discarded_batches', 'keff_auto', 'used_batches']
+          keff_auto           Dict with keys = ['keff', 'sigma', 'sigma%']
+            keff 9.122718e-01, dtype: float64
+            sigma 6.131945e-03, dtype: float64
+            sigma% 6.721621e-01, dtype: float64
+          discarded_batches 2, dtype: int64
+          used_batches 8, dtype: int64
+    elt 1:       Dict with keys = ['keff_estimator', 'response_type', 'results']
+        keff_estimator KCOLL
+        response_type keff_auto
+        results         Dict with keys = ['discarded_batches', 'keff_auto', 'used_batches']
+          keff_auto           Dict with keys = ['keff', 'sigma', 'sigma%']
+            keff 9.121435e-01, dtype: float64
+            sigma 6.034187e-03, dtype: float64
+            sigma% 6.615392e-01, dtype: float64
+          discarded_batches 2, dtype: int64
+          used_batches 8, dtype: int64
+    elt 2:       Dict with keys = ['keff_estimator', 'response_type', 'results']
+        keff_estimator KTRACK
+        response_type keff_auto
+        results         Dict with keys = ['discarded_batches', 'keff_auto', 'used_batches']
+          keff_auto           Dict with keys = ['keff', 'sigma', 'sigma%']
+            keff 9.082232e-01, dtype: float64
+            sigma 7.976384e-03, dtype: float64
+            sigma% 8.782405e-01, dtype: float64
+          discarded_batches 2, dtype: int64
+          used_batches 8, dtype: int64
+    elt 3:       Dict with keys = ['keff_estimator', 'response_type', 'results']
+        keff_estimator MACRO KCOLL
+        response_type keff_auto
+        results         Dict with keys = ['discarded_batches', 'keff_auto', 'used_batches']
+          keff_auto           Dict with keys = ['keff', 'sigma', 'sigma%']
+            keff 9.130250e-01, dtype: float64
+            sigma 5.407199e-03, dtype: float64
+            sigma% 5.922290e-01, dtype: float64
+          discarded_batches 2, dtype: int64
+          used_batches 8, dtype: int64
 
 list_responses 
 Number of responses: 2

@@ -500,7 +500,7 @@ specified):
   :``'used_batches'``: number of batchs used to calculate the |kij|
     (:class:`int`)
   :``'kij_mkeff'``: result of |kij|-|keff| (`float`)
-  :``'spacebins'``: **facultative**, list of N volumes/mesh elements
+  :``'space_bins'``: **facultative**, list of N volumes/mesh elements
     considered (:obj:`numpy.ndarray` of
 
     * :class:`int` for volumes,
@@ -1858,14 +1858,14 @@ def convert_kij_keff(res):
        {'keff_estimator': str,
         'results': {'used_batches_res': int,
                     'kij_mkeff': float (kij result - keff),
-                    'spacebins_res': numpy.array of int with shape (nbins,) or
+                    'space_bins_res': numpy.array of int with shape (nbins,) or
                       (nbins, 3), the latter case corresponding to space mesh,
                     'kij_leigenvec_res': numpy.array,
                     'kij_matrix_res': numpy.array,
                     'kij_stddev_matrix_res': numpy.array,
                     'kij_sensibility_matrix_res': numpy.array}}
 
-    Key ``'spacebins'`` is facultative.
+    Key ``'space_bins'`` is facultative.
 
     For more details see :ref:`eponine-kij-in-keff`.
 
@@ -1899,7 +1899,7 @@ def convert_kij_keff(res):
     return {'keff_estimator': res['estimator'],
             'results': {'used_batches': res['batchs_kept'],
                         'kij_mkeff': res['kij_mkeff'],
-                        'spacebins': spacebins,
+                        'space_bins': spacebins,
                         'kij_leigenvec': egvec,
                         'kij_matrix': np.array(kijmat),
                         'kij_stddev_matrix': np.array(stddevmat),

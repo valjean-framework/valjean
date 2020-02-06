@@ -168,7 +168,7 @@ level as the response block. These parsers and the associated dictionary key
   ``'ifp_adjoint_crit_edition'``;
 * :parsing_var:`autokeffblock`: "default" |keff| block, containing for example
   the best estimation of |keff| using variable number of discarded batches, key
-  ``'auto_keffs'``;
+  ``'keff_auto'``;
 * :parsing_var:`contribpartblock`: *contributing particles block*, key
   ``'contributing_particles'``
 * :parsing_var:`perturbation`: perturbation results, containing a description
@@ -751,7 +751,7 @@ bestres = (Group(Suppress(_bestresdiscbatchs_kw) + _inums('discarded_batches')
                  + Suppress("batches")
                  + _minus_line
                  + _numusedbatch + _fnums('score') + _fnums('sigma'))
-           ('bestresult_res'))
+           ('best_result_res'))
 
 
 integratedres = (Group(Optional(Suppress(_integratedres_kw))
@@ -1011,7 +1011,7 @@ _bestkeffpestim = (Group(_notconverged_kw('not_converged')
                          | Group(_bestresdiscbatch
                                  + _numusedbatch
                                  + _bestkeff
-                                 + Optional(_equivkeff))('auto_keff'))
+                                 + Optional(_equivkeff))('keff_auto'))
                    ('results'))
 _bestreskeff = Group(_bestresestim + _minus_line + _bestkeffpestim)
 _warnfixedsources = Group(Suppress(_warning_kw) + _minus_line
@@ -1020,7 +1020,7 @@ _bestresblock = OneOrMore(_bestreskeff, stopOn="KIJ")
 autokeffblock = Group(Group(Optional(_warnfixedsources)
                             + _bestresblock
                             + Optional(_kijkeffblock))
-                      .setParseAction(trans.convert_auto_keff))('auto_keffs')
+                      .setParseAction(trans.convert_keff_auto))('keff_auto')
 
 
 # MED files
@@ -1051,7 +1051,7 @@ _gbsource = Group(Suppress(_gbsourcenum_kw)
                   + (_minus_line | (_gbtabulation + _minus_line)))('gb_source')
 _gbrespersource = Group(_gbsource + spectrumblock)
 _gbstep = Group(_gbstepdesc + Group(OneOrMore(_gbrespersource))('gb_step_res'))
-gbblock = Group(OneOrMore(_gbstep))('greenbands_res')
+gbblock = Group(OneOrMore(_gbstep))('green_bands_res')
 
 
 # Scores ordered by nuclei and precursor families, IFP outputs
