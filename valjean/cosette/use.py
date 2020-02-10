@@ -548,7 +548,7 @@ Module API
 
 from functools import update_wrapper
 
-from .task import TaskStatus, det_hash
+from .task import TaskStatus
 from .pythontask import PythonTask
 from .run import RunTask
 from .. import LOGGER
@@ -674,21 +674,6 @@ class Use:
         '''Return the task that executes the decorated function.'''
         from itertools import chain
 
-        kwargs_names = {kwarg: (task.name, key)
-                        for kwarg, (task, key) in self.inj_kwargs.items()}
-        args_names = [(task.name, key) for task, key in self.inj_args]
-        uid = det_hash(kwargs_names, args_names, self.deps_type)
-        pytask_name = self.func_name + '-' + uid
-
-        if self._USE_CACHING and pytask_name in self._CACHE:
-            LOGGER.debug('returning cached task %s', pytask_name)
-            return self._CACHE[pytask_name]
-
-        LOGGER.debug('creating %s task', pytask_name)
-        LOGGER.debug('  args: %s', self.inj_args)
-        LOGGER.debug('  kwargs: %s', self.inj_kwargs)
-        LOGGER.debug('  deps_type: %s', self.deps_type)
-
         if self.deps_type == 'soft':
             soft_deps = set(value[0]
                             for value in chain(self.inj_kwargs.values(),
@@ -698,8 +683,23 @@ class Use:
             deps = set(value[0] for value in chain(self.inj_kwargs.values(),
                                                    self.inj_args))
             soft_deps = set()
-        LOGGER.debug('%s task will depend on %s', pytask_name, deps)
-        LOGGER.debug('%s task will soft-depend on %s', pytask_name, soft_deps)
+
+        if deps:
+            pytask_name = (','.join(dep.name for dep in deps)
+                           + '.' + self.func_name)
+        else:
+            pytask_name = self.func_name
+
+        if self._USE_CACHING and pytask_name in self._CACHE:
+            LOGGER.debug('returning cached task %s', pytask_name)
+            return self._CACHE[pytask_name]
+
+        LOGGER.debug('creating %s task', pytask_name)
+        LOGGER.debug('  args: %s', self.inj_args)
+        LOGGER.debug('  kwargs: %s', self.inj_kwargs)
+        LOGGER.debug('  deps_type: %s', self.deps_type)
+        LOGGER.debug('  will depend on %s', deps)
+        LOGGER.debug('  will soft-depend on %s', soft_deps)
 
         def inject_from_env(env):
             # Prepare the args for the function; we loop over self.inj_args in
@@ -785,13 +785,13 @@ class UseRun:
         result of the previous one.
 
         :param RunTaskFactory factory: a :class:`~.RunTaskFactory` object.
-        :param posts: a collection of post-processing functions. Each function
-                      will be converted to a :class:`~.PythonTask` object.
+        :param list posts: a collection of post-processing functions. Each
+            function will be converted to a :class:`~.PythonTask` object.
         :param int priority: the priority to assign to the tasks produced by
             this factory.
         '''
         self.factory = factory
-        self.posts = posts
+        self.posts = posts.copy()
         self.priority = priority
 
     def __call__(self, kwarg=None, **kwargs):

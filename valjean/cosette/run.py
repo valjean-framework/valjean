@@ -81,26 +81,26 @@ The simplest way to create a :class:`RunTaskFactory` is to use one of the
 a factory instance that generates :class:`RunTask` objects for the
 :command:`echo` executable:
 
-    >>> factory = RunTaskFactory.from_executable('echo')
+    >>> factory = RunTaskFactory.from_executable('echo', uid='echo')
 
 You can use it to generate tasks by invoking the :meth:`RunTaskFactory.make`
 method:
 
     >>> task = factory.make(name='task', extra_args=['spam'])
 
-This creates a `task` object (of type :class:`RunTask`) that executes
+This creates an `task.echo` object (of type :class:`RunTask`) that executes
 :file:`echo spam` when run:
 
     >>> env_up, status = task.do(env={}, config=config)
-    >>> print_stdout(env_up, 'task')
+    >>> print_stdout(env_up, 'task.echo')
     spam
 
 You can also leave the `name` parameter out. If you do so,
 :class:`RunTaskFactory` will generate a name for you:
 
     >>> task_sausage = factory.make(extra_args=['sausage'])
-    >>> print(task_sausage.name)
-    run#...
+    >>> task_sausage.name
+    '....echo'
 
 Of course you can generate multiple tasks using the same factory (this is the
 whole point of :class:`RunTaskFactory`, really):
@@ -111,21 +111,22 @@ whole point of :class:`RunTaskFactory`, really):
 
 You can also specify a few arguments beforehand and provide the rest later:
 
-    >>> factory = RunTaskFactory.from_executable('echo',
+    >>> factory = RunTaskFactory.from_executable('echo', uid='echo',
     ...                                          default_args=['spam'])
     >>> task = factory.make(name='task', extra_args=['eggs'])
     >>> env_up, status = task.do(env={}, config=config)
-    >>> print_stdout(env_up, 'task')
+    >>> print_stdout(env_up, 'task.echo')
     spam eggs
 
 Finally, you can parametrize your arguments on arbitrary keywords that will be
 provided when the task is created:
 
     >>> args = ['{food}', 'with', '{side}']
-    >>> factory = RunTaskFactory.from_executable('echo', default_args=args)
+    >>> factory = RunTaskFactory.from_executable('echo', uid='echo',
+    ...                                          default_args=args)
     >>> task = factory.make(name='task', food='lobster', side='spam')
     >>> env_up, status = task.do(env={}, config=config)
-    >>> print_stdout(env_up, 'task')
+    >>> print_stdout(env_up, 'task.echo')
     lobster with spam
 
 Default values for the parameters may be specified when creating the factory
@@ -133,25 +134,26 @@ and can be overridden when the task is created:
 
     >>> args = ['{food}', 'with', '{side}']
     >>> factory = RunTaskFactory.from_executable('echo', default_args=args,
-    ...                                          side='spam')
+    ...                                          side='spam', uid='echo')
     >>> beans = factory.make(name='baked beans', food='baked beans')
     >>> eggs = factory.make(name='eggs', food='eggs',
     ...                     side='bacon and spam')
     >>> env_up, status = beans.do(env={}, config=config)
-    >>> print_stdout(env_up, 'baked beans')
+    >>> print_stdout(env_up, 'baked beans.echo')
     baked beans with spam
     >>> env_up, status = eggs.do(env={}, config=config)
-    >>> print_stdout(env_up, 'eggs')
+    >>> print_stdout(env_up, 'eggs.echo')
     eggs with bacon and spam
 
 Note also that you can refer to the environment or the configuration in your
 command-line arguments:
 
     >>> args = ['{env[side]}']
-    >>> factory = RunTaskFactory.from_executable('echo', default_args=args)
+    >>> factory = RunTaskFactory.from_executable('echo', uid='echo',
+    ...                                          default_args=args)
     >>> task = factory.make(name='task')
     >>> env_up, status = task.do(env={'side': 'spam'}, config=config)
-    >>> print_stdout(env_up, 'task')
+    >>> print_stdout(env_up, 'task.echo')
     spam
 
 
@@ -162,7 +164,7 @@ The :class:`RunTaskFactory` class caches generated tasks under the hood.
 Repeated calls to :meth:`RunTaskFactory.make` from the same factory with the
 same arguments will result in the same task:
 
-    >>> factory = RunTaskFactory.from_executable('echo')
+    >>> factory = RunTaskFactory.from_executable('echo', uid='echo')
     >>> task_sausage = factory.make(extra_args=['sausage'])
     >>> task_sausage_again = factory.make(extra_args=['sausage'])
     >>> task_sausage is task_sausage_again
@@ -170,7 +172,7 @@ same arguments will result in the same task:
 
 If you instantiate another factory, the caching mechanism is defeated:
 
-    >>> other_factory = RunTaskFactory.from_executable('echo')
+    >>> other_factory = RunTaskFactory.from_executable('echo', uid='echo')
     >>> task_sausage_other = other_factory.make(extra_args=['sausage'])
     >>> task_sausage is task_sausage_other
     False
@@ -202,7 +204,7 @@ def run(clis, stdout, stderr, **subprocess_args):
     :param stderr: File handle to capture the stderr stream.
     :type stderr: :term:`file object`
     :param dict subprocess_args: Parameters to be passed to
-                                 :func:`subprocess.call`.
+        :func:`subprocess.call`.
     '''
     from subprocess import call
     from time import time
@@ -254,10 +256,10 @@ class RunTask(PythonTask):
 
         :param str name: The name of this task.
         :param list cli: The command line to be executed, as a list of strings.
-                         The first element of the list is the command and the
-                         following ones are its arguments.
+            The first element of the list is the command and the following ones
+            are its arguments.
         :param kwargs: Any other keyword arguments will be passed on to the
-                       constructor (see :meth:`RunTask.__init__`).
+            constructor (see :meth:`RunTask.__init__`).
         '''
         if not isinstance(cli, (list, tuple)):
             raise TypeError('Argument `cli` must be a list or a tuple')
@@ -269,10 +271,10 @@ class RunTask(PythonTask):
 
         :param str name: The name of this task.
         :param list clis: The command lines to be executed, as a list of lists
-                          of strings.  The first element of each sub-list is
-                          the command and the following ones are its arguments.
+            of strings.  The first element of each sub-list is the command and
+            the following ones are its arguments.
         :param kwargs: Any other keyword arguments will be passed on to the
-                       constructor (see :meth:`RunTask.__init__`).
+            constructor (see :meth:`RunTask.__init__`).
         '''
         if (not isinstance(clis, (list, tuple))
                 or not all(isinstance(cli, (list, tuple)) for cli in clis)):
@@ -295,16 +297,14 @@ class RunTask(PythonTask):
         :param str name: The name of this task.
         :param list clis_closure: A closure to generate the command lines.
         :param dict subprocess_args: Any remaining options will be passed to
-                                     the :class:`.subprocess.Popen`
-                                     constructor.
+            the :class:`.subprocess.Popen` constructor.
         :param deps: The dependencies for this task (see
-                     :meth:`Task.__init__ <valjean.cosette.task.Task.__init__>`
-                     for the format), or `None`.
+            :meth:`Task.__init__ <valjean.cosette.task.Task.__init__>` for the
+            format), or `None`.
         :type deps: list(Task) or None
         :param soft_deps: The dependencies for this task (see
-                          :meth:`Task.__init__
-                          <valjean.cosette.task.Task.__init__>` for the
-                          format), or `None`.
+            :meth:`Task.__init__ <valjean.cosette.task.Task.__init__>` for the
+            format), or `None`.
         :type soft_deps: list(Task) or None
         '''
         super().__init__(name, self.run_task(clis_closure, name,
@@ -385,7 +385,7 @@ class RunTaskFactory:
         return [cli]
 
     @classmethod
-    def from_checkout(cls, checkout_task, *, relative_path,
+    def from_checkout(cls, checkout_task, *, relative_path, uid=None,
                       default_args=None, **kwargs):
         '''This class method creates a :class:`RunTaskFactory` from a
         :class:`~valjean.cosette.code.CheckoutTask`. The command to be executed
@@ -393,20 +393,24 @@ class RunTaskFactory:
         specified with the `relative_path` argument.
 
         :param checkout_task: The :class:`~valjean.cosette.code.CheckoutTask`
-                              object.
+            object.
         :type checkout_task: :class:`~valjean.cosette.code.CheckoutTask`
         :param str relative_path: The path to the executable, relative to the
-                                  the checkout directory.
+            the checkout directory.
+        :param uid: a unique identifier for this factory. If `None` is given,
+            the factory will use a hash of the other arguments.
+        :type uid: str or None
         :param default_args: see :meth:`RunTaskFactory.from_executable`.
         :param kwargs: Any remaining arguments will be passed to the
-                       :meth:`__init__`.
+            :meth:`__init__`.
         '''
         d_args = [] if default_args is None else default_args
         LOGGER.debug('relative_path=%r', relative_path)
         LOGGER.debug('d_args=%s', d_args)
         closure = partial(cls._clis_closure_from_checkout,
                           checkout_task.name, relative_path, d_args)
-        uid = det_hash(checkout_task.name, relative_path, d_args)
+        uid = (uid if uid is not None
+               else det_hash(checkout_task.name, relative_path, d_args))
         return cls(closure, deps=[checkout_task], uid=uid, **kwargs)
 
     @classmethod
@@ -426,7 +430,7 @@ class RunTaskFactory:
         return clis_closure
 
     @classmethod
-    def from_build(cls, build_task, *, relative_path,
+    def from_build(cls, build_task, *, relative_path, uid=None,
                    default_args=None, **kwargs):
         '''This class method creates a :class:`RunTaskFactory` from a
         :class:`~valjean.cosette.code.BuildTask`. The command to be executed
@@ -436,17 +440,21 @@ class RunTaskFactory:
         :param build_task: The :class:`~valjean.cosette.code.BuildTask` object.
         :type build_task: :class:`~valjean.cosette.code.BuildTask`
         :param str relative_path: The path to the executable, relative to the
-                                  the build directory.
+            the build directory.
+        :param uid: a unique identifier for this factory. If `None` is given,
+            the factory will use a hash of the other arguments.
+        :type uid: str or None
         :param default_args: see :meth:`RunTaskFactory.from_executable`.
         :param kwargs: Any remaining arguments will be passed to the
-                       :meth:`__init__`.
+            :meth:`__init__`.
         '''
         d_args = [] if default_args is None else default_args
         LOGGER.debug('relative_path=%r', relative_path)
         LOGGER.debug('d_args=%s', d_args)
         closure = partial(cls._clis_closure_from_build,
                           build_task.name, relative_path, d_args)
-        uid = det_hash(build_task.name, relative_path, d_args)
+        uid = (uid if uid is not None
+               else det_hash(build_task.name, relative_path, d_args))
         return cls(closure, deps=[build_task], uid=uid, **kwargs)
 
     @classmethod
@@ -466,25 +474,27 @@ class RunTaskFactory:
         return clis_closure
 
     @classmethod
-    def from_executable(cls, path, default_args=None, **kwargs):
+    def from_executable(cls, path, uid=None, default_args=None, **kwargs):
         '''This class method creates a :class:`RunTaskFactory` from the path to
         an existing executable.
 
+        :param str path: the path to the executable.
+        :param uid: a unique identifier for this factory. If `None` is given,
+            the factory will use a hash of the other arguments.
+        :type uid: str or None
         :param default_args: The list of arguments that will be passed to the
-                             executed command by :class:`RunTask`. It may
-                             contain expressions understood by Python's format
-                             mini-language, such as ``{foo}``. These
-                             expressions can be filled when the task is
-                             generated by passing appropriate keyword arguments
-                             to the :meth:`make` method.
+            executed command by :class:`RunTask`. It may contain expressions
+            understood by Python's format mini-language, such as ``{foo}``.
+            These expressions can be filled when the task is generated by
+            passing appropriate keyword arguments to the :meth:`make` method.
         :type default_args: list(str) or None
         :param kwargs: Any remaining arguments will be passed to the
-                       :meth:`__init__`.
+            :meth:`__init__`.
         '''
         d_args = [] if default_args is None else default_args
         LOGGER.debug('path=%r', path)
         LOGGER.debug('d_args=%s', d_args)
-        uid = det_hash(path, d_args)
+        uid = uid if uid is not None else det_hash(path, d_args)
         return cls(partial(cls._clis_closure_from_executable, path, d_args),
                    uid=uid, **kwargs)
 
@@ -514,27 +524,31 @@ class RunTaskFactory:
         '''Create a :class:`RunTask` object.
 
         :param name: the name of the task to be generated, as a string. If
-                     `None` is passed, :class:`RunTaskFactory` will generate a
-                     name by hashing the contents of all the other arguments.
+            `None` is passed, :class:`RunTaskFactory` will generate a name by
+            hashing the contents of all the other arguments.
         :type name: str or None
-        :param extra_args: A list of additional arguments that will be
-                           appended at the end of the command line.
+        :param extra_args: A list of additional arguments that will be appended
+            at the end of the command line.
         :type extra_args: list or None
-        :param subprocess_args: A dictionary of arguments for the call to
-                                the :class:`.subprocess.Popen` constructor.
+        :param subprocess_args: A dictionary of arguments for the call to the
+            :class:`.subprocess.Popen` constructor.
         :type subprocess_args: dict or None
         :param deps: A list of dependencies for the generated task. Note that
-                     factories built with :meth:`from_checkout` and
-                     :meth:`from_build` automatically inject dependencies on
-                     the checkout and build tasks, respectively.
+            factories built with :meth:`from_checkout` and :meth:`from_build`
+            automatically inject dependencies on the checkout and build tasks,
+            respectively.
         :type deps: list(Task) or None
         :param soft_deps: A list of soft dependencies for the generated task.
         :type soft_deps: list(Task) or None
         :param kwargs: Any remaining keyword arguments will be used to format
-                       the command line before execution. The environment and
-                       the configuration are available at formatting time as
-                       ``env`` and ``config``, respectively.
+            the command line before execution. The environment and the
+            configuration are available at formatting time as ``env`` and
+            ``config``, respectively.
         '''
+        LOGGER.debug('RunFactory.make(name=%r, extra_args=%r, '
+                     'subprocess_args=%r, deps=%r, soft_deps=%r, **kwargs=%r)',
+                     name, extra_args, subprocess_args, deps, soft_deps,
+                     kwargs)
         extra_args = [] if extra_args is None else extra_args
         subprocess_args = {} if subprocess_args is None else subprocess_args
         deps = [] if deps is None else deps
@@ -544,23 +558,23 @@ class RunTaskFactory:
         cli_closure = self.make_closure(extra_args, **kwargs_)
 
         # handle caching
-        uid = det_hash(self.uid, extra_args, kwargs_)
-        if uid in self.cache:
-            LOGGER.debug('cache hit for uid %s', uid)
-            cached_task = self.cache[uid]
-            if name is not None and cached_task.name != name:
-                LOGGER.warning('task %r has already been cached under a '
-                               'different name (%r)', name, cached_task.name)
+        if name is None:
+            task_name = str(det_hash(self.uid, extra_args, kwargs_))
+        else:
+            task_name = name
+        task_name += '.' + self.uid
+        if task_name in self.cache:
+            LOGGER.debug('cache hit for task name %r', task_name)
+            cached_task = self.cache[task_name]
             return cached_task
 
-        LOGGER.debug('cache miss for uid %s', uid)
-        name = name if name is not None else 'run#' + str(uid)
+        LOGGER.debug('cache miss for task name %r', task_name)
 
-        task = RunTask(name, cli_closure,
+        task = RunTask(task_name, cli_closure,
                        deps=self.deps + deps,
                        soft_deps=self.soft_deps + soft_deps,
                        **subprocess_args)
-        self.cache[uid] = task
+        self.cache[task_name] = task
         return task
 
     def copy(self):

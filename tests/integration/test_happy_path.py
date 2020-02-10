@@ -147,9 +147,9 @@ def test_resume_newer(job_config, env_path, subdir, job_file):
 @requires_git
 @requires_cmake
 @pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho',
-                                    'pling', 'plong'],
+                                    'pling.cecho', 'plong.cecho'],
                          ids=['no target', 'checkout_cecho', 'build_cecho',
-                              'pling', 'plong'])
+                              'pling.cecho', 'plong.cecho'])
 def test_run(job_config, target, env_path, subdir, job_file):
     '''Test the `run` command.'''
     args = ['run']
@@ -161,15 +161,15 @@ def test_run(job_config, target, env_path, subdir, job_file):
     if target != 'checkout_cecho':
         assert_task_done(env, 'build_cecho')
         assert_cecho_exists(env, 'build_cecho', subdir)
-    if target == 'pling':
-        assert_task_done(env, 'pling')
-        assert 'plong' not in env
-    elif target == 'plong':
-        assert_task_done(env, 'plong')
-        assert 'pling' not in env
+    if target == 'pling.cecho':
+        assert_task_done(env, 'pling.cecho')
+        assert 'plong.cecho' not in env
+    elif target == 'plong.cecho':
+        assert_task_done(env, 'plong.cecho')
+        assert 'pling.cecho' not in env
     elif target is None:
-        assert_task_done(env, 'pling')
-        assert_task_done(env, 'plong')
+        assert_task_done(env, 'pling.cecho')
+        assert_task_done(env, 'plong.cecho')
 
 
 @pytest.mark.parametrize('target', [None, 'checkout_cecho', 'build_cecho'],

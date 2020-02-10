@@ -37,7 +37,7 @@ class EvalTestTask(PythonTask):
                                tests as a result.
         '''
         test_task_name = test_task.name
-        eval_task_name = 'eval-' + test_task_name
+        eval_task_name = test_task_name + '.eval'
         return cls(eval_task_name, test_task_name, deps=[test_task])
 
     def __init__(self, name, test_task_name, *, deps=None, soft_deps=None):

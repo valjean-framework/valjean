@@ -37,8 +37,8 @@ def stats_worker(test_fn, name, description, tasks, **kwargs):
     :returns: an :class:`~.EvalTestTask` that evaluates the diagnostic test.
     :rtype: EvalTestTask
     '''
-    test_fn.__name__ = 'create_' + name
-    test_fn.__qualname__ = test_fn.__qualname__[-10] + 'create_' + name
+    test_fn.__name__ = name + '.stats'
+    test_fn.__qualname__ = test_fn.__qualname__[-10] + name + '.stats'
     inj_args = [(task, None) for task in tasks]
     wrapped = partial(test_fn, name=name, description=description, **kwargs)
     update_wrapper(wrapped, test_fn)
@@ -68,12 +68,12 @@ def task_stats(*, name, description='', tasks):
 
     Here is how you make a :class:`TestStatsTasks`:
 
-    >>> stats = task_stats(name='stats', tasks=my_tasks)
+    >>> stats = task_stats(name='delays', tasks=my_tasks)
     >>> from valjean.gavroche.eval_test_task import EvalTestTask
     >>> isinstance(stats, EvalTestTask)
     True
     >>> print(stats.depends_on)
-    {Task('create_stats-...')}
+    {Task('delays.stats')}
     >>> create_stats = next(task for task in stats.depends_on)
 
     Here `create_stats` is the task that actually creates the
@@ -220,7 +220,7 @@ def test_stats(*, name, description='', tasks):
     Here is how you make a :class:`TestStatsTests` to collect statistics about
     the results of the generated tests:
 
-    >>> stats = test_stats(name='stats', tasks=[create_tests_task])
+    >>> stats = test_stats(name='equal', tasks=[create_tests_task])
 
     >>> from valjean.gavroche.eval_test_task import EvalTestTask
     >>> isinstance(stats, EvalTestTask)
@@ -230,7 +230,7 @@ def test_stats(*, name, description='', tasks):
     on a special task that generates the :class:`TestStatsTests` instance:
 
     >>> print(stats.depends_on)
-    {Task('create_stats-...')}
+    {Task('equal.stats')}
     >>> create_stats = next(task for task in stats.depends_on)
 
     In turn, `create_stats` has a soft dependency on the task that generates

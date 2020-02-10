@@ -71,7 +71,7 @@ class Task(ABC):
     def __init__(self, name, *, deps=None, soft_deps=None, priority=None):
         '''Initialize the task.
 
-        :param str name: The name of the task.
+        :param str name: The name of the task. Task names **must** be unique!
         :param deps: The list of (hard) dependencies for this task. It must be
                      either `None` (i.e. no dependencies) or list of
                      :class:`Task` objects.
@@ -83,6 +83,7 @@ class Task(ABC):
         :param int priority: the priority for this task. See
             :func:`~.collect_tasks` for more information.
         '''
+        LOGGER.debug('creating task %s', name)
         self.name = name
 
         self.depends_on = set()

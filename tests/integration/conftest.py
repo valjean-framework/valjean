@@ -12,7 +12,7 @@ def job():
     checkout = CheckoutTask(name='checkout_cecho', repository='{repo_path}')
     build = BuildTask(name='build_cecho', source=checkout)
     factory = RunTaskFactory.from_build(build, relative_path='{subdir}cecho',
-                                        default_args=['{{text}}'])
+                                        default_args=['{{text}}'], uid='cecho')
     pling = factory.make(name='pling', text='pling')
     plong = factory.make(name='plong', text='plong')
     return [pling, plong]

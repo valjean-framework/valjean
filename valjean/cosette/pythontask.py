@@ -298,7 +298,7 @@ class PythonTask(Task):
                        as the `config_kwarg` keyword, if specified.
         '''
         from types import MappingProxyType
-        LOGGER.info('PythonTask %s runs', self.name)
+        LOGGER.debug('PythonTask %r runs', self.name)
         if self.env_kwarg is not None:
             # wrap the environment in MappingProxyType, so that self.func
             # cannot modify it

@@ -311,6 +311,7 @@ def dep_tasks(draw, names=text(min_size=1), min_deps=0, max_deps=None,
     though!).'''
     dep_dict = draw(dep_dicts(elements=names, min_deps=min_deps,
                               max_deps=max_deps, **kwargs))
+    LOGGER.debug('generated dep_dict: %s', dep_dict)
 
     def to_task(dep_dict, task_name, task_dict):
         if task_name in task_dict:
