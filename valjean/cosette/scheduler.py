@@ -26,7 +26,6 @@ from .depgraph import DepGraph
 from .backends.queue import QueueScheduling
 from .env import Env
 from .. import LOGGER
-from ..path import ensure
 from ..config import Config
 
 
@@ -101,7 +100,6 @@ class Scheduler:
         '''
         if config is None:
             config = Config()
-        self.setup_paths(config)
 
         if env is None:
             env = Env()
@@ -114,15 +112,3 @@ class Scheduler:
                                    hard_graph=self.hard_graph,
                                    env=env, config=config)
         return env
-
-    @staticmethod
-    def setup_paths(config):
-        '''Create all the paths mentioned in the `path` section of the
-        configuration.
-
-        :param Config config: the configuration object.
-        '''
-        for key, path in config.items('path'):
-            if key.endswith('-root'):
-                LOGGER.info('ensuring that %r path at %s exists...', key, path)
-                ensure(path, is_dir=True)
