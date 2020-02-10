@@ -28,9 +28,9 @@ def do_test_task(task, env, config):
     assert env_up[task.name]['return_codes'] == [0]
     stdout = Path(env_up[task.name]['stdout'])
     stderr = Path(env_up[task.name]['stderr'])
-    run_dir = config.get('path', 'run-root')
-    stdout.relative_to(str(run_dir))  # raises ValueError if impossible
-    stderr.relative_to(str(run_dir))  # raises ValueError if impossible
+    output_dir = config.get('path', 'output-root')
+    stdout.relative_to(str(output_dir))  # raises ValueError if impossible
+    stderr.relative_to(str(output_dir))  # raises ValueError if impossible
     with stdout.open() as f_out:
         stdout_content = f_out.read()
     with stderr.open() as f_out:
@@ -54,7 +54,7 @@ def test_factory_checkout(git_myecho_repo, config_tmp, subdir):
     checkout = CheckoutTask('checkout_myecho',
                             repository=str(git_myecho_repo))
     myecho_path = str(Path(subdir) / 'myecho')
-    factory = RunTaskFactory.from_checkout(checkout, relative_path=myecho_path)
+    factory = RunTaskFactory.from_task(checkout, relative_path=myecho_path)
     env = {}
     env_up, status = checkout.do(env=env, config=config_tmp)
     assert status == TaskStatus.DONE
@@ -72,7 +72,7 @@ def test_factory_build(cmake_echo, config_tmp, subdir):
     '''
     build = BuildTask('build_echo', source=str(cmake_echo))
     cecho_path = str(Path(subdir) / 'cecho')
-    factory = RunTaskFactory.from_build(build, relative_path=cecho_path)
+    factory = RunTaskFactory.from_task(build, relative_path=cecho_path)
     env = {}
     env_up, status = build.do(env=env, config=config_tmp)
     assert status == TaskStatus.DONE

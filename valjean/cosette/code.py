@@ -27,37 +27,37 @@ to the ``cmake`` executable may be specified through the
    :hide:
 
    >>> from valjean.cosette.code import CheckoutTask, BuildTask
-   >>> import os
-   >>> work_dir = 'work_dir'
-   >>> os.mkdir(work_dir)
-   >>> repo_dir = os.path.join(work_dir, 'repo')
-   >>> os.mkdir(repo_dir)
-   >>> os.system(CheckoutTask.GIT + ' init ' + repo_dir)
+   >>> import subprocess
+   >>> work_dir = getfixture('tmp_path')
+   >>> repo_dir = work_dir / 'repo'
+   >>> repo_dir.mkdir()
+   >>> subprocess.check_call([CheckoutTask.GIT, 'init', str(repo_dir)])
    0
-   >>> cmakelists_path = os.path.join(repo_dir, 'CMakeLists.txt')
-   >>> with open(cmakelists_path, 'w') as cmake_file:
+   >>> cmakelists_path = repo_dir / 'CMakeLists.txt'
+   >>> with cmakelists_path.open('w') as cmake_file:
    ...     print('project(TestCodeTasks C)\\n'
    ...           'cmake_minimum_required(VERSION 2.6)\\n'
    ...           'set(SOURCE_FILENAME "${PROJECT_BINARY_DIR}/test.c")\\n'
    ...           'file(WRITE "${SOURCE_FILENAME}" "int main(){return 0;}")\\n'
    ...           'add_executable(test_exe "${SOURCE_FILENAME}")\\n',
    ...           file=cmake_file)
-   >>> git_dir = os.path.join(repo_dir, '.git')
-   >>> os.system(CheckoutTask.GIT + ' --git-dir ' + git_dir + ' --work-tree ' +
-   ...           repo_dir + ' add CMakeLists.txt')
+   >>> git_dir = repo_dir / '.git'
+   >>> subprocess.check_call([CheckoutTask.GIT, '--git-dir', str(git_dir),
+   ...                        '--work-tree' , str(repo_dir),
+   ...                        'add', 'CMakeLists.txt'])
    0
-   >>> os.system(CheckoutTask.GIT + ' --git-dir ' + git_dir + ' --work-tree ' +
-   ...           repo_dir + ' commit -a -m "Test commit"')
+   >>> subprocess.check_call([CheckoutTask.GIT, '--git-dir', str(git_dir),
+   ...                        '--work-tree', str(repo_dir),
+   ...                        'commit', '-a', '-m', 'Test commit'])
    0
 
 To describe the usage of :class:`CheckoutTask` and :class:`BuildTask`, let us
 assume that ``repo_dir`` contains a ``git`` repository with a CMake project.
 We use a temporary directory ``work_dir`` for our test:
 
-   >>> import os
-   >>> checkout_dir = os.path.join(work_dir, 'checkout')
-   >>> build_dir = os.path.join(work_dir, 'build')
-   >>> log_dir = os.path.join(work_dir, 'log')
+   >>> checkout_dir = work_dir / 'checkout'
+   >>> build_dir = work_dir / 'build'
+   >>> log_dir = work_dir / 'log'
 
 Now we can build checkout and build tasks for this repository:
 
@@ -84,10 +84,10 @@ path to the `source` argument instead.
    >>> print(ct_status)
    TaskStatus.DONE
    >>> pprint(ct_up)
-   {'project_checkout': {'checkout_dir': '.../project_checkout',
-                         'checkout_log': \
-'.../log/checkout_project_checkout.log',
+   {'project_checkout': {'checkout_log': \
+'.../log/project_checkout.checkout.log',
                          'elapsed_time': ...,
+                         'output_dir': '.../checkout/project_checkout',
                          'repository': '.../repo'}}
    >>> env.apply(ct_up)  # apply CheckoutTask's environment update
    ...                   # for this example, this is actually optional
@@ -95,9 +95,9 @@ path to the `source` argument instead.
    >>> print(bt_status)
    TaskStatus.DONE
    >>> pprint(bt_up)
-   {'project_build': {'build_dir': '.../build/project_build',
-                      'build_log': '.../log/build_project_build.log',
-                      'elapsed_time': ...}}
+   {'project_build': {'build_log': '.../log/project_build.build.log',
+                      'elapsed_time': ...,
+                      'output_dir': '.../build/project_build'}}
 """
 
 import os
@@ -105,7 +105,7 @@ import logging
 from time import time
 
 from .task import TaskStatus
-from ..path import sanitize_filename, ensure
+from ..path import ensure
 from .run import run
 from .pythontask import PythonTask
 from .. import LOGGER
@@ -146,27 +146,23 @@ class CheckoutTask(PythonTask):
                for the format), or `None`.
         :type soft_deps: list(Task) or None
         '''
-
-        self.log_root = log_root
         self.checkout_root = checkout_root
-        self.sanitized_name = sanitize_filename(name)
-        self.checkout_log = 'checkout_' + self.sanitized_name + '.log'
+        self.log_root = log_root
 
         if vcs == 'git':
-            self.repository = repository
-            self.flags = flags
-            self.ref = ref if ref is not None else 'master'
+            if ref is None:
+                ref = 'master'
 
             def checkout_vcs(checkout_dir, log):
                 clone_cli = [self.GIT, 'clone']
-                if self.flags is not None:
-                    clone_cli.extend(self.flags)
-                clone_cli.extend(['--', self.repository, str(checkout_dir)])
+                if flags is not None:
+                    clone_cli.extend(flags)
+                clone_cli.extend(['--', str(repository), str(checkout_dir)])
                 ret, status, _ = run([clone_cli], stdout=log, stderr=log)
                 if ret[-1] != 0:
                     LOGGER.debug('`git clone` returned %s', ret)
                     return status
-                checkout_cli = [self.GIT, 'checkout', self.ref]
+                checkout_cli = [self.GIT, 'checkout', ref]
                 ret, status, _ = run([checkout_cli], stdout=log, stderr=log,
                                      cwd=str(checkout_dir))
                 if ret[-1] != 0:
@@ -182,19 +178,16 @@ class CheckoutTask(PythonTask):
             raise ValueError('unrecognized VCS: {}'.format(vcs))
 
         def checkout(*, config):
-            from pathlib import Path
-
-            # setup log dir
+            # setup log dir and file
             if self.log_root is None:
                 self.log_root = config.get('path', 'log-root')
-            log_file = Path(self.log_root, self.checkout_log)
+            log_file = ensure(self.log_root, self.name + '.checkout.log')
             ensure(log_file)
 
             # setup checkout dir
             if self.checkout_root is None:
-                self.checkout_root = config.get('path', 'checkout-root')
-            checkout_dir = Path(self.checkout_root, self.sanitized_name)
-            ensure(checkout_dir, is_dir=True)
+                self.checkout_root = config.get('path', 'output-root')
+            checkout_dir = ensure(self.checkout_root, self.name, is_dir=True)
 
             with log_file.open('w') as log:
                 start = time()
@@ -209,8 +202,8 @@ class CheckoutTask(PythonTask):
                         LOGGER.debug('checkout log:\n%s', log.read())
 
             env_up = {self.name: {'checkout_log': str(log_file),
-                                  'checkout_dir': str(checkout_dir),
-                                  'repository': self.repository,
+                                  'output_dir': str(checkout_dir),
+                                  'repository': str(repository),
                                   'elapsed_time': elapsed}}
             return env_up, status
 
@@ -270,46 +263,40 @@ class BuildTask(PythonTask):
         :type soft_deps: list(Task) or None
         '''
         assert isinstance(source, (str, CheckoutTask))
-        self.source = source
         LOGGER.debug('BuildTask %s will look for source files in %s',
-                     name, self.source)
+                     name, source)
 
         if deps is None:
             deps = []
-        if isinstance(self.source, CheckoutTask):
-            deps.append(self.source)
+        if isinstance(source, CheckoutTask):
+            deps.append(source)
 
         self.log_root = log_root
         self.build_root = build_root
-        self.sanitized_name = sanitize_filename(name)
-        self.configure_flags = configure_flags
-        self.build_flags = build_flags
-        self.configure_log = 'configure_{}.log'.format(self.sanitized_name)
-        self.build_log = 'build_{}.log'.format(self.sanitized_name)
 
         if build_system == 'cmake':
 
             def build_sys(source_dir, build_dir, log):
                 configure_cli = [self.CMAKE]
-                if self.configure_flags is not None:
-                    configure_cli.extend(self.configure_flags)
+                if configure_flags is not None:
+                    configure_cli.extend(configure_flags)
                 configure_cli.append(source_dir)
                 ret, status, _ = run([configure_cli], stdout=log, stderr=log,
                                      cwd=str(build_dir))
                 if ret[-1] != 0:
-                    LOGGER.debug('`cmake` returned %s', ret)
+                    LOGGER.debug('`cmake` (configure step) returned %s', ret)
                     return status
                 build_cli = [self.CMAKE, '--build', str(build_dir)]
                 target_list = [] if targets is None else targets
                 for target in target_list:
                     build_cli.append('--target')
                     build_cli.append(target)
-                if self.build_flags is not None:
-                    build_cli.extend(self.build_flags)
+                if build_flags is not None:
+                    build_cli.extend(build_flags)
                 ret, status, _ = run([build_cli], stdout=log, stderr=log,
                                      cwd=str(build_dir))
                 if ret[-1] != 0:
-                    LOGGER.debug('`cmake` (build) returned %s', ret)
+                    LOGGER.debug('`cmake` (build step) returned %s', ret)
                 return status
 
         elif build_system in ('autoconf', 'configure'):
@@ -319,26 +306,22 @@ class BuildTask(PythonTask):
                              .format(build_system))
 
         def build(*, config, env):
-            from pathlib import Path
-
-            # setup log dir
+            # setup log dir and files
             if self.log_root is None:
                 self.log_root = config.get('path', 'log-root')
-            log_file = Path(self.log_root, self.build_log)
+            log_file = ensure(self.log_root, self.name + '.build.log')
             ensure(log_file)
-            log_file = log_file.resolve()
 
-            # setup checkout dir
+            # setup build dir
             if self.build_root is None:
-                self.build_root = config.get('path', 'build-root')
-            build_dir = Path(self.build_root, self.sanitized_name)
-            ensure(build_dir, is_dir=True)
-            build_dir = build_dir.resolve()
+                self.build_root = config.get('path', 'output-root')
+            build_dir = (ensure(self.build_root, self.name, is_dir=True)
+                         .resolve())
 
-            if isinstance(self.source, str):
-                source_dir = os.path.abspath(self.source)
+            if isinstance(source, str):
+                source_dir = os.path.abspath(source)
             else:
-                source_dir = os.path.abspath(env[source.name]['checkout_dir'])
+                source_dir = os.path.abspath(env[source.name]['output_dir'])
 
             with log_file.open('w') as log:
                 start = time()
@@ -353,7 +336,7 @@ class BuildTask(PythonTask):
                         LOGGER.debug('build log:\n%s', log.read())
 
             env_up = {self.name: {'build_log': str(log_file),
-                                  'build_dir': str(build_dir),
+                                  'output_dir': str(build_dir),
                                   'elapsed_time': elapsed}}
             return env_up, status
 

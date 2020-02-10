@@ -160,14 +160,10 @@ def config_tmp(tmpdir_factory):
     '''Create a configuration object with the path options set to temporary
     directories.'''
     log_dir = str(tmpdir_factory.mktemp('log'))
-    checkout_dir = str(tmpdir_factory.mktemp('checkout'))
-    build_dir = str(tmpdir_factory.mktemp('build'))
-    run_dir = str(tmpdir_factory.mktemp('run'))
+    output_dir = str(tmpdir_factory.mktemp('output'))
     config = Config(paths=[])
     config.set('path', 'log-root', log_dir)
-    config.set('path', 'checkout-root', checkout_dir)
-    config.set('path', 'build-root', build_dir)
-    config.set('path', 'run-root', run_dir)
+    config.set('path', 'output-root', output_dir)
     return config
 
 

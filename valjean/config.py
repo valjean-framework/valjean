@@ -40,16 +40,14 @@ A few options are set from the beginning:
     ...     print('{} = {}'.format(opt, val))
     work-dir = /...
     log-root = ${work-dir}/log
-    checkout-root = ${work-dir}/checkout
-    build-root = ${work-dir}/build
-    run-root = ${work-dir}/run
+    output-root = ${work-dir}/output
     report-root = ${work-dir}/report
     job-file = ${work-dir}/job.py
 
 The :class:`Config` class provides getters and setters:
 
-    >>> print(config.get('path', 'build-root'))
-    /.../build
+    >>> print(config.get('path', 'report-root'))
+    /.../report
 
     # value interpolation is possible
     >>> config.set('path', 'log-root', '${work-dir}/log_dir')
@@ -67,9 +65,7 @@ It also provides some additional convenience methods:
     ...     print('{}.{}: {}'.format(sec_name, option, value))
     path.work-dir: /...
     path.log-root: ${work-dir}/log_dir
-    path.checkout-root: ${work-dir}/checkout
-    path.build-root: ${work-dir}/build
-    path.run-root: ${work-dir}/run
+    path.output-root: ${work-dir}/output
     path.report-root: ${work-dir}/report
     path.job-file: ${work-dir}/job.py
 
@@ -137,9 +133,7 @@ class Config:
         # Set some default options
         self.set('path', 'work-dir', os.path.realpath(os.getcwd()))
         self.set('path', 'log-root', '${work-dir}/log')
-        self.set('path', 'checkout-root', '${work-dir}/checkout')
-        self.set('path', 'build-root', '${work-dir}/build')
-        self.set('path', 'run-root', '${work-dir}/run')
+        self.set('path', 'output-root', '${work-dir}/output')
         self.set('path', 'report-root', '${work-dir}/report')
         self.set('path', 'job-file', '${work-dir}/job.py')
 

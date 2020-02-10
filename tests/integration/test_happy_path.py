@@ -43,8 +43,8 @@ def assert_cecho_exists(env, name, subdir):
     '''Assert that the cecho executable can be found in the subdir
     directory.'''
     assert name in env
-    assert 'build_dir' in env[name]
-    cecho_path = Path(env[name]['build_dir']) / subdir / 'cecho'
+    assert 'output_dir' in env[name]
+    cecho_path = Path(env[name]['output_dir']) / subdir / 'cecho'
     assert cecho_path.exists()
     assert cecho_path.is_file()
 
@@ -130,7 +130,7 @@ def test_resume_newer(job_config, env_path, subdir, job_file):
 
     # remove the checkout directory, too, otherwise the new checkout_cecho will
     # fail
-    rmtree(env['checkout_cecho']['checkout_dir'])
+    rmtree(env['checkout_cecho']['output_dir'])
     # remove checkout_echo from the env, so that it is rerun
     del env['checkout_cecho']
     env.to_file(env_path)

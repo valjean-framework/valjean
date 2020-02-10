@@ -222,13 +222,13 @@ The keyword is specified by the `config_kwarg` parameter to the
 :class:`PythonTask` constructor. For example:
 
     >>> from valjean.config import Config
-    >>> def print_checkout_dir(*, config):
-    ...     print(config.get('path', 'checkout-root'))
-    >>> task = PythonTask('work-dir', print_checkout_dir,
+    >>> def print_output_dir(*, config):
+    ...     print(config.get('path', 'output-root'))
+    >>> task = PythonTask('work-dir', print_output_dir,
     ...                   config_kwarg='config')
     >>> config = Config([])
     >>> task.do(env={}, config=config)
-    /.../checkout
+    /.../output
 
 
 Module API

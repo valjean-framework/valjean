@@ -2,27 +2,37 @@
 from pathlib import Path
 
 
-def ensure(path, *, is_dir=False):
+def ensure(*path, is_dir=False):
     '''Make sure that the given path exists.
 
-    :param pathlib.Path path: A path.
+    :param pathlib.Path path: A path. Multiple arguments will be concatenated
+        into a single path.
     :param bool is_dir: If `True`, the path will be constructed as a directory.
     '''
-    path = Path(path)
-    if path.exists():
-        return
-    if is_dir:
-        path.mkdir(parents=True)
-    else:
-        if not path.parent.exists():
-            path.parent.mkdir(parents=True)
-        path.touch()
+    path = Path(*path)
+    if not path.exists():
+        if is_dir:
+            path.mkdir(parents=True)
+        else:
+            if not path.parent.exists():
+                path.parent.mkdir(parents=True)
+            path.touch()
+    return path
 
 
 def sanitize_filename(name):
-    '''Sanitize a string so that it may be used as a filename.'''
-    return ''.join(c if _allowed_char(c) else '_' for c in name)
+    '''Check that the `name` string can be used as a filename.
 
-
-def _allowed_char(char):
-    return char.isalnum() or char == '.'
+    :raises ValueError: if the string contains characters that are forbidden in
+        a filename.
+    :returns: `name` unchanged
+    '''
+    if '\0' in name:
+        raise ValueError(r"NULL character ('\0') is not allowed in filename "
+                         "{!r}".format(name))
+    if '/' in name:
+        raise ValueError(r"slash ('/') is not allowed in filename {!r}"
+                         .format(name))
+    if name in ('.', '..'):
+        raise ValueError('{!r} is not a valid filename'.format(name))
+    return name
