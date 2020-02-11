@@ -385,7 +385,7 @@ class T4Scan(Mapping):
         time = (int(line.split()[-1]) if line.split()[-1].isdigit()
                 else "Not a time")
         self.times.setdefault(eflag, {}).setdefault(batch_number, time)
-        if self.times[eflag][batch_number] != time:
+        if self.times[eflag][batch_number] != time and 'time' in end_flag:
             if self.partial:
                 LOGGER.warning("Partial edition: %s set to last found", eflag)
                 self.times[eflag][batch_number] = time
