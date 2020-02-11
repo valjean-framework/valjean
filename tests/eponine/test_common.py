@@ -888,20 +888,24 @@ def test_parse_keffs_roundtrip(corrmat, keffmat, sigmat, combination):
     keff_t4_out = keff_t4_genoutput(keffmat, sigmat, corrmat, combination)
     keffres = pygram.keffblock.parseString(keff_t4_out)
     assert keffres
-    assert list(keffres.keys()) == ['keff']
-    assert (sorted(list(keffres['keff'].keys()))
-            == ['keff_combination', 'keff_per_estimator', 'used_batches'])
-    assert (sorted(list(keffres['keff']['keff_per_estimator']))
-            == ['correlation_matrix', 'estimators', 'keff_matrix',
-                'sigma_matrix'])
-    keff_per_estim = keffres['keff']['keff_per_estimator']
-    assert np.allclose(keff_per_estim['correlation_matrix'], corrmat)
-    assert np.allclose(keff_per_estim['keff_matrix'], keffmat)
-    assert np.allclose(keff_per_estim['sigma_matrix'], sigmat)
-    assert np.isclose(
-        keffres['keff']['keff_combination']['keff'], combination[0])
-    assert np.isclose(
-        keffres['keff']['keff_combination']['sigma'], combination[1])
+    assert len(keffres) == 7
+    assert (sorted(list(keffres[0].keys()))
+            == ['keff_estimator', 'keff_res', 'used_batches_res'])
+    assert ([k['keff_estimator'] for k in keffres]
+            == ['KSTEP', 'KCOLL', 'KTRACK', 'KSTEP-KCOLL', 'KSTEP-KTRACK',
+                'KCOLL-KTRACK', 'full combination'])
+    indmat = ((0, 0), (1, 1), (2, 2), (0, 1), (0, 2), (1, 2))
+    for ikeff, keff in enumerate(keffres[:-1]):
+        assert np.isclose(keff['keff_res']['keff'],
+                          keffmat[indmat[ikeff][0], indmat[ikeff][1]])
+        assert np.isclose(keff['keff_res']['sigma%'],
+                          sigmat[indmat[ikeff][0], indmat[ikeff][1]])
+        if 'correlation' in keff['keff_res']:
+            assert np.isclose(keff['keff_res']['correlation'],
+                              corrmat[indmat[ikeff][0], indmat[ikeff][1]])
+    assert keffres[-1]['keff_estimator'] == 'full combination'
+    assert np.isclose(keffres[-1]['keff_res']['keff'], combination[0])
+    assert np.isclose(keffres[-1]['keff_res']['sigma%'], combination[1])
 
 
 @composite

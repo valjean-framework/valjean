@@ -14,45 +14,45 @@ keff_auto     list of 4 elements ->
         keff_estimator KSTEP
         response_type keff_auto
         results         Dict with keys = ['discarded_batches', 'keff_auto', 'used_batches']
+          discarded_batches 2, dtype: int64
           keff_auto           Dict with keys = ['keff', 'sigma', 'sigma%']
             keff 9.122718e-01, dtype: float64
             sigma 6.131945e-03, dtype: float64
             sigma% 6.721621e-01, dtype: float64
-          discarded_batches 2, dtype: int64
           used_batches 8, dtype: int64
     elt 1:       Dict with keys = ['keff_estimator', 'response_type', 'results']
         keff_estimator KCOLL
         response_type keff_auto
         results         Dict with keys = ['discarded_batches', 'keff_auto', 'used_batches']
+          discarded_batches 2, dtype: int64
           keff_auto           Dict with keys = ['keff', 'sigma', 'sigma%']
             keff 9.121435e-01, dtype: float64
             sigma 6.034187e-03, dtype: float64
             sigma% 6.615392e-01, dtype: float64
-          discarded_batches 2, dtype: int64
           used_batches 8, dtype: int64
     elt 2:       Dict with keys = ['keff_estimator', 'response_type', 'results']
         keff_estimator KTRACK
         response_type keff_auto
         results         Dict with keys = ['discarded_batches', 'keff_auto', 'used_batches']
+          discarded_batches 2, dtype: int64
           keff_auto           Dict with keys = ['keff', 'sigma', 'sigma%']
             keff 9.082232e-01, dtype: float64
             sigma 7.976384e-03, dtype: float64
             sigma% 8.782405e-01, dtype: float64
-          discarded_batches 2, dtype: int64
           used_batches 8, dtype: int64
     elt 3:       Dict with keys = ['keff_estimator', 'response_type', 'results']
         keff_estimator MACRO KCOLL
         response_type keff_auto
         results         Dict with keys = ['discarded_batches', 'keff_auto', 'used_batches']
+          discarded_batches 2, dtype: int64
           keff_auto           Dict with keys = ['keff', 'sigma', 'sigma%']
             keff 9.130250e-01, dtype: float64
             sigma 5.407199e-03, dtype: float64
             sigma% 5.922290e-01, dtype: float64
-          discarded_batches 2, dtype: int64
           used_batches 8, dtype: int64
 
 list_responses 
-Number of responses: 2
+Number of responses: 8
 
       RESPONSE 0      'response metadata'
       Dict with keys = ['composition', 'concentration', 'energy_split_name', 'particle', 'reaction', 'reaction_on_nucleus', 'response_function', 'response_index', 'response_type', 'score_index', 'scoring_mode', 'scoring_zone_type', 'temperature']
@@ -142,27 +142,96 @@ Number of responses: 2
           used_batches 9, dtype: int64
 
       RESPONSE 1      'response metadata'
-      Dict with keys = ['response_function', 'response_index', 'response_type']
+      Dict with keys = ['keff_estimator', 'response_function', 'response_index', 'response_type']
+        keff_estimator KSTEP
         response_function KEFFS
         response_index 1
         response_type keff
       results (<class 'dict'>) -> keff
-        Dict with keys = ['keff_combination', 'keff_per_estimator', 'used_batches']
-          keff_combination (9.169699e-01, 7.721112e-01), dtype: [('keff', '<f8'), ('sigma', '<f8')]
-          keff_per_estimator           Dict with keys = ['correlation_matrix', 'estimators', 'keff_matrix', 'sigma_matrix']
-            correlation_matrix <class 'numpy.ndarray'>, shape: (3, 3), dtype: float64, squeezed:
-[[1.000000e+00 9.935526e-01 7.818913e-01]
- [9.935526e-01 1.000000e+00 8.287193e-01]
- [7.818913e-01 8.287193e-01 1.000000e+00]]
-            estimators ('KSTEP', 'KCOLL', 'KTRACK')
-            keff_matrix <class 'numpy.ndarray'>, shape: (3, 3), dtype: float64, squeezed:
-[[9.169150e-01 9.168596e-01 9.170936e-01]
- [9.168596e-01 9.170253e-01 9.173621e-01]
- [9.170936e-01 9.173621e-01 9.158044e-01]]
-            sigma_matrix <class 'numpy.ndarray'>, shape: (3, 3), dtype: float64, squeezed:
-[[7.773594e-01 7.761104e-01 7.687564e-01]
- [7.761104e-01 7.875050e-01 7.666668e-01]
- [7.687564e-01 7.666668e-01 1.129290e+00]]
+        Dict with keys = ['keff', 'used_batches']
+          keff           Dict with keys = ['keff', 'sigma%']
+            keff 9.169150e-01, dtype: float64
+            sigma% 7.773594e-01, dtype: float64
+          used_batches 9, dtype: int64
+
+      RESPONSE 2      'response metadata'
+      Dict with keys = ['keff_estimator', 'response_function', 'response_index', 'response_type']
+        keff_estimator KCOLL
+        response_function KEFFS
+        response_index 1
+        response_type keff
+      results (<class 'dict'>) -> keff
+        Dict with keys = ['keff', 'used_batches']
+          keff           Dict with keys = ['keff', 'sigma%']
+            keff 9.170253e-01, dtype: float64
+            sigma% 7.875050e-01, dtype: float64
+          used_batches 9, dtype: int64
+
+      RESPONSE 3      'response metadata'
+      Dict with keys = ['keff_estimator', 'response_function', 'response_index', 'response_type']
+        keff_estimator KTRACK
+        response_function KEFFS
+        response_index 1
+        response_type keff
+      results (<class 'dict'>) -> keff
+        Dict with keys = ['keff', 'used_batches']
+          keff           Dict with keys = ['keff', 'sigma%']
+            keff 9.158044e-01, dtype: float64
+            sigma% 1.129290e+00, dtype: float64
+          used_batches 9, dtype: int64
+
+      RESPONSE 4      'response metadata'
+      Dict with keys = ['keff_estimator', 'response_function', 'response_index', 'response_type']
+        keff_estimator KSTEP-KCOLL
+        response_function KEFFS
+        response_index 1
+        response_type keff
+      results (<class 'dict'>) -> keff
+        Dict with keys = ['keff', 'used_batches']
+          keff           Dict with keys = ['correlation', 'keff', 'sigma%']
+            correlation 9.935526e-01, dtype: float64
+            keff 9.168596e-01, dtype: float64
+            sigma% 7.761104e-01, dtype: float64
+          used_batches 9, dtype: int64
+
+      RESPONSE 5      'response metadata'
+      Dict with keys = ['keff_estimator', 'response_function', 'response_index', 'response_type']
+        keff_estimator KSTEP-KTRACK
+        response_function KEFFS
+        response_index 1
+        response_type keff
+      results (<class 'dict'>) -> keff
+        Dict with keys = ['keff', 'used_batches']
+          keff           Dict with keys = ['correlation', 'keff', 'sigma%']
+            correlation 7.818913e-01, dtype: float64
+            keff 9.170936e-01, dtype: float64
+            sigma% 7.687564e-01, dtype: float64
+          used_batches 9, dtype: int64
+
+      RESPONSE 6      'response metadata'
+      Dict with keys = ['keff_estimator', 'response_function', 'response_index', 'response_type']
+        keff_estimator KCOLL-KTRACK
+        response_function KEFFS
+        response_index 1
+        response_type keff
+      results (<class 'dict'>) -> keff
+        Dict with keys = ['keff', 'used_batches']
+          keff           Dict with keys = ['correlation', 'keff', 'sigma%']
+            correlation 8.287193e-01, dtype: float64
+            keff 9.173621e-01, dtype: float64
+            sigma% 7.666668e-01, dtype: float64
+          used_batches 9, dtype: int64
+
+      RESPONSE 7      'response metadata'
+      Dict with keys = ['keff_estimator', 'response_function', 'response_index', 'response_type']
+        keff_estimator full combination
+        response_function KEFFS
+        response_index 1
+        response_type keff
+      results (<class 'dict'>) -> keff
+        Dict with keys = ['keff', 'used_batches']
+          keff           Dict with keys = ['keff', 'sigma%']
+            keff 9.169699e-01, dtype: float64
+            sigma% 7.721112e-01, dtype: float64
           used_batches 9, dtype: int64
 --------------------------------------------------------------------------------
-

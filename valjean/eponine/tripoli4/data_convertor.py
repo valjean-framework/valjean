@@ -138,7 +138,7 @@ def generic_score(result, res_type='generic'):
                        name=res_type)
 
 
-def keff_estimator(result, res_type, *, estimator):
+def keff_matrix(result, res_type, *, estimator):
     '''Conversion of keff in :class:`~.base_dataset.BaseDataset` for a given
     estimator.
 
@@ -168,7 +168,7 @@ def keff_combination(result, res_type):
                        name='keff_combination')
 
 
-def keff_auto(result, res_type, *, estimator):
+def keff_auto(result, res_type, *, estimator=''):
     '''Conversion of "automatic" keff estimation in
     :class:`~.base_dataset.BaseDataset`.
 
@@ -179,7 +179,24 @@ def keff_auto(result, res_type, *, estimator):
     '''
     akeff = result[res_type]
     return BaseDataset(akeff['keff'].copy(), akeff['sigma'].copy(),
-                       name='keff_auto_'+estimator)
+                       name=res_type+'_'+estimator)
+
+
+def keff(result, res_type, *, estimator='', correlation=False):
+    '''Conversion of "automatic" keff estimation in
+    :class:`~.base_dataset.BaseDataset`.
+
+    :dict result: results dictionary containing ``res_type`` key
+    :param str res_type: should be ``'keff_auto'``
+    :param str estimator: estimator name (to construct the dataset name)
+    :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
+    '''
+    akeff = result[res_type]
+    if correlation:
+        return value_wo_error(akeff, 'correlation')
+    return BaseDataset(akeff['keff'].copy(),
+                       akeff['sigma%'] * akeff['keff'] * 0.01,
+                       name=res_type+'_'+estimator)
 
 
 def complex_values_wo_error(result, res_type):
@@ -234,6 +251,13 @@ def not_converged_result():
     LOGGER.warning('Result not converged, no dataset can be built')
 
 
+def not_available_result():
+    '''Deals with not available results (foreseen).
+    return None instead of a dataset.
+    '''
+    LOGGER.warning('Result not available, no dataset can be built')
+
+
 CONVERT_IN_DATASET = {
     'spectrum': array_result,
     'uncert_spectrum': array_result,
@@ -244,9 +268,10 @@ CONVERT_IN_DATASET = {
     'integrated': integrated_result,
     'best_result': integrated_result,
     'generic': generic_score,
-    'keff_per_estimator': keff_estimator,
+    'keff_per_estimator': keff_matrix,
     'keff_combination': keff_combination,
     'keff_auto': keff_auto,
+    'keff': keff,
     'shannon_entropy': value_wo_error,
     'boltzmann_entropy': value_wo_error,
     'used_batches': value_wo_error,

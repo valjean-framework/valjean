@@ -251,7 +251,7 @@ def test_tt_simple_packet20_para(datadir):
     assert len(t4p.scan_res) == 1
     t4_res = t4p.parse_from_index(-1)
     assert t4_res.res['batch_data']['batch_number'] == 10
-    assert len(t4_res.res['list_responses']) == 7
+    assert len(t4_res.res['list_responses']) == 13
     assert t4_res.res['list_responses'][-1]['response_index'] == 3
     assert t4_res.res['list_responses'][-1]['response_function'] == 'KEFFS'
     assert ['score_index' in x
@@ -296,8 +296,6 @@ def test_debug_entropy(caplog, datadir):
         assert len(lines) == 62
         assert "RESULTS ARE GIVEN FOR SOURCE INTENSITY" in lines[0]
         assert "number of batches used" in lines[-1]
-    # with open('/home/el220326/valjean/entr_deg_out.log', 'w') as ofile:
-    #     ofile.write(caplog.text)
 
 
 def check_last_entropy_result(entropy_rb):
@@ -324,18 +322,29 @@ def check_last_entropy_result(entropy_rb):
     bd_int = dcv.convert_data(resp['results'], data_type='integrated')
     assert np.array_equal(bd_spectrum.bins['e'], bd_int.bins['e'])
     # response_function = keff
-    resp = entropy_rb.select_by(response_type='keff',
-                                squeeze=True)
-    bd_keff = dcv.convert_data(resp['results'],
-                               data_type='keff_per_estimator',
-                               estimator='KSTEP')
-    assert bd_keff.name == 'keff_KSTEP'
-    assert bd_keff.shape == ()
-    bd_keff = dcv.convert_data(resp['results'],
-                               data_type='keff_combination')
-    assert bd_keff.name == 'keff_combination'
-    assert not bd_keff.bins
+    resps = entropy_rb.select_by(response_type='keff')
+    assert len(resps) == 7
+    for resp in resps:
+        bd_keff = dcv.convert_data(resp['results'], data_type='keff',
+                                   estimator=resp['keff_estimator'])
+        assert bd_keff.name == 'keff_' + resp['keff_estimator']
+        assert bd_keff.shape == ()
+        assert not bd_keff.bins
+        if '-' in resp['keff_estimator']:
+            bd_corr = dcv.convert_data(resp['results'], data_type='keff',
+                                       estimator=resp['keff_estimator'],
+                                       correlation=True)
+            assert bd_corr
+            assert np.isnan(bd_corr.error)
+        else:
+            with pytest.raises(KeyError):
+                bd_corr = dcv.convert_data(resp['results'], data_type='keff',
+                                           estimator=resp['keff_estimator'],
+                                           correlation=True)
+    assert 'KSTEP-KCOLL' in entropy_rb.available_values('keff_estimator')
+    assert 'full combination' in entropy_rb.available_values('keff_estimator')
     resps = entropy_rb.select_by(response_type='keff_auto')
+    assert len(resps) == 4
     for resp in resps:
         bd_keff = dcv.convert_data(resp['results'], data_type='keff_auto',
                                    estimator=resp['keff_estimator'])
@@ -373,12 +382,12 @@ def test_entropy(datadir):
     assert t4p.scan_res.times['initialization_time'] == 6
     assert len(t4p.scan_res) == 10
     lastres = t4p.parse_from_number(10)
-    assert len(lastres.res['list_responses']) == 2
+    assert len(lastres.res['list_responses']) == 8
     lastresps = lastres.res['list_responses']
     for ires in lastresps:
         assert ires['response_function'] in ['REACTION', 'KEFFS']
     assert lastresps[1]['response_type'] == 'keff'
-    keffs_checks(lastresps[1]['results'])
+    # keffs_checks(lastresps[1]['results'])
     t4rb = lastres.to_response_book()
     assert t4rb.globals['simulation_time'] == 24
     check_last_entropy_result(t4rb)
@@ -436,7 +445,7 @@ def test_ifp(datadir):
     assert t4_res.res['batch_data']['batch_number'] == 200
     assert max([v['response_index']
                 for v in t4_res.res['list_responses']]) + 1 == 22
-    assert len(t4_res.res['list_responses']) == 192
+    assert len(t4_res.res['list_responses']) == 198
     last_resp = t4_res.res['list_responses'][-1]
     assert (last_resp['response_function']
             == "IFP ADJOINT WEIGHTED MIGRATION AREA")
@@ -567,7 +576,7 @@ def test_kij(datadir):
     assert t4p.scan_res.times['initialization_time'] == 1
     t4_res = t4p.parse_from_number(100)
     assert t4_res.res['batch_data']['batch_number'] == 100
-    assert len(t4_res.res['list_responses']) == 16
+    assert len(t4_res.res['list_responses']) == 22
     resp_list = t4_res.res['list_responses']
     assert resp_list[13]['response_function'] == "KIJ_MATRIX"
     assert resp_list[14]['response_function'] == "KIJ_SOURCES"
@@ -614,7 +623,7 @@ def test_tt_simple_packet20_mono(datadir):
     assert t4p.scan_res.times['initialization_time'] == 3
     assert len(t4p.scan_res) == 2
     t4_res = t4p.parse_from_index()
-    assert len(t4_res.res['list_responses']) == 7
+    assert len(t4_res.res['list_responses']) == 13
     assert t4_res.res['list_responses'][-1]['response_index'] == 3
     assert t4_res.res['list_responses'][-1]['response_function'] == 'KEFFS'
     assert ['score_index' in x

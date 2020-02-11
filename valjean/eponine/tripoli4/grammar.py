@@ -993,7 +993,7 @@ _warnkeff = (Suppress(_warning_kw)
 keffblock = Group(Suppress(_integratedres_kw)
                   + _numusedbatch
                   + (_autokeffres | _warnkeff)
-                  ).setParseAction(trans.convert_keff)('keff')
+                  ).setParseAction(trans.convert_keff)('keff_res')
 
 
 # Keff as historical response

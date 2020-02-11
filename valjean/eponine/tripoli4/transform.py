@@ -291,7 +291,7 @@ def convert_keff(toks):
        <valjean.eponine.tripoli4.common.convert_keff>` and more generally
        :mod:`~valjean.eponine.tripoli4.common`
     '''
-    keffmat = common.convert_keff_with_matrix(toks['keff'].asDict())
+    keffmat = common.convert_keff(toks['keff_res'].asDict())
     return keffmat
 
 
@@ -489,6 +489,9 @@ def finalize_response_dict(s, loc, toks):
         "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
     res = toks[0]['results']
     key, val = next(res.items())
+    # in keff case, results are stored in a list
+    if len(res) > 1:
+        val = res
     assert isinstance(val, dict) or val.asList()
     mydict = toks[0].asDict()
     mydict['results'] = val if isinstance(val, dict) else val.asList()

@@ -1439,33 +1439,32 @@ def convert_keff(res):
 
     See :ref:`eponine-keff-stdarrays` for more details.
     '''
+    LOGGER.debug("In convert_keff")
     LOGGER.debug("Clefs:%s", list(res.keys()))
     usedbatchs = res['used_batches']
-    if 'not_converged' in res:
-        return {'used_batches': res['used_batches'],
-                'not_converged': res['not_converged']}
-    keffnames = list(zip(*res['res_per_estimator']))[0]
-    keffres = {}
-    dtkeff = np.dtype([('keff', FTYPE), ('sigma', FTYPE)])
+    if 'not_converged' in res or 'warning' in res:
+        return res
+    mkeff = []
     for keff in res['res_per_estimator']:
-        keffres[keff[0]] = np.array(tuple(keff[1:]), dtype=dtkeff)
-    fullcombres = (np.array(tuple(res['full_comb_estimation']), dtype=dtkeff)
-                   if len(res['full_comb_estimation']) == 2
-                   else res['full_comb_estimation'])
-    corrres = {}
-    dtcorr = np.dtype([('correlations', FTYPE),
-                       ('combined values', FTYPE),
-                       ('combined sigma%', FTYPE)])
-    for elt in res['correlation_mat']:
-        corrval = (elt[1:]
-                   if all(isinstance(ielt, FTYPE) for ielt in elt[1:])
-                   else [np.nan if isinstance(x, str) else x for x in elt[1:]])
-        corrres[tuple(elt[0])] = np.array(tuple(corrval), dtype=dtcorr)
-    return {'used_batches': usedbatchs,
-            'estimators': keffnames,
-            'res_per_estimator': keffres,
-            'full_comb_estimation': fullcombres,
-            'correlation_matrix': corrres}
+        mkeff.append({'keff_estimator': keff[0],
+                      'keff_res': {'keff': keff[1], 'sigma%': keff[2]},
+                      'used_batches_res': usedbatchs})
+    for keff in res['correlation_mat']:
+        mkeff.append({
+            'keff_estimator': '-'.join(keff[0]),
+            'keff_res': {
+                'keff': keff[2] if not isinstance(keff[2], str) else np.nan,
+                'sigma%': keff[3] if not isinstance(keff[3], str) else np.nan,
+                'correlation': (keff[1] if not isinstance(keff[1], str)
+                                else np.nan)},
+            'used_batches_res': usedbatchs})
+    fcomb = (dict(zip(['keff', 'sigma%'], res['full_comb_estimation']))
+             if len(res['full_comb_estimation']) == 2
+             else 'not_converged')
+    mkeff.append({
+        'keff_estimator': 'full combination', 'keff_res': fcomb,
+        'used_batches_res': usedbatchs})
+    return mkeff
 
 
 class GreenBandsDictBuilder(DictBuilder):
