@@ -36,22 +36,23 @@ def repr_bins(dsref):
     >>> import numpy as np
     >>> from collections import OrderedDict
 
-    >>> vals = np.arange(6).reshape(1, 2, 1, 3)
-    >>> errs = np.array([0.1]*6).reshape(1, 2, 1, 3)
+    >>> vals = np.arange(6).reshape(1, 2, 1, 3, 1)
+    >>> errs = np.array([0.1]*6).reshape(1, 2, 1, 3, 1)
     >>> bins = OrderedDict([('bacon', np.array([0, 1])),
     ...                     ('egg', np.array([0, 2, 4])),
     ...                     ('sausage', np.array([10, 20])),
-    ...                     ('spam', np.array([-5, 0, 5]))])
-    >>> ds = BaseDataset(vals, errs, bins=bins, name="ds_to_squeeze")
+    ...                     ('spam', np.array([-5, 0, 5])),
+    ...                     ('tomato', np.array([-2, 2]))])
+    >>> ds = BaseDataset(vals, errs, bins=bins)
     >>> names, rbins = repr_bins(ds)
     >>> print(list(ds.bins.keys()))
-    ['bacon', 'egg', 'sausage', 'spam']
+    ['bacon', 'egg', 'sausage', 'spam', 'tomato']
     >>> print(names)
     ['egg', 'spam']
     >>> print(ds.shape)
-    (1, 2, 1, 3)
+    (1, 2, 1, 3, 1)
     >>> print([rb.shape for rb in rbins])
-    [(1, 2, 1, 3), (1, 2, 1, 3)]
+    [(1, 2, 1, 3, 1), (1, 2, 1, 3, 1)]
 
     ``'bacon'`` and ``'sausage'`` are trivial dimensions, so won't be
     represented in the table, but we expect 6 values corresponding to 2 bins in
@@ -73,8 +74,8 @@ def repr_bins(dsref):
     :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
     :returns: list of the non-trivial dimensions and a tuple of the bins
 
-    The tuple should have the same length as the list of dimensions and the
-    bins insdide should have the same shape as ``dsref.value``.
+    The tuple must have the same length as the list of dimensions and the bins
+    inside must have the same shape as ``dsref.value``.
     '''
     bins, dim_names = [], []
     for idim, dim in enumerate(dsref.bins.keys()):
@@ -82,19 +83,18 @@ def repr_bins(dsref):
         if dsref.value.shape[idim] < 2:
             continue
         dim_names.append(dim)
-        dims_af = int(np.prod(dsref.value.shape[idim+1:]))
-        dims_bf = int(np.prod(dsref.value.shape[:idim]))
+        shape = [dsref.value.shape[idim]] + [1] * (dsref.ndim - 1 - idim)
+        if dsref.value.shape[:idim] == tuple([1]*idim):
+            shape = [1]*idim + shape
         if dsref.bins[dim].size == dsref.value.shape[idim]+1:
-            dbins = [["{0:.4g} - {1:.4g}".format(a, b)] * dims_af
+            dbins = ["{0:.4g} - {1:.4g}".format(a, b)
                      for a, b in zip(dsref.bins[dim][:-1],
                                      dsref.bins[dim][1:])]
         else:
-            dbins = [["{0:.4g}".format(a)] * dims_af
-                     for a in dsref.bins[dim]]
-        dbins = [dbins] * dims_bf
-        bins.append(np.array(dbins).squeeze().reshape(dsref.shape))
-    assert all(abin.shape == dsref.shape for abin in bins)
-    return dim_names, tuple(bins)
+            dbins = ["{0:.4g}".format(a) for a in dsref.bins[dim]]
+        bins.append(np.array(dbins).reshape(shape))
+    bbins = np.broadcast_arrays(*bins)
+    return dim_names, tuple(bbins)
 
 
 def repr_testresultequal(result, verbosity=None):

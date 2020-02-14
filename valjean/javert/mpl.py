@@ -461,24 +461,24 @@ class MplPlot2D:
         '''Draw method.'''
         return self.twod_plots()
 
-    def bin_centers(self, curve):
-        '''Calculate bin centers.'''
+    def broadcasted_bin_centers(self, curve):
+        '''Calcuate bin centers if edges are given and broadcast all bins:
+        build the (x, y) grid for all bins.
+        '''
         bins = []
         for idim, tbin in enumerate(self.data.bins.values()):
-            dims_af = int(np.prod(curve.values.shape[idim+1:]))
-            dims_bf = int(np.prod(curve.values.shape[:idim]))
-            if tbin.size == curve.values.shape[idim]+1:
-                cbins = [[(a + b)/2]*dims_af
-                         for a, b in zip(tbin[:-1], tbin[1:])]
-            else:
-                cbins = [[a] * dims_af for a in tbin]
-            cbins = [cbins] * dims_bf
-            bins.append(np.array(cbins).squeeze())
-        return bins
+            shape = ([curve.values.shape[idim]]
+                     + [1] * (curve.values.ndim - 1 - idim))
+            cbins = ((tbin[1:] + tbin[:-1]) / 2
+                     if tbin.size == curve.values.shape[idim]+1
+                     else tbin)
+            bins.append(np.array(cbins).reshape(shape))
+        bbins = np.broadcast_arrays(*bins)
+        return bbins
 
     def itwod_plot(self, curve, iplot, ):
         '''Draw the 2D distribution on the ith subplot.'''
-        cbins = self.bin_centers(curve)
+        cbins = self.broadcasted_bin_centers(curve)
         h2d = self.splt[iplot].hist2d(cbins[0].flatten(), cbins[1].flatten(),
                                       bins=list(self.data.bins.values()),
                                       weights=curve.values.flatten())
