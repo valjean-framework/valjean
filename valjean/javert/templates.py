@@ -9,6 +9,7 @@ are handled by suitable formatting classes, such as :class:`~.Rst`.
    https://docs.scipy.org/doc/numpy/user/basics.indexing.html
 '''
 
+from hashlib import sha256
 import numpy as np
 from .. import LOGGER
 
@@ -285,7 +286,6 @@ and the array at index 1 has 2 dimension(s)
         depends only on the content of `self`. Two :class:`TableTemplate`
         objects containing equal data have the same fingerprint. The converse
         is not true, but very likely.'''
-        from hashlib import sha256
         hasher = sha256()
         for col, head, unit, high in zip(self.columns, self.headers,
                                          self.units, self.highlights):
@@ -653,7 +653,6 @@ PlotTemplate.
         depends only on the content of `self`. Two :class:`PlotTemplate`
         objects containing equal data have the same fingerprint. The converse
         is not true, but very likely.'''
-        from hashlib import sha256
         hasher = sha256()
         hasher.update(self.bins.data.cast('b'))
         hasher.update(self.xname.encode('utf-8'))
@@ -783,7 +782,6 @@ highlight=[(2, 3), (-31, 2), (30, 3), (-3, 2)])
         depends only on the content of `self`. Two :class:`TextTemplate`
         objects containing equal data have the same fingerprint. The converse
         is not true, but very likely.'''
-        from hashlib import sha256
         hasher = sha256()
         hasher.update(self.text.encode('utf-8'))
         hasher.update(self.highlight.data.cast('b'))
