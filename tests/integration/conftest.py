@@ -42,6 +42,6 @@ def job_config(config_tmp, tmpdir):
 
 
 @pytest.fixture(scope='function')
-def env_path(tmpdir):
+def env_filename():
     '''Provide the path to a temporary file for serializing the environment.'''
-    return tmpdir.join('valjean.tasks')
+    return 'valjean.env'

@@ -155,12 +155,12 @@ class Env(MutableMapping):
                                repr(self.dictionary))
 
     @classmethod
-    def from_file(cls, path, fmt='pickle'):
+    def from_file(cls, path, *, fmt='pickle'):
         '''Deserialize an :class:`Env` object from a file.
 
         :param str path: Path to the file.
         :param str fmt: Serialization format (only ``'pickle'`` is supported
-                        for the moment).
+            for the moment).
         :returns: The deserialized object.
         '''
         def deserializer(file_):
@@ -171,28 +171,35 @@ class Env(MutableMapping):
                 deser = deserializer(input_file)
         except IOError as error:
             if error.errno == 2:
-                LOGGER.info("environment file '%s' is missing, starting "
-                            "with an empty environment", path)
+                LOGGER.debug('environment file %r is missing, returning an '
+                             'empty environment', path)
             else:
-                LOGGER.warning("cannot load %s environment from file '%s'. "
-                               "Error message: %s", fmt, path, error.strerror)
+                LOGGER.warning('cannot load %s environment from file %r. '
+                               'Error message: %s', fmt, path, error.strerror)
             return None
         except ValueError as error:
-            LOGGER.warning("cannot load %s environment from file '%s'. "
-                           "Error message: %s", fmt, path, error)
+            LOGGER.warning('cannot load %s environment from file %r. '
+                           'Error message: %s', fmt, path, error)
             return None
         LOGGER.debug('returning environment: %s', deser)
         return deser
 
-    def to_file(self, path, fmt='pickle'):
+    def to_file(self, path, *, task_name=None, fmt='pickle'):
         '''Serialize an :class:`Env` object to a file.
 
-        :param str path: Path to the file.
-        :param str fmt: Serialization format (only ``'pickle'`` is supported
-                        for the moment).
+        :param str path: path to the file.
+        :param task_name: name of the task to serialize, or `None` to serialize
+            the whole environment.
+        :type task_name: str or None
+        :param str fmt: serialization format (only ``'pickle'`` is supported
+            for the moment).
         '''
         def serializer(file_):
-            pickle.dump(self, file_)
+            if task_name is None:
+                pickle.dump(self, file_)
+                return
+            partial_env = Env({task_name: self[task_name]})
+            pickle.dump(partial_env, file_)
         mode = 'wb'
         try:
             with open(path, mode) as output_file:

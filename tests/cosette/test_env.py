@@ -37,8 +37,8 @@ def event_frac(name, frac):
 def test_persistence_roundtrip(env, persistence_format):
     '''Test the roundtrip to all the persistence formats.'''
     with tempfile.NamedTemporaryFile() as persist:
-        env.to_file(persist.name, persistence_format)
-        re_env = Env.from_file(persist.name, persistence_format)
+        env.to_file(persist.name, fmt=persistence_format)
+        re_env = Env.from_file(persist.name, fmt=persistence_format)
     assert env == re_env
 
 

@@ -1,5 +1,5 @@
-:mod:`~.env` — Environment for task execution
-=============================================
+:mod:`~.cosette.env` — Environment for task execution
+=====================================================
 
 .. automodule:: valjean.cosette.env
    :synopsis: Task scheduling and dependency handling

@@ -6,9 +6,7 @@ import pytest
 
 
 def pytest_addoption(parser):
-    '''Add the ``--valjean-verbose`` and ``--runslow`` options to `pytest`.'''
-    parser.addoption("--valjean-verbose", action="store_true",
-                     help="Maximize valjean verbosity")
+    '''Add command-line options to `pytest`.'''
     parser.addoption("--runslow", action="store_true",
                      default=False, help="run slow tests")
     parser.addoption("--parsing-config-file", action="append", default=[],
@@ -24,10 +22,14 @@ def pytest_collection_modifyitems(config, items):
     '''Handle CLI options to pytest.'''
     import logging
     logger = logging.getLogger('valjean')
-    if config.getoption('valjean_verbose'):
+    if config.getoption('verbose') > 1:
         logger.setLevel(logging.DEBUG)
         for handler in logger.handlers:
             handler.setLevel(logging.DEBUG)
+    elif config.getoption('verbose') > 0:
+        logger.setLevel(logging.INFO)
+        for handler in logger.handlers:
+            handler.setLevel(logging.INFO)
     else:
         logger.setLevel(logging.WARNING)
         for handler in logger.handlers:

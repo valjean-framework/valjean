@@ -53,10 +53,9 @@ def collect_tasks(job_file, job_args, priority, targets):
     (along with their dependencies).  This allows partial execution of the
     dependency graph.
 
-    Some sub-commands (e.g. :class:`~.GraphCommand` and
-    :class:`~.TasksCommand`) do not have any ``PRIORITY`` attribute.
-    :func:`collect_tasks` does not apply any filtering when these sub-commands
-    are invoked.
+    Some sub-commands (e.g. :class:`~.GraphCommand` and :class:`~.EnvCommand`)
+    do not have any ``PRIORITY`` attribute.  :func:`collect_tasks` does not
+    apply any filtering when these sub-commands are invoked.
 
     The real filtering work is done in :func:`filter_tasks`.
     :func:`collect_tasks` returns the tasks returned by :func:`filter_tasks`
@@ -210,15 +209,17 @@ def make_parser():
                         'function; may be specified multiple times')
     parser.add_argument('-w', '--workers', action='store', default=4, type=int,
                         help='number of workers to use in parallel')
-    parser.add_argument('--env-path', action='store', default='valjean.tasks',
-                        help='path to the file containing the persistent '
-                        'environment (default: valjean.tasks)')
+    parser.add_argument('--env-filename', action='store',
+                        default='valjean.env',
+                        help='name of the files that contain the persistent '
+                        'environment (default: valjean.env)')
     parser.add_argument('--env-skip-read', action='store_true',
                         help='do not read the environment from the path '
-                        'specified by --env_path at the beginning of the run')
+                        'specified by --env-filename at the beginning of the '
+                        'run')
     parser.add_argument('--env-skip-write', action='store_true',
                         help='do not write the environment to the path '
-                        'specified by --env_path at the end of the run')
+                        'specified by --env-filename at the end of the run')
     parser.add_argument('--env-format', action='store',
                         choices=('pickle',), default='pickle',
                         help='environment persistency format')

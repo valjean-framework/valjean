@@ -324,13 +324,13 @@ class RunTask(PythonTask):
 
             env[task.name]['clis'] = clis
             env[task.name]['return_codes'] = return_codes
-            env[task.name]['wallclock_time'] = wallclock_time
+            env[task.name]['elapsed_time'] = wallclock_time
             env[task.name]['stdout'] = stdout
             env[task.name]['stderr'] = stderr
 
         Here ``clis`` is the list of command lines that were executed,
         ``return_codes`` is the list of return codes of the executed commands,
-        and ``wallclock_time`` is the time the whole list took. The keys
+        and ``elapsed_time`` is the time the whole list took. The keys
         ``stdout`` and ``stderr`` hold the paths to the files containing
         respectively the captured standard output and standard error streams.
 
@@ -358,7 +358,7 @@ class RunTask(PythonTask):
             env_up = {self.name: {'clis': clis,
                                   'output_dir': str(output_dir),
                                   'return_codes': results,
-                                  'wallclock_time': elapsed,
+                                  'elapsed_time': elapsed,
                                   'stdout': str(stdout_path),
                                   'stderr': str(stderr_path)}}
 
