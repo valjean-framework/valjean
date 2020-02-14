@@ -17,7 +17,6 @@ from valjean.cosette.depgraph import DepGraph
 from valjean.cosette.task import Task, TaskStatus, DelayTask
 from valjean.cosette.env import Env
 from valjean.cosette.rlist import RList
-from valjean.config import Config
 from valjean import LOGGER
 
 
@@ -153,18 +152,6 @@ def git_ref(request):
 def git_flags(request):
     '''Return possible values of the `flags` option for git checkout.'''
     return request.param
-
-
-@pytest.fixture(scope='function')
-def config_tmp(tmpdir_factory):
-    '''Create a configuration object with the path options set to temporary
-    directories.'''
-    log_dir = str(tmpdir_factory.mktemp('log'))
-    output_dir = str(tmpdir_factory.mktemp('output'))
-    config = Config(paths=[])
-    config.set('path', 'log-root', log_dir)
-    config.set('path', 'output-root', output_dir)
-    return config
 
 
 @pytest.fixture(scope='function', params=['svn', 'cvs', 'copy'])

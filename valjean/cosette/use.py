@@ -550,7 +550,6 @@ from functools import update_wrapper
 
 from .task import TaskStatus
 from .pythontask import PythonTask
-from .run import RunTask
 from .. import LOGGER
 
 
@@ -594,7 +593,7 @@ class Use:
     _USE_CACHING = True
 
     @classmethod
-    def from_func(cls, *, func, task, key='result', kwarg=None, priority=0,
+    def from_func(cls, *, func, task, key='result', kwarg=None,
                   deps_type='hard'):
         '''Create a :class:`Use` from a function.
 
@@ -608,9 +607,6 @@ class Use:
             fed with the `task` result. If None, the result of `task` will be
             passed as a positional argument.
         :type kwarg: None or str
-        :param int priority: the priority value to be assigned to the produced
-            tasks. See :mod:`~.task` or :func:`~.collect_tasks` for more
-            information about the meaning of priority.
         :param str deps_type: whether the created task should have a hard or a
             soft dependency towards the injected tasks. Possible values are
             ``'hard'`` and ``'soft'``.
@@ -631,10 +627,10 @@ class Use:
             inj_kwargs[kwarg] = (task, key)
         LOGGER.debug('inj_args = %s', inj_args)
         LOGGER.debug('inj_kwargs = %s', inj_kwargs)
-        return cls(inj_args=inj_args, inj_kwargs=inj_kwargs,
-                   wrapped=func, priority=priority, deps_type=deps_type)
+        return cls(inj_args=inj_args, inj_kwargs=inj_kwargs, wrapped=func,
+                   deps_type=deps_type)
 
-    def __init__(self, *, inj_args=None, inj_kwargs=None, wrapped, priority,
+    def __init__(self, *, inj_args=None, inj_kwargs=None, wrapped,
                  deps_type='hard'):
         '''Instantiate a :class:`Use` by providing all  the necessary
         information.
@@ -648,7 +644,6 @@ class Use:
             the given kwarg.
         :type inj_kwargs: dict(str, (Task, str or None))
         :param wrapped: the function to wrap.
-        :param int priority: the priority to assign to the created task.
         :param str deps_type: whether the created task should have a hard or a
             soft dependency towards the injected tasks. Possible values are
             ``'hard'`` and ``'soft'``.
@@ -656,7 +651,6 @@ class Use:
         self.inj_args = () if inj_args is None else inj_args
         self.inj_kwargs = {} if inj_kwargs is None else inj_kwargs
         self.wrapped = wrapped
-        self.priority = priority
         if isinstance(wrapped, self.__class__):
             func_name = wrapped.func_name
         else:
@@ -727,7 +721,6 @@ class Use:
         task = PythonTask(pytask_name, inject_from_env,
                           deps=deps, soft_deps=soft_deps,
                           env_kwarg='env')
-        task.priority = self.priority
         self._CACHE[pytask_name] = task
         return task
 
@@ -738,20 +731,17 @@ class Use:
     def map(self, func):
         '''Create a new :class:`Use` object that applies `func` to the result
         of the task defined by `self`.'''
-        return Use.from_func(func=func, task=self.get_task(),
-                             priority=self.priority)
+        return Use.from_func(func=func, task=self.get_task())
 
 
-def using(*, key='result', task, kwarg=None, priority=0):
+def using(*, key='result', task, kwarg=None):
     '''Make it possible to instantiate :class:`Use` as a decorator.
 
     See :meth:`Use.__init__` for a description of the parameters.
     '''
     def decorator(wrapped):
-        LOGGER.debug('wrapping %s into a Use with priority %d',
-                     wrapped, priority)
-        return Use.from_func(task=task, key=key, kwarg=kwarg, func=wrapped,
-                             priority=priority)
+        LOGGER.debug('wrapping %s into a Use object', wrapped)
+        return Use.from_func(task=task, key=key, kwarg=kwarg, func=wrapped)
     return decorator
 
 
@@ -759,7 +749,7 @@ class UseRun:
     '''Produce :class:`Use` decorators from a :class:`~.RunTaskFactory`.'''
 
     @classmethod
-    def from_factory(cls, factory, *, priority=RunTask.PRIORITY + 1):
+    def from_factory(cls, factory):
         '''Create a :class:`UseRun` from a :class:`~.RunTaskFactory`.
 
         Given a :class:`~.RunTaskFactory`, the :class:`UseRun` class can be
@@ -767,12 +757,10 @@ class UseRun:
         results into the decorated function.
 
         :param RunTaskFactory factory: a :class:`~.RunTaskFactory` object.
-        :param int priority: the priority to assign to the tasks produced by
-            this factory.
         '''
-        return cls(factory, [], priority=priority)
+        return cls(factory, [])
 
-    def __init__(self, factory, posts, *, priority=0):
+    def __init__(self, factory, posts):
         '''Instantiate a :class:`UseRun` object.
 
         Given a :class:`~.RunTaskFactory`, the :class:`UseRun` class can be
@@ -787,12 +775,9 @@ class UseRun:
         :param RunTaskFactory factory: a :class:`~.RunTaskFactory` object.
         :param list posts: a collection of post-processing functions. Each
             function will be converted to a :class:`~.PythonTask` object.
-        :param int priority: the priority to assign to the tasks produced by
-            this factory.
         '''
         self.factory = factory
         self.posts = posts.copy()
-        self.priority = priority
 
     def __call__(self, kwarg=None, **kwargs):
         task = self.factory.make(**kwargs)
@@ -800,16 +785,14 @@ class UseRun:
         LOGGER.debug('mapping %s functions on the output of %s',
                      len(self.posts), task.name)
         for post in self.posts:
-            use = Use.from_func(task=task, key=key, func=post,
-                                priority=self.priority)
+            use = Use.from_func(task=task, key=key, func=post)
             task = use.get_task()
             key = 'result'
-        return using(kwarg=kwarg, task=task, key=key, priority=self.priority)
+        return using(kwarg=kwarg, task=task, key=key)
 
     def copy(self):
         '''Return a copy of this object.'''
-        return UseRun(self.factory.copy(), self.posts.copy(),
-                      priority=self.priority)
+        return UseRun(self.factory.copy(), self.posts.copy())
 
     def map(self, func):
         '''Create a new instance of :class:`UseRun` by extending the list of

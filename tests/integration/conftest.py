@@ -1,9 +1,14 @@
 '''Fixtures for integration testing.'''
 
+import logging
+from pathlib import Path
 import pytest
 
-# pylint: disable=unused-import
-from ..cosette.conftest import subdir, cmake_echo, config_tmp
+from valjean import LOGGER
+from valjean.cambronne.main import main
+from valjean.cosette.env import Env
+from ..cosette.conftest import (subdir,  # pylint: disable=unused-import
+                                cmake_echo)
 
 
 JOB_FILE = '''from valjean.cosette.code import CheckoutTask, BuildTask
@@ -12,11 +17,48 @@ def job():
     checkout = CheckoutTask(name='checkout_cecho', repository='{repo_path}')
     build = BuildTask(name='build_cecho', source=checkout)
     factory = RunTaskFactory.from_task(build, relative_path='{subdir}cecho',
-                                       default_args=['{{text}}'], uid='cecho')
-    pling = factory.make(name='pling', text='pling')
-    plong = factory.make(name='plong', text='plong')
+                                       default_args=['{{text}}'], name='cecho')
+    pling = factory.make(name='pling', text='pling it')
+    plong = factory.make(name='plong', text='plong it')
     return [pling, plong]
 '''
+
+
+def load_all_envs(output_root, filename, fmt):
+    '''Load all environment files found in `output_root`.
+
+    :param str output_root: path to the root directory
+    :param str filename: name of the environment files
+    :param str fmt: the environment format
+    :returns: the merged environment
+    '''
+    env = Env()
+    output_root = Path(output_root)
+    for path in output_root.glob('**/' + filename):
+        persisted_env = Env.from_file(path, fmt=fmt)
+        if persisted_env is not None:
+            env.update(persisted_env)
+    return env
+
+
+def call_valjean(*args):
+    '''Run :command:`valjean` using the specified arguments.'''
+    LOGGER.info('******** Starting valjean with args: %s', args)
+    main(args)
+    LOGGER.info('******** End of valjean')
+
+
+def run_valjean(*args, config, job_config, env_filename, job_file):
+    '''Run :command:`valjean` using the specified arguments.'''
+    v_args = [] if LOGGER.getEffectiveLevel() != logging.DEBUG else ['-v']
+    v_args.extend(('-c', str(job_config), 'run', '--env-filename',
+                   str(env_filename), str(job_file)))
+    v_args.extend(args)
+    call_valjean(*v_args)
+    output_root = config.get('path', 'output-root')
+    env = load_all_envs(output_root=output_root, filename=env_filename,
+                        fmt='pickle')
+    return env
 
 
 @pytest.fixture(scope='function')

@@ -751,8 +751,6 @@ class RstTestReportTask(PythonTask):
     '''Task class that transforms a list of tests into a test report.
     :class:`~.TestResult` objects in the environment.'''
 
-    PRIORITY = 50
-
     @classmethod
     def from_tasks(cls, name, *, make_report, eval_tasks, representation,
                    author, version):

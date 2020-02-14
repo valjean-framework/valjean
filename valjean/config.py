@@ -42,7 +42,6 @@ A few options are set from the beginning:
     log-root = ${work-dir}/log
     output-root = ${work-dir}/output
     report-root = ${work-dir}/report
-    job-file = ${work-dir}/job.py
 
 The :class:`Config` class provides getters and setters:
 
@@ -67,7 +66,6 @@ It also provides some additional convenience methods:
     path.log-root: ${work-dir}/log_dir
     path.output-root: ${work-dir}/output
     path.report-root: ${work-dir}/report
-    path.job-file: ${work-dir}/job.py
 
     # merge two configuration objects; options from the second
     # configuration override those from the first one
@@ -135,7 +133,6 @@ class Config:
         self.set('path', 'log-root', '${work-dir}/log')
         self.set('path', 'output-root', '${work-dir}/output')
         self.set('path', 'report-root', '${work-dir}/report')
-        self.set('path', 'job-file', '${work-dir}/job.py')
 
         if paths is None:
             paths = self.DEFAULT_CONFIG_FILES

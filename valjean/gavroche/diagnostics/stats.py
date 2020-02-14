@@ -42,8 +42,7 @@ def stats_worker(test_fn, name, description, tasks, **kwargs):
     inj_args = [(task, None) for task in tasks]
     wrapped = partial(test_fn, name=name, description=description, **kwargs)
     update_wrapper(wrapped, test_fn)
-    use_create_test = Use(inj_args=inj_args, wrapped=wrapped,
-                          priority=EvalTestTask.PRIORITY - 1, deps_type='soft')
+    use_create_test = Use(inj_args=inj_args, wrapped=wrapped, deps_type='soft')
     return EvalTestTask.from_test_task(use_create_test.get_task())
 
 

@@ -244,8 +244,6 @@ class RunTask(PythonTask):
     '''Task that executes the specified shell commands and waits for their
     completion.'''
 
-    PRIORITY = 30
-
     @classmethod
     def from_cli(cls, name, cli, **kwargs):
         '''Create a :class:`RunTask` from a single command line.

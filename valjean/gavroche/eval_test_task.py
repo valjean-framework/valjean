@@ -26,8 +26,6 @@ class EvalTestTask(PythonTask):
     '''Class that evaluates a list of tests and stores the resulting
     :class:`~.TestResult` objects in the environment.'''
 
-    PRIORITY = 40
-
     @classmethod
     def from_test_task(cls, test_task):
         '''This method instantiates an :class:`EvalTestTask` that will evaluate

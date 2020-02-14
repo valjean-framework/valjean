@@ -86,6 +86,18 @@ def empty_config():
     return Config([])
 
 
+@pytest.fixture(scope='function')
+def config_tmp(tmpdir_factory):
+    '''Create a configuration object with the path options set to temporary
+    directories.'''
+    log_dir = str(tmpdir_factory.mktemp('log'))
+    output_dir = str(tmpdir_factory.mktemp('output'))
+    config = Config(paths=[])
+    config.set('path', 'log-root', log_dir)
+    config.set('path', 'output-root', output_dir)
+    return config
+
+
 def foreach_data(*args, **kwargs):
     '''Decorator that parametrizes a test function over files in the data
     directory for the current tests.

@@ -13,16 +13,21 @@ class EnvCommand(Command):
 
     NAME = 'env'
 
-    HELP = 'inspect the content of one or more serialized environment files'
+    HELP = 'Inspect the content of one or more serialized environment files.'
+
+    DESC = HELP
 
     def register(self, parser):
         '''Register options for this command in the parser.'''
+        parser.add_argument('--env-format', action='store',
+                            choices=('pickle',), default='pickle',
+                            help='environment persistency format')
         parser.add_argument('names', metavar='NAME', nargs='+',
                             help='The name of the environment file to show.')
         parser.set_defaults(func=self.env)
 
-    def env(self,  # pylint: disable=no-self-use
-            args, _collected_tasks, _config):
+    @staticmethod
+    def env(args, _config):
         '''Execute the ``show-env`` command.'''
         # deserialize the environment
         for name in args.names:

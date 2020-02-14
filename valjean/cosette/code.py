@@ -116,8 +116,6 @@ class CheckoutTask(PythonTask):
     checkout is performed when the task is executed.
     '''
 
-    PRIORITY = 10
-
     # pylint: disable=too-many-arguments
     def __init__(self, name, *, repository, checkout_root=None, log_root=None,
                  flags=None, ref=None, vcs='git', deps=None, soft_deps=None):
@@ -221,8 +219,6 @@ class BuildTask(PythonTask):
     '''Task to build an existing source tree. The build is actually performed
     when the task is executed.
     '''
-
-    PRIORITY = 20
 
     # pylint: disable=too-many-arguments
     def __init__(self, name, source, *, build_root=None, log_root=None,

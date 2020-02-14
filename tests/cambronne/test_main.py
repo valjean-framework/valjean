@@ -8,7 +8,7 @@ from ..context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 from valjean.cosette.task import close_dependency_graph
-from valjean.cambronne.main import check_unique_task_names
+from valjean.cambronne.common import check_unique_task_names
 
 
 # pylint: disable=no-value-for-parameter

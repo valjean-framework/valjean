@@ -52,8 +52,6 @@ class TestReportTask(PythonTask):
     # as tests
     __test__ = False
 
-    PRIORITY = 50
-
     def __init__(self, name, *, make_report, eval_tasks):
         '''Instantiate a :class:`TestReportTask` from a list of
         :class:`~.EvalTestTask` objects. The `make_report` argument is expected

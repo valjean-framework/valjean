@@ -24,14 +24,6 @@ cannot run unless `B` has successfully completed. If `B` fails, then it makes
 no sense to run `A`.  On the other hand, if task `A` has a **soft dependency**
 on task `B`, it means that `A` will not start before `B`'s termination, but it
 makes sense to run `A` even if `B` fails.
-
-If you derive a class derived from :class:`Task`, you may want to redefine the
-value of the ``PRIORITY`` class attribute to declare at which point in the
-conventional :program:`valjean` workflow your new task is expected to appear.
-For instance, classes :class:`~.CheckoutTask`, :class:`~.BuildTask` and
-:class:`~.RunTask` respectively have ``PRIORITY`` values of 10, 20 and 30; this
-reflects the fact that checkout tasks are expected to be executed *before*
-build tasks, which in turn are expected to be executed *before* run tasks.
 '''
 
 import enum
@@ -60,15 +52,7 @@ class TaskError(Exception):
 class Task(ABC):
     '''Base class for other task classes.'''
 
-    #: This class attribute is used to establish a partial order between task
-    #: types. Tasks with lower ``PRIORITY`` values are generally expected to
-    #: be executed before tasks with larger values, so that it should make
-    #: sense to limit the execution of the tasks based on a maximum
-    #: ``PRIORITY`` value. Subclasses of :class:`Task` may redefine the value
-    #: of this attribute.
-    PRIORITY = 0
-
-    def __init__(self, name, *, deps=None, soft_deps=None, priority=None):
+    def __init__(self, name, *, deps=None, soft_deps=None):
         '''Initialize the task.
 
         :param str name: The name of the task. Task names **must** be unique!
@@ -80,8 +64,6 @@ class Task(ABC):
                           be either `None` (i.e. no dependencies) or list of
                           :class:`Task` objects.
         :type soft_deps: list(Task) or None
-        :param int priority: the priority for this task. See
-            :func:`~.collect_tasks` for more information.
         '''
         LOGGER.debug('creating task %s', name)
         self.name = name
@@ -103,9 +85,6 @@ class Task(ABC):
                           'type {} found'.format(type(soft_deps)))
                 raise TypeError(errmsg)
             self.soft_depends_on.update(soft_deps)
-
-        if priority is None:
-            self.priority = self.PRIORITY
 
     @abstractmethod
     def do(self, env, config):

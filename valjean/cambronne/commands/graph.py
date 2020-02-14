@@ -2,16 +2,18 @@
 
 import os
 
-from ..common import Command, build_graphs
+from ..common import JobCommand, build_graphs
 from ... import LOGGER
 
 
-class GraphCommand(Command):
+class GraphCommand(JobCommand):
     '''Command class for the ``build`` subcommand.'''
 
     NAME = 'graph'
 
-    HELP = 'output the dependency graph in graphviz format'
+    HELP = 'Output the dependency graph in any format supported by Graphviz.'
+
+    DESC = HELP
 
     def register(self, parser):
         '''Register options for this command in the parser.'''
@@ -24,9 +26,10 @@ class GraphCommand(Command):
                             action='store', help='path to the output file')
         parser.set_defaults(func=self.execute)
 
-    def execute(self, args, collected_tasks, _):
+    @staticmethod
+    def execute(args, _config):
         '''Execute the ``graph`` command.'''
-        hard_graph, soft_graph = build_graphs(collected_tasks)
+        hard_graph, soft_graph = build_graphs(args)
         if args.dependencies == 'hard':
             graph_str = hard_graph.to_graphviz()
         elif args.dependencies == 'soft':
