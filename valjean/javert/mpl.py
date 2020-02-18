@@ -319,7 +319,10 @@ class MplPlot:
 
     def draw(self):
         '''Draw method.'''
-        return self.error_plots()
+        # return
+        self.error_plots()
+        # if self.data.customization:
+        self.customize_plots()
 
     def ierror_plot(self, curve, iplot, data_fmt):
         '''Draw the plot with error bars on the plot (update the plot)
@@ -435,6 +438,11 @@ class MplPlot:
                     ncol=ncol, **LEGENDS.get('legend_kwargs', {}))
             return
 
+    def customize_plots(self):
+        '''Customize plots.'''
+        if 'limits' in self.data.customization:
+            self.splt[0].set_xlim(*self.data.customization['limits'][0])
+
     def save(self, name='fig.png'):
         '''Save the plot under the given name.
 
@@ -459,17 +467,20 @@ class MplPlot2D:
 
     def draw(self):
         '''Draw method.'''
-        return self.twod_plots()
+        # return self.twod_plots()
+        self.twod_plots()
+        self.customize_plots()
 
-    def broadcasted_bin_centers(self, curve):
+    @staticmethod
+    def broadcasted_bin_centers(curve, lbins):
         '''Calcuate bin centers if edges are given and broadcast all bins:
         build the (x, y) grid for all bins.
         '''
         bins = []
-        for idim, tbin in enumerate(self.data.bins.values()):
+        for idim, tbin in enumerate(lbins):
             shape = ([curve.values.shape[idim]]
                      + [1] * (curve.values.ndim - 1 - idim))
-            cbins = ((tbin[1:] + tbin[:-1]) / 2
+            cbins = ((tbin[1:] + tbin[:-1]) * 0.5
                      if tbin.size == curve.values.shape[idim]+1
                      else tbin)
             bins.append(np.array(cbins).reshape(shape))
@@ -478,7 +489,7 @@ class MplPlot2D:
 
     def itwod_plot(self, curve, iplot, ):
         '''Draw the 2D distribution on the ith subplot.'''
-        cbins = self.broadcasted_bin_centers(curve)
+        cbins = self.broadcasted_bin_centers(curve, self.data.bins.values())
         h2d = self.splt[iplot].hist2d(cbins[0].flatten(), cbins[1].flatten(),
                                       bins=list(self.data.bins.values()),
                                       weights=curve.values.flatten())
@@ -492,6 +503,12 @@ class MplPlot2D:
         '''Build 2D plots.'''
         for icrv, crv in enumerate(self.data.curves):
             self.itwod_plot(crv, icrv)
+
+    def customize_plots(self):
+        '''Customize plots.'''
+        if 'limits' in self.data.customization:
+            self.splt[0].set_xlim(*self.data.customization['limits'][0])
+            self.splt[0].set_ylim(*self.data.customization['limits'][1])
 
     def save(self, name='fig.png'):
         '''Save the plot under the given name.

@@ -570,6 +570,7 @@ PlotTemplate.
         self.bins = bins
         self.xname = xname
         self.curves = curves
+        self.customization = {}
 
         if not isinstance(self.curves, list):
             raise TypeError("The 'curves' argument must a list of "
@@ -671,6 +672,14 @@ PlotTemplate.
         '''Test for inequality of `self` and another :class:`PlotTemplate`.'''
         return not self == other
 
+    def add_customization(self, **kwargs):
+        '''Update customization dictionary.
+
+        The keyword has to be understood in :class:`.mpl.MplPlot`, check it for
+        possibilities.
+        '''
+        self.customization.update(kwargs)
+
 
 class PlotNDTemplate:
     '''A container for full test result to be represented as a N-dimensions
@@ -697,6 +706,7 @@ class PlotNDTemplate:
         '''
         self.bins = bins
         self.curves = curves
+        self.customization = {}
 
         if not isinstance(self.curves, list):
             raise TypeError("The 'curves' argument must a list of "
@@ -791,6 +801,14 @@ class PlotNDTemplate:
     def __ne__(self, other):
         '''Test for inequality of `self` and another :class:`PlotTemplate`.'''
         return not self == other
+
+    def add_customization(self, **kwargs):
+        '''Update customization dictionary.
+
+        The keyword has to be understood in :class:`.mpl.MplPlot`, check it for
+        possibilities.
+        '''
+        self.customization.update(kwargs)
 
 
 class TextTemplate:

@@ -1,6 +1,7 @@
 '''Module containing all available methods to convert a test result in a table
 to be converted in rst.
 '''
+import numpy as np
 from .. import LOGGER
 from .templates import PlotTemplate, CurveElements, join, PlotNDTemplate
 from .verbosity import Verbosity
@@ -59,8 +60,69 @@ def dimension(bins, array_shape):
         LOGGER.debug("Used dimension: %s among %s", dim_name, lbins)
     else:
         dim_name = [lbins[i] for i in idim]
-        print(dim_name)
     return dim_name
+
+
+def adapt_range(curves, bins):
+    '''Adapt bins range when extreme bins are very large.
+
+    The bins are aranged if their width is at least 1000 times the next one for
+    the first bin (comparison of bin 0 and bin 1) and the previous one for the
+    last bin (comparison of bin -1 to bin -2).
+    The bin content is still represented: the width of the axis is redefined
+    (last - first) and enlarged by 5% on each side. In that case the content of
+    the reduced bins appears in these 5% with `matplotlib`.
+    '''
+    lvcurve = (lambda x: x.index(max(x)))([c.index for c in curves])
+    if curves[lvcurve].index != lvcurve:
+        LOGGER.warning('Index looks strangely defined')
+    blimits = []
+    for lbins in bins:
+        nbins = lbins
+        twidth = nbins[-1] - nbins[0]
+        limits = [nbins[0], nbins[-1]]
+        if nbins.size < 3:
+            LOGGER.warning('Not enough bins to adapt range.')
+            blimits.append([])
+            continue
+        if nbins.size < 4:
+            LOGGER.warning('Will adapt range for %d bins, '
+                           'binning might be not suitable')
+        binw = np.ediff1d(lbins)
+        if binw[0]/binw[1] > 1e3:
+            limits[0] = nbins[1]
+        if binw[-1]/binw[-2] > 1e3:
+            limits[1] = nbins[-2]
+        rwidth = limits[1] - limits[0]
+        if rwidth != twidth:
+            limits[0] -= 0.05 * rwidth
+            limits[1] += 0.05 * rwidth
+        else:
+            limits = []
+        blimits.append(tuple(limits))
+    if all(not lim for lim in blimits):
+        blimits = []
+    return blimits
+
+
+def post_treatment(templates, result):
+    '''Post-treatment of plots after template generate.
+
+    For example add names from test result if not done before, suppress zero
+    bins at range edges, etc.
+    '''
+    LOGGER.debug('calling post_treatment for %s', result.__class__)
+    if 'Bonferroni' in result.__class__.__name__:
+        LOGGER.info('post already applied')
+        return templates
+    for templ in templates:
+        blimits = adapt_range(templ.curves,
+                              templ.bins.values()
+                              if isinstance(templ.bins, dict)
+                              else [templ.bins])
+        if blimits:
+            templ.add_customization(limits=blimits)
+    return templates
 
 
 def repr_testresultstudent(result, verbosity=None):
@@ -172,6 +234,7 @@ def repr_student_values(result):
     if dim is None:
         LOGGER.debug('value: dim is None')
         return []
+    print('TEST LABELS:', result.test.labels)
     cds = [CurveElements(values=result.test.dsref.value,
                          label=(result.test.dsref.name
                                 if result.test.dsref.name else 'reference'),

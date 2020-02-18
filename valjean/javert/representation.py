@@ -204,6 +204,10 @@ class PlotRepresenter(Representer):
     :class:`PlotRepresenter` for specific test results should subclass
     :class:`PlotRepresenter` and define the relevant ``repr_*`` methods.
     '''
+    def __init__(self, post=plt_elts.post_treatment):
+        self.post = post
+        if self.post is not None or not callable(self.post):
+            LOGGER.warning('Plot post-treatment shoould be a callable.')
 
     def __call__(self, result, verbosity=None):
         LOGGER.debug("In PlotRepresenter.__call__")
@@ -217,6 +221,8 @@ class PlotRepresenter(Representer):
                 LOGGER.info('no plot representer %s', meth_name)
                 return None
             res = meth(result, verbosity)
+        if res and self.post is not None:
+            res = self.post(res, result)
         return res
 
     def repr_testresultbonferroni(self, result, verbosity=None):
