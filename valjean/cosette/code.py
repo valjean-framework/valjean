@@ -209,7 +209,7 @@ class CheckoutTask(PythonTask):
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
 
-    #: Path to the :file:`cmake` executable. May be overridden before class
+    #: Path to the :file:`git` executable. May be overridden before class
     #: instantiation.
     GIT = 'git'
 
