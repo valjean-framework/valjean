@@ -1,5 +1,6 @@
 '''Tests for the :mod:`~cosette.run` module.'''
 
+import shlex
 from pathlib import Path
 import pytest
 
@@ -43,7 +44,7 @@ def test_echo(config_tmp):
     runtask = RunTask.from_cli('echo', ['echo', TEXT])
     stdout, stderr = do_test_task(runtask, {}, config_tmp)
     assert stdout == TEXT + '\n'
-    assert stderr == '$ echo ' + TEXT + '\n'
+    assert stderr == '$ echo ' + shlex.quote(TEXT) + '\n'
 
 
 @requires_git
@@ -92,7 +93,7 @@ def test_factory_exe(config_tmp):
                         extra_args=(TEXT,))
     stdout, stderr = do_test_task(task, {}, config_tmp)
     assert stdout == TEXT + '\n'
-    assert stderr == '$ /bin/echo ' + TEXT + '\n'
+    assert stderr == '$ /bin/echo ' + shlex.quote(TEXT) + '\n'
 
 
 def test_factory_exe_args(config_tmp):
@@ -104,7 +105,7 @@ def test_factory_exe_args(config_tmp):
     task = factory.make(name='task', text=TEXT)
     stdout, stderr = do_test_task(task, {}, config_tmp)
     assert stdout == TEXT + '\n'
-    assert stderr == '$ /bin/echo ' + TEXT + '\n'
+    assert stderr == '$ /bin/echo ' + shlex.quote(TEXT) + '\n'
 
 
 def test_factory_exe_raise_missing(config_tmp):

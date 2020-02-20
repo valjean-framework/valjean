@@ -182,7 +182,10 @@ Module API
 '''
 
 import os
+import shlex
 from functools import partial
+from subprocess import call
+from time import time
 
 from .. import LOGGER
 from ..path import ensure, sanitize_filename
@@ -205,15 +208,13 @@ def run(clis, stdout, stderr, **subprocess_args):
     :param dict subprocess_args: Parameters to be passed to
         :func:`subprocess.call`.
     '''
-    from subprocess import call
-    from time import time
-
     results = []    # collect the return codes of each cli
     status = TaskStatus.DONE    # will change to FAILED in case of trouble
     start_time = time()
-    for i_cli, cli in enumerate(clis):
+    for cli in clis:
         LOGGER.debug('Running cli: %s', cli)
-        print('$ ' + ' '.join(cli), file=stderr, flush=True)
+        print('$ ' + ' '.join(shlex.quote(token) for token in cli),
+              file=stderr, flush=True)
         LOGGER.debug('subprocess_args: %s', subprocess_args)
         result = call(cli, universal_newlines=True,
                       stdout=stdout, stderr=stderr,
@@ -222,8 +223,7 @@ def run(clis, stdout, stderr, **subprocess_args):
         results.append(result)
         if result != 0:
             LOGGER.warning('A subprocess ended with return code %s; will '
-                           'skip the remaining %s commands',
-                           result, len(clis) - i_cli - 1)
+                           'skip the remaining commands', result)
             status = TaskStatus.FAILED
             break
     end_time = time()
