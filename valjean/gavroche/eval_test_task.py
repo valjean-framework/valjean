@@ -4,6 +4,9 @@ transforms them into :class:`~.gavroche.test.TestResult` objects, which can be
 subsequently processed for inclusion in a test report.
 '''
 
+from pathlib import Path
+
+from ..path import ensure, sanitize_filename
 from ..cosette.task import TaskStatus
 from ..cosette.use import from_env
 from ..cosette.pythontask import PythonTask
@@ -49,7 +52,7 @@ class EvalTestTask(PythonTask):
         :param soft_deps: the list of soft dependencies for this task.
         :type soft_deps: list(Task) or None
         '''
-        def evaluate(*, env):
+        def evaluate(*, env, config):
             tests = from_env(env=env, task_name=test_task_name, key='result')
             if not isinstance(tests, list):
                 raise TypeError('Expected a list of tests in EvalTestTask '
@@ -63,12 +66,15 @@ class EvalTestTask(PythonTask):
 
             results = [eval_test(test) for test in tests]
 
+            output_dir = Path(config.get('path', 'output-root'),
+                              sanitize_filename(self.name))
+            ensure(output_dir, is_dir=True)
             env_up = {self.name: {'result': results}}
             status = TaskStatus.DONE
             return env_up, status
 
         super().__init__(name, evaluate, deps=deps, soft_deps=soft_deps,
-                         env_kwarg='env')
+                         env_kwarg='env', config_kwarg='config')
 
 
 def eval_tests(tests):

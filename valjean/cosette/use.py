@@ -545,9 +545,11 @@ Module API
 ==========
 '''
 
+from pathlib import Path
 from functools import update_wrapper
 
 from .task import TaskStatus
+from ..path import ensure, sanitize_filename
 from .pythontask import PythonTask
 from .. import LOGGER
 
@@ -694,7 +696,7 @@ class Use:
         LOGGER.debug('  will depend on %s', deps)
         LOGGER.debug('  will soft-depend on %s', soft_deps)
 
-        def inject_from_env(env):
+        def inject_from_env(*, env, config):
             # Prepare the args for the function; we loop over self.inj_args in
             # reverse because stacked decorators are invoked from the inside
             # out. If we do not reverse the list, the outermost decorator will
@@ -714,12 +716,16 @@ class Use:
             LOGGER.debug('injecting kwargs: %s', kwargs)
 
             result = self.wrapped(*args, **kwargs)
-            env_up = {pytask_name: {'result': result}}
+            output_dir = Path(config.get('path', 'output-root'),
+                              sanitize_filename(pytask_name))
+            ensure(output_dir, is_dir=True)
+            env_up = {pytask_name: {'result': result,
+                                    'output_dir': str(output_dir)}}
             return env_up, TaskStatus.DONE
 
         task = PythonTask(pytask_name, inject_from_env,
                           deps=deps, soft_deps=soft_deps,
-                          env_kwarg='env')
+                          env_kwarg='env', config_kwarg='config')
         self._CACHE[pytask_name] = task
         return task
 
