@@ -19,8 +19,8 @@ class GraphCommand(JobCommand):
         '''Register options for this command in the parser.'''
         super().register(parser)
         parser.add_argument('--dependencies', action='store',
-                            help='select which dependencies to draw',
-                            choices=['hard', 'soft', 'both'],
+                            help='select which dependencies to draw (default: '
+                            'both)', choices=['hard', 'soft', 'both'],
                             default='both')
         parser.add_argument('-o', '--output',
                             action='store', help='path to the output file')

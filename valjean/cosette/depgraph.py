@@ -605,12 +605,15 @@ class DepGraph:
         :returns: A string describing the file in graphviz format.
         '''
 
+        def sanitized_name(node):
+            return str(node).replace('"', "'").replace('\n', '-')
+
         gviz = [r'digraph {']
         for key, vals in self._edges.items():
-            from_node = str(self._nodes[key])
+            from_node = sanitized_name(self._nodes[key])
             gviz.append('"' + from_node + '";')
             for val in vals:
-                to_node = str(self._nodes[val])
+                to_node = sanitized_name(self._nodes[val])
                 gviz.append('"' + from_node + '" -> "' + to_node + '"')
         gviz.append(r'}')
         gviz.append('')
