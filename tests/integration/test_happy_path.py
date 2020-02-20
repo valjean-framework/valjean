@@ -48,6 +48,8 @@ def test_run(job_config,  # pylint: disable=too-many-arguments
         task = prefix + '.cecho'
         assert 'output_dir' in env[task]
         assert 'stdout' in env[task]
+        assert 'result' in env[task]
+        assert env[task]['stdout'] == env[task]['result']
         content = Path(env[task]['stdout']).read_text()
         assert content == prefix + ' it\n'
 

@@ -357,10 +357,11 @@ class RunTask(PythonTask):
                                   'output_dir': str(output_dir),
                                   'return_codes': results,
                                   'elapsed_time': elapsed,
+                                  'result': str(stdout_path),
                                   'stdout': str(stdout_path),
                                   'stderr': str(stderr_path)}}
 
-            LOGGER.debug('RunTask %s ends, elapsed time: %s s', name, elapsed)
+            LOGGER.debug('RunTask %s ends, elapsed time: %f s', name, elapsed)
             return env_up, status
 
         # saturate name, clis and subprocess_args with the values from the

@@ -28,8 +28,7 @@ been executed, simply because its output (which is the input to
 The solution is to bridge the gap using an :class:`Use` object:
 
     >>> from valjean.cosette.use import Use
-    >>> use_arg_echo = Use.from_func(func=how_many_chars, task=run_task,
-    ...                              key='stdout')
+    >>> use_arg_echo = Use.from_func(func=how_many_chars, task=run_task)
 
 :class:`Use` lifts the naked function `how_many_chars` into the world of
 :mod:`valjean` dependency graphs. The `how_many_chars` function is wrapped in a
@@ -56,7 +55,7 @@ has failed, then of course `how_many_task` will fail, too.  The dependency of
     hard one), you can use the `deps_type` constructor argument:
 
     >>> use_arg_echo_soft = Use.from_func(func=how_many_chars, task=run_task,
-    ...                                   key='stdout', deps_type='soft')
+    ...                                   deps_type='soft')
     >>> how_many_task_soft = use_arg_echo_soft.get_task()
     >>> run_task in how_many_task_soft.soft_depends_on
     True
@@ -138,7 +137,7 @@ Argument injection via the :func:`using` decorator
 A practical way to create :class:`Use` objects is to call the :func:`using`
 decorator:
 
-    >>> @using(task=run_task, key='stdout')
+    >>> @using(task=run_task)
     ... def how_many_chars(filename):
     ...     return len(open(filename).read())
 
@@ -183,8 +182,8 @@ you can stack multiple :class:`Use` decorators:
     >>> name_task = RunTask.from_cli('name_task', ['echo', 'Arthur'])
     >>> job_task = RunTask.from_cli('job_task',
     ...                             ['echo', 'King of the Britons'])
-    >>> @using(task=name_task, key='stdout')
-    ... @using(task=job_task, key='stdout')
+    >>> @using(task=name_task)
+    ... @using(task=job_task)
     ... def introduce(name_filename, job_filename):
     ...     with open(name_filename) as name_file:
     ...         name = name_file.read().rstrip()
@@ -239,8 +238,8 @@ and the inner one (`job_task`) injects the second argument (`job_filename`). If
 we nest the decorators the other way around, we inverse the order of the
 arguments:
 
-    >>> @using(task=job_task, key='stdout')
-    ... @using(task=name_task, key='stdout')
+    >>> @using(task=job_task)
+    ... @using(task=name_task)
     ... def introduce_inv(name_filename, job_filename):
     ...     with open(name_filename) as name_file:
     ...         name = name_file.read().rstrip()
@@ -258,12 +257,12 @@ If you are injecting many arguments, it may be a good idea to use the `kwarg`
 argument to :func:`using`, which allows you to inject values into arguments by
 name instead of by position:
 
-    >>> @using(kwarg='name_filename', task=name_task, key='stdout')
-    ... @using(kwarg='job_filename', task=job_task, key='stdout')
+    >>> @using(kwarg='name_filename', task=name_task)
+    ... @using(kwarg='job_filename', task=job_task)
     ... def introduce_kwargs(name_filename, job_filename):
     ...     return introduce(name_filename, job_filename)
-    >>> @using(kwarg='job_filename', task=job_task, key='stdout')
-    ... @using(kwarg='name_filename', task=name_task, key='stdout')
+    >>> @using(kwarg='job_filename', task=job_task)
+    ... @using(kwarg='name_filename', task=name_task)
     ... def introduce_kwargs_swap(name_filename, job_filename):
     ...     return introduce(name_filename, job_filename)
 
@@ -781,14 +780,12 @@ class UseRun:
 
     def __call__(self, kwarg=None, **kwargs):
         task = self.factory.make(**kwargs)
-        key = 'stdout'
         LOGGER.debug('mapping %s functions on the output of %s',
                      len(self.posts), task.name)
         for post in self.posts:
-            use = Use.from_func(task=task, key=key, func=post)
+            use = Use.from_func(task=task, key='result', func=post)
             task = use.get_task()
-            key = 'result'
-        return using(kwarg=kwarg, task=task, key=key)
+        return using(kwarg=kwarg, task=task, key='result')
 
     def copy(self):
         '''Return a copy of this object.'''
