@@ -81,7 +81,7 @@ We construct a :class:`~.RunTaskFactory` that simply echoes any text passed as
 an argument::
 
     >>> from valjean.cosette.run import RunTaskFactory
-    >>> echo_factory = RunTaskFactory.from_executable('/bin/echo', uid='echo',
+    >>> echo_factory = RunTaskFactory.from_executable('/bin/echo', name='echo',
     ...                                               default_args=['{text}'])
 
 In the real world, the :class:`~.RunTaskFactory` would actually generate tasks
