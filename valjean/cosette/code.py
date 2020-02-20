@@ -118,7 +118,7 @@ class CheckoutTask(PythonTask):
 
     PRIORITY = 10
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
+    # pylint: disable=too-many-arguments
     def __init__(self, name, *, repository, checkout_root=None, log_root=None,
                  flags=None, ref=None, vcs='git', deps=None, soft_deps=None):
         '''Construct a :class:`CheckoutTask`.
@@ -217,7 +217,6 @@ class CheckoutTask(PythonTask):
     GIT = 'git'
 
 
-# pylint: disable=too-many-instance-attributes
 class BuildTask(PythonTask):
     '''Task to build an existing source tree. The build is actually performed
     when the task is executed.
@@ -225,7 +224,7 @@ class BuildTask(PythonTask):
 
     PRIORITY = 20
 
-    # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
+    # pylint: disable=too-many-arguments
     def __init__(self, name, source, *, build_root=None, log_root=None,
                  targets=None, build_system='cmake', configure_flags=None,
                  build_flags=None, deps=None, soft_deps=None):
@@ -275,30 +274,8 @@ class BuildTask(PythonTask):
         self.build_root = build_root
 
         if build_system == 'cmake':
-
-            def build_sys(source_dir, build_dir, log):
-                configure_cli = [self.CMAKE]
-                if configure_flags is not None:
-                    configure_cli.extend(configure_flags)
-                configure_cli.append(source_dir)
-                ret, status, _ = run([configure_cli], stdout=log, stderr=log,
-                                     cwd=str(build_dir))
-                if ret[-1] != 0:
-                    LOGGER.debug('`cmake` (configure step) returned %s', ret)
-                    return status
-                build_cli = [self.CMAKE, '--build', str(build_dir)]
-                target_list = [] if targets is None else targets
-                for target in target_list:
-                    build_cli.append('--target')
-                    build_cli.append(target)
-                if build_flags is not None:
-                    build_cli.extend(build_flags)
-                ret, status, _ = run([build_cli], stdout=log, stderr=log,
-                                     cwd=str(build_dir))
-                if ret[-1] != 0:
-                    LOGGER.debug('`cmake` (build step) returned %s', ret)
-                return status
-
+            build_sys = self.cmake_build_sys(targets, configure_flags,
+                                             build_flags)
         elif build_system in ('autoconf', 'configure'):
             raise NotImplementedError('configure build not implemented yet')
         else:
@@ -344,6 +321,34 @@ class BuildTask(PythonTask):
                          env_kwarg='env', config_kwarg='config')
 
         LOGGER.debug('Created %s task %r', self.__class__.__name__, self.name)
+
+    def cmake_build_sys(self, targets, configure_flags, build_flags):
+        '''Return a function that builds a project using cmake.'''
+
+        def build_sys(source_dir, build_dir, log):
+            '''Build a project using cmake.'''
+            configure_cli = [self.CMAKE]
+            if configure_flags is not None:
+                configure_cli.extend(configure_flags)
+            configure_cli.append(source_dir)
+            ret, status, _ = run([configure_cli], stdout=log, stderr=log,
+                                 cwd=str(build_dir))
+            if ret[-1] != 0:
+                LOGGER.debug('`cmake` (configure step) returned %s', ret)
+                return status
+            build_cli = [self.CMAKE, '--build', str(build_dir)]
+            target_list = [] if targets is None else targets
+            for target in target_list:
+                build_cli.append('--target')
+                build_cli.append(target)
+            if build_flags is not None:
+                build_cli.extend(build_flags)
+            ret, status, _ = run([build_cli], stdout=log, stderr=log,
+                                 cwd=str(build_dir))
+            if ret[-1] != 0:
+                LOGGER.debug('`cmake` (build step) returned %s', ret)
+            return status
+        return build_sys
 
     #: Path to the :file:`cmake` executable. May be overridden before class
     #: instantiation.
