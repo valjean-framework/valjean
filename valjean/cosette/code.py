@@ -84,8 +84,7 @@ path to the `source` argument instead.
    >>> print(ct_status)
    TaskStatus.DONE
    >>> pprint(ct_up)
-   {'project_checkout': {'checkout_log': \
-'.../log/project_checkout.checkout.log',
+   {'project_checkout': {'checkout_log': '.../log/project_checkout.log',
                          'elapsed_time': ...,
                          'output_dir': '.../checkout/project_checkout',
                          'repository': '.../repo'}}
@@ -95,7 +94,7 @@ path to the `source` argument instead.
    >>> print(bt_status)
    TaskStatus.DONE
    >>> pprint(bt_up)
-   {'project_build': {'build_log': '.../log/project_build.build.log',
+   {'project_build': {'build_log': '.../log/project_build.log',
                       'elapsed_time': ...,
                       'output_dir': '.../build/project_build'}}
 """
@@ -179,7 +178,7 @@ class CheckoutTask(PythonTask):
             # setup log dir and file
             if self.log_root is None:
                 self.log_root = config.get('path', 'log-root')
-            log_file = ensure(self.log_root, self.name + '.checkout.log')
+            log_file = ensure(self.log_root, self.name + '.log')
             ensure(log_file)
 
             # setup checkout dir
@@ -282,7 +281,7 @@ class BuildTask(PythonTask):
             # setup log dir and files
             if self.log_root is None:
                 self.log_root = config.get('path', 'log-root')
-            log_file = ensure(self.log_root, self.name + '.build.log')
+            log_file = ensure(self.log_root, self.name + '.log')
             ensure(log_file)
 
             # setup build dir
