@@ -616,7 +616,6 @@ class DepGraph:
                 to_node = sanitized_name(self._nodes[val])
                 gviz.append('"' + from_node + '" -> "' + to_node + '"')
         gviz.append(r'}')
-        gviz.append('')
         return '\n'.join(gviz)
 
     def transitive_reduction(self):
