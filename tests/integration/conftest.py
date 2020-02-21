@@ -13,13 +13,13 @@ from ..cosette.conftest import (subdir,  # pylint: disable=unused-import
 
 JOB_FILE = '''from valjean.cosette.code import CheckoutTask, BuildTask
 from valjean.cosette.run import RunTaskFactory
-def job():
+def job(what='it'):
     checkout = CheckoutTask(name='checkout_cecho', repository='{repo_path}')
     build = BuildTask(name='build_cecho', source=checkout)
     factory = RunTaskFactory.from_task(build, relative_path='{subdir}cecho',
                                        default_args=['{{text}}'], name='cecho')
-    pling = factory.make(name='pling', text='pling it')
-    plong = factory.make(name='plong', text='plong it')
+    pling = factory.make(name='pling', text='pling ' + what)
+    plong = factory.make(name='plong', text='plong ' + what)
     return [pling, plong]
 '''
 

@@ -17,7 +17,8 @@ class RunCommand(JobCommand):
     HELP = 'Run the tasks defined in a job file.'
 
     DESC = ('Run the tasks defined by the job() function in JOB_FILE, passing '
-            'the given ARGUMENTs to job().')
+            'the given arguments (JOB_ARG) and keyword arguments (-k option) '
+            'to job().')
 
     def register(self, parser):
         '''Register options for this command in the parser.'''

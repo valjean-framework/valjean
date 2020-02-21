@@ -32,13 +32,12 @@ def assert_cecho_exists(env, name, subdir):
     assert cecho_path.is_file()
 
 
-@requires_git
-@requires_cmake
-def test_run(job_config,  # pylint: disable=too-many-arguments
-             config_tmp, env_filename, subdir, job_file):
-    '''Test the `run` command.'''
+def do_test_run(*args, job_config,  # pylint: disable=too-many-arguments
+                config_tmp, env_filename, subdir, job_file,
+                expected):
+    '''Actually run the test for the `run` command.'''
     env = run_valjean(job_config=job_config, config=config_tmp,
-                      env_filename=env_filename, job_file=job_file)
+                      env_filename=env_filename, job_file=job_file, *args)
     assert_task_done(env, 'checkout_cecho')
     assert_task_done(env, 'build_cecho')
     assert_cecho_exists(env, 'build_cecho', subdir)
@@ -51,7 +50,28 @@ def test_run(job_config,  # pylint: disable=too-many-arguments
         assert 'result' in env[task]
         assert env[task]['stdout'] == env[task]['result']
         content = Path(env[task]['stdout']).read_text()
-        assert content == prefix + ' it\n'
+        assert content == prefix + expected
+
+
+@requires_git
+@requires_cmake
+def test_run(job_config,  # pylint: disable=too-many-arguments
+             config_tmp, env_filename, subdir, job_file):
+    '''Test the `run` command.'''
+    do_test_run(job_config=job_config, config_tmp=config_tmp,
+                env_filename=env_filename, subdir=subdir, job_file=job_file,
+                expected=' it\n')
+
+
+@requires_git
+@requires_cmake
+def test_run_kwarg(job_config,  # pylint: disable=too-many-arguments
+                   config_tmp, env_filename, subdir, job_file):
+    '''Test the ``-k`` cli option.'''
+    do_test_run('-k', 'what=the thing',
+                job_config=job_config, config_tmp=config_tmp,
+                env_filename=env_filename, subdir=subdir, job_file=job_file,
+                expected=' the thing\n')
 
 
 @requires_git

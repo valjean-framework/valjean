@@ -1,6 +1,7 @@
 '''Common utilities for :program:`valjean` commands.'''
 
 from pathlib import Path
+import argparse
 import sys
 import inspect
 
@@ -16,6 +17,22 @@ class Command:
     ALIASES = ()
 
 
+class DictKwargAction(argparse.Action):
+    '''An :class:`argparse.Action` subclass that parses arguments as
+    ``key=value`` pairs and stores the resulting associations in a
+    dictionary.'''
+
+    def __call__(self, parser, namespace, option, option_string=None):
+        '''Add a key-value pair to the dictionary.'''
+        kwargs = getattr(namespace, self.dest)
+        try:
+            key, value = option.split('=', maxsplit=1)
+        except ValueError:
+            raise ValueError('cannot parse -k argument {!r} as a '
+                             'NAME=VALUE pair'.format(option)) from None
+        kwargs[key] = value
+
+
 class JobCommand(Command):
     '''Base class for all :program:`valjean` subcommands that take a job file
     and job arguments.'''
@@ -26,18 +43,25 @@ class JobCommand(Command):
         parser.'''
         parser.add_argument('job_file', action='store', metavar='JOB_FILE',
                             help='path to the job file')
-        parser.add_argument('job_args', metavar='ARGUMENT', nargs='*',
-                            help='arguments that will be passed to the job() '
-                            'function; multiple arguments can be passed')
+        parser.add_argument('job_args', metavar='JOB_ARG', nargs='*',
+                            help='positional arguments that will be passed to '
+                            'the job() function; multiple arguments may be '
+                            'given')
+        parser.add_argument('-k', '--job-kwarg', metavar='NAME=VALUE',
+                            dest='job_kwargs', action=DictKwargAction,
+                            default=dict(), help='keyword arguments that will '
+                            'be passed to the job() function; may be '
+                            'specified multiple times')
 
 
-def run_job(job_file, job_args):
+def run_job(job_file, job_args, job_kwargs):
     '''Run the `job()` function from the specified job file and return its
     result.
 
     :param str job_file: the name of the file containing the `job()` function.
     :param list(str) job_args: the list of arguments to be passed to the
         `job()` function.
+    :param dict job_kwargs: a dictionary of keyword arguments for `job()`
     :returns: whatever `job()` returns; expected to be a list of
         :class:`~.Task` objects.
     :rtype: list(Task)
@@ -51,14 +75,17 @@ def run_job(job_file, job_args):
         sys.exit(1)
 
     try:
-        tasks = module.job(*job_args)
+        tasks = module.job(*job_args, **job_kwargs)
     except TypeError as err:
         if str(err).startswith('job()'):
-            signature = inspect.getfullargspec(module.job)
-            n_args = len(signature.args)
-            new_msg = ('This valjean job expects exactly {} -a/--args '
-                       'option(s)'.format(n_args))
-            err = TypeError(new_msg)
+            signature = inspect.signature(module.job)
+            msg = ['argument mismatch to job() function',
+                   '  signature:\n    job{}'.format(signature)]
+            docstr = inspect.getdoc(module.job)
+            if docstr is not None:
+                msg.append('  docstring:\n    {}'
+                           .format(docstr.replace('\n', '\n    ')))
+            err = TypeError('\n'.join(msg))
         raise err
     LOGGER.debug('job tasks: %s', tasks)
     return tasks
@@ -83,17 +110,18 @@ def check_unique_task_names(tasks):
         raise ValueError(err)
 
 
-def collect_tasks(job_file, job_args):
+def collect_tasks(job_file, job_args, job_kwargs):
     '''Collect tasks from a job file, along with all their dependencies.
 
     :param str job_file: the name of the file containing the `job()` function.
     :param list(str) job_args: the list of arguments to be passed to the
         `job()` function.
+    :param dict job_kwargs: a dictionary of keyword arguments for `job()`
     :returns: the collected tasks.
     :rtype: list(Task)
     '''
     # import the job file and run the job() function
-    tasks = run_job(job_file, job_args)
+    tasks = run_job(job_file, job_args, job_kwargs)
     # compute the transitive closure of the dependency graph for the tasks
     # returned by job()
     tasks = close_dependency_graph(tasks)
@@ -105,7 +133,7 @@ def collect_tasks(job_file, job_args):
 def build_graphs(args):
     '''Build the dependency graphs according to the CLI parameters.'''
 
-    tasks = collect_tasks(args.job_file, args.job_args)
+    tasks = collect_tasks(args.job_file, args.job_args, args.job_kwargs)
     LOGGER.debug('building graphs for tasks: %s', tasks)
 
     hard_graph = DepGraph()
