@@ -31,7 +31,7 @@ def bins_reduction(def_bins, def_array_shape, array_shape):
     return bins
 
 
-def special_array(array, res_type, score, bins):
+def special_array(array, score, bins):
     '''Convert special arrays in :class:`~.base_dataset.BaseDataset`.
 
     These special cases are typically vov results or uncertainty spectrum
@@ -40,9 +40,7 @@ def special_array(array, res_type, score, bins):
     '''
     the_array = array['array'][score]
     return BaseDataset(
-        the_array.copy(),
-        np.full_like(the_array, np.nan),
-        bins=bins, name=res_type+'_'+score)
+        the_array.copy(), np.full_like(the_array, np.nan), bins=bins)
 
 
 def array_result(farray_res, res_type, array_type='array', score='score'):
@@ -65,11 +63,11 @@ def array_result(farray_res, res_type, array_type='array', score='score'):
                                 array_res['array'].shape,
                                 array_res[array_type].shape))
     if score != 'score':
-        return special_array(array_res, res_type, score, bins)
+        return special_array(array_res, score, bins)
     return BaseDataset(
         array_res[array_type][score].copy(),
         array_res[array_type]['sigma'] * array_res[array_type][score] * 0.01,
-        bins=bins, name=res_type)
+        bins=bins)
 
 
 def integrated_result(result, res_type='integrated', score='score'):
@@ -106,7 +104,7 @@ def integrated_result(result, res_type='integrated', score='score'):
                               intres.shape)
         return BaseDataset(intres[score],
                            intres['sigma'] * intres[score] * 0.01,
-                           bins=bins, name=res_type)
+                           bins=bins)
     ishape = tuple([1]*result[other_res[0]]['array'].ndim)
     bins = bins_reduction(result[other_res[0]]['bins'],
                           result[other_res[0]]['array'].shape,
@@ -114,7 +112,7 @@ def integrated_result(result, res_type='integrated', score='score'):
     return BaseDataset(
         np.full(ishape, intres[score]),
         np.full(ishape, intres['sigma']*intres[score]*0.01),
-        bins=bins, name=res_type)
+        bins=bins)
 
 
 def generic_score(result, res_type='generic'):
@@ -131,11 +129,9 @@ def generic_score(result, res_type='generic'):
         return not_converged_result()
     if set(('sigma', 'sigma%')).issubset(intres):
         # used for mean weight leakage for example
-        return BaseDataset(intres['score'].copy(), intres['sigma'].copy(),
-                           name=res_type)
+        return BaseDataset(intres['score'].copy(), intres['sigma'].copy())
     return BaseDataset(intres['score'].copy(),
-                       intres['sigma'] * intres['score'] * 0.01,
-                       name=res_type)
+                       intres['sigma'] * intres['score'] * 0.01)
 
 
 def keff_matrix(result, res_type, *, estimator):
@@ -151,8 +147,7 @@ def keff_matrix(result, res_type, *, estimator):
     id_estim = res['estimators'].index(estimator)
     return BaseDataset(res['keff_matrix'][id_estim][id_estim],
                        (res['sigma_matrix'][id_estim][id_estim]
-                        * res['keff_matrix'][id_estim][id_estim] * 0.01),
-                       name='keff_'+estimator)
+                        * res['keff_matrix'][id_estim][id_estim] * 0.01))
 
 
 def keff_combination(result, res_type):
@@ -164,11 +159,10 @@ def keff_combination(result, res_type):
     '''
     kcomb = result[res_type]
     return BaseDataset(kcomb['keff'].copy(),
-                       kcomb['sigma'] * kcomb['keff'] * 0.01,
-                       name='keff_combination')
+                       kcomb['sigma'] * kcomb['keff'] * 0.01)
 
 
-def keff_auto(result, res_type, *, estimator=''):
+def keff_auto(result, res_type):
     '''Conversion of "automatic" keff estimation in
     :class:`~.base_dataset.BaseDataset`.
 
@@ -178,11 +172,10 @@ def keff_auto(result, res_type, *, estimator=''):
     :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
     akeff = result[res_type]
-    return BaseDataset(akeff['keff'].copy(), akeff['sigma'].copy(),
-                       name=res_type+'_'+estimator)
+    return BaseDataset(akeff['keff'].copy(), akeff['sigma'].copy())
 
 
-def keff(result, res_type, *, estimator='', correlation=False):
+def keff(result, res_type, *, correlation=False):
     '''Conversion of "automatic" keff estimation in
     :class:`~.base_dataset.BaseDataset`.
 
@@ -195,8 +188,7 @@ def keff(result, res_type, *, estimator='', correlation=False):
     if correlation:
         return value_wo_error(akeff, 'correlation')
     return BaseDataset(akeff['keff'].copy(),
-                       akeff['sigma%'] * akeff['keff'] * 0.01,
-                       name=res_type+'_'+estimator)
+                       akeff['sigma%'] * akeff['keff'] * 0.01)
 
 
 def complex_values_wo_error(result, res_type):
@@ -209,8 +201,7 @@ def complex_values_wo_error(result, res_type):
     :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
     cplxres = result[res_type]
-    return BaseDataset(cplxres, np.full(cplxres.shape, np.nan),
-                       name=res_type)
+    return BaseDataset(cplxres, np.full(cplxres.shape, np.nan))
 
 
 def matrix_wo_error(result, res_type):
@@ -225,10 +216,7 @@ def matrix_wo_error(result, res_type):
     :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
     matrixres = result[res_type]
-    return BaseDataset(
-        matrixres,
-        np.full_like(matrixres, np.nan),
-        name=res_type)
+    return BaseDataset(matrixres, np.full_like(matrixres, np.nan))
 
 
 def value_wo_error(result, res_type):
@@ -243,7 +231,7 @@ def value_wo_error(result, res_type):
     :returns: :class:`~valjean.eponine.base_dataset.BaseDataset`
     '''
     LOGGER.debug("value without error %s", result[res_type])
-    return BaseDataset(result[res_type], np.float_(np.nan), name=res_type)
+    return BaseDataset(result[res_type], np.float_(np.nan))
 
 
 def not_converged_result():

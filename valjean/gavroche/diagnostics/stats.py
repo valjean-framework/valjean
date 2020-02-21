@@ -191,13 +191,13 @@ def test_stats(*, name, description='', tasks):
 
     >>> from collections import OrderedDict
     >>> import numpy as np
-    >>> from valjean.eponine.base_dataset import BaseDataset
+    >>> from valjean.gavroche.dataset import Dataset
     >>> x = np.linspace(-5., 5., num=100)
     >>> y = x**2
     >>> error = np.zeros_like(y)
     >>> bins = OrderedDict([('x', x)])
-    >>> parabola = BaseDataset(y, error, bins=bins, name='parabola')
-    >>> parabola2 = BaseDataset(y*(1+1e-6), error, bins=bins, name='parabola2')
+    >>> parabola = Dataset(y, error, bins=bins, name='parabola')
+    >>> parabola2 = Dataset(y*(1+1e-6), error, bins=bins, name='parabola2')
 
     Now we write a function that generates dummy tests for the `parabola`
     dataset:

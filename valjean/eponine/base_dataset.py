@@ -6,7 +6,6 @@ A dataset is, up to now, composed a 4 members:
     represented like the arrays, with dim, etc)
   * error: an object of same type as value
   * bins: an :obj:`collections.OrderedDict` (optional and named argument)
-  * name (optional and named argument)
 
 The bins object should have the same dimension as the value, the order matches
 the dimensions. If no bins are available it is still possible to use an empty
@@ -36,7 +35,7 @@ If there are useless dimensions, the dataset can be squeezed:
 ...                     ('egg', np.array([0, 2, 4])),
 ...                     ('sausage', np.array([10, 20])),
 ...                     ('spam', np.array([-5, 0, 5, 10]))])
->>> ds = BaseDataset(vals, errs, bins=bins, name="ds_to_squeeze")
+>>> ds = BaseDataset(vals, errs, bins=bins)
 >>> ds.value.shape == (1, 2, 1, 3)
 True
 >>> len(ds.bins) == 4
@@ -59,16 +58,7 @@ True
 
 The dimensions with only one bin are squeezed, the same is done on the bins.
 
-It is possible to give a new name to the squeezed dataset, else the default one
-is kept.
-
->>> ds.name == "ds_to_squeeze"
-True
->>> sds.name == "ds_to_squeeze"
-True
->>> nsds = ds.squeeze(name="squeezed")
->>> nsds.name == "squeezed"
-True
+>>> nsds = ds.squeeze()
 >>> np.array_equal(nsds.value, sds.value)
 True
 >>> nsds.bins == sds.bins
@@ -124,17 +114,16 @@ class BaseDataset:
         How to deal with bins of N values (= center of bins)
     '''
 
-    def __init__(self, value, error, *, bins=None, name=''):
+    def __init__(self, value, error, *, bins=None):
         '''BaseDataset class initialization.
 
         :param value: array of N dimensions representing the values
-        :type value: :obj:`numpy.ndarray` or :obj:`numpy.generic`
+        :type value: numpy.ndarray or numpy.generic
         :param error: array of N dimensions representing the **absolute**
           errors
-        :type error: :obj:`numpy.ndarray` or :obj:`numpy.generic`
+        :type error: numpy.ndarray or numpy.generic
         :param bins: bins corresponding to value (named optional parameter)
-        :type bins: :obj:`collections.OrderedDict` (str, :obj:`numpy.ndarray`)
-        :param str name: name of the dataset (named optional parameter)
+        :type bins: collections.OrderedDict (str, numpy.ndarray)
 
         For the moment, N+1 values in the arrays corresponding to bins edges.
         '''
@@ -156,38 +145,36 @@ class BaseDataset:
         self.value = value
         self.error = error
         self.bins = bins if bins is not None else OrderedDict()
-        self.name = name
 
     def __repr__(self):
         if isinstance(self.value, np.ndarray):
-            return ("class: {0}, data type: {1}\n"
-                    "        name: {2}, with shape {3},\n"
-                    "        value: {4},\n"
-                    "        error: {5},\n"
-                    "        bins: {6}"
+            return ("class: {}, data type: {}\n"
+                    "        with shape {},\n"
+                    "        value: {},\n"
+                    "        error: {},\n"
+                    "        bins: {}"
                     .format(self.__class__, type(self.value),
-                            self.name, self.value.shape,
+                            self.value.shape,
                             self.value.squeeze(),
                             self.error.squeeze(), self.bins))
         return (
-            "class: {0}, data type: {1}\n"
-            "name: {2}, value: {3:6e}, error: {4:6e}, bins: {5}\n"
-            .format(self.__class__, type(self.value), self.name,
+            "class: {}, data type: {}\n"
+            "value: {:6e}, error: {:6e}, bins: {}\n"
+            .format(self.__class__, type(self.value),
                     self.value, self.error, self.bins))
 
     def __str__(self):
         if isinstance(self.value, np.ndarray):
-            return ("name: {0}, with shape {1}, dim {2}, type {3}, bins: {4}"
-                    .format(self.name, self.value.shape, self.value.ndim,
+            return ("shape {}, dim {}, type {}, bins: {}"
+                    .format(self.value.shape, self.value.ndim,
                             type(self.value),
                             ["{}: {}".format(k, str(v).replace('\n', ''))
                              for k, v in self.bins.items()]))
         return (
-            "name: {0}, value: {1:6e}, error: {2:6e}, bins: {3}, type: {4}"
-            .format(self.name, self.value, self.error, self.bins,
-                    type(self.value)))
+            "value: {:6e}, error: {:6e}, bins: {}, type: {}"
+            .format(self.value, self.error, self.bins, type(self.value)))
 
-    def squeeze(self, name=None):
+    def squeeze(self):
         '''Squeeze dataset: remove useless dimensions.
 
         Squeeze is based on the shape and on the bins dim ??? To confirm...
@@ -202,8 +189,7 @@ class BaseDataset:
                 lbins.pop(key_axis[axis])
         return self.__class__(self.value.squeeze(),
                               self.error.squeeze(),
-                              bins=lbins,
-                              name=self.name if name is None else name)
+                              bins=lbins)
 
     @property
     def shape(self):
@@ -226,8 +212,7 @@ class BaseDataset:
         new_bins = self.bins.copy()
         new_value = self.value.copy()
         new_error = self.error.copy()
-        return self.__class__(new_value, new_error,
-                              bins=new_bins, name=self.name)
+        return self.__class__(new_value, new_error, bins=new_bins)
 
 
 def relatively_equal(ds1, ds2, tolerance=1e-5):

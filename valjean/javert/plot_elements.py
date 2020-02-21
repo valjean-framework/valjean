@@ -175,12 +175,15 @@ def repr_student_values(result):
     cds = [CurveElements(values=result.test.dsref.value,
                          label=(result.test.dsref.name
                                 if result.test.dsref.name else 'reference'),
-                         index=0, yname='', errors=result.test.dsref.error)]
+                         index=0,
+                         yname=result.test.dsref.what,
+                         errors=result.test.dsref.error)]
     for ids, tds in enumerate(result.test.datasets):
         cds.append(CurveElements(
             values=tds.value,
             label=(tds.name if tds.name else 'dataset '+str(ids)),
-            index=ids+1, yname='', errors=tds.error))
+            index=ids+1, yname=result.test.dsref.what,
+            errors=tds.error))
     if not isinstance(dim, str):
         bins = (result.test.dsref.bins
                 if len(result.test.dsref.bins) == len(dim)
@@ -247,11 +250,13 @@ def repr_datasets_values(result):
     cds = [CurveElements(values=result.test.dsref.value,
                          label=(result.test.dsref.name
                                 if result.test.dsref.name else 'reference'),
-                         index=0, yname='', errors=result.test.dsref.error)]
+                         index=0, yname=result.test.dsref.what,
+                         errors=result.test.dsref.error)]
     cds.extend([CurveElements(values=ds.value,
                               label=(ds.name if ds.name
                                      else 'dataset '+str(ids)),
-                              index=ids+1, yname='', errors=ds.error)
+                              index=ids+1, yname=result.test.dsref.what,
+                              errors=ds.error)
                 for ids, ds in enumerate(result.test.datasets)])
     LOGGER.info("bins %s", bins)
     return [PlotTemplate(bins=bins, xname=dim, curves=cds)]

@@ -325,30 +325,24 @@ def check_last_entropy_result(entropy_rb):
     resps = entropy_rb.select_by(response_type='keff')
     assert len(resps) == 7
     for resp in resps:
-        bd_keff = dcv.convert_data(resp['results'], data_type='keff',
-                                   estimator=resp['keff_estimator'])
-        assert bd_keff.name == 'keff_' + resp['keff_estimator']
+        bd_keff = dcv.convert_data(resp['results'], data_type='keff')
         assert bd_keff.shape == ()
         assert not bd_keff.bins
         if '-' in resp['keff_estimator']:
             bd_corr = dcv.convert_data(resp['results'], data_type='keff',
-                                       estimator=resp['keff_estimator'],
                                        correlation=True)
             assert bd_corr
             assert np.isnan(bd_corr.error)
         else:
             with pytest.raises(KeyError):
                 bd_corr = dcv.convert_data(resp['results'], data_type='keff',
-                                           estimator=resp['keff_estimator'],
                                            correlation=True)
     assert 'KSTEP-KCOLL' in entropy_rb.available_values('keff_estimator')
     assert 'full combination' in entropy_rb.available_values('keff_estimator')
     resps = entropy_rb.select_by(response_type='keff_auto')
     assert len(resps) == 4
     for resp in resps:
-        bd_keff = dcv.convert_data(resp['results'], data_type='keff_auto',
-                                   estimator=resp['keff_estimator'])
-        assert bd_keff.name == 'keff_auto_' + resp['keff_estimator']
+        bd_keff = dcv.convert_data(resp['results'], data_type='keff_auto')
         assert bd_keff.shape == ()
 
 

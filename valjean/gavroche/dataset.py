@@ -5,6 +5,13 @@ other to perform simple calculations and usual operations on datasets
 
 All operations conserve the name of the initial dataset.
 
+The **what** attribute can be used to store the name of the quantity
+represented by the dataset. It is updated if it involves another dataset:
+
+* in addition or substraction, if **what** is different it contains both
+  separated by the symbol
+* in multiplication or division it always contains both separeted by the symbol
+
 .. todo::
 
     Adding comparisons to gdataset.
@@ -32,9 +39,12 @@ From the default arguments:
 
     >>> bins = OrderedDict([('e', np.array([1, 2, 3])), ('t', np.arange(5))])
     >>> gd1 = Dataset(np.arange(10).reshape(2, 5),
-    ...               np.array([0.3]*10).reshape(2, 5), bins=bins, name='gd1')
+    ...               np.array([0.3]*10).reshape(2, 5),
+    ...               bins=bins, name='gd1', what='spam')
     >>> gd1.name
     'gd1'
+    >>> gd1.what
+    'spam'
     >>> gd1.value.shape == (2, 5)
     True
     >>> np.array_equal(gd1.value, [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]])
@@ -53,14 +63,14 @@ From a :class:`~valjean.eponine.base_dataset.BaseDataset` (usually obtained
 from parsing):
 
     >>> from valjean.eponine.base_dataset import BaseDataset
-    >>> ds = BaseDataset(np.arange(3), np.array([1]*3), name='ds')
+    >>> ds = BaseDataset(np.arange(3), np.array([1]*3))
     >>> gds = Dataset.from_dataset(ds)
     >>> ds.__class__
     <class 'valjean.eponine.base_dataset.BaseDataset'>
     >>> gds.__class__
     <class 'valjean.gavroche.dataset.Dataset'>
-    >>> ds.name == gds.name
-    True
+    >>> gds.name
+    ''
     >>> np.array_equal(ds.value, gds.value)
     True
     >>> np.array_equal(ds.error, gds.error)
@@ -107,6 +117,8 @@ Example addition of a scalar value (only on value)
     True
     >>> gd1p10.bins == gd1.bins
     True
+    >>> gd1p10.what == gd1.what
+    True
 
 As expected it 'only' acts on the value, error and bins are unchanged.
 
@@ -126,6 +138,8 @@ Example of subtraction of a :obj:`numpy.ndarray`
     >>> np.array_equal(gd1ma.error, gd1.error)
     True
     >>> gd1ma.bins == gd1.bins
+    True
+    >>> gd1ma.what == gd1.what
     True
 
 ``a`` and ``gd1`` have the same shape to everything is fine.
@@ -151,13 +165,15 @@ Example of addition or subtraction of another :class:`Dataset`
 
     >>> gd2 = Dataset(value=np.arange(20, 30).reshape(2, 5),
     ...               error=np.array([0.4]*10).reshape(2, 5),
-    ...               bins=bins, name='gd2')
+    ...               bins=bins, name='gd2', what='spam')
     >>> gd1.bins == gd2.bins
     True
     >>> gd1p2 = gd1 + gd2
     >>> gd1p2.__class__
     <class 'valjean.gavroche.dataset.Dataset'>
     >>> gd1p2.name == gd1.name
+    True
+    >>> gd1p2.what == gd1.what
     True
     >>> np.array_equal(gd1p2.value, [[20, 22, 24, 26, 28],
     ...                              [30, 32, 34, 36, 38]])
@@ -177,6 +193,10 @@ Datasets without binning can also be added:
     >>> gd1p3 = gd1 + gd3
     >>> gd1p3.name == gd1.name
     True
+    >>> gd1p3.what == gd1.what
+    False
+    >>> gd1p3.what
+    'spam+'
     >>> np.array_equal(gd1p3.value, [[200, 211, 222, 233, 244],
     ...                              [255, 266, 277, 288, 299]])
     True
@@ -216,7 +236,7 @@ If bins are given, they need to have the same keys and the same values
     >>> bins6 = OrderedDict([('e', np.array([1, 2, 30])), ('t', np.arange(5))])
     >>> gd6 = Dataset(np.arange(0, -10, -1).reshape(2, 5),
     ...               np.array([0.01]*10).reshape(2, 5),
-    ...               bins=bins6, name='gd5')
+    ...               bins=bins6, name='gd6')
     >>> gd1 - gd6
     Traceback (most recent call last):
         [...]
@@ -279,6 +299,8 @@ Example of division of a :obj:`numpy.ndarray`
     >>> gd1da = gd1 / a
     >>> gd1da.name == gd1.name
     True
+    >>> gd1da.what == gd1.what
+    True
     >>> np.array_equal(gd1da.value, [[0., 0.01, 0.02, 0.03, 0.04],
     ...                              [0.05, 0.06, 0.07, 0.08, 0.09]])
     True
@@ -308,8 +330,8 @@ with them. It sends a RunningWarning about the division by zero.
             name: gd1, with shape (2, 5),
             value: [[0.         0.33333333        nan 0.75              inf]
      [5.         0.         1.4        0.8               inf]],
-            error: [[0.05       0.03333333        nan 0.025             inf]
-     [0.1        0.         0.02       0.01              inf]],
+            error: [[0.15       0.03333333        nan 0.075             inf]
+     [0.3        0.         0.06       0.03              inf]],
             bins: OrderedDict([('e', array([1, 2, 3])), ('t', \
 array([0, 1, 2, 3, 4]))])
     >>> # prints *** RuntimeWarning: divide by zero encountered in true_divide
@@ -318,32 +340,35 @@ array([0, 1, 2, 3, 4]))])
 Example of multiplication or division of another :class:`Dataset`
 `````````````````````````````````````````````````````````````````
 
-    >>> gd1 * gd2  # doctest: +SKIP
+    >>> gd1m2 = gd1 * gd2
+    >>> gd1m2  # doctest: +SKIP
     class: <class 'valjean.gavroche.dataset.Dataset'>, data type: \
 <class 'numpy.ndarray'>
-            name: gd1, with shape (2, 5),
+            shape (2, 5),
             value: [[  0  21  44  69  96]
      [125 156 189 224 261]],
-            error: [[        nan  3.26496554  6.39061812 10.74895344 \
-16.17899873]
-     [22.63846285 30.11245589 38.5945592  48.08159731 58.57183624]],
+            error: [[6.         6.31268564 6.64830806 7.00357052 7.37563557]
+     [7.76208735 8.16088231 8.57029754 8.98888202 9.4154129 ]],
             bins: OrderedDict([('e', array([1, 2, 3])), ('t', \
 array([0, 1, 2, 3, 4]))])
-    >>> # prints *** RuntimeWarning: divide by zero encountered in true_divide
-    >>> # prints *** invalid value encountered in multiply
+    >>> gd1m2.what
+    'spam*spam'
+    >>> same_coords(gd1m2, gd2)
+    True
 
-    >>> gd1 / gd2  # doctest: +SKIP
+    >>> gd1o2 = gd1 / gd2
+    >>> gd1o2  # doctest: +SKIP
     class: <class 'valjean.gavroche.dataset.Dataset'>, data type: \
 <class 'numpy.ndarray'>
-            name: gd1, with shape (2, 5),
+            shape (2, 5),
             value: [[0.         0.04761905 0.09090909 0.13043478 0.16666667]
      [0.2        0.23076923 0.25925926 0.28571429 0.31034483]],
-            error: [[       nan 0.00740355 0.01320376 0.02031938 0.02808854]
-     [0.03622154 0.04454505 0.05294178 0.06132857 0.06964547]],
+            error: [[0.015      0.01431448 0.01373617 0.01323926 0.01280492]
+     [0.01241934 0.01207231 0.01175624 0.01146541 0.0111955 ]],
             bins: OrderedDict([('e', array([1, 2, 3])), ('t', \
 array([0, 1, 2, 3, 4]))])
-    >>> # prints *** RuntimeWarning: divide by zero encountered in true_divide
-    >>> # prints *** RuntimeWarning: invalid value encountered in multiply
+    >>> gd1o2.what
+    'spam/spam'
 
 In both cases the error is calulated considering both datasets are independent,
 so quadratically :math:`e = v*\\sqrt{{(\\frac{gd_1.e}{gd_1.v})}^2 +
@@ -355,7 +380,12 @@ multiplication and division, same ``AssertError`` are raised, see
 
 About the division by ``0``, ``nan`` or ``inf``, it acts like in the
 multiplication or division by a :obj:`numpy.ndarray`, see
-:ref:`division_by_nparray`.
+:ref:`division_by_nparray` (warnings and ``nan``, ``inf``, etc.)
+
+>>> np.isnan((gd1/gd1).value[0][0])
+True
+>>> np.isinf(((gd1+1)/gd1).value[0][0])
+True
 
 
 Indexing and slicing
@@ -559,15 +589,56 @@ class Dataset(BaseDataset):
     '''A :class:`~valjean.eponine.base_dataset.BaseDataset` with mathematical
     operations.'''
 
+    def __init__(self, value, error, *, bins=None, name='', what=''):
+        '''Initialize a dataset: initialize a :class:`.BaseDataset` and two
+        additional attributes, name and what.
+
+        :param value: array of N dimensions representing the values
+        :type value: numpy.ndarray or numpy.generic
+        :param error: array of N dimensions representing the **absolute**
+          errors
+        :type error: numpy.ndarray or numpy.generic
+        :param bins: bins corresponding to value (named optional parameter)
+        :type bins: collections.OrderedDict (str, numpy.ndarray)
+        :param str name: name of the dataset (used in test representation)
+        :param str what: name of the quantity represented by the dataset
+        '''
+        super().__init__(value, error, bins=bins)
+        self.name = name
+        self.what = what
+
     @classmethod
-    def from_dataset(cls, dataset, name=None):
+    def from_dataset(cls, dataset, name='', what=''):
         '''Construct a :class:`Dataset` from an instance of a
-        :class:`~valjean.eponine.base_dataset.BaseDataset`.'''
-        if name is not None:
-            return cls(value=dataset.value, error=dataset.error,
-                       bins=dataset.bins, name=name)
+        :class:`~valjean.eponine.base_dataset.BaseDataset`.
+
+        :param dataset: initial :class:`.BaseDataset`
+        :type dataset: BaseDataset
+        :param str name: name of the dataset (used in test representation)
+        :param str what: name of the quantity represented by the dataset
+        '''
         return cls(value=dataset.value, error=dataset.error,
-                   bins=dataset.bins, name=dataset.name)
+                   bins=dataset.bins, name=name, what=what)
+
+    def __repr__(self):
+        return (super().__repr__()
+                + '\nname: {}, what: {}'.format(self.name, self.what))
+
+    def __str__(self):
+        return (super().__str__()
+                + ', name: {}, what: {}'.format(self.name, self.what))
+
+    def squeeze(self):
+        '''Squeeze dataset: remove useless dimensions.
+
+        See :meth:`~valjean.eponine.base_dataset.BaseDataset.squeeze` for more
+        details.
+        :rtype: Dataset
+        '''
+        dss = super().squeeze()
+        dss.name = self.name
+        dss.what = self.what
+        return dss
 
     def _check_datasets_consistency(self, other, operation=""):
         if other.shape != self.shape:
@@ -589,11 +660,13 @@ class Dataset(BaseDataset):
                             "accepted for the moment")
         if not isinstance(other, BaseDataset):
             return Dataset(self.value + other, self.error,
-                           bins=self.bins, name=self.name)
+                           bins=self.bins, name=self.name, what=self.what)
         self._check_datasets_consistency(other, "add")
         value = self.value + other.value
         error = np.sqrt(self.error**2 + other.error**2)
-        return Dataset(value, error, bins=self.bins, name=self.name)
+        what = (self.what if other.what == self.what
+                else self.what+'+'+other.what)
+        return Dataset(value, error, bins=self.bins, name=self.name, what=what)
 
     def __sub__(self, other):
         LOGGER.debug("in %s.__sub__", self.__class__.__name__)
@@ -602,30 +675,33 @@ class Dataset(BaseDataset):
                             "accepted for the moment")
         if not isinstance(other, BaseDataset):
             return Dataset(self.value - other, self.error,
-                           bins=self.bins, name=self.name)
+                           bins=self.bins, name=self.name, what=self.what)
         self._check_datasets_consistency(other, "subtract")
         value = self.value - other.value
         error = np.sqrt(self.error**2 + other.error**2)
-        return Dataset(value, error, bins=self.bins, name=self.name)
+        what = (self.what if other.what == self.what
+                else self.what+'-'+other.what)
+        return Dataset(value, error, bins=self.bins, name=self.name, what=what)
 
     def __mul__(self, other):
         LOGGER.debug("in %s.__mul__", self.__class__.__name__)
         if not isinstance(other, BaseDataset):
             return Dataset(
                 self.value * other, self.error * other,
-                bins=self.bins, name=self.name)
+                bins=self.bins, name=self.name, what=self.what)
         self._check_datasets_consistency(other, "multiply")
         value = self.value * other.value
         error = np.sqrt((self.error * other.value)**2
                         + (other.error * self.value)**2)
-        return Dataset(value, error, bins=self.bins, name=self.name)
+        return Dataset(value, error, bins=self.bins, name=self.name,
+                       what=self.what+'*'+other.what)
 
     def __truediv__(self, other):
         LOGGER.debug("in %s.__truediv__", self.__class__.__name__)
         if not isinstance(other, BaseDataset):
             return Dataset(
                 self.value / other, self.error / other,
-                bins=self.bins, name=self.name)
+                bins=self.bins, name=self.name, what=self.what)
         self._check_datasets_consistency(other, "divide")
         value = self.value / other.value
         # RuntimeWarning can be ignored thanks to the commented line.
@@ -633,7 +709,8 @@ class Dataset(BaseDataset):
         # with np.errstate(divide='divide', invalid='ignore'):
         error = np.sqrt((self.error / other.value)**2
                         + (self.value * other.error / other.value**2)**2)
-        return Dataset(value, error, bins=self.bins, name=self.name)
+        return Dataset(value, error, bins=self.bins, name=self.name,
+                       what=self.what+'/'+other.what)
 
     @staticmethod
     def _get_bins_slice(index):
@@ -674,7 +751,7 @@ class Dataset(BaseDataset):
         bins = self._get_bins_items(index)
         LOGGER.debug("Shape: %s -> %s", self.shape, value.shape)
         LOGGER.debug("Bins:%s -> %s", self.bins, bins)
-        return Dataset(value, error, bins=bins, name=self.name)
+        return Dataset(value, error, bins=bins, name=self.name, what=self.what)
 
 
 def consistent_datasets(gds1, gds2):

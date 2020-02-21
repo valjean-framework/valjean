@@ -67,15 +67,12 @@ def base_datasets(draw, elements=None, shape=None, dtype=None, coords=None):
     else:
         bins = draw(coords)
 
-    name = draw(text())
-
     note('data shape: {}'.format(data_val.shape))
     note('data_val: {}'.format(data_val))
     note('data_err: {}'.format(data_err))
     note('bins: {}'.format(bins))
-    note('name: {}'.format(name))
 
-    return BaseDataset(data_val, data_err, bins=bins, name=name)
+    return BaseDataset(data_val, data_err, bins=bins)
 
 
 def cnames():
@@ -241,8 +238,7 @@ def perturbed_base_datasets(draw):
     pert_value = draw(perturb(dataset.value))
     pert_datasets = (dataset,
                      BaseDataset(pert_value, dataset.error.copy(),
-                                 bins=dataset.bins,
-                                 name=dataset.name + '_pert'))
+                                 bins=dataset.bins))
     return pert_datasets
 
 

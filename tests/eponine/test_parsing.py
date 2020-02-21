@@ -74,7 +74,7 @@ def check_array_datasets(response, dname, data):
         for elt in data:
             assert dcv.convert_data(data, elt)
     else:
-        if isinstance(data, dict) and 'array'in data:
+        if isinstance(data, dict) and 'array' in data:
             for akey in data:
                 if 'array' not in akey:
                     continue
@@ -108,18 +108,10 @@ def check_data(responses):
         for dname, data in iresp['results'].items():
             if isinstance(data, str):
                 continue
-            if dname == 'keff_per_estimator':
-                for kestim in data['estimators']:
-                    assert dcv.convert_data(iresp['results'], dname,
-                                            estimator=kestim)
-            elif dname == 'keff_auto':
-                assert dcv.convert_data(iresp['results'], dname,
-                                        estimator=iresp['keff_estimator'])
+            if iresp['response_type'] == 'score':
+                check_array_datasets(iresp, dname, data)
             else:
-                if iresp['response_type'] == 'score':
-                    check_array_datasets(iresp, dname, data)
-                else:
-                    assert dcv.convert_data(iresp['results'], dname)
+                assert dcv.convert_data(iresp['results'], dname)
 
 
 def response_book_test(res):

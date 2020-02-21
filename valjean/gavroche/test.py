@@ -15,14 +15,14 @@ Now we create a toy data set:
     >>> error = np.zeros_like(y)
     >>> bins = OrderedDict()
     >>> bins['x'] = x
-    >>> parabola = BaseDataset(y, error, bins=bins, name='parabola')
+    >>> parabola = BaseDataset(y, error, bins=bins)
 
 We perturb the data by applying some small amount of noise:
 
     >>> eps = 1e-8
     >>> noise = np.random.uniform(-eps, eps, parabola.shape)
     >>> y2 = y + noise
-    >>> parabola2 = BaseDataset(y2, error, bins=bins, name='parabola2')
+    >>> parabola2 = BaseDataset(y2, error, bins=bins)
 
 Now we can test if the new dataset is equal to the original one:
 
