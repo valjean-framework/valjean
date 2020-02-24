@@ -16,3 +16,4 @@ class Verbosity(Enum):
     SUMMARY = 1
     INTERMEDIATE = 2
     FULL_DETAILS = 3
+    DEVELOPMENT = 4

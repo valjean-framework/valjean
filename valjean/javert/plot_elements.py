@@ -75,9 +75,9 @@ def repr_testresultstudent(result, verbosity=None):
     # faire une condition sur le bool dans le cas de SUMMARY ?
     if verbosity in (Verbosity.SILENT, Verbosity.SUMMARY):
         return []
-    if verbosity == Verbosity.INTERMEDIATE:
+    if verbosity is None or verbosity == Verbosity.INTERMEDIATE:
         return repr_student_intermediate(result)
-    if verbosity == Verbosity.FULL_DETAILS:
+    if verbosity.value >= Verbosity.FULL_DETAILS.value:
         return repr_student_full_details(result)
     return repr_student_intermediate(result)
 

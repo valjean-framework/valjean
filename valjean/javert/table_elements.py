@@ -110,7 +110,9 @@ def repr_testresultequal(result, verbosity=None):
         if verbosity != Verbosity.FULL_DETAILS:
             return []
         return repr_equal(result, 'equal?')
-    if verbosity not in (Verbosity.INTERMEDIATE, Verbosity.FULL_DETAILS):
+    if verbosity is None:
+        return repr_equal(result, 'equal?')
+    if verbosity.value < Verbosity.INTERMEDIATE.value:
         return repr_equal_summary(result)
     return repr_equal(result, 'equal?')
 
@@ -261,7 +263,6 @@ def repr_student(result):
     LOGGER.debug("In repr_student")
     oracles = result.oracles()
     nbins, bins = repr_bins(result.test.dsref)
-    print("after repr_bins:", bins)
     dscols = tuple((ds.value, ds.error, delta, studbool)
                    for ds, delta, studbool in zip(result.test.datasets,
                                                   result.delta,
@@ -666,13 +667,15 @@ def repr_testresultmetadata(result, verbosity=None):
     :returns: list of templates representing a :class:`~.TestResultMetadata`
     '''
     LOGGER.debug("metadata res, %s, res = %s", verbosity, bool(result))
+    if verbosity is None:
+        return repr_metadata(result)
     if verbosity == Verbosity.SILENT:
         return []
     if verbosity == Verbosity.SUMMARY:
         return repr_metadata_summary(result)
     if verbosity == Verbosity.INTERMEDIATE:
         return repr_metadata_intermediate(result)
-    if verbosity == Verbosity.FULL_DETAILS:
+    if verbosity.value >= Verbosity.FULL_DETAILS.value:
         return repr_metadata_full_details(result)
     return repr_metadata(result)
 
