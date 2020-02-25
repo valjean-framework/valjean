@@ -17,23 +17,23 @@ from hypothesis import given, settings, HealthCheck, note
 from hypothesis.strategies import just, integers, data, lists, text
 from hypothesis.extra.numpy import array_shapes
 
-from ..context import valjean  # pylint: disable=wrong-import-order
+from ...context import valjean  # pylint: disable=wrong-import-order
 
 from valjean import LOGGER
 from valjean.javert.templates import (PlotTemplate, join, TableTemplate,
                                       CurveElements)
-from valjean.javert.mpl import MplPlot
+from valjean.javert.mpl import MplPlot, MplPlot2D
 from valjean.javert import plot_elements as plt_elts
-from ..gavroche.conftest import (some_1d_dataset, one_dim_dataset,
-                                 other_1d_dataset, some_1d_dataset_edges,
-                                 other_1d_dataset_edges, different_1d_dataset)
-from ..gavroche.conftest import (student_test, student_test_result,
-                                 student_test_fail, student_test_result_fail,
-                                 student_test_edges, student_test_edges_result,
-                                 student_test_3ds, student_test_result_3ds,
-                                 student_test_with_pvals,
-                                 student_test_result_with_pvals)
-from ..gavroche.conftest import datasets
+from ...gavroche.conftest import (some_1d_dataset, one_dim_dataset,
+                                  other_1d_dataset, some_1d_dataset_edges,
+                                  other_1d_dataset_edges, different_1d_dataset)
+from ...gavroche.conftest import (student_test, student_test_result,
+                                  student_test_fail, student_test_result_fail,
+                                  student_test_edges, student_test_edges_result,
+                                  student_test_3ds, student_test_result_3ds,
+                                  student_test_with_pvals,
+                                  student_test_result_with_pvals)
+from ...gavroche.conftest import datasets
 
 
 def test_plot_1d_dataset(some_1d_dataset):
@@ -221,3 +221,97 @@ def test_fplit_join(student_test_result, student_test_result_fail, plot_repr):
     templ2 = plot_repr(student_test_result_fail)[0]
     with pytest.raises(ValueError):
         join(templ1, templ2)
+
+
+@pytest.mark.mpl_image_compare(filename='adapt_range_lrbin.png',
+                               baseline_dir='ref_plots')
+def test_adapt_range_lrbin(studentt_res_range_lrbin, plot_repr):
+    '''Test with matplotlib test.'''
+    # pelt = CurveElements(values=np.arange(5), label='', index=0, yname='Y')
+    # plti = PlotTemplate(bins=np.array([0, 2, 3, 6, 7, 10000]), xname='X',
+    #                     curves=[pelt])
+    templ = plot_repr(studentt_res_range_lrbin)
+    mplt = MplPlot(templ[0])
+    # mplt.splt.set_title('Plot irregular bins')
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='adapt_range_lbin.png',
+                               baseline_dir='ref_plots')
+def test_adapt_range_lbin(studentt_res_range_lbin, plot_repr):
+    '''Test with matplotlib test.'''
+    # pelt = CurveElements(values=np.arange(5), label='', index=0, yname='Y')
+    # plti = PlotTemplate(bins=np.array([0, 2, 3, 6, 7, 10000]), xname='X',
+    #                     curves=[pelt])
+    templ = plot_repr(studentt_res_range_lbin)
+    mplt = MplPlot(templ[0])
+    # mplt.splt.set_title('Plot irregular bins')
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='adapt_range_rbin.png',
+                               baseline_dir='ref_plots')
+def test_adapt_range_rbin(studentt_res_range_rbin, plot_repr):
+    '''Test with matplotlib test.'''
+    # pelt = CurveElements(values=np.arange(5), label='', index=0, yname='Y')
+    # plti = PlotTemplate(bins=np.array([0, 2, 3, 6, 7, 10000]), xname='X',
+    #                     curves=[pelt])
+    templ = plot_repr(studentt_res_range_rbin)
+    mplt = MplPlot(templ[0])
+    # mplt.splt.set_title('Plot irregular bins')
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='noadapt_range_lrbin.png',
+                               baseline_dir='ref_plots')
+def test_noadapt_range_lrbin(studentt_res_range_lrbin, plot_no_post_repr):
+    '''Test with matplotlib test.'''
+    # pelt = CurveElements(values=np.arange(5), label='', index=0, yname='Y')
+    # plti = PlotTemplate(bins=np.array([0, 2, 3, 6, 7, 10000]), xname='X',
+    #                     curves=[pelt])
+    templ = plot_no_post_repr(studentt_res_range_lrbin)
+    mplt = MplPlot(templ[0])
+    # mplt.splt.set_title('Plot irregular bins')
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_2d.png',
+                               baseline_dir='ref_plots')
+def test_student_2d(studentt_res_2d, plot_repr):
+    '''2D plot for Student test'''
+    templ = plot_repr(studentt_res_2d)
+    print(bool(studentt_res_2d))
+    print(list(studentt_res_2d.oracles()))
+    print('nombre de templates =', len(templ))
+    mplt = MplPlot2D(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_2d_range_elr.png',
+                               baseline_dir='ref_plots')
+def test_student_2d_range_elr(studentt_res_2d_range_elr, plot_repr):
+    '''2D plot for Student test with large extreme bins in e (x-axis).'''
+    templ = plot_repr(studentt_res_2d_range_elr)
+    print('nombre de templates =', len(templ))
+    print(list(studentt_res_2d_range_elr.oracles()))
+    mplt = MplPlot2D(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_2d_range_etlr.png',
+                               baseline_dir='ref_plots')
+def test_student_2d_range_etlr(studentt_res_2d_range_etlr, plot_repr):
+    '''2D plot for Studnet test with large extreme bins in e and t (both axis).
+    '''
+    templ = plot_repr(studentt_res_2d_range_etlr)
+    mplt = MplPlot2D(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_2d_range_etr.png',
+                               baseline_dir='ref_plots')
+def test_student_2d_range_etr(studentt_res_2d_range_etr, plot_repr):
+    '''2D plot for Student test with large last bins in e and t (both axis).'''
+    templ = plot_repr(studentt_res_2d_range_etr)
+    mplt = MplPlot2D(templ[0])
+    return mplt.fig

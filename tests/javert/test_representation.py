@@ -35,7 +35,7 @@ def test_full_repr(test_name, request):
 
 
 @pytest.mark.mpl_image_compare(filename='student_comp_points.png',
-                               baseline_dir='ref_plots')
+                               baseline_dir='plots/ref_plots')
 def test_student_full(student_test_result, full_repr, rst_formatter, rstcheck):
     '''Test plot of student result when bins are given by centers of bins.'''
     templates = full_repr(student_test_result)
@@ -51,7 +51,7 @@ def test_student_full(student_test_result, full_repr, rst_formatter, rstcheck):
 
 
 @pytest.mark.mpl_image_compare(filename='student_comp_edges.png',
-                               baseline_dir='ref_plots')
+                               baseline_dir='plots/ref_plots')
 def test_student_edges_full(student_test_edges_result, full_repr,
                             rst_formatter, rstcheck):
     '''Test plot of student result when bins are given by edges.'''
@@ -94,7 +94,7 @@ def test_full_concatenation(student_test_result, student_test_result_fail,
 
 
 @pytest.mark.mpl_image_compare(filename='student_fplit_3ds.png',
-                               baseline_dir='ref_plots')
+                               baseline_dir='plots/ref_plots')
 def test_full_repr_3d(student_test_result_3ds, full_repr, rst_formatter,
                       rstcheck):
     '''Test full representation with 3 datasets (1 reference, 2 test datasets).
