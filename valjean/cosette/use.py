@@ -680,7 +680,7 @@ class Use:
             soft_deps = set()
 
         if deps:
-            pytask_name = (','.join(dep.name for dep in deps)
+            pytask_name = (','.join(sorted(dep.name for dep in deps))
                            + '.' + self.func_name)
         else:
             pytask_name = self.func_name
