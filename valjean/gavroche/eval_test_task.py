@@ -76,7 +76,8 @@ class EvalTestTask(PythonTask):
             output_dir = Path(config.get('path', 'output-root'),
                               sanitize_filename(self.name))
             ensure(output_dir, is_dir=True)
-            env_up = {self.name: {'result': results}}
+            env_up = {self.name: {'result': results,
+                                  'output_dir': str(output_dir)}}
             status = TaskStatus.DONE
             return env_up, status
 
