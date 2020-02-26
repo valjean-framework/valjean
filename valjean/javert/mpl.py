@@ -195,6 +195,41 @@ keys are interpreted:
     >>> mplplt = mpl.MplPlot(pltit)
 
 
+2D plots
+--------
+
+To make 2D plots the class :class:`MplPlot2D` has to be used. Principle is the
+same as for 1D plots but the template is a :class:`~.templates.PlotNDTemplate`.
+The main change is the format of the ``bins`` element: an
+:obj:`collections.OrderedDict`. Each curve has its own plot, no superposition
+is done.
+
+The colorbar axis label is set using the ``yname`` attribute.
+
+There is no real legend, so ``label`` is added as prefix to the colorbar label.
+
+.. plot::
+    :include-source:
+
+    >>> from collections import OrderedDict
+    >>> import numpy as np
+    >>> from valjean.javert.templates import PlotNDTemplate, CurveElements
+    >>> bins = OrderedDict([('x', np.arange(6)),
+    ...                     ('y', np.arange(17, step=2))])
+    >>> incvals = np.arange(1, 41).reshape(5, 8)
+    >>> decvals = np.arange(1, 41)[::-1].reshape(5, 8)
+    >>> lcurves = []
+    >>> lcurves.append(CurveElements(
+    ...         values=incvals, label='increase', index=0, yname='spam'))
+    >>> lcurves.append(CurveElements(
+    ...         values=decvals, label='decrease', index=0, yname='spam'))
+    >>> lcurves.append(CurveElements(
+    ...         values=incvals/decvals, label='', index=1, yname='ratio'))
+    >>> pltnd = PlotNDTemplate(bins=bins, curves=lcurves)
+    >>> from valjean.javert import mpl
+    >>> mplplt = mpl.MplPlot2D(pltnd)
+
+
 Module API
 ----------
 '''
@@ -399,6 +434,64 @@ class MplPlot:
                     [l.label for l in self.legend if l.iplot == iyax],
                     ncol=ncol, **LEGENDS.get('legend_kwargs', {}))
             return
+
+    def save(self, name='fig.png'):
+        '''Save the plot under the given name.
+
+        :param str name: name of the output file. Expected extensions: png,
+            pdf, svg, eps.
+        '''
+        self.fig.savefig(name)
+
+
+class MplPlot2D:
+    '''Convert a :class:`~.templates.PlotNDTemplate` into a 2D plot.'''
+
+    def __init__(self, data):
+        LOGGER.debug('initialisation of MplPlot2D')
+        plt.style.use(STYLE)
+        self.data = data
+        self.nb_splts = len(set(c.label for c in self.data.curves))
+        self.fig, self.splt = plt.subplots(self.nb_splts, sharex=True,
+                                           sharey=True)
+        self.legend = []
+        self.draw()
+
+    def draw(self):
+        '''Draw method.'''
+        return self.twod_plots()
+
+    def bin_centers(self, curve):
+        '''Calculate bin centers.'''
+        bins = []
+        for idim, tbin in enumerate(self.data.bins.values()):
+            dims_af = int(np.prod(curve.values.shape[idim+1:]))
+            dims_bf = int(np.prod(curve.values.shape[:idim]))
+            if tbin.size == curve.values.shape[idim]+1:
+                cbins = [[(a + b)/2]*dims_af
+                         for a, b in zip(tbin[:-1], tbin[1:])]
+            else:
+                cbins = [[a] * dims_af for a in tbin]
+            cbins = [cbins] * dims_bf
+            bins.append(np.array(cbins).squeeze())
+        return bins
+
+    def itwod_plot(self, curve, iplot, ):
+        '''Draw the 2D distribution on the ith subplot.'''
+        cbins = self.bin_centers(curve)
+        h2d = self.splt[iplot].hist2d(cbins[0].flatten(), cbins[1].flatten(),
+                                      bins=list(self.data.bins.values()),
+                                      weights=curve.values.flatten())
+        cbar = self.fig.colorbar(h2d[3], ax=self.splt[iplot])
+        self.splt[iplot].set_xlabel(list(self.data.bins.keys())[0])
+        self.splt[iplot].set_ylabel(list(self.data.bins.keys())[1])
+        # cbar.set_label(r'{}$_{}$'.format(curve.yname, '{'+curve.label+'}'))
+        cbar.set_label('{}: {}'.format(curve.label, curve.yname))
+
+    def twod_plots(self):
+        '''Build 2D plots.'''
+        for icrv, crv in enumerate(self.data.curves):
+            self.itwod_plot(crv, icrv)
 
     def save(self, name='fig.png'):
         '''Save the plot under the given name.

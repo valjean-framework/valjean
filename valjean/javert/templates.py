@@ -672,6 +672,127 @@ PlotTemplate.
         return not self == other
 
 
+class PlotNDTemplate:
+    '''A container for full test result to be represented as a N-dimensions
+    plot. This includes all the datasets and the test result. This can also
+    include p-values or other test parameters, depending on what is given to
+    the PlotTemplate.
+    '''
+
+    def __init__(self, *, bins, curves):
+        '''Construction of the PlotTemplate from x-bins and curves.
+
+        The curves should be a list of :class:`CurveElements`.
+
+        The bins mean the x-axis bins. They should be common to all the curves.
+        It is up to the user to ensure that (when coming from a unique test
+        this should be automatic).
+
+        :param bins: bins, common for all plots (important), only one set is
+            needed
+        :type bins: :obj:`numpy.ndarray`
+        :param str xname: name of x-axis (default: ``''``)
+        :param curves: list of curves characteristics
+        :type curves: :class:`list` (:class:`CurveElements`)
+        '''
+        self.bins = bins
+        self.curves = curves
+
+        if not isinstance(self.curves, list):
+            raise TypeError("The 'curves' argument must a list of "
+                            "CurveElements.")
+
+        if not all(isinstance(curve, CurveElements) for curve in self.curves):
+            raise TypeError("The 'curves' argument must a list of "
+                            "CurveElements.")
+
+    def copy(self):
+        '''Copy a :class:`PlotTemplate` object.
+
+        :returns: :class:`PlotTemplate`
+        '''
+        return PlotTemplate(bins=self.bins.copy(),
+                            curves=[pelt.copy() for pelt in self.curves])
+
+    def _binary_join(self, other):
+        '''Join another :class:`PlotNDTemplate` to the current one.
+
+        This method **concatenates** the current :class:`PlotNDTemplate` to the
+        ``other`` one, i.e., if they share the x-axis (bins and name), the
+        curves list is extended.
+
+        The curves are not added in the mathematical sense. If this is what you
+        really want to do, please add the datasets themselves before and
+        probably redo the test.
+
+        :param other: :class:`PlotNDTemplate` to add to the current one
+        :returns: updated :class:`PlotNDTemplate`
+        :raises TypeError: if the other parameter is not a
+            :class:`PlotNDTemplate`
+        :raises ValueError: if x-axes are not the same (``xname`` and ``bins``)
+        '''
+        if not isinstance(other, PlotNDTemplate):
+            raise TypeError("Only a PlotNDTemplate can be joined to another "
+                            "PlotTemplate")
+        if not np.array_equal(self.bins, other.bins):
+            raise ValueError("Bins should be the same in both PlotNDTemplates")
+        if not set(c.yname for c in other.curves).isdisjoint(
+                set(c.yname for c in self.curves)):
+            raise ValueError("Only new subplots (ynames) can be joined to a "
+                             "previous PlotNDTemplate.")
+        self.curves.extend(other.curves)
+
+    def join(self, *others):
+        '''Join a given number a :class:`PlotNDTemplate` to the current one.
+
+        Only :class:`PlotNDTemplate` with the same number of columns and same
+        headers can be joined. The method returns the updated current one.
+
+        :param others: list of PlotNDTemplates
+        :type others: :class:`list` (:class:`PlotNDTemplate`)
+        :returns: updated :class:`PlotNDTemplate`
+        '''
+        for oti in others:
+            self._binary_join(oti)
+
+    def __repr__(self):
+        '''Printing of :class:`PlotTemplate`.'''
+        intro = ["class: {0}\n"
+                 "bins: {1}\n".format(self.__class__, self.bins)]
+        elts = []
+        for curve in self.curves:
+            elts.append("label:  {0}\n"
+                        "index:  {1}\n"
+                        "yname:  {2}\n"
+                        "values: {3}\n"
+                        "errors: {4}\n".format(curve.label, curve.index,
+                                               curve.yname,
+                                               curve.values, curve.errors))
+        return ''.join(intro + elts)
+
+    def fingerprint(self):
+        '''Compute a fingerprint (a SHA256 hash) for `self`. The fingerprint
+        depends only on the content of `self`. Two :class:`PlotTemplate`
+        objects containing equal data have the same fingerprint. The converse
+        is not true, but very likely.'''
+        hasher = sha256()
+        for bins in self.bins.values():
+            hasher.update(bins.data.cast('b'))
+        for curve in self.curves:
+            for data in curve.data():
+                hasher.update(data)
+        return hasher.hexdigest()
+
+    def __eq__(self, other):
+        '''Test for equality of `self` and another :class:`PlotTemplate`.'''
+        return (np.array_equal(self.bins, other.bins)
+                and self.curves == other.curves)
+
+    def __ne__(self, other):
+        '''Test for inequality of `self` and another :class:`PlotTemplate`.'''
+        return not self == other
+
+
 class TextTemplate:
     '''A container class that encapsulates text for the report.
 

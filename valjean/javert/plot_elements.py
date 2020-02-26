@@ -2,8 +2,9 @@
 to be converted in rst.
 '''
 from .. import LOGGER
-from .templates import PlotTemplate, CurveElements, join
+from .templates import PlotTemplate, CurveElements, join, PlotNDTemplate
 from .verbosity import Verbosity
+
 
 # turn off pylint warnings about invalid names in this file; there are just too
 # many long function names and they cannot be renamed because
@@ -24,10 +25,12 @@ def dimension_from_array(array_shape):
     :rtype: int
     '''
     non_trivial_dims = tuple(d for d, s in enumerate(array_shape) if s > 1)
-    LOGGER.debug("Non-trivial dimensions: %s", non_trivial_dims)
+    LOGGER.warning("Non-trivial dimensions: %s", non_trivial_dims)
     if len(non_trivial_dims) > 1:
-        LOGGER.debug("More than one non-trivial dimensions, N-dimensions "
-                     "should be required or a dataset slice.")
+        LOGGER.warning("More than one non-trivial dimensions, N-dimensions "
+                       "should be required or a dataset slice.")
+        if len(non_trivial_dims) == 2:
+            return non_trivial_dims
         return None
     if not non_trivial_dims:
         LOGGER.debug("Only trivial dimensions, you may prefer a different "
@@ -50,8 +53,13 @@ def dimension(bins, array_shape):
     :rtype: str
     '''
     idim = dimension_from_array(array_shape)
-    dim_name = list(bins.keys())[idim] if idim is not None else None
-    LOGGER.debug("Used dimension: %s among %s", dim_name, list(bins.keys()))
+    lbins = list(bins.keys())
+    if not isinstance(idim, tuple):
+        dim_name = lbins[idim] if idim is not None else None
+        LOGGER.debug("Used dimension: %s among %s", dim_name, lbins)
+    else:
+        dim_name = [lbins[i] for i in idim]
+        print(dim_name)
     return dim_name
 
 
@@ -85,9 +93,12 @@ def repr_student_intermediate(result):
     :type result: :class:`~.TestResultStudent`
     :returns: :class:`list` (:class:`~.PlotTemplate`)
     '''
+    rval = repr_student_values(result)
+    rdelta = repr_student_delta(result)
     rstudent = [join(rvals, rdelta)
-                for rvals, rdelta in zip(repr_student_values(result),
-                                         repr_student_delta(result))]
+                for rvals, rdelta in zip(rval, rdelta)]
+    if not rstudent and rval:
+        rstudent = rval
     return rstudent
 
 
@@ -102,10 +113,14 @@ def repr_student_full_details(result):
     :type result: :class:`~.TestResultStudent`
     :returns: :class:`list` (:class:`~.PlotTemplate`)
     '''
+    LOGGER.debug('in repr_student_full_details')
+    rval = repr_student_values(result)
+    rdelta = repr_student_delta(result)
+    rpval = repr_student_pvalues(result)
     rstudent = [join(rvals, rdelta, rpvals)
-                for rvals, rdelta, rpvals in zip(repr_student_values(result),
-                                                 repr_student_delta(result),
-                                                 repr_student_pvalues(result))]
+                for rvals, rdelta, rpvals in zip(rval, rdelta, rpval)]
+    if not rstudent and rval:
+        rstudent = rval
     return rstudent
 
 
@@ -124,6 +139,8 @@ def repr_student_delta(result):
     '''
     dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
+        return []
+    if not isinstance(dim, str):
         return []
     bins = result.test.dsref.bins[dim]
     curves = []
@@ -153,8 +170,8 @@ def repr_student_values(result):
     '''
     dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
+        LOGGER.debug('value: dim is None')
         return []
-    bins = result.test.dsref.bins[dim]
     cds = [CurveElements(values=result.test.dsref.value,
                          label=(result.test.dsref.name
                                 if result.test.dsref.name else 'reference'),
@@ -164,6 +181,16 @@ def repr_student_values(result):
             values=tds.value,
             label=(tds.name if tds.name else 'dataset '+str(ids)),
             index=ids+1, yname='', errors=tds.error))
+    if not isinstance(dim, str):
+        bins = (result.test.dsref.bins
+                if len(result.test.dsref.bins) == len(dim)
+                else [result.test.dsref.bins[d] for d in dim])
+        if result.test.dsref.value.ndim != len(bins):
+            LOGGER.warning('Bins and values have different dimensions, '
+                           'consider squeezing dataset before plotting.')
+            return []
+        return [PlotNDTemplate(bins=bins, curves=cds)]
+    bins = result.test.dsref.bins[dim]
     return [PlotTemplate(bins=bins, xname=dim, curves=cds)]
 
 
@@ -182,6 +209,8 @@ def repr_student_pvalues(result):
         return []
     dim = dimension(result.test.dsref.bins, result.test.dsref.value.shape)
     if dim is None:
+        return []
+    if not isinstance(dim, str):
         return []
     bins = result.test.dsref.bins[dim]
     curves = []
@@ -211,6 +240,8 @@ def repr_datasets_values(result):
     dim = dimension(result.test.dsref.bins,
                     result.test.dsref.value.shape)
     if dim is None:
+        return []
+    if not isinstance(dim, str):
         return []
     bins = result.test.dsref.bins[dim]
     cds = [CurveElements(values=result.test.dsref.value,

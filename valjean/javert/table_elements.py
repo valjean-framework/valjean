@@ -261,6 +261,7 @@ def repr_student(result):
     LOGGER.debug("In repr_student")
     oracles = result.oracles()
     nbins, bins = repr_bins(result.test.dsref)
+    print("after repr_bins:", bins)
     dscols = tuple((ds.value, ds.error, delta, studbool)
                    for ds, delta, studbool in zip(result.test.datasets,
                                                   result.delta,

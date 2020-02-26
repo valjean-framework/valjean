@@ -20,7 +20,7 @@ from ..cosette.task import TaskStatus
 from ..cosette.pythontask import PythonTask
 from ..gavroche.test import TestResult
 from .formatter import Formatter
-from .mpl import MplPlot
+from .mpl import MplPlot, MplPlot2D
 from .test_report import TestReport, TestReportTask
 from .verbosity import Verbosity
 
@@ -204,7 +204,8 @@ six-cent-six cyprès.
         for template in res_repr:
             fmt = self.formatter.template(template)
             lines.append(str(fmt))
-            if isinstance(fmt, RstPlot):
+            if isinstance(fmt, (RstPlot, RstPlotND)):
+                print("on est dans le cas...")
                 self.plots[fmt.fingerprint] = fmt.mpl_plot
         LOGGER.debug('formatted result: %s', lines)
         return lines
@@ -264,7 +265,20 @@ class RstFormatter(Formatter):
         :returns: the formatted plot
         :rtype: RstPlot
         '''
+        print('in format_plottemplate')
         return RstPlot(plot)
+
+    @staticmethod
+    def format_plotndtemplate(plot):
+        '''Format a :class:`~.PlotNDTemplate`.
+
+        :param plot: A plot.
+        :type plot: :class:`~.PlotNDTemplate`
+        :returns: the formatted plot
+        :rtype: RstPlotND
+        '''
+        print('in format_plotndtemplate')
+        return RstPlotND(plot)
 
     @staticmethod
     def format_texttemplate(text):
@@ -529,8 +543,27 @@ class RstPlot:
     provides the ``.. image::`` directive to include in the .rst file.
     '''
     def __init__(self, plot):
+        print("RstPlot")
         self.fingerprint = plot.fingerprint()
         self.mpl_plot = MplPlot(plot)
+
+    def __str__(self):
+        return '.. image:: /figures/{}\n'.format(self.filename())
+
+    def filename(self):
+        '''Make up a(n almost) unique filename for this plot.'''
+        return 'plot_{}.png'.format(self.fingerprint)
+
+
+class RstPlotND:
+    '''This class models a plot in an `reStructuredText`_ document. It converts
+    a :class:`~.PlotNDTemplate` object into an :class:`~.MplPlot2D`, and it
+    provides the ``.. image::`` directive to include in the .rst file.
+    '''
+    def __init__(self, plot):
+        print("RstPlotND")
+        self.fingerprint = plot.fingerprint()
+        self.mpl_plot = MplPlot2D(plot)
 
     def __str__(self):
         return '.. image:: /figures/{}\n'.format(self.filename())
