@@ -595,7 +595,7 @@ class Use:
 
     @classmethod
     def from_func(cls, *, func, task, key='result', kwarg=None,
-                  deps_type='hard'):
+                  deps_type='hard', serialize=False):
         '''Create a :class:`Use` from a function.
 
         :param func: a function or a callable object.
@@ -611,6 +611,8 @@ class Use:
         :param str deps_type: whether the created task should have a hard or a
             soft dependency towards the injected tasks. Possible values are
             ``'hard'`` and ``'soft'``.
+        :param bool serialize: if `True`, the result of this task will be
+            written to the output directory.
         '''
         if isinstance(func, cls):
             # when we decorate another Use object, we just extend the decorated
@@ -629,10 +631,10 @@ class Use:
         LOGGER.debug('inj_args = %s', inj_args)
         LOGGER.debug('inj_kwargs = %s', inj_kwargs)
         return cls(inj_args=inj_args, inj_kwargs=inj_kwargs, wrapped=func,
-                   deps_type=deps_type)
+                   deps_type=deps_type, serialize=serialize)
 
     def __init__(self, *, inj_args=None, inj_kwargs=None, wrapped,
-                 deps_type='hard'):
+                 deps_type='hard', serialize=False):
         '''Instantiate a :class:`Use` by providing all  the necessary
         information.
 
@@ -648,6 +650,8 @@ class Use:
         :param str deps_type: whether the created task should have a hard or a
             soft dependency towards the injected tasks. Possible values are
             ``'hard'`` and ``'soft'``.
+        :param bool serialize: if `True`, the result of this task will be
+            written to the output directory.
         '''
         self.inj_args = () if inj_args is None else inj_args
         self.inj_kwargs = {} if inj_kwargs is None else inj_kwargs
@@ -664,6 +668,7 @@ class Use:
             raise ValueError('deps_type argument to Use must be one of {}'
                              .format(expected_deps_type))
         self.deps_type = deps_type
+        self.serialize = bool(serialize)
 
     def get_task(self):
         '''Return the task that executes the decorated function.'''
@@ -716,11 +721,12 @@ class Use:
             LOGGER.debug('injecting kwargs: %s', kwargs)
 
             result = self.wrapped(*args, **kwargs)
-            output_dir = Path(config.get('path', 'output-root'),
-                              sanitize_filename(pytask_name))
-            ensure(output_dir, is_dir=True)
-            env_up = {pytask_name: {'result': result,
-                                    'output_dir': str(output_dir)}}
+            env_up = {pytask_name: {'result': result}}
+            if self.serialize:
+                output_dir = Path(config.get('path', 'output-root'),
+                                  sanitize_filename(pytask_name))
+                ensure(output_dir, is_dir=True)
+                env_up[pytask_name]['output_dir'] = str(output_dir)
             return env_up, TaskStatus.DONE
 
         task = PythonTask(pytask_name, inject_from_env,
