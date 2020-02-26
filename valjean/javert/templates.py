@@ -289,7 +289,7 @@ and the array at index 1 has 2 dimension(s)
         hasher = sha256()
         for col, head, unit, high in zip(self.columns, self.headers,
                                          self.units, self.highlights):
-            hasher.update(col.data.cast('b'))
+            hasher.update(np.require(col, requirements='C').data.cast('b'))
             hasher.update(head.encode('utf-8'))
             hasher.update(unit.encode('utf-8'))
             hasher.update(high.data.cast('b'))
@@ -373,12 +373,12 @@ class CurveElements:
     def data(self):
         '''Generator yielding objects supporting the buffer protocol that (as a
         whole) represent a serialized version of `self`.'''
-        yield self.values.data.cast('b')
+        yield np.require(self.values, requirements='C').data.cast('b')
         yield self.label.encode('utf-8')
         yield bytes((self.index,))
         yield self.yname.encode('utf-8')
         if self.errors is not None:
-            yield self.errors.data.cast('b')
+            yield np.require(self.errors, requirements='C').data.cast('b')
 
     def __eq__(self, other):
         '''Test for equality of `self` and another :class:`CurveElements`.'''
@@ -776,8 +776,8 @@ class PlotNDTemplate:
         objects containing equal data have the same fingerprint. The converse
         is not true, but very likely.'''
         hasher = sha256()
-        for bins in self.bins.values():
-            hasher.update(bins.data.cast('b'))
+        for bins in self.bins:
+            hasher.update(np.require(bins, requirements='C').data.cast('b'))
         for curve in self.curves:
             for data in curve.data():
                 hasher.update(data)

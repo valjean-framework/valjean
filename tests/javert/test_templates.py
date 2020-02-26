@@ -1,9 +1,11 @@
 '''Tests for the :mod:`~.templates` module.'''
 
+import numpy as np
 from hypothesis import given
 from hypothesis.strategies import text, data, integers
 # pylint: disable=wrong-import-order
 from .conftest import plot_templates, table_templates, valid_index
+from valjean.javert.templates import TableTemplate
 
 
 @given(plot_t=plot_templates())  # pylint: disable=no-value-for-parameter
@@ -100,3 +102,14 @@ def test_tcolumns_table_fingerprint(table_t, sampler):
     column[column_index] += 1.0
     assert table_t != copy
     assert table_t.fingerprint() != copy.fingerprint()
+
+
+def test_table_list():
+    '''Check that fingerprint are equal when containing the same data.
+    Pretext to test list inside :class:`TableTemplate` and their fingerprints.
+    '''
+    tab1 = TableTemplate(['s', 'p', 'a', 'm'], np.arange(4)*0.5,
+                         headers=['egg', 'bacon'])
+    tab2 = TableTemplate(np.array(['s', 'p', 'a', 'm']), np.arange(4)*0.5,
+                         headers=['egg', 'bacon'])
+    assert tab1.fingerprint() == tab2.fingerprint()
