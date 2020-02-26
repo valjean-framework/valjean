@@ -230,13 +230,85 @@ There is no real legend, so ``label`` is added as prefix to the colorbar label.
     >>> mplplt = mpl.MplPlot2D(pltnd)
 
 
+Customization
+`````````````
+
+Some customizations can be requested filling the ``customization`` dictionary
+of :class:`~.PlotTemplate`. **This is for the moment only available in order to
+adapt axes ranges and possibly set them in logarithmic scale.**
+
+Using the previous example:
+
+.. plot::
+    :include-source:
+
+    >>> import numpy as np
+    >>> from valjean.javert.templates import PlotTemplate, CurveElements
+    >>> bins = np.array(np.arange(10))
+    >>> lcurves = []
+    >>> for icurve in range(3):
+    ...     lcurves.append(CurveElements(
+    ...         values=bins[1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
+    ...         label=str(icurve), index=icurve))
+    >>> for icurve in range(1, 3):
+    ...     lcurves.append(CurveElements(
+    ...         values=lcurves[icurve].values/lcurves[0].values,
+    ...         yname='C/ref', label=str(icurve+1)+' vs 0', index=icurve))
+    >>> for icurve in range(1, 3):
+    ...     lcurves.append(CurveElements(
+    ...         values=((lcurves[icurve].values-lcurves[0].values)
+    ...                 /lcurves[0].values),
+    ...         yname='(C-ref)/ref', label=str(icurve+1)+' vs 0',
+    ...         index=icurve))
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> pltit.add_customization(logx=True)
+    >>> pltit.add_customization(limits=[(2, 7)])
+    >>> pltit.customization
+    {'logx': True, 'limits': [(2, 7)]}
+    >>> from valjean.javert import mpl
+    >>> mplplt = mpl.MplPlot(pltit)
+
+As **x** always means an axis, logx can be followed by anything while in
+1D-plots case ``logy`` should be followed by an iterable (list or tuple) and in
+2D-plots case this is reserved to ``logz`` (and ``logy`` has the same behaviour
+as ``logx``).
+
+
+Customization also works on 2D plots. In addition the colorscale and colormap
+can be put in logarithmic scale.
+
+.. plot::
+    :include-source:
+
+    >>> from collections import OrderedDict
+    >>> import numpy as np
+    >>> from valjean.javert.templates import PlotNDTemplate, CurveElements
+    >>> bins = OrderedDict([('x', np.arange(6)),
+    ...                     ('y', np.arange(17, step=2))])
+    >>> incvals = np.arange(1, 41).reshape(5, 8)
+    >>> decvals = np.arange(1, 41)[::-1].reshape(5, 8)
+    >>> lcurves = []
+    >>> lcurves.append(CurveElements(
+    ...         values=incvals, label='increase', index=0, yname='spam'))
+    >>> lcurves.append(CurveElements(
+    ...         values=decvals, label='decrease', index=0, yname='spam'))
+    >>> lcurves.append(CurveElements(
+    ...         values=incvals/decvals, label='', index=1, yname='ratio'))
+    >>> pltnd = PlotNDTemplate(bins=bins, curves=lcurves)
+    >>> pltnd.add_customization(logz=(2,))
+    >>> from valjean.javert import mpl
+    >>> mplplt = mpl.MplPlot2D(pltnd)
+
+
 Module API
 ----------
 '''
 from collections import OrderedDict, defaultdict
+from collections.abc import Iterable
 from itertools import cycle, chain
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mplcol
 from .. import LOGGER
 
 
@@ -442,6 +514,17 @@ class MplPlot:
         '''Customize plots.'''
         if 'limits' in self.data.customization:
             self.splt[0].set_xlim(*self.data.customization['limits'][0])
+        if 'logx' in self.data.customization:
+            self.splt[0].set_xscale('log')
+        logsplts = []
+        if 'logy' in self.data.customization:
+            if not isinstance(self.data.customization, Iterable):
+                LOGGER.warning('logy should be associated to a list or a tuple'
+                               'of subplots index for 1D plots')
+            else:
+                logsplts = self.data.customization['logy']
+        for ispl in logsplts:
+            self.splt[ispl].set_yscale('log')
 
     def save(self, name='fig.png'):
         '''Save the plot under the given name.
@@ -466,8 +549,12 @@ class MplPlot2D:
         self.draw()
 
     def draw(self):
-        '''Draw method.'''
-        # return self.twod_plots()
+        '''Draw method.
+
+        Remark: if the quantity represented is required in logarithmic scale it
+        will be done at the histogram declaration and not in the customization
+        step.
+        '''
         self.twod_plots()
         self.customize_plots()
 
@@ -487,12 +574,13 @@ class MplPlot2D:
         bbins = np.broadcast_arrays(*bins)
         return bbins
 
-    def itwod_plot(self, curve, iplot, ):
+    def itwod_plot(self, curve, iplot, norm):
         '''Draw the 2D distribution on the ith subplot.'''
         cbins = self.broadcasted_bin_centers(curve, self.data.bins.values())
-        h2d = self.splt[iplot].hist2d(cbins[0].flatten(), cbins[1].flatten(),
-                                      bins=list(self.data.bins.values()),
-                                      weights=curve.values.flatten())
+        h2d = self.splt[iplot].hist2d(
+            cbins[0].flatten(), cbins[1].flatten(),
+            bins=list(self.data.bins.values()), norm=norm,
+            weights=curve.values.flatten())
         cbar = self.fig.colorbar(h2d[3], ax=self.splt[iplot])
         self.splt[iplot].set_xlabel(list(self.data.bins.keys())[0])
         self.splt[iplot].set_ylabel(list(self.data.bins.keys())[1])
@@ -501,14 +589,27 @@ class MplPlot2D:
 
     def twod_plots(self):
         '''Build 2D plots.'''
+        logsplts = []
+        if 'logz' in self.data.customization:
+            if not isinstance(self.data.customization, Iterable):
+                LOGGER.warning('logz should be associated to a list or a tuple'
+                               'for 2D plots')
+            else:
+                logsplts = self.data.customization['logz']
         for icrv, crv in enumerate(self.data.curves):
-            self.itwod_plot(crv, icrv)
+            self.itwod_plot(crv, icrv,
+                            norm=(mplcol.LogNorm() if icrv in logsplts
+                                  else mplcol.Normalize()))
 
     def customize_plots(self):
         '''Customize plots.'''
         if 'limits' in self.data.customization:
             self.splt[0].set_xlim(*self.data.customization['limits'][0])
             self.splt[0].set_ylim(*self.data.customization['limits'][1])
+        if 'logx' in self.data.customization:
+            self.splt[0].set_xscale('log')
+        if 'logy' in self.data.customization:
+            self.splt[0].set_yscale('log')
 
     def save(self, name='fig.png'):
         '''Save the plot under the given name.

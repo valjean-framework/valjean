@@ -805,8 +805,8 @@ class PlotNDTemplate:
     def add_customization(self, **kwargs):
         '''Update customization dictionary.
 
-        The keyword has to be understood in :class:`.mpl.MplPlot`, check it for
-        possibilities.
+        The keyword has to be understood in :class:`.mpl.MplPlot2D`, check it
+        for possibilities.
         '''
         self.customization.update(kwargs)
 

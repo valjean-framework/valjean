@@ -24,12 +24,14 @@ from valjean.javert.templates import (PlotTemplate, join, TableTemplate,
                                       CurveElements)
 from valjean.javert.mpl import MplPlot, MplPlot2D
 from valjean.javert import plot_elements as plt_elts
+from valjean.javert.representation import PlotRepresenter
 from ...gavroche.conftest import (some_1d_dataset, one_dim_dataset,
                                   other_1d_dataset, some_1d_dataset_edges,
                                   other_1d_dataset_edges, different_1d_dataset)
 from ...gavroche.conftest import (student_test, student_test_result,
                                   student_test_fail, student_test_result_fail,
-                                  student_test_edges, student_test_edges_result,
+                                  student_test_edges,
+                                  student_test_edges_result,
                                   student_test_3ds, student_test_result_3ds,
                                   student_test_with_pvals,
                                   student_test_result_with_pvals)
@@ -313,5 +315,112 @@ def test_student_2d_range_etlr(studentt_res_2d_range_etlr, plot_repr):
 def test_student_2d_range_etr(studentt_res_2d_range_etr, plot_repr):
     '''2D plot for Student test with large last bins in e and t (both axis).'''
     templ = plot_repr(studentt_res_2d_range_etr)
+    mplt = MplPlot2D(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_2d_nopost.png',
+                               baseline_dir='ref_plots')
+def test_student_2d_no_post(studentt_res_2d, plot_no_post_repr):
+    '''2D plot for Student test'''
+    templ = plot_no_post_repr(studentt_res_2d)
+    mplt = MplPlot2D(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_logx.png',
+                               baseline_dir='ref_plots')
+def test_studentt_res_logx(studentt_res_range_lrbin):
+    '''Test logarithmic x-axis with 1D plot.'''
+    def log_post(templates, tres):  # pylint: disable=unused-argument
+        for templ in templates:
+            templ.add_customization(logx=True)
+        return templates
+    templ = PlotRepresenter(post=log_post)(studentt_res_range_lrbin)
+    mplt = MplPlot(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_logy.png',
+                               baseline_dir='ref_plots')
+def test_studentt_res_logy(studentt_res_range_lrbin):
+    '''Test logarithmic y-axis with 1D plot.'''
+    def log_post(templates, tres):
+        plt_elts.post_treatment(templates, tres)
+        for templ in templates:
+            templ.add_customization(logy=(0,))
+        return templates
+    templ = PlotRepresenter(post=log_post)(studentt_res_range_lrbin)
+    mplt = MplPlot(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_logy2.png',
+                               baseline_dir='ref_plots')
+def test_studentt_res_logy2(studentt_res_range_lrbin):
+    '''Test logarithmic y-axis with 1D plot.'''
+    def log_post(templates, tres):
+        plt_elts.post_treatment(templates, tres)
+        for templ in templates:
+            templ.add_customization(logy=(0, 1))
+        return templates
+    templ = PlotRepresenter(post=log_post)(studentt_res_range_lrbin)
+    mplt = MplPlot(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_logxy.png',
+                               baseline_dir='ref_plots')
+def test_studentt_res_logxy(studentt_res_range_lrbin):
+    '''Test logarithmic x- and y-axis with 1D plot.'''
+    def log_post(templates, tres):  # pylint: disable=unused-argument
+        for templ in templates:
+            templ.add_customization(logx=True)
+            templ.add_customization(logy=(0,))
+        return templates
+    templ = PlotRepresenter(post=log_post)(studentt_res_range_lrbin)
+    mplt = MplPlot(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_2d_logz.png',
+                               baseline_dir='ref_plots')
+def test_studentt_2d_logz(studentt_res_2d):
+    '''Test logarithmic colorbar with 2D plot.'''
+    def log_post(templates, tres):  # pylint: disable=unused-argument
+        for templ in templates:
+            templ.add_customization(logz=(0, 1))
+        return templates
+    templ = PlotRepresenter(post=log_post)(studentt_res_2d)
+    mplt = MplPlot2D(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_2d_logxy.png',
+                               baseline_dir='ref_plots')
+def test_studentt_2d_logxy(studentt_res_2d_range_etlr):
+    '''Test logarithmic x- and y-axis with 2D plot.'''
+    def log_post(templates, tres):
+        plt_elts.post_treatment(templates, tres)
+        for templ in templates:
+            templ.add_customization(logx=True)
+            templ.add_customization(logy=True)
+        return templates
+    templ = PlotRepresenter(post=log_post)(studentt_res_2d_range_etlr)
+    mplt = MplPlot2D(templ[0])
+    return mplt.fig
+
+
+@pytest.mark.mpl_image_compare(filename='student_2d_logxz.png',
+                               baseline_dir='ref_plots')
+def test_studentt_2d_logxz(studentt_res_2d_range_etlr):
+    '''Test logarithmic x-axis and colorbar with 2D plot.'''
+    def log_post(templates, tres):
+        plt_elts.post_treatment(templates, tres)
+        for templ in templates:
+            templ.add_customization(logx=True)
+            templ.add_customization(logz=(1,))
+        return templates
+    templ = PlotRepresenter(post=log_post)(studentt_res_2d_range_etlr)
     mplt = MplPlot2D(templ[0])
     return mplt.fig
