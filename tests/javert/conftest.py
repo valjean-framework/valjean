@@ -115,7 +115,7 @@ def table_templates(draw, n_columns=integers(1, 5),
 
 
 @composite
-def curve_elements(draw, shape=None, label=text(), yname=text(),
+def curve_elements(draw, shape=None, legend=text(), label=text(),
                    index=integers(0, 10)):
     '''Strategy for generating :class:`~.CurveElements` objects.'''
     if shape is None:
@@ -125,10 +125,10 @@ def curve_elements(draw, shape=None, label=text(), yname=text(),
     a_values = draw(arrays(np.float64, a_shape, elements=finite()))
     a_errors = draw(none()
                     | arrays(np.float64, a_shape, elements=finite()))
+    a_legend = draw(legend)
     a_label = draw(label)
-    a_yname = draw(yname)
     a_index = draw(index)
-    return CurveElements(a_values, a_label, yname=a_yname, errors=a_errors,
+    return CurveElements(a_values, a_legend, label=a_label, errors=a_errors,
                          index=a_index)
 
 
@@ -145,7 +145,7 @@ def plot_templates(draw, n_curves=integers(1, 5), size=integers(1, 10),
     a_curves = [draw(curve_elements(shape=just(a_size)))
                 for _ in range(a_n_curves)]
     a_xname = draw(xname)
-    return PlotTemplate(bins=a_bins, curves=a_curves, xname=a_xname)
+    return PlotTemplate(bins=[a_bins], curves=a_curves, axnames=[a_xname])
 
 
 @pytest.fixture

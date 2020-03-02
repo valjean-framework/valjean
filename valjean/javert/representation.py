@@ -158,10 +158,10 @@ class FullTableRepresenter(TableRepresenter):
         2. Bonferroni test result
 
         :param  result: a test result.
-        :type result: :class:`~.TestResultBonferroni`
+        :type result: TestResultBonferroni
         :returns: Representation of a :class:`~.TestResultBonferroni` as
-            2 tables (the first test result and the Bonferroni result).
-        :rtype: list(:class:`~.TableTemplate`)
+            two tables (the first test result and the Bonferroni result).
+        :rtype: list(TableTemplate)
         '''
         LOGGER.debug("In FullTableRepresenter.repr_testresultbonferroni")
         if verbosity == Verbosity.SILENT:
@@ -180,10 +180,10 @@ class FullTableRepresenter(TableRepresenter):
         2. Holm-Bonferroni test result
 
         :param  result: a test result.
-        :type result: :class:`~.TestResultHolmBonferroni`
+        :type result: TestResultHolmBonferroni
         :returns: Representation of a :class:`~.TestResultHolmBonferroni` as
-            2 tables (the first test result and the Holm-Bonferroni result).
-        :rtype: list(:class:`~.TableTemplate`)
+            two tables (the first test result and the Holm-Bonferroni result).
+        :rtype: list(TableTemplate)
         '''
         LOGGER.debug(
             "In FullTableRepresenter.repr_testresultholmbonferroni")
@@ -204,10 +204,16 @@ class PlotRepresenter(Representer):
     :class:`PlotRepresenter` for specific test results should subclass
     :class:`PlotRepresenter` and define the relevant ``repr_*`` methods.
     '''
-    def __init__(self, post=plt_elts.post_treatment):
-        self.post = post
-        if self.post is not None or not callable(self.post):
-            LOGGER.warning('Plot post-treatment shoould be a callable.')
+    def __init__(self, post='default'):
+        if callable(post):
+            self.post = post
+        elif post.lower() == 'none':
+            self.post = None
+        elif post.lower() == 'default':
+            self.post = plt_elts.post_treatment
+        else:
+            LOGGER.warning('Plot post-treatment must be a callable.')
+            self.post = None
 
     def __call__(self, result, verbosity=None):
         LOGGER.debug("In PlotRepresenter.__call__")
@@ -230,10 +236,10 @@ class PlotRepresenter(Representer):
         (only the input test for the moment) (Student, equal, etc)
 
         :param  result: a test result.
-        :type result: :class:`~.TestResultBonferroni`
-        :returns: Representation of a :class:`~.TestResultBonferroni` as
-            1 plot (the first test result).
-        :rtype: list(:class:`~.PlotTemplate`)
+        :type result: TestResultBonferroni
+        :returns: Representation of a :class:`~.TestResultBonferroni` as a plot
+            (the first test result).
+        :rtype: list(PlotTemplate)
         '''
         LOGGER.debug("In FullPlotRepresenter.repr_testresultbonferroni")
         return self(result.first_test_res, verbosity)
@@ -243,10 +249,10 @@ class PlotRepresenter(Representer):
         plot (Student, equal, etc)
 
         :param  result: a test result.
-        :type result: :class:`~.TestResultHolmBonferroni`
-        :returns: Representation of a :class:`~.TestResultHolmBonferroni` as
-            a plot (the first test result).
-        :rtype: list(:class:`~.PlotTemplate`)
+        :type result: TestResultHolmBonferroni
+        :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
+            plot (the first test result).
+        :rtype: list(PlotTemplate)
         '''
         LOGGER.debug("In PlotRepresenter.repr_testresultholmbonferroni")
         return self(result.first_test_res, verbosity)
@@ -263,10 +269,10 @@ class FullPlotRepresenter(PlotRepresenter):
         (only the input test for the moment) (Student, equal, etc)
 
         :param  result: a test result.
-        :type result: :class:`~.TestResultBonferroni`
-        :returns: Representation of a :class:`~.TestResultBonferroni` as
-            1 plot (the first test result).
-        :rtype: list(:class:`~.PlotTemplate`)
+        :type result: TestResultBonferroni
+        :returns: Representation of a :class:`~.TestResultBonferroni` as a plot
+            (the first test result).
+        :rtype: list(PlotTemplate)
         '''
         LOGGER.debug("In FullPlotRepresenter.repr_testresultbonferroni")
         return self(result.first_test_res, verbosity)
@@ -276,10 +282,10 @@ class FullPlotRepresenter(PlotRepresenter):
         plot (Student, equal, etc)
 
         :param  result: a test result.
-        :type result: :class:`~.TestResultHolmBonferroni`
-        :returns: Representation of a :class:`~.TestResultHolmBonferroni` as
-            a plot (the first test result).
-        :rtype: list(:class:`~.PlotTemplate`)
+        :type result: TestResultHolmBonferroni
+        :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
+            plot (the first test result).
+        :rtype: list(PlotTemplate)
         '''
         LOGGER.debug(
             "In FullPlotRepresenter.repr_testresultholmbonferroni")

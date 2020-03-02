@@ -21,7 +21,6 @@ class Formatter(ABC):
         '''Convert an item to the relevant format.'''
         class_name = item.__class__.__name__
         meth_name = 'format_' + class_name.lower()
-        print('LOOKing for', meth_name)
         try:
             meth = getattr(self, meth_name)
         except AttributeError:

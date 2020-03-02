@@ -18,7 +18,7 @@ def plot_repr():
 @pytest.fixture
 def plot_no_post_repr():
     '''Create a :class:`~.PlotRepresenter` object with no post-treatment.'''
-    return PlotRepresenter(post=None)
+    return PlotRepresenter(post='None')
 
 
 @pytest.fixture
@@ -68,15 +68,12 @@ def studentt_res_2d():
     '''Return a Student test result from 2-dimensions datasets.'''
     bins = OrderedDict([('e', np.array([0, 2, 4, 6, 8])),
                         ('t', np.array([0, 1, 2, 3]))])
-    print(bins)
     tarr = np.arange(12).reshape(4, 3)
     ds1 = Dataset(tarr, tarr*0.5,
                   bins=bins, name="ds1", what='the quantity')
     tarr = np.arange(12)[::-1].reshape(4, 3)
     ds2 = Dataset(tarr, tarr*0.5,
                   bins=bins, name="ds2", what='the quantity')
-    print('{!r}'.format(ds1))
-    print('{!r}'.format(ds2))
     return TestStudent(ds1, ds2, name='A Student test').evaluate()
 
 
@@ -86,15 +83,12 @@ def studentt_res_2d_range_elr():
     and last bins in e.'''
     bins = OrderedDict([('e', np.array([-2000, 2, 4, 6, 8000])),
                         ('t', np.arange(4))])
-    print(bins)
     tarr = np.arange(12).reshape(4, 3)
     ds1 = Dataset(tarr, tarr*0.2,
                   bins=bins, name="ds1", what='the quantity')
     tarr = np.arange(12)[::-1].reshape(4, 3)
     ds2 = Dataset(tarr, tarr*0.2,
                   bins=bins, name="ds2", what='the quantity')
-    print('{!r}'.format(ds1))
-    print('{!r}'.format(ds2))
     return TestStudent(ds1, ds2, name='A Student test').evaluate()
 
 
@@ -104,15 +98,12 @@ def studentt_res_2d_range_etlr():
     and last bins in e and t.'''
     bins = OrderedDict([('e', np.array([-2000, 2, 4, 6, 8000])),
                         ('t', np.array([-5000, 1, 2, 3000]))])
-    print(bins)
     tarr = np.arange(12).reshape(4, 3)
     ds1 = Dataset(tarr, tarr*0.2,
                   bins=bins, name="ds1", what='the quantity')
     tarr = np.arange(12)[::-1].reshape(4, 3)
     ds2 = Dataset(tarr, tarr*0.2,
                   bins=bins, name="ds2", what='the quantity')
-    print('{!r}'.format(ds1))
-    print('{!r}'.format(ds2))
     return TestStudent(ds1, ds2, name='A Student test').evaluate()
 
 
@@ -122,13 +113,10 @@ def studentt_res_2d_range_etr():
     bins in e and t.'''
     bins = OrderedDict([('e', np.array([0, 2, 4, 6, 8000])),
                         ('t', np.array([0, 1, 2, 3000]))])
-    print(bins)
     tarr = np.arange(12).reshape(4, 3)
     ds1 = Dataset(tarr, tarr*0.2,
                   bins=bins, name="ds1", what='the quantity')
     tarr = np.arange(12)[::-1].reshape(4, 3)
     ds2 = Dataset(tarr, tarr*0.2,
                   bins=bins, name="ds2", what='the quantity')
-    print('{!r}'.format(ds1))
-    print('{!r}'.format(ds2))
     return TestStudent(ds1, ds2, name='A Student test').evaluate()

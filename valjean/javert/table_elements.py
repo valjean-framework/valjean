@@ -71,8 +71,9 @@ def repr_bins(dsref):
     (``min - max``) while ``'spam'`` bins are given by center (``center``).
 
     :param dsref: dataset
-    :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
+    :type dsref: Dataset
     :returns: list of the non-trivial dimensions and a tuple of the bins
+    :rtype: (list(str), tuple(numpy.ndarray))
 
     The tuple must have the same length as the list of dimensions and the bins
     inside must have the same shape as ``dsref.value``.

@@ -20,21 +20,34 @@ def test_copy_plot_fingerprint(plot_t):
 @given(plot_t=plot_templates(),  # pylint: disable=no-value-for-parameter
        more_text=text(min_size=1))
 def test_xname_plot_fingerprint(plot_t, more_text):
-    '''Test that changing the `xname` attribute of :class:`~.PlotTemplate`
-    affects its fingerprint.'''
+    '''Test that changing the first element of the `axnames` attribute of
+    :class:`~.PlotTemplate` affects its fingerprint.'''
     copy = plot_t.copy()
-    copy.xname += more_text
+    copy.axnames[0] += more_text
     assert plot_t != copy
     assert plot_t.fingerprint() != copy.fingerprint()
 
 
 @given(plot_t=plot_templates())  # pylint: disable=no-value-for-parameter
 def test_bins_plot_fingerprint(plot_t):
-    '''Test that changing the `xname` attribute of :class:`~.PlotTemplate`
-    affects its fingerprint.'''
+    '''Test that changing the `bins` attribute of :class:`~.PlotTemplate`
+    affects its fingerprint. THe last bin of the first dimension is used.
+    '''
     copy = plot_t.copy()
-    copy.bins[-1] *= 1.1
-    copy.bins[-1] += 1.0
+    copy.bins[0][-1] *= 1.1
+    copy.bins[0][-1] += 1.0
+    assert plot_t != copy
+    assert plot_t.fingerprint() != copy.fingerprint()
+
+
+@given(plot_t=plot_templates(),  # pylint: disable=no-value-for-parameter
+       more_text=text(min_size=1), sampler=data())
+def test_clegend_plot_fingerprint(plot_t, more_text, sampler):
+    '''Test that changing the `legend` of any :class:`~.PlotTemplate` curve
+    affects the fingerprint of the plot template.'''
+    copy = plot_t.copy()
+    index = sampler.draw(integers(0, len(copy.curves) - 1))
+    copy.curves[index].legend += more_text
     assert plot_t != copy
     assert plot_t.fingerprint() != copy.fingerprint()
 
@@ -52,21 +65,9 @@ def test_clabel_plot_fingerprint(plot_t, more_text, sampler):
 
 
 @given(plot_t=plot_templates(),  # pylint: disable=no-value-for-parameter
-       more_text=text(min_size=1), sampler=data())
-def test_cyname_plot_fingerprint(plot_t, more_text, sampler):
-    '''Test that changing the `yname` of any :class:`~.PlotTemplate` curve
-    affects the fingerprint of the plot template.'''
-    copy = plot_t.copy()
-    index = sampler.draw(integers(0, len(copy.curves) - 1))
-    copy.curves[index].yname += more_text
-    assert plot_t != copy
-    assert plot_t.fingerprint() != copy.fingerprint()
-
-
-@given(plot_t=plot_templates(),  # pylint: disable=no-value-for-parameter
        sampler=data())
 def test_cvals_plot_fingerprint(plot_t, sampler):
-    '''Test that changing the `yname` of any :class:`~.PlotTemplate` curve
+    '''Test that changing the `label` of any :class:`~.PlotTemplate` curve
     affects the fingerprint of the plot template.'''
     copy = plot_t.copy()
     index = sampler.draw(integers(0, len(copy.curves) - 1))

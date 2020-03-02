@@ -20,7 +20,7 @@ from ..cosette.task import TaskStatus
 from ..cosette.pythontask import PythonTask
 from ..gavroche.test import TestResult
 from .formatter import Formatter
-from .mpl import MplPlot, MplPlot2D
+from .mpl import MplPlot
 from .test_report import TestReport, TestReportTask
 from .verbosity import Verbosity
 
@@ -32,8 +32,7 @@ class Rst:
     def __init__(self, representation):
         '''Initialize a class instance with the given representation.
 
-        :param representation: A representation.
-        :type representation: :class:`~.Representation`
+        :param Representation representation: A representation.
         '''
         self.representation = representation
         self.formatter = RstFormatter()
@@ -53,8 +52,7 @@ class Rst:
         Most of the work is actually done in the :meth:`format_report_rec`
         method.
 
-        :param report: the report to format.
-        :type report: :class:`~.TestReport`
+        :param TestReport report: the report to format.
         :returns: the formatted report.
         :rtype: FormattedRst
         '''
@@ -175,8 +173,7 @@ six-cent-six cyprès.
     def format_section(self, section, *, depth):
         '''Format a report section.
 
-        :param report: the report section to format.
-        :type report: :class:`~.TestReport`
+        :param TestReport report: the report section to format.
         :returns: the formatted report section.
         :rtype: str
         '''
@@ -189,8 +186,7 @@ six-cent-six cyprès.
     def format_result(self, result, *, depth):
         '''Format one test result.
 
-        :param result: A :class:`~.TestResult`.
-        :type result: :class:`~.gavroche.test.TestResult`
+        :param TestResult result: A :class:`~.TestResult`.
         :returns: the formatted test result.
         :rtype: str
         '''
@@ -204,8 +200,7 @@ six-cent-six cyprès.
         for template in res_repr:
             fmt = self.formatter.template(template)
             lines.append(str(fmt))
-            if isinstance(fmt, (RstPlot, RstPlotND)):
-                print("on est dans le cas...")
+            if isinstance(fmt, RstPlot):
                 self.plots[fmt.fingerprint] = fmt.mpl_plot
         LOGGER.debug('formatted result: %s', lines)
         return lines
@@ -222,8 +217,7 @@ class RstFormatter(Formatter):
     def header(self, name, depth):
         '''Produce the header for formatting a :class:`~.TestResult`.
 
-        :param result: A test result.
-        :type result: :class:`~.TestResult`
+        :param TestResult result: A test result.
         :param int depth: the depth of this header, 0 being the top.
         :returns: the test header, for inclusion in a reST document.
         :rtype: str
@@ -249,8 +243,7 @@ class RstFormatter(Formatter):
     def format_tabletemplate(table):
         '''Format a :class:`~.TableTemplate`.
 
-        :param table: A table.
-        :type table: :class:`~.TableTemplate`
+        :param TableTemplate table: A table.
         :returns: the reST table.
         :rtype: RstTable
         '''
@@ -260,32 +253,17 @@ class RstFormatter(Formatter):
     def format_plottemplate(plot):
         '''Format a :class:`~.PlotTemplate`.
 
-        :param plot: A plot.
-        :type plot: :class:`~.PlotTemplate`
+        :param PlotTemplate plot: A plot.
         :returns: the formatted plot
         :rtype: RstPlot
         '''
-        print('in format_plottemplate')
         return RstPlot(plot)
-
-    @staticmethod
-    def format_plotndtemplate(plot):
-        '''Format a :class:`~.PlotNDTemplate`.
-
-        :param plot: A plot.
-        :type plot: :class:`~.PlotNDTemplate`
-        :returns: the formatted plot
-        :rtype: RstPlotND
-        '''
-        print('in format_plotndtemplate')
-        return RstPlotND(plot)
 
     @staticmethod
     def format_texttemplate(text):
         '''Format a :class:`~.TextTemplate`.
 
-        :param text: A text with its highlight positions
-        :type text: :class:`~.TextTemplate`
+        :param TextTemplate text: A text with its highlight positions
         :returns: the formatted text (text itself)
         :rtype: str
         '''
@@ -302,8 +280,7 @@ class RstTable:
         '''Construct an :class:`RstTable` from the given
         :class:`~.templates.TableTemplate`.
 
-        :param table: The table to convert.
-        :type table: :class:`~.templates.TableTemplate`
+        :param TableTemplate table: The table to convert.
         :param str num_fmt: A :func:`format` string to specify how numerical
                             table entries should be represented. The default
                             value for this option is ``'{:11.6g}'``.
@@ -421,8 +398,7 @@ class RstTable:
             transparently support most numerical operations.
 
         :param columns: An iterable yielding columns
-        :type columns: list(list) or list(tuple) or
-                       list(:class:`numpy.ndarray`)
+        :type columns: list(list) or list(tuple) or list(numpy.ndarray)
         :raises ValueError: if the columns do not have the same length.
         :returns: a generator for the rows of the transposed matrix.
         '''
@@ -543,7 +519,6 @@ class RstPlot:
     provides the ``.. image::`` directive to include in the .rst file.
     '''
     def __init__(self, plot):
-        print("RstPlot")
         self.fingerprint = plot.fingerprint()
         self.mpl_plot = MplPlot(plot)
 
@@ -551,25 +526,11 @@ class RstPlot:
         return '.. image:: /figures/{}\n'.format(self.filename())
 
     def filename(self):
-        '''Make up a(n almost) unique filename for this plot.'''
-        return 'plot_{}.png'.format(self.fingerprint)
+        '''Make up a(n almost) unique filename for this plot.
 
-
-class RstPlotND:
-    '''This class models a plot in an `reStructuredText`_ document. It converts
-    a :class:`~.PlotNDTemplate` object into an :class:`~.MplPlot2D`, and it
-    provides the ``.. image::`` directive to include in the .rst file.
-    '''
-    def __init__(self, plot):
-        print("RstPlotND")
-        self.fingerprint = plot.fingerprint()
-        self.mpl_plot = MplPlot2D(plot)
-
-    def __str__(self):
-        return '.. image:: /figures/{}\n'.format(self.filename())
-
-    def filename(self):
-        '''Make up a(n almost) unique filename for this plot.'''
+        :returns: the filename from fingerprint (png format)
+        :rtype: str
+        '''
         return 'plot_{}.png'.format(self.fingerprint)
 
 

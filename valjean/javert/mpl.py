@@ -21,17 +21,17 @@ Plots can be obtained with the following for example:
 
     >>> import numpy as np
     >>> from valjean.javert.templates import PlotTemplate, CurveElements
-    >>> bins = np.array(np.arange(10))
-    >>> lcurves = [CurveElements(values=bins*0.5*(icurve+1),
-    ...                          label=str(icurve+1),
+    >>> bins = (np.array(np.arange(10)),)
+    >>> lcurves = [CurveElements(values=bins[0]*0.5*(icurve+1),
+    ...                          legend=str(icurve+1),
     ...                          index=icurve)
     ...            for icurve in range(20)]
-    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, axnames=['the x-axis'])
     >>> from valjean.javert.mpl import MplPlot
     >>> mplplt = MplPlot(pltit)
 
 Additional subplots can be drawn if they have different y-axis names (set using
-the ``yname`` argument in :class:`.CurveElements`). The style of the curves is
+the ``label`` argument in :class:`.CurveElements`). The style of the curves is
 fixed by the index (see :class:`.CurveElements`).
 
 .. plot::
@@ -39,22 +39,22 @@ fixed by the index (see :class:`.CurveElements`).
 
     >>> import numpy as np
     >>> from valjean.javert.templates import PlotTemplate, CurveElements
-    >>> bins = np.array(np.arange(10))
+    >>> bins = (np.array(np.arange(10)),)
     >>> lcurves = []
     >>> for icurve in range(3):
     ...     lcurves.append(CurveElements(
-    ...         values=bins[1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
-    ...         label=str(icurve), index=icurve))
+    ...         values=bins[0][1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
+    ...         legend=str(icurve), index=icurve))
     >>> for icurve in range(1, 3):
     ...     lcurves.append(CurveElements(
     ...         values=lcurves[icurve].values/lcurves[0].values,
-    ...         yname='C/ref', label=str(icurve+1), index=icurve))
+    ...         label='C/ref', legend=str(icurve+1), index=icurve))
     >>> for icurve in range(1, 3):
     ...     lcurves.append(CurveElements(
     ...         values=((lcurves[icurve].values-lcurves[0].values)
     ...                 /lcurves[0].values),
-    ...         yname='(C-ref)/ref', label=str(icurve+1), index=icurve))
-    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    ...         label='(C-ref)/ref', legend=str(icurve+1), index=icurve))
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, axnames=['the x-axis'])
     >>> from valjean.javert.mpl import MplPlot
     >>> mplplt = MplPlot(pltit)
 
@@ -92,12 +92,12 @@ For example, we can have:
 
     >>> import numpy as np
     >>> from valjean.javert.templates import PlotTemplate, CurveElements
-    >>> bins = np.array(np.arange(10))
+    >>> bins = (np.array(np.arange(10)),)
     >>> lcurves = []
     >>> for icurve in range(20):
-    ...     lcurves.append(CurveElements(values=bins*0.5*(icurve+1),
-    ...                                  label=str(icurve+1), index=icurve))
-    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    ...     lcurves.append(CurveElements(values=bins[0]*0.5*(icurve+1),
+    ...                                  legend=str(icurve+1), index=icurve))
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, axnames=['the x-axis'])
     >>> from valjean.javert import mpl
     >>> mpl.STYLE = 'Solarize_Light2'
     >>> mplplt = mpl.MplPlot(pltit)
@@ -112,12 +112,12 @@ Colors and markers can also be changed directly:
 
     >>> import numpy as np
     >>> from valjean.javert.templates import PlotTemplate, CurveElements
-    >>> bins = np.array(np.arange(10))
+    >>> bins = [np.array(np.arange(10))]
     >>> lcurves = []
     >>> for icurve in range(20):
-    ...     lcurves.append(CurveElements(values=bins*0.5*(icurve+1),
-    ...                                  label=str(icurve+1), index=icurve))
-    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    ...     lcurves.append(CurveElements(values=bins[0]*0.5*(icurve+1),
+    ...                                  legend=str(icurve+1), index=icurve))
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, axnames=['the x-axis'])
     >>> from valjean.javert import mpl
     >>> mpl.STYLE = 'default'  # needed here as persistent from above
     >>> mpl.COLORS = ['b', 'g', 'r', 'y', 'm']
@@ -145,23 +145,23 @@ keys are interpreted:
 
     >>> import numpy as np
     >>> from valjean.javert.templates import PlotTemplate, CurveElements
-    >>> bins = np.array(np.arange(10))
+    >>> bins = [np.array(np.arange(10))]
     >>> lcurves = []
     >>> for icurve in range(3):
     ...     lcurves.append(CurveElements(
-    ...         values=bins[1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
-    ...         label=str(icurve), index=icurve))
+    ...         values=bins[0][1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
+    ...         legend=str(icurve), index=icurve))
     >>> for icurve in range(1, 3):
     ...     lcurves.append(CurveElements(
     ...         values=lcurves[icurve].values/lcurves[0].values,
-    ...         yname='C/ref', label=str(icurve+1)+' vs 0', index=icurve))
+    ...         label='C/ref', legend=str(icurve+1)+' vs 0', index=icurve))
     >>> for icurve in range(1, 3):
     ...     lcurves.append(CurveElements(
     ...         values=((lcurves[icurve].values-lcurves[0].values)
     ...                 /lcurves[0].values),
-    ...         yname='(C-ref)/ref', label=str(icurve+1)+' vs 0',
+    ...         label='(C-ref)/ref', legend=str(icurve+1)+' vs 0',
     ...         index=icurve))
-    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, axnames=['the x-axis'])
     >>> from valjean.javert import mpl
     >>> mpl.LEGENDS = {'legend_kwargs': {'loc': 3,
     ...                                  'bbox_to_anchor': (0., 1., 1, 1),
@@ -173,23 +173,23 @@ keys are interpreted:
 
     >>> import numpy as np
     >>> from valjean.javert.templates import PlotTemplate, CurveElements
-    >>> bins = np.array(np.arange(10))
+    >>> bins = [np.array(np.arange(10))]
     >>> lcurves = []
     >>> for icurve in range(3):
     ...     lcurves.append(CurveElements(
-    ...         values=bins[1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
-    ...         label=str(icurve), index=icurve))
+    ...         values=bins[0][1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
+    ...         legend=str(icurve), index=icurve))
     >>> for icurve in range(1, 3):
     ...     lcurves.append(CurveElements(
     ...         values=lcurves[icurve].values/lcurves[0].values,
-    ...         yname='C/ref', label=str(icurve+1)+' vs 0', index=icurve))
+    ...         label='C/ref', legend=str(icurve)+' vs 0', index=icurve))
     >>> for icurve in range(1, 3):
     ...     lcurves.append(CurveElements(
     ...         values=((lcurves[icurve].values-lcurves[0].values)
     ...                 /lcurves[0].values),
-    ...         yname='(C-ref)/ref', label=str(icurve+1)+' vs 0',
+    ...         label='(C-ref)/ref', legend=str(icurve)+' vs 0',
     ...         index=icurve))
-    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, axnames=['the x-axis'])
     >>> from valjean.javert import mpl
     >>> mpl.LEGENDS = {'all_subplots': True}
     >>> mplplt = mpl.MplPlot(pltit)
@@ -199,35 +199,36 @@ keys are interpreted:
 --------
 
 To make 2D plots the class :class:`MplPlot2D` has to be used. Principle is the
-same as for 1D plots but the template is a :class:`~.templates.PlotNDTemplate`.
+same as for 1D plots but the template is a :class:`~.templates.PlotTemplate`.
 The main change is the format of the ``bins`` element: an
 :obj:`collections.OrderedDict`. Each curve has its own plot, no superposition
 is done.
 
-The colorbar axis label is set using the ``yname`` attribute.
+The colorbar axis label is set using the ``label`` attribute.
 
-There is no real legend, so ``label`` is added as prefix to the colorbar label.
+There is no real legend, so ``legend`` is added as prefix to the colorbar
+label.
 
 .. plot::
     :include-source:
 
     >>> from collections import OrderedDict
     >>> import numpy as np
-    >>> from valjean.javert.templates import PlotNDTemplate, CurveElements
-    >>> bins = OrderedDict([('x', np.arange(6)),
-    ...                     ('y', np.arange(17, step=2))])
+    >>> from valjean.javert.templates import PlotTemplate, CurveElements
+    >>> bins = [np.arange(6), np.arange(17, step=2)]
+    >>> axnames = ['x', 'y']
     >>> incvals = np.arange(1, 41).reshape(5, 8)
     >>> decvals = np.arange(1, 41)[::-1].reshape(5, 8)
     >>> lcurves = []
     >>> lcurves.append(CurveElements(
-    ...         values=incvals, label='increase', index=0, yname='spam'))
+    ...         values=incvals, legend='increase', index=0, label='spam'))
     >>> lcurves.append(CurveElements(
-    ...         values=decvals, label='decrease', index=0, yname='spam'))
+    ...         values=decvals, legend='decrease', index=0, label='spam'))
     >>> lcurves.append(CurveElements(
-    ...         values=incvals/decvals, label='', index=1, yname='ratio'))
-    >>> pltnd = PlotNDTemplate(bins=bins, curves=lcurves)
+    ...         values=incvals/decvals, legend='', index=1, label='ratio'))
+    >>> pltnd = PlotTemplate(bins=bins, axnames=axnames, curves=lcurves)
     >>> from valjean.javert import mpl
-    >>> mplplt = mpl.MplPlot2D(pltnd)
+    >>> mplplt = mpl.MplPlot(pltnd)
 
 
 Customization
@@ -244,28 +245,29 @@ Using the previous example:
 
     >>> import numpy as np
     >>> from valjean.javert.templates import PlotTemplate, CurveElements
-    >>> bins = np.array(np.arange(10))
+    >>> bins = [np.array(np.arange(10))]
     >>> lcurves = []
     >>> for icurve in range(3):
     ...     lcurves.append(CurveElements(
-    ...         values=bins[1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
-    ...         label=str(icurve), index=icurve))
+    ...         values=bins[0][1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
+    ...         legend=str(icurve), index=icurve))
     >>> for icurve in range(1, 3):
     ...     lcurves.append(CurveElements(
     ...         values=lcurves[icurve].values/lcurves[0].values,
-    ...         yname='C/ref', label=str(icurve+1)+' vs 0', index=icurve))
+    ...         label='C/ref', legend=str(icurve)+' vs 0', index=icurve))
     >>> for icurve in range(1, 3):
     ...     lcurves.append(CurveElements(
     ...         values=((lcurves[icurve].values-lcurves[0].values)
     ...                 /lcurves[0].values),
-    ...         yname='(C-ref)/ref', label=str(icurve+1)+' vs 0',
+    ...         label='(C-ref)/ref', legend=str(icurve)+' vs 0',
     ...         index=icurve))
-    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, xname='the x-axis')
+    >>> pltit = PlotTemplate(bins=bins, curves=lcurves, axnames=['the x-axis'])
     >>> pltit.add_customization(logx=True)
     >>> pltit.add_customization(limits=[(2, 7)])
     >>> pltit.customization
     {'logx': True, 'limits': [(2, 7)]}
     >>> from valjean.javert import mpl
+    >>> mpl.LEGENDS = {'all_subplots': False}
     >>> mplplt = mpl.MplPlot(pltit)
 
 As **x** always means an axis, logx can be followed by anything while in
@@ -282,19 +284,19 @@ can be put in logarithmic scale.
 
     >>> from collections import OrderedDict
     >>> import numpy as np
-    >>> from valjean.javert.templates import PlotNDTemplate, CurveElements
-    >>> bins = OrderedDict([('x', np.arange(6)),
-    ...                     ('y', np.arange(17, step=2))])
+    >>> from valjean.javert.templates import PlotTemplate, CurveElements
+    >>> bins = [np.arange(6), np.arange(17, step=2)]
+    >>> axnames = ['x', 'y']
     >>> incvals = np.arange(1, 41).reshape(5, 8)
     >>> decvals = np.arange(1, 41)[::-1].reshape(5, 8)
     >>> lcurves = []
     >>> lcurves.append(CurveElements(
-    ...         values=incvals, label='increase', index=0, yname='spam'))
+    ...         values=incvals, legend='increase', index=0, label='spam'))
     >>> lcurves.append(CurveElements(
-    ...         values=decvals, label='decrease', index=0, yname='spam'))
+    ...         values=decvals, legend='decrease', index=0, label='spam'))
     >>> lcurves.append(CurveElements(
-    ...         values=incvals/decvals, label='', index=1, yname='ratio'))
-    >>> pltnd = PlotNDTemplate(bins=bins, curves=lcurves)
+    ...         values=incvals/decvals, legend='', index=1, label='ratio'))
+    >>> pltnd = PlotTemplate(bins=bins, axnames=axnames, curves=lcurves)
     >>> pltnd.add_customization(logz=(2,))
     >>> from valjean.javert import mpl
     >>> mplplt = mpl.MplPlot2D(pltnd)
@@ -348,8 +350,45 @@ class MplPlot:
         '''Construct a :class:`MplPlot` from the given
         :class:`~.templates.PlotTemplate`.
 
-        :param data: the data to convert.
-        :type data: :class:`~.templates.PlotTemplate`
+        :param PlotTemplate data: the data to convert.
+
+        **Instance variables:**
+
+        `fig` (:class:`matplotlib.figure.Figure`)
+            **Matplotlib** figure
+
+        The figure can 1D or 2D depending on the dimension of the input
+        :class:`~.templates.PlotTemplate`.
+
+        No plot for more than 2 dimensions are done.
+        '''
+        LOGGER.debug('initialisation of MplPlot')
+        self.fig = None
+        if len(data.bins) == 1:
+            self.fig = MplPlot1D(data).fig
+        elif len(data.bins) == 2:
+            self.fig = MplPlot2D(data).fig
+        else:
+            LOGGER.info('No plots are available for more than 2 dimensions.')
+
+    def save(self, name='fig.png'):
+        '''Save the plot under the given name.
+
+        :param str name: name of the output file. Expected extensions: png,
+            pdf, svg, eps.
+        '''
+        if self.fig is not None:
+            self.fig.savefig(name)
+
+
+class MplPlot1D:
+    '''Convert a :class:`~.templates.PlotTemplate` into a matplotlib plot.'''
+
+    def __init__(self, data):
+        '''Construct a :class:`MplPlot1D` from the given
+        :class:`~.templates.PlotTemplate`.
+
+        :param PlotTemplate data: the data to convert.
 
         **Instance variables:**
 
@@ -380,7 +419,7 @@ class MplPlot:
                                       cycle(MARKERS_SHAPE),
                                       cycle(MARKERS_FILL)))
         self.data = data
-        self.nb_splts = len(set(c.yname for c in self.data.curves))
+        self.nb_splts = len(set(c.label for c in self.data.curves))
         self.fig, self.splt = plt.subplots(
             self.nb_splts, sharex=True,
             figsize=(6.4, 4.8+1.2*(self.nb_splts-1)),
@@ -391,9 +430,7 @@ class MplPlot:
 
     def draw(self):
         '''Draw method.'''
-        # return
         self.error_plots()
-        # if self.data.customization:
         self.customize_plots()
 
     def ierror_plot(self, curve, iplot, data_fmt):
@@ -410,38 +447,37 @@ class MplPlot:
             i.e. (color, marker shape, marker filling)
         '''
         LOGGER.debug("in ierror plot for plot %s on subplot %d",
-                     curve.label, iplot)
+                     curve.legend, iplot)
         splt = self.splt if self.nb_splts == 1 else self.splt[iplot]
         if iplot == self.nb_splts-1:
-            splt.set_xlabel(self.data.xname)
-        splt.set_ylabel(curve.yname)
-        if self.data.bins.size == curve.values.size+1:
+            splt.set_xlabel(self.data.axnames[0])
+        splt.set_ylabel(curve.label)
+        if self.data.bins[0].size == curve.values.size+1:
             steps = splt.errorbar(
-                self.data.bins, np.append(curve.values, [np.nan]),
+                self.data.bins[0], np.append(curve.values, [np.nan]),
                 linestyle='-', color=data_fmt[0], drawstyle='steps-post')
             markers = splt.errorbar(
-                (self.data.bins[1:] + self.data.bins[:-1])/2,
+                (self.data.bins[0][1:] + self.data.bins[0][:-1])/2,
                 curve.values, yerr=curve.errors,
                 color=data_fmt[0], marker=data_fmt[1], fillstyle=data_fmt[2],
                 linestyle='')
-            self.legend.append(MplLegend((steps, markers), curve.label, iplot,
+            self.legend.append(MplLegend((steps, markers), curve.legend, iplot,
                                          curve.index))
         else:
             linesty = '--' if len(self.data.curves) > 1 else ''
             eplt = splt.errorbar(
-                self.data.bins, curve.values, yerr=curve.errors,
+                self.data.bins[0], curve.values, yerr=curve.errors,
                 linestyle=linesty, color=data_fmt[0], marker=data_fmt[1],
                 fillstyle=data_fmt[2])
-            self.legend.append(MplLegend(eplt, curve.label, iplot,
+            self.legend.append(MplLegend(eplt, curve.legend, iplot,
                                          curve.index))
 
     @staticmethod
     def pack_by_index(curves):
         '''Pack the curves by index.
 
-        :param curves: list of curves to be used
-        :type curves: :class:`.CurveElements`
-        :returns: :class:`collections.defaultdict` (:class:`list`)
+        :param CurveElements curves: list of curves to be used
+        :rtype: collections.defaultdict(list)
         '''
         ind_dict = defaultdict(list)
         for crv in curves:
@@ -449,23 +485,22 @@ class MplPlot:
         return ind_dict
 
     @staticmethod
-    def sbplts_by_yname(curves):
+    def sbplts_by_label(curves):
         '''Associate the subplots to the y-axis names.
 
         The order is supposed to be fixed by the user earlier. The first
         subplot will always be bigger (values per default).
 
-        :param curves: list of curves to be used
-        :type curves: :class:`.CurveElements`
-        :returns: :class:`collections.defaultdict` (:class:`list`)
+        :param CurveElements curves: list of curves to be used
+        :rtype: collections.defaultdict(list)
         '''
-        sbynames = OrderedDict()
+        sblabels = OrderedDict()
         for crv in curves:
-            if crv.yname not in sbynames:
-                sbynames[crv.yname] = [1, len(sbynames)]
+            if crv.label not in sblabels:
+                sblabels[crv.label] = [1, len(sblabels)]
             else:
-                sbynames[crv.yname][0] += 1
-        return sbynames
+                sblabels[crv.label][0] += 1
+        return sblabels
 
     def error_plots(self):
         '''Plot errorbar plot (update the pyplot instance) and build the
@@ -475,13 +510,13 @@ class MplPlot:
         a single test. If we had them manually bins will need to be checked.
         '''
         crvs_by_index = self.pack_by_index(self.data.curves)
-        sbplts_by_ynames = self.sbplts_by_yname(self.data.curves)
+        sbplts_by_labels = self.sbplts_by_label(self.data.curves)
         for crvs, fmt in zip(crvs_by_index.values(), self.curve_format):
             for crv in crvs:
-                self.ierror_plot(crv, sbplts_by_ynames[crv.yname][1], fmt)
-        self._build_legend(sbplts_by_ynames)
+                self.ierror_plot(crv, sbplts_by_labels[crv.label][1], fmt)
+        self._build_legend(sbplts_by_labels)
 
-    def _build_legend(self, ynames):
+    def _build_legend(self, labels):
         '''Build the legends from self.legend and add them to the figures.
 
         An automatic number of columns is calculated, depending on the number
@@ -490,7 +525,7 @@ class MplPlot:
 
         No legend is printed when only one curve is given.
 
-        :param ynames: available y-axis names
+        :param labels: available y-axis names
         '''
         if len(self.data.curves) == 1:
             return
@@ -500,7 +535,7 @@ class MplPlot:
                              [l.label for l in self.legend],
                              ncol=ncol, **LEGENDS.get('legend_kwargs', {}))
             return
-        for nplt, iyax in ynames.values():
+        for nplt, iyax in labels.values():
             if nplt > 0 and (LEGENDS.get('all_subplots', False)
                              or iyax == 0):
                 ncol = nplt // 6 + 1
@@ -508,7 +543,6 @@ class MplPlot:
                     [l.handle for l in self.legend if l.iplot == iyax],
                     [l.label for l in self.legend if l.iplot == iyax],
                     ncol=ncol, **LEGENDS.get('legend_kwargs', {}))
-            return
 
     def customize_plots(self):
         '''Customize plots.'''
@@ -536,16 +570,35 @@ class MplPlot:
 
 
 class MplPlot2D:
-    '''Convert a :class:`~.templates.PlotNDTemplate` into a 2D plot.'''
+    '''Convert a :class:`~.templates.PlotTemplate` into a 2D plot.'''
 
     def __init__(self, data):
+        '''Construct a :class:`MplPlot2D` from the given
+        :class:`~.templates.PlotTemplate`.
+
+        :param PlotTemplate data: the data to convert.
+
+        **Instance variables:**
+
+        `nb_splts` (:class:`int`)
+            number of subplots in the plot, initialised from ``data``
+
+        `fig` (:class:`matplotlib.figure.Figure`)
+            **Matplotlib** figure
+
+        `splt` (:class:`matplotlib.axes.Axes` or \
+            :class:`tuple` (:class:`~matplotlib.axes.Axes`))
+            the subplots on which will be drawn the curves, tuple if more than
+            one subplot
+        '''
         LOGGER.debug('initialisation of MplPlot2D')
         plt.style.use(STYLE)
         self.data = data
-        self.nb_splts = len(set(c.label for c in self.data.curves))
-        self.fig, self.splt = plt.subplots(self.nb_splts, sharex=True,
-                                           sharey=True)
-        self.legend = []
+        self.nb_splts = len(self.data.curves)
+        self.fig, self.splt = plt.subplots(
+            self.nb_splts, sharex=True, sharey=True,
+            figsize=(6.4, 6.4+2.*(self.nb_splts-1)),
+            gridspec_kw={'hspace': 0.3})
         self.draw()
 
     def draw(self):
@@ -559,9 +612,13 @@ class MplPlot2D:
         self.customize_plots()
 
     @staticmethod
-    def broadcasted_bin_centers(curve, lbins):
+    def broadcast_bin_centers(curve, lbins):
         '''Calcuate bin centers if edges are given and broadcast all bins:
         build the (x, y) grid for all bins.
+
+        :param CurveElements curve: data to plot
+        :param list(numpy.ndarray) lbins: x and y bins corresponding to data
+        :rtype: numpy.ndarray
         '''
         bins = []
         for idim, tbin in enumerate(lbins):
@@ -575,17 +632,25 @@ class MplPlot2D:
         return bbins
 
     def itwod_plot(self, curve, iplot, norm):
-        '''Draw the 2D distribution on the ith subplot.'''
-        cbins = self.broadcasted_bin_centers(curve, self.data.bins.values())
+        '''Draw the 2D distribution on the ith subplot.
+
+        :param CurveElements curve: data to plot
+        :param int iplot: number of the subplot
+        :param norm: function corresponding to the chosen
+            normalisation and scale (linear or logarithmic)
+        :type norm: function from :obj:`matplotlib.colors`
+        '''
+        cbins = self.broadcast_bin_centers(curve, self.data.bins)
         h2d = self.splt[iplot].hist2d(
             cbins[0].flatten(), cbins[1].flatten(),
-            bins=list(self.data.bins.values()), norm=norm,
+            bins=self.data.bins, norm=norm,
             weights=curve.values.flatten())
         cbar = self.fig.colorbar(h2d[3], ax=self.splt[iplot])
-        self.splt[iplot].set_xlabel(list(self.data.bins.keys())[0])
-        self.splt[iplot].set_ylabel(list(self.data.bins.keys())[1])
-        # cbar.set_label(r'{}$_{}$'.format(curve.yname, '{'+curve.label+'}'))
-        cbar.set_label('{}: {}'.format(curve.label, curve.yname))
+        self.splt[iplot].set_xlabel(self.data.axnames[0])
+        self.splt[iplot].set_ylabel(self.data.axnames[1])
+        cbar.set_label(curve.label)
+        if curve.legend:
+            self.splt[iplot].set_title(curve.legend)
 
     def twod_plots(self):
         '''Build 2D plots.'''
