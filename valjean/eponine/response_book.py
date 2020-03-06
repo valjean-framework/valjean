@@ -576,7 +576,7 @@ class ResponseBook(Container):
         lresp = [self.responses[i] for i in respids
                  if sincl.issubset(self.responses[i])
                  and not sexcl.intersection(self.responses[i])]
-        sub_rb = ResponseBook(lresp)
+        sub_rb = ResponseBook(lresp, global_vars=self.globals)
         return sub_rb
 
     def select_by(self, *, squeeze=False, include=(), exclude=(), **kwargs):
