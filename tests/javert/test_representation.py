@@ -47,7 +47,7 @@ def test_student_full(student_test_result, full_repr, rst_formatter, rstcheck):
     assert not list(errs)
     mplt = MplPlot([template for template in templates
                     if isinstance(template, PlotTemplate)][0])
-    return mplt.fig
+    return mplt.draw()
 
 
 @pytest.mark.mpl_image_compare(filename='student_comp_edges.png',
@@ -64,7 +64,7 @@ def test_student_edges_full(student_test_edges_result, full_repr,
     assert not list(errs)
     mplt = MplPlot([template for template in templates
                     if isinstance(template, PlotTemplate)][0])
-    return mplt.fig
+    return mplt.draw()
 
 
 @pytest.mark.parametrize('test_name', ['equal_test', 'approx_equal_test'])
@@ -78,7 +78,7 @@ def test_empty_repr(test_name, request):
 
 
 def test_full_concatenation(student_test_result, student_test_result_fail,
-                            full_repr):
+                            full_repr, caplog):
     '''Test concatenation of all templates.'''
     student_test_result_fail.test.datasets[0].name = "other 1D dataset"
     templ1 = full_repr(student_test_result)
@@ -89,8 +89,9 @@ def test_full_concatenation(student_test_result, student_test_result_fail,
             assert (conc.columns[0].size
                     == it1.columns[0].size + it2.columns[0].size)
         else:
-            with pytest.raises(ValueError):
-                join(it1, it2)
+            join(it1, it2)
+            assert ('Some indices are them same in self and other, '
+                    'might generate a representation issue.' in caplog.text)
 
 
 @pytest.mark.mpl_image_compare(filename='student_fplit_3ds.png',
@@ -109,7 +110,8 @@ def test_full_repr_3d(student_test_result_3ds, full_repr, rst_formatter,
     assert len([_tp for _tp in templ if isinstance(_tp, PlotTemplate)]) == 1
     mplt = MplPlot([template for template in templ
                     if isinstance(template, PlotTemplate)][0])
-    return mplt.fig
+    mplt.draw()
+    return mplt.mpl_plot.fig
 
 
 @pytest.fixture(scope='function', params=['spam', 'egg'])

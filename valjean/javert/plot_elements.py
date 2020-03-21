@@ -3,7 +3,7 @@ to be converted in rst.
 '''
 import numpy as np
 from .. import LOGGER
-from .templates import PlotTemplate, CurveElements, join
+from .templates import PlotTemplate, CurveElements, SubPlotElements, join
 from .verbosity import Verbosity
 
 
@@ -74,6 +74,7 @@ def trim_range(bins):
     :rtype: list(tuple(int, int), tuple(int, int), )
     '''
     LOGGER.debug('In plot_elements.trim_range')
+    has_changed = False
     blimits = []
     for lbins in bins:
         nbins = lbins
@@ -89,17 +90,15 @@ def trim_range(bins):
         binw = np.ediff1d(lbins)
         if binw[0]/binw[1] > 1e3:
             limits[0] = nbins[1]
+            has_changed = True
         if binw[-1]/binw[-2] > 1e3:
             limits[1] = nbins[-2]
+            has_changed = True
         rwidth = limits[1] - limits[0]
         if rwidth != twidth:
             limits[0] -= 0.05 * rwidth
             limits[1] += 0.05 * rwidth
-        else:
-            limits = []
-        blimits.append(tuple(limits))
-    if all(not lim for lim in blimits):
-        blimits = []
+        blimits.append([tuple(limits), has_changed])
     return blimits
 
 
@@ -114,9 +113,15 @@ def post_treatment(templates, result):
         LOGGER.debug('post already applied')
         return templates
     for templ in templates:
-        blimits = trim_range(templ.bins)
-        if blimits:
-            templ.add_customization(limits=blimits)
+        for splt in templ.subplots:
+            blimits = [trim_range(sc.bins) for sc in splt.curves]
+            if all(not b[1] for a in blimits for b in a):
+                continue
+            nlimits = []
+            for idim in range(len(blimits[0])):
+                nlimits.append((min(crv[idim][0][0] for crv in blimits),
+                                max(crv[idim][0][1] for crv in blimits)))
+            splt.limits = nlimits
     return templates
 
 
@@ -201,11 +206,15 @@ def repr_student_delta(result):
     curves = []
     for ind, delta in enumerate(result.delta):
         curves.append(CurveElements(
-            values=delta,
-            legend='',
-            index=ind+1, label=r'$t_{Student}$', errors=None))
-    return [PlotTemplate(bins=list(dab.values()), axnames=list(dab.keys()),
-                         curves=curves)]
+            values=delta, legend='', bins=list(dab.values()),
+            index=ind+1, errors=None))
+    subplot = SubPlotElements(
+        curves=curves, axnames=list(dab.keys()) + [r'$t_{Student}$'],
+        ptype='{}D'.format(len(dab)))
+    subplot.lines = [[{'y': result.test.threshold},
+                      {'y': -result.test.threshold}]]
+    plt = PlotTemplate(subplots=[subplot])
+    return [plt]
 
 
 def repr_student_values(result):
@@ -233,17 +242,20 @@ def repr_student_values(result):
     cds = [CurveElements(values=result.test.dsref.value,
                          legend=(result.test.dsref.name
                                  if result.test.dsref.name else 'reference'),
+                         bins=list(dab.values()),
                          index=0,
-                         label=result.test.dsref.what,
                          errors=result.test.dsref.error)]
     for ids, tds in enumerate(result.test.datasets):
         cds.append(CurveElements(
             values=tds.value,
             legend=(tds.name if tds.name else 'dataset '+str(ids)),
-            index=ids+1, label=result.test.dsref.what,
+            bins=list(dab.values()),
+            index=ids+1,
             errors=tds.error))
-    return [PlotTemplate(bins=list(dab.values()), axnames=list(dab.keys()),
-                         curves=cds)]
+    subplot = SubPlotElements(
+        curves=cds, ptype='{}D'.format(len(dab)),
+        axnames=list(dab.keys())+[result.test.dsref.what])
+    return [PlotTemplate(subplots=[subplot])]
 
 
 def repr_student_pvalues(result):
@@ -268,12 +280,16 @@ def repr_student_pvalues(result):
         return []
     curves = []
     for ind, pval in enumerate(result.pvalue):
-        curves.append(CurveElements(
-            values=pval,
-            legend='',
-            index=ind+1, label='p-value', errors=None))
-    return [PlotTemplate(bins=list(dab.values()), axnames=list(dab.keys()),
-                         curves=curves)]
+        curves.append(CurveElements(values=pval, bins=list(dab.values()),
+                                    legend='', index=ind+1, errors=None))
+    subplot = SubPlotElements(
+        curves=curves, ptype='{}D'.format(len(dab)),
+        axnames=list(dab.keys())+['p-value'])
+    if result.pvalue[0].ndim == 1:
+        subplot.lines = [[{'y': result.test.alpha/2},
+                          {'y': -result.test.alpha/2}]]
+    plt = PlotTemplate(subplots=[subplot])
+    return [plt]
 
 
 def repr_datasets_values(result):
@@ -292,20 +308,21 @@ def repr_datasets_values(result):
                               result.test.dsref.value.shape)
     if dab is None:
         return []
-    cds = [CurveElements(values=result.test.dsref.value,
-                         legend=(result.test.dsref.name
-                                 if result.test.dsref.name else 'reference'),
-                         index=0, label=result.test.dsref.what,
-                         errors=result.test.dsref.error)]
-    cds.extend([CurveElements(values=ds.value,
-                              legend=(ds.name if ds.name
-                                      else 'dataset '+str(ids)),
-                              index=ids+1, label=result.test.dsref.what,
-                              errors=ds.error)
-                for ids, ds in enumerate(result.test.datasets)])
+    cds = [CurveElements(
+        values=result.test.dsref.value, bins=list(dab.values()),
+        legend=(result.test.dsref.name if result.test.dsref.name
+                else 'reference'),
+        index=0, errors=result.test.dsref.error)]
+    cds.extend([
+        CurveElements(values=ds.value, bins=list(dab.values()),
+                      legend=(ds.name if ds.name else 'dataset '+str(ids)),
+                      index=ids+1, errors=ds.error)
+        for ids, ds in enumerate(result.test.datasets)])
     LOGGER.info("bins %s", list(dab.values()))
-    return [PlotTemplate(bins=list(dab.values()), axnames=list(dab.keys()),
-                         curves=cds)]
+    subplot = SubPlotElements(
+        curves=cds, ptype='{}D'.format(len(dab)),
+        axnames=list(dab.keys())+[result.test.dsref.what])
+    return [PlotTemplate(subplots=[subplot])]
 
 
 def repr_testresultequal(result, _verbosity=None):

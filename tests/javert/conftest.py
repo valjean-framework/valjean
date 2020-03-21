@@ -1,7 +1,7 @@
 '''Fixtures for the :mod:`~.valjean.javert` tests.'''
 
 from hypothesis.strategies import (composite, tuples, integers, text, none,
-                                   just, sampled_from, lists)
+                                   just, sampled_from, lists, booleans)
 from hypothesis.extra.numpy import arrays, array_shapes
 
 import pytest
@@ -14,7 +14,8 @@ from ..gavroche.conftest import some_dataset, other_dataset
 from valjean.javert.representation import (FullRepresenter, EmptyRepresenter,
                                            FullTableRepresenter,
                                            PlotRepresenter, Representation)
-from valjean.javert.templates import TableTemplate, PlotTemplate, CurveElements
+from valjean.javert.templates import (TableTemplate, PlotTemplate,
+                                      SubPlotElements, CurveElements)
 from valjean.javert.test_report import TestReport
 from valjean.javert.rst import Rst, RstFormatter
 
@@ -115,37 +116,59 @@ def table_templates(draw, n_columns=integers(1, 5),
 
 
 @composite
-def curve_elements(draw, shape=None, legend=text(), label=text(),
-                   index=integers(0, 10)):
+def curve_elements(draw, legend=text(), index=integers(0, 10), shape=None):
+    # pylint: disable=too-many-arguments
     '''Strategy for generating :class:`~.CurveElements` objects.'''
     if shape is None:
         a_shape = draw(array_shapes())
     else:
         a_shape = draw(shape)
+    a_size = a_shape if isinstance(a_shape, int) else a_shape[0]
     a_values = draw(arrays(np.float64, a_shape, elements=finite()))
     a_errors = draw(none()
                     | arrays(np.float64, a_shape, elements=finite()))
-    a_legend = draw(legend)
-    a_label = draw(label)
-    a_index = draw(index)
-    return CurveElements(a_values, a_legend, label=a_label, errors=a_errors,
-                         index=a_index)
-
-
-@composite
-def plot_templates(draw, n_curves=integers(1, 5), size=integers(1, 10),
-                   xname=text()):
-    '''Strategy for generating :class:`~.PlotTemplate` objects.'''
-    a_n_curves = draw(n_curves)
-    a_size = draw(size)
     a_bins_size = draw(sampled_from((a_size, a_size+1)))
     a_bins = draw(arrays(np.float64, shape=just(a_bins_size),
                          elements=finite(), unique=True))
     a_bins.sort()
-    a_curves = [draw(curve_elements(shape=just(a_size)))
+    return CurveElements(a_values, legend=draw(legend),
+                         errors=a_errors, index=draw(index), bins=[a_bins])
+
+
+@composite
+def sub_plot_elements(draw, n_curves=integers(1, 3), xname=text()):
+    '''Strategy for generating :class:`SubPlotElements` objects.'''
+    a_n_curves = draw(n_curves)
+    a_curves = [draw(curve_elements(shape=integers(1, 10)))
                 for _ in range(a_n_curves)]
     a_xname = draw(xname)
-    return PlotTemplate(bins=[a_bins], curves=a_curves, axnames=[a_xname])
+    return SubPlotElements(curves=a_curves,
+                           axnames=[a_xname, draw(text())],
+                           ptype='1D')
+
+
+@composite
+def plot_templates(draw, n_subplots=integers(1, 5), same_xaxis=booleans()):
+    '''Strategy for generating :class:`~.PlotTemplate` objects.'''
+    # a_size = draw(size)
+    # a_bins_size = draw(sampled_from((a_size, a_size+1)))
+    # a_bins = draw(arrays(np.float64, shape=just(a_bins_size),
+    #                      elements=finite(), unique=True))
+    # a_bins.sort()
+    # a_curves = [draw(curve_elements(shape=just(size), size=a_size))
+    # a_curves = [draw(curve_elements(shape=just(a_size), size=a_size))
+    #             for _ in range(a_n_curves)]
+    # axnames=[draw(xname)])
+    a_n_subplots = draw(n_subplots)
+    a_same_xaxis = draw(same_xaxis)
+    if a_same_xaxis:
+        a_xname = draw(text())
+        a_subplots = [draw(sub_plot_elements(xname=just(a_xname)))
+                      for _ in range(a_n_subplots)]
+    else:
+        a_subplots = [draw(sub_plot_elements(xname=text()))
+                      for _ in range(a_n_subplots)]
+    return PlotTemplate(subplots=a_subplots)
 
 
 @pytest.fixture
