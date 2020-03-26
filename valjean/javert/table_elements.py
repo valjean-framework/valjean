@@ -110,12 +110,12 @@ def repr_testresultequal(result, verbosity=None):
     if bool(result):
         if verbosity != Verbosity.FULL_DETAILS:
             return []
-        return repr_equal(result, 'equal?')
+        return repr_equal(result)
     if verbosity is None:
-        return repr_equal(result, 'equal?')
+        return repr_equal(result)
     if verbosity.value < Verbosity.INTERMEDIATE.value:
         return repr_equal_summary(result)
-    return repr_equal(result, 'equal?')
+    return repr_equal(result)
 
 
 def repr_equal_summary(result):
@@ -131,27 +131,29 @@ def repr_equal_summary(result):
     return [TextTemplate('Equal test: KO', highlight=[(-2, 2)])]
 
 
-def repr_equal(result, result_header):
+def repr_equal(result):
     '''Representation of equal test.
 
     :param TestResultEqual result: a test result.
-    :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultEqual` as a table.
     :rtype: list(TableTemplate)
     '''
     LOGGER.debug("In repr_equal")
     dscols = tuple((ds.value, eq)
                    for ds, eq in zip(result.test.datasets, result.equal))
-    heads = [('reference',)]
-    for ids in range(len(dscols)):
-        str_ids = str(ids)
-        heads.append(
-            ('dataset'+str_ids, result_header.replace('?', str_ids+'?'))
-            if len(dscols) > 1 else ('dataset', result_header))
-    falses = np.full_like(result.test.dsref.value, False)
+    heads = [(result.test.dsref.name,)]
+    for ds in result.test.datasets:
+        heads.append((ds.name,
+                      'equal({})?'.format(ds.name)
+                      if len(result.test.datasets) > 1 else 'equal?'))
+    falses = (np.full_like(result.test.dsref.value, False, dtype=bool)
+              if result.test.dsref.ndim > 0
+              else (False,))
     highlights = [(falses,)]
     for equal in result.equal:
-        highlights.append((falses, np.logical_not(equal)))
+        highlights.append((falses,
+                           np.logical_not(equal) if result.test.dsref.ndim > 0
+                           else (np.logical_not(equal),)))
     table_template = TableTemplate(
         result.test.dsref.value,
         *chain.from_iterable(dscols),
@@ -171,7 +173,7 @@ def repr_testresultapproxequal(result, verbosity=None):
         return []
     if verbosity == Verbosity.SUMMARY:
         return repr_approx_equal_summary(result)
-    return repr_approx_equal(result, 'approx equal?')
+    return repr_approx_equal(result)
 
 
 def repr_approx_equal_summary(result):
@@ -187,11 +189,10 @@ def repr_approx_equal_summary(result):
     return [TextTemplate('Approx equal test: KO', highlight=[(-2, 2)])]
 
 
-def repr_approx_equal(result, result_header):
+def repr_approx_equal(result):
     '''Representation of approx equal test.
 
     :param TestResultApproxEqual result: a test result.
-    :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultApproxEqual` as a table.
     :rtype: list(TableTemplate)
     '''
@@ -199,16 +200,21 @@ def repr_approx_equal(result, result_header):
     dscols = tuple((ds.value, eq)
                    for ds, eq in zip(result.test.datasets,
                                      result.approx_equal))
-    heads = [('reference',)]
-    for ids in range(len(dscols)):
-        str_ids = str(ids)
-        heads.append(
-            ('dataset'+str_ids, result_header.replace('?', str_ids+'?'))
-            if len(dscols) > 1 else ('dataset', result_header))
-    falses = np.full_like(result.test.dsref.value, False)
+    heads = [(result.test.dsref.name,)]
+    for ds in result.test.datasets:
+        heads.append((ds.name,
+                      'approx equal({})?'.format(ds.name)
+                      if len(result.test.datasets) > 1
+                      else 'approx equal?'))
+    falses = (np.full_like(result.test.dsref.value, False, dtype=bool)
+              if result.test.dsref.ndim > 0
+              else (False,))
     highlights = [(falses,)]
     for approx_equal in result.approx_equal:
-        highlights.append((falses, np.logical_not(approx_equal)))
+        highlights.append((falses,
+                           np.logical_not(approx_equal)
+                           if result.test.dsref.ndim > 0
+                           else (np.logical_not(approx_equal),)))
     table_template = TableTemplate(
         result.test.dsref.value,
         *chain.from_iterable(dscols),
@@ -257,7 +263,6 @@ def repr_student(result):
     '''Representation of Student test result.
 
     :param TestResultStudent result: a test result.
-    :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultStudent` as a table.
     :rtype: list(TableTemplate)
     '''
@@ -373,7 +378,6 @@ def repr_bonferroni(result):
     Only represents the Bonferroni result, not the input test result.
 
     :param TestResultBonferroni result: a test result.
-    :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
     :rtype: list(TableTemplate)
     '''
@@ -419,7 +423,6 @@ def repr_holm_bonferroni(result):
     Only represents the Holm-Bonferroni result, not the input test result.
 
     :param TestResultHolmBonferroni result: a test result.
-    :param str result_header: result header appearing in the table
     :returns: Representation of a :class:`~.TestResultHolmBonferroni` as a
         table.
     :rtype: list(TableTemplate)
