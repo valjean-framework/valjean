@@ -302,7 +302,7 @@ class FullRepresenter(Representer):
     :class:`FullRepresenter` will do it.
     '''
 
-    def __init__(self):
+    def __init__(self, post=plt_elts.post_treatment):
         '''Initialisation of :class:`FullRepresenter`.
 
         Two instance objects are built: a :class:`FullTableRepresenter` and
@@ -310,7 +310,7 @@ class FullRepresenter(Representer):
         '''
         LOGGER.debug("In initialisation of FullRepresenter")
         self.table_repr = FullTableRepresenter()
-        self.plot_repr = FullPlotRepresenter()
+        self.plot_repr = FullPlotRepresenter(post=post)
 
     def __call__(self, result, verbosity=None):
         '''Dispatch handling of `result` to all the Representer subclass
