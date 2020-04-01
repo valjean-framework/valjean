@@ -252,7 +252,7 @@ def test_tabletemplate_join(table_repr,
     templates5 = [join(it1, it2) for it1, it2 in zip(templates1, templates2)]
     LOGGER.debug("templates1+templates2 = %s", templates5)
     assert len(templates5) == 2
-    assert templates5[0].headers[-1] == 'Student(other 1D dataset)?'
+    assert templates5[0].headers[-1] == 'Student?'
     assert templates5[0].columns[0].size == 10
     assert templates5[1].headers[-1] == 'Bonferroni?'
 

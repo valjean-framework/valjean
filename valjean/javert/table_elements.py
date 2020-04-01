@@ -250,10 +250,13 @@ def _student_heads(test_res, bin_names):
     :param list(str) bin_names: names of the bins (dimensions)
     :returns: list of headers
     '''
-    heads = ['v_'+test_res.dsref.name, 'σ_'+test_res.dsref.name]
+    heads = ['v('+test_res.dsref.name+')', 'σ('+test_res.dsref.name+')']
     for _ds in test_res.datasets:
-        heads.extend(['v_'+_ds.name, 'σ_'+_ds.name, 't_'+_ds.name,
-                      'Student('+_ds.name+')?'])
+        heads.extend(['v('+_ds.name+')', 'σ('+_ds.name+')'])
+        if len(test_res.datasets) > 1:
+            heads.extend([r't('+_ds.name+')', 'Student('+_ds.name+')?'])
+        else:
+            heads.extend(['t', 'Student?'])
     heads = bin_names + heads
     return heads
 
