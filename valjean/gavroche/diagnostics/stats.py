@@ -46,7 +46,7 @@ def stats_worker(test_fn, name, description, tasks, **kwargs):
     return EvalTestTask.from_test_task(use_create_test.get_task())
 
 
-def task_stats(*, name, description='', tasks):
+def task_stats(*, name, description='', labels=None, tasks):
     '''Create a :class:`TestStatsTasks` from a list of tasks.
 
     The :class:`TestStatsTasks` class must be instantiated with the list of
@@ -92,12 +92,12 @@ def task_stats(*, name, description='', tasks):
     :returns: an :class:`~.EvalTestTask` that evaluates the diagnostic test.
     :rtype: EvalTestTask
     '''
-    def create_test(*task_results, name, description):
+    def create_test(*task_results, name, description, labels):
         return [TestStatsTasks(name=name, description=description,
-                               task_results=task_results)]
+                               labels=labels, task_results=task_results)]
 
     return stats_worker(create_test, name=name, description=description,
-                        tasks=close_dependency_graph(tasks))
+                        labels=labels, tasks=close_dependency_graph(tasks))
 
 
 class TestStatsTasks(Test):
@@ -105,7 +105,7 @@ class TestStatsTasks(Test):
     given tasks.
     '''
 
-    def __init__(self, *, name, description='', task_results):
+    def __init__(self, *, name, description='', labels=None, task_results):
         '''Instantiate a :class:`TestStatsTasks`.
 
         :param str name: the test name.
@@ -116,7 +116,7 @@ class TestStatsTasks(Test):
             succeeded.
         :type task_results: list(dict(str, *stuff*))
         '''
-        super().__init__(name=name, description=description)
+        super().__init__(name=name, description=description, labels=labels)
         self.task_results = task_results
 
     def evaluate(self):
@@ -173,7 +173,7 @@ class TestOutcome(IntEnum):
     __test__ = False
 
 
-def test_stats(*, name, description='', tasks):
+def test_stats(*, name, description='', labels=None, tasks):
     '''Create a :class:`TestStatsTests` from a list of tests.
 
     The :class:`TestStatsTests` class must be instantiated with the list of
@@ -272,12 +272,12 @@ def test_stats(*, name, description='', tasks):
     :rtype: EvalTestTask
     '''
 
-    def create_test(*task_results, name, description):
+    def create_test(*task_results, name, description, labels):
         return [TestStatsTests(name=name, description=description,
-                               task_results=task_results)]
+                               labels=labels, task_results=task_results)]
 
     return stats_worker(create_test, name=name, description=description,
-                        tasks=tasks)
+                        labels=labels, tasks=tasks)
 
 
 # hey, pytest!
@@ -289,12 +289,12 @@ class TestStatsTests(Test):
     tests.
     '''
 
-    def __init__(self, *, name, description='', task_results):
+    def __init__(self, *, name, description='', labels=None, task_results):
         '''Instantiate a :class:`TestStatsTests` from a collection of task
         results. The tasks are expected to generate :class:`~.TestResult`
         objects, which must appear in the ``'result'`` key of the task result.
         '''
-        super().__init__(name=name, description=description)
+        super().__init__(name=name, description=description, labels=labels)
         self.task_results = task_results
 
     def evaluate(self):
@@ -326,7 +326,8 @@ class TestResultStatsTests(TestResultStatsTasks):
         return TestOutcome.SUCCESS in self.classify and len(self.classify) == 1
 
 
-def test_stats_by_labels(*, name, description='', tasks, by_labels):
+def test_stats_by_labels(*, name, description='', labels=None,
+                         tasks, by_labels):
     '''Create a :class:`TestStatsTestsByLabels` from a list of tests.
 
     See :func:`test_stats` for the generalities about this function.
@@ -425,13 +426,13 @@ def test_stats_by_labels(*, name, description='', tasks, by_labels):
     :returns: an :class:`~.EvalTestTask` that evaluates the diagnostic test.
     :rtype: EvalTestTask
     '''
-    def create_test(*task_results, name, description, by_labels=None):
+    def create_test(*task_results, name, description, labels, by_labels=None):
         return [TestStatsTestsByLabels(
-            name=name, description=description, task_results=task_results,
-            by_labels=by_labels)]
+            name=name, description=description, labels=labels,
+            task_results=task_results, by_labels=by_labels)]
 
     return stats_worker(create_test, name=name, description=description,
-                        tasks=tasks, by_labels=by_labels)
+                        labels=labels, tasks=tasks, by_labels=by_labels)
 
 
 # hey, pytest!
@@ -463,7 +464,8 @@ class TestStatsTestsByLabels(Test):
     the strings corresponding to the chosen labels under the ``'labels'`` key
     and the number of results OK, KO and total.
     '''
-    def __init__(self, *, name, description='', task_results, by_labels):
+    def __init__(self, *, name, description='', labels=None, task_results,
+                 by_labels):
         '''Instantiate a :class:`TestStatsTestsByLabels` from a collection of
         task results. The tasks are expected to generate :class:`~.TestResult`
         objects, which must appear in the ``'result'`` key of the task result.
@@ -475,7 +477,7 @@ class TestStatsTestsByLabels(Test):
         :param tuple by_labels: ordered labels to sort the test results. These
             labels are the test labels.
         '''
-        super().__init__(name=name, description=description)
+        super().__init__(name=name, description=description, labels=labels)
         self.task_results = task_results
         self.by_labels = by_labels
         self.labels_lod = None
