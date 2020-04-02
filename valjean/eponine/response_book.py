@@ -573,7 +573,7 @@ class ResponseBook(Container):
         LOGGER.debug("in select_by, kwargs=%s", kwargs)
         sincl, sexcl = set(include), set(exclude)
         respids = self._filter_resp_id_by(**kwargs)
-        lresp = [self.responses[i] for i in respids
+        lresp = [self.responses[i] for i in sorted(respids)
                  if sincl.issubset(self.responses[i])
                  and not sexcl.intersection(self.responses[i])]
         sub_rb = ResponseBook(lresp, global_vars=self.globals)
@@ -595,7 +595,7 @@ class ResponseBook(Container):
         '''
         respids = self._filter_resp_id_by(**kwargs)
         sincl, sexcl = set(include), set(exclude)
-        lresp = [self.responses[i] for i in respids
+        lresp = [self.responses[i] for i in sorted(respids)
                  if sincl.issubset(self.responses[i])
                  and not sexcl.intersection(self.responses[i])]
         if squeeze:
