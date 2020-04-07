@@ -482,8 +482,14 @@ class TestStudent(TestDataset):
             if diff.error == 0 and diff.value == 0:
                 LOGGER.debug('Student test set to 0 as giving 0 / 0')
                 return np.zeros_like(ds1.value)
+            if np.isnan(ds1.error) and np.isnan(ds2.error) and diff.value == 0:
+                LOGGER.debug('Student test set to 0 as giving 0 / nan with '
+                             'nan coming from both datasets.')
+                return np.zeros_like(ds1.value)
             return studentt
         studentt[(diff.value == 0) & (diff.error == 0)] = 0
+        studentt[(diff.value == 0) & np.isnan(ds1.error)
+                 & np.isnan(ds2.error)] = 0
         return studentt
 
     @staticmethod
