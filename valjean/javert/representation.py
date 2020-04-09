@@ -323,10 +323,10 @@ class FullRepresenter(Representer):
         list (no ``None`` returned from this step).
         '''
         res = []
-        tabres = self.table_repr(result, verbosity)
-        if tabres is not None:
-            res.extend(tabres)
         pltres = self.plot_repr(result, verbosity)
         if pltres is not None:
             res.extend(pltres)
+        tabres = self.table_repr(result, verbosity)
+        if tabres is not None:
+            res.extend(tabres)
         return res
