@@ -2,6 +2,7 @@
 # pylint: disable=unused-argument
 
 import numpy as np
+import pytest
 from hypothesis import given, note
 
 # pylint: disable=wrong-import-order
@@ -10,6 +11,7 @@ from valjean import LOGGER
 from valjean.javert.rst import RstTable
 from valjean.javert.templates import join
 from valjean.javert.table_elements import repr_bins
+from valjean.javert.verbosity import Verbosity
 from .conftest import int_matrices
 from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  equal_test_result, equal_test_fail,
@@ -77,11 +79,15 @@ def test_rst_equal_full(rstcheck, equal_test_result, rst_formatter,
     assert not list(errs)
 
 
-def test_rst_equal_hl(rstcheck, equal_test_result_fail, rst_formatter,
-                      table_repr):
+@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
+                                        Verbosity.INTERMEDIATE,
+                                        Verbosity.FULL_DETAILS,
+                                        Verbosity.DEVELOPMENT])
+def test_rst_equal_hl(verb_level, rstcheck, equal_test_result_fail,
+                      rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
     tables when formatting an equality test with highlighted elements.'''
-    templates = table_repr(equal_test_result_fail)
+    templates = table_repr(equal_test_result_fail, verb_level)
     rst = '\n'.join(str(rst_formatter.template(template))
                     for template in templates)
     # patch the generated rst with a declaration for the highlight role
@@ -91,11 +97,15 @@ def test_rst_equal_hl(rstcheck, equal_test_result_fail, rst_formatter,
     assert not list(errs)
 
 
-def test_rst_approx_equal(rstcheck, approx_equal_test_result, rst_formatter,
-                          table_repr):
+@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
+                                        Verbosity.INTERMEDIATE,
+                                        Verbosity.FULL_DETAILS,
+                                        Verbosity.DEVELOPMENT])
+def test_rst_approx_equal(verb_level, rstcheck, approx_equal_test_result,
+                          rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
     tables when formatting an approximate equality test.'''
-    templates = table_repr(approx_equal_test_result)
+    templates = table_repr(approx_equal_test_result, verb_level)
     rst = '\n'.join(str(rst_formatter.template(template))
                     for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)
@@ -111,17 +121,19 @@ def test_rst_student(rstcheck, student_test_result, rst_formatter, table_repr):
     rst = '\n'.join(str(rst_formatter.template(template))
                     for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)
-    # print()
-    # print(rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
 
 
-def test_rst_student_hl(rstcheck, student_test_result_fail, rst_formatter,
-                        table_repr):
+@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
+                                        Verbosity.INTERMEDIATE,
+                                        Verbosity.FULL_DETAILS,
+                                        Verbosity.DEVELOPMENT])
+def test_rst_student_hl(verb_level, rstcheck, student_test_result_fail,
+                        rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` generates correct reST table for
     Student results.'''
-    templates = table_repr(student_test_result_fail)
+    templates = table_repr(student_test_result_fail, verb_level)
     rst = '\n'.join(str(rst_formatter.template(template))
                     for template in templates)
     # patch the generated rst with a declaration for the highlight role
@@ -131,25 +143,31 @@ def test_rst_student_hl(rstcheck, student_test_result_fail, rst_formatter,
     assert not list(errs)
 
 
-def test_rst_bonferroni(rstcheck, bonferroni_test_result, rst_formatter,
-                        table_repr):
+@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
+                                        Verbosity.INTERMEDIATE,
+                                        Verbosity.FULL_DETAILS,
+                                        Verbosity.DEVELOPMENT])
+def test_rst_bonferroni(verb_level, rstcheck, bonferroni_test_result,
+                        rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` generates correct reST table for
     Bonferroni result.'''
-    templates = table_repr(bonferroni_test_result)
+    templates = table_repr(bonferroni_test_result, verb_level)
     rst = '\n'.join(str(rst_formatter.template(template))
                     for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)
-    # print()
-    # print(rst)
     errs = rstcheck.check(rst)
     assert not list(errs)
 
 
-def test_rst_holm_bonferroni(rstcheck, holm_bonferroni_test_result,
+@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
+                                        Verbosity.INTERMEDIATE,
+                                        Verbosity.FULL_DETAILS,
+                                        Verbosity.DEVELOPMENT])
+def test_rst_holm_bonferroni(verb_level, rstcheck, holm_bonferroni_test_result,
                              rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` generates correct reST table for
     Holm-Bonferroni results.'''
-    templates = table_repr(holm_bonferroni_test_result)
+    templates = table_repr(holm_bonferroni_test_result, verb_level)
     rst = '\n'.join(str(rst_formatter.template(template))
                     for template in templates)
     LOGGER.debug('generated rst:\n%s', rst)

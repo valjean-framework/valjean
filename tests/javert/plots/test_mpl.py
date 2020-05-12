@@ -234,9 +234,6 @@ def test_fplit_pjoin(student_test_result_with_pvals, plot_repr):
                                baseline_dir='ref_plots')
 def test_adapt_range_lrbin(studentt_res_range_lrbin, plot_repr):
     '''Test with matplotlib test.'''
-    # pelt = CurveElements(values=np.arange(5), legend='', index=0, label='Y')
-    # plti = PlotTemplate(bins=np.array([0, 2, 3, 6, 7, 10000]), xname='X',
-    #                     curves=[pelt])
     templ = plot_repr(studentt_res_range_lrbin)
     mplt = MplPlot(templ[0])
     return mplt.draw()
@@ -246,9 +243,6 @@ def test_adapt_range_lrbin(studentt_res_range_lrbin, plot_repr):
                                baseline_dir='ref_plots')
 def test_adapt_range_lbin(studentt_res_range_lbin, plot_repr):
     '''Test with matplotlib test.'''
-    # pelt = CurveElements(values=np.arange(5), legend='', index=0, label='Y')
-    # plti = PlotTemplate(bins=np.array([0, 2, 3, 6, 7, 10000]), xname='X',
-    #                     curves=[pelt])
     templ = plot_repr(studentt_res_range_lbin)
     mplt = MplPlot(templ[0])
     return mplt.draw()
@@ -258,9 +252,6 @@ def test_adapt_range_lbin(studentt_res_range_lbin, plot_repr):
                                baseline_dir='ref_plots')
 def test_adapt_range_rbin(studentt_res_range_rbin, plot_repr):
     '''Test with matplotlib test.'''
-    # pelt = CurveElements(values=np.arange(5), legend='', index=0, label='Y')
-    # plti = PlotTemplate(bins=np.array([0, 2, 3, 6, 7, 10000]), xname='X',
-    #                     curves=[pelt])
     templ = plot_repr(studentt_res_range_rbin)
     mplt = MplPlot(templ[0])
     return mplt.draw()
@@ -270,9 +261,6 @@ def test_adapt_range_rbin(studentt_res_range_rbin, plot_repr):
                                baseline_dir='ref_plots')
 def test_noadapt_range_lrbin(studentt_res_range_lrbin, plot_no_post_repr):
     '''Test with matplotlib test.'''
-    # pelt = CurveElements(values=np.arange(5), legend='', index=0, label='Y')
-    # plti = PlotTemplate(bins=np.array([0, 2, 3, 6, 7, 10000]), xname='X',
-    #                     curves=[pelt])
     templ = plot_no_post_repr(studentt_res_range_lrbin)
     mplt = MplPlot(templ[0])
     return mplt.draw()

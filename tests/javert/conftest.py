@@ -1,21 +1,24 @@
 '''Fixtures for the :mod:`~.valjean.javert` tests.'''
 
 from hypothesis.strategies import (composite, tuples, integers, text, none,
-                                   just, sampled_from, lists, booleans)
+                                   just, sampled_from, lists, booleans, one_of)
 from hypothesis.extra.numpy import arrays, array_shapes
 
+# pylint: disable=wrong-import-order,unused-import,no-value-for-parameter
+import string
 import pytest
 import numpy as np
 
-# pylint: disable=wrong-import-order,unused-import,no-value-for-parameter
 from ..context import valjean  # noqa: F401
 from ..eponine.conftest import finite
 from ..gavroche.conftest import some_dataset, other_dataset
+from valjean.javert.verbosity import Verbosity
 from valjean.javert.representation import (FullRepresenter, EmptyRepresenter,
                                            FullTableRepresenter,
                                            PlotRepresenter, Representation)
 from valjean.javert.templates import (TableTemplate, PlotTemplate,
-                                      SubPlotElements, CurveElements)
+                                      SubPlotElements, CurveElements,
+                                      TextTemplate)
 from valjean.javert.test_report import TestReport
 from valjean.javert.rst import Rst, RstFormatter
 
@@ -51,7 +54,7 @@ def rst_formatter():
 
 
 @pytest.fixture
-def full_repr():
+def rfull_repr():
     '''Create a :class:`~.FullRepresenter` object.'''
     return Representation(FullRepresenter())
 
@@ -72,6 +75,12 @@ def table_repr():
 def plot_repr():
     '''Create a :class:`~.PlotRepresenter` object.'''
     return PlotRepresenter()
+
+
+@pytest.fixture
+def full_repr():
+    '''Create a :class:`~.FullRepresenter` object.'''
+    return FullRepresenter()
 
 
 @composite
@@ -150,15 +159,6 @@ def sub_plot_elements(draw, n_curves=integers(1, 3), xname=text()):
 @composite
 def plot_templates(draw, n_subplots=integers(1, 5), same_xaxis=booleans()):
     '''Strategy for generating :class:`~.PlotTemplate` objects.'''
-    # a_size = draw(size)
-    # a_bins_size = draw(sampled_from((a_size, a_size+1)))
-    # a_bins = draw(arrays(np.float64, shape=just(a_bins_size),
-    #                      elements=finite(), unique=True))
-    # a_bins.sort()
-    # a_curves = [draw(curve_elements(shape=just(size), size=a_size))
-    # a_curves = [draw(curve_elements(shape=just(a_size), size=a_size))
-    #             for _ in range(a_n_curves)]
-    # axnames=[draw(xname)])
     a_n_subplots = draw(n_subplots)
     a_same_xaxis = draw(same_xaxis)
     if a_same_xaxis:
@@ -169,6 +169,34 @@ def plot_templates(draw, n_subplots=integers(1, 5), same_xaxis=booleans()):
         a_subplots = [draw(sub_plot_elements(xname=text()))
                       for _ in range(a_n_subplots)]
     return PlotTemplate(subplots=a_subplots)
+
+
+@composite
+def text_highlight(draw, thlight=one_of(none(), just(1)), *, tlen):
+    '''Strategy for generating highlight of :class:`.TextTemplate`.'''
+    a_thlight = draw(thlight)
+    if not a_thlight:
+        return None
+    lhlight = []
+    start = 0
+    if a_thlight == 2:
+        start = draw(integers(start, tlen-2))
+        length = draw(integers(1, tlen-1-start))
+        lhlight.append((start, length))
+        start = start+length
+    start = draw(integers(start, tlen-1))
+    length = draw(integers(1, tlen-start))
+    lhlight.append((start, length))
+    return lhlight
+
+
+@composite
+def text_templates(draw, text=text(alphabet=string.printable, min_size=2)):
+    '''Strategy for generating :class:`~.TextTemplate` objects.'''
+    a_text = draw(text)
+    a_highlight = draw(text_highlight(
+        thlight=integers(0, min(len(a_text)-1, 2)), tlen=len(a_text)))
+    return TextTemplate(a_text, highlight=a_highlight)
 
 
 @pytest.fixture

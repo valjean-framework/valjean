@@ -214,6 +214,21 @@ def student_test_result(student_test):
 
 
 @pytest.fixture
+def student_test_2d(some_dataset, other_dataset):
+    '''Return a Student test between datasets.'''
+    return TestStudent(some_dataset, other_dataset,
+                       name='A Student test',
+                       description='Do the datasets have the same mean taking '
+                                   'into account the errors?')
+
+
+@pytest.fixture
+def student_test_2d_result(student_test_2d):
+    '''Return a Student test result between datasets.'''
+    return student_test_2d.evaluate()
+
+
+@pytest.fixture
 def student_test_edges(some_1d_dataset_edges, other_1d_dataset_edges):
     '''Return a Student test between datasets with bins given by edges.'''
     return TestStudent(some_1d_dataset_edges, other_1d_dataset_edges,
