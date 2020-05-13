@@ -1050,7 +1050,7 @@ highlight=[(2, 3), (-31, 2), (30, 3), (-3, 2)])
 
         :rtype: TextTemplate
         '''
-        return TextTemplate(text=self.text,
+        return TextTemplate(text=self.text.replace('\n\n', '\n'),
                             highlight=(self.highlight.copy()
                                        if self.highlight is not None
                                        else None))
@@ -1067,7 +1067,11 @@ highlight=[(2, 3), (-31, 2), (30, 3), (-3, 2)])
         is not true, but very likely.'''
         hasher = sha256()
         hasher.update(self.text.encode('utf-8'))
-        hasher.update(self.highlight.data.cast('b'))
+        hasher.update(
+            np.require(np.array(self.highlight),
+                       requirements='C').data.cast('b')
+            if isinstance(self.highlight, list)
+            else 'None'.encode('utf-8'))
         return hasher.hexdigest()
 
     def __eq__(self, other):
