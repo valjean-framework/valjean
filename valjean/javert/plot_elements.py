@@ -63,22 +63,22 @@ def trim_range(bins):
     trimmed if their width is at least 1000 times larger than the width of the
     neighbouring bin (the first bin is compared to the second one, and the last
     bin is compared to the second-last one). If there is no need to change
-    the previous limits an empty tuple is returned for the considered dimension
-    and **matplotlib** does not apply any additional limit.
+    the previous limits a tuple with initial limits is returned for the
+    considered dimension. A boolean is associated to the tuple to precise if
+    the limits have be changed.
 
     The trimmed ranges extend a bit over the clipped bins, so that their
     content is still visible in the plots.
 
     :param list(numpy.ndarray) bins: bins of the :class:`~.PlotTemplate`
     :returns: new limits for all dimensions
-    :rtype: list(tuple(int, int), tuple(int, int), )
+    :rtype: list(list(tuple(int, int), bool), list(tuple(int, int), bool), )
     '''
     LOGGER.debug('In plot_elements.trim_range')
-    has_changed = False
     blimits = []
     for lbins in bins:
         nbins = lbins
-        twidth = nbins[-1] - nbins[0]
+        has_changed = [False, False]
         limits = [nbins[0], nbins[-1]]
         if nbins.size < 3:
             LOGGER.warning('Not enough bins to adapt range.')
@@ -90,15 +90,16 @@ def trim_range(bins):
         binw = np.ediff1d(lbins)
         if binw[0]/binw[1] > 1e3:
             limits[0] = nbins[1]
-            has_changed = True
+            has_changed[0] = True
         if binw[-1]/binw[-2] > 1e3:
             limits[1] = nbins[-2]
-            has_changed = True
+            has_changed[1] = True
         rwidth = limits[1] - limits[0]
-        if rwidth != twidth:
+        if has_changed[0] or len(bins) == 1:
             limits[0] -= 0.05 * rwidth
+        if has_changed[1] or len(bins) == 1:
             limits[1] += 0.05 * rwidth
-        blimits.append([tuple(limits), has_changed])
+        blimits.append([tuple(limits), any(has_changed)])
     return blimits
 
 
@@ -121,11 +122,11 @@ def post_treatment(templates, result):
             for idim in range(len(blimits[0])):
                 nlimits.append((min(crv[idim][0][0] for crv in blimits),
                                 max(crv[idim][0][1] for crv in blimits)))
-            splt.limits = nlimits
+            splt.attributes.limits = nlimits
     return templates
 
 
-def organise_subplots(curves, axnames):
+def build_plot_template_with_dim(curves, axnames):
     '''Organise curves in :class:`~.templates.SubPlotElements`.
 
     If curves are 1D they will all go in the same
@@ -133,28 +134,31 @@ def organise_subplots(curves, axnames):
     curve will have its :class:`~.templates.SubPlotElements`.
 
     :param list(CurveElements) curves: list of curves
-    :param list(string) axnames: list of axis names
+    :param list(str) axnames: list of axis names
     :rtype: list(SubPlotElements)
     '''
     dim = curves[0].values.ndim
     if dim == 1:
-        return [SubPlotElements(curves=curves, axnames=axnames, ptype='1D')]
+        subplot = SubPlotElements(curves=curves, axnames=axnames, ptype='1D')
+        return PlotTemplate(subplots=[subplot], small_subplots=True,
+                            suppress_xaxes=True, suppress_legends=True)
     if dim == 2:
-        return [SubPlotElements(curves=[crv], axnames=axnames, ptype='2D')
-                for crv in curves]
+        subplots = [SubPlotElements(curves=[crv], axnames=axnames, ptype='2D')
+                    for crv in curves]
+        return PlotTemplate(subplots=subplots, small_subplots=False)
     LOGGER.warning('Not expected dimension')
     return []
 
 
 def repr_datasets_values(result):
     '''Representation of the datasets values from test results obtained from a
-    child test of :class:``~valjean.gavroche.test.TestDataset`.
+    child test of :class:`~valjean.gavroche.test.TestDataset`.
 
     Examples:
 
     * :class:`~valjean.gavroche.test.TestResultEqual`;
     * :class:`~valjean.gavroche.test.TestResultApproxEqual`;
-    * :class:`~valjean.gavroche.test.TestResultStudent`.
+    * :class:`~valjean.gavroche.stat_tests.student.TestResultStudent`.
 
     :param TestResult result: test result from test on datasets
     :rtype: list(PlotTemplate)
@@ -180,9 +184,9 @@ def repr_datasets_values(result):
                       legend=(ds.name if ds.name else 'dataset '+str(ids)),
                       index=ids+1, errors=ds.error)
         for ids, ds in enumerate(result.test.datasets)])
-    subplots = organise_subplots(
+    pltemp = build_plot_template_with_dim(
         cds, axnames=list(dab.keys())+[result.test.dsref.what])
-    return [PlotTemplate(subplots=subplots)]
+    return [pltemp] if pltemp else []
 
 
 def repr_testresultequal(result, _verbosity=None):
@@ -284,14 +288,15 @@ def repr_student_delta(result):
     curves = [CurveElements(values=delta, legend='', bins=list(dab.values()),
                             index=ind+1, errors=None)
               for ind, delta in enumerate(result.delta)]
-    subplots = organise_subplots(
+    pltemp = build_plot_template_with_dim(
         curves, axnames=list(dab.keys()) + [r'$t_{Student}$'])
+    if not pltemp:
+        return []
     if result.delta[0].ndim == 1:
-        for splt in subplots:
-            splt.lines = [[{'y': result.test.threshold},
-                           {'y': -result.test.threshold}]]
-    plt = PlotTemplate(subplots=subplots)
-    return [plt]
+        for splt in pltemp.subplots:
+            splt.attributes.lines = [{'y': result.test.threshold},
+                                     {'y': -result.test.threshold}]
+    return [pltemp]
 
 
 def repr_student_pvalues(result):
@@ -317,13 +322,15 @@ def repr_student_pvalues(result):
     curves = [CurveElements(values=pval, bins=list(dab.values()),
                             legend='', index=ind+1, errors=None)
               for ind, pval in enumerate(result.pvalue)]
-    subplots = organise_subplots(curves, axnames=list(dab.keys())+['p-value'])
+    pltemp = build_plot_template_with_dim(
+        curves, axnames=list(dab.keys())+['p-value'])
+    if not pltemp:
+        return []
     if result.pvalue[0].ndim == 1:
-        for splt in subplots:
-            splt.lines = [[{'y': result.test.alpha/2},
-                           {'y': -result.test.alpha/2}]]
-    plt = PlotTemplate(subplots=subplots)
-    return [plt]
+        for splt in pltemp.subplots:
+            splt.attributes.lines = [{'y': result.test.alpha/2},
+                                     {'y': -result.test.alpha/2}]
+    return [pltemp]
 
 
 def repr_testresultmetadata(_result, _verbosity=None):

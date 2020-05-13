@@ -14,7 +14,11 @@ from valjean.gavroche.test import TestEqual, TestApproxEqual
 from valjean.gavroche.stat_tests.student import TestStudent
 from valjean.gavroche.stat_tests.bonferroni import (TestBonferroni,
                                                     TestHolmBonferroni)
+from valjean.gavroche.diagnostics.metadata import TestMetadata
 from ..eponine.conftest import base_datasets, perturbed_base_datasets
+from valjean.cosette.pythontask import PythonTask
+from valjean.cosette.task import TaskStatus
+from valjean.config import Config
 
 
 def datasets(*, elements=None, shape=None, dtype=None, coords=None):
@@ -397,3 +401,39 @@ def metadata_dicts(draw, min_size=1):
     return draw(dictionaries(keys=text(alphabet=string.printable),
                              values=text(alphabet=string.printable),
                              min_size=min_size))
+
+
+def generate_test_tasks():
+    '''Generate :class:`~.TestMetadata` to test the statistics diagnostics
+    based on labels.'''
+    menu1 = {'food': 'egg + spam', 'drink': 'beer'}
+    menu2 = {'food': 'egg + bacon', 'drink': 'beer'}
+    menu3 = {'food': 'lobster thermidor', 'drink': 'brandy'}
+
+    def test_generator():
+        result = [TestMetadata({'Graham': menu1, 'Terry': menu1},
+                               name='gt_wday_lunch',
+                               labels={'day': 'Wednesday', 'meal': 'lunch'}
+                               ).evaluate(),
+                  TestMetadata({'Michael': menu1, 'Eric': menu2},
+                               name='me_wday_dinner',
+                               labels={'day': 'Wednesday', 'meal': 'dinner'}
+                               ).evaluate(),
+                  TestMetadata({'John': menu2, 'Terry': menu2},
+                               name='jt_wday',
+                               labels={'day': 'Wednesday'}).evaluate(),
+                  TestMetadata({'Terry': menu3, 'John': menu3},
+                               name='Xmasday',
+                               labels={'day': "Christmas Eve"}).evaluate()]
+        return {'test_generator': {'result': result}}, TaskStatus.DONE
+
+    return PythonTask('test_generator', test_generator)
+
+
+def run_tasks(tasks, env):
+    '''Run the tasls and update the environnment.'''
+    config = Config(paths=[])
+    for task in tasks:
+        env_up, status = task.do(env=env, config=config)
+        env.apply(env_up)
+    return env, status

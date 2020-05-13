@@ -16,6 +16,8 @@ from valjean.gavroche.test import TestResultFailed
 from valjean.config import Config
 from valjean.cosette.env import Env
 
+from .conftest import generate_test_tasks, run_tasks
+
 
 @given(metadata1=shared(metadata_dicts(), key='metadata'),
        metadata2=one_of(shared(metadata_dicts(), key='metadata'),
@@ -53,48 +55,12 @@ def test_metadata_exclude(metadata):
     assert test.evaluate()
 
 
-def generate_test_tasks():
-    '''Generate :class:`~.TestMetadata` to test the statistics diagnostics
-    based on labels.'''
-    menu1 = {'food': 'egg + spam', 'drink': 'beer'}
-    menu2 = {'food': 'egg + bacon', 'drink': 'beer'}
-    menu3 = {'food': 'lobster thermidor', 'drink': 'brandy'}
-
-    def test_generator():
-        result = [TestMetadata({'Graham': menu1, 'Terry': menu1},
-                               name='gt_wday_lunch',
-                               labels={'day': 'Wednesday', 'meal': 'lunch'}
-                               ).evaluate(),
-                  TestMetadata({'Michael': menu1, 'Eric': menu2},
-                               name='me_wday_dinner',
-                               labels={'day': 'Wednesday', 'meal': 'dinner'}
-                               ).evaluate(),
-                  TestMetadata({'John': menu2, 'Terry': menu2},
-                               name='jt_wday',
-                               labels={'day': 'Wednesday'}).evaluate(),
-                  TestMetadata({'Terry': menu3, 'John': menu3},
-                               name='Xmasday',
-                               labels={'day': "Christmas Eve"}).evaluate()]
-        return {'test_generator': {'result': result}}, TaskStatus.DONE
-
-    return PythonTask('test_generator', test_generator)
-
-
 def generate_stats_tasks(name, test_task, labels):
     '''Generate to tasks to make the diagnostic based on tests' labels.'''
     stats = test_stats_by_labels(name=name, tasks=[test_task],
                                  by_labels=labels)
     create_stats = next(task for task in stats.depends_on)
     return [create_stats, stats]
-
-
-def run_tasks(tasks, env):
-    '''Run the tasls and update the environnment.'''
-    config = Config(paths=[])
-    for task in tasks:
-        env_up, status = task.do(env=env, config=config)
-        env.apply(env_up)
-    return env, status
 
 
 def one_label_case(ttask, env):

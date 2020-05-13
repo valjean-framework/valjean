@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 '''This module contains classes that are supposed to act as containers of all
 the information that is necessary to represent a test in a given format. For
 instance, in the case of tables this includes the column contents, the headers,
@@ -8,7 +9,6 @@ are handled by suitable formatting classes, such as :class:`~.Rst`.
 .. _numpy indexing:
    https://docs.scipy.org/doc/numpy/user/basics.indexing.html
 '''
-from collections import defaultdict
 from hashlib import sha256
 import numpy as np
 from .. import LOGGER
@@ -328,7 +328,7 @@ class CurveElements:
         style will be applied to 'egg vs reference' and 'egg' and to 'spam vs
         reference' and 'spam'. In that case to ensure the same style 'egg vs
         reference' and 'egg' should have the same index (same for the 'spam'
-        case). ``index=0`` will always be considered as reference.
+        case).
 
         :param numpy.ndarray values: array to be represented on the plot,
             **mandatory**
@@ -368,6 +368,24 @@ class CurveElements:
                              errors=(None if self.errors is None
                                      else self.errors.copy()))
 
+    def __repr__(self):
+        '''Printing of :class:`CurveElements`.'''
+        elts = ("  legend:  {}\n"
+                "  index:   {}\n"
+                "  bins:    {}\n"
+                "  values:  {}\n"
+                "  errors:  {}\n".format(
+                    self.legend, self.index, self.bins, self.values,
+                    self.errors))
+        return elts
+
+    def __str__(self):
+        '''Printing of :class:`CurveElements`.'''
+        elts = ("  legend:  {}\n"
+                "  index:   {}\n"
+                "  bins:    {}\n".format(self.legend, self.index, self.bins))
+        return elts
+
     def data(self):
         '''Generator yielding objects supporting the buffer protocol that (as a
         whole) represent a serialized version of `self`.'''
@@ -392,12 +410,96 @@ class CurveElements:
         return not self == other
 
 
+class SubPlotAttributes:
+    # pylint: disable=too-many-instance-attributes
+    '''Container to store sub-plots attributes:
+
+    * axis limits
+    * axis scale: linear (default) or logatithmic
+    * additional horizontal or vertical lines
+
+    Theses attributes are independent of the used backend (examples:
+    **matplotlib**, **Root**, **gnuplot**, **D3**). The backend then gets the
+    attributes and apply them with its own features.
+
+    .. note:
+
+        If needed new attributes can be added.
+    '''
+    def __init__(self, dim):
+        '''Initialisation of PlotAttributes.
+
+        The attributes of the instance are private.
+
+        :param int dim: dimension of the data on the sub-plot (used to check
+            consistency of limits)
+        '''
+        self.dim = dim
+        self.logx = False
+        self.logy = False
+        self.logz = False
+        self._limits = None
+        self._lines = None
+
+    def copy(self):
+        '''Copy a :class:`SubPlotAttributes` object.
+
+        :rtype: SubPlotAttributes
+        '''
+        spa = SubPlotAttributes(self.dim)
+        spa.logx = self.logx
+        spa.logy = self.logy
+        spa.logz = self.logz
+        spa.limits = self.limits.copy() if self.limits is not None else None
+        spa.lines = self.lines.copy() if self.lines is not None else None
+        return spa
+
+    @property
+    def limits(self):
+        '''Return limits.'''
+        return self._limits
+
+    @limits.setter
+    def limits(self, limits):
+        '''Store limits for curves in the :class:`PlotTemplate`.
+
+        :param list(tuple) limits: limits for each axis of the sub-plot
+
+        Each tuple corresponds to an axis, 2 values are expected: min and max.
+        '''
+        if limits is not None:
+            if len(limits) != self.dim:
+                LOGGER.warning('Wrong number of limits given: expected %s, '
+                               'got %s', self.dim, len(limits))
+                return
+        self._limits = limits
+
+    @property
+    def lines(self):
+        '''Return lines to be plotted.'''
+        return self._lines
+
+    @lines.setter
+    def lines(self, lines):
+        '''Set lines to be added to the plots.
+
+        :param list(list(dict)) lines: lines to be added to the plots
+        '''
+        if lines is None:
+            self._lines = None
+            return
+        for line in lines:
+            if len({'x', 'y'}.intersection(line)) != 1:
+                LOGGER.warning('Only vertical or horizontal lines accepted')
+                return
+        self._lines = lines
+
+
 class SubPlotElementsException(Exception):
     '''Error raised if the sub plot looks inconsistent.'''
 
 
 class SubPlotElements:
-    # pylint: disable=too-many-instance-attributes
     '''Container to store a given sub-plot.'''
 
     def __init__(self, *, curves, axnames=('', ''), ptype='1D'):
@@ -426,14 +528,10 @@ class SubPlotElements:
         :param str type: type of the sub-plot, default: ``'1D'``
         '''
         self.curves = curves
-        self.axnames = axnames
+        self.axnames = list(axnames)
         self.ptype = ptype
         self._check_axes_consistency()
-        self.logx = False
-        self.logy = False
-        self.logz = False
-        self._limits = None
-        self._lines = None
+        self.attributes = SubPlotAttributes(len(self.axnames)-1)
 
     def _check_axes_consistency(self):
         '''Check axes consistency.
@@ -451,31 +549,16 @@ class SubPlotElements:
             raise SubPlotElementsException(
                 'Inconsistent number of axis names and bins')
         if self.ptype == '1D' and len(self.axnames) != 2:
-            LOGGER.warning('Expecting a 1D plot but got %d axes',
-                           len(self.axnames))
+            raise SubPlotElementsException(
+                'Expecting a 1D plot but got {} axes'
+                .format(len(self.axnames)))
         if self.ptype == '2D' and len(self.axnames) != 3:
-            LOGGER.warning('Expecting a 1D plot but got %d axes',
-                           len(self.axnames))
-
-    def consistent(self, other):
-        '''Check if 2 :class:`SubPlotElements` are consistent.
-
-        Check bins of the curves, axnames and plot type (``ptype``).
-
-        :rtype: bool
-        '''
-        if other.axnames != self.axnames:
-            return False
-        if other.ptype != self.ptype:
-            return False
-        # should normally never happened due to _check_axes_consistency, keep?
-        if len(other.curves[0].bins) != len(self.curves[0].bins):
-            return False
-        ind = [c.index for c in self.curves] + [c.index for c in other.curves]
-        if len(set(ind)) != len(ind):
-            LOGGER.warning('Some indices are them same in self and other, '
-                           'might generate a representation issue.')
-        return True
+            raise SubPlotElementsException(
+                'Expecting a 2D plot but got {} axes'
+                .format(len(self.axnames)))
+        if self.ptype == '2D' and len(self.curves) > 1:
+            LOGGER.warning('Only one subplot expected by SubPlotElements in '
+                           '2D case')
 
     def copy(self):
         '''Copy a :class:`SubPlotElements` object.
@@ -483,14 +566,36 @@ class SubPlotElements:
         :rtype: SubPlotElements
         '''
         celt = SubPlotElements(curves=[c.copy() for c in self.curves],
-                               axnames=list(self.axnames).copy(),
-                               ptype=self.ptype)
-        celt.limits = self.limits
-        celt.logx = self.logx
-        celt.logy = self.logy
-        celt.logz = self.logz
-        celt.lines = self.lines
+                               axnames=list(self.axnames),
+                               ptype=self.ptype,)
+        celt.attributes = self.attributes.copy()
         return celt
+
+    def __repr__(self):
+        '''Printing of :class:`SubPlotElements`'''
+        elts = [" axnames: {}, plot type: {}, N curves: {}\n"
+                .format(self.axnames, self.ptype, len(self.curves))]
+        for j, curve in enumerate(self.curves):
+            elts.append(" Curve {}\n{!r}".format(j, curve))
+        return ''.join(elts)
+
+    def __str__(self):
+        '''Printing of :class:`SubPlotElements`'''
+        elts = [" axnames: {}, plot type: {}\n"
+                .format(self.axnames, self.ptype)]
+        for j, curve in enumerate(self.curves):
+            elts.append(" Curve {}\n{!s}".format(j, curve))
+        return ''.join(elts)
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        for aname in self.axnames:
+            yield aname.encode('utf-8')
+        yield self.ptype.encode('utf-8')
+        for curve in self.curves:
+            for data in curve.data():
+                yield data
 
     def __eq__(self, other):
         '''Test of equality of `self` and another :class:`SubPlotElements`.'''
@@ -502,48 +607,6 @@ class SubPlotElements:
         '''Test for inequality of `self` and another :class:`SubPlotElements`.
         '''
         return not self == other
-
-    @property
-    def limits(self):
-        '''Return limits.'''
-        return self._limits
-
-    @limits.setter
-    def limits(self, limits):
-        '''Store limits for curves in the :class:`PlotTemplate`.
-
-        :param list(tuple) limits: limits for each axis of the plots
-
-        List must contain a list whose items corresponds to a plot, this list
-        must contain a tuple whose items correspond to the axes.
-        '''
-        if limits is not None:
-            if len(limits) != len(self.axnames)-1:
-                LOGGER.warning('Inconsistent limits given')
-                return
-        self._limits = limits
-
-    @property
-    def lines(self):
-        '''Return lines to be plotted.'''
-        return self._lines
-
-    @lines.setter
-    def lines(self, lines):
-        '''Set lines to be added to the plots.
-
-        :param list(list(dict)) lines: lines to be added to the plots
-        '''
-        if lines is None:
-            self._lines = None
-            return
-        for line in lines:
-            if (line is not None
-                    and not all(len({'x', 'y'}.intersection(li)) == 1
-                                for li in line)):
-                LOGGER.warning('Only vertical or horizontal lines accepted')
-                return
-        self._lines = lines
 
 
 class PlotTemplate:
@@ -567,34 +630,10 @@ class PlotTemplate:
     >>> pit3 = PlotTemplate(subplots=[SubPlotElements(
     ...     curves=[CurveElements(d13, legend='d13', bins=[bins1], index=2)],
     ...     axnames=['egg', 'wine'])])
-    >>> splt12 = join(pit1, pit2)
-    >>> print("{!r}".format(splt12))
-    class:   <class 'valjean.javert.templates.PlotTemplate'>
-    N subplots: 2, N curves: 2
-    Subplot 0
-     axnames: ['egg', 'brandy'], plot type: 1D, N curves: 1
-     Curve 0
-      legend:  d11
-      index:   0
-      bins:    [array([0, 1, 2, 3])]
-      values:  [0 1 2 3]
-      errors:  None
-    Subplot 1
-     axnames: ['egg', 'beer'], plot type: 1D, N curves: 1
-     Curve 0
-      legend:  d12
-      index:   1
-      bins:    [array([0, 1, 2, 3])]
-      values:  [ 0 10 20 30]
-      errors:  None
-    <BLANKLINE>
-
-    We obtain a new :class:`PlotTemplate` containing two different subplots.
-
     >>> splt123 = join(pit1, pit2, pit3)
     >>> print("{!r}".format(splt123))
     class:   <class 'valjean.javert.templates.PlotTemplate'>
-    N subplots: 3, N curves: 3
+    N subplots: 3
     Subplot 0
      axnames: ['egg', 'brandy'], plot type: 1D, N curves: 1
      Curve 0
@@ -631,8 +670,7 @@ class PlotTemplate:
     >>> pit1 == splt123
     True
 
-    It is possible to join a new curve with the same axes. In that
-    case they are added directly in the :class:`CurveElements` list.
+    A new curve with the same axes will also create a new suplot:
 
     >>> d14 = d11*2
     >>> pit4 = PlotTemplate(subplots=[SubPlotElements(
@@ -642,19 +680,21 @@ class PlotTemplate:
     >>> print(split24)
     class:   <class 'valjean.javert.templates.PlotTemplate'>
     Subplot 0
-     axnames: ['egg', 'beer'], plot type: 1D, N curves: 2
+     axnames: ['egg', 'beer'], plot type: 1D
      Curve 0
       legend:  d12
       index:   1
       bins:    [array([0, 1, 2, 3])]
-     Curve 1
+    Subplot 1
+     axnames: ['egg', 'beer'], plot type: 1D
+     Curve 0
       legend:  d14
       index:   3
       bins:    [array([0, 1, 2, 3])]
     <BLANKLINE>
 
 
-    We get the same result as if it was done at creation:
+    To get it in the same subplot it has to be done at creation.
 
     >>> pit24 = PlotTemplate(subplots=[SubPlotElements(
     ...     curves=[CurveElements(d12, legend='d12', index=1, bins=[bins1]),
@@ -663,7 +703,7 @@ class PlotTemplate:
     >>> print(pit24)
     class:   <class 'valjean.javert.templates.PlotTemplate'>
     Subplot 0
-     axnames: ['egg', 'beer'], plot type: 1D, N curves: 2
+     axnames: ['egg', 'beer'], plot type: 1D
      Curve 0
       legend:  d12
       index:   1
@@ -674,63 +714,16 @@ class PlotTemplate:
       bins:    [array([0, 1, 2, 3])]
     <BLANKLINE>
     >>> split24 == pit24
-    True
-
-    Warning: if axnames are given in a tuple in one subplot and in a list in
-    the other one (axis names being the same), curves will stay in different
-    subplots after a ``join`` and not be in the same one.
-
-    If axes names are different a new subplot is created, curves cannot be
-    drawn on the same one. Bins can be the same or not, only the name counts
-    here, as it supposes quantities are different.
-
-    >>> pit5 = PlotTemplate(subplots=[SubPlotElements(
-    ...     curves=[CurveElements(d12, legend='d15', index=4, bins=[bins1])],
-    ...     axnames=['Egg', 'beer'])])
-    >>> splt25 = join(pit2, pit5)
-    >>> print(splt25)
-    class:   <class 'valjean.javert.templates.PlotTemplate'>
-    Subplot 0
-     axnames: ['egg', 'beer'], plot type: 1D, N curves: 1
-     Curve 0
-      legend:  d12
-      index:   1
-      bins:    [array([0, 1, 2, 3])]
-    Subplot 1
-     axnames: ['Egg', 'beer'], plot type: 1D, N curves: 1
-     Curve 0
-      legend:  d15
-      index:   4
-      bins:    [array([0, 1, 2, 3])]
-    <BLANKLINE>
-
-    If the axis names are identical, even if bins are different, curves can be
-    represented in the same subplot:
-
-    >>> pit6 = PlotTemplate(subplots=[SubPlotElements(
-    ...     curves=[CurveElements(d2, legend='d2', index=5, bins=[bins2])],
-    ...     axnames=['Egg', 'beer'])])
-    >>> splt56 = join(pit5, pit6)
-    >>> print(splt56)
-    class:   <class 'valjean.javert.templates.PlotTemplate'>
-    Subplot 0
-     axnames: ['Egg', 'beer'], plot type: 1D, N curves: 2
-     Curve 0
-      legend:  d15
-      index:   4
-      bins:    [array([0, 1, 2, 3])]
-     Curve 1
-      legend:  d2
-      index:   5
-      bins:    [array([0, 1, 2, 3, 4])]
-    <BLANKLINE>
+    False
 
 
     N-dimensional plot templates can be built, but the plotting engine may not
-    be able to convert multi-dimensional templates into plots:
+    be able to convert multi-dimensional templates into plots.
 
-    The same behaviors are expected for multi-dimensions plots: same subplot
-    for same axes, different subplots for different axes.
+    The same behavior is expected for multi-dimensions plots: ``join`` will had
+    a new subplot. To be noted: only one curve can be plotted on a subplot in
+    multi-dimensional case, so any additional curve will throw a warning. Plot
+    representation may not be as expected.
 
     >>> d31 = np.arange(bins1.size*bins2.size).reshape(bins1.size, bins2.size)
     >>> d32 = np.arange(bins1.size*bins2.size).reshape(
@@ -747,58 +740,57 @@ class PlotTemplate:
     >>> print("{!s}".format(splt78))
     class:   <class 'valjean.javert.templates.PlotTemplate'>
     Subplot 0
-     axnames: ['egg', 'spam', 'bacon'], plot type: 2D, N curves: 1
+     axnames: ['egg', 'spam', 'bacon'], plot type: 2D
      Curve 0
       legend:  d31
       index:   0
       bins:    [array([0, 1, 2, 3]), array([0, 1, 2, 3, 4])]
     Subplot 1
-     axnames: ['egg', 'spam', 'lobster'], plot type: 2D, N curves: 1
+     axnames: ['egg', 'spam', 'lobster'], plot type: 2D
      Curve 0
       legend:  d32
       index:   1
       bins:    [array([0, 1, 2, 3]), array([0, 1, 2, 3, 4])]
     <BLANKLINE>
 
-    >>> splt77 = join(pit7, pit7)
-    >>> print(splt77)
+    It is also possible to mix 1D and 2D plots:
+
+    >>> splt27 = join(pit2, pit7)
+    >>> print("{!s}".format(splt27))
     class:   <class 'valjean.javert.templates.PlotTemplate'>
     Subplot 0
-     axnames: ['egg', 'spam', 'bacon'], plot type: 2D, N curves: 2
+     axnames: ['egg', 'beer'], plot type: 1D
      Curve 0
-      legend:  d31
-      index:   0
-      bins:    [array([0, 1, 2, 3]), array([0, 1, 2, 3, 4])]
-     Curve 1
+      legend:  d12
+      index:   1
+      bins:    [array([0, 1, 2, 3])]
+    Subplot 1
+     axnames: ['egg', 'spam', 'bacon'], plot type: 2D
+     Curve 0
       legend:  d31
       index:   0
       bins:    [array([0, 1, 2, 3]), array([0, 1, 2, 3, 4])]
     <BLANKLINE>
 
-    To be noted: multiple curves on a given subplots will probably mean
-    multiple subplots, one curve by subplot but all subplots with the same
-    properties. For example, if logx is required all curves in the subplot will
-    be in logarithmic scale.
     '''
-    def __init__(self, *, subplots):  # curves):
-        '''Construction of the PlotTemplate from x-bins and curves.
+    def __init__(self, *, subplots, small_subplots=True, suppress_xaxes=False,
+                 suppress_legends=False):
+        '''Construction of the PlotTemplate from a list of
+        :class:`SubPlotElements`.
 
-        The curves should be a list of :class:`CurveElements`.
-
-        Bins should be common to all the curves. It is up to the user to ensure
-        that (when coming from a unique test this should be automatic).
-
-        :param bins: bins, common for all plots (important), only one set is
-            needed
-        :type bins: list(numpy.ndarray)
-        :param axnames: names of axes (default: ``''``)
-        :type axnames: list(str)
-        :param curves: list of curves characteristics
-        :type curves: list(CurveElements)
+        :param list(SubPlotElements) subplots: list of sub-plots
+        :param bool small_subplots: draw additional subplots in smaller size
+            than the first one, default = ``True``
+        :param bool suppress_xaxes: suppress label and ticks labels of the
+            x-axis of subplots except the last one, default = ``False``
+        :param bool suppress_legends: suppress legend on all subplots except
+            the first one, default = ``False``
         '''
         self.subplots = subplots
         self.nb_plots = len(self.subplots)
-        self.nb_curves = sum(len(s.curves) for s in self.subplots)
+        self.small_subplots = small_subplots
+        self.suppress_xaxes = suppress_xaxes
+        self.suppress_legends = suppress_legends
 
         if not isinstance(self.subplots, list):
             raise TypeError("The 'subplots' argument must a list of "
@@ -813,7 +805,10 @@ class PlotTemplate:
 
         :rtype: PlotTemplate
         '''
-        ccplt = PlotTemplate(subplots=[pelt.copy() for pelt in self.subplots])
+        ccplt = PlotTemplate(subplots=[pelt.copy() for pelt in self.subplots],
+                             small_subplots=self.small_subplots,
+                             suppress_xaxes=self.suppress_xaxes,
+                             suppress_legends=self.suppress_legends)
         return ccplt
 
     def _binary_join(self, other):
@@ -836,24 +831,18 @@ class PlotTemplate:
         if not isinstance(other, PlotTemplate):
             raise TypeError("Only a PlotTemplate can be joined to another "
                             "PlotTemplate")
-        # axnames = [splt.axnames for splt in self.subplots]
-        # for splt in other.subplots:
-        #     if splt.axnames in axnames:  # and splt.ptype == ptype
-        #         ind = axnames.index(splt.axnames)
-        #         self.subplots[ind].curves.extend(splt.curves)
-        #     else:
-        #         self.subplots.append(splt)
-        for osplt in other.subplots:
-            added = False
-            for ssplt in self.subplots:
-                if ssplt.consistent(osplt):
-                    ssplt.curves.extend(osplt.curves)
-                    added = True
-                    break
-            if not added:
-                self.subplots.append(osplt)
+        self.subplots.extend(other.subplots)
         self.nb_plots = len(self.subplots)
-        self.nb_curves = sum(len(s.curves) for s in self.subplots)
+        if other.small_subplots != self.small_subplots:
+            LOGGER.warning('Not same value for small_subplots in self and '
+                           'other, keeping self one (%s)', self.small_subplots)
+        if other.suppress_xaxes != self.suppress_xaxes:
+            LOGGER.warning('Not same value for suppress_xaxes in self and '
+                           'other, keeping self one (%s)', self.suppress_xaxes)
+        if other.suppress_legends != self.suppress_legends:
+            LOGGER.warning('Not same value for suppress_legends in self and '
+                           'other, keeping self one (%s)',
+                           self.suppress_legends)
 
     def join(self, *others):
         '''Join a given number a :class:`PlotTemplate` to the current one.
@@ -871,23 +860,10 @@ class PlotTemplate:
     def __repr__(self):
         '''Printing of :class:`PlotTemplate`.'''
         intro = ["class:   {}\n"
-                 "N subplots: {}, N curves: {}\n".format(
-                     self.__class__, self.nb_plots, self.nb_curves)]
+                 "N subplots: {}\n".format(self.__class__, self.nb_plots)]
         elts = []
         for i, splt in enumerate(self.subplots):
-            elts.append("Subplot {}\n"
-                        " axnames: {}, plot type: {}, N curves: {}\n"
-                        .format(i, splt.axnames, splt.ptype, len(splt.curves)))
-            for j, curve in enumerate(splt.curves):
-                elts.append(
-                    " Curve {}\n"
-                    "  legend:  {}\n"
-                    "  index:   {}\n"
-                    "  bins:    {}\n"
-                    "  values:  {}\n"
-                    "  errors:  {}\n".format(
-                        j, curve.legend, curve.index, curve.bins, curve.values,
-                        curve.errors))
+            elts.append("Subplot {}\n{!r}".format(i, splt))
         return ''.join(intro + elts)
 
     def __str__(self):
@@ -895,16 +871,7 @@ class PlotTemplate:
         intro = ["class:   {0}\n".format(self.__class__)]
         elts = []
         for i, splt in enumerate(self.subplots):
-            elts.append("Subplot {}\n"
-                        " axnames: {}, plot type: {}, N curves: {}\n"
-                        .format(i, splt.axnames, splt.ptype, len(splt.curves)))
-            for j, curve in enumerate(splt.curves):
-                elts.append(
-                    " Curve {}\n"
-                    "  legend:  {}\n"
-                    "  index:   {}\n"
-                    "  bins:    {}\n".format(
-                        j, curve.legend, curve.index, curve.bins))
+            elts.append("Subplot {}\n{!s}".format(i, splt))
         return ''.join(intro + elts)
 
     def fingerprint(self):
@@ -914,11 +881,8 @@ class PlotTemplate:
         is not true, but very likely.'''
         hasher = sha256()
         for splt in self.subplots:
-            for axn in splt.axnames:
-                hasher.update(axn.encode('utf-8'))
-            for curve in splt.curves:
-                for data in curve.data():
-                    hasher.update(data)
+            for data in splt.data():
+                hasher.update(data)
         return hasher.hexdigest()
 
     def __eq__(self, other):
@@ -929,31 +893,14 @@ class PlotTemplate:
         '''Test for inequality of `self` and another :class:`PlotTemplate`.'''
         return not self == other
 
-    def same_xaxis(self):
-        '''Returns True if all axes have the same names (no check on the bins).
-        '''
-        min0 = min(c.bins[0][0] for c in self.subplots[0].curves)
-        max0 = max(c.bins[0][-1] for c in self.subplots[0].curves)
-        for splt in self.subplots[1:]:
-            if splt.axnames[0] != self.subplots[0].axnames[0]:
-                return False
-            if (not np.isclose(min(c.bins[0][0] for c in splt.curves), min0)
-                    or not np.isclose(max(c.bins[0][-1] for c in splt.curves),
-                                      max0)):
-                return False
-        return True
-
-    def pack_by_index(self):
-        '''Pack the curves by index (typically used to attribute style to
-        curves).
-
-        :rtype: collections.defaultdict(list)
-        '''
-        ind_dict = defaultdict(list)
-        for isplt, splt in enumerate(self.subplots):
+    def curves_index(self):
+        '''Return a sorted list of unique index of the curves.'''
+        lind = []
+        for splt in self.subplots:
             for crv in splt.curves:
-                ind_dict[crv.index].append((crv, isplt))
-        return ind_dict
+                if crv.index not in lind:
+                    lind.append(crv.index)
+        return lind
 
 
 class TextTemplate:
@@ -1012,7 +959,7 @@ highlight=[(2, 3), (-31, 2), (30, 3), (-3, 2)])
             given as a list of tuples of 2 ints, first being the start position
             and the second the legth of the text to highlight
         '''
-        self.text = text.replace('\n', '\n\n')
+        self.text = text
         if highlight is not None:
             msg = ("highlight should be a list of tuple of int, each tuple "
                    "being (start, length) of highlighted text")
@@ -1050,7 +997,7 @@ highlight=[(2, 3), (-31, 2), (30, 3), (-3, 2)])
 
         :rtype: TextTemplate
         '''
-        return TextTemplate(text=self.text.replace('\n\n', '\n'),
+        return TextTemplate(text=self.text,
                             highlight=(self.highlight.copy()
                                        if self.highlight is not None
                                        else None))
@@ -1067,11 +1014,9 @@ highlight=[(2, 3), (-31, 2), (30, 3), (-3, 2)])
         is not true, but very likely.'''
         hasher = sha256()
         hasher.update(self.text.encode('utf-8'))
-        hasher.update(
-            np.require(np.array(self.highlight),
-                       requirements='C').data.cast('b')
-            if isinstance(self.highlight, list)
-            else 'None'.encode('utf-8'))
+        if isinstance(self.highlight, list):
+            hasher.update(np.require(np.array(self.highlight),
+                                     requirements='C').data.cast('b'))
         return hasher.hexdigest()
 
     def __eq__(self, other):

@@ -772,5 +772,6 @@ def repr_testresultfailed(result, _verbosity=None):
     LOGGER.debug("In repr_testresultfailed")
     defmsg = ' failed with message:'
     cname = result.test.__class__.__name__
-    return [TextTemplate('{}{} \n{}'.format(cname, defmsg, result.msg),
-                         highlight=[(0, len(defmsg) + len(cname))])]
+    text = '{}{}\n{}'.format(cname, defmsg, result.msg)
+    return [TextTemplate(text.replace('\n', '\n\n'),
+                         highlight=[(0, len(cname) + len(defmsg))])]

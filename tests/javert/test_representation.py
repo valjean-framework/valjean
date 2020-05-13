@@ -17,10 +17,8 @@ from valjean.gavroche.test import Test, TestResult
 from valjean.gavroche.diagnostics.metadata import TestMetadata
 from valjean.gavroche.diagnostics.stats import (test_stats_by_labels,
                                                 test_stats, task_stats)
-from valjean.cosette.pythontask import PythonTask
 from valjean.cosette.env import Env
 from valjean.cosette.task import TaskStatus
-from valjean.config import Config
 
 from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  equal_test_result, approx_equal_test,
@@ -37,7 +35,8 @@ from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  student_test_3ds, student_test_result_3ds,
                                  holm_bonferroni_test,
                                  holm_bonferroni_test_result,
-                                 bonferroni_test, bonferroni_test_result)
+                                 bonferroni_test, bonferroni_test_result,
+                                 generate_test_tasks, run_tasks)
 
 
 @pytest.mark.parametrize('test_name', ['equal_test', 'approx_equal_test'])
@@ -45,7 +44,6 @@ def test_full_repr(test_name, request):
     '''Test that :class:`~.FullRepresenter` yields all the expected templates
     for equality tests.'''
     test = request.getfixturevalue(test_name)
-    # representer = TableRepresenter()
     representer = FullRepresenter()
     templates = representer(test.evaluate(), Verbosity.FULL_DETAILS)
     assert isinstance(templates, list)
@@ -67,7 +65,7 @@ def test_student_full(student_test_result, rfull_repr, rst_formatter,
     assert not list(errs)
     mplt = MplPlot([template for template in templates
                     if isinstance(template, PlotTemplate)][0])
-    return mplt.draw()
+    return mplt.draw()[0]
 
 
 @pytest.mark.mpl_image_compare(filename='student_comp_edges.png',
@@ -84,7 +82,7 @@ def test_student_edges_full(student_test_edges_result, rfull_repr,
     assert not list(errs)
     mplt = MplPlot([template for template in templates
                     if isinstance(template, PlotTemplate)][0])
-    return mplt.draw()
+    return mplt.draw()[0]
 
 
 @pytest.mark.parametrize('verb_level', [None, Verbosity.SILENT,
@@ -94,7 +92,7 @@ def test_student_edges_full(student_test_edges_result, rfull_repr,
                                         Verbosity.DEVELOPMENT])
 def test_student_verb(verb_level, student_test_2d_result, rst_formatter,
                       rstcheck):
-    '''Test Student templates with verbosity.'''
+    '''Test Student templates with verbosity (2D plots).'''
     frepr = Representation(FullRepresenter(), verb_level)
     templates = frepr(student_test_2d_result)
     ttempl = filter(lambda x: isinstance(x, TableTemplate), templates)
@@ -108,10 +106,10 @@ def test_student_verb(verb_level, student_test_2d_result, rst_formatter,
     elif (verb_level is not None
           and verb_level.value >= Verbosity.FULL_DETAILS.value):
         assert len(ptempl) == 1
-        assert ptempl[0].nb_plots == 1
+        assert ptempl[0].nb_plots == 2
     else:
         assert len(ptempl) == 1
-        assert ptempl[0].nb_plots == 2
+        assert ptempl[0].nb_plots == 3
 
 
 @pytest.mark.parametrize('verb_level', [Verbosity.SILENT, Verbosity.SUMMARY,
@@ -119,7 +117,7 @@ def test_student_verb(verb_level, student_test_2d_result, rst_formatter,
                                         Verbosity.FULL_DETAILS])
 def test_student_pvals_verb(verb_level, student_test_result_with_pvals,
                             rst_formatter, rstcheck):
-    '''Test Student templates with verbosity requiring p-values.'''
+    '''Test Student templates with verbosity requiring p-values (1D plots).'''
     frepr = Representation(FullRepresenter(), verb_level)
     templates = frepr(student_test_result_with_pvals)
     ttempl = filter(lambda x: isinstance(x, (TableTemplate, TextTemplate)),
@@ -144,7 +142,7 @@ def test_student_pvals_verb(verb_level, student_test_result_with_pvals,
                                         Verbosity.FULL_DETAILS])
 def test_equal_verb(verb_level, equal_test_result, full_repr, rst_formatter,
                     rstcheck):
-    '''Test equal templates with verbosity.'''
+    '''Test equal templates with verbosity (2D plots).'''
     templates = full_repr(equal_test_result, verb_level)
     ttempl = filter(lambda x: isinstance(x, (TableTemplate, TextTemplate)),
                     templates)
@@ -154,7 +152,7 @@ def test_equal_verb(verb_level, equal_test_result, full_repr, rst_formatter,
     errs = rstcheck.check(rst)
     assert not list(errs)
     assert len(ptempl) == 1
-    assert ptempl[0].nb_plots == 1
+    assert ptempl[0].nb_plots == 2
 
 
 @pytest.mark.parametrize('verb_level', [Verbosity.SILENT, Verbosity.SUMMARY,
@@ -223,33 +221,6 @@ def test_metadata_verb(verb_level, full_repr, rst_formatter, rstcheck):
     assert not ptempl
 
 
-def generate_test_tasks():
-    '''Generate :class:`~.TestMetadata` to test the statistics diagnostics
-    based on labels.'''
-    menu1 = {'food': 'egg + spam', 'drink': 'beer'}
-    menu2 = {'food': 'egg + bacon', 'drink': 'beer'}
-    menu3 = {'food': 'lobster thermidor', 'drink': 'brandy'}
-
-    def test_generator():
-        result = [TestMetadata({'Graham': menu1, 'Terry': menu1},
-                               name='gt_wday_lunch',
-                               labels={'day': 'Wednesday', 'meal': 'lunch'}
-                               ).evaluate(),
-                  TestMetadata({'Michael': menu1, 'Eric': menu2},
-                               name='me_wday_dinner',
-                               labels={'day': 'Wednesday', 'meal': 'dinner'}
-                               ).evaluate(),
-                  TestMetadata({'John': menu2, 'Terry': menu2},
-                               name='jt_wday',
-                               labels={'day': 'Wednesday'}).evaluate(),
-                  TestMetadata({'Terry': menu3, 'John': menu3},
-                               name='Xmasday',
-                               labels={'day': "Christmas Eve"}).evaluate()]
-        return {'test_generator': {'result': result}}, TaskStatus.DONE
-
-    return PythonTask('test_generator', test_generator)
-
-
 def generate_labstats_tasks(name, test_task, labels):
     '''Generate to tasks to make the diagnostic based on tests' labels.'''
     stats = test_stats_by_labels(name=name, tasks=[test_task],
@@ -272,18 +243,8 @@ def generate_statstests_tasks(test_task):
     return [create_stats, stats]
 
 
-def run_tasks(tasks, env):
-    '''Run the tasls and update the environnment.'''
-    config = Config(paths=[])
-    for task in tasks:
-        env_up, status = task.do(env=env, config=config)
-        env.apply(env_up)
-    return env, status
-
-
-def stats_result(tasks_md, env):  # , env, name, labels):
+def stats_result(tasks_md, env):
     '''Run the stats task test and return result.'''
-    # tasks_md = generate_labstats_tasks(name, ttask, labels=labels)
     env, status = run_tasks(tasks_md, env)
     assert status == TaskStatus.DONE
     return env[tasks_md[1].name]['result'][0]
@@ -342,7 +303,7 @@ def test_empty_repr(test_name, request):
 
 
 def test_full_concatenation(student_test_result, student_test_result_fail,
-                            rfull_repr, caplog):
+                            rfull_repr):
     '''Test concatenation of all templates.'''
     student_test_result_fail.test.datasets[0].name = "other 1D dataset"
     templ1 = rfull_repr(student_test_result)
@@ -353,9 +314,8 @@ def test_full_concatenation(student_test_result, student_test_result_fail,
             assert (conc.columns[0].size
                     == it1.columns[0].size + it2.columns[0].size)
         else:
-            join(it1, it2)
-            assert ('Some indices are them same in self and other, '
-                    'might generate a representation issue.' in caplog.text)
+            conc = join(it1, it2)
+            assert conc.nb_plots == it1.nb_plots + it2.nb_plots
 
 
 @pytest.mark.mpl_image_compare(filename='student_fplit_3ds.png',
@@ -374,8 +334,7 @@ def test_full_repr_3d(student_test_result_3ds, rfull_repr, rst_formatter,
     assert len([_tp for _tp in templ if isinstance(_tp, PlotTemplate)]) == 1
     mplt = MplPlot([template for template in templ
                     if isinstance(template, PlotTemplate)][0])
-    mplt.draw()
-    return mplt.mpl_plot.fig
+    return mplt.draw()[0]
 
 
 @pytest.fixture(scope='function', params=['spam', 'egg'])
