@@ -763,16 +763,6 @@ def repr_metadata_summary(result):
     return [TextTemplate('Metadata: KO', highlight=[(-2, 2)])]
 
 
-def repr_metadata_silent(_result):
-    '''Function to generate a table from the metadata test results.
-
-    :param TestResultMetadata result: a test result.
-    :returns: empty list
-    '''
-    LOGGER.debug("repr_metadata_silent")
-    return []
-
-
 def repr_testresultfailed(result, _verbosity=None):
     '''Represent a failed result as rst text.
 
