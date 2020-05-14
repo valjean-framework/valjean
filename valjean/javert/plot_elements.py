@@ -125,6 +125,84 @@ def post_treatment(templates, result):
     return templates
 
 
+def organise_subplots(curves, axnames):
+    '''Organise curves in :class:`~.templates.SubPlotElements`.
+
+    If curves are 1D they will all go in the same
+    :class:`~.templates.SubPlotElements`, if there are in 2 dimensions each
+    curve will have its :class:`~.templates.SubPlotElements`.
+
+    :param list(CurveElements) curves: list of curves
+    :param list(string) axnames: list of axis names
+    :rtype: list(SubPlotElements)
+    '''
+    dim = curves[0].values.ndim
+    if dim == 1:
+        return [SubPlotElements(curves=curves, axnames=axnames, ptype='1D')]
+    if dim == 2:
+        return [SubPlotElements(curves=[crv], axnames=axnames, ptype='2D')
+                for crv in curves]
+    LOGGER.warning('Not expected dimension')
+    return []
+
+
+def repr_datasets_values(result):
+    '''Representation of the datasets values from test results obtained from a
+    child test of :class:``~valjean.gavroche.test.TestDataset`.
+
+    Examples:
+
+    * :class:`~valjean.gavroche.test.TestResultEqual`;
+    * :class:`~valjean.gavroche.test.TestResultApproxEqual`;
+    * :class:`~valjean.gavroche.test.TestResultStudent`.
+
+    :param TestResult result: test result from test on datasets
+    :rtype: list(PlotTemplate)
+
+    If the dimension cannot be determined or if the dimension is greater than 2
+    an empty list is returned.
+    '''
+    dab = dimensions_and_bins(result.test.dsref.bins,
+                              result.test.dsref.value.shape)
+    if dab is None:
+        return []
+    if len(dab) > 2:
+        LOGGER.info('No plot available for %dD, no PlotTemplate built',
+                    len(dab))
+        return []
+    cds = [CurveElements(
+        values=result.test.dsref.value, bins=list(dab.values()),
+        legend=(result.test.dsref.name if result.test.dsref.name
+                else 'reference'),
+        index=0, errors=result.test.dsref.error)]
+    cds.extend([
+        CurveElements(values=ds.value, bins=list(dab.values()),
+                      legend=(ds.name if ds.name else 'dataset '+str(ids)),
+                      index=ids+1, errors=ds.error)
+        for ids, ds in enumerate(result.test.datasets)])
+    subplots = organise_subplots(
+        cds, axnames=list(dab.keys())+[result.test.dsref.what])
+    return [PlotTemplate(subplots=subplots)]
+
+
+def repr_testresultequal(result, _verbosity=None):
+    '''Represent the equal test result as a plot.
+
+    :param TestResultEqual result: a test result.
+    :rtype: list(PlotTemplate)
+    '''
+    return repr_datasets_values(result)
+
+
+def repr_testresultapproxequal(result, _verbosity=None):
+    '''Represent the approx equal test result as a plot.
+
+    :param TestResultApproxEqual result: a test result.
+    :rtype: list(PlotTemplate)
+    '''
+    return repr_datasets_values(result)
+
+
 def repr_testresultstudent(result, verbosity=None):
     '''Plot the Student results according to verbosity.
 
@@ -153,7 +231,7 @@ def repr_student_intermediate(result):
     :param TestResultStudent result:  a test result.
     :rtype: list(PlotTemplate)
     '''
-    rval = repr_student_values(result)
+    rval = repr_datasets_values(result)
     rdelta = repr_student_delta(result)
     rstudent = [join(rvals, rdelta)
                 for rvals, rdelta in zip(rval, rdelta)]
@@ -173,7 +251,7 @@ def repr_student_full_details(result):
     :rtype: list(PlotTemplate)
     '''
     LOGGER.debug('in repr_student_full_details')
-    rval = repr_student_values(result)
+    rval = repr_datasets_values(result)
     rdelta = repr_student_delta(result)
     rpval = repr_student_pvalues(result)
     rstudent = [join(rvals, rdelta, rpvals)
@@ -203,59 +281,17 @@ def repr_student_delta(result):
         LOGGER.info('No plot available for %dD, no PlotTemplate built',
                     len(dab))
         return []
-    curves = []
-    for ind, delta in enumerate(result.delta):
-        curves.append(CurveElements(
-            values=delta, legend='', bins=list(dab.values()),
-            index=ind+1, errors=None))
-    subplot = SubPlotElements(
-        curves=curves, axnames=list(dab.keys()) + [r'$t_{Student}$'],
-        ptype='{}D'.format(len(dab)))
-    subplot.lines = [[{'y': result.test.threshold},
-                      {'y': -result.test.threshold}]]
-    plt = PlotTemplate(subplots=[subplot])
+    curves = [CurveElements(values=delta, legend='', bins=list(dab.values()),
+                            index=ind+1, errors=None)
+              for ind, delta in enumerate(result.delta)]
+    subplots = organise_subplots(
+        curves, axnames=list(dab.keys()) + [r'$t_{Student}$'])
+    if result.delta[0].ndim == 1:
+        for splt in subplots:
+            splt.lines = [[{'y': result.test.threshold},
+                           {'y': -result.test.threshold}]]
+    plt = PlotTemplate(subplots=subplots)
     return [plt]
-
-
-def repr_student_values(result):
-    '''Represent the values distributions from a Student test result as a plot
-    (both distributions expected to be on the same plot).
-
-    :param TestResultStudent result: a test result.
-    :rtype: list(PlotTemplate)
-
-    .. note::
-        if we have a member ``units`` in base_dataset the axis names
-        would be constructed like ``name + units['name']``.
-
-    If the dimension cannot be determined an empty list is returned.
-    '''
-    dab = dimensions_and_bins(result.test.dsref.bins,
-                              result.test.dsref.value.shape)
-    if dab is None:
-        LOGGER.debug('value: dim is None')
-        return []
-    if len(dab) > 2:
-        LOGGER.info('No plot available for %dD, no PlotTemplate built',
-                    len(dab))
-        return []
-    cds = [CurveElements(values=result.test.dsref.value,
-                         legend=(result.test.dsref.name
-                                 if result.test.dsref.name else 'reference'),
-                         bins=list(dab.values()),
-                         index=0,
-                         errors=result.test.dsref.error)]
-    for ids, tds in enumerate(result.test.datasets):
-        cds.append(CurveElements(
-            values=tds.value,
-            legend=(tds.name if tds.name else 'dataset '+str(ids)),
-            bins=list(dab.values()),
-            index=ids+1,
-            errors=tds.error))
-    subplot = SubPlotElements(
-        curves=cds, ptype='{}D'.format(len(dab)),
-        axnames=list(dab.keys())+[result.test.dsref.what])
-    return [PlotTemplate(subplots=[subplot])]
 
 
 def repr_student_pvalues(result):
@@ -278,69 +314,16 @@ def repr_student_pvalues(result):
         LOGGER.info('No plot available for %dD, no PlotTemplate built',
                     len(dab))
         return []
-    curves = []
-    for ind, pval in enumerate(result.pvalue):
-        curves.append(CurveElements(values=pval, bins=list(dab.values()),
-                                    legend='', index=ind+1, errors=None))
-    subplot = SubPlotElements(
-        curves=curves, ptype='{}D'.format(len(dab)),
-        axnames=list(dab.keys())+['p-value'])
+    curves = [CurveElements(values=pval, bins=list(dab.values()),
+                            legend='', index=ind+1, errors=None)
+              for ind, pval in enumerate(result.pvalue)]
+    subplots = organise_subplots(curves, axnames=list(dab.keys())+['p-value'])
     if result.pvalue[0].ndim == 1:
-        subplot.lines = [[{'y': result.test.alpha/2},
-                          {'y': -result.test.alpha/2}]]
-    plt = PlotTemplate(subplots=[subplot])
+        for splt in subplots:
+            splt.lines = [[{'y': result.test.alpha/2},
+                           {'y': -result.test.alpha/2}]]
+    plt = PlotTemplate(subplots=subplots)
     return [plt]
-
-
-def repr_datasets_values(result):
-    '''Representation of the datasets values from test results like
-    :class:`~valjean.gavroche.test.TestResultEqual` or
-    :class:`~valjean.gavroche.test.TestResultApproxEqual`, i.e. all tests
-    containing a ``dataset1`` and a ``dataset2`` members.
-
-    :param result: test result
-    :type result: TestResultEqual, TestResultApproxEqual
-    :rtype: list(PlotTemplate)
-
-    If the dimension cannot be determined an empty list is returned.
-    '''
-    dab = dimensions_and_bins(result.test.dsref.bins,
-                              result.test.dsref.value.shape)
-    if dab is None:
-        return []
-    cds = [CurveElements(
-        values=result.test.dsref.value, bins=list(dab.values()),
-        legend=(result.test.dsref.name if result.test.dsref.name
-                else 'reference'),
-        index=0, errors=result.test.dsref.error)]
-    cds.extend([
-        CurveElements(values=ds.value, bins=list(dab.values()),
-                      legend=(ds.name if ds.name else 'dataset '+str(ids)),
-                      index=ids+1, errors=ds.error)
-        for ids, ds in enumerate(result.test.datasets)])
-    LOGGER.info("bins %s", list(dab.values()))
-    subplot = SubPlotElements(
-        curves=cds, ptype='{}D'.format(len(dab)),
-        axnames=list(dab.keys())+[result.test.dsref.what])
-    return [PlotTemplate(subplots=[subplot])]
-
-
-def repr_testresultequal(result, _verbosity=None):
-    '''Represent the equal test result as a plot.
-
-    :param TestResultEqual result: a test result.
-    :rtype: list(PlotTemplate)
-    '''
-    return repr_datasets_values(result)
-
-
-def repr_testresultapproxequal(result, _verbosity=None):
-    '''Represent the approx equal test result as a plot.
-
-    :param TestResultApproxEqual result: a test result.
-    :rtype: list(PlotTemplate)
-    '''
-    return repr_datasets_values(result)
 
 
 def repr_testresultmetadata(_result, _verbosity=None):

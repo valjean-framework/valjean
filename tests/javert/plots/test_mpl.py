@@ -176,7 +176,7 @@ def test_student_with_fpi_d(student_test_result):
                                baseline_dir='ref_plots')
 def test_student_edges_with_fpi_v(student_test_edges_result):
     '''Test plot of Student result when bins are given by edges.'''
-    template = plt_elts.repr_student_values(student_test_edges_result)
+    template = plt_elts.repr_datasets_values(student_test_edges_result)
     mplt = MplPlot(template[0])
     return mplt.draw()
 
@@ -377,7 +377,7 @@ def test_studentt_2d_logz(studentt_res_2d):
     def log_post(templates, tres):  # pylint: disable=unused-argument
         for templ in templates:
             templ.subplots[0].logz = True
-            templ.subplots[1].logz = False
+            templ.subplots[1].logz = True
         return templates
     templ = PlotRepresenter(post=log_post)(studentt_res_2d)
     mplt = MplPlot2D(templ[0])
@@ -410,6 +410,7 @@ def test_studentt_2d_logxz(studentt_res_2d_range_etlr):
             for splt in templ.subplots:
                 splt.logx = True
             templ.subplots[0].logz = True
+            templ.subplots[1].logz = True
         return templates
     templ = PlotRepresenter(post=log_post)(studentt_res_2d_range_etlr)
     mplt = MplPlot2D(templ[0])
