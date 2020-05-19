@@ -694,7 +694,8 @@ class FormattedRst:
         :param str toc_title: the title for the table of contents (e.g.
                               ``'Contents'``).
         '''
-        lines = ['\n\n.. toctree::\n    :caption: {}:\n'.format(toc_title)]
+        lines = ['\n\n.. toctree::\n    :titlesonly:\n    :caption: {}:\n'
+                 .format(toc_title)]
         for subtree in subtrees:
             fname = str(self.tree_to_path(base=Path(''), tree=subtree))
             line = ' '*4 + fname
