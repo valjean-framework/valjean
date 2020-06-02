@@ -351,16 +351,19 @@ def check_first_entropy_result(entropy_rb):
     resp0 = entropy_rb.select_by(response_function='REACTION',
                                  squeeze=True)
     bd_int0 = dcv.convert_data(resp0['results'], data_type='integrated')
-    assert bd_int0 is None
+    assert bd_int0 is not None
+    assert np.isnan(bd_int0.value)
     resp0 = entropy_rb.select_by(response_type='keff',
                                  squeeze=True)
     bd_keff = dcv.convert_data(resp0['results'],
                                data_type='keff_per_estimator',
                                estimator='KSTEP')
-    assert bd_keff is None
+    assert bd_keff is not None
+    assert np.isnan(bd_keff.value)
     bd_keff = dcv.convert_data(resp0['results'],
                                data_type='keff_combination')
-    assert bd_keff is None
+    assert bd_keff is not None
+    assert np.isnan(bd_keff.value)
 
 
 def test_entropy(datadir):

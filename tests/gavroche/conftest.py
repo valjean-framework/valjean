@@ -159,6 +159,25 @@ def other_1d_dataset_edges():
 
 
 @pytest.fixture
+def some_scalar_dataset():
+    '''Return a scalar :class:`~.Dataset` object.'''
+    return Dataset(np.float_(1.2), np.float_(0.2), name='some scalar dataset')
+
+
+@pytest.fixture
+def other_scalar_dataset():
+    '''Return an other scalar :class:`~.Dataset` object.'''
+    return Dataset(np.float_(1.0), np.float_(0.1), name='other scalar dataset')
+
+
+@pytest.fixture
+def different_scalar_dataset():
+    '''Return a different scalar :class:`~.Dataset` object.'''
+    return Dataset(np.float_(4.3), np.float_(0.1),
+                   name='different scalar dataset')
+
+
+@pytest.fixture
 def equal_test(some_dataset, other_dataset):
     '''Return an equality test between datasets.'''
     return TestEqual(some_dataset, other_dataset,
@@ -306,6 +325,24 @@ def student_test_fail_with_pvals(some_1d_dataset, different_1d_dataset):
                        description='Do the datasets have the same mean taking '
                                    'into account the errors?',
                        ndf=20)
+
+
+@pytest.fixture
+def student_test_scalar(some_scalar_dataset, other_scalar_dataset):
+    '''Return a Student test between datasets.'''
+    return TestStudent(some_scalar_dataset, other_scalar_dataset,
+                       name='A Student test from scalars',
+                       description='Do the datasets have the same mean taking '
+                                   'into account the errors?')
+
+
+@pytest.fixture
+def student_test_fail_scalar(some_scalar_dataset, different_scalar_dataset):
+    '''Return a Student test between datasets.'''
+    return TestStudent(some_scalar_dataset, different_scalar_dataset,
+                       name='A Student test from scalars',
+                       description='Do the datasets have the same mean taking '
+                                   'into account the errors?')
 
 
 @pytest.fixture

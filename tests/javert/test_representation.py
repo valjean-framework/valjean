@@ -27,12 +27,15 @@ from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  student_test_2d_result, some_1d_dataset,
                                  other_1d_dataset, different_1d_dataset,
                                  some_1d_dataset_edges, other_1d_dataset_edges,
+                                 some_scalar_dataset, other_scalar_dataset,
+                                 different_scalar_dataset,
                                  student_test, student_test_result,
                                  student_test_edges, student_test_edges_result,
                                  student_test_fail, student_test_result_fail,
                                  student_test_with_pvals,
                                  student_test_result_with_pvals,
                                  student_test_3ds, student_test_result_3ds,
+                                 student_test_scalar, student_test_fail_scalar,
                                  holm_bonferroni_test,
                                  holm_bonferroni_test_result,
                                  bonferroni_test, bonferroni_test_result,
@@ -135,6 +138,35 @@ def test_student_pvals_verb(verb_level, student_test_result_with_pvals,
     else:
         assert len(ptempl) == 1
         assert ptempl[0].nb_plots == 2
+
+
+def test_student_scalar(student_test_scalar, rfull_repr, rst_formatter,
+                        rstcheck):
+    '''Test representation of Student result when datasets contain scalars.'''
+    templates = rfull_repr(student_test_scalar.evaluate())
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates
+                    if isinstance(template, TableTemplate))
+    LOGGER.debug('generated rst:\n%s', rst)
+    errs = rstcheck.check(rst)
+    assert not list(errs)
+    assert len([template for template in templates
+                if isinstance(template, PlotTemplate)]) == 0
+
+
+def test_student_fail_scalar(student_test_fail_scalar, rfull_repr,
+                             rst_formatter, rstcheck):
+    '''Test representation of Student result when datasets contain scalars and
+    test fails.'''
+    templates = rfull_repr(student_test_fail_scalar.evaluate())
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates
+                    if isinstance(template, TableTemplate))
+    LOGGER.debug('generated rst:\n%s', rst)
+    errs = rstcheck.check(rst)
+    assert not list(errs)
+    assert len([template for template in templates
+                if isinstance(template, PlotTemplate)]) == 0
 
 
 @pytest.mark.parametrize('verb_level', [Verbosity.SILENT, Verbosity.SUMMARY,

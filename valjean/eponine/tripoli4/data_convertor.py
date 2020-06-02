@@ -235,8 +235,13 @@ def value_wo_error(result, res_type):
 
 
 def not_converged_result():
-    '''Deals with not converged results return None instead of a dataset.'''
-    LOGGER.warning('Result not converged, no dataset can be built')
+    '''Deals with not converged results return None instead of a dataset.
+
+    :rtype: :class:`~.base_dataset.BaseDataset`
+    :returns: dataset containing NaN as value and error
+    '''
+    LOGGER.warning('Result not converged, return dataset with NaN value')
+    return BaseDataset(np.float_(np.nan), np.float_(np.nan))
 
 
 def not_available_result():
