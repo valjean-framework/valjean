@@ -40,7 +40,7 @@ class TableTemplate:
     headers: ['egg', 'spam']
     egg: [1.5 1.2]
     spam: [1.4 0.9]
-    <BLANKLINE>
+    highlights: [0.0, 0.0, 0.0, 0.0]
 
     ``stab12`` contained both ``tit1`` and ``tit2`` as expected. Headers of the
     columns are the same, length of the columns is the sum of the two.
@@ -81,7 +81,7 @@ and the array at index 1 has 2 dimension(s)
     headers: ['egg', 'spam']
     egg: [1.5 0.  1.  2.  3. ]
     spam: [1.4 0.  0.5 1.  1.5]
-    <BLANKLINE>
+    highlights: [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])]
 
     If the columns are the same format, concatenation of TableTemplates
     containing arrays and numbers is possible.
@@ -99,7 +99,8 @@ and the array at index 1 has 2 dimension(s)
     headers: ['egg', 'spam']
     egg: [0.  1.  2.  3.  0.  0.1 0.2]
     spam: [0.   0.5  1.   1.5  0.   0.05 0.1 ]
-    <BLANKLINE>
+    highlights: [array([0., 0., 0., 0., 0., 0., 0.]), \
+array([0., 0., 0., 0., 0., 0., 0.])]
 
     Any number of :class:`TableTemplate` can be joined (if fulfilling the
     requirements).
@@ -110,7 +111,8 @@ and the array at index 1 has 2 dimension(s)
     headers: ['egg', 'spam']
     egg: [1.5 0.  1.  2.  3.  0.  0.1 0.2]
     spam: [1.4  0.   0.5  1.   1.5  0.   0.05 0.1 ]
-    <BLANKLINE>
+    highlights: [array([0., 0., 0., 0., 0., 0., 0., 0.]), \
+array([0., 0., 0., 0., 0., 0., 0., 0.])]
 
     The :meth:`TableTemplate.join` method updates the left
     :class:`TableTemplate` as expected:
@@ -121,7 +123,8 @@ and the array at index 1 has 2 dimension(s)
     headers: ['egg', 'spam']
     egg: [1.5 0.  1.  2.  3.  0.  0.1 0.2]
     spam: [1.4  0.   0.5  1.   1.5  0.   0.05 0.1 ]
-    <BLANKLINE>
+    highlights: [array([0., 0., 0., 0., 0., 0., 0., 0.]), \
+array([0., 0., 0., 0., 0., 0., 0., 0.])]
     '''
 
     def __init__(self, *columns, headers=None, units=None,
@@ -257,7 +260,8 @@ and the array at index 1 has 2 dimension(s)
         elts = []
         for header, col in zip(self.headers, self.columns):
             elts.append("{0}: {1}\n".format(header, col))
-        return ''.join(intro + elts)
+        hlight = ['highlights: {}'.format(self.highlights)]
+        return ''.join(intro + elts + hlight)
 
     def __getitem__(self, index):
         '''Build a sliced :class:`TableTemplate` from the current

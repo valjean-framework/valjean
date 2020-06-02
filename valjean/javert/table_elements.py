@@ -250,12 +250,11 @@ def _student_heads(test_res, bin_names):
     :param list(str) bin_names: names of the bins (dimensions)
     :returns: list of headers
     '''
-    heads = [('v_'+test_res.dsref.name, 'σ_'+test_res.dsref.name)]
+    heads = ['v_'+test_res.dsref.name, 'σ_'+test_res.dsref.name]
     for _ds in test_res.datasets:
-        heads.append(('v_'+_ds.name, 'σ_'+_ds.name, 't_'+_ds.name,
-                      'Student('+_ds.name+')?'))
-    if bin_names:
-        heads.insert(0, bin_names)
+        heads.extend(['v_'+_ds.name, 'σ_'+_ds.name, 't_'+_ds.name,
+                      'Student('+_ds.name+')?'])
+    heads = bin_names + heads
     return heads
 
 
@@ -273,19 +272,20 @@ def repr_student(result):
                    for ds, delta, studbool in zip(result.test.datasets,
                                                   result.delta,
                                                   oracles))
-
-    falses = np.full_like(result.test.dsref.value, False)
-    highlights = [(falses, falses)]
+    falses = (np.full_like(result.test.dsref.value, False, dtype=bool)
+              if result.test.dsref.ndim > 0
+              else (False,))
     heads = _student_heads(result.test, nbins)
-    if nbins:
-        highlights.insert(0, [(falses,)]*len(nbins))
+    highlights = [falses]*(len(nbins) + 2)
     for oracle in oracles:
-        highlights.append((falses, falses, falses, np.logical_not(oracle)))
+        highlights += [falses, falses, falses,
+                       np.logical_not(oracle) if result.test.dsref.ndim > 0
+                       else (np.logical_not(oracle),)]
     table_template = TableTemplate(
         *bins, result.test.dsref.value, result.test.dsref.error,
         *chain.from_iterable(dscols),
-        highlights=list(chain.from_iterable(highlights)),
-        headers=list(chain.from_iterable(heads)))
+        highlights=highlights,
+        headers=heads)
     return [table_template]
 
 
@@ -339,21 +339,19 @@ def repr_student_intermediate(result):
                                                   oracles))
     heads = _student_heads(result.test, nbins)
     falses = np.full_like(result.test.dsref.value[np.where(falses_ind == 0)],
-                          False)
-    highlights = [(falses, falses)]
-    if nbins:
-        highlights.insert(0, [(falses,)]*len(nbins))
+                          False, dtype=bool)
+    highlights = [falses]*(len(nbins) + 2)
     for oracle in oracles:
-        highlights.append((falses, falses, falses,
-                           np.logical_not(oracle[np.where(falses_ind == 0)])))
+        highlights += [falses, falses, falses,
+                       np.logical_not(oracle[np.where(falses_ind == 0)])]
     cols = (list((b[np.where(falses_ind == 0)],) for b in bins)
             + [(result.test.dsref.value[np.where(falses_ind == 0)],
                 result.test.dsref.error[np.where(falses_ind == 0)])])
     table_template = TableTemplate(
         *chain.from_iterable(cols),
         *chain.from_iterable(dscols),
-        highlights=list(chain.from_iterable(highlights)),
-        headers=list(chain.from_iterable(heads)))
+        highlights=highlights,
+        headers=heads)
     return [table_template]
 
 
@@ -764,6 +762,16 @@ def repr_metadata_summary(result):
     if result:
         return [TextTemplate('Metadata: OK')]
     return [TextTemplate('Metadata: KO', highlight=[(-2, 2)])]
+
+
+def repr_metadata_silent(_result):
+    '''Function to generate a table from the metadata test results.
+
+    :param TestResultMetadata result: a test result.
+    :returns: empty list
+    '''
+    LOGGER.debug("repr_metadata_silent")
+    return []
 
 
 def repr_testresultfailed(result, _verbosity=None):
