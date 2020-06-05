@@ -146,14 +146,10 @@ def repr_equal(result):
         heads.append((ds.name,
                       'equal({})?'.format(ds.name)
                       if len(result.test.datasets) > 1 else 'equal?'))
-    falses = (np.full_like(result.test.dsref.value, False, dtype=bool)
-              if result.test.dsref.ndim > 0
-              else (False,))
+    falses = np.full_like(result.test.dsref.value, False, dtype=bool)
     highlights = [(falses,)]
     for equal in result.equal:
-        highlights.append((falses,
-                           np.logical_not(equal) if result.test.dsref.ndim > 0
-                           else (np.logical_not(equal),)))
+        highlights.append((falses, np.logical_not(equal)))
     table_template = TableTemplate(
         result.test.dsref.value,
         *chain.from_iterable(dscols),
@@ -206,15 +202,10 @@ def repr_approx_equal(result):
                       'approx equal({})?'.format(ds.name)
                       if len(result.test.datasets) > 1
                       else 'approx equal?'))
-    falses = (np.full_like(result.test.dsref.value, False, dtype=bool)
-              if result.test.dsref.ndim > 0
-              else (False,))
+    falses = np.full_like(result.test.dsref.value, False, dtype=bool)
     highlights = [(falses,)]
     for approx_equal in result.approx_equal:
-        highlights.append((falses,
-                           np.logical_not(approx_equal)
-                           if result.test.dsref.ndim > 0
-                           else (np.logical_not(approx_equal),)))
+        highlights.append((falses, np.logical_not(approx_equal)))
     table_template = TableTemplate(
         result.test.dsref.value,
         *chain.from_iterable(dscols),
@@ -275,15 +266,11 @@ def repr_student(result):
                    for ds, delta, studbool in zip(result.test.datasets,
                                                   result.delta,
                                                   oracles))
-    falses = (np.full_like(result.test.dsref.value, False, dtype=bool)
-              if result.test.dsref.ndim > 0
-              else (False,))
+    falses = np.full_like(result.test.dsref.value, False, dtype=bool)
     heads = _student_heads(result.test, nbins)
     highlights = [falses]*(len(nbins) + 2)
     for oracle in oracles:
-        highlights += [falses, falses, falses,
-                       np.logical_not(oracle) if result.test.dsref.ndim > 0
-                       else (np.logical_not(oracle),)]
+        highlights += [falses, falses, falses, np.logical_not(oracle)]
     table_template = TableTemplate(
         *bins, result.test.dsref.value, result.test.dsref.error,
         *chain.from_iterable(dscols),

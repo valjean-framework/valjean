@@ -346,6 +346,24 @@ def student_test_fail_scalar(some_scalar_dataset, different_scalar_dataset):
 
 
 @pytest.fixture
+def equal_test_scalar(some_scalar_dataset):
+    '''Return an equality test between datasets.'''
+    return TestEqual(
+        some_scalar_dataset, some_scalar_dataset,
+        name='An equality test',
+        description='Are these datasets equal?')
+
+
+@pytest.fixture
+def equal_test_fail_scalar(some_scalar_dataset, other_scalar_dataset):
+    '''Return an equality test between datasets.'''
+    return TestEqual(
+        some_scalar_dataset, other_scalar_dataset,
+        name='An equality test',
+        description='Are these datasets equal?')
+
+
+@pytest.fixture
 def bonferroni_test(student_test_with_pvals):
     '''Return a Bonferroni test based on a Student test.'''
     return TestBonferroni(name='A Bonferroni test',

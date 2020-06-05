@@ -19,6 +19,8 @@ from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  approx_equal_test_result, different_dataset,
                                  student_test, student_test_result,
                                  some_1d_dataset, other_1d_dataset,
+                                 some_scalar_dataset, other_scalar_dataset,
+                                 different_scalar_dataset,
                                  student_test_fail, student_test_result_fail,
                                  different_1d_dataset, bonferroni_test,
                                  bonferroni_test_result,
@@ -26,6 +28,8 @@ from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  bonferroni_test_fail,
                                  bonferroni_test_result_fail,
                                  student_test_fail_with_pvals,
+                                 student_test_scalar, student_test_fail_scalar,
+                                 equal_test_scalar, equal_test_fail_scalar,
                                  holm_bonferroni_test,
                                  holm_bonferroni_test_result,
                                  holm_bonferroni_test_fail,
@@ -261,24 +265,86 @@ def test_tabletemplate_join_array(table_repr,
                                   student_test_result,
                                   student_test_result_fail):
     '''Test join table templates containing arrays.'''
-    template1 = table_repr(student_test_result)
-    template1_cc = template1[0].copy()
+    template1 = table_repr(student_test_result)[0]
+    template1_cc = template1.copy()
     LOGGER.debug('template1 = %s', template1)
     student_test_result_fail.test.datasets[0].name = "other 1D dataset"
-    template2 = table_repr(student_test_result_fail)
+    template2 = table_repr(student_test_result_fail)[0]
     LOGGER.debug('template2 = %s', template2)
-    template1[0].join(template2[0])
+    template1.join(template2)
     LOGGER.debug('after join: template1 = %s', template1)
-    assert template1[0].headers == template1_cc.headers
-    assert template1[0].headers == template2[0].headers
+    assert template1.headers == template1_cc.headers
+    assert template1.headers == template2.headers
     assert all(col.size == col1.size + col2.size
-               for col, col1, col2 in zip(template1[0].columns,
+               for col, col1, col2 in zip(template1.columns,
                                           template1_cc.columns,
-                                          template2[0].columns))
-    assert all(np.isin(template1[0].columns[4][template1_cc.columns[4].size:],
-                       template2[0].columns[4]))
-    assert all(np.isin(template1[0].columns[4][:template1_cc.columns[4].size],
+                                          template2.columns))
+    assert all(np.isin(template1.columns[4][template1_cc.columns[4].size:],
+                       template2.columns[4]))
+    assert all(np.isin(template1.columns[4][:template1_cc.columns[4].size],
                        template1_cc.columns[4]))
+    assert all(len(col) == len(hlight)
+               for col, hlight in zip(template1.columns, template1.highlights))
+
+
+def test_tabletemplate_join_scalar(table_repr, student_test_scalar,
+                                   student_test_fail_scalar, rst_formatter,
+                                   rstcheck):
+    '''Test join table templates containing scalars.'''
+    st1 = student_test_scalar.evaluate()
+    template1 = table_repr(st1)[0]
+    template1_cc = template1.copy()
+    LOGGER.debug('template1 = %s', template1)
+    st2 = student_test_fail_scalar.evaluate()
+    st2.test.datasets[0].name = "other scalar dataset"
+    template2 = table_repr(st2)[0]
+    LOGGER.debug('template2 = %s', template2)
+    template1.join(template2)
+    LOGGER.debug('after join: template1 = %s', template1)
+    assert template1.headers == template1_cc.headers
+    assert template1.headers == template2.headers
+    rst = str(rst_formatter.template(template1))
+    LOGGER.debug('generated rst:\n%s', rst)
+    errs = rstcheck.check(rst)
+    assert not list(errs)
+    assert all(col.size == col1.size + col2.size
+               for col, col1, col2 in zip(template1.columns,
+                                          template1_cc.columns,
+                                          template2.columns))
+    assert all(np.isin(template1.columns[4][template1_cc.columns[4].size:],
+                       template2.columns[4]))
+    assert all(np.isin(template1.columns[4][:template1_cc.columns[4].size],
+                       template1_cc.columns[4]))
+    assert all(len(col) == len(hlight)
+               for col, hlight in zip(template1.columns, template1.highlights))
+
+
+def test_tabletemplate_scalar_equal(table_repr, equal_test_scalar,
+                                    equal_test_fail_scalar, rst_formatter,
+                                    rstcheck):
+    '''Test join table templates containing scalars.'''
+    et1 = equal_test_scalar.evaluate()
+    et1.test.datasets[0].name = "other scalar dataset"
+    template1 = table_repr(et1, Verbosity.FULL_DETAILS)[0]
+    template1_cc = template1.copy()
+    LOGGER.debug('template1 = %s', template1)
+    et2 = equal_test_fail_scalar.evaluate()
+    template2 = table_repr(et2)[0]
+    LOGGER.debug('template2 = %s', template2)
+    template1.join(template2)
+    LOGGER.debug('after join: template1 = %s', template1)
+    assert template1.headers == template1_cc.headers
+    assert template1.headers == template2.headers
+    rst = str(rst_formatter.template(template1))
+    LOGGER.debug('generated rst:\n%s', rst)
+    errs = rstcheck.check(rst)
+    assert not list(errs)
+    assert all(col.size == col1.size + col2.size
+               for col, col1, col2 in zip(template1.columns,
+                                          template1_cc.columns,
+                                          template2.columns))
+    assert all(len(col) == len(hlight)
+               for col, hlight in zip(template1.columns, template1.highlights))
 
 
 def test_rst_report(rstcheck, report, rst_full, tmpdir):

@@ -40,7 +40,7 @@ class TableTemplate:
     headers: ['egg', 'spam']
     egg: [1.5 1.2]
     spam: [1.4 0.9]
-    highlights: [0.0, 0.0, 0.0, 0.0]
+    highlights: [array([0., 0.]), array([0., 0.])]
 
     ``stab12`` contained both ``tit1`` and ``tit2`` as expected. Headers of the
     columns are the same, length of the columns is the sum of the two.
@@ -55,26 +55,17 @@ class TableTemplate:
     An error is raised as the two :class:`TableTemplate` don't contain the same
     headers, so not the same kind of columns, thus they cannot be concatenated.
 
+    It is also possible to join tables with same headers but different 'types'
+    (scalars and arrays):
+
     >>> tit4 = TableTemplate(np.arange(4), np.arange(4)*0.5,
     ...                      headers=['egg', 'spam'])
     >>> print(len(tit4.columns), tit4.columns[0].size)
     2 4
     >>> stab14 = join(tit1, tit4)
-    Traceback (most recent call last):
-        ...
-    ValueError: all the input arrays must have same number of dimensions, \
-but the array at index 0 has 1 dimension(s) \
-and the array at index 1 has 2 dimension(s)
-
-    It is still possible to join these tables if *tit1* columns are declared as
-    arrays:
-
-    >>> tit1b = TableTemplate(np.array([1.5]), np.array([1.4]),
-    ...                       headers=['egg', 'spam'])
-    >>> stab14 = join(tit1b, tit4)
     >>> print(len(stab14.columns), stab14.columns[0].size)
     2 5
-    >>> stab14.columns[0].size == tit1b.columns[0].size + tit4.columns[0].size
+    >>> stab14.columns[0].size == tit1.columns[0].size + tit4.columns[0].size
     True
     >>> print("{!r}".format(stab14))
     class: <class 'valjean.javert.templates.TableTemplate'>
@@ -83,11 +74,9 @@ and the array at index 1 has 2 dimension(s)
     spam: [1.4 0.  0.5 1.  1.5]
     highlights: [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])]
 
-    If the columns are the same format, concatenation of TableTemplates
-    containing arrays and numbers is possible.
 
-    It is also between arrays, a bigger array is obtained, without separation
-    between the initial :class:`TableTemplate`:
+    It is also possible to join arrays, a bigger array is obtained, without
+    separation between the initial :class:`TableTemplate`:
 
     >>> tit5 = TableTemplate(np.arange(3)*0.1, np.arange(3)*0.05,
     ...                      headers=['egg', 'spam'])
@@ -105,7 +94,7 @@ array([0., 0., 0., 0., 0., 0., 0.])]
     Any number of :class:`TableTemplate` can be joined (if fulfilling the
     requirements).
 
-    >>> stab145 = join(tit1b, tit4, tit5)
+    >>> stab145 = join(tit1, tit4, tit5)
     >>> print("{!r}".format(stab145))
     class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
@@ -117,8 +106,8 @@ array([0., 0., 0., 0., 0., 0., 0., 0.])]
     The :meth:`TableTemplate.join` method updates the left
     :class:`TableTemplate` as expected:
 
-    >>> tit1b.join(tit4, tit5)
-    >>> print("{!r}".format(tit1b))
+    >>> tit1.join(tit4, tit5)
+    >>> print("{!r}".format(tit1))
     class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [1.5 0.  1.  2.  3.  0.  0.1 0.2]
@@ -238,7 +227,9 @@ array([0., 0., 0., 0., 0., 0., 0., 0.])]
         self.columns = tuple(np.hstack((self.columns[i], other.columns[i]))
                              for i in range(len(self.columns)))
         self.units = other.units if self.units is None else self.units
-        self.highlights = list(np.hstack((self.highlights, other.highlights)))
+        self.highlights = list(np.hstack((
+            [np.atleast_1d(h) for h in self.highlights],
+            [np.atleast_1d(h) for h in other.highlights])))
 
     def join(self, *others):
         '''Join a given number a :class:`TableTemplate` to the current one.
