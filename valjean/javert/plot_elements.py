@@ -86,7 +86,7 @@ def trim_range(bins):
             continue
         if nbins.size < 4:
             LOGGER.warning('Will adapt range for %d bins, '
-                           'binning might be not suitable')
+                           'binning might be not suitable', nbins.size)
         binw = np.ediff1d(lbins)
         if binw[0]/binw[1] > 1e3:
             limits[0] = nbins[1]
