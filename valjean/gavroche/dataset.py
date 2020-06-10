@@ -102,8 +102,7 @@ The addition or subtraction f 2 :class:`Dataset` can be done if
 * bins conditions (:func:`same_coords`):
 
     * EITHER the second :class:`Dataset` does not have any bins
-    * OR bins are approximately the same, i.e. have the same keys and bins
-      values are within 1e-5 tolerance (default from :func:`numpy.allclose`)
+    * OR bins are the same, i.e. have the same keys and bins values
 
 
 Example addition of a scalar value (only on value)
@@ -267,8 +266,7 @@ The multiplication or division of 2 :class:`Dataset` can be done if
 * bins conditions (:func:`same_coords`):
 
     * EITHER the second :class:`Dataset` does not have any bins
-    * OR bins are approximately the same, i.e. have the same keys and bins
-      values are within 1e-5 tolerance (default from :func:`numpy.allclose`)
+    * OR bins are the same, i.e. have the same keys and bins values
 
 Division by zero, nan or inf are handled by `NumPy` and return a
 RuntimeWarning from `NumPy` (only in the zero case).
@@ -648,7 +646,7 @@ class Dataset(BaseDataset):
             if any((s != o) for s, o in zip(self.bins, other.bins)):
                 raise ValueError("Datasets to {} do not have same bins names"
                                  .format(operation))
-            if not all(np.allclose(self.bins[s], other.bins[o])
+            if not all(np.array_equal(self.bins[s], other.bins[o])
                        for s, o in zip(self.bins, other.bins)):
                 raise ValueError("Datasets to {} do not seem to have the same "
                                  "bins".format(operation))
@@ -759,13 +757,11 @@ def consistent_datasets(gds1, gds2):
     return gds1.shape == gds2.shape
 
 
-def same_coords(ds1, ds2, *, rtol=1e-5, atol=1e-8):
+def same_coords(ds1, ds2):
     '''Return `True` if coordinates (bins) are compatible.
 
     :param ds1: the first array of coordinate arrays.
     :param ds2: the second array of coordinate arrays.
-    :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
-    :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
 
     Comparison on keys and values.
     '''
@@ -773,7 +769,5 @@ def same_coords(ds1, ds2, *, rtol=1e-5, atol=1e-8):
         return False
     if len(ds1.bins) != len(ds2.bins):
         return False
-    return all(
-        (s == o
-         and np.allclose(ds1.bins[s], ds2.bins[o], rtol=rtol, atol=atol))
-        for s, o in zip(ds1.bins, ds2.bins))
+    return all((s == o and np.array_equal(ds1.bins[s], ds2.bins[o]))
+               for s, o in zip(ds1.bins, ds2.bins))

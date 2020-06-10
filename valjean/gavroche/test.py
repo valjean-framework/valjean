@@ -50,54 +50,44 @@ class CheckBinsException(Exception):
     '''An error is raised when check bins fails.'''
 
 
-def same_arrays(arr1, arr2, *, rtol=1e-5, atol=1e-8):
-    '''Return `True` if `arr1` and `arr2` are equal within the accuracy.
+def same_arrays(arr1, arr2):
+    '''Return `True` if `arr1` and `arr2` are equal.
 
     :param arr1: the first array.
     :param arr2: the second array.
-    :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
-    :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
     '''
-    return np.allclose(arr1, arr2, rtol=rtol, atol=atol)
+    return np.array_equal(arr1, arr2)
 
 
-def same_bins(bins1, bins2, *, rtol=1e-5, atol=1e-8):
+def same_bins(bins1, bins2):
     '''Return `True` if all the coordinate arrays are compatible.
 
     :param bins1: the first dictionary of coordinate arrays.
     :param bins2: the second dictionary of coordinate arrays.
-    :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
-    :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
     '''
     if bins1.keys() != bins2.keys():
         return False
-    return all(same_arrays(bins1[k], bins2[k], rtol=rtol, atol=atol)
-               for k in bins1.keys())
+    return all(same_arrays(bins1[k], bins2[k]) for k in bins1.keys())
 
 
-def same_bins_datasets(*datasets, rtol=1e-5, atol=1e-8):
-    '''Return `True` if all datasets have compatible coordinates.
+def same_bins_datasets(*datasets):
+    '''Return `True` if all datasets have the same coordinates.
 
     :param datasets: any number of datasets.
     :type datasets: :class:`~valjean.eponine.base_dataset.BaseDataset`
-    :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
-    :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
     '''
     for dataset in datasets[1:]:
-        if not same_bins(datasets[0].bins, dataset.bins,
-                         rtol=rtol, atol=atol):
+        if not same_bins(datasets[0].bins, dataset.bins):
             return False
     return True
 
 
-def check_bins(*datasets, rtol=1e-5, atol=1e-8):
+def check_bins(*datasets):
     '''Check if the datasets have compatible coordinates, raise if not.
 
     :raises ValueError: if the datasets do not have compatible coordinates.
-    :param float rtol: the relative tolerance — see :func:`numpy.allclose`.
-    :param float atol: the absolute tolerance — see :func:`numpy.allclose`.
     '''
-    if not same_bins_datasets(*datasets, rtol=rtol, atol=atol):
+    if not same_bins_datasets(*datasets):
         msg = 'Inconsistent coordinates: \n{}'.format(
             '\n'.join(["{}".format(dat) for dat in datasets]))
         raise CheckBinsException(msg)

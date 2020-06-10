@@ -5,14 +5,13 @@ from collections import OrderedDict
 import pytest
 import numpy as np
 from hypothesis import given, note, settings, HealthCheck
-from hypothesis.strategies import data
 
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.gavroche import test
 from valjean.gavroche.dataset import Dataset
 
 from .conftest import datasets, perturbed_datasets
-from ..eponine.conftest import coord_odicts, perturb
+from ..eponine.conftest import coord_odicts
 
 
 @given(bins_dict=coord_odicts())
@@ -21,12 +20,17 @@ def test_same_bins_same(bins_dict):
     assert test.same_bins(bins_dict, bins_dict)
 
 
-@given(bins_dict=coord_odicts(), sampler=data())
-def test_same_bins_close(bins_dict, sampler):
-    '''Test that small perturbations do not spoil coordinate equality.'''
-    pert_bins_dict = {key: sampler.draw(perturb(bins))
-                      for key, bins in bins_dict.items()}
-    assert test.same_bins(bins_dict, pert_bins_dict)
+def test_different_bins():
+    '''Test that small perturbations do spoil coordinate equality.'''
+    bins1 = OrderedDict([('e', np.array([1, 2, 3]))])
+    bins2 = OrderedDict([('e', np.array([1, 2+1e-9, 3]))])
+    assert not test.same_bins(bins1, bins2)
+    bins3 = OrderedDict([('e', np.array([1, 2, 3])),
+                         ('t', np.array([4, 5, 6]))])
+    bins4 = OrderedDict([('e', np.array([1-1e-9, 2, 3])),
+                         ('t', np.array([4, 5, 6]))])
+    assert not test.same_bins(bins3, bins4)
+
 
 
 def test_different_bins_raises():
