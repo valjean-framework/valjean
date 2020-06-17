@@ -261,7 +261,7 @@ def repr_student_full_details(result):
     rstudent = [join(rvals, rdelta, rpvals)
                 for rvals, rdelta, rpvals in zip(rval, rdelta, rpval)]
     if not rstudent and rval:
-        rstudent = rval
+        rstudent = [join(rvals, rdelta) for rvals, rdelta in zip(rval, rdelta)]
     return rstudent
 
 

@@ -106,10 +106,6 @@ def test_student_verb(verb_level, student_test_2d_result, rst_formatter,
     assert not list(errs)
     if verb_level in (Verbosity.SILENT, Verbosity.SUMMARY):
         assert not ptempl
-    elif (verb_level is not None
-          and verb_level.value >= Verbosity.FULL_DETAILS.value):
-        assert len(ptempl) == 1
-        assert ptempl[0].nb_plots == 2
     else:
         assert len(ptempl) == 1
         assert ptempl[0].nb_plots == 3
