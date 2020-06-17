@@ -328,15 +328,14 @@ def check_last_entropy_result(entropy_rb):
         bd_keff = dcv.convert_data(resp['results'], data_type='keff')
         assert bd_keff.shape == ()
         assert not bd_keff.bins
-        if '-' in resp['keff_estimator']:
-            bd_corr = dcv.convert_data(resp['results'], data_type='keff',
-                                       correlation=True)
-            assert bd_corr
-            assert np.isnan(bd_corr.error)
-        else:
-            with pytest.raises(KeyError):
-                bd_corr = dcv.convert_data(resp['results'], data_type='keff',
-                                           correlation=True)
+        bd_corr = dcv.convert_data(resp['results'], data_type='keff',
+                                   correlation=True)
+        assert bd_corr
+        assert np.isnan(bd_corr.error)
+        if resp['keff_estimator'] in ('KSTEP', 'KCOLL', 'KTRACK'):
+            assert bd_corr.value == 1
+        if resp['keff_estimator'] == 'full_combination':
+            assert np.isnan(bd_corr.value)
     assert 'KSTEP-KCOLL' in entropy_rb.available_values('keff_estimator')
     assert 'full combination' in entropy_rb.available_values('keff_estimator')
     resps = entropy_rb.select_by(response_type='keff_auto')

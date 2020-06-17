@@ -1447,7 +1447,8 @@ def convert_keff(res):
     mkeff = []
     for keff in res['res_per_estimator']:
         mkeff.append({'keff_estimator': keff[0],
-                      'keff_res': {'keff': keff[1], 'sigma%': keff[2]},
+                      'keff_res': {'keff': keff[1], 'sigma%': keff[2],
+                                   'correlation': FTYPE(1)},
                       'used_batches_res': usedbatchs})
     for keff in res['correlation_mat']:
         mkeff.append({
@@ -1458,9 +1459,11 @@ def convert_keff(res):
                 'correlation': (keff[1] if not isinstance(keff[1], str)
                                 else np.nan)},
             'used_batches_res': usedbatchs})
-    fcomb = (dict(zip(['keff', 'sigma%'], res['full_comb_estimation']))
-             if len(res['full_comb_estimation']) == 2
-             else 'not_converged')
+    if len(res['full_comb_estimation']) == 2:
+        fcomb = dict(zip(['keff', 'sigma%'], res['full_comb_estimation']))
+        fcomb['correlation'] = FTYPE(1)
+    else:
+        fcomb = 'not_converged'
     mkeff.append({
         'keff_estimator': 'full combination', 'keff_res': fcomb,
         'used_batches_res': usedbatchs})
