@@ -631,3 +631,65 @@ def test_mix_1d_and_2d():
         splt.attributes.limits = [li[0] for li in lim]
     mplt = MplPlot(plt1)
     return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(filename='string_bins_1d_same_axes.png',
+                               baseline_dir='ref_plots')
+def test_string_bins_1d_same_axes():
+    '''Test for multiple curves on the same subplot.'''
+    bins = [np.array(['spam', 'bacon', 'egg+spam', 'egg+bacon',
+                      'egg+spam+bacon'])]
+    pelt1 = CurveElements(values=np.arange(5), bins=bins, legend='c0',
+                          index=0)
+    pelt2 = CurveElements(values=np.arange(5)*1.2, bins=bins,
+                          legend='c1', index=1)
+    pelt3 = CurveElements(values=np.arange(5)*0.7, bins=bins,
+                          legend='c2', index=2)
+    plti = PlotTemplate(
+        subplots=[SubPlotElements(curves=[pelt1, pelt2], axnames=('X', 'Y')),
+                  SubPlotElements(curves=[pelt3], axnames=('X', 'Y'))],
+        suppress_xaxes=True)
+    mplt = MplPlot(plti)
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(filename='string_bins_1d_diff_axes.png',
+                               baseline_dir='ref_plots')
+def test_string_bins_1d_diff_axes():
+    '''Test for multiple curves on the same subplot.'''
+    bins1 = [np.array(['spam', 'bacon', 'egg+spam', 'egg+bacon',
+                       'egg+spam+bacon'])]
+    bins2 = [np.array(['wine', 'beer', 'champagne', 'water', 'orange juice'])]
+    pelt1 = CurveElements(values=np.arange(5), bins=bins1, legend='c0',
+                          index=0)
+    pelt2 = CurveElements(values=np.arange(5)*1.2, bins=bins1,
+                          legend='c1', index=1)
+    pelt3 = CurveElements(values=np.arange(5)*0.7, bins=bins2,
+                          legend='c2', index=2)
+    plti = PlotTemplate(
+        subplots=[SubPlotElements(curves=[pelt1, pelt2], axnames=('X', 'Y')),
+                  SubPlotElements(curves=[pelt3], axnames=('X', 'Y'))])
+    mplt = MplPlot(plti)
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(filename='string_bins_2d.png',
+                               baseline_dir='ref_plots')
+def test_string_bins_2d():
+    '''Test for multiple curves on the same subplot.'''
+    bins = [np.array(['spam', 'bacon', 'egg+spam', 'egg+bacon',
+                      'egg+spam+bacon']),
+            # np.arange(4)]
+            np.array(['wine', 'beer', 'champagne', 'orange juice'])]
+    pelt1 = CurveElements(values=np.arange(20).reshape(5, 4), bins=bins,
+                          legend='c0')
+    pelt2 = CurveElements(values=np.arange(20).reshape(5, 4)*1.2, bins=bins,
+                          legend='c1')
+    plti = PlotTemplate(
+        subplots=[SubPlotElements(curves=[pelt1],
+                                  axnames=('meal', 'drink', 'Z'), ptype='2D'),
+                  SubPlotElements(curves=[pelt2],
+                                  axnames=('meal', 'drink', 'Z'), ptype='2D')],
+        small_subplots=False)
+    mplt = MplPlot(plti)
+    return mplt.draw()[0]

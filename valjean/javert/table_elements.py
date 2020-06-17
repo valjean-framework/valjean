@@ -92,7 +92,9 @@ def repr_bins(dsref):
                      for a, b in zip(dsref.bins[dim][:-1],
                                      dsref.bins[dim][1:])]
         else:
-            dbins = ["{0:.4g}".format(a) for a in dsref.bins[dim]]
+            dbins = (["{0:.4g}".format(a) for a in dsref.bins[dim]]
+                     if dsref.bins[dim].dtype.kind != 'U'
+                     else dsref.bins[dim])
         bins.append(np.array(dbins).reshape(shape))
     bbins = np.broadcast_arrays(*bins)
     return dim_names, tuple(bbins)

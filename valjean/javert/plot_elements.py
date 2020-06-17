@@ -80,9 +80,12 @@ def trim_range(bins):
         nbins = lbins
         has_changed = [False, False]
         limits = [nbins[0], nbins[-1]]
+        if lbins.dtype.kind == 'U':
+            blimits.append([tuple(limits), False])
+            continue
         if nbins.size < 3:
             LOGGER.warning('Not enough bins to adapt range.')
-            blimits.append([])
+            blimits.append([tuple(limits), False])
             continue
         if nbins.size < 4:
             LOGGER.warning('Will adapt range for %d bins, '

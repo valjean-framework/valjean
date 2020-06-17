@@ -32,7 +32,6 @@ def test_different_bins():
     assert not test.same_bins(bins3, bins4)
 
 
-
 def test_different_bins_raises():
     '''Test that :func:`~.check_bins` raises on incompatible coordinates
     arrays.'''

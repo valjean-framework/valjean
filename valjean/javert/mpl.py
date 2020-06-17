@@ -285,7 +285,7 @@ The index is currently not used.
 
 
 Customization
-`````````````
+-------------
 
 Some customizations can be done for each subplot with the attributes parameter
 of :class:`~.templates.SubPlotElements`: limits to adapt axes ranges,
@@ -356,6 +356,39 @@ can be put in logarithmic scale.
     >>> from valjean.javert import mpl
     >>> mplplt = mpl.MplPlot(pltnd)
     >>> fig, _ = mplplt.draw()
+
+
+Strings as bins
+---------------
+
+It is possible to use strings as bins both in 1D and 2D plots. If strings are
+too long on x-axis they will be represented vertically.
+
+.. plot::
+    :include-source:
+
+    >>> from collections import OrderedDict
+    >>> import numpy as np
+    >>> from valjean.javert.templates import (PlotTemplate, CurveElements,
+    ...                                       SubPlotElements)
+    >>> bins = [np.array(['spam', 'egg', 'bacon']),
+    ...         np.array(['beer', 'wine', 'milk', 'tea with milk and sugar'])]
+    >>> axnames = ['x', 'y']
+    >>> v2d = np.arange(12).reshape(3, 4)
+    >>> v1d = np.arange(4)
+    >>> lsplts = []
+    >>> lsplts.append(SubPlotElements(
+    ...     curves=[CurveElements(values=v2d, bins=bins, legend='Menus')],
+    ...     axnames=['Meat', 'Drink', 'Associations'], ptype='2D'))
+    >>> lsplts.append(SubPlotElements(
+    ...     curves=[CurveElements(
+    ...         values=v1d, bins=bins[1:], legend='', index=1)],
+    ...     axnames=['Drink', 'Quantity'], ptype='1D'))
+    >>> pltnd = PlotTemplate(subplots=lsplts)
+    >>> from valjean.javert import mpl
+    >>> mplplt = mpl.MplPlot(pltnd)
+    >>> fig, _ = mplplt.draw()
+
 
 Module API
 ----------
@@ -454,13 +487,13 @@ class MplPlot:
         :returns: dictionary of keyword arguments directly used by matplotlib
         :rtype: dict
         '''
+        hspace = 0.05 if data.suppress_xaxes else 0.4
         splts_kwargs = {'figsize': (6.4, 6.4+2*(data.nb_plots-1)),
-                        'gridspec_kw': {'hspace': 0.4, 'top': 0.95,
-                                        'bottom': 0.05, 'right': 0.95}}
+                        'gridspec_kw': {'hspace': hspace}}
         if data.small_subplots:
             splts_kwargs['figsize'] = (6.4, 4.8+1.2*(data.nb_plots-1))
             splts_kwargs['gridspec_kw'] = {
-                'height_ratios': [4] + [1]*(data.nb_plots-1), 'hspace': 0.05}
+                'height_ratios': [4] + [1]*(data.nb_plots-1), 'hspace': hspace}
         return splts_kwargs
 
     def initialize_figure(self):
@@ -469,7 +502,8 @@ class MplPlot:
         :rtype: tuple(matplotlib.figure.Figure, list(matplotlib.axes.Axes))
         '''
         fig, splts = plt.subplots(
-            self.data.nb_plots, **self.figure_properties(self.data))
+            self.data.nb_plots, **self.figure_properties(self.data),
+            constrained_layout=True)
         if self.data.nb_plots == 1:
             splts = [splts]
         return fig, splts
@@ -626,6 +660,10 @@ class _MplPlot1D:
         '''Customize plots (scale, limits and lines).'''
         splt.set_xlabel(self.data.axnames[0])
         splt.set_ylabel(self.data.axnames[1])
+        if self.data.curves[0].bins[0].dtype.kind == 'U':
+            bmax = max([len(b) for b in self.data.curves[0].bins[0]])
+            if bmax * self.data.curves[0].bins[0].size > 60:
+                splt.tick_params(axis='x', rotation=90)
         if self.data.attributes.limits is not None:
             splt.set_xlim(*self.data.attributes.limits[0])
         if self.data.attributes.logx:
@@ -679,16 +717,21 @@ class _MplPlot2D:
         :param list(numpy.ndarray) lbins: x and y bins corresponding to data
         :rtype: numpy.ndarray
         '''
-        bins = []
+        bins, rsbins = [], []
         for idim, tbin in enumerate(curve.bins):
             shape = ([curve.values.shape[idim]]
                      + [1] * (curve.values.ndim - 1 - idim))
             cbins = ((tbin[1:] + tbin[:-1]) * 0.5
                      if tbin.size == curve.values.shape[idim]+1
                      else tbin)
-            bins.append(np.array(cbins).reshape(shape))
-        bbins = np.broadcast_arrays(*bins)
-        return bbins
+            if tbin.dtype.kind == 'U':
+                cbins = np.arange(tbin.size)+0.5
+                bins.append(np.arange(tbin.size+1))
+            else:
+                bins.append(tbin)
+            rsbins.append(np.array(cbins).reshape(shape))
+        bbins = np.broadcast_arrays(*rsbins)
+        return bbins, bins
 
     def itwod_plot(self, fig, splt, curve, axnames, norm):
         # pylint: disable=too-many-arguments
@@ -702,13 +745,22 @@ class _MplPlot2D:
             normalisation and scale (linear or logarithmic)
         :type norm: function from :obj:`matplotlib.colors`
         '''
-        cbins = self.broadcast_bin_centers(curve)
+        cbins, bins = self.broadcast_bin_centers(curve)
         h2d = splt.hist2d(
             cbins[0].flatten(), cbins[1].flatten(),
-            bins=curve.bins, norm=norm, weights=curve.values.flatten())
+            bins=bins, norm=norm, weights=curve.values.flatten())
         cbar = fig.colorbar(h2d[3], ax=splt)
         splt.set_xlabel(axnames[0])
+        if curve.bins[0].dtype.kind == 'U':
+            splt.set_xticks(bins[0][:-1]+0.5)
+            splt.set_xticklabels(list(curve.bins[0]))
+            bmax = max([len(b) for b in self.data.curves[0].bins[0]])
+            if bmax * self.data.curves[0].bins[0].size > 60:
+                splt.tick_params(axis='x', rotation=90)
         splt.set_ylabel(axnames[1])
+        if curve.bins[1].dtype.kind == 'U':
+            splt.set_yticks(bins[1][:-1] + 0.5)
+            splt.set_yticklabels(curve.bins[1])
         cbar.set_label(axnames[2])
         if curve.legend:
             splt.set_title(curve.legend)
@@ -738,4 +790,7 @@ class _MplPlot2D:
             splt.set_xscale('log')
         if self.data.attributes.logy:
             splt.set_yscale('log')
-        plt.subplots_adjust(top=0.95)
+        if self.data.curves[0].bins[0].dtype.kind == 'U':
+            bmax = max([len(b) for b in self.data.curves[0].bins[0]])
+            if bmax * self.data.curves[0].bins[0].size > 60:
+                splt.tick_params(axis='x', rotation=90)
