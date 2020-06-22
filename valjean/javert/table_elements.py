@@ -141,22 +141,21 @@ def repr_equal(result):
     :rtype: list(TableTemplate)
     '''
     LOGGER.debug("In repr_equal")
+    nbins, bins = repr_bins(result.test.dsref)
     dscols = tuple((ds.value, eq)
                    for ds, eq in zip(result.test.datasets, result.equal))
-    heads = [(result.test.dsref.name,)]
+    heads = nbins + [result.test.dsref.name]
     for ds in result.test.datasets:
-        heads.append((ds.name,
+        heads.extend([ds.name,
                       'equal({})?'.format(ds.name)
-                      if len(result.test.datasets) > 1 else 'equal?'))
+                      if len(result.test.datasets) > 1 else 'equal?'])
     falses = np.full_like(result.test.dsref.value, False, dtype=bool)
-    highlights = [(falses,)]
+    highlights = [falses] * (len(nbins) + 1)
     for equal in result.equal:
-        highlights.append((falses, np.logical_not(equal)))
+        highlights.extend([falses, np.logical_not(equal)])
     table_template = TableTemplate(
-        result.test.dsref.value,
-        *chain.from_iterable(dscols),
-        highlights=list(chain.from_iterable(highlights)),
-        headers=list(chain.from_iterable(heads)))
+        *bins, result.test.dsref.value, *chain.from_iterable(dscols),
+        highlights=highlights, headers=heads)
     return [table_template]
 
 
@@ -195,24 +194,23 @@ def repr_approx_equal(result):
     :rtype: list(TableTemplate)
     '''
     LOGGER.debug("In repr_approx_equal")
+    nbins, bins = repr_bins(result.test.dsref)
     dscols = tuple((ds.value, eq)
                    for ds, eq in zip(result.test.datasets,
                                      result.approx_equal))
-    heads = [(result.test.dsref.name,)]
+    heads = nbins + [result.test.dsref.name]
     for ds in result.test.datasets:
-        heads.append((ds.name,
+        heads.extend([ds.name,
                       'approx equal({})?'.format(ds.name)
                       if len(result.test.datasets) > 1
-                      else 'approx equal?'))
+                      else 'approx equal?'])
     falses = np.full_like(result.test.dsref.value, False, dtype=bool)
-    highlights = [(falses,)]
+    highlights = [falses] * (len(nbins) + 1)
     for approx_equal in result.approx_equal:
-        highlights.append((falses, np.logical_not(approx_equal)))
+        highlights.extend([falses, np.logical_not(approx_equal)])
     table_template = TableTemplate(
-        result.test.dsref.value,
-        *chain.from_iterable(dscols),
-        highlights=list(chain.from_iterable(highlights)),
-        headers=list(chain.from_iterable(heads)))
+        *bins, result.test.dsref.value, *chain.from_iterable(dscols),
+        highlights=highlights, headers=heads)
     return [table_template]
 
 
@@ -276,8 +274,7 @@ def repr_student(result):
     table_template = TableTemplate(
         *bins, result.test.dsref.value, result.test.dsref.error,
         *chain.from_iterable(dscols),
-        highlights=highlights,
-        headers=heads)
+        highlights=highlights, headers=heads)
     return [table_template]
 
 
@@ -340,10 +337,8 @@ def repr_student_intermediate(result):
             + [(result.test.dsref.value[np.where(falses_ind == 0)],
                 result.test.dsref.error[np.where(falses_ind == 0)])])
     table_template = TableTemplate(
-        *chain.from_iterable(cols),
-        *chain.from_iterable(dscols),
-        highlights=highlights,
-        headers=heads)
+        *chain.from_iterable(cols), *chain.from_iterable(dscols),
+        highlights=highlights, headers=heads)
     return [table_template]
 
 
