@@ -390,6 +390,33 @@ too long on x-axis they will be represented vertically.
     >>> fig, _ = mplplt.draw()
 
 
+Pie plot
+--------
+
+Pie plots can be done if requested. `ptype` should be equal to `'pie'`. Note
+that the number of `axnames` still has to be N dim + 1, so 2. The first one is
+the title of the plot, the second one the title of the legend. If the second
+string is empty no title will be given to the legend.
+
+.. plot::
+    :include-source:
+
+    >>> import numpy as np
+    >>> from valjean.javert.templates import (PlotTemplate, CurveElements,
+    ...                                       SubPlotElements)
+    >>> ingredients = ['egg', 'spam', 'bacon', 'sausage', 'tomato', 'beans']
+    >>> proportions = [0.1, 0.3, 0.25, 0.2, 0.05, 0.1]
+    >>> curve = CurveElements(values=np.array(proportions),
+    ...                       bins=[ingredients], legend='')
+    >>> sbplt = SubPlotElements(curves=[curve],
+    ...                         axnames=('Python pie', 'Ingredients'),
+    ...                         ptype='pie')
+    >>> pltpie = PlotTemplate(subplots=[sbplt])
+    >>> from valjean.javert import mpl
+    >>> mplplt = mpl.MplPlot(pltpie)
+    >>> fig, _ = mplplt.draw()
+
+
 Module API
 ----------
 '''
@@ -458,7 +485,7 @@ class MplPlotException(Exception):
 class MplPlot:
     '''Convert a :class:`~.templates.PlotTemplate` into a matplotlib plot.'''
 
-    PTYPES = ('1D', '2D')
+    PTYPES = ('1D', '2D', 'pie')
 
     def __init__(self, data, *, style=None):
         '''Construct a :class:`MplPlot` from the given
@@ -494,6 +521,8 @@ class MplPlot:
             splts_kwargs['figsize'] = (6.4, 4.8+1.2*(data.nb_plots-1))
             splts_kwargs['gridspec_kw'] = {
                 'height_ratios': [4] + [1]*(data.nb_plots-1), 'hspace': hspace}
+        if 'pie' in [s.ptype for s in data.subplots]:
+            splts_kwargs = {'figsize': (6.4, 4)}
         return splts_kwargs
 
     def initialize_figure(self):
@@ -526,7 +555,8 @@ class MplPlot:
                 plt.setp(splt.get_xticklabels(), visible=False)
                 splt.set_xlabel('')
             if ((i != 0 and self.data.suppress_legends)
-                    or sum(len(s.curves) for s in self.data.subplots) == 1):
+                    or (sum(len(s.curves) for s in self.data.subplots) == 1
+                        and self.data.subplots[i].ptype != 'pie')):
                 plt.setp(splt.get_legend(), visible=False)
 
     def draw(self):
@@ -536,8 +566,8 @@ class MplPlot:
         '''
         if any(s.ptype not in MplPlot.PTYPES for s in self.data.subplots):
             raise MplPlotException(
-                "ptype from {} not taken into account. Expected ones are "
-                "['1D', '2D'].".format([s.ptype for s in self.data.subplots]))
+                "ptype from {} not taken into account. Expected ones are {}."
+                .format([s.ptype for s in self.data.subplots], self.PTYPES))
         fig, splts = self.initialize_figure()
         fmts = self.style.styles_sequence(self.data.curves_index())
         for splt, sdat in zip(splts, self.data.subplots):
@@ -545,6 +575,8 @@ class MplPlot:
                 mpl_plot = _MplPlot1D(sdat, self.style)
             elif sdat.ptype == '2D':
                 mpl_plot = _MplPlot2D(sdat, self.style)
+            elif sdat.ptype == 'pie':
+                mpl_plot = _MplPie(sdat, self.style)
             mpl_plot.draw(fig, splt, fmts=fmts)
         self.finalize_figure(splts)
         return fig, splts
@@ -596,7 +628,7 @@ class _MplPlot1D:
     def draw(self, _fig, splt, *_args, fmts, **_kwargs):
         '''Draw method.
 
-        :param matplotlib.figure.Figure fig: the current figure
+        :param matplotlib.figure.Figure _fig: the current figure
         :param matplotlib.axes.Axes splt: the current subplot
         :param dict fmts: curves styles
         '''
@@ -794,3 +826,38 @@ class _MplPlot2D:
             bmax = max([len(b) for b in self.data.curves[0].bins[0]])
             if bmax * self.data.curves[0].bins[0].size > 60:
                 splt.tick_params(axis='x', rotation=90)
+
+
+class _MplPie:
+    '''Convert a :class:`~.templates.PlotTemplate` into a matplotlib pie chart.
+    '''
+
+    def __init__(self, data, _style=None):
+        '''Construct a :class:`_MplPie` from the given
+        :class:`~.templates.SubPlotElements`.
+
+        :param SubPlotElements data: the data to convert.
+        :param MplStyle style: style to be used in the subplot
+        '''
+        self.data = data
+        self.fig, self.splt = None, None
+
+    def draw(self, _fig, splt, *_args, **_kwargs):
+        '''Draw method.
+
+        :param matplotlib.figure.Figure _fig: the current figure
+        :param matplotlib.axes.Axes splt: the current subplot
+        '''
+        self.pie_chart(splt)
+
+    def pie_chart(self, splt):
+        '''Prepare the pie chart.
+
+        :param matplotlib.axes.Axes splt: the current subplot
+        '''
+        curve = self.data.curves[0]
+        wedges, _, _ = splt.pie(curve.values, autopct='%1.1f%%')
+        splt.set_title(self.data.axnames[0])
+        splt.legend(wedges, curve.bins[0],
+                    loc='center right', bbox_to_anchor=(1.3, 0.5),
+                    title=self.data.axnames[1])

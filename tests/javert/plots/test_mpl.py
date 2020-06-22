@@ -693,3 +693,17 @@ def test_string_bins_2d():
         small_subplots=False)
     mplt = MplPlot(plti)
     return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(filename='pie_chart.png',
+                               baseline_dir='ref_plots')
+def test_pie_chart():
+    '''Test pie chart.'''
+    bins = [np.array(['spam', 'bacon', 'egg', 'lobster'])]
+    celts = CurveElements(values=np.array([2, 4, 5, 1]), bins=bins, legend='')
+    splte = SubPlotElements(curves=[celts],
+                            axnames=['Frequency of ingredients', ''],
+                            ptype='pie')
+    ptemp = PlotTemplate(subplots=[splte])
+    mplt = MplPlot(ptemp)
+    return mplt.draw()[0]

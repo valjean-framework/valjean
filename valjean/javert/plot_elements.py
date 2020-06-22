@@ -3,6 +3,8 @@ to be converted in rst.
 '''
 import numpy as np
 from .. import LOGGER
+from ..cosette.task import TaskStatus
+from ..gavroche.diagnostics.stats import TestOutcome
 from .templates import PlotTemplate, CurveElements, SubPlotElements, join
 from .verbosity import Verbosity
 
@@ -350,6 +352,45 @@ def repr_testresultfailed(_result, _verbosity=None):
     :returns: empty list
     '''
     return []
+
+
+def repr_testresultstats(result, status_ok, label):
+    '''Represent result from statistical test as a plot (pie chart probably).
+
+    :param TestResult result: result from a statistical test
+    :rtype: list(PlotTemplate)
+    '''
+    classify = result.classify
+    statuses = [status_ok]
+    statuses.extend(status for status in status_ok.__class__
+                    if status != status_ok)
+
+    counts = [len(classify[status]) for status in statuses]
+    statuses_txt = [status.name for status in statuses]
+    subplot = SubPlotElements(
+        curves=[CurveElements(values=np.array(counts),
+                              bins=[np.array(statuses_txt)],
+                              legend='')],
+        axnames=(label, ''), ptype='pie')
+    return [PlotTemplate(subplots=[subplot], small_subplots=False)]
+
+
+def repr_testresultstatstasks(result, _verbosity=None):
+    '''Represent result from statistical test on tasks as a plot (pie chart).
+
+    :param TestResultStatsTasks result: result from tasks statistics
+    :rtype: list(PlotTemplate)
+    '''
+    return repr_testresultstats(result, TaskStatus.DONE, 'Tasks')
+
+
+def repr_testresultstatstests(result, _verbosity=None):
+    '''Represent result from statistical test on tests as a plot (pie chart).
+
+    :param TestResultStatsTests result: result from tasks statistics
+    :rtype: list(PlotTemplate)
+    '''
+    return repr_testresultstats(result, TestOutcome.SUCCESS, 'Tests')
 
 
 def repr_testresultstatstestsperflags(_result, _verbosity=None):

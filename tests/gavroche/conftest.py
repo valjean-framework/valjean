@@ -464,7 +464,6 @@ def generate_test_tasks():
     menu1 = {'food': 'egg + spam', 'drink': 'beer'}
     menu2 = {'food': 'egg + bacon', 'drink': 'beer'}
     menu3 = {'food': 'lobster thermidor', 'drink': 'brandy'}
-
     def test_generator():
         result = [TestMetadata({'Graham': menu1, 'Terry': menu1},
                                name='gt_wday_lunch',
@@ -486,9 +485,10 @@ def generate_test_tasks():
 
 
 def run_tasks(tasks, env):
-    '''Run the tasls and update the environnment.'''
+    '''Run the tasks and update the environnment.'''
     config = Config(paths=[])
     for task in tasks:
         env_up, status = task.do(env=env, config=config)
+        env.set_status(task, status)
         env.apply(env_up)
     return env, status

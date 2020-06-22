@@ -258,14 +258,14 @@ def generate_labstats_tasks(name, test_task, labels):
 
 
 def generate_stats_tasks(test_task):
-    '''Generate to tasks to make the diagnostic based on tests' labels.'''
+    '''Generate to tasks to make the diagnostic based on tasks.'''
     stats = task_stats(name='stats_tasks', tasks=[test_task])
     create_stats = next(task for task in stats.depends_on)
     return [create_stats, stats]
 
 
 def generate_statstests_tasks(test_task):
-    '''Generate to tasks to make the diagnostic based on tests' labels.'''
+    '''Generate to tasks to make the diagnostic based on tests.'''
     stats = test_stats(name='stats_tests', tasks=[test_task])
     create_stats = next(task for task in stats.depends_on)
     return [create_stats, stats]
@@ -278,7 +278,8 @@ def stats_result(tasks_md, env):
     return env[tasks_md[1].name]['result'][0]
 
 
-def stats_representation(sres, verb_level, full_repr, rst_formatter, rstcheck):
+def stats_representation(sres, verb_level, full_repr, rst_formatter, rstcheck,
+                         plot_type=None):
     '''Representation of stats tests.'''
     templates = full_repr(sres, verb_level)
     ttempl = filter(lambda x: isinstance(x, (TableTemplate, TextTemplate)),
@@ -288,7 +289,11 @@ def stats_representation(sres, verb_level, full_repr, rst_formatter, rstcheck):
                     for template in ttempl)
     errs = rstcheck.check(rst)
     assert not list(errs)
-    assert not ptempl
+    if plot_type is None:
+        assert not ptempl
+    else:
+        assert ptempl[0].nb_plots == 1
+        assert ptempl[0].subplots[0].ptype == plot_type
 
 
 @pytest.mark.parametrize('verb_level', [None, Verbosity.SILENT,
@@ -314,10 +319,10 @@ def test_stats_diagnostic_verb(verb_level, full_repr, rst_formatter, rstcheck):
             'except', tasks[0], ('consumer',)), env),
         verb_level, full_repr, rst_formatter, rstcheck)
     stats_representation(stats_result(generate_stats_tasks(tasks[0]), env),
-                         verb_level, full_repr, rst_formatter, rstcheck)
+                         verb_level, full_repr, rst_formatter, rstcheck, 'pie')
     stats_representation(
         stats_result(generate_statstests_tasks(tasks[0]), env),
-        verb_level, full_repr, rst_formatter, rstcheck)
+        verb_level, full_repr, rst_formatter, rstcheck, 'pie')
 
 
 @pytest.mark.parametrize('test_name', ['equal_test', 'approx_equal_test'])
