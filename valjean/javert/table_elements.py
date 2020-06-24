@@ -6,7 +6,7 @@ import numpy as np
 from .. import LOGGER
 from ..cosette.task import TaskStatus
 from ..gavroche.diagnostics.stats import TestOutcome
-from .templates import TableTemplate, TextTemplate
+from .templates import TableTemplate, TextTemplate, join
 from .verbosity import Verbosity
 
 # turn off pylint warnings about invalid names in this file; there are just too
@@ -528,7 +528,16 @@ def repr_testresultstats(result, status_ok):
     highlights = [hl_column, hl_column]
     table = TableTemplate(statuses_txt, percents, headers=['status', 'counts'],
                           highlights=highlights)
-    return [table]
+    if status_ok == TaskStatus.DONE:
+        status_ko = TaskStatus.FAILED
+        text = [TextTemplate('List of failed tasks\n\n')]
+    else:
+        status_ko = TestOutcome.MISSING
+        text = [TextTemplate('List of missing tests\n\n')]
+    for task in classify[status_ko]:
+        text += [TextTemplate('* {}\n'.format(task))]
+    ftext = join(*text)
+    return [table, ftext]
 
 
 def repr_testresultstatstestsbylabels(result, verbosity=None):
