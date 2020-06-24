@@ -679,7 +679,6 @@ def test_string_bins_2d():
     '''Test for multiple curves on the same subplot.'''
     bins = [np.array(['spam', 'bacon', 'egg+spam', 'egg+bacon',
                       'egg+spam+bacon']),
-            # np.arange(4)]
             np.array(['wine', 'beer', 'champagne', 'orange juice'])]
     pelt1 = CurveElements(values=np.arange(20).reshape(5, 4), bins=bins,
                           legend='c0')
@@ -705,5 +704,26 @@ def test_pie_chart():
                             axnames=['Frequency of ingredients', ''],
                             ptype='pie')
     ptemp = PlotTemplate(subplots=[splte])
+    mplt = MplPlot(ptemp)
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(filename='bar_charts.png',
+                               baseline_dir='ref_plots')
+def test_bar_chart():
+    '''Test bar chart from stat test filtered on one label.'''
+    bins = [np.array(['spam', 'bacon', 'egg', 'lobster'])]
+    c_terry = CurveElements(values=np.array([1, 3, 2, 0]), bins=bins,
+                            legend='Terry')
+    c_eric = CurveElements(values=np.array([0, 2, 2, 1]), bins=bins,
+                           legend='Eric')
+    c_john = CurveElements(values=np.array([2, 1, 2, 2]), bins=bins,
+                           legend='John')
+    spb = SubPlotElements(curves=[c_terry, c_eric, c_john],
+                          axnames=['consumer', 'ingredients'], ptype='bar')
+    spbs = SubPlotElements(curves=[c_terry, c_eric, c_john],
+                           axnames=['consumer', 'ingredients'],
+                           ptype='barstack')
+    ptemp = PlotTemplate(subplots=[spb, spbs], small_subplots=False)
     mplt = MplPlot(ptemp)
     return mplt.draw()[0]

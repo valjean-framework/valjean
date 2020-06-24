@@ -291,7 +291,7 @@ Some customizations can be done for each subplot with the attributes parameter
 of :class:`~.templates.SubPlotElements`: limits to adapt axes ranges,
 logarithmic scale or lines.
 
-Using the previous example:
+Using the previous 1D example:
 
 .. plot::
     :include-source:
@@ -417,6 +417,36 @@ string is empty no title will be given to the legend.
     >>> fig, _ = mplplt.draw()
 
 
+Bar plots
+---------
+
+Bar plots can be used here with strings as labels in x-axis, like category
+plots but no errors are expected here. Two kinds of bar plots are available:
+side-by-side bars and stacked bars.
+
+.. plot::
+    :include-source:
+
+    >>> import numpy as np
+    >>> from valjean.javert.templates import (PlotTemplate, CurveElements,
+    ...                                       SubPlotElements)
+    >>> bins = [np.array(['spam', 'egg', 'bacon'])]
+    >>> data = [np.array([1, 3, 4]),  np.array([2, 4, 5]),
+    ...         np.array([5, 3, 2]), np.array([2, 3, 1])]
+    >>> names = ['Terry', 'John' , 'Graham', 'Eric']
+    >>> lcurves = []
+    >>> for datum, name in zip(data, names):
+    ...     lcurves.append(CurveElements(values=datum, bins=bins, legend=name))
+    >>> speb = SubPlotElements(curves=lcurves,
+    ...                        axnames=['ingredient', 'quantity'], ptype='bar')
+    >>> spebs = SubPlotElements(curves=lcurves,
+    ...                         axnames=['ingredient', 'quantity'],
+    ...                         ptype='barstack')
+    >>> pltbar = PlotTemplate(subplots=[speb, spebs], small_subplots=False)
+    >>> from valjean.javert import mpl
+    >>> mplplt = mpl.MplPlot(pltbar)
+    >>> fig, _ = mplplt.draw()
+
 Module API
 ----------
 '''
@@ -485,7 +515,7 @@ class MplPlotException(Exception):
 class MplPlot:
     '''Convert a :class:`~.templates.PlotTemplate` into a matplotlib plot.'''
 
-    PTYPES = ('1D', '2D', 'pie')
+    PTYPES = ('1D', '2D', 'pie', 'bar', 'barstack')
 
     def __init__(self, data, *, style=None):
         '''Construct a :class:`MplPlot` from the given
@@ -577,6 +607,10 @@ class MplPlot:
                 mpl_plot = _MplPlot2D(sdat, self.style)
             elif sdat.ptype == 'pie':
                 mpl_plot = _MplPie(sdat, self.style)
+            elif sdat.ptype == 'bar':
+                mpl_plot = _MplBar(sdat, self.style)
+            elif sdat.ptype == 'barstack':
+                mpl_plot = _MplBarStack(sdat, self.style)
             mpl_plot.draw(fig, splt, fmts=fmts)
         self.finalize_figure(splts)
         return fig, splts
@@ -861,3 +895,76 @@ class _MplPie:
         splt.legend(wedges, curve.bins[0],
                     loc='center right', bbox_to_anchor=(1.3, 0.5),
                     title=self.data.axnames[1])
+
+
+class _MplBar:
+    '''Convert a :class:`~.templates.PlotTemplate` into a matplotlib bar plot.
+    '''
+
+    def __init__(self, data, _style=None):
+        '''Construct a :class:`_MplBar` from the given
+        :class:`~.templates.SubPlotElements`.
+
+        :param SubPlotElements data: the data to convert.
+        :param MplStyle style: style to be used in the subplot
+        '''
+        self.data = data
+
+    def draw(self, _fig, splt, *_args, **_kwargs):
+        '''Draw method.
+
+        :param matplotlib.figure.Figure _fig: the current figure
+        :param matplotlib.axes.Axes splt: the current subplot
+        '''
+        self.bar_plot(splt)
+
+    def bar_plot(self, splt):
+        '''Prepare the bar plot.'''
+        nb_curves = len(self.data.curves)
+        width = 0.8 / nb_curves
+        x = np.arange(self.data.curves[0].values.size)
+        bot = np.zeros_like(self.data.curves[0].values)
+        for icrv, curve in enumerate(self.data.curves):
+            splt.bar(x + (icrv-(nb_curves-1)/2)*width, curve.values, width,
+                     label=curve.legend)
+            bot += curve.values
+        splt.set_xlabel(self.data.axnames[0])
+        splt.set_ylabel(self.data.axnames[1])
+        splt.set_xticks(x)
+        splt.set_xticklabels(self.data.curves[0].bins[0])
+        splt.legend()
+
+
+class _MplBarStack:
+    '''Convert a :class:`~.templates.PlotTemplate` into a matplotlib bar plot.
+    '''
+
+    def __init__(self, data, _style=None):
+        '''Construct a :class:`_MplBarStack` from the given
+        :class:`~.templates.SubPlotElements`.
+
+        :param SubPlotElements data: the data to convert.
+        :param MplStyle style: style to be used in the subplot
+        '''
+        self.data = data
+
+    def draw(self, _fig, splt, *_args, **_kwargs):
+        '''Draw method.
+
+        :param matplotlib.figure.Figure _fig: the current figure
+        :param matplotlib.axes.Axes splt: the current subplot
+        '''
+        self.bar_plot(splt)
+
+    def bar_plot(self, splt):
+        '''Prepare the bar plot.'''
+        nb_curves = len(self.data.curves)
+        width = 0.8 / nb_curves
+        bot = np.zeros_like(self.data.curves[0].values)
+        for curve in self.data.curves:
+            splt.bar(self.data.curves[0].bins[0], curve.values,
+                     width*nb_curves, label=curve.legend, bottom=bot)
+            bot += curve.values
+        splt.set_xlabel(self.data.axnames[0])
+        splt.set_ylabel(self.data.axnames[1])
+        splt.legend()

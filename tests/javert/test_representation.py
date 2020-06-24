@@ -279,8 +279,13 @@ def stats_result(tasks_md, env):
 
 
 def stats_representation(sres, verb_level, full_repr, rst_formatter, rstcheck,
-                         plot_type=None):
-    '''Representation of stats tests.'''
+                         expected_plot_types=None):
+    # pylint: disable=too-many-arguments
+    '''Representation of stats tests `sres` at given verbosity level.
+
+    Test if table and text templates are well formatted in rst and that plot
+    ones are consistent with requirements.
+    '''
     templates = full_repr(sres, verb_level)
     ttempl = filter(lambda x: isinstance(x, (TableTemplate, TextTemplate)),
                     templates)
@@ -289,11 +294,13 @@ def stats_representation(sres, verb_level, full_repr, rst_formatter, rstcheck,
                     for template in ttempl)
     errs = rstcheck.check(rst)
     assert not list(errs)
-    if plot_type is None:
+    if expected_plot_types is None:
         assert not ptempl
     else:
-        assert ptempl[0].nb_plots == 1
-        assert ptempl[0].subplots[0].ptype == plot_type
+        assert ptempl[0].nb_plots == len(expected_plot_types)
+        assert all(splt.ptype == ptype
+                   for splt, ptype in zip(ptempl[0].subplots,
+                                          expected_plot_types))
 
 
 @pytest.mark.parametrize('verb_level', [None, Verbosity.SILENT,
@@ -309,20 +316,21 @@ def test_stats_diagnostic_verb(verb_level, full_repr, rst_formatter, rstcheck):
     stats_representation(
         stats_result(generate_labstats_tasks(
             'one_lab', tasks[0], ('day',)), env),
-        verb_level, full_repr, rst_formatter, rstcheck)
+        verb_level, full_repr, rst_formatter, rstcheck, ['bar', 'barstack'])
     stats_representation(
         stats_result(generate_labstats_tasks(
             'two_lab', tasks[0], ('day', 'meal')), env),
-        verb_level, full_repr, rst_formatter, rstcheck)
+        verb_level, full_repr, rst_formatter, rstcheck, ['bar', 'barstack'])
     stats_representation(
         stats_result(generate_labstats_tasks(
             'except', tasks[0], ('consumer',)), env),
         verb_level, full_repr, rst_formatter, rstcheck)
     stats_representation(stats_result(generate_stats_tasks(tasks[0]), env),
-                         verb_level, full_repr, rst_formatter, rstcheck, 'pie')
+                         verb_level, full_repr, rst_formatter, rstcheck,
+                         ['pie'])
     stats_representation(
         stats_result(generate_statstests_tasks(tasks[0]), env),
-        verb_level, full_repr, rst_formatter, rstcheck, 'pie')
+        verb_level, full_repr, rst_formatter, rstcheck, ['pie'])
 
 
 @pytest.mark.parametrize('test_name', ['equal_test', 'approx_equal_test'])

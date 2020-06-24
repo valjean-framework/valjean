@@ -11,7 +11,7 @@ import numpy as np
 
 from ..context import valjean  # noqa: F401
 from ..eponine.conftest import finite
-from ..gavroche.conftest import some_dataset, other_dataset
+from ..gavroche.conftest import some_dataset, other_dataset, run_tasks
 from valjean.javert.verbosity import Verbosity
 from valjean.javert.representation import (FullRepresenter, EmptyRepresenter,
                                            FullTableRepresenter,

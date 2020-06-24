@@ -1,6 +1,7 @@
 '''Module containing all available methods to convert a test result in a table
 to be converted in rst.
 '''
+from collections import OrderedDict
 import numpy as np
 from .. import LOGGER
 from ..cosette.task import TaskStatus
@@ -120,6 +121,8 @@ def post_treatment(templates, result):
         return templates
     for templ in templates:
         for splt in templ.subplots:
+            if splt.ptype not in ('1D', '2D'):
+                continue
             blimits = [trim_range(sc.bins) for sc in splt.curves]
             if all(not b[1] for a in blimits for b in a):
                 continue
@@ -393,9 +396,55 @@ def repr_testresultstatstests(result, _verbosity=None):
     return repr_testresultstats(result, TestOutcome.SUCCESS, 'Tests')
 
 
-def repr_testresultstatstestsperflags(_result, _verbosity=None):
-    '''Plot statistics on the tests classified per flags -> no plot done.
+def repr_statstestsby2labels(result):
+    '''Plot statistics on the tests classified by 2 labels.
 
-    :returns: empty list
+    Caution: the tests are summed over the second label, only the first one
+    will be written on the plot. This is for summaries.
+
+    :rtype: list(PlotTemplate)
     '''
-    return []
+    keys = sorted(set(res['labels'][0] for res in result.classify))
+    dok, dko = (OrderedDict([(k, 0) for k in keys]) for i in range(2))
+    for res in result.classify:
+        if res['KO'] == 0:
+            dok[res['labels'][0]] += 1
+        else:
+            dko[res['labels'][0]] += 1
+    labs = result.test.by_labels
+    yname = '# of {} in {}'.format(labs[1], labs[0])
+    curve_ok = CurveElements(np.array(list(dok.values())), bins=[keys],
+                             index=0, legend='OK')
+    curve_ko = CurveElements(np.array(list(dko.values())), bins=[keys],
+                             index=1, legend='KO')
+    sbpeb = SubPlotElements(curves=[curve_ok, curve_ko],
+                            axnames=[labs[0], yname], ptype='bar')
+    sbpebs = SubPlotElements(curves=[curve_ok, curve_ko],
+                             axnames=[labs[0], yname], ptype='barstack')
+    return [PlotTemplate(subplots=[sbpeb, sbpebs], small_subplots=False)]
+
+
+def repr_testresultstatstestsbylabels(result, _verbosity=None):
+    '''Plot statistics on the tests classified by labels if 1 or labels.
+
+    :rtype: list(PlotTemplate)
+    '''
+    if len(result.test.by_labels) > 2:
+        LOGGER.info('No plot for more than 2 labels.')
+        return []
+    if len(result.test.by_labels) == 2:
+        return repr_statstestsby2labels(result)
+    lok, lko, legs = ([] for i in range(3))
+    for res in result.classify:
+        lok.append(res['OK'])
+        lko.append(res['KO'])
+        legs.append(res['labels'][0])
+    curve_ok = CurveElements(np.array(lok), bins=[legs], index=0, legend='OK')
+    curve_ko = CurveElements(np.array(lko), bins=[legs], index=1, legend='KO')
+    sbpeb = SubPlotElements(curves=[curve_ok, curve_ko],
+                            axnames=[result.test.by_labels[0], '# of tests'],
+                            ptype='bar')
+    sbpebs = SubPlotElements(curves=[curve_ok, curve_ko],
+                             axnames=[result.test.by_labels[0], '# of tests'],
+                             ptype='barstack')
+    return [PlotTemplate(subplots=[sbpeb, sbpebs], small_subplots=False)]
