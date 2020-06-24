@@ -18,8 +18,8 @@ author = u'Ève Le Ménédeu, Davide Mancusi'
 author_email = u'davide.mancusi@cea.fr'
 copyright = u'2017-2019, ' + author
 
-test_deps = ['hypothesis[numpy]', 'pytest', 'pytest-cov', 'pytest-xdist',
-             'pytest-timeout', 'rstcheck', 'pytest-mpl']
+test_deps = ['pytest-runner', 'hypothesis[numpy]', 'pytest', 'pytest-cov',
+             'pytest-xdist', 'pytest-timeout', 'rstcheck', 'pytest-mpl']
 graphviz_deps = ['pydot']
 dev_deps = test_deps + graphviz_deps + ['flake8', 'pylint', 'sphinx',
                                         'sphinx_rtd_theme']
@@ -29,9 +29,9 @@ setup(name=name,
       author_email=author_email,
       url=r'http://',
       packages=find_packages(exclude=['doc', 'tests', 'tests.*']),
-      package_data={'': ['conf.py.template']},
+      package_data={'': ['conf.py.template', 'valjean.css']},
       python_requires='>=3.4',
-      setup_requires=['pytest-runner', 'setuptools_scm'],
+      setup_requires=['setuptools_scm'],
       install_requires=['pyparsing', 'numpy', 'scipy', 'matplotlib'],
       tests_require=test_deps,
       extras_require={
