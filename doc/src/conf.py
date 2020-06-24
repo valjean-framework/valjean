@@ -167,7 +167,7 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
     'pytest': ('https://docs.pytest.org/en/latest/', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'hypothesis': ('https://hypothesis.readthedocs.io/en/latest/', None),
     'virtualenvwrapper': (

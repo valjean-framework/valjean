@@ -33,9 +33,11 @@ This page contains a list of things that you should check before issuing a new
 
    Running `pytest` also runs doctests.  Make sure they all pass.
 
+#. :ref:`Build archives <distributing-code>` for the code and the documentation
+
 #. Test :ref:`package installation <package-installation>`, with and without
-   optional dependencies. Check the install/setup/tests/extras requirements:
-   are they up to date?
+   optional dependencies (``pip``, ``conda`` and documentation). Check the
+   install/setup/tests/extras requirements: are they up to date?
 
 #. Build the HTML documentation :ref:`in nitpicky mode <nitpicky-mode>`. Fix
    all the warnings, except the intentional ones.

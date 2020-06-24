@@ -1,3 +1,5 @@
+.. _building-documentation-dvpers:
+
 Building the documentation
 ==========================
 

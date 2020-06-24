@@ -1,3 +1,5 @@
+.. _building-documentation:
+
 Documentation
 =============
 
@@ -9,7 +11,10 @@ the sources of :mod:`valjean`, in the ``doc`` folder. You will find the
 documentation in reStructuredText in ``doc/src``, and the HTML version in
 ``doc/build/html/index.html``.
 
-If, for some reason, the HTML documentation is missing, you can generate it by
+You can also find it in the valjean package release on Tuleap under the
+*Fichiers* area in the valjean project.
+
+If, for some reason, the HTML documentation isl missing, you can generate it by
 running
 
 .. code-block:: bash

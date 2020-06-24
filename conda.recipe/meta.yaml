@@ -1,0 +1,32 @@
+package:
+  name: "valjean"
+  author: "Eve Le Ménédeu, Davide Mancusi"
+  version: {{ GIT_DESCRIBE_TAG }}
+
+source:
+  git_url: ../
+
+build:
+  number: {{ GIT_DESCRIBE_NUMBER }}
+  string: {{ GIT_BUILD_STR }}_py{{ PY_VER }}
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+  entry_points:
+    - valjean = valjean.cambronne.main:main
+
+
+requirements:
+  build:
+    - python {{PY_VER}},>=3.4
+    - setuptools
+    - setuptools_scm
+
+  run:
+    - python
+    - numpy
+    - pyparsing
+    - scipy
+    - matplotlib
+
+test:
+  imports:
+    - valjean
