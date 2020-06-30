@@ -85,7 +85,7 @@ def integrated_result(result, res_type='integrated', score='score'):
     LOGGER.debug("In integrated_result")
     intres = result[res_type] if res_type in result else result
     if isinstance(intres, dict) and 'not_converged' in intres:
-        return not_converged_result()
+        return nan_result()
     other_res = [x for x in result
                  if x != res_type and ('spectrum' in x or 'mesh' in x)]
     # if other_res:
@@ -126,7 +126,7 @@ def generic_score(result, res_type='generic'):
     LOGGER.debug("In generic_score")
     intres = result[res_type]
     if isinstance(intres, dict) and 'not_converged' in intres:
-        return not_converged_result()
+        return nan_result()
     if set(('sigma', 'sigma%')).issubset(intres):
         # used for mean weight leakage for example
         return BaseDataset(intres['score'].copy(), intres['sigma'].copy())
@@ -234,21 +234,19 @@ def value_wo_error(result, res_type):
     return BaseDataset(result[res_type], np.float_(np.nan))
 
 
-def not_converged_result():
-    '''Deals with not converged results return None instead of a dataset.
+def nan_result():
+    '''Returns a NaN :class:`~.base_dataset.BaseDataset` (value and error).
+
+    This :class:`~.base_dataset.BaseDataset` can be returned for example in
+    case of non converged results or when no dataset can be built.
+
+    Values are scalar per default, not arrays.
 
     :rtype: :class:`~.base_dataset.BaseDataset`
     :returns: dataset containing NaN as value and error
     '''
     LOGGER.warning('Result not converged, return dataset with NaN value')
     return BaseDataset(np.float_(np.nan), np.float_(np.nan))
-
-
-def not_available_result():
-    '''Deals with not available results (foreseen).
-    return None instead of a dataset.
-    '''
-    LOGGER.warning('Result not available, no dataset can be built')
 
 
 CONVERT_IN_DATASET = {
@@ -297,13 +295,13 @@ def convert_data(data, data_type, **kwargs):
     '''
     if data_type not in data:
         if 'not_converged' in data:
-            return not_converged_result()
+            return nan_result()
         LOGGER.warning("%s not found in data", data_type)
         return None
     if isinstance(data[data_type], str):
-        if 'not_converged' in data[data_type]:
-            return not_converged_result()
+        if 'not_converged' in data[data_type] or data_type == 'not_converged':
+            return nan_result()
         LOGGER.warning("Dataset cannot be built from a string.")
-        return None
+        return nan_result()
     return CONVERT_IN_DATASET.get(data_type, value_wo_error)(
         data, data_type, **kwargs)
