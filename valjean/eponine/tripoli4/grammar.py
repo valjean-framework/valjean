@@ -282,10 +282,11 @@ _scorevolvol_kw = Keyword("num of volume")
 _scorevolume_kw = Keyword("Volume in cm3")
 _scorevolumeint_kw = (Keyword("The result is integrated over the volume")
                       | Keyword("The result is integrated in volume"))
-_scorevolumenotint_kw = (Keyword("The volume has been provided by the user "
-                                "(the user requested a score per unit volume)")
-                         | Keyword("The volume has been calculated by "
-                                   "TRIPOLI-4 or provided by the user"))
+_scorevolumenotint_kw = (
+    Keyword("The volume has been provided by the user "
+            "(the user requested a score per unit volume)")
+    | Keyword("The volume has been calculated by TRIPOLI-4 "
+              "or provided by the user"))
 _scorevolsum_kw = Keyword("Volume Sum")
 _scorevolsumvol_kw = Keyword("num of volumes")
 _scorevolumesum_kw = Keyword("Total volume in cm3")
@@ -832,18 +833,22 @@ vovspectrumblock = Group(Group(_vovspectrum))('vov_spectrum_res')
 
 
 # Nu spectrum
+_nuspectrumunits = Group(Suppress(_units_kw)
+                         + Word(alphanums+'.^-+%') * 3)('units')
 _nuspectrumcols = Suppress(_nusprange_kw + _spscore_kw + _spsigma_kw)
 _nuspectrumvals = (Group(_spectrumbin + _fnums + _fnums)
                    .setFailAction(trans.fail_spectrum))
 _nuspectrum = (Suppress(_nuspectrum_kw)
                + _numdiscbatch
                + _nuspectrumcols
-               + Optional(_spectrumunits)
+               + Optional(_nuspectrumunits)
                + OneOrMore(_nuspectrumvals, stopOn=_endtable)('spectrum_vals'))
 nuspectrumblock = Group(Group(_nuspectrum + integratedres))('nu_spectrum_res')
 
 
 # ZA spectrum
+_zaspectrumunits = Group(Suppress(_units_kw)
+                         + Word(alphanums+'.^-+%') * 2)('units')
 _zaspectrumcols = Suppress(_zaspid_kw + _spscore_kw + _spsigma_kw)
 _zaspectrumbin = (Suppress('(') + _inums + Suppress(',')
                   + _inums + Suppress(')'))
@@ -852,7 +857,7 @@ _zaspectrumvals = (Group(_zaspectrumbin + _fnums + _fnums)
 _zaspectrum = (Suppress(_zaspectrum_kw)
                + _numdiscbatch
                + _zaspectrumcols
-               + Optional(_spectrumunits)
+               + Optional(_zaspectrumunits)
                + OneOrMore(_zaspectrumvals, stopOn=_endtable)('spectrum_vals'))
 zaspectrumblock = Group(Group(_zaspectrum + integratedres))('za_spectrum_res')
 

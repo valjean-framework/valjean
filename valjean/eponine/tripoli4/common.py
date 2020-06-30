@@ -1359,8 +1359,8 @@ def convert_za_spectrum(spectrum, colnames=('score', 'sigma')):
                 'bins': vals.bins,
                 'units': vals.units}
     if 'units' in spectrum[0]:
-        convspec['units']['score'] = spectrum[0]['units'][1]
-        convspec['units']['sigma'] = spectrum[0]['units'][2]
+        convspec['units']['score'] = spectrum[0]['units'][0]
+        convspec['units']['sigma'] = spectrum[0]['units'][1]
     if 'integrated_res' in spectrum[0]:
         convspec['integrated_array'] = vals.arrays['integrated_res']
     return convspec
