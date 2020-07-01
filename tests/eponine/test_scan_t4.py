@@ -757,9 +757,7 @@ def test_bad_response_name(datadir, caplog):
     t4p = T4Parser(str(datadir/"failure_test_bad_resp_name.d.res"))
     with pytest.raises(T4ParserException):
         t4p.parse_from_index(-1)
-        assert "Error in parsing" in caplog.text
-        assert ("corresponding to line: "
-                "'RESPONSE NAME : flux_@_neutron' in file" in caplog.text)
+    assert "Parsing error located at line: 12, col: 1" in caplog.text
 
 
 def test_no_normal_completion(datadir, caplog):

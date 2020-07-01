@@ -166,7 +166,7 @@ FIN_SIMULATION
 
 ******************************************************************************
 RESPONSE FUNCTION : FLUX
-RESPONSE NAME : flux_@_neutron
+RESPONSE NAME : flux neutron
 SCORE NAME : score
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
