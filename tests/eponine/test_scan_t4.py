@@ -677,6 +677,34 @@ def test_vov(datadir):
     assert list_resp[0]['scoring_zone_type'] == 'Point'
 
 
+def test_phemep_balance(datadir):
+    '''Use Tripoli-4 result from ELECTRON_PHOTON_BALANCE.d to test
+    photon-electron-positron balance.
+    '''
+    t4p = T4Parser(str(datadir/"ELECTRON_PHOTON_BALANCE.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert t4p.scan_res.phemep_balance
+    assert len(t4p.scan_res.phemep_balance) == 10
+    t4res = t4p.parse_from_index(batch_index=-1).to_response_book()
+    assert len(t4res) == 4
+    assert set(t4res.available_values('particle')) == {
+        'PHOTON', 'ELECTRON', 'POSITRON', 'CUMUL on all particles'}
+
+
+def test_homogenize_material(datadir):
+    '''Use Tripoli-4 result from angle.d to test the dump of homogenize
+    materials.
+    '''
+    t4p = T4Parser(str(datadir/"angle.d.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    assert t4p.scan_res.homog_mat
+    assert len(t4p.scan_res.homog_mat) == 2
+    t4res = t4p.parse_from_index(batch_index=-1).to_response_book()
+    assert len(t4res) == 17
+
+
 def test_empty_file(caplog):
     '''Test Tripoli-4 parsing on an empty file: this should fail.'''
     with open('empty_file.txt', 'w') as ofile:

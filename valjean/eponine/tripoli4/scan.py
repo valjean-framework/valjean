@@ -110,6 +110,60 @@ if 'profile' not in globals()['__builtins__']:
         return fmem
 
 
+class PhEmEpBalanceOutput:
+    '''Class to store photon-electron-positron balance.'''
+
+    def __init__(self):
+        self.content = []
+        self.in_phemep = False
+        self.count = 0
+
+    def _count(self, line):
+        if "Total" in line:
+            self.count += 1
+            if self.count == 3:
+                self.in_phemep = False
+
+    def add_line(self, line):
+        '''Add line to the photon electron positron output and counts.'''
+        self.content.append(line)
+        self._count(line)
+
+
+class HomogMatOutput:
+    '''Class to store the homogenized material output.'''
+
+    def __init__(self):
+        self.content = []
+        self.in_dump = False
+        self.nb_groups = 0
+        self.counting = False
+        self.nb_corr_lines = 0
+
+    def _count(self, line):
+        '''Count the number of bins for the homogenized material dump.'''
+        if self.counting:
+            if self.nb_corr_lines > 0:
+                self.nb_corr_lines += 1
+            elif line[0].isdigit():
+                self.nb_groups += 1
+        if 'dump total section :' in line:
+            self.counting = True
+        elif 'dump absorption section :' in line:
+            self.counting = False
+        elif "correlation between absorption and total cross section" in line:
+            self.nb_corr_lines += 1
+            self.counting = True
+        elif self.nb_corr_lines > self.nb_groups:
+            self.counting = False
+            self.in_dump = False
+
+    def add_line(self, line):
+        '''Add line to the homogenized material output and count.'''
+        self.content.append(line)
+        self._count(line)
+
+
 class BatchResultScanner:
     # pylint: disable=too-many-instance-attributes
     '''Class to build batchs collection.
@@ -141,6 +195,8 @@ class BatchResultScanner:
         self.in_mesh = False
         self.nb_mesh_lines = 0
         self.prev_line_mesh = False
+        self.phemep_balance = PhEmEpBalanceOutput()
+        self.homog_mat = HomogMatOutput()
 
     def add_meshline(self, line):
         '''Add mesh line to result if stop mesh is not reached.
@@ -182,6 +238,12 @@ class BatchResultScanner:
         elif "Results on a mesh" in line:
             self.in_mesh = True
             assert self.mesh_limit != 0
+        elif '#'*64 in line and not self.phemep_balance.in_phemep:
+            LOGGER.debug('phe+e- balance')
+            self.phemep_balance.in_phemep = True
+        elif "DUMP HOMOGENIZED MATERIAL" in line:
+            LOGGER.debug("In DUMP HOMOGENIZED MATERIAL")
+            self.homog_mat.in_dump = True
         if self.para and "number of batches used" in line:
             self._set_greater_batch_number(line)
         self._store_line(line)
@@ -189,6 +251,10 @@ class BatchResultScanner:
     def _store_line(self, line):
         if self.in_mesh:
             self.add_meshline(line)
+        elif self.phemep_balance.in_phemep:
+            self.phemep_balance.add_line(line)
+        elif self.homog_mat.in_dump:
+            self.homog_mat.add_line(line)
         else:
             self.result.append(line)
 
@@ -282,6 +348,14 @@ class T4Scan(Mapping):
         keep the random generator state (not included in the result as given
         after `endflag`)
 
+    `phemep_balance` (:class:`dict`)
+        keep the photon electron positron balance as :class:`str` indexed by
+        batch number
+
+    `homog_mat` (:class:`dict`)
+        keep the homogenized material dump as :class:`str` indexed by batch
+        number
+
 
     **Available methods:**
 
@@ -340,6 +414,8 @@ class T4Scan(Mapping):
         self.counterrors = 0
         self.times = OrderedDict()
         self.last_generator_state = ""
+        self.phemep_balance = {}
+        self.homog_mat = {}
         self._fatal_error = []
         self._collres = OrderedDict()
         self._get_collres()
@@ -405,6 +481,15 @@ class T4Scan(Mapping):
         elif "NORMAL COMPLETION" in line:
             self.normalend = True
 
+    def _additional_outputs(self, batch_scan):
+        bnum = batch_scan.batch_counts['number']
+        if batch_scan.phemep_balance.count == 3:
+            self.phemep_balance[bnum] = ''.join(
+                batch_scan.phemep_balance.content)
+        if (batch_scan.homog_mat.nb_corr_lines != 0
+                and not batch_scan.homog_mat.in_dump):
+            self.homog_mat[bnum] = ''.join(batch_scan.homog_mat.content)
+
     @profile
     def _get_collres(self):
         # pylint: disable=too-many-branches
@@ -432,6 +517,7 @@ class T4Scan(Mapping):
                         batch_number = _batch_scan.batch_counts['number']
                         self._collres[batch_number] = _batch_scan.get_result()
                         count_mesh_exceeding = _batch_scan.count_mesh_exceeding
+                        self._additional_outputs(_batch_scan)
                         _batch_scan = None
                         # ordered dictionary -> unique keys, so only last kept
                         self._add_time(end_flag, line)

@@ -1,0 +1,2815 @@
+
+=====================================================================
+
+=====================================================================
+$Id$
+ hostname: is234240
+ pid: 25429
+
+=====================================================================
+$Id$
+
+ HOSTNAME : is234240
+
+ PROCESS ID is : 25429
+
+ DATE : Sat Jun 27 04:03:07 2020
+
+ Version is $Name$.
+
+ git version is efd6f05318530bb0557f9c9a7d80d490d136c913 (DIRTY).
+
+=====================================================================
+
+ data filename = ../qualif/input/ELECTRON_PHOTON_BALANCE.d
+ catalogname = ../Env/t4path.ceav5
+ execution call = tripoli4 -R -s NJOY -c ../Env/t4path.ceav5 -a -d ../qualif/input/ELECTRON_PHOTON_BALANCE.d 
+
+
+ dictionary file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/ceav512.dictionary
+ mass file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/Standard_data/mass_rmd.mas95
+ Q fission directory : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/Qfission
+ electron cross section directory : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon
+ abondance file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/Standard_data/abundance
+ own evaluations directory : /home/tri4test/evals/testj
+ Warning: using format for dictionary with five columns: information on reading or computing the Q-values for energy deposition is provided
+
+  initializing geometry tables
+
+
+ 	 reading geometry : 
+
+  building connectivity map
+
+  building optimization tables for simple volumes
+
+
+ 	 checking association of compositions and volumes :  ok 
+
+
+LANG ENGLISH
+GEOMETRY
+TITLE check balance
+  TYPE 1 BOX 4 4 102
+  TYPE 2 BOX 1 1 100
+  TYPE 3 CYLZ 0.45 49
+
+  VOLU 1 COMBI 1 0 0 0 ENDV
+
+  VOLU 11 COMBI 2 -1 -1 0 SMASH 1 1 ENDV
+  VOLU 12 COMBI 2 0 -1 0 SMASH 1 1 ENDV
+  VOLU 13 COMBI 2 1 -1 0 SMASH 1 1 ENDV
+
+  VOLU 14 COMBI 2 -1 0 0 SMASH 1 1 ENDV
+  VOLU 15 COMBI 2 0 0 0 SMASH 1 1 ENDV
+  VOLU 16 COMBI 2 1 0 0 SMASH 1 1 ENDV
+
+  VOLU 17 COMBI 2 -1 1 0 SMASH 1 1 ENDV
+  VOLU 18 COMBI 2 0 1 0 SMASH 1 1 ENDV
+  VOLU 19 COMBI 2 1 1 0 SMASH 1 1 ENDV
+
+  VOLU 21 COMBI 3 -1 -1 0 SMASH 1 11 ENDV
+  VOLU 22 COMBI 3 0 -1 0  SMASH 1 12 ENDV
+  VOLU 23 COMBI 3 1 -1 0  SMASH 1 13 ENDV
+
+  VOLU 24 COMBI 3 -1 0 0  SMASH 1 14 ENDV
+  VOLU 25 COMBI 3 0 0 0   SMASH 1 15 ENDV
+  VOLU 26 COMBI 3 1 0 0   SMASH 1 16 ENDV
+
+  VOLU 27 COMBI 3 -1 1 0  SMASH 1 17 ENDV
+  VOLU 28 COMBI 3 0 1 0   SMASH 1 18 ENDV
+  VOLU 29 COMBI 3 1 1 0   SMASH 1 19 ENDV
+
+ENDGEOM 
+
+BOUNDARY_CONDITION 12
+11 REFLECTION 1
+11 REFLECTION 3
+12 REFLECTION 3
+13 REFLECTION 2
+13 REFLECTION 3
+14 REFLECTION 1
+16 REFLECTION 2
+17 REFLECTION 1
+17 REFLECTION 4
+18 REFLECTION 4
+19 REFLECTION 2
+19 REFLECTION 4
+END_BOUNDARY_CONDITION
+
+COMPOSITION 4
+
+POINT_WISE 624 GAINC 1
+ZR90   1.93E-02          
+
+POINT_WISE 300 VIDE 1
+O16   1.0E-15
+
+POINT_WISE 574 MODE 2
+H1_H2O 4.736E-02       
+O16    2.3684E-02        
+
+
+POINT_WISE 924 fuel_1_1_1 4
+U238   2.2694E-02
+U235   7.7229E-04
+U234   6.6523E-06
+O16    4.6945E-02
+
+END_COMPOSITION
+
+GEOMCOMP
+  VIDE 1 1
+  MODE 9 11 12 13 14 15 16 17 18 19
+  fuel_1_1_1 9 21 22 23 24 25 26 27 28 29
+END_GEOMCOMP
+
+SOURCES_LIST 1 
+   SOURCE 
+     PHOTON
+     FACTORIZED  FRAME CARTESIAN  0. 0. 0.
+                   1. 0. 0.
+                   0. 1. 0.
+                   0. 0. 1.
+
+     ALL_FISSILE_VOLUMES_INSIDE_MESH
+
+	 GEOMETRIC_DISTRIBUTION  TABULATED  TYPE F_U_V_W
+           VAR_U X 2 -1.89312 1.89312
+           VAR_V Y 2 -1.89312 1.89312
+           VAR_W Z 2 -50  50. 
+               F_U 1.   F_V 1. F_W 1.
+         ANGULAR_DISTRIBUTION ISOTROPIC
+         ENERGETIC_DISTRIBUTION SPECTRUM WATT_SPECTRUM 
+         TIME_DISTRIBUTION DIRAC 0.
+   END_SOURCES
+END_SOURCES_LIST
+
+GRID_LIST 1
+  DEC_1G 2 20. 1.E-11
+END_GRID_LIST
+
+RESPONSES 3
+  NAME edep_g
+    DEPOSITED_ENERGY PHOTON
+  NAME edep_e
+    DEPOSITED_ENERGY ELECTRON
+  NAME edep_p
+    DEPOSITED_ENERGY POSITRON
+END_RESPONSES
+
+SCORE 3
+  NAME edep_g_score
+    edep_g LOCAL_ENERGY_DEPOSITION GRID DEC_1G VOLUME SUM 18
+    11 12 13 14 15 16 17 18 19 21 22 23 24 25 26 27 28 29
+  NAME edep_e_score
+    edep_e LOCAL_ENERGY_DEPOSITION GRID DEC_1G VOLUME SUM 18
+    11 12 13 14 15 16 17 18 19 21 22 23 24 25 26 27 28 29
+  NAME edep_p_score
+    edep_p LOCAL_ENERGY_DEPOSITION GRID DEC_1G VOLUME SUM 18
+    11 12 13 14 15 16 17 18 19 21 22 23 24 25 26 27 28 29
+END_SCORE
+
+SIMULATION
+  
+  EDITION 1
+  BATCH 10
+  SIZE 1000
+  PARTICLE 3
+    PHOTON ELECTRON POSITRON
+  ELECTRON_PHOTON_BALANCE
+  MONITORING 0
+
+END_SIMULATION
+
+
+
+
+ data reading time (s): 0
+
+
+ data reading time (s): 0
+-- NJOY file format for evaluations --
+
+ reading material : 4000 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.Zr90.bcd
+
+
+ reading electron data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eedl.electron.Zr.bcd
+
+
+ reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br40
+
+
+ reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br40
+
+
+ reading atomic relaxation data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eadl.atom.Zr.bcd
+
+
+ reading material : 800 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.O16.bcd
+
+
+ reading electron data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eedl.electron.O.bcd
+
+
+ reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br8
+
+
+ reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br8
+
+
+ reading atomic relaxation data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eadl.atom.O.bcd
+
+
+ reading material : 100 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.H1_H2O.bcd
+
+
+ reading electron data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eedl.electron.H.bcd
+
+
+ reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br1
+
+
+ reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br1
+
+
+ reading atomic relaxation data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eadl.atom.H.bcd
+
+
+ reading material : 800 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.O16.bcd
+
+ reading material : 9200 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.U238.bcd
+
+
+ reading electron data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eedl.electron.U.bcd
+
+
+ reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br92
+
+
+ reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br92
+
+
+ reading atomic relaxation data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eadl.atom.U.bcd
+
+
+ reading material : 9200 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.U235.bcd
+
+ reading material : 9200 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.U234.bcd
+
+ reading material : 800 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.O16.bcd
+
+ Total concentration of material GAINC (1.E24at/cm3) is: 1.930000e-02
+
+
+ WARNING: material GAINC : microscopic electronic properties have been set to a conductor
+ Microscopic electronic property of material GAINC is conductor
+
+
+ Total concentration of material VIDE (1.E24at/cm3) is: 1.000000e-15
+
+
+ WARNING: material VIDE : microscopic electronic properties have been set to a gas
+ Microscopic electronic property of material VIDE is gas at standard temperature and pressure conditions
+
+
+ Total concentration of material MODE (1.E24at/cm3) is: 7.104400e-02
+
+
+ Microscopic electronic property of material MODE is nonpolarizable homogeneous solid
+
+
+ Total concentration of material fuel_1_1_1 (1.E24at/cm3) is: 7.041794e-02
+
+
+ Microscopic electronic property of material fuel_1_1_1 is nonpolarizable homogeneous solid
+
+Checked mean free path for particle type photon
+  in material GAINC
+  between 1.000000e-03 and 2.000000e+01 MeV
+  mean free path < transport precision (1.000000e-04 cm) approximately between 1.000000e-03 and 1.104654e-03 MeV
+Checked mean free path for particle type positron
+  in material GAINC
+  between 1.000000e-03 and 2.000000e+01 MeV
+  mean free path < transport precision (1.000000e-04 cm) approximately between 1.416748e-03 and 3.833159e-03 MeV
+Checked charged-particle step size for particle type electron
+  in material GAINC
+  between 1.000000e-03 and 2.000000e+01 MeV
+  charged-particle step size < transport precision (1.000000e-04 cm) approximately between 1.000000e-03 and 5.632102e-02 MeV
+Checked charged-particle step size for particle type positron
+  in material GAINC
+  between 1.000000e-03 and 2.000000e+01 MeV
+  charged-particle step size < transport precision (1.000000e-04 cm) approximately between 1.000000e-03 and 5.632102e-02 MeV
+Checked charged-particle step size for particle type electron
+  in material MODE
+  between 1.000000e-03 and 2.000000e+01 MeV
+  charged-particle step size < transport precision (1.000000e-04 cm) approximately between 1.000000e-03 and 3.424036e-02 MeV
+Checked charged-particle step size for particle type positron
+  in material MODE
+  between 1.000000e-03 and 2.000000e+01 MeV
+  charged-particle step size < transport precision (1.000000e-04 cm) approximately between 1.000000e-03 and 3.424036e-02 MeV
+Checked mean free path for particle type photon
+  in material fuel_1_1_1
+  between 1.000000e-03 and 2.000000e+01 MeV
+  mean free path < transport precision (1.000000e-04 cm) approximately between 1.000000e-03 and 2.705605e-03 MeV
+  mean free path < transport precision (1.000000e-04 cm) approximately between 3.647066e-03 and 4.677456e-03 MeV
+Checked mean free path for particle type electron
+  in material fuel_1_1_1
+  between 1.000000e-03 and 2.000000e+01 MeV
+  mean free path < transport precision (1.000000e-04 cm) approximately between 2.449277e-03 and 1.265535e-02 MeV
+Checked mean free path for particle type positron
+  in material fuel_1_1_1
+  between 1.000000e-03 and 2.000000e+01 MeV
+  mean free path < transport precision (1.000000e-04 cm) approximately between 1.104654e-03 and 1.623081e-02 MeV
+Checked charged-particle step size for particle type electron
+  in material fuel_1_1_1
+  between 1.000000e-03 and 2.000000e+01 MeV
+  charged-particle step size < transport precision (1.000000e-04 cm) approximately between 1.000000e-03 and 1.075579e-01 MeV
+Checked charged-particle step size for particle type positron
+  in material fuel_1_1_1
+  between 1.000000e-03 and 2.000000e+01 MeV
+  charged-particle step size < transport precision (1.000000e-04 cm) approximately between 1.000000e-03 and 1.130461e-01 MeV
+
+
+ Loading response functions ...
+ Constructing score  ...0
+ Constructing score  ...1
+ Constructing score  ...2
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 9.999997e-01
+
+		 Energetic density simulation intensity = 9.999857e-01
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 5.609812e+02
+
+		 Calculated source simulation intensity = 7.049397e+03
+
+		 Calculated source definition intensity = 7.049496e+03
+
+	         SIMULATION INTENSITY = 7.049397e+03   BIASED SIMULATION INTENSITY = 7.049397e+03
+
+   SUM OF SIMULATION INTENSITIES = 7.049397e+03
+
+   GLOBAL SIMULATION INTENSITY = 7.049397e+03
+
+   BIASED TOTAL SOURCE INTENSITY = 7.049397e+03
+
+
+ initialization time (s): 14
+
+
+ initialization time (s): 14
+
+
+ Type and parameters of random generator before batch 1 : 
+	 DRAND48_RANDOM 123 13 37  COUNTER	0
+
+
+ batch number : 1
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.300444e+00	 sigma_n : 9.468654e-03
+	 number of secondary particules: 125869
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 2.100000e+01	 sigma = 0.000000e+00	 sigma% = 0.000000e+00
+
+
+ Edition after batch number : 1
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.800007e+02	0.000000e+00	2.753834e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 1	7.800007e+02	0.000000e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.200677e+04	0.000000e+00	4.239056e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 1	1.200677e+04	0.000000e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.845393e+02	0.000000e+00	3.475969e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 1	9.845393e+02	0.000000e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.377131e+04	0.000000e+00	1.377131e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 1	1.377131e+04	0.000000e+00
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                             1000    1              1.9939                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                   5433    5.433          0.16602        
+ Rayleigh                            360    0.36           0.21409                360    0.36           0.21409        
+ Compton                            1351    1.351          0.59873               1351    1.351          1.2277         
+ Annihilation                        342    0.342          0.53741                                                     
+ Pair                                                                             171    0.171          3.9366         
+ Bremsstrahlung                     1855    1.855          0.083327                                                    
+ Fluorescence                       2428    2.428          0.054755                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                           21    0.021          1.9205         
+ Total                              7336    7.336          0.45681               7336    7.336          0.45681        
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                 121211    121.21         0.0009889      
+ Photoelectric                      2667    2.667          0.24017                                                     
+ Compton                            1351    1.351          0.62895                                                     
+ Mott                             102101    102.1          0.0051534                                                   
+ Bhabha                            13276    13.276         0.0055794                                                   
+ Pair                                171    0.171          1.513                                                       
+ Auger                              1645    1.645          0.010856                                                    
+ Inelastic Hard                                                                     0    0              0.004341       
+ Inelastic Soft                                                                     0    0              0.013059       
+ Bremsstrahlung Hard                                                                0    0              0.0011355      
+ Bremsstrahlung Soft                                                                0    0              3.9011E-06     
+ Leakage                                                                            0    0              0              
+ Total                            121211    121.21         0.019528            121211    121.21         0.019528       
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                     161    0.161          0.00093612     
+ Pair                                171    0.171          1.4017                                                      
+ Annihilation in flight                                                            10    0.01           0.90324        
+ Inelastic Hard                                                                     0    0              0.43317        
+ Inelastic Soft                                                                     0    0              0.81563        
+ Bremsstrahlung Hard                                                                0    0              0.099064       
+ Bremsstrahlung Soft                                                                0    0              0.00012649     
+ Leakage                                                                            0    0              0              
+ Total                               171    0.171          1.4017                 171    0.171          1.4017         
+
+
+
+
+
+
+
+ simulation time (s) : 2
+
+
+ Type and parameters of random generator before batch 2 : 
+	 DRAND48_RANDOM 9923 57224 14414  COUNTER	5092136
+
+
+ batch number : 2
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.301556e+00	 sigma_n : 9.497151e-03
+	 number of secondary particules: 130691
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 2.000000e+01	 sigma = 1.000000e+00	 sigma% = 5.000000e+00
+
+
+ Edition after batch number : 2
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.446251e+02	4.750794e+00	2.628939e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 2	7.446251e+02	4.750794e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.220751e+04	1.644392e+00	4.309928e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 2	1.220751e+04	1.644392e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.794316e+02	5.214923e-01	3.457936e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 2	9.794316e+02	5.214923e-01
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.393157e+04	1.150309e+00	1.393157e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 2	1.393157e+04	1.150309e+00
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                             2000    1              2.0187                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                  10904    5.452          0.16497        
+ Rayleigh                            712    0.356          0.22919                712    0.356          0.22919        
+ Compton                            2723    1.3615         0.61268               2723    1.3615         1.2655         
+ Annihilation                        670    0.335          0.52943                                                     
+ Pair                                                                             335    0.1675         3.879          
+ Bremsstrahlung                     3757    1.8785         0.081182                                                    
+ Fluorescence                       4852    2.426          0.054326                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                           40    0.02           2.1202         
+ Total                             14714    7.357          0.46161              14714    7.357          0.46161        
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                 247229    123.61         0.00098913     
+ Photoelectric                      5384    2.692          0.2389                                                      
+ Compton                            2723    1.3615         0.65281                                                     
+ Mott                             208858    104.43         0.0051478                                                   
+ Bhabha                            26546    13.273         0.005563                                                    
+ Pair                                335    0.1675         1.4587                                                      
+ Auger                              3383    1.6915         0.011146                                                    
+ Inelastic Hard                                                                     0    0              0.0043489      
+ Inelastic Soft                                                                     0    0              0.013016       
+ Bremsstrahlung Hard                                                                0    0              0.00111        
+ Bremsstrahlung Soft                                                                0    0              3.9007E-06     
+ Leakage                                                                            0    0              0              
+ Total                            247229    123.61         0.019468            247229    123.61         0.019468       
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                     321    0.1605         0.00094902     
+ Pair                                335    0.1675         1.3984                                                      
+ Annihilation in flight                                                            14    0.007          0.88204        
+ Inelastic Hard                                                                     0    0              0.44082        
+ Inelastic Soft                                                                     0    0              0.82834        
+ Bremsstrahlung Hard                                                                0    0              0.091304       
+ Bremsstrahlung Soft                                                                0    0              0.00012921     
+ Leakage                                                                            0    0              0              
+ Total                               335    0.1675         1.3984                 335    0.1675         1.3984         
+
+
+
+
+
+
+
+ simulation time (s) : 4
+
+
+ Type and parameters of random generator before batch 3 : 
+	 DRAND48_RANDOM 29098 1125 12785  COUNTER	10294081
+
+
+ batch number : 3
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.323593e+00	 sigma_n : 1.041406e-02
+	 number of secondary particules: 128183
+
+  optimizing geometry neighborhood
+
+  optimizing surface geometry neighborhood
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 1.933333e+01	 sigma = 8.819171e-01	 sigma% = 4.561640e+00
+
+
+ Edition after batch number : 3
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.366186e+02	2.978117e+00	2.600672e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 3	7.366186e+02	2.978117e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.222447e+04	9.581645e-01	4.315914e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 3	1.222447e+04	9.581645e-01
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.549183e+02	2.585568e+00	3.371390e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 3	9.549183e+02	2.585568e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.391601e+04	6.742172e-01	1.391601e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 3	1.391601e+04	6.742172e-01
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                             3000    1              2.0151                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                  16237    5.4123         0.16501        
+ Rayleigh                           1090    0.36333        0.24051               1090    0.36333        0.24051        
+ Compton                            4145    1.3817         0.61645               4145    1.3817         1.2734         
+ Annihilation                        990    0.33           0.53208                                                     
+ Pair                                                                             495    0.165          3.8187         
+ Bremsstrahlung                     5621    1.8737         0.080299                                                    
+ Fluorescence                       7178    2.3927         0.054489                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                           57    0.019          2.1435         
+ Total                             22024    7.3413         0.46458              22024    7.3413         0.46458        
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                 370857    123.62         0.00098901     
+ Photoelectric                      8030    2.6767         0.23893                                                     
+ Compton                            4145    1.3817         0.65694                                                     
+ Mott                             314470    104.82         0.0051368                                                   
+ Bhabha                            38638    12.879         0.0055237                                                   
+ Pair                                495    0.165          1.4174                                                      
+ Auger                              5080    1.6933         0.011032                                                    
+ Inelastic Hard                                                                     0    0              0.0043558      
+ Inelastic Soft                                                                     0    0              0.013035       
+ Bremsstrahlung Hard                                                                0    0              0.0011035      
+ Bremsstrahlung Soft                                                                0    0              3.9081E-06     
+ Leakage                                                                            1    0.00033333     1.022          
+ Total                            370858    123.62         0.01949             370858    123.62         0.01949        
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                     472    0.15733        0.00094367     
+ Pair                                495    0.165          1.3793                                                      
+ Annihilation in flight                                                            23    0.0076667      0.90751        
+ Inelastic Hard                                                                     0    0              0.43116        
+ Inelastic Soft                                                                     0    0              0.81986        
+ Bremsstrahlung Hard                                                                0    0              0.085056       
+ Bremsstrahlung Soft                                                                0    0              0.00012607     
+ Leakage                                                                            0    0              0              
+ Total                               495    0.165          1.3793                 495    0.165          1.3793         
+
+
+
+
+
+
+
+ simulation time (s) : 7
+
+
+ Type and parameters of random generator before batch 4 : 
+	 DRAND48_RANDOM 58878 3294 45753  COUNTER	15474421
+
+
+ batch number : 4
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.300819e+00	 sigma_n : 9.776201e-03
+	 number of secondary particules: 129840
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 2.050000e+01	 sigma = 1.322876e+00	 sigma% = 6.453052e+00
+
+
+ Edition after batch number : 4
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.405195e+02	2.159972e+00	2.614444e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 4	7.405195e+02	2.159972e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.223045e+04	6.789552e-01	4.318025e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 4	1.223045e+04	6.789552e-01
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.922293e+02	4.151619e+00	3.503119e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 4	9.922293e+02	4.151619e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.396320e+04	5.830669e-01	1.396320e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 4	1.396320e+04	5.830669e-01
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                             4000    1              2.0235                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                  21772    5.443          0.16452        
+ Rayleigh                           1460    0.365          0.2415                1460    0.365          0.2415         
+ Compton                            5526    1.3815         0.61357               5526    1.3815         1.2672         
+ Annihilation                       1354    0.3385         0.52833                                                     
+ Pair                                                                             677    0.16925        3.8177         
+ Bremsstrahlung                     7532    1.883          0.081408                                                    
+ Fluorescence                       9644    2.411          0.054536                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                           81    0.02025        2.0968         
+ Total                             29516    7.379          0.46387              29516    7.379          0.46387        
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                 495899    123.97         0.00098907     
+ Photoelectric                     10755    2.6888         0.23809                                                     
+ Compton                            5526    1.3815         0.65366                                                     
+ Mott                             418342    104.59         0.0051479                                                   
+ Bhabha                            53814    13.454         0.0055748                                                   
+ Pair                                677    0.16925        1.3968                                                      
+ Auger                              6786    1.6965         0.011055                                                    
+ Inelastic Hard                                                                     0    0              0.0043428      
+ Inelastic Soft                                                                     0    0              0.013002       
+ Bremsstrahlung Hard                                                                0    0              0.0011141      
+ Bremsstrahlung Soft                                                                0    0              3.8966E-06     
+ Leakage                                                                            1    0.00025        1.022          
+ Total                            495900    123.97         0.019454            495900    123.97         0.019454       
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                     651    0.16275        0.00094931     
+ Pair                                677    0.16925        1.399                                                       
+ Annihilation in flight                                                            26    0.0065         0.90265        
+ Inelastic Hard                                                                     0    0              0.44313        
+ Inelastic Soft                                                                     0    0              0.83049        
+ Bremsstrahlung Hard                                                                0    0              0.089619       
+ Bremsstrahlung Soft                                                                0    0              0.00012871     
+ Leakage                                                                            0    0              0              
+ Total                               677    0.16925        1.399                  677    0.16925        1.399          
+
+
+
+
+
+
+
+ simulation time (s) : 9
+
+
+ Type and parameters of random generator before batch 5 : 
+	 DRAND48_RANDOM 14481 3205 63941  COUNTER	20630998
+
+
+ batch number : 5
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.299672e+00	 sigma_n : 9.536957e-03
+	 number of secondary particules: 131165
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 1.980000e+01	 sigma = 1.240967e+00	 sigma% = 6.267512e+00
+
+
+ Edition after batch number : 5
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.485638e+02	1.973399e+00	2.642845e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 5	7.485638e+02	1.973399e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.228719e+04	6.980719e-01	4.338058e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 5	1.228719e+04	6.980719e-01
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.705227e+02	3.976387e+00	3.426483e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 5	9.705227e+02	3.976387e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.400628e+04	5.452835e-01	1.400628e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 5	1.400628e+04	5.452835e-01
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                             5000    1              2.0284                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                  27387    5.4774         0.16448        
+ Rayleigh                           1867    0.3734         0.23905               1867    0.3734         0.23905        
+ Compton                            6871    1.3742         0.6131                6871    1.3742         1.2789         
+ Annihilation                       1678    0.3356         0.53076                                                     
+ Pair                                                                             839    0.1678         3.811          
+ Bremsstrahlung                     9586    1.9172         0.082729                                                    
+ Fluorescence                      12059    2.4118         0.054518                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                           97    0.0194         2.1257         
+ Total                             37061    7.4122         0.46254              37061    7.4122         0.46254        
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                 622247    124.45         0.00098902     
+ Photoelectric                     13489    2.6978         0.23884                                                     
+ Compton                            6871    1.3742         0.66582                                                     
+ Mott                             526568    105.31         0.0051861                                                   
+ Bhabha                            65909    13.182         0.0055771                                                   
+ Pair                                839    0.1678         1.3923                                                      
+ Auger                              8573    1.7146         0.011032                                                    
+ Inelastic Hard                                                                     0    0              0.0043887      
+ Inelastic Soft                                                                     0    0              0.013013       
+ Bremsstrahlung Hard                                                                0    0              0.0011414      
+ Bremsstrahlung Soft                                                                0    0              3.9048E-06     
+ Leakage                                                                            2    0.0004         0.77309        
+ Total                            622249    124.45         0.019538            622249    124.45         0.019538       
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                     804    0.1608         0.00095003     
+ Pair                                839    0.1678         1.3967                                                      
+ Annihilation in flight                                                            35    0.007          0.94736        
+ Inelastic Hard                                                                     0    0              0.43812        
+ Inelastic Soft                                                                     0    0              0.81934        
+ Bremsstrahlung Hard                                                                0    0              0.098699       
+ Bremsstrahlung Soft                                                                0    0              0.00012702     
+ Leakage                                                                            0    0              0              
+ Total                               839    0.1678         1.3967                 839    0.1678         1.3967         
+
+
+
+
+
+
+
+ simulation time (s) : 12
+
+
+ Type and parameters of random generator before batch 6 : 
+	 DRAND48_RANDOM 15696 63562 46077  COUNTER	25860639
+
+
+ batch number : 6
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.307095e+00	 sigma_n : 9.804725e-03
+	 number of secondary particules: 133782
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 1.966667e+01	 sigma = 1.021981e+00	 sigma% = 5.196512e+00
+
+
+ Edition after batch number : 6
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.452728e+02	1.677554e+00	2.631226e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 6	7.452728e+02	1.677554e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.234672e+04	7.444768e-01	4.359077e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 6	1.234672e+04	7.444768e-01
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.876439e+02	3.630971e+00	3.486930e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 6	9.876439e+02	3.630971e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.407964e+04	6.838646e-01	1.407964e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 6	1.407964e+04	6.838646e-01
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                             6000    1              2.0379                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                  32869    5.4782         0.16487        
+ Rayleigh                           2235    0.3725         0.23812               2235    0.3725         0.23812        
+ Compton                            8262    1.377          0.61437               8262    1.377          1.2807         
+ Annihilation                       2008    0.33467        0.529                                                       
+ Pair                                                                            1004    0.16733        3.8458         
+ Bremsstrahlung                    11452    1.9087         0.082829                                                    
+ Fluorescence                      14529    2.4215         0.054345                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                          116    0.019333       2.0877         
+ Total                             44486    7.4143         0.46387              44486    7.4143         0.46387        
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                 751323    125.22         0.00098895     
+ Photoelectric                     16195    2.6992         0.23963                                                     
+ Compton                            8262    1.377          0.66635                                                     
+ Mott                             635244    105.87         0.0051782                                                   
+ Bhabha                            80340    13.39          0.0055767                                                   
+ Pair                               1004    0.16733        1.4117                                                      
+ Auger                             10280    1.7133         0.011114                                                    
+ Inelastic Hard                                                                     0    0              0.0043781      
+ Inelastic Soft                                                                     0    0              0.012994       
+ Bremsstrahlung Hard                                                                0    0              0.0011387      
+ Bremsstrahlung Soft                                                                0    0              3.8951E-06     
+ Leakage                                                                            2    0.00033333     0.77309        
+ Total                            751325    125.22         0.019506            751325    125.22         0.019506       
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                     963    0.1605         0.00095429     
+ Pair                               1004    0.16733        1.4121                                                      
+ Annihilation in flight                                                            41    0.0068333      0.88149        
+ Inelastic Hard                                                                     0    0              0.44624        
+ Inelastic Soft                                                                     0    0              0.83614        
+ Bremsstrahlung Hard                                                                0    0              0.092668       
+ Bremsstrahlung Soft                                                                0    0              0.00012968     
+ Leakage                                                                            0    0              0              
+ Total                              1004    0.16733        1.4121                1004    0.16733        1.4121         
+
+
+
+
+
+
+
+ simulation time (s) : 14
+
+
+ Type and parameters of random generator before batch 7 : 
+	 DRAND48_RANDOM 31858 17415 22273  COUNTER	31186057
+
+
+ batch number : 7
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.301825e+00	 sigma_n : 9.598301e-03
+	 number of secondary particules: 131458
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 1.971429e+01	 sigma = 8.650430e-01	 sigma% = 4.387899e+00
+
+
+ Edition after batch number : 7
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.507819e+02	1.587193e+00	2.650676e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 7	7.507819e+02	1.587193e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.238459e+04	6.978240e-01	4.372446e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 7	1.238459e+04	6.978240e-01
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.724377e+02	3.486995e+00	3.433244e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 7	9.724377e+02	3.486995e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.410781e+04	6.103990e-01	1.410781e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 7	1.410781e+04	6.103990e-01
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                             7000    1              2.0415                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                  38439    5.4913         0.1649         
+ Rayleigh                           2616    0.37371        0.23535               2616    0.37371        0.23535        
+ Compton                            9636    1.3766         0.6189                9636    1.3766         1.2898         
+ Annihilation                       2342    0.33457        0.52994                                                     
+ Pair                                                                            1171    0.16729        3.8212         
+ Bremsstrahlung                    13438    1.9197         0.082205                                                    
+ Fluorescence                      16964    2.4234         0.054268                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                          134    0.019143       2.08           
+ Total                             51996    7.428          0.4642               51996    7.428          0.4642         
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                 877978    125.43         0.00098895     
+ Photoelectric                     18902    2.7003         0.24017                                                     
+ Compton                            9636    1.3766         0.67093                                                     
+ Mott                             744204    106.31         0.0051797                                                   
+ Bhabha                            92087    13.155         0.0056336                                                   
+ Pair                               1171    0.16729        1.4047                                                      
+ Auger                             11982    1.7117         0.011085                                                    
+ Inelastic Hard                                                                     0    0              0.0043905      
+ Inelastic Soft                                                                     0    0              0.013014       
+ Bremsstrahlung Hard                                                                0    0              0.0011394      
+ Bremsstrahlung Soft                                                                0    0              3.9007E-06     
+ Leakage                                                                            4    0.00057143     0.7466         
+ Total                            877982    125.43         0.01954             877982    125.43         0.01954        
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                    1118    0.15971        0.00095487     
+ Pair                               1171    0.16729        1.3945                                                      
+ Annihilation in flight                                                            53    0.0075714      0.83706        
+ Inelastic Hard                                                                     0    0              0.44303        
+ Inelastic Soft                                                                     0    0              0.82349        
+ Bremsstrahlung Hard                                                                0    0              0.089062       
+ Bremsstrahlung Soft                                                                0    0              0.00012774     
+ Leakage                                                                            0    0              0              
+ Total                              1171    0.16729        1.3945                1171    0.16729        1.3945         
+
+
+
+
+
+
+
+ simulation time (s) : 17
+
+
+ Type and parameters of random generator before batch 8 : 
+	 DRAND48_RANDOM 44986 35867 54697  COUNTER	36472145
+
+
+ batch number : 8
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.321869e+00	 sigma_n : 1.012638e-02
+	 number of secondary particules: 124711
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 1.975000e+01	 sigma = 7.500000e-01	 sigma% = 3.797468e+00
+
+
+ Edition after batch number : 8
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.502053e+02	1.377752e+00	2.648640e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 8	7.502053e+02	1.377752e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.233657e+04	7.208418e-01	4.355491e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 8	1.233657e+04	7.208418e-01
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.523194e+02	3.737865e+00	3.362215e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 8	9.523194e+02	3.737865e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.403909e+04	7.223440e-01	1.403909e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 8	1.403909e+04	7.223440e-01
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                             8000    1              2.0303                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                  43708    5.4635         0.16574        
+ Rayleigh                           3022    0.37775        0.23377               3022    0.37775        0.23377        
+ Compton                           11000    1.375          0.62066              11000    1.375          1.2904         
+ Annihilation                       2638    0.32975        0.53058                                                     
+ Pair                                                                            1319    0.16487        3.8082         
+ Bremsstrahlung                    15285    1.9106         0.082016                                                    
+ Fluorescence                      19258    2.4072         0.054318                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                          154    0.01925        1.996          
+ Total                             59203    7.4004         0.46409              59203    7.4004         0.46409        
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                 998234    124.78         0.00098892     
+ Photoelectric                     21493    2.6866         0.24173                                                     
+ Compton                           11000    1.375          0.66977                                                     
+ Mott                             847741    105.97         0.0051819                                                   
+ Bhabha                           103094    12.887         0.0056488                                                   
+ Pair                               1319    0.16487        1.3998                                                      
+ Auger                             13591    1.6989         0.011122                                                    
+ Inelastic Hard                                                                     0    0              0.0044007      
+ Inelastic Soft                                                                     0    0              0.013032       
+ Bremsstrahlung Hard                                                                0    0              0.0011417      
+ Bremsstrahlung Soft                                                                0    0              3.9038E-06     
+ Leakage                                                                            4    0.0005         0.7466         
+ Total                            998238    124.78         0.01957             998238    124.78         0.01957        
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                    1258    0.15725        0.00095185     
+ Pair                               1319    0.16487        1.3864                                                      
+ Annihilation in flight                                                            61    0.007625       0.84679        
+ Inelastic Hard                                                                     0    0              0.44152        
+ Inelastic Soft                                                                     0    0              0.81824        
+ Bremsstrahlung Hard                                                                0    0              0.086404       
+ Bremsstrahlung Soft                                                                0    0              0.00012675     
+ Leakage                                                                            0    0              0              
+ Total                              1319    0.16487        1.3864                1319    0.16487        1.3864         
+
+
+
+
+
+
+
+ simulation time (s) : 19
+
+
+ Type and parameters of random generator before batch 9 : 
+	 DRAND48_RANDOM 33456 55453 13639  COUNTER	41523839
+
+
+ batch number : 9
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.317668e+00	 sigma_n : 9.818545e-03
+	 number of secondary particules: 132199
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 1.988889e+01	 sigma = 6.758625e-01	 sigma% = 3.398191e+00
+
+
+ Edition after batch number : 9
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.537584e+02	1.297957e+00	2.661185e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 9	7.537584e+02	1.297957e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.236938e+04	6.873100e-01	4.367077e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 9	1.236938e+04	6.873100e-01
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.549562e+02	3.298960e+00	3.371524e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 9	9.549562e+02	3.298960e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.407810e+04	6.930792e-01	1.407810e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 9	1.407810e+04	6.930792e-01
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                             9000    1              2.0352                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                  49257    5.473          0.16502        
+ Rayleigh                           3404    0.37822        0.23614               3404    0.37822        0.23614        
+ Compton                           12464    1.3849         0.62322              12464    1.3849         1.2905         
+ Annihilation                       2988    0.332          0.53289                                                     
+ Pair                                                                            1494    0.166          3.8175         
+ Bremsstrahlung                    17213    1.9126         0.081503                                                    
+ Fluorescence                      21725    2.4139         0.054195                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                          175    0.019444       1.9462         
+ Total                             66794    7.4216         0.46503              66794    7.4216         0.46503        
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                1125639    125.07         0.00098898     
+ Photoelectric                     24189    2.6877         0.24059                                                     
+ Compton                           12464    1.3849         0.66732                                                     
+ Mott                             955783    106.2          0.005184                                                    
+ Bhabha                           116462    12.94          0.005649                                                    
+ Pair                               1494    0.166          1.413                                                       
+ Auger                             15251    1.6946         0.011081                                                    
+ Inelastic Hard                                                                     0    0              0.0044018      
+ Inelastic Soft                                                                     0    0              0.013037       
+ Bremsstrahlung Hard                                                                0    0              0.0011369      
+ Bremsstrahlung Soft                                                                0    0              3.906E-06      
+ Leakage                                                                            4    0.00044444     0.7466         
+ Total                           1125643    125.07         0.019571           1125643    125.07         0.019571       
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                    1423    0.15811        0.00095211     
+ Pair                               1494    0.166          1.3825                                                      
+ Annihilation in flight                                                            71    0.0078889      0.92135        
+ Inelastic Hard                                                                     0    0              0.44036        
+ Inelastic Soft                                                                     0    0              0.81495        
+ Bremsstrahlung Hard                                                                0    0              0.082413       
+ Bremsstrahlung Soft                                                                0    0              0.00012624     
+ Leakage                                                                            0    0              0              
+ Total                              1494    0.166          1.3825                1494    0.166          1.3825         
+
+
+
+
+
+
+
+ simulation time (s) : 21
+
+
+ Type and parameters of random generator before batch 10 : 
+	 DRAND48_RANDOM 45546 60704 44382  COUNTER	46812033
+
+
+ batch number : 10
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per photon history: 1.296439e+00	 sigma_n : 9.503310e-03
+	 number of secondary particules: 126133
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 7.049397e+03
+*********************************************************
+
+
+ Mean weight leakage = 1.960000e+01	 sigma = 6.699917e-01	 sigma% = 3.418325e+00
+
+
+ Edition after batch number : 10
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_g
+SCORE NAME : edep_g_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : PHOTON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	7.518218e+02	1.192080e+00	2.654347e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	7.518218e+02	1.192080e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_e
+SCORE NAME : edep_e_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : ELECTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	1.234121e+04	6.570705e-01	4.357132e+02
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	1.234121e+04	6.570705e-01
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : DEPOSITED_ENERGY
+RESPONSE NAME : edep_p
+SCORE NAME : edep_p_score
+ENERGY DECOUPAGE NAME : DEC_1G
+
+
+ PARTICULE : POSITRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Volume Sum 	 num of volumes : 
+		11+12+13+14+15+16+17+18+19+21+22+
+		23+24+25+26+27+28+29	 Total volume in cm3: 1.000000e+00
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.000000e-11	9.468623e+02	3.096241e+00	3.342948e+01
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	9.468623e+02	3.096241e+00
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : TOTAL ENERGY RELEASED
+ENERGY DECOUPAGE NAME : ALL_ENERGY
+
+
+ PARTICULE : CUMUL on all particles 
+******************************************************************************
+
+	 scoring mode : LOCAL_ENERGY_DEPOSITION
+	 scoring zone : 	 Results cumulated on all geometry
+
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+0.000000e+00 - 1.000000e+30	1.403990e+04	6.785332e-01	1.403990e-31
+
+	 ENERGY INTEGRATED RESULTS
+
+	 number of first discarded batches : 0
+
+number of batches used: 10	1.403990e+04	6.785332e-01
+
+
+
+
+				#################################################################
+				#                                                               #
+				#                   PHOTON ELECTRON POSITRON BALANCE            #
+				#                                                               #
+				#################################################################
+
+                                                                     PHOTON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                            10000    1              2.0292                                                      
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                      0    0              0              
+ Photoelectric                                                                  54817    5.4817         0.16484        
+ Rayleigh                           3778    0.3778         0.23723               3778    0.3778         0.23723        
+ Compton                           13804    1.3804         0.62261              13804    1.3804         1.2904         
+ Annihilation                       3292    0.3292         0.53282                                                     
+ Pair                                                                            1646    0.1646         3.8221         
+ Bremsstrahlung                    19182    1.9182         0.081418                                                    
+ Fluorescence                      24180    2.418          0.054154                                                    
+ Photonuclear                                                                       0    0              0              
+ (n,xg)                                0    0              0                                                           
+ Leakage                                                                          191    0.0191         1.9485         
+ Total                             74236    7.4236         0.46349              74236    7.4236         0.46349        
+
+
+                                                                     ELECTRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Energy Cutoff                                                                1247026    124.7          0.00098895     
+ Photoelectric                     26880    2.688          0.24077                                                     
+ Compton                           13804    1.3804         0.66775                                                     
+ Mott                            1059335    105.93         0.0051793                                                   
+ Bhabha                           128390    12.839         0.0056619                                                   
+ Pair                               1646    0.1646         1.4181                                                      
+ Auger                             16976    1.6976         0.011077                                                    
+ Inelastic Hard                                                                     0    0              0.0043998      
+ Inelastic Soft                                                                     0    0              0.013046       
+ Bremsstrahlung Hard                                                                0    0              0.0011457      
+ Bremsstrahlung Soft                                                                0    0              3.9076E-06     
+ Leakage                                                                            5    0.0005         0.62525        
+ Total                           1247031    124.7          0.019587           1247031    124.7          0.019587       
+
+
+                                                                     POSITRON
+                                                 Creation                                     Destruction
+                                   track         weight     av. energy          track         weight     av. energy
+                                  number       (per source)   (MeV)            number       (per source)    (MeV)
+ Source                                0    0              0                                                           
+ Russian Roulette/Splitting            0    0              0                        0    0              0              
+ Ene. Cutoff + Annhi. at rest                                                    1569    0.1569         0.00095449     
+ Pair                               1646    0.1646         1.382                                                       
+ Annihilation in flight                                                            77    0.0077         0.93278        
+ Inelastic Hard                                                                     0    0              0.44163        
+ Inelastic Soft                                                                     0    0              0.81491        
+ Bremsstrahlung Hard                                                                0    0              0.080817       
+ Bremsstrahlung Soft                                                                0    0              0.00012633     
+ Leakage                                                                            0    0              0              
+ Total                              1646    0.1646         1.382                 1646    0.1646         1.382          
+
+
+
+
+
+
+
+ simulation time (s) : 24
+
+
+ Type and parameters of random generator at the end of simulation: 
+	 DRAND48_RANDOM 51239 41174 2780  COUNTER	51859868
+
+
+ simulation time (s): 24
+
+
+=====================================================================
+	NORMAL COMPLETION
+=====================================================================
