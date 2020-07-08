@@ -13,4 +13,4 @@ suite of the `TRIPOLI-4®`_ Monte-Carlo particle-transport code. It includes a
 parser for TRIPOLI-4 calculation results, but its aim is to be more broadly
 useful to the whole community of scientific computing.
 
-.. _TRIPOLI-4®: http://www.cea.fr/nucleaire/tripoli-4/
+.. _TRIPOLI-4®: http://www.cea.fr/energies/tripoli-4/
