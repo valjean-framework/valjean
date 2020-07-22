@@ -1,0 +1,6 @@
+config:
+  build_stage:
+    - /volatile/$user/spack/stage
+    - ~/.spack/stage
+    - $spack/var/spack/stage
+    - $tempdir/$user/spack-stage

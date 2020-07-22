@@ -1,0 +1,7 @@
+hypothesis[numpy]
+pytest
+pytest-cov
+pytest-mpl
+pytest-timeout
+pytest-xdist
+rstcheck

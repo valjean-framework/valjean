@@ -1,0 +1,73 @@
+#!/bin/bash
+
+function help {
+  >&2 echo "Syntax: new_spack_env [--suffix SUFFIX] [VERSION [VERSION...]]"
+}
+
+function error_spack_root {
+  >&2 echo "Error: the VALJEAN_SPACK_ROOT environment variable must be defined and point to the root of a spack installation."
+}
+
+if [ ! -d "${VALJEAN_SPACK_ROOT}" ]; then
+  error_spack_root
+  exit 2
+fi
+
+OPTIONS=$(getopt -n new_spack_env -o '' -l suffix:,no-miniconda -- "$@")
+if [ $? -ne 0 ]; then
+  help
+  exit 1
+fi
+
+MINICONDA=y
+
+eval set -- "$OPTIONS"
+while true; do
+  case "$1" in
+    --suffix)
+      shift
+      SUFFIX=$1
+      ;;
+    --no-miniconda)
+      MINICONDA=n
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+  shift
+done
+
+PY_VERSIONS=$@
+
+source ${VALJEAN_SPACK_ROOT}/share/spack/setup-env.sh
+spack compiler find
+spack install environment-modules target=x86_64
+
+# generate a sanitized environment name (only letters, digits, - and _ allowed)
+ENV_NAME=$(spack arch -o)
+if [ "x${SUFFIX}" != x ]; then
+  ENV_NAME="${ENV_NAME}-${SUFFIX}"
+fi
+ENV_NAME=$(echo "${ENV_NAME}" | tr -d '\n' | tr -c '[:alnum:]_-' _)
+
+echo "creating env ${ENV_NAME}..."
+spack env create --without-view "${ENV_NAME}"
+spack env activate --without-view "${ENV_NAME}"
+for py_version in ${PY_VERSIONS}; do
+  spack add python@${py_version} target=x86_64
+done
+if [ "x${MINICONDA}" = xy ]; then
+  spack add miniconda3 target=x86_64
+fi
+spack install -y
+
+# generate module files
+ENV_ROOT=${VALJEAN_SPACK_ROOT}/var/spack/environments/${ENV_NAME}
+for py_version in ${PY_VERSIONS}; do
+  spack module tcl loads python@${py_version} >"${ENV_ROOT}/modules-python@${py_version}"
+done
+if [ "x${MINICONDA}" = xy ]; then
+  spack module tcl loads miniconda >"${ENV_ROOT}/modules-miniconda"
+fi

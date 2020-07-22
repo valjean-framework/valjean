@@ -1,0 +1,129 @@
+def notifyTuleap(boolean success) {
+  String statusTag = "failure"
+  if (success) {
+    statusTag = "success"
+  }
+  REPO_ID=704  // central repository
+  withCredentials([string(credentialsId: "ci-token-${REPO_ID}", variable: 'token')]) {
+    sh """
+       cd ${SRC}
+       rev="\$(git rev-parse HEAD)"
+       curl -k "https://codev-tuleap.intra.cea.fr/api/git/${REPO_ID}/statuses/\$rev" \
+       -X POST \
+       -H 'Content-Type: application/json' \
+       -H 'Accept: application/json' \
+       --data-binary "{ \\"state\\": \\"$statusTag\\", \\"token\\": \\"$token\\"}"
+       """
+  }
+}
+
+pipeline {
+  options {
+    skipDefaultCheckout()
+    timestamps()
+    timeout(time: 1, unit: 'HOURS')
+  }
+
+  agent { label 'valjean' }
+
+  environment {
+    projectName = 'valjean'
+    SRC = "${env.WORKSPACE}/src"
+    TOX_VENV = "${env.WORKSPACE}/tox/venv"
+    TOX = "tox --workdir \"${REPORTS}\""
+    REPORTS = "${env.WORKSPACE}/tox/work"
+    MPLCONFIGDIR = "${env.WORKSPACE}/tox/matplotlib"
+  }
+
+  stages {
+    stage('Setup') {
+      steps {
+        cleanWs()
+        sh """mkdir -p ${REPORTS}"""
+        dir("${SRC}") {
+          checkout scm
+        }
+        withFolderProperties {
+          echo "Starting build ${env.BUILD_ID} on ${env.JENKINS_URL}..."
+          sh """#!/bin/bash
+          if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+            source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+          fi
+          python3 -m venv "${TOX_VENV}"
+          source "${TOX_VENV}/bin/activate"
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install tox
+          """
+        }
+      }
+    }
+    stage('Build and check HTML doc') {
+      steps {
+        echo 'Building and checking documentation...'
+        dir("${SRC}") {
+          sh """
+              source "${TOX_VENV}/bin/activate"
+              ${TOX} -e docs
+              """
+        }
+      }
+    }
+    stage('Lint') {
+      steps {
+        echo 'Linting...'
+        dir("${SRC}") {
+          sh """
+              source "${TOX_VENV}/bin/activate"
+              ${TOX} -e linting valjean/ tests/ | tee "${REPORTS}/linting.out"
+              """
+        }
+      }
+    }
+    stage('Run unit tests') {
+      steps {
+        withFolderProperties {
+          echo 'Running unit tests...'
+          dir("${SRC}") {
+            sh """#!/bin/bash
+                if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                  source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+                fi
+                source "${TOX_VENV}/bin/activate"
+                TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 valjean/ tests/ | tee "${REPORTS}/testing.out"
+                """
+          }
+        }
+      }
+    }
+  }
+  post {
+    success {
+        notifyTuleap(true)
+    }
+    failure {
+        notifyTuleap(false)
+    }
+    always {
+      dir("${REPORTS}") {
+        recordIssues (referenceJobName: 'valjean/reference/master',
+                      enabledForFailure: true,
+                      sourceDirectory: "${SRC}",
+                      tools: [pep8(pattern: "linting.out", reportEncoding: 'UTF-8'),
+                              pyLint(pattern: "linting.out", reportEncoding: 'UTF-8'),
+                              sphinxBuild(pattern: "sphinx-*.out,doc/linkcheck/output.txt", reportEncoding: 'UTF-8')])
+        archiveArtifacts artifacts: "*.out", fingerprint: true
+        archiveArtifacts artifacts: "distshare/valjean*.zip", fingerprint: true
+        cobertura (autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'coverage-*.xml',
+                   failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false,
+                   sourceEncoding: 'UTF_8', zoomCoverageChart: false)
+        publishHTML (target: [allowMissing: false,
+                              alwaysLinkToLastBuild: true,
+                              keepAll: false,
+                              reportDir: "doc/html",
+                              reportFiles: 'index.html',
+                              reportName: "Sphinx documentation"])
+        junit "pytest-*.xml"
+      }
+    }
+  }
+}

@@ -16,33 +16,31 @@ if parse_version(st_version) < st_version_required_parsed:
 name = 'valjean'
 author = u'Ève Le Ménédeu, Davide Mancusi'
 author_email = u'davide.mancusi@cea.fr'
-copyright = u'2017-2019, ' + author
+copyright = u'2017-2020, ' + author
 
-test_deps = ['pytest-runner', 'hypothesis[numpy]', 'pytest', 'pytest-cov',
-             'pytest-xdist', 'pytest-timeout', 'rstcheck', 'pytest-mpl']
-graphviz_deps = ['pydot']
-dev_deps = test_deps + graphviz_deps + ['flake8', 'pylint', 'sphinx',
-                                        'sphinx_rtd_theme']
+def read_req(filename):
+    with open(filename) as req:
+        return list(line.strip() for line in req)
+
+install_reqs = read_req('requirements.txt')
+graphviz_reqs = read_req('requirements_graphviz.txt')
+testing_reqs = read_req('requirements_testing.txt')
+doc_reqs = read_req('requirements_doc.txt')
+lint_reqs = read_req('requirements_lint.txt')
+dev_reqs = graphviz_reqs + testing_reqs + doc_reqs + lint_reqs
 
 setup(name=name,
       author=author,
       author_email=author_email,
-      url=r'http://',
+      url=r'https://codev-tuleap.intra.cea.fr/projects/valjean',
       packages=find_packages(exclude=['doc', 'tests', 'tests.*']),
       package_data={'': ['conf.py.template', 'valjean.css']},
-      python_requires='>=3.4',
+      python_requires='>=3.5',
       setup_requires=['setuptools_scm'],
-      install_requires=['pyparsing', 'numpy', 'scipy', 'matplotlib'],
-      tests_require=test_deps,
+      install_requires=install_reqs,
       extras_require={
-          'dev': dev_deps,
-          'graphviz': graphviz_deps,
-          },
-      command_options={
-          'build_sphinx': {
-              'source_dir': ('setup.py', 'doc/src'),
-              'build_dir': ('setup.py', 'doc/build'),
-              }
+          'dev': dev_reqs,
+          'graphviz': graphviz_reqs
           },
       data_files=[('', ['README.rst'])],
       use_scm_version=True,
