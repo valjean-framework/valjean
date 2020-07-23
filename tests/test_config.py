@@ -50,7 +50,7 @@ def test_merge_with_self(conf):
     assert conf + conf == conf
 
 
-@settings(suppress_health_check=(HealthCheck.too_slow,))
+@settings(deadline=None, suppress_health_check=(HealthCheck.too_slow,))
 @given(conf=configs())
 def test_merge_with_empty(conf):
     '''Test that merging with the empty configuration is the identity.'''
