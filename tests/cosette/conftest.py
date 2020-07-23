@@ -368,7 +368,7 @@ def envs(draw, keys=env_keys()):
     return an_env
 
 
-@pytest.fixture(scope='function', params=['pickle'])
+@pytest.fixture(scope='module', params=['pickle'])
 def persistence_format(request):
     '''Yield all the available persistence formats.'''
     return request.param
@@ -447,7 +447,7 @@ def failing_tasks(draw, min_size=1, max_size=20):
     return tasks
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def quiet(caplog):
     '''This fixture will temporarily set the level of the ``valjean`` logger to
     CRITICAL, in order to silence any warning/error that may be produced.'''

@@ -258,12 +258,13 @@ def test_strip_index(sampler):
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(respl=responses_lists())
-def test_respbook_serializable(respl, tmpdir):
+def test_respbook_serializable(respl, tmp_path_factory):
     '''Test that the :class:`~.ResponseBook` class is serializable when it
     appears in the environment.'''
     resp_book = ResponseBook(respl)
     env = Env({'task': {'resp_book': resp_book}})
-    env_file = str(tmpdir / 'env.pickle')
+    env_file = str(tmp_path_factory.mktemp('test_respbook_serializable')
+                   / 'env.pickle')
     env.to_file(env_file)
     env_roundtrip = Env.from_file(env_file)
     note('env = {}'.format(env))
