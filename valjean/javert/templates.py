@@ -6,8 +6,7 @@ etc.  It does **not** include any formatting information, such as column
 widths, floating-point precision, colours, etc.  Decisions about the formatting
 are handled by suitable formatting classes, such as :class:`~.Rst`.
 
-.. _numpy indexing:
-   https://docs.scipy.org/doc/numpy/user/basics.indexing.html
+.. _numpy indexing: https://numpy.org/doc/stable/user/basics.indexing.html
 '''
 from hashlib import sha256
 import numpy as np

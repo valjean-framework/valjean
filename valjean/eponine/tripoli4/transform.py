@@ -5,8 +5,7 @@ It is called in the module :mod:`~.grammar` via
 ``pyparsing.ParserElement.setParseAction`` functions. It calls the general
 module :mod:`~valjean.eponine.tripoli4.common`.
 
-.. _numpy structured array:
-   https://docs.scipy.org/doc/numpy/user/basics.rec.html
+.. _numpy structured array: https://numpy.org/doc/stable/user/basics.rec.html
 
 .. |parseres| replace:: pyparsing.ParseResults
 

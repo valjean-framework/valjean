@@ -16,8 +16,7 @@ represented by the dataset. It is updated if it involves another dataset:
 
     Adding comparisons to gdataset.
 
-.. _numpy indexing:
-   https://docs.scipy.org/doc/numpy/user/basics.indexing.html
+.. _numpy indexing: https://numpy.org/doc/stable/user/basics.indexing.html
 
 
 Creation of a :class:`Dataset`

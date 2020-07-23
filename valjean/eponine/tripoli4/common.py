@@ -18,8 +18,7 @@ dictionary keys should be the same in all parsers...
 .. |KC| replace:: KCOLL
 .. |KT| replace:: KTRACK
 .. |kij| replace:: k\ :sub:`ij`
-.. _numpy structured array:
-   https://docs.scipy.org/doc/numpy/user/basics.rec.html
+.. _numpy structured array: https://numpy.org/doc/stable/user/basics.rec.html
 
 Goal
 ====
@@ -49,11 +48,9 @@ Spectrum and meshes
 Generalities
 ------------
 
-.. _doc: https://docs.scipy.org/doc/numpy/user/basics.rec.html
-
 Spectrum and meshes results use a common representation build using
 :class:`DictBuilder`. This common representation is a **7-dimension structured
-array** from `NumPy`, see `doc`_ or `numpy structured array`_.
+array** from `NumPy`, see `numpy structured array`_.
 
 Kinematic dimensions are:
 

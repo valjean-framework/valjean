@@ -3,9 +3,9 @@ format. reStructuredText_ is a text markup language meant for easy human
 consumption. The `reStructuredText primer`_ provides a good introduction to its
 syntax.
 
-.. _reStructuredText: http://docutils.sourceforge.net/rst.html
-.. _reStructuredText primer: http://
-    docutils.sourceforge.net/docs/user/rst/quickstart.html
+.. _reStructuredText: https://docutils.sourceforge.io/rst.html
+.. _reStructuredText primer: https://
+    docutils.sourceforge.io/docs/user/rst/quickstart.html
 '''
 
 
