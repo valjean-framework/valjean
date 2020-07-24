@@ -54,7 +54,8 @@ def test_full_repr(test_name, request):
     assert any(isinstance(template, PlotTemplate) for template in templates)
 
 
-@pytest.mark.mpl_image_compare(filename='student_comp_points.png',
+@pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='student_comp_points.png',
                                baseline_dir='plots/ref_plots')
 def test_student_full(student_test_result, rfull_repr, rst_formatter,
                       rstcheck):
@@ -71,7 +72,8 @@ def test_student_full(student_test_result, rfull_repr, rst_formatter,
     return mplt.draw()[0]
 
 
-@pytest.mark.mpl_image_compare(filename='student_comp_edges.png',
+@pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='student_comp_edges.png',
                                baseline_dir='plots/ref_plots')
 def test_student_edges_full(student_test_edges_result, rfull_repr,
                             rst_formatter, rstcheck):
@@ -359,7 +361,8 @@ def test_full_concatenation(student_test_result, student_test_result_fail,
             assert conc.nb_plots == it1.nb_plots + it2.nb_plots
 
 
-@pytest.mark.mpl_image_compare(filename='student_fplit_3ds.png',
+@pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='student_fplit_3ds.png',
                                baseline_dir='plots/ref_plots')
 def test_full_repr_3d(student_test_result_3ds, rfull_repr, rst_formatter,
                       rstcheck):
