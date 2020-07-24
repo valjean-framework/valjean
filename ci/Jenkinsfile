@@ -111,8 +111,7 @@ pipeline {
                       tools: [pep8(pattern: "linting.out", reportEncoding: 'UTF-8'),
                               pyLint(pattern: "linting.out", reportEncoding: 'UTF-8'),
                               sphinxBuild(pattern: "sphinx-*.out,doc/linkcheck/output.txt", reportEncoding: 'UTF-8')])
-        archiveArtifacts artifacts: "*.out", fingerprint: true
-        archiveArtifacts artifacts: "distshare/valjean*.zip", fingerprint: true
+        archiveArtifacts artifacts: "*.out,distshare/valjean*.zip,mpl_image_compare/**/*.png,**/log/*.log", fingerprint: true
         cobertura (autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'coverage-*.xml',
                    failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false,
                    sourceEncoding: 'UTF_8', zoomCoverageChart: false)
