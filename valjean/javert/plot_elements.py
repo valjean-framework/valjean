@@ -54,7 +54,7 @@ def dimensions_and_bins(bins, array_shape):
         return None
     # subd = {k: v for i, (k, v) in enumerate(bins.items()) if i in idims}
     items = list(bins.items())
-    subd = dict(items[i] for i in idims)
+    subd = OrderedDict(items[i] for i in idims)
     return subd
 
 
@@ -187,11 +187,11 @@ def repr_datasets_values(result):
         legend=(result.test.dsref.name if result.test.dsref.name
                 else 'reference'),
         index=0, errors=result.test.dsref.error)]
-    cds.extend([
+    cds.extend(
         CurveElements(values=ds.value, bins=list(dab.values()),
                       legend=(ds.name if ds.name else 'dataset '+str(ids)),
                       index=ids+1, errors=ds.error)
-        for ids, ds in enumerate(result.test.datasets)])
+        for ids, ds in enumerate(result.test.datasets))
     pltemp = build_plot_template_with_dim(
         cds, axnames=list(dab.keys())+[result.test.dsref.what])
     return [pltemp] if pltemp else []

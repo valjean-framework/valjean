@@ -144,7 +144,7 @@ class BaseDataset:
                                  "dimension of value")
         self.value = value
         self.error = error
-        self.bins = bins if bins is not None else OrderedDict()
+        self.bins = bins.copy() if bins is not None else OrderedDict()
 
     def __repr__(self):
         if isinstance(self.value, np.ndarray):
@@ -213,8 +213,3 @@ class BaseDataset:
         new_value = self.value.copy()
         new_error = self.error.copy()
         return self.__class__(new_value, new_error, bins=new_bins)
-
-
-def relatively_equal(ds1, ds2, tolerance=1e-5):
-    '''First esquisse of test of dataset comparison.'''
-    return np.allclose(ds1.value, ds2.value, rtol=tolerance)
