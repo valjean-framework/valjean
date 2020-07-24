@@ -2,14 +2,15 @@
 from pathlib import Path
 
 
-def ensure(*path, is_dir=False):
+def ensure(*paths, is_dir=False):
     '''Make sure that the given path exists.
 
-    :param pathlib.Path path: A path. Multiple arguments will be concatenated
+    :param paths: One or more paths. Multiple arguments will be concatenated
         into a single path.
+    :type paths: str or pathlib.Path or pathlib2.Path
     :param bool is_dir: If `True`, the path will be constructed as a directory.
     '''
-    path = Path(*path)
+    path = Path(*(str(path) for path in paths))
     if not path.exists():
         if is_dir:
             path.mkdir(parents=True)

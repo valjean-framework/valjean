@@ -35,7 +35,7 @@ def load_all_envs(output_root, filename, fmt):
     env = Env()
     output_root = Path(output_root)
     for path in output_root.glob('**/' + filename):
-        persisted_env = Env.from_file(path, fmt=fmt)
+        persisted_env = Env.from_file(str(path), fmt=fmt)
         if persisted_env is not None:
             env.update(persisted_env)
     return env

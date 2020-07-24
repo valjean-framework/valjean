@@ -179,7 +179,7 @@ def read_env(*, root, names, filename, fmt):
     LOGGER.info('deserializing %s environment from %r files in %s',
                 fmt, filename, root)
     for task_name in names:
-        task_file = Path(root) / task_name / filename
+        task_file = str(Path(root) / task_name / filename)
         persisted_env = Env.from_file(task_file, fmt=fmt)
         if persisted_env is not None:
             env.merge_done_tasks(persisted_env)
@@ -216,8 +216,8 @@ def write_env(env, *, filename, fmt):
             LOGGER.debug("skipping serialization of task %s because it does "
                          "not have any 'output_dir' key", task_name)
             continue
-        task_file = Path(subenv['output_dir']) / filename
+        task_file = str(Path(subenv['output_dir']) / filename)
         env.to_file(task_file, task_name=task_name, fmt=fmt)
-        written_files.append(str(task_file))
+        written_files.append(task_file)
     LOGGER.info('%d environment files written', len(written_files))
     LOGGER.debug('list of written environment files: %s', written_files)

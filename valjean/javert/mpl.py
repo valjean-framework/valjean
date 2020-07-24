@@ -776,11 +776,10 @@ class _MplPlot2D:
 
     @staticmethod
     def broadcast_bin_centers(curve):
-        '''Calcuate bin centers if edges are given and broadcast all bins:
+        '''Calculate bin centers if edges are given and broadcast all bins:
         build the (x, y) grid for all bins.
 
         :param CurveElements curve: data to plot
-        :param list(numpy.ndarray) lbins: x and y bins corresponding to data
         :rtype: numpy.ndarray
         '''
         bins, rsbins = [], []
