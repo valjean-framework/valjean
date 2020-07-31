@@ -5,7 +5,7 @@ from hypothesis import given
 from hypothesis.strategies import text, data, integers
 # pylint: disable=wrong-import-order
 from .conftest import (plot_templates, table_templates, valid_index,
-                       text_templates, text_highlight)
+                       text_templates)
 from valjean.javert.templates import TableTemplate
 
 
@@ -125,22 +125,6 @@ def test_modif_text_fingerprint(text_t, sampler):
     copy.text += sampler.draw(text(alphabet='azertyuiop', min_size=1))
     assert text_t != copy
     assert text_t.fingerprint() != copy.fingerprint()
-
-
-@given(text_t=text_templates(),  # pylint: disable=no-value-for-parameter
-       sampler=data())
-def test_modifhl_text_fingerprint(text_t, sampler):
-    '''Test that a :class:`~.TextTemplate` and its copy have the same
-    fingerprint.'''
-    copy = text_t.copy()
-    # pylint: disable=no-value-for-parameter
-    copy.highlight = sampler.draw(text_highlight(tlen=len(copy.text)))
-    if copy.highlight == text_t.highlight:
-        assert text_t == copy
-        assert text_t.fingerprint() == copy.fingerprint()
-    else:
-        assert text_t != copy
-        assert text_t.fingerprint() != copy.fingerprint()
 
 
 def test_table_list():

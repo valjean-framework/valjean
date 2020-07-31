@@ -1,7 +1,7 @@
 '''Fixtures for the :mod:`~.valjean.javert` tests.'''
 
 from hypothesis.strategies import (composite, tuples, integers, text, none,
-                                   just, sampled_from, lists, booleans, one_of)
+                                   just, sampled_from, lists, booleans)
 from hypothesis.extra.numpy import arrays, array_shapes
 
 # pylint: disable=wrong-import-order,unused-import,no-value-for-parameter
@@ -21,6 +21,9 @@ from valjean.javert.templates import (TableTemplate, PlotTemplate,
                                       TextTemplate)
 from valjean.javert.test_report import TestReport
 from valjean.javert.rst import Rst, RstFormatter
+
+
+ALPHABET_RST = string.ascii_letters + string.digits
 
 
 @composite
@@ -172,31 +175,10 @@ def plot_templates(draw, n_subplots=integers(1, 5), same_xaxis=booleans()):
 
 
 @composite
-def text_highlight(draw, thlight=one_of(none(), just(1)), *, tlen):
-    '''Strategy for generating highlight of :class:`.TextTemplate`.'''
-    a_thlight = draw(thlight)
-    if not a_thlight:
-        return None
-    lhlight = []
-    start = 0
-    if a_thlight == 2:
-        start = draw(integers(start, tlen-2))
-        length = draw(integers(1, tlen-1-start))
-        lhlight.append((start, length))
-        start = start+length
-    start = draw(integers(start, tlen-1))
-    length = draw(integers(1, tlen-start))
-    lhlight.append((start, length))
-    return lhlight
-
-
-@composite
-def text_templates(draw, text=text(alphabet=string.printable, min_size=2)):
+def text_templates(draw, ltext=text(alphabet=ALPHABET_RST, min_size=2)):
     '''Strategy for generating :class:`~.TextTemplate` objects.'''
-    a_text = draw(text)
-    a_highlight = draw(text_highlight(
-        thlight=integers(0, min(len(a_text)-1, 2)), tlen=len(a_text)))
-    return TextTemplate(a_text, highlight=a_highlight)
+    a_text = draw(ltext)
+    return TextTemplate(a_text)
 
 
 @pytest.fixture

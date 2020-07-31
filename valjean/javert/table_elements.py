@@ -6,7 +6,7 @@ import numpy as np
 from .. import LOGGER
 from ..cosette.task import TaskStatus
 from ..gavroche.diagnostics.stats import TestOutcome
-from .templates import TableTemplate, TextTemplate, join
+from .templates import TableTemplate, TextTemplate
 from .verbosity import Verbosity
 
 # turn off pylint warnings about invalid names in this file; there are just too
@@ -129,8 +129,9 @@ def repr_equal_summary(result):
     '''
     LOGGER.debug("repr_equal_summary found")
     if result:
-        return [TextTemplate('Equal test: OK')]
-    return [TextTemplate('Equal test: KO', highlight=[(-2, 2)])]
+        return [TextTemplate('Equal test: OK\n\n')]
+    return [TextTemplate('.. role:: hl\n\n'
+                         'Equal test: :hl:`KO`\n\n')]
 
 
 def repr_equal(result):
@@ -182,8 +183,9 @@ def repr_approx_equal_summary(result):
     '''
     LOGGER.debug("repr_approx_equal_summary found")
     if result:
-        return [TextTemplate('Approx equal test: OK')]
-    return [TextTemplate('Approx equal test: KO', highlight=[(-2, 2)])]
+        return [TextTemplate('Approx equal test: OK\n\n')]
+    return [TextTemplate('.. role:: hl\n\n'
+                         'Approx equal test: :hl:`KO`\n\n')]
 
 
 def repr_approx_equal(result):
@@ -298,8 +300,9 @@ def repr_student_summary(result):
     '''
     LOGGER.debug("repr_student_summary found")
     if result:
-        return [TextTemplate('Student test: OK')]
-    return [TextTemplate('Student test: KO', highlight=[(-2, 2)])]
+        return [TextTemplate('Student test: OK\n\n')]
+    return [TextTemplate('.. role:: hl\n\n'
+                         'Student test: :hl:`KO`\n\n')]
 
 
 def repr_student_intermediate(result):
@@ -354,6 +357,8 @@ def repr_testresultbonferroni(result, verbosity=None):
     LOGGER.debug("bonf repr, %s, res = %s", verbosity, bool(result))
     if verbosity == Verbosity.SILENT and bool(result):
         return []
+    if verbosity == Verbosity.SUMMARY:
+        return repr_bonferroni_summary(result)
     return repr_bonferroni(result)
 
 
@@ -382,6 +387,20 @@ def repr_bonferroni(result):
         headers=['test', 'ndf', 'α', 'α(Bonferroni)', 'min(p-value)',
                  'Bonferroni?'])
     return [table_template]
+
+
+def repr_bonferroni_summary(result):
+    '''Represent the result of a :class:`~.TestBonferroni` test for the
+    SUMMARY level of verbosity.
+
+    :param TestResultBonferroni result: a test result.
+    :returns: Representation of a :class:`~.TestResultBonferroni` as a table.
+    :rtype: list(TextTemplate)
+    '''
+    if result:
+        return [TextTemplate('Bonferroni test: OK\n\n')]
+    return [TextTemplate('.. role:: hl\n\n'
+                         'Bonferroni test: :hl:`KO`\n\n')]
 
 
 def repr_testresultholmbonferroni(result, verbosity=None):
@@ -441,8 +460,9 @@ def repr_holm_bonferroni_summary(result):
     :rtype: list(TextTemplate)
     '''
     if result:
-        return [TextTemplate('Holm-Bonferroni test: OK')]
-    return [TextTemplate('Holm-Bonferroni test: KO', highlight=[(-2, 2)])]
+        return [TextTemplate('Holm-Bonferroni test: OK\n\n')]
+    return [TextTemplate('.. role:: hl\n\n'
+                         'Holm-Bonferroni test: :hl:`KO`\n\n')]
 
 
 def percent_fmt(num, den):
@@ -528,15 +548,16 @@ def repr_testresultstats(result, status_ok):
     highlights = [hl_column, hl_column]
     table = TableTemplate(statuses_txt, percents, headers=['status', 'counts'],
                           highlights=highlights)
+    text = []
     if status_ok == TaskStatus.DONE:
         status_ko = TaskStatus.FAILED
-        text = [TextTemplate('List of failed tasks\n\n')]
+        text.append('List of failed tasks\n\n')
     else:
         status_ko = TestOutcome.MISSING
-        text = [TextTemplate('List of missing tests\n\n')]
+        text.append('List of missing tests\n\n')
     for task in classify[status_ko]:
-        text += [TextTemplate('* {}\n'.format(task))]
-    ftext = join(*text)
+        text.append('* {}\n\n'.format(task))
+    ftext = TextTemplate(''.join(text))
     return [table, ftext]
 
 
@@ -615,7 +636,7 @@ def repr_testresultstatsbylabels(result):
         result.test.by_labels, result.classify, result.oracles()))
     if result.nb_missing_labels() != 0:
         res.append(TextTemplate('At least one of the labels used for sorting '
-                                '{} is missing in {} tests'
+                                '{} is missing in {} tests\n\n'
                                 .format(result.test.by_labels,
                                         result.nb_missing_labels())))
     return res
@@ -648,10 +669,10 @@ def repr_testresultstatsbylabels_summary(result):
     if lok:
         res.append(tabtemp)
     else:
-        res.append(TextTemplate('No failed test found.'))
+        res.append(TextTemplate('No failed test found.\n\n'))
     if result.nb_missing_labels() != 0:
         res.append(TextTemplate('At least one of the labels used for sorting '
-                                '{} is missing in {} tests'
+                                '{} is missing in {} tests\n\n'
                                 .format(result.test.by_labels,
                                         result.nb_missing_labels())))
     return res
@@ -756,8 +777,9 @@ def repr_metadata_summary(result):
     '''
     LOGGER.debug("repr_metadata_summary")
     if result:
-        return [TextTemplate('Metadata: OK')]
-    return [TextTemplate('Metadata: KO', highlight=[(-2, 2)])]
+        return [TextTemplate('Metadata: OK\n\n')]
+    return [TextTemplate('.. role:: hl\n\n'
+                         'Metadata test: :hl:`KO`\n\n')]
 
 
 def repr_metadata_silent(_result):
@@ -779,6 +801,5 @@ def repr_testresultfailed(result, _verbosity=None):
     LOGGER.debug("In repr_testresultfailed")
     defmsg = ' failed with message:'
     cname = result.test.__class__.__name__
-    text = '{}{}\n{}'.format(cname, defmsg, result.msg)
-    return [TextTemplate(text.replace('\n', '\n\n'),
-                         highlight=[(0, len(cname) + len(defmsg))])]
+    text = ':hl:`{}{}`\n{}\n'.format(cname, defmsg, result.msg)
+    return [TextTemplate('.. role:: hl\n\n' + text.replace('\n', '\n\n'))]

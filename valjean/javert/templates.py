@@ -900,101 +900,83 @@ class PlotTemplate:
 class TextTemplate:
     '''A container class that encapsulates text for the report.
 
-    The user has to write the text that can be highlighted using the start
-    position and the length of the text to highlight.
+    The user has to write the text as a string. ReST markdown can be used as
+    compilation is expected to be done by sphinx.
+
+    .. note::
+
+        Titles might not be well represented in a ReSt formatted TextTemplate:
+        no knowledge of the current level of title, nor the associated symbol.
+        Lists or enumerations might be more suitable.
 
     As in the other templates, examples will focus on the concatenation (join)
     of different TextTemplate.
 
-    >>> ltext = 'Spam egg bacon'
-    >>> ttplt1 = TextTemplate(ltext)
+    >>> ttplt1 = TextTemplate('Spam egg bacon')
     >>> print("{!r}".format(ttplt1))
     <class 'valjean.javert.templates.TextTemplate'>\
-(text='Spam egg bacon', highlight=None)
-    >>> ttplt2 = TextTemplate(ltext, highlight=[(0, 4)])
+(text='Spam egg bacon')
+    >>> ttplt2 = TextTemplate('**Spam** egg bacon')
     >>> print("{!r}".format(ttplt2))
     <class 'valjean.javert.templates.TextTemplate'>\
-(text='Spam egg bacon', highlight=[(0, 4)])
-    >>> ttplt3 = TextTemplate('sausage tomato', highlight=[(2, 3), (-3, 2)])
+(text='**Spam** egg bacon')
+    >>> ttplt3 = TextTemplate(r".. role:: hl\\n\\nsausage :hl:`tomato`")
     >>> ttplt1.join(ttplt3)
     >>> print("{!r}".format(ttplt1))
     <class 'valjean.javert.templates.TextTemplate'>\
-(text='Spam egg baconsausage tomato', highlight=[(16, 3), (-3, 2)])
+(text='Spam egg bacon.. role:: hl\\\\n\\\\nsausage :hl:`tomato`')
+
+    The sphinx compilation will fail there, as the are no empty line between
+    the first and the second string. If you know some text will follow, think
+    about the ``\\n``.
+
+    >>> ttplt1 = TextTemplate('Spam egg bacon\\n\\n')
+    >>> ttplt3 = TextTemplate('.. role:: hl\\n\\nsausage :hl:`tomato`\\n\\n')
+    >>> ttplt1.join(ttplt3)
+    >>> print("{!r}".format(ttplt1))
+    <class 'valjean.javert.templates.TextTemplate'>\
+(text='Spam egg bacon\\n\\n.. role:: hl\\n\\nsausage :hl:`tomato`\\n\\n')
 
     Test of the external function :meth:`join`:
 
-    >>> ttplt4 = join(ttplt2, ttplt3)
+    >>> ttplt4 = join(ttplt3, ttplt3)
     >>> print("{!r}".format(ttplt4))
     <class 'valjean.javert.templates.TextTemplate'>\
-(text='Spam egg baconsausage tomato', highlight=[(0, 4), (16, 3), (-3, 2)])
-    >>> ttplt5 = join(ttplt3, ttplt1)
-    >>> print("{!r}".format(ttplt5))
-    <class 'valjean.javert.templates.TextTemplate'>\
-(text='sausage tomatoSpam egg baconsausage tomato', \
-highlight=[(2, 3), (-31, 2), (30, 3), (-3, 2)])
+(text='.. role:: hl\\n\\nsausage :hl:`tomato`\\n\\n\
+.. role:: hl\\n\\nsausage :hl:`tomato`\\n\\n')
 
     The copy doesn't affect the original:
 
-    >>> ttplt6 = ttplt3.copy()
-    >>> ttplt6.highlight = [(6, 3)]
-    >>> print("{!r}".format(ttplt3))
+    >>> ttplt5 = ttplt2.copy()
+    >>> ttplt5.text += ' sausage'
+    >>> print("{!r}".format(ttplt2))
     <class 'valjean.javert.templates.TextTemplate'>\
-(text='sausage tomato', highlight=[(2, 3), (-3, 2)])
-    >>> print("{!r}".format(ttplt6))
+(text='**Spam** egg bacon')
+    >>> print("{!r}".format(ttplt5))
     <class 'valjean.javert.templates.TextTemplate'>\
-(text='sausage tomato', highlight=[(6, 3)])
+(text='**Spam** egg bacon sausage')
     '''
 
-    def __init__(self, text, highlight=None):
+    def __init__(self, text):
         '''Construct the text to be sent to the report.
 
         :param str text: text to be written in the report
-        :param list(tuple(int)) highlight: parts of the string to highlight
-            given as a list of tuples of 2 ints, first being the start position
-            and the second the legth of the text to highlight
         '''
         self.text = text
-        if highlight is not None:
-            msg = ("highlight should be a list of tuple of int, each tuple "
-                   "being (start, length) of highlighted text")
-            if not isinstance(highlight, list):
-                raise TypeError(msg)
-            if any(not isinstance(h, tuple) for h in highlight):
-                raise TypeError(msg)
-        self.highlight = highlight
 
     def __repr__(self):
         '''Print :class:`TextTemplate` details.'''
-        return ('{}(text={!r}, highlight={!r})'
-                .format(self.__class__, self.text, self.highlight))
+        return '{}(text={!r})'.format(self.__class__, self.text)
 
     def _binary_join(self, other):
-        lst = len(self.text)
         self.text += other.text
-        nhl = []
-        if self.highlight is not None:
-            for pos in self.highlight:
-                if pos[0] >= 0:
-                    nhl.append(pos)
-                else:
-                    nhl.append((pos[0] - len(other.text), pos[1]))
-        if other.highlight is not None:
-            for pos in other.highlight:
-                if pos[0] > 0:
-                    nhl.append((pos[0] + lst, pos[1]))
-                else:
-                    nhl.append(pos)
-        self.highlight = nhl
 
     def copy(self):
         '''Copy a :class:`TextTemplate` object.
 
         :rtype: TextTemplate
         '''
-        return TextTemplate(text=self.text,
-                            highlight=(self.highlight.copy()
-                                       if self.highlight is not None
-                                       else None))
+        return TextTemplate(text=self.text)
 
     def join(self, *others):
         '''Join a given number of :class:`TextTemplate` to the current one.'''
@@ -1008,14 +990,11 @@ highlight=[(2, 3), (-31, 2), (30, 3), (-3, 2)])
         is not true, but very likely.'''
         hasher = sha256()
         hasher.update(self.text.encode('utf-8'))
-        if isinstance(self.highlight, list):
-            hasher.update(np.require(np.array(self.highlight),
-                                     requirements='C').data.cast('b'))
         return hasher.hexdigest()
 
     def __eq__(self, other):
         '''Test for equality of `self` and another :class:`TextTemplate`.'''
-        return self.text == other.text and self.highlight == other.highlight
+        return self.text == other.text
 
     def __ne__(self, other):
         '''Test for inequality of `self` and another :class:`TextTemplate`.

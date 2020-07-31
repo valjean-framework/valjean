@@ -536,57 +536,13 @@ class RstPlot:
 
 class RstText:
     '''Construct an :class:`RstText` from the given
-    :class:`~.templates.TextTemplate`. Typically it applies the highlight.
+    :class:`~.templates.TextTemplate`.
     '''
-    HIGHLIGHT_ROLE = 'hl'
-
     def __init__(self, text):
         self.text = text
 
     def __str__(self):
-        header = '.. role:: ' + RstText.HIGHLIGHT_ROLE + '\n\n'
-        rstt = (self.highlight(self.text.text, self.text.highlight)
-                if self.text.highlight
-                else self.text.text)
-        return header + rstt + '\n'
-
-    @classmethod
-    def highlight(cls, text, positions):
-        '''Wrap `text` in highlight reST markers at the required positions.
-
-        >>> RstText.highlight('Spam egg bacon', [(0, 4)])
-        ':hl:`Spam` egg bacon'
-        >>> RstText.highlight('Spam egg bacon', [(-5, 5)])
-        'Spam egg :hl:`bacon`'
-        >>> RstText.highlight('Spam egg bacon', [(0, 4), (-5, 5)])
-        ':hl:`Spam` egg :hl:`bacon`'
-        >>> RstText.highlight('Spam egg bacon', [(-5, 5), (0, 4)])
-        ':hl:`Spam` egg :hl:`bacon`'
-        >>> RstText.highlight('Spam egg bacon', [(0, 4), (9, 5)])
-        ':hl:`Spam` egg :hl:`bacon`'
-        >>> RstText.highlight('Spam egg bacon', [(9, 5), (0, 4)])
-        ':hl:`Spam` egg :hl:`bacon`'
-        >>> RstText.highlight('Spam egg bacon', [])
-        'Spam egg bacon'
-        >>> RstText.highlight('Spam egg bacon', None)
-        'Spam egg bacon'
-
-        :param str text: string to highlight
-        :param list(tuple(int)) positions: positions given by start and length
-        '''
-        if not positions:
-            return text
-        ltext = len(text)
-        ppos = []
-        for pos in positions:
-            if pos[0] < 0:
-                ppos.append((ltext + pos[0], ltext + pos[0] + pos[1]))
-            else:
-                ppos.append((pos[0], pos[0] + pos[1]))
-        for pos in reversed(sorted(ppos)):
-            text = "{}:{}:`{}`{}".format(text[:pos[0]], cls.HIGHLIGHT_ROLE,
-                                         text[pos[0]:pos[1]], text[pos[1]:])
-        return text
+        return self.text.text
 
 
 class FormattedRst:
