@@ -21,5 +21,6 @@ javert — Journal Automatique de VÉRificaTion
    javert/formatter
    javert/mpl
    javert/test_report
+   javert/test_external
    javert/rst
    javert/verbosity

@@ -13,6 +13,7 @@ from valjean.javert.representation import (TableRepresenter, EmptyRepresenter,
                                            Representation)
 from valjean.javert.mpl import MplPlot
 from valjean.javert.verbosity import Verbosity
+from valjean.javert.test_external import TestExternal
 from valjean.gavroche.test import Test, TestResult
 from valjean.gavroche.diagnostics.metadata import TestMetadata
 from valjean.gavroche.diagnostics.stats import (test_stats_by_labels,
@@ -442,3 +443,26 @@ def test_spam_repr(caplog, str_choice, rfull_repr):
     assert templates is None
     assert caplog.text.count(loginfo_tabrepr) == 2
     assert caplog.text.count(loginfo_pltrepr) == 2
+
+
+@pytest.mark.parametrize('verb_level', [None, Verbosity.SILENT,
+                                        Verbosity.SUMMARY,
+                                        Verbosity.INTERMEDIATE,
+                                        Verbosity.FULL_DETAILS])
+@pytest.mark.parametrize('success', [True, False])
+def test_external_repr(templates, verb_level, success,
+                       full_repr, rst_formatter, rstcheck):
+    # pylint: disable=too-many-arguments
+    '''Test the TestExternal representation.'''
+    texternal = TestExternal(*templates, name='test_external', success=success)
+    rexternal = texternal.evaluate()
+    assert bool(rexternal) == success
+    atempl = full_repr(rexternal, verb_level)
+    for rtempl, templ in zip(templates, atempl):
+        assert templ == rtempl
+    ttempl = filter(lambda x: isinstance(x, (TableTemplate, TextTemplate)),
+                    atempl)
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in ttempl)
+    errs = rstcheck.check(rst)
+    assert not list(errs)

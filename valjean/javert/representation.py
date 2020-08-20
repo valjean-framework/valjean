@@ -120,6 +120,21 @@ class Representer:
         return meth(result, verbosity)
 
 
+class ExternalRepresenter:
+    '''This class is the default representation class for external tests, i.e.
+    tests defined by the users who already defined the test representation as
+    templates.
+    '''
+
+    def __call__(self, result, _verbosity):
+        LOGGER.debug("In ExternalRepresenter.__call__")
+        if result.__class__.__name__ != 'TestResultExternal':
+            LOGGER.debug('ExternalRepresenter only deals with '
+                         'TestResultExternal')
+            return []
+        return result.test.templates
+
+
 class TableRepresenter(Representer):
     '''This class is the default representation class for tables. It contains
     the overridden :meth:`Representer.__call__`.
@@ -311,6 +326,7 @@ class FullRepresenter(Representer):
         LOGGER.debug("In initialisation of FullRepresenter")
         self.table_repr = FullTableRepresenter()
         self.plot_repr = FullPlotRepresenter(post=post)
+        self.ext_repr = ExternalRepresenter()
 
     def __call__(self, result, verbosity=None):
         '''Dispatch handling of `result` to all the Representer subclass
@@ -329,4 +345,7 @@ class FullRepresenter(Representer):
         tabres = self.table_repr(result, verbosity)
         if tabres is not None:
             res.extend(tabres)
+        extres = self.ext_repr(result, verbosity)
+        if extres is not None:
+            res.extend(extres)
         return res

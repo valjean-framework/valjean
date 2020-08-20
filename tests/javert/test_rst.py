@@ -9,10 +9,10 @@ from hypothesis import given, note
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 from valjean import LOGGER
 from valjean.javert.rst import RstTable
-from valjean.javert.templates import join, TextTemplate
+from valjean.javert.templates import join
 from valjean.javert.table_elements import repr_bins
 from valjean.javert.verbosity import Verbosity
-from .conftest import int_matrices, text_templates
+from .conftest import int_matrices
 from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  equal_test_result, equal_test_fail,
                                  equal_test_result_fail, approx_equal_test,
@@ -372,21 +372,10 @@ def test_repr_bins(dset):
     assert all(dset.shape == abin.shape for abin in bins)
 
 
-def test_rst_text(rstcheck, rst_formatter):
+def test_rst_text(text_template, rstcheck, rst_formatter):
     '''Test that :class:`~.RstFormatter` generates correct reST texts.'''
-    ttempl = TextTemplate(
-        'Essai de rst\n'
-        '============\n'
-        '\n'
-        '.. role:: hl\n'
-        '\n'
-        'Un essai de **text** avec :hl:`balises` et *tout* et `tout`\n'
-        '\n'
-        '* et\n'
-        '* une\n'
-        '* liste\n')
-    LOGGER.debug('generated text:\n%s', ttempl)
-    rsttext = str(rst_formatter.template(ttempl))
+    LOGGER.debug('generated text:\n%s', text_template)
+    rsttext = str(rst_formatter.template(text_template))
     LOGGER.debug('generated rst:\n%s', rsttext)
     errs = rstcheck.check(rsttext)
     assert not list(errs)

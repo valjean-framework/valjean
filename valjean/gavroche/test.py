@@ -101,7 +101,7 @@ class Test(ABC):
 
     def __init__(self, *, name, description='', labels=None):
         '''Initialize the :class:`~.Test` object with a name, a description of
-        the test (may be long) and the test type (equality, Student, χ², etc.).
+        the test (may be long) and labels if needed.
 
         The test is actually performed in the :meth:`evaluate` method, which is
         abstract in the base class and must be implemented by sub-classes.

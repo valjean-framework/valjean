@@ -792,6 +792,17 @@ def repr_metadata_silent(_result):
     return []
 
 
+def repr_testresultexternal(_result, _verbosity=None):
+    '''Represent external test as tables -> no table done.
+
+    If tables are required they are already done. Their representation in the
+    report is done by :class:`.ExternalRepresenter`.
+
+    :returns: empty list
+    '''
+    return []
+
+
 def repr_testresultfailed(result, _verbosity=None):
     '''Represent a failed result as rst text.
 

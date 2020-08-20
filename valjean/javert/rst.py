@@ -163,7 +163,7 @@ six-cent-six cyprès.
                 LOGGER.debug('tree: %s', tree)
                 LOGGER.debug('tree_dict: %s', dict(self.tree_dict))
                 assert tree in self.text_dict
-                res_text = self.format_result(stuff, depth=len(tree) + 1)
+                res_text = self.format_result(stuff)
                 self.text_dict[tree].extend(res_text)
             else:
                 raise TypeError('expected TestReport or TestResult in '

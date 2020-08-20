@@ -104,6 +104,33 @@ def table_template(some_dataset, other_dataset):
                          units=['furlong', 'fortnight'])
 
 
+@pytest.fixture
+def text_template():
+    '''Create a text template with ReST marks.'''
+    return TextTemplate(
+        'Essai de rst\n'
+        '============\n'
+        '\n'
+        '.. role:: hl\n'
+        '\n'
+        'Un essai de **text** avec :hl:`balises` et *tout* et `tout`\n'
+        '\n'
+        '* et\n'
+        '* une\n'
+        '* liste\n')
+
+
+@pytest.fixture
+def plot_template():
+    '''Create a plot template.'''
+    celt0 = CurveElements(values=np.arange(5), bins=[np.arange(6)],
+                          legend='c0', index=0)
+    celt1 = CurveElements(values=np.arange(5)*1.2, bins=[np.arange(6)],
+                          legend='c1', index=1)
+    return PlotTemplate(subplots=[SubPlotElements(
+        curves=[celt0, celt1], axnames=('X', 'Y'))])
+
+
 @composite
 def table_templates(draw, n_columns=integers(1, 5),
                     shape=array_shapes(min_side=1, max_side=5)):
@@ -223,3 +250,14 @@ def rstcheck():
     '''Import and return the :mod:`rstcheck` module, if it is installed. If it
     isn't, tests depending on this fixture will be automatically skipped.'''
     return pytest.importorskip('rstcheck')
+
+
+@pytest.fixture(
+    params=[['table_template'], ['plot_template'], ['text_template'],
+            ['text_template', 'plot_template', 'table_template']],
+    ids=['table', 'plot', 'text', 'all of them'])
+def templates(request):
+    '''Return lists of valid :class:`~.Test` objects.'''
+    fixtures = [request.getfixturevalue(fix_name)
+                for fix_name in request.param]
+    return fixtures

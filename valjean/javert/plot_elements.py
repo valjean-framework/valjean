@@ -349,6 +349,17 @@ def repr_testresultmetadata(_result, _verbosity=None):
     return []
 
 
+def repr_testresultexternal(_result, _verbosity=None):
+    '''Plot external test -> no plot done.
+
+    If plots are required they are already done. Their representation in the
+    report is done by :class:`.ExternalRepresenter`.
+
+    :returns: empty list
+    '''
+    return []
+
+
 def repr_testresultfailed(_result, _verbosity=None):
     '''Plot failed test -> no plot done.
 
