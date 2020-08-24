@@ -52,9 +52,9 @@ class GraphCommand(JobCommand):
                 graph_pydot = graph_from_dot_data(graph_str)[0]
                 try:
                     writer = getattr(graph_pydot, 'write_' + ext[1:].lower())
-                except AttributeError:
+                except AttributeError as aerr:
                     raise ValueError('graph output format {} is not supported'
-                                     .format(ext))
+                                     .format(ext)) from aerr
                 writer(args.output)
             else:
                 with open(args.output, 'w') as fout:

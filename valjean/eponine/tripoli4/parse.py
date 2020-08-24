@@ -135,10 +135,10 @@ class T4Parser:
         bdata = pres['batch_data']
         try:
             time_key = next(k for k in bdata if 'time' in k)
-        except StopIteration:
+        except StopIteration as sit:
             raise T4ParserException(
                 'No "time" variable found in the TRIPOLI-4 output, '
-                'please check it.')
+                'please check it.') from sit
         if bdata[time_key] != self.scan_res.times[time_key][batch_number]:
             msg = ('{} looks inconsistent between parsing ({}) and scanning '
                    '({})'.format(time_key, bdata[time_key],

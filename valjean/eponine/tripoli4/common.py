@@ -681,12 +681,12 @@ class KinematicDictBuilder(DictBuilder):
         try:
             assert len(lnbins) == 7
         except TypeError:
-            LOGGER.error("lnbins should the list of number of bins")
-            raise TypeError
+            LOGGER.error("lnbins should be the list of number of bins")
+            raise
         except AssertionError:
             LOGGER.error("Number of bins should be 7 (3 space dimensions, "
                          "1 energy, 1 time, 2 direction angles)")
-            raise AssertionError
+            raise
         super().__init__(colnames, lnbins)
         self.bins = OrderedDict([('s0', []), ('s1', []), ('s2', []),
                                  ('e', []), ('t', []),

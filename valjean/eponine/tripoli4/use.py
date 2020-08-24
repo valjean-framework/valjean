@@ -218,7 +218,8 @@ def make_parser(filename):
     try:
         parser = T4Parser(filename)
     except T4ParserException as tpe:
-        raise TaskException('cannot build parser {}: {}'.format(filename, tpe))
+        raise TaskException('cannot build parser {}: {}'
+                            .format(filename, tpe)) from None
     return parser
 
 
@@ -231,7 +232,8 @@ def parse_batch_number(parser, *, batch_number):
     try:
         pres = parser.parse_from_number(batch_number=batch_number)
     except T4ParserException as t4pe:
-        raise TaskException('cannot parse {}: {}'.format(parser.jdd, t4pe))
+        raise TaskException('cannot parse {}: {}'
+                            .format(parser.jdd, t4pe)) from None
     return pres
 
 
@@ -244,7 +246,8 @@ def parse_batch_index(parser, *, batch_index=-1):
     try:
         pres = parser.parse_from_index(batch_index=batch_index)
     except T4ParserException as t4pe:
-        raise TaskException('cannot parse {}: {}'.format(parser.jdd, t4pe))
+        raise TaskException('cannot parse {}: {}'
+                            .format(parser.jdd, t4pe)) from None
     return pres
 
 

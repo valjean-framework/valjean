@@ -490,9 +490,9 @@ class DepGraph:
         i_on = self._nodes.index(on)
         try:
             self._edges[i_node].remove(i_on)
-        except KeyError:
+        except KeyError as kerr:
             raise KeyError('trying to remove missing edge {} -> {}'
-                           .format(node, on))
+                           .format(node, on)) from kerr
         return self
 
     def invert(self):

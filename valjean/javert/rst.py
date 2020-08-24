@@ -405,8 +405,8 @@ class RstTable:
         LOGGER.debug('columns: %s, %s', type(columns), len(columns))
         try:
             yield from np.nditer(columns)
-        except ValueError:
-            raise ValueError('all columns must have the same length')
+        except ValueError as exc:
+            raise ValueError('all columns must have the same length') from exc
 
     @classmethod
     def format_columns(cls, columns, highlights, num_fmt):
