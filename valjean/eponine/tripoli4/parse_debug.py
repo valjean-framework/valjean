@@ -42,13 +42,12 @@ class T4ParserDebug(T4Parser):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
         self.scan_res = scan.T4Scan(self.jdd, self.mesh_limit, self.end_flag)
 
-    def parse_from_number(self, batch_number=None):
+    def parse_from_number(self, batch_number):
         '''Parse from batch index or batch number.
 
         Per default the last batch is parsed (index = -1).
 
-        :param int batch_number: batch number (default = ``None``)
-        :param int batch_index: batch index (default = ``None``)
+        :param int batch_number: the number of the batch to parse
         :returns: list(dict)
         '''
         LOGGER.debug('Using parse from T4ParserDebug')
