@@ -269,6 +269,26 @@ def convert_generic_adjoint(toks):
     return lod
 
 
+def convert_generic_kinetic(toks):
+    '''Convert generic scores for kinetic simulations into a :obj:`numpy`
+    object.
+
+    :param toks: parsed tokens
+    :type toks: |parseres|
+    :returns: list(dict) compatible with
+      :class:`~valjean.eponine.response_book.ResponseBook` and
+      :class:`~valjean.eponine.response_book.Index`.
+
+    .. seealso::
+
+       :func:`~valjean.eponine.tripoli4.common.convert_generic_kinetic` and
+       more generally :mod:`~valjean.eponine.tripoli4.common`
+    '''
+    rtoks = toks[0]
+    lod = common.convert_generic_kinetic(rtoks)
+    return lod
+
+
 def convert_keff(toks):
     r'''Convert k\ :sub:`eff` response in python dictionary including
     :obj:`numpy.matrix` and using :mod:`~valjean.eponine.tripoli4.common`.

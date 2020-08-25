@@ -1618,6 +1618,37 @@ def convert_generic_adjoint(res):
     return tlist
 
 
+def convert_generic_kinetic(res):
+    '''Convert kinetic results into association of dictionaries and NumPy
+    array.
+
+    :param list res: parsed tokens
+    :returns: list(dict) each dictionary containing
+
+      * metadata like nucleus name, family number or cycle length
+      * data saved as ``'integrated_res'``
+
+    Units, if available, and used batch are also saved under the integrated
+    result.
+
+    This structure is compatible with the response book and the index.
+    Selections are done like in the default score cases.
+    '''
+    scores = res['kin_generic_res']
+    ubatch = res['used_batches']
+    # deal with units (stored in all results)
+    dicts = []
+    for i, (score, sigma) in enumerate(scores):
+        generic_res = {'score': score, 'sigma': sigma}
+        if 'units' in res:
+            generic_res.update({'uscore': res['units'][0]['uscore'],
+                                'usigma': res['units'][0]['usigma']})
+        dicts.append({'used_batches_res': ubatch,
+                      'time_step': i,
+                      'generic_res': generic_res})
+    return dicts
+
+
 class AdjointCritEdDictBuilderException(Exception):
     '''Exception to adjoint criticality edition array builder (bad bins)'''
 

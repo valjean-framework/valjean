@@ -1101,6 +1101,18 @@ adjointres = (Group(Group(Suppress(_integratedres_kw)
                           + Optional(_unitsres)
                           ).setParseAction(trans.convert_generic_adjoint))
               )('adjoint')
+# Convergence statistics
+_kingcritline = Group(Suppress("CRITICALITY SOURCE") + _fnums + _fnums)
+_kingtimestepline = Group(Suppress("END OF TIME STEP ") + Suppress(_inums)
+                          + _fnums + _fnums)
+_kingstat = Group(_kingcritline
+                  + ZeroOrMore(_kingtimestepline))('kin_generic_res')
+kingres = (Group(Suppress(_integratedres_kw)
+                 + _numusedbatch
+                 + _kingstat
+                 + Optional(_unitsres)('units')
+                 ).setParseAction(trans.convert_generic_kinetic)
+           )('kinetic_generic')
 # sensitivities
 _sensitivityorder = (Suppress(_sensitivitytypeorder_kw)
                      + OneOrMore(Word(alphas + '_,()'),
@@ -1263,6 +1275,7 @@ responseblock = Group(keffblock
                       | kijres
                       | kijsources
                       | adjointres
+                      | kingres
                       | sensitivityres
                       | genericscoreblock
                       | listscoreblock)('results')
