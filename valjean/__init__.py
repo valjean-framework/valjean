@@ -51,8 +51,8 @@ LOG_FILE_FORMAT = ('%(levelname)9.9s (%(module)10.10s/%(funcName)12.12s) '
 _configure_logger(LOGGER)
 
 
-def set_log_level(logger, level):
+def set_log_level(level):
     '''Set the verbosity level for the default logger.'''
-    logger.setLevel(level)
-    for handler in logger.handlers:
+    LOGGER.setLevel(level)
+    for handler in LOGGER.handlers:
         handler.setLevel(level)
