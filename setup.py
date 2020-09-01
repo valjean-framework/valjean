@@ -42,7 +42,7 @@ setup(name=name,
           'dev': dev_reqs,
           'graphviz': graphviz_reqs
           },
-      data_files=[('', ['README.rst'])],
+      data_files=[('', ['README.md'])],
       use_scm_version=True,
       entry_points={
           'console_scripts': [
