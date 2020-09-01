@@ -16,7 +16,7 @@ the following from the source folder::
     $ pylint valjean
     $ pylint tests
 
-As a rune, try hard to keep :mod:`valjean` lint-free by running these commands
+As a rule, try hard to keep :mod:`valjean` lint-free by running these commands
 often. If the linter emits a warning, you can do one of the following:
 
 1. Fix the warning;
