@@ -7,7 +7,7 @@ def ensure(*paths, is_dir=False):
 
     :param paths: One or more paths. Multiple arguments will be concatenated
         into a single path.
-    :type paths: str or pathlib.Path or pathlib2.Path
+    :type paths: str or pathlib.Path
     :param bool is_dir: If `True`, the path will be constructed as a directory.
     '''
     path = Path(*(str(path) for path in paths))
