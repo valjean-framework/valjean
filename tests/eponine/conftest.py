@@ -289,7 +289,8 @@ def pytest_generate_tests(metafunc):
     '''Handle the ``--parsing-config-file`` option in order to make one test
     per folder required for comparison simplicity.
     '''
-    if metafunc.function.__name__ == "test_listing_parsing":
+    if metafunc.function.__name__ in ("test_listing_parsing",
+                                      "test_apollo3_hdf"):
         confiles = metafunc.config.getoption("--parsing-config-file")
         list_params = []
         if len(set(os.path.basename(x) for x in confiles)) != len(confiles):

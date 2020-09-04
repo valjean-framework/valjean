@@ -187,7 +187,9 @@ intersphinx_mapping = {
     'setuptools': ('https://setuptools.readthedocs.io/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None),
     'py': ('https://py.readthedocs.io/en/latest/', None),
-    'matplotlib': ('https://matplotlib.org/', None)}
+    'matplotlib': ('https://matplotlib.org/', None),
+    'h5py': ('https://docs.h5py.org/en/stable/', None)}
+
 
 # -- doctest options ------------------------------------------------------
 

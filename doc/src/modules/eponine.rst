@@ -18,3 +18,4 @@ eponine — ExPloratiON et INtErfaçage
    eponine/dataset
    eponine/browser
    eponine/tripoli4
+   eponine/apollo3
