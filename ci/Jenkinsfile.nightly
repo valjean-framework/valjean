@@ -1,0 +1,78 @@
+pipeline {
+  options {
+    skipDefaultCheckout()
+    timestamps()
+    timeout(time: 1, unit: 'HOURS')
+  }
+
+  agent { label 'valjean' }
+
+  environment {
+    projectName = 'valjean'
+    SRC = "${env.WORKSPACE}/src"
+    NIGHTLIES = "${env.WORKSPACE}/nightlies"
+    TOX_VENV = "${env.WORKSPACE}/tox/venv"
+    TOX = "tox --workdir \"${REPORTS}\""
+    REPORTS = "${env.WORKSPACE}/tox/work"
+  }
+
+  stages {
+    stage('Setup') {
+      steps {
+        cleanWs()
+        sh """mkdir -p ${REPORTS}"""
+        dir("${SRC}") {
+          checkout scm
+        }
+        dir("${NIGHTLIES}") {
+          git(branch: 'master',
+              credentialsId: '74004654-7955-49b7-a83a-4aa4663404a2',
+              url: 'https://codev-tuleap.intra.cea.fr/plugins/git/valjean/valjean-nightly-testing.git')
+        }
+        withFolderProperties {
+          echo "Starting build ${env.BUILD_ID} on ${env.JENKINS_URL}..."
+          sh """#!/bin/bash
+          if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+            source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+          fi
+          python3 -m venv "${TOX_VENV}"
+          source "${TOX_VENV}/bin/activate"
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install tox
+          """
+        }
+      }
+    }
+    stage('Run all parsing tests') {
+      steps {
+        withFolderProperties {
+          echo 'Running parsing tests...'
+          dir("${SRC}") {
+            sh """#!/bin/bash
+                if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                  source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+                fi
+                source "${TOX_VENV}/bin/activate"
+                for script in "${NIGHTLIES}"/scripts/valjean_nightly*.py; do
+                  script_base=\$(basename \${script})
+                  echo "Running tests for \${script_base}"
+                  ${TOX} -e parsing -- --parsing-config-file="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
+                done
+                """
+          }
+        }
+      }
+    }
+  }
+  post {
+    always {
+      dir("${REPORTS}") {
+        archiveArtifacts artifacts: "testing-*.out", fingerprint: true
+        cobertura (autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'coverage-*.xml',
+                   failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false,
+                   sourceEncoding: 'UTF_8', zoomCoverageChart: false)
+        junit "pytest-*.xml"
+      }
+    }
+  }
+}
