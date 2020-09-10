@@ -183,15 +183,14 @@ six-cent-six cyprès.
         LOGGER.debug('formatted section: %s', lines)
         return lines
 
-    def format_result(self, result, *, depth):
+    def format_result(self, result):
         '''Format one test result.
 
         :param TestResult result: A :class:`~.TestResult`.
         :returns: the formatted test result.
         :rtype: str
         '''
-        lines = [self.formatter.header(result.test.name, depth),
-                 self.formatter.text(result.test.description), '']
+        lines = [self.formatter.text(result.test.description), '']
         res_repr = self.representation(result)
         if (not res_repr
                 and self.representation.verbosity in (Verbosity.SILENT,
