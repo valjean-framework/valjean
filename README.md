@@ -16,7 +16,7 @@ pip install -U pip setuptools
 
 ```
 git clone https://codev-tuleap.intra.cea.fr/plugins/git/valjean/valjean.git
-pip install valjean
+pip install ./valjean  # or pip install path/to/valjean
 ```
 
 ### Installation from archive ###
