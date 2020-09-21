@@ -14,3 +14,4 @@ dist
 *~
 .pytest_cache
 .tox
+__t4depletion__

@@ -34,6 +34,9 @@ the innest ones:
       * One additional module parsing module is available for debugging and
         development: :mod:`~.parse_debug`
 
+    * Access to TRIPOLI-4 results from depletion, so reading ROOT files is
+      handled by :mod:`~.depletion`.
+
 
 Main modules
 ------------
@@ -44,6 +47,7 @@ Main modules
    tripoli4/parse
    tripoli4/scan
    tripoli4/use
+   tripoli4/depletion
 
 
 More details on parsing
