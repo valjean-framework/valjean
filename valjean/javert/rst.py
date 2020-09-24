@@ -653,7 +653,9 @@ class FormattedRst:
         lines = ['\n\n.. toctree::\n    :titlesonly:\n    :caption: {}:\n'
                  .format(toc_title)]
         for subtree in subtrees:
-            fname = str(self.tree_to_path(base=Path(''), tree=subtree))
+            # need to remove upper level to subtree in toc else they appear N
+            # times in the toc, depending on level, breaking the links
+            fname = str(self.tree_to_path(base=Path(''), tree=subtree[-2:]))
             line = ' '*4 + fname
             lines.append(line)
         lines.append('')
