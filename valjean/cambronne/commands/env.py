@@ -22,17 +22,18 @@ class EnvCommand(Command):
         parser.add_argument('--env-format', action='store',
                             choices=('pickle',), default='pickle',
                             help='environment persistency format')
-        parser.add_argument('names', metavar='NAME', nargs='+',
-                            help='The name of the environment file to show.')
+        parser.add_argument('env_files', metavar='ENV_FILE', nargs='+',
+                            help='The environment file to show.')
         parser.set_defaults(func=self.env)
 
     @staticmethod
     def env(args, _config):
         '''Execute the ``show-env`` command.'''
         # deserialize the environment
-        for name in args.names:
-            env = Env.from_file(name, fmt=args.env_format)
+        for env_file in args.env_files:
+            env = Env.from_file(env_file, fmt=args.env_format)
             if env is None:
-                LOGGER.error('cannot show the environment for task %s', name)
+                LOGGER.error('cannot show the environment for task %s',
+                             env_file)
             else:
                 pprint(dict(env.items()))
