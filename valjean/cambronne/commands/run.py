@@ -24,7 +24,7 @@ class RunCommand(JobCommand):
     def register(self, parser):
         '''Register options for this command in the parser.'''
         super().register(parser)
-        parser.add_argument('-w', '--workers', action='store', default=4,
+        parser.add_argument('-j', '--workers', action='store', default=4,
                             type=int,
                             help='number of workers to use in parallel')
         parser.add_argument('--env-filename', action='store',
