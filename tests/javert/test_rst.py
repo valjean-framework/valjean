@@ -214,16 +214,16 @@ def test_tabletemplate_tjoin(table_repr,
                              bonferroni_test_result_fail):
     '''Test :meth:`~valjean.javert.templates.TableTemplate.join`.'''
     templates = table_repr(bonferroni_test_result)
-    templates_id = id(templates[1])
+    templates_id = id(templates[0])
     LOGGER.debug("templates = %s", templates)
     templates2 = table_repr(bonferroni_test_result_fail)
     LOGGER.debug("templates2 = %s", templates2)
-    templates[1].join(templates2[1])
+    templates[0].join(templates2[0])
     LOGGER.debug("templates+templates2 = %s", templates)
-    assert id(templates[1]) != id(templates2[1])
-    assert id(templates[1]) == templates_id
-    assert all(tuple((row[0] in templates[1].columns[i]
-                      for i, row in enumerate(templates2[1].columns))))
+    assert id(templates[0]) != id(templates2[0])
+    assert id(templates[0]) == templates_id
+    assert all(tuple((row[0] in templates[0].columns[i]
+                      for i, row in enumerate(templates2[0].columns))))
 
 
 def test_tabletemplate_join(table_repr,
@@ -236,29 +236,29 @@ def test_tabletemplate_join(table_repr,
     first_test.test.datasets[0].name = "other 1D dataset"
     templates2 = table_repr(bonferroni_test_result_fail)
     LOGGER.debug("templates2 = %s", templates2)
-    templates3 = join(templates1[1], templates2[1])
+    templates3 = join(templates1[0], templates2[0])
     LOGGER.debug("templates1+templates2 = %s", templates3)
-    assert id(templates1[1]) != id(templates2[1])
-    assert id(templates1[1]) != id(templates3)
-    assert id(templates2[1]) != id(templates3)
+    assert id(templates1[0]) != id(templates2[0])
+    assert id(templates1[0]) != id(templates3)
+    assert id(templates2[0]) != id(templates3)
     # check the 2 results are not identical = contains some different elements
-    assert any(tuple((row[0] not in templates2[1].columns[i]
-                      for i, row in enumerate(templates1[1].columns))))
+    assert any(tuple((row[0] not in templates2[0].columns[i]
+                      for i, row in enumerate(templates1[0].columns))))
     # templates1 column elements are all in templates3
     assert all(tuple((row[0] in templates3.columns[i]
-                      for i, row in enumerate(templates1[1].columns))))
+                      for i, row in enumerate(templates1[0].columns))))
     # templates2 column elements are all in templates3
     assert all(tuple((row[0] in templates3.columns[i]
-                      for i, row in enumerate(templates2[1].columns))))
+                      for i, row in enumerate(templates2[0].columns))))
     templates4 = templates1 + templates2
     LOGGER.debug("templates1+templates2 = %s", templates4)
     assert len(templates4) == 4
     templates5 = [join(it1, it2) for it1, it2 in zip(templates1, templates2)]
     LOGGER.debug("templates1+templates2 = %s", templates5)
     assert len(templates5) == 2
-    assert templates5[0].headers[-1] == 'Student?'
-    assert templates5[0].columns[0].size == 10
-    assert templates5[1].headers[-1] == 'Bonferroni?'
+    assert templates5[0].headers[-1] == 'Bonferroni?'
+    assert templates5[1].headers[-1] == 'Student?'
+    assert templates5[1].columns[0].size == 10
 
 
 def test_tabletemplate_join_array(table_repr,

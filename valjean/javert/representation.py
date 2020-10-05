@@ -184,8 +184,8 @@ class FullTableRepresenter(TableRepresenter):
         ftest_verb = (Verbosity(verbosity.value-1)
                       if verbosity not in (Verbosity.SILENT, None)
                       else verbosity)
-        return (super().__call__(result.first_test_res, ftest_verb)
-                + tab_elts.repr_testresultbonferroni(result, verbosity))
+        return (tab_elts.repr_testresultbonferroni(result, verbosity)
+                + super().__call__(result.first_test_res, ftest_verb))
 
     def repr_testresultholmbonferroni(self, result, verbosity=None):
         '''Represent the result of a :class:`~.TestHolmBonferroni` test in two
@@ -207,8 +207,8 @@ class FullTableRepresenter(TableRepresenter):
         ftest_verb = (Verbosity(verbosity.value-1)
                       if verbosity not in (Verbosity.SILENT, None)
                       else verbosity)
-        return (super().__call__(result.first_test_res, ftest_verb)
-                + tab_elts.repr_testresultholmbonferroni(result, verbosity))
+        return (tab_elts.repr_testresultholmbonferroni(result, verbosity)
+                + super().__call__(result.first_test_res, ftest_verb))
 
 
 class PlotRepresenter(Representer):
