@@ -7,6 +7,7 @@ from ..common import JobCommand, read_env, write_env, build_graphs
 from ...cosette.backends.queue import QueueScheduling
 from ...cosette.scheduler import Scheduler
 from ...cosette.task import TaskStatus
+from ...path import ensure
 
 
 class RunCommand(JobCommand):
@@ -109,6 +110,7 @@ class RunCommand(JobCommand):
         if not failed:
             return
         log_root = config.get('path', 'log-root')
+        ensure(log_root, is_dir=True)
         failed_fname = Path(log_root, 'failed-tasks')
         with failed_fname.open('w') as failed_file:
             for task in failed:
