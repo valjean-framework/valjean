@@ -705,20 +705,20 @@ class RstTestReportTask(PythonTask):
 
     @classmethod
     def from_tasks(cls, name, *, make_report, eval_tasks, representation,
-                   author, version):
+                   author, version, kwargs=None, deps=None, soft_deps=None):
         '''Construct an :class:`RstTestReportTask` from a list of test
         evaluation tasks and a function to classify test results and put them
         in test reports.
         '''
         report_name = 'report-' + name
-        report_task = TestReportTask(report_name,
-                                     make_report=make_report,
-                                     eval_tasks=eval_tasks)
+        report_task = TestReportTask(report_name, make_report=make_report,
+                                     eval_tasks=eval_tasks, kwargs=kwargs)
         return cls(name, report_task=report_task,
                    representation=representation, author=author,
-                   version=version)
+                   version=version, deps=deps, soft_deps=soft_deps)
 
-    def __init__(self, name, *, report_task, representation, author, version):
+    def __init__(self, name, *, report_task, representation, author, version,
+                 deps=None, soft_deps=None):
 
         def write_rst(*, env, config):
             report = env[report_task.name]['result']
@@ -729,8 +729,12 @@ class RstTestReportTask(PythonTask):
             report_path = report_root / sanitize_filename(self.name)
             ensure(report_path, is_dir=True)
             fmt_report.write(report_path)
-            env_up = {self.name: {'result': fmt_report}}
+            env_up = {self.name: {'result': fmt_report,
+                                  'output_dir': str(report_path)}}
             return env_up, TaskStatus.DONE
 
-        super().__init__(name, write_rst, deps=[report_task],
+        deps = [] if deps is None else deps
+        deps.append(report_task)
+
+        super().__init__(name, write_rst, deps=deps, soft_deps=soft_deps,
                          env_kwarg='env', config_kwarg='config')

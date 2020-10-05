@@ -52,7 +52,7 @@ class TestReportTask(PythonTask):
     # as tests
     __test__ = False
 
-    def __init__(self, name, *, make_report, eval_tasks):
+    def __init__(self, name, *, make_report, eval_tasks, kwargs=None):
         '''Instantiate a :class:`TestReportTask` from a list of
         :class:`~.EvalTestTask` objects. The `make_report` argument is expected
         to be a function taking one argument, which is a dictionary associating
@@ -68,7 +68,11 @@ class TestReportTask(PythonTask):
             :class:`TestReport`.
         :param eval_tasks: a list of tasks, typically :class:`~.EvalTestTask`.
         :type eval_tasks: list(Task)
+        :param kwargs: a dictionary of kwargs that will be passed to the
+            `make_report` function.
+        :type kwargs: dict or None
         '''
+        kwargs = {} if kwargs is None else kwargs.copy()
 
         def report(*, env):
             result_dict = {}
@@ -79,7 +83,7 @@ class TestReportTask(PythonTask):
                         or 'result' not in env[tname]):
                     continue  # skip failed or missing tasks
                 result_dict[tname] = env[tname]['result']
-            report = make_report(result_dict)
+            report = make_report(result_dict, **kwargs)
             env_up = {self.name: {'result': report}}
             return env_up, TaskStatus.DONE
 
