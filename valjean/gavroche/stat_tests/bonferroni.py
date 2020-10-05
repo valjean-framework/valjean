@@ -350,8 +350,8 @@ class TestResultBonferroni(TestResult):
 class TestBonferroni(Test):
     '''Bonferroni correction for multiple tests of the same hypothesis.'''
 
-    def __init__(self, *, name, description, labels=None, test, alpha=0.01):
-        '''Initialisation of TestBonferroni.
+    def __init__(self, *, name, description='', labels=None, test, alpha=0.01):
+        '''Initialisation of :class:`TestBonferroni`.
 
 
         :param str name: local name of the test
@@ -478,8 +478,8 @@ class TestResultHolmBonferroni(TestResult):
 class TestHolmBonferroni(Test):
     '''Holm-Bonferroni method for multiple tests of the same hypothesis.'''
 
-    def __init__(self, *, name, description, labels=None, test, alpha=0.01):
-        '''Initialisation of TestHolmBonferroni.
+    def __init__(self, *, name, description='', labels=None, test, alpha=0.01):
+        '''Initialisation of :class:`TestHolmBonferroni`.
 
         :param str name: local name of the test
         :param str description: specific description of the test
