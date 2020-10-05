@@ -168,6 +168,7 @@ class QueueScheduling:
         tasks_left = full_graph.topological_sort()
         while tasks_left:
             n_tasks_left = len(tasks_left)
+            LOGGER.info('master: %d tasks left', n_tasks_left)
             with cond_var:
                 tasks_left = self._enqueue(tasks_left, full_graph, hard_graph,
                                            env)
