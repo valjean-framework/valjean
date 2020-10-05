@@ -95,7 +95,7 @@ class Task(ABC):
         raise NotImplementedError('do() not implemented for Task')
 
     def __str__(self):
-        return self.name
+        return repr(self.name)  # use repr() to add quotes around the task name
 
     def __repr__(self):
         return "Task('{}')".format(self.name)
