@@ -499,7 +499,7 @@ def repr_testresultstatstasks(result, verbosity=None):
     LOGGER.debug("In repr_testresultstatstasks")
     if verbosity == Verbosity.SILENT and bool(result):
         return []
-    return repr_testresultstats(result, TaskStatus.DONE)
+    return repr_testresultstats(result, TaskStatus.DONE, 'tasks')
 
 
 def repr_testresultstatstests(result, verbosity=None):
@@ -514,17 +514,20 @@ def repr_testresultstatstests(result, verbosity=None):
     LOGGER.debug("In repr_testresultstatstests")
     if verbosity == Verbosity.SILENT and bool(result):
         return []
-    return repr_testresultstats(result, TestOutcome.SUCCESS)
+    return repr_testresultstats(result, TestOutcome.SUCCESS, 'tests')
 
 
-def repr_testresultstats(result, status_ok):
+def repr_testresultstats(result, status_ok, label):
     '''Helper function for :func:`repr_testresultstatstests` and
     :func:`repr_testresultstatstasks`. It generates a table with the
     `status_ok` value in the first row. Non-null results in other rows are
     considered as failures, and are highlighted if the count is non-zero.
 
-    :param TestResultStatsTasks result: the test result to represent.
+    :param result: the test result to represent.
+    :type result: TestResultStatsTasks or TestResultStatsTests
     :param status_ok: the status value that must be considered as a success.
+    :param str label: the type of things that we are testing (``'tests'`` or
+        ``'tasks'``)
     :returns: the tables representing the test result.
     :rtype: list(TableTemplate)
     '''
@@ -549,15 +552,13 @@ def repr_testresultstats(result, status_ok):
     table = TableTemplate(statuses_txt, percents, headers=['status', 'counts'],
                           highlights=highlights)
     text = []
-    if status_ok == TaskStatus.DONE:
-        status_ko = TaskStatus.FAILED
-        text.append('List of failed tasks\n\n')
-    else:
-        status_ko = TestOutcome.MISSING
-        text.append('List of missing tests\n\n')
-    for task in classify[status_ko]:
-        text.append('* {}\n\n'.format(task))
-    ftext = TextTemplate(''.join(text))
+    for status, status_txt in zip(statuses, statuses_txt):
+        if status_ok == status:
+            continue
+        text.append('List of {} with status {}:\n\n'.format(label, status_txt))
+        text.extend('#. {}'.format(item) for item in sorted(classify[status]))
+        text.append('\n')
+    ftext = TextTemplate('\n'.join(text))
     return [table, ftext]
 
 
