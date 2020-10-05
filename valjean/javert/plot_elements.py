@@ -371,6 +371,8 @@ def repr_testresultfailed(_result, _verbosity=None):
 def repr_testresultstats(result, status_ok, label):
     '''Represent result from statistical test as a plot (pie chart probably).
 
+    Null results are omitted from the table.
+
     :param TestResult result: result from a statistical test
     :rtype: list(PlotTemplate)
     '''
@@ -378,8 +380,10 @@ def repr_testresultstats(result, status_ok, label):
     statuses = [status_ok]
     statuses.extend(status for status in status_ok.__class__
                     if status != status_ok)
-
     counts = [len(classify[status]) for status in statuses]
+    statuses = [status for status, count in zip(statuses, counts)
+                if count != 0]
+    counts = [count for count in counts if count != 0]
     statuses_txt = [status.name for status in statuses]
     subplot = SubPlotElements(
         curves=[CurveElements(values=np.array(counts),

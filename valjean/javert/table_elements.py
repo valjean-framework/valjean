@@ -521,7 +521,8 @@ def repr_testresultstats(result, status_ok, label):
     '''Helper function for :func:`repr_testresultstatstests` and
     :func:`repr_testresultstatstasks`. It generates a table with the
     `status_ok` value in the first row. Non-null results in other rows are
-    considered as failures, and are highlighted if the count is non-zero.
+    considered as failures, and are highlighted if the count is non-zero. Null
+    results are omitted from the table.
 
     :param result: the test result to represent.
     :type result: TestResultStatsTasks or TestResultStatsTests
@@ -536,11 +537,15 @@ def repr_testresultstats(result, status_ok, label):
     statuses = [status_ok]
     statuses.extend(status for status in status_ok.__class__
                     if status != status_ok)
-    statuses_txt = [status.name for status in statuses]
 
     counts = [len(classify[status]) for status in statuses]
     n_tasks = sum(counts)
-    percents = [percent_fmt(count, n_tasks) for count in counts]
+    percents = [percent_fmt(count, n_tasks) for count in counts
+                if count != 0]
+    statuses = [status for status, count in zip(statuses, counts)
+                if count != 0]
+    counts = [count for count in counts if count != 0]
+    statuses_txt = [status.name for status in statuses]
 
     statuses_txt.append('total')
     counts.append(n_tasks)
@@ -548,9 +553,8 @@ def repr_testresultstats(result, status_ok, label):
 
     hl_column = [False]
     hl_column.extend(count > 0 for count in counts[1:-1])
-    highlights = [hl_column, hl_column]
     table = TableTemplate(statuses_txt, percents, headers=['status', 'counts'],
-                          highlights=highlights)
+                          highlights=[hl_column, hl_column])
     text = []
     for status, status_txt in zip(statuses, statuses_txt):
         if status_ok == status:
@@ -558,8 +562,7 @@ def repr_testresultstats(result, status_ok, label):
         text.append('List of {} with status {}:\n\n'.format(label, status_txt))
         text.extend('#. {}'.format(item) for item in sorted(classify[status]))
         text.append('\n')
-    ftext = TextTemplate('\n'.join(text))
-    return [table, ftext]
+    return [table, TextTemplate('\n'.join(text))]
 
 
 def repr_testresultstatstestsbylabels(result, verbosity=None):
