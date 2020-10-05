@@ -459,8 +459,6 @@ class TestStudent(TestDataset):
         for _ds in self.datasets:
             check_bins(self.dsref, _ds)
             deltas.append(self.student_test(self.dsref, _ds))
-        if self.ndf is None:
-            return TestResultStudent(self, deltas)
         pval = [self.pvalue(delta, self.ndf) for delta in deltas]
         return TestResultStudent(self, deltas, pval)
 

@@ -111,7 +111,10 @@ def test_student_verb(verb_level, student_test_2d_result, rst_formatter,
         assert not ptempl
     else:
         assert len(ptempl) == 1
-        assert ptempl[0].nb_plots == 3
+        if verb_level in (None, Verbosity.INTERMEDIATE):
+            assert ptempl[0].nb_plots == 3
+        else:
+            assert ptempl[0].nb_plots == 4
 
 
 @pytest.mark.parametrize('verb_level', [Verbosity.SILENT, Verbosity.SUMMARY,
