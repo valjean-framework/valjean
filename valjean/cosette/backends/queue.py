@@ -228,7 +228,7 @@ class QueueScheduling:
 
                 start = time.time()
                 try:
-                    env_update, status = task.do(self.env, self.config)
+                    task_result = task.do(self.env, self.config)
                 except Exception as ex:  # pylint: disable=broad-except
                     LOGGER.exception('task %s on worker %s failed with the '
                                      'following exception:\n%s',
@@ -237,14 +237,20 @@ class QueueScheduling:
                                  'environment...', self.name)
                     self.env.set_failed(task)
                 else:
-                    LOGGER.debug('worker %s: task %s completed '
-                                 'with status %s', self.name, task, status)
-                    LOGGER.info('task %s completed with status %s',
-                                task, status)
-                    LOGGER.debug('worker %s: proposed environment update: %s',
-                                 self.name, env_update)
-                    self.env.set_status(task, status)
-                    self.env.apply(env_update)
+                    if task_result is None:
+                        LOGGER.error('expected an (env_update, status) pair '
+                                     'from task %s, got None', task.name)
+                        self.env.set_failed(task)
+                    else:
+                        env_update, status = task_result
+                        LOGGER.debug('worker %s: task %s completed '
+                                     'with status %s', self.name, task, status)
+                        LOGGER.info('task %s completed with status %s',
+                                    task, status)
+                        LOGGER.debug('worker %s: proposed environment update: '
+                                     '%s', self.name, env_update)
+                        self.env.set_status(task, status)
+                        self.env.apply(env_update)
                 end = time.time()
                 self.env.set_start_end_clock(task, start=start, end=end)
 
