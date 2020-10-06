@@ -117,18 +117,22 @@ def make_git_repo(path, log_path):
             check_call([CheckoutTask.GIT, 'init', path_str],
                        stdout=log, stderr=log)
             git_dir = str(path / '.git')
-        for filename in filenames:
-            check_call([CheckoutTask.GIT, '--git-dir', git_dir,
-                        '--work-tree', path_str, 'add', str(filename)],
-                       stdout=log, stderr=log)
-            check_call([CheckoutTask.GIT, '--git-dir', git_dir,
-                        '--work-tree', path_str, 'commit',
-                        '-m', 'Test commit'],
-                       stdout=log, stderr=log)
+            check_call([CheckoutTask.GIT, '--git-dir', str(git_dir),
+                        'config', 'user.email', 'sblinda@antani.com'])
+            check_call([CheckoutTask.GIT, '--git-dir', str(git_dir),
+                        'config', 'user.name', 'Conte Mascetti'])
+            for filename in filenames:
+                check_call([CheckoutTask.GIT, '--git-dir', git_dir,
+                            '--work-tree', path_str, 'add', str(filename)],
+                           stdout=log, stderr=log)
+                check_call([CheckoutTask.GIT, '--git-dir', git_dir,
+                            '--work-tree', path_str, 'commit',
+                            '-m', 'Test commit'],
+                           stdout=log, stderr=log)
     except CalledProcessError:
         log_txt = log_file.read_text()
-        LOGGER.error('command failed with the following errors: {}'
-                     .format(log_txt))
+        LOGGER.error('One of the commands failed. Here is the log:\n%s',
+                     log_txt)
         raise
 
 

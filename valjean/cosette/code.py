@@ -43,6 +43,12 @@ to the ``cmake`` executable may be specified through the
    ...           file=cmake_file)
    >>> git_dir = repo_dir / '.git'
    >>> subprocess.check_call([CheckoutTask.GIT, '--git-dir', str(git_dir),
+   ...                        'config', 'user.email', 'sblinda@antani.com'])
+   0
+   >>> subprocess.check_call([CheckoutTask.GIT, '--git-dir', str(git_dir),
+   ...                        'config', 'user.name', 'Conte Mascetti'])
+   0
+   >>> subprocess.check_call([CheckoutTask.GIT, '--git-dir', str(git_dir),
    ...                        '--work-tree' , str(repo_dir),
    ...                        'add', 'CMakeLists.txt'])
    0
