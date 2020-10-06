@@ -2,7 +2,7 @@
 import logging
 import locale
 import re
-from subprocess import check_call, check_output, DEVNULL, CalledProcessError
+from subprocess import check_call, check_output, CalledProcessError
 
 import py
 import pytest
@@ -81,7 +81,7 @@ add_executable(test_exe "${SOURCE_FILENAME}")
 '''
 
 
-def setup_project(project_path):
+def setup_project(project_path, log_path):
     '''Set up a minimalist project for testing in the given directory.
 
     The project consists of a git repository containing a simple
@@ -98,10 +98,10 @@ def setup_project(project_path):
     with filename.open('w') as cmakelists_file:
         cmakelists_file.write(CMAKELISTS)
 
-    make_git_repo(project_path)
+    make_git_repo(project_path, log_path)
 
 
-def make_git_repo(path):
+def make_git_repo(path, log_path):
     '''Turn path into a git repository.
 
     This function adds to the git repository all the files that are contained
@@ -111,16 +111,25 @@ def make_git_repo(path):
         return
     path_str = str(path)
     filenames = path.listdir()
-    check_call([CheckoutTask.GIT, 'init', path_str],
-               stdout=DEVNULL, stderr=DEVNULL)
-    git_dir = str(path / '.git')
-    for filename in filenames:
-        check_call([CheckoutTask.GIT, '--git-dir', git_dir,
-                    '--work-tree', path_str, 'add', str(filename)],
-                   stdout=DEVNULL, stderr=DEVNULL)
-    check_call([CheckoutTask.GIT, '--git-dir', git_dir,
-                '--work-tree', path_str, 'commit', '-m', 'Test commit'],
-               stdout=DEVNULL, stderr=DEVNULL)
+    log_file = log_path / 'log'
+    try:
+        with log_file.open('w') as log:
+            check_call([CheckoutTask.GIT, 'init', path_str],
+                       stdout=log, stderr=log)
+            git_dir = str(path / '.git')
+        for filename in filenames:
+            check_call([CheckoutTask.GIT, '--git-dir', git_dir,
+                        '--work-tree', path_str, 'add', str(filename)],
+                       stdout=log, stderr=log)
+            check_call([CheckoutTask.GIT, '--git-dir', git_dir,
+                        '--work-tree', path_str, 'commit',
+                        '-m', 'Test commit'],
+                       stdout=log, stderr=log)
+    except CalledProcessError:
+        log_txt = log_file.read_text()
+        LOGGER.error('command failed with the following errors: {}'
+                     .format(log_txt))
+        raise
 
 
 #########################################
@@ -132,7 +141,9 @@ def project(tmpdir_factory):
     '''Set up a git project with a CMake file.'''
     project_path = tmpdir_factory.mktemp('project')
     project_path.chmod(0o700)
-    setup_project(project_path)
+    log_path = tmpdir_factory.mktemp('log')
+    log_path.chmod(0o700)
+    setup_project(project_path, log_path)
     project_path.chmod(0o500, rec=True)
     yield project_path
     project_path.chmod(0o700, rec=True)
@@ -210,12 +221,14 @@ def git_myecho_repo(tmpdir_factory, subdir):
     '''Set up a git project with the :command:`echo` command.'''
     project_path = tmpdir_factory.mktemp('project')
     project_path.chmod(0o700)
+    log_path = tmpdir_factory.mktemp('log')
+    log_path.chmod(0o700)
     myecho_dir = project_path / subdir
     myecho_dir.ensure(dir=True)
     myecho = myecho_dir / 'myecho'
     echo = py.path.local('/bin/echo')
     echo.copy(myecho, mode=True)
-    make_git_repo(project_path)
+    make_git_repo(project_path, log_path)
     project_path.chmod(0o500, rec=True)
     yield project_path
     project_path.chmod(0o700, rec=True)
@@ -245,13 +258,15 @@ def cmake_echo(tmpdir_factory, subdir):
     '''Set up a CMake project with a CMake file.'''
     project_path = tmpdir_factory.mktemp('project')
     project_path.chmod(0o700)
+    log_path = tmpdir_factory.mktemp('log')
+    log_path.chmod(0o700)
     cmakelists = project_path / 'CMakeLists.txt'
     if subdir:
         subdir = '/' + subdir
     cmakelists.ensure(file=True).write(CECHO_CMAKE.format(subdir))
     cecho = project_path / 'cecho.c'
     cecho.ensure(file=True).write(CECHO_C)
-    make_git_repo(project_path)
+    make_git_repo(project_path, log_path)
     project_path.chmod(0o500, rec=True)
     yield project_path
     project_path.chmod(0o700, rec=True)
