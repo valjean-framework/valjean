@@ -6,9 +6,9 @@ r'''This module provides χ²-test (based on Pearson χ²) to compare dataset.
 
 In our case we'll use the modified χ²-test widely used in physics for comparing
 histograms. This test is also available in the **ROOT**
-`software <https://root.cern/>`_. For further explanations a good desciption is
-provided by the documentation of ROOT's ``Chi2Test()`` method on
-`TH1 page <https://root.cern/doc/master/classTH1.html>`_ or in this
+`software <https://root.cern.ch/>`_. For further explanations a good desciption
+is provided by the documentation of ROOT's ``Chi2Test()`` method on
+`TH1 page <https://root.cern.ch/doc/master/classTH1.html>`_ or in this
 `article <https://arxiv.org/abs/physics/0605123>`_ by N. Gagunashvili.
 
 The used formula is then:
