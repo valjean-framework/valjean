@@ -52,9 +52,6 @@ def perturbed_datasets():
     This strategy uses the :func:`~.perturbed_base_datasets` strategy to
     generate a pair of perturbed :class:`~.BaseDataset` objects, and converts
     them to :class:`Dataset`.
-
-    :param int min_size: the minimum list size.
-    :param int max_size: the maximum list size.
     '''
     # pylint: disable=no-member
     return (perturbed_base_datasets()
