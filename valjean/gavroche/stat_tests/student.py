@@ -537,3 +537,13 @@ class TestStudent(TestDataset):
         if ndf is None:
             return np.fabs(norm.ppf(alpha/2))
         return np.fabs(t.ppf(alpha/2, ndf))
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        yield float(self.alpha).hex().encode('utf-8')
+        if self.ndf is not None:
+            n_bytes = (self.ndf.bit_length() - 1) // 8 + 1
+            yield self.ndf.to_bytes(n_bytes, 'little')

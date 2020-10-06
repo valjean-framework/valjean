@@ -619,7 +619,7 @@ class Dataset(BaseDataset):
 
     def __repr__(self):
         return (super().__repr__()
-                + 'name: {}, what: {}'.format(self.name, self.what))
+                + ', name: {!r}, what: {!r}'.format(self.name, self.what))
 
     def __str__(self):
         return (super().__str__()
@@ -749,6 +749,32 @@ class Dataset(BaseDataset):
         LOGGER.debug("Shape: %s -> %s", self.shape, value.shape)
         LOGGER.debug("Bins:%s -> %s", self.bins, bins)
         return Dataset(value, error, bins=bins, name=self.name, what=self.what)
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.
+
+        >>> vals = np.arange(10).reshape(2, 5)
+        >>> errs = np.array([1]*10).reshape(2, 5)
+        >>> ds = Dataset(vals, errs)
+        >>> ds.fingerprint()
+        'a8411470d7766c543e90f0f38241dc918b9448d1b9d19b0a9b8b6c91f61944d0'
+        >>> bins = OrderedDict([('bacon', np.arange(3)),
+        ...                     ('egg', np.arange(5))])
+        >>> ds = Dataset(vals, errs, bins=bins)
+        >>> ds.fingerprint()
+        'dfec4e6ac118d30b7a83cfc500fefaec94f93a76a024d7550732cd08fbfb0fee'
+        >>> ds = Dataset(vals, errs, bins=bins, name='name')
+        >>> ds.fingerprint()
+        '441623c096bf917414013ebbfe345c66124f9a8dfbbd7051cf733ea20d7b651a'
+        >>> ds = Dataset(vals, errs, bins=bins, name='name', what='what!')
+        >>> ds.fingerprint()
+        '9a42c91381d696c1af651665f84efc43efa14d9c471c4ac851239ed0779a48a0'
+        '''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        yield self.name.encode('utf-8')
+        yield self.what.encode('utf-8')
 
 
 def consistent_datasets(gds1, gds2):

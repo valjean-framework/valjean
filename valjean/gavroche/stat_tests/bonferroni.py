@@ -406,6 +406,14 @@ class TestBonferroni(Test):
             for pval in test_res.pvalue]
         return TestResultBonferroni(self, test_res, null_hyp_reject)
 
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        yield from self.test.data()
+        yield float(self.alpha).hex().encode('utf-8')
+
 
 class TestResultHolmBonferroni(TestResult):
     '''Result from the Holm-Bonferroni method.'''
@@ -534,3 +542,11 @@ class TestHolmBonferroni(Test):
         hb_res = [self.holm_bonferroni_method(pvals, self.alpha)
                   for pvals in test_res.pvalue]
         return TestResultHolmBonferroni(self, test_res, *zip(*hb_res))
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        yield from self.test.data()
+        yield float(self.alpha).hex().encode('utf-8')

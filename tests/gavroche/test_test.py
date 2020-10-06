@@ -126,3 +126,12 @@ def test_not_approx_equal_data(dataset):
                              description="dataset equality")
     thetest_res = thetest.evaluate()
     assert not bool(thetest_res)
+
+
+def test_fingerprint(valid_tests):
+    '''Test that fingerprinting works on all the types of tests.'''
+    all_fingerprints = set()
+    for valid_test in valid_tests:
+        fgpr = valid_test.fingerprint()
+        all_fingerprints.add(fgpr)
+    assert len(all_fingerprints) == len(valid_tests)

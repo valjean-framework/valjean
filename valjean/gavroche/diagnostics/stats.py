@@ -127,6 +127,14 @@ class TestStatsTasks(Test):
             status_dict[task_result['status']].append(task_name)
         return TestResultStatsTasks(test=self, classify=status_dict)
 
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        for task_name, _task_result in self.task_results:
+            yield task_name.encode('utf-8')
+
 
 class TestResultStatsTasks(TestResult):
     '''The result of the evaluation of a :class:`TestStatsTasks`. The test is
@@ -315,6 +323,14 @@ class TestStatsTests(Test):
                     test_lst = status_dict[TestOutcome.FAILURE]
                 test_lst.append(test_result.test.name)
         return TestResultStatsTests(test=self, classify=status_dict)
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        for task_name, _task_result in self.task_results:
+            yield task_name.encode('utf-8')
 
 
 class TestResultStatsTests(TestResultStatsTasks):
@@ -592,6 +608,16 @@ class TestStatsTestsByLabels(Test):
         self._build_index()
         sfl = self._stats_for_labels()
         return TestResultStatsTestsByLabels(test=self, classify=sfl)
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        for task_name, _task_result in self.task_results:
+            yield task_name.encode('utf-8')
+        for label in self.by_labels:
+            yield label.encode('utf-8')
 
 
 class TestResultStatsTestsByLabels(TestResultStatsTasks):

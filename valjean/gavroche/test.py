@@ -42,6 +42,7 @@ However, they are approximately equal:
     >>> print(bool(test_approx_res))
     True
 '''
+from hashlib import sha256
 from abc import ABC, abstractmethod
 import numpy as np
 
@@ -126,6 +127,25 @@ class Test(ABC):
         Must return a subclass of :class:`~.TestResult`.
         '''
 
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield self.__class__.__name__.encode('utf-8')
+        yield self.name.encode('utf-8')
+        yield self.description.encode('utf-8')
+        for key, value in self.labels.items():
+            yield key.encode('utf-8')
+            yield value.encode('utf-8')
+
+    def fingerprint(self):
+        '''Compute a fingerprint for `self`. The fingerprint must be a good
+        hash of the contents of the test.
+        '''
+        hasher = sha256()
+        for data in self.data():
+            hasher.update(data)
+        return hasher.hexdigest()
+
     # tell pytest that this class and derived classes should NOT be collected
     # as tests
     __test__ = False
@@ -153,6 +173,15 @@ class TestDataset(Test):
         if not datasets:
             raise ValueError('At least one dataset expected to be compared to '
                              'the reference one')
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        yield from self.dsref.data()
+        for dataset in self.datasets:
+            yield from dataset.data()
 
     @abstractmethod
     def evaluate(self):
@@ -239,6 +268,12 @@ class TestEqual(TestDataset):
             equal.append(np.equal(self.dsref.value, _ds.value))
         return TestResultEqual(self, equal)
 
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+
 
 class TestResultApproxEqual(TestResult):
     '''Result from :class:`TestApproxEqual`.'''
@@ -302,3 +337,11 @@ class TestApproxEqual(TestDataset):
             approx_equal.append(np.isclose(self.dsref.value, _ds.value,
                                            rtol=self.rtol, atol=self.atol))
         return TestResultApproxEqual(self, approx_equal)
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        yield float(self.rtol).hex().encode('utf-8')
+        yield float(self.atol).hex().encode('utf-8')

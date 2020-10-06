@@ -394,3 +394,12 @@ class TestChi2(TestDataset):
         pvalue = [self.pvalue(_chi2, _ndf)
                   for _chi2, _ndf in zip(chi2, self.ndf)]
         return TestResultChi2(self, chi2, pvalue)
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        yield float(self.alpha).hex().encode('utf-8')
+        n_bytes = (self.ignore_empty.bit_length() - 1) // 8 + 1
+        yield self.ignore_empty.to_bytes(n_bytes, 'little')

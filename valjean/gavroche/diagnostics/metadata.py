@@ -97,3 +97,16 @@ class TestMetadata(Test):
         '''Evaluate this test and turn it into a :class:`TestResultMetadata`.
         '''
         return TestResultMetadata(self, self.compare_metadata())
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield from super().data()
+        yield self.__class__.__name__.encode('utf-8')
+        for key, tmd in self.dmd.items():
+            yield key.encode('utf-8')
+            for mdkey, mdval in tmd.items():
+                yield mdkey.encode('utf-8')
+                yield mdval.encode('utf-8')
+        for key in self.exclude:
+            yield key.encode('utf-8')

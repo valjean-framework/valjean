@@ -344,3 +344,23 @@ def test_slicing(sampler):
             len(ys)-xs == len(y)-x
             for x, y, xs, ys in zip(gds.value.shape, gds.bins.values(),
                                     gdssl.value.shape, gdssl.bins.values())))
+
+
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(gds=datasets())
+def test_fingerprint_copy(gds):
+    '''Test dataset fingerprinting.'''
+    fgpr = gds.fingerprint()
+    gds_copy = gds.copy()
+    fgpr_copy = gds_copy.fingerprint()
+    assert fgpr == fgpr_copy
+
+
+def test_fingerprint_different(some_dataset, other_dataset, different_dataset):
+    '''Test that different datasets have different fingerprints.'''
+    fgpr1 = some_dataset.fingerprint()
+    fgpr2 = other_dataset.fingerprint()
+    fgpr3 = different_dataset.fingerprint()
+    assert fgpr1 != fgpr2
+    assert fgpr2 != fgpr3
+    assert fgpr3 != fgpr1

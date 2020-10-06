@@ -427,8 +427,17 @@ def one_dim_dataset(draw):
 
 @pytest.fixture(params=[['equal_test'],
                         ['equal_test_fail'],
-                        ['equal_test', 'approx_equal_test']],
-                ids=['one successful test', 'one failing test', 'two tests'])
+                        ['equal_test', 'approx_equal_test'],
+                        ['student_test', 'student_test_2d',
+                         'student_test_edges', 'student_test_fail',
+                         'student_test_3ds', 'student_test_with_pvals',
+                         'student_test_fail_with_pvals',
+                         'student_test_scalar', 'equal_test_scalar',
+                         'bonferroni_test', 'bonferroni_test_fail',
+                         'holm_bonferroni_test',
+                         'holm_bonferroni_test_fail']],
+                ids=['one successful test', 'one failing test', 'two tests',
+                     'all the other tests'])
 def valid_tests(request):
     '''Return lists of valid :class:`~.Test` objects.'''
     fixtures = [request.getfixturevalue(fix_name)

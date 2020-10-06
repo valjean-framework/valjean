@@ -94,6 +94,7 @@ ValueError: Number of bins do not correspond to dimension of value
 '''
 
 import logging
+from hashlib import sha256
 from collections import OrderedDict
 import numpy as np
 
@@ -213,3 +214,33 @@ class BaseDataset:
         new_value = self.value.copy()
         new_error = self.error.copy()
         return self.__class__(new_value, new_error, bins=new_bins)
+
+    def fingerprint(self):
+        '''Return a hash of the content of the dataset.
+
+        >>> vals = np.arange(10).reshape(2, 5)
+        >>> errs = np.array([1]*10).reshape(2, 5)
+        >>> ds = BaseDataset(vals, errs)
+        >>> ds.fingerprint()
+        'a6b5982bf8a4fe0dcd688db92afade0f5f06dc10edfb63d886fae6d80e960b05'
+        >>> bins = OrderedDict([('bacon', np.arange(3)),
+        ...                     ('egg', np.arange(5))])
+        >>> ds = BaseDataset(vals, errs, bins=bins)
+        >>> ds.fingerprint()
+        'cf518e8f68dae66e2853b539f2f5543ba289da1a2b4a309e3044583b007b2155'
+        '''
+        hasher = sha256()
+        for data in self.data():
+            hasher.update(data)
+        return hasher.hexdigest()
+
+    def data(self):
+        '''Generator yielding objects supporting the buffer protocol that (as a
+        whole) represent a serialized version of `self`.'''
+        yield self.__class__.__name__.encode('utf-8')
+        yield np.require(self.value, requirements='C').data.cast('b')
+        yield np.require(self.error, requirements='C').data.cast('b')
+        if self.bins is not None:
+            for key, val in self.bins.items():
+                yield key.encode('utf-8')
+                yield np.require(val, requirements='C').data.cast('b')
