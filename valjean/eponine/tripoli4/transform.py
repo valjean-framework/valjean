@@ -255,8 +255,8 @@ def convert_generic_adjoint(toks):
     :param toks: Adjoint result (got thanks to IFP or Wielandt method)
     :type toks: |parseres|
     :returns: list(dict) compatible with
-      :class:`~valjean.eponine.response_book.ResponseBook` and
-      :class:`~valjean.eponine.response_book.Index`.
+      :class:`~valjean.eponine.browser.Browser` and
+      :class:`~valjean.eponine.browser.Index`.
 
     .. seealso::
 
@@ -276,8 +276,8 @@ def convert_generic_kinetic(toks):
     :param toks: parsed tokens
     :type toks: |parseres|
     :returns: list(dict) compatible with
-      :class:`~valjean.eponine.response_book.ResponseBook` and
-      :class:`~valjean.eponine.response_book.Index`.
+      :class:`~valjean.eponine.browser.Browser` and
+      :class:`~valjean.eponine.browser.Index`.
 
     .. seealso::
 
@@ -374,8 +374,7 @@ def convert_keff_auto(toks):
     usual response) in standard python objects.
 
     Add the ``'response_type'`` key to the dictionary with ``'keff_auto_res'``
-    as associated value (to match response book and data_convertor
-    requirements).
+    as associated value (to match browser and data_convertor requirements).
     '''
     assert len(toks) == 1, "Not correct number of elements in keff_auto toks"
     akeff_res = toks[0]

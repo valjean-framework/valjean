@@ -2,4 +2,4 @@
 ````````````````````````````````````````
 
 .. automodule:: valjean.eponine.tripoli4.parse
-   :synopsis: Parse TRIPOLI-4 outputs and provide :class:`valjean.eponine.response_book.ResponseBook`
+   :synopsis: Parse TRIPOLI-4 outputs and provide :class:`valjean.eponine.browser.Browser`

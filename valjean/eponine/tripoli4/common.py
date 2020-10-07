@@ -1577,7 +1577,7 @@ def convert_generic_adjoint(res):
     Units, if available, and used batch are also saved under the integrated
     result.
 
-    This structure is compatible with the response book and the index.
+    This structure is compatible with the browser and the index.
     Selections are done like in the default score cases.
     '''
     keys = ('score', 'sigma')
@@ -1631,7 +1631,7 @@ def convert_generic_kinetic(res):
     Units, if available, and used batch are also saved under the integrated
     result.
 
-    This structure is compatible with the response book and the index.
+    This structure is compatible with the browser and the index.
     Selections are done like in the default score cases.
     '''
     scores = res['kin_generic_res']

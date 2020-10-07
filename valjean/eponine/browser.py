@@ -2,15 +2,14 @@
 
 This module is composed of 2 classes:
 
-  * :class:`ResponseBook` that stores the list of dictionaries and builds an
+  * :class:`Browser` that stores the list of dictionaries and builds an
     :class:`Index` to facilitate selections;
   * :class:`Index` based on :class:`collections.defaultdict` to perform
     selections on the list of dictionaries
 
 
-The classes :class:`Index` and :class:`ResponseBook` are meant to be general
-even if they will be shown and used in our specific case: parsing results from
-Tripoli-4.
+The classes :class:`Index` and :class:`Browser` are meant to be general even if
+they will be shown and used in a specific case: parsing results from Tripoli-4.
 
 
 The :class:`Index` class
@@ -24,166 +23,158 @@ from :mod:`collections`. It implements a ``defaultdict(defaultdict(set))`` from
 the list of dictionaries.
 
 :class:`Index` is not supposed to be used standalone, but called from
-:class:`ResponseBook`, but this is still possible.
+:class:`Browser`, but this is still possible.
 
 
-The :class:`ResponseBook` class
--------------------------------
+The :class:`Browser` class
+--------------------------
 
 This class is analogue to a phonebook: it contains an index and the content,
 here stored as a list of dictionaries. It commands the index (building and
 selections). Examples are shown below.
 
 
-.. _resp-book-example:
+.. _browser-example:
 
-Building the responses book
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Building the browser
+^^^^^^^^^^^^^^^^^^^^
 
 Let's consider a bunch of friends going to the restaurant and ordering their
 menus. For each of them the waiter has to remember their name, under
-``'consumer'``, their choice of menu under ``'response_function'``, their
-drink, what they precisely order as dish under ``'results'`` and optionally the
-number corresponding to their choice of dessert. He will represent these orders
-as a list of orders, one order being a dictionary.
+``'consumer'``, their choice of menu under ``'menu'``, their drink, what they
+precisely order as dish under ``'results'`` and optionally the number
+corresponding to their choice of dessert. He will represent these orders as a
+list of orders, one order being a dictionary.
 
->>> from valjean.eponine.response_book import ResponseBook
+>>> from valjean.eponine.browser import Browser
 >>> from pprint import pprint
 >>> orders = [
-... {'response_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
+... {'menu': '1', 'consumer': 'Terry', 'drink': 'beer',
 ...  'results': {'ingredients_res': ['egg', 'bacon']}},
-... {'response_function': 'menu2', 'consumer': 'John',
+... {'menu': '2', 'consumer': 'John',
 ...  'results': [{'ingredients_res': ['egg', 'spam']},
 ...              {'ingredients_res': ['tomato', 'spam', 'bacon']}]},
-... {'response_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
+... {'menu': '1', 'consumer': 'Graham', 'drink': 'coffee',
 ...  'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},
-... {'response_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
+... {'menu': '3', 'consumer': 'Eric', 'drink': 'beer',
 ...  'results': {'ingredients_res': ['sausage'],
 ...              'side_res': 'baked beans'}},
-... {'response_function': 'royal_menu', 'consumer': 'Michael',
-...  'drink': 'brandy', 'dessert': 3,
+... {'menu': 'royal', 'consumer': 'Michael', 'drink': 'brandy', 'dessert': 3,
 ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
->>> com_rb = ResponseBook(orders)
->>> print(com_rb)
-ResponseBook object -> Number of responses: 5, data key: 'results', \
-available metadata keys: ['consumer', 'dessert', 'drink', 'index', \
-'response_function']
-                    -> Number of globals: 0
+>>> com_br = Browser(orders)
+>>> print(com_br)
+Browser object -> Number of content items: 5, data key: 'results', \
+available metadata keys: ['consumer', 'dessert', 'drink', 'index', 'menu']
+               -> Number of globals: 0
 
 Some global variables can be added, as a dictionary, normally common to all the
-results sent under the argument ``resp``.
+results sent under the argument ``content``.
 
 >>> global_vars = {'table': 42, 'service_time': 300, 'priority': -1}
->>> com_rb = ResponseBook(orders, global_vars=global_vars)
->>> print(com_rb)
-ResponseBook object -> Number of responses: 5, data key: 'results', \
-available metadata keys: ['consumer', 'dessert', 'drink', 'index', \
-'response_function']
-                    -> Number of globals: 3
->>> pprint(com_rb.globals)
+>>> com_br = Browser(orders, global_vars=global_vars)
+>>> print(com_br)
+Browser object -> Number of content items: 5, data key: 'results', \
+available metadata keys: ['consumer', 'dessert', 'drink', 'index', 'menu']
+               -> Number of globals: 3
+>>> pprint(com_br.globals)
 {'priority': -1, 'service_time': 300, 'table': 42}
 
 
-Selection of a given response or of a list of responses
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Selection of a given items or of a list of items from content
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Various methods are available to select one order, depending on requirements:
 
-  * get a new ResponseBook:
+  * get a new Browser:
 
-    >>> sel_rb = com_rb.filter_by(response_function='menu1', drink='beer')
-    >>> pprint(sel_rb.responses)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Terry',  'drink': 'beer', 'index': 0, \
-'response_function': 'menu1', \
+    >>> sel_br = com_br.filter_by(menu='1', drink='beer')
+    >>> pprint(sel_br.content)  # doctest: +NORMALIZE_WHITESPACE
+    [{'consumer': 'Terry',  'drink': 'beer', 'index': 0, 'menu': '1', \
 'results': {'ingredients_res': ['egg', 'bacon']}}]
 
     * check if a key is present or not:
 
-    >>> 'drink' in sel_rb
+    >>> 'drink' in sel_br
     True
-    >>> 'dessert' in sel_rb
+    >>> 'dessert' in sel_br
     False
-    >>> 'dessert' in com_rb
+    >>> 'dessert' in com_br
     True
 
-    The ``'dessert'`` key has been removed from the ResponseBook issued from
+    The ``'dessert'`` key has been removed from the Browser issued from
     the selection while it is still present in the original one.
 
   * get the available keys (sorted to be able to test them in the doctest, else
     list is enough):
 
-    >>> sorted(sel_rb.keys())
-    ['consumer', 'drink', 'index', 'response_function']
-    >>> sorted(com_rb.keys())
-    ['consumer', 'dessert', 'drink', 'index', 'response_function']
+    >>> sorted(sel_br.keys())
+    ['consumer', 'drink', 'index', 'menu']
+    >>> sorted(com_br.keys())
+    ['consumer', 'dessert', 'drink', 'index', 'menu']
 
   * if the required key doesn't exist a warning is emitted:
 
-    >>> sel_rb = com_rb.filter_by(quantity=5)
-    >>> # prints  WARNING     accessor: quantity not a valid key. Possible \
-ones are ['consumer', 'dessert', 'drink', 'index', 'response_function']
-    >>> 'quantity' in com_rb
+    >>> sel_br = com_br.filter_by(quantity=5)
+    >>> # prints  WARNING     browser: quantity not a valid key. Possible \
+ones are ['consumer', 'dessert', 'drink', 'index', 'menu']
+    >>> 'quantity' in com_br
     False
 
   * if the value corresponding to the key doesn't exist another warning is
     emitted:
 
-    >>> sel_rb = com_rb.filter_by(drink='wine')
-    >>> # prints  WARNING     accessor: wine is not a valid drink
+    >>> sel_br = com_br.filter_by(drink='wine')
+    >>> # prints  WARNING     browser: wine is not a valid drink
 
   * to know the available values corresponding to the keys (without the
-    corresponding responses indexes):
+    corresponding items indexes):
 
-    >>> sorted(com_rb.available_values('drink'))
+    >>> sorted(com_br.available_values('drink'))
     ['beer', 'brandy', 'coffee']
 
   * if the key doesn't exist an 'empty generator' is emitted:
 
-    >>> sorted(com_rb.available_values('quantity'))
+    >>> sorted(com_br.available_values('quantity'))
     []
 
-  * to directly get the responses corresponding to the selection, use the
-    method :func:`ResponseBook.select_by`
+  * to directly get the content items corresponding to the selection, use the
+    method :func:`Browser.select_by`
 
-    >>> sel_rb = com_rb.select_by(consumer='Graham')
-    >>> type(sel_rb)
+    >>> sel_br = com_br.select_by(consumer='Graham')
+    >>> type(sel_br)
     <class 'list'>
-    >>> len(sel_rb)
+    >>> len(sel_br)
     1
-    >>> pprint(sel_rb)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Graham', 'drink': 'coffee', 'index': 2, \
-'response_function': 'menu1', \
+    >>> pprint(sel_br)  # doctest: +NORMALIZE_WHITESPACE
+    [{'consumer': 'Graham', 'drink': 'coffee', 'index': 2, 'menu': '1', \
 'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}]
 
-  * this also work when more than one response corresponds to the selection:
+  * this also work when several items correspond to the selection:
 
-    >>> sel_rb = com_rb.select_by(drink='beer')
-    >>> pprint(sel_rb)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Terry', 'drink': 'beer', 'index': 0, \
-'response_function': 'menu1', \
+    >>> sel_br = com_br.select_by(drink='beer')
+    >>> pprint(sel_br)  # doctest: +NORMALIZE_WHITESPACE
+    [{'consumer': 'Terry', 'drink': 'beer', 'index': 0, 'menu': '1', \
 'results': {'ingredients_res': ['egg', 'bacon']}}, \
-{'consumer': 'Eric', 'drink': 'beer', 'index': 3, \
-'response_function': 'menu3', \
+{'consumer': 'Eric', 'drink': 'beer', 'index': 3, 'menu': '3', \
 'results': {'ingredients_res': ['sausage'], 'side_res': 'baked beans'}}]
-    >>> len(sel_rb)
+    >>> len(sel_br)
     2
 
-  * a *squeeze* option is also available to directly get the response (and not
-    a list of responses) when **only one** response corresponds to the
-    selection (its default is at False):
+  * a *squeeze* option is also available to directly get the item (and not a
+    list of items) when **only one** item corresponds to the selection (its
+    default is at False):
 
-    >>> resp = com_rb.select_by(consumer='Graham', squeeze=True)
-    >>> pprint(resp)  # doctest: +NORMALIZE_WHITESPACE
-    {'consumer': 'Graham', 'drink': 'coffee', 'index': 2, \
-'response_function': 'menu1', \
+    >>> item = com_br.select_by(consumer='Graham', squeeze=True)
+    >>> pprint(item)  # doctest: +NORMALIZE_WHITESPACE
+    {'consumer': 'Graham', 'drink': 'coffee', 'index': 2, 'menu': '1', \
 'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}
 
-  * squeeze is not possible if more than one result corresponds to the
-    required selection
+  * squeeze is not possible if several results correspond to the required
+    selection
 
-    >>> resps = com_rb.select_by(drink='beer', squeeze=True)
-    >>> # prints  WARNING     accessor: Squeeze cannot be applied, more than \
-one response corresponds to your choice
+    >>> items = com_br.select_by(drink='beer', squeeze=True)
+    >>> # prints  WARNING     browser: Squeeze cannot be applied, more than \
+one content item corresponds to your choice
 
 
 Module API
@@ -207,7 +198,7 @@ def _make_defaultdict_set():
 
 
 class Index(Mapping):
-    '''Class to describe index used in ResponseBook.
+    '''Class to describe index used in Browser.
 
     The structure of Index is a ``defaultdict(defaultdict(set))``.  This class
     was derived mainly for pretty-printing purposes.
@@ -215,7 +206,7 @@ class Index(Mapping):
     Quick example of index (menu for 4 persons, identified by numbers, one has
     no drink):
 
-    >>> from valjean.eponine.response_book import Index
+    >>> from valjean.eponine.browser import Index
     >>> myindex = Index()
     >>> myindex.index['drink']['beer'] = {1, 4}
     >>> myindex.index['drink']['wine'] = {2}
@@ -307,7 +298,7 @@ class Index(Mapping):
         required set of ids.
 
         :param set(int) ids: index corresponding to the required elements of
-          the list of responses
+          the list of content items
         :returns: Index only containing the keys involved in the ids
         '''
         assert isinstance(ids, set)
@@ -343,21 +334,22 @@ class Index(Mapping):
         return str(self)
 
 
-class ResponseBook(Container):
+class Browser(Container):
     '''Class to perform selections on results.
 
     This class is based on four objects:
 
-      * the responses, as a list of dictionaries (containing data and metadata)
+      * the content, as a list of dictionaries (containing data and metadata)
       * the key corresponding to data in the dictionary (default='results')
-      * an index based on responses allowing easy selections on each metadata
-      * a dictionary corresponding to global variables (common to all
-        responses).
+      * an index based on content elements allowing easy selections on each
+        metadata
+      * a dictionary corresponding to global variables (common to all content
+        items).
 
     Initialization parameters:
 
-    :param list(dict) resp: list of responses
-    :param str data_key: key in list of responses corresponding to results or
+    :param list(dict) content: list of items containing data and metadata
+    :param str data_key: key in the content items corresponding to results or
       data, that should not be used in index (as always present and mandatory)
     :param dict global_vars: global variables (optional, default=None)
 
@@ -368,43 +360,43 @@ class ResponseBook(Container):
     Examples on development / debugging methods:
 
     Let's use the example detailled above in
-    :ref:`module introduction <resp-book-example>`:
+    :ref:`module introduction <browser-example>`:
 
-    >>> from valjean.eponine.response_book import ResponseBook
+    >>> from valjean.eponine.browser import Browser
     >>> orders = [
-    ... {'response_function': 'menu1', 'consumer': 'Terry', 'drink': 'beer',
+    ... {'menu': '1', 'consumer': 'Terry', 'drink': 'beer',
     ...  'results': {'ingredients_res': ['egg', 'bacon']}},
-    ... {'response_function': 'menu2', 'consumer': 'John',
+    ... {'menu': '2', 'consumer': 'John',
     ...  'results': [{'ingredients_res': ['egg', 'spam']},
     ...              {'ingredients_res': ['tomato', 'spam', 'bacon']}]},
-    ... {'response_function': 'menu1', 'consumer': 'Graham', 'drink': 'coffee',
+    ... {'menu': '1', 'consumer': 'Graham', 'drink': 'coffee',
     ...  'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]},
-    ... {'response_function': 'menu3', 'consumer': 'Eric', 'drink': 'beer',
+    ... {'menu': '3', 'consumer': 'Eric', 'drink': 'beer',
     ...  'results': {'ingredients_res': ['sausage'],
     ...              'side_res': 'baked beans'}},
-    ... {'response_function': 'royal_menu', 'consumer': 'Michael',
-    ...  'drink': 'brandy', 'dessert': 3,
+    ... {'menu': 'royal', 'consumer': 'Michael', 'drink': 'brandy',
+    ...  'dessert': 3,
     ...  'results': {'dish_res': ['lobster thermidor', 'Mornay sauce']}}]
-    >>> com_rb = ResponseBook(orders)
+    >>> com_br = Browser(orders)
 
-    * possibility to get the response id directly (internally used method):
+    * possibility to get the item id directly (internally used method):
 
-      >>> ind = com_rb._filter_resp_id_by(drink='coffee')
+      >>> ind = com_br._filter_items_id_by(drink='coffee')
       >>> isinstance(ind, set)
       True
       >>> print(ind)
       {2}
 
-    * possibility to get the index of the response stripped without rebuilding
-      the full ResponseBook:
+    * possibility to get the index of the content element stripped without
+      rebuilding the full Browser:
 
-      >>> ind = com_rb._filter_index_by(response_function='menu1')
+      >>> ind = com_br._filter_index_by(menu='1')
       >>> isinstance(ind, Index)
       True
       >>> ind.dump(sort=True)  # doctest: +NORMALIZE_WHITESPACE
       "{'consumer': {'Graham': {2}, 'Terry': {0}}, \
 'drink': {'beer': {0}, 'coffee': {2}}, 'index': {0: {0}, 2: {2}}, \
-'response_function': {'menu1': {0, 2}}}"
+'menu': {'1': {0, 2}}}"
 
       The 'dessert' key has been stripped from the index:
 
@@ -414,14 +406,14 @@ class ResponseBook(Container):
     Debug print is available thanks to :func:`__repr__`:
 
     >>> small_order = [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}]
-    >>> so_rb = ResponseBook(small_order)
-    >>> "{0!r}".format(so_rb)
-    "<class 'valjean.eponine.response_book.ResponseBook'>, \
-(Responses: ..., Index: ...)"
+    >>> so_br = Browser(small_order)
+    >>> "{0!r}".format(so_br)
+    "<class 'valjean.eponine.browser.Browser'>, (Content items: ..., \
+Index: ...)"
     '''
 
-    def __init__(self, resp, data_key='results', global_vars=None):
-        self.responses = [r.copy() for r in resp]
+    def __init__(self, content, data_key='results', global_vars=None):
+        self.content = [r.copy() for r in content]
         self.data_key = data_key
         self.index = self._build_index()
         LOGGER.debug("Index: %s", self.index)
@@ -429,7 +421,7 @@ class ResponseBook(Container):
                         else {})
 
     def __eq__(self, other):
-        return (self.responses == other.responses
+        return (self.content == other.content
                 and self.data_key == other.data_key
                 and self.globals == other.globals)
 
@@ -437,21 +429,21 @@ class ResponseBook(Container):
         return not self == other
 
     def _build_index(self):
-        '''Build index from all responses in the list.
+        '''Build index from all content elements in the list.
 
-        Keys of the sets are keywords used to describe the responses and/or the
+        Keys of the sets are keywords used to describe the items and/or the
         scores (if flat case).
 
-        :param str data_key: key in list of responses corresponding to results
-          or data
+        :param str data_key: key in list of content items corresponding to
+          results or data
         :returns: :class:`Index`
         '''
         index = Index()
-        for iresp, resp in enumerate(self.responses):
-            resp['index'] = iresp
-            for key in resp:
+        for ielt, elt in enumerate(self.content):
+            elt['index'] = ielt
+            for key in elt:
                 if key != self.data_key:
-                    index[key][resp[key]].add(iresp)
+                    index[key][elt[key]].add(ielt)
         return index
 
     def __contains__(self, key):
@@ -460,40 +452,39 @@ class ResponseBook(Container):
         return False
 
     def __len__(self):
-        return len(self.responses)
+        return len(self.content)
 
     def is_empty(self):
-        '''Check if the ResponseBook is empty or not.
+        '''Check if the Browser is empty or not.
 
-        Empty meaning no responses AND no globals.
+        Empty meaning no elements in content AND no globals.
         '''
-        return not self.responses and not self.globals
+        return not self.content and not self.globals
 
     def merge(self, other):
-        '''Merge two ResponseBooks.
+        '''Merge two browsers.
 
-        This method merge 2 ResponseBooks: the *other* one appears then at the
+        This method merge 2 browsers: the *other* one appears then at the
         end of the *self* one. Global variables are also merged. The new index
         correspond to the merged case.
 
-        :param ResponseBook other: another ResponseBook
-        :rtype: ResponseBook
+        :param Browser other: another browser
+        :rtype: Browser
         '''
         if self.data_key != other.data_key:
-            raise ValueError('Same data_key is required to '
-                             'merge ResponseBooks')
+            raise ValueError('Same data_key is required to merge Browsers')
         if self.globals != other.globals:
             LOGGER.info('globals will be updated with other values')
         new_glob = self.globals.copy()
         new_glob.update(other.globals)
-        new_resps = self.responses + other.responses
-        LOGGER.debug("Nb self resps (%d) + Nb other resps (%d) = %d",
-                     len(self), len(other), len(new_resps))
-        return ResponseBook(new_resps, data_key=self.data_key,
-                            global_vars=new_glob)
+        new_content = self.content + other.content
+        LOGGER.debug("Nb self items (%d) + Nb other items (%d) = %d",
+                     len(self), len(other), len(new_content))
+        return Browser(new_content, data_key=self.data_key,
+                       global_vars=new_glob)
 
     def keys(self):
-        '''Get the available keys in the index (so in the responses list). As
+        '''Get the available keys in the index (so in the items list). As
         usual it returns a generator.
         '''
         return self.index.keys()
@@ -511,26 +502,26 @@ class ResponseBook(Container):
             yield from ()
 
     def __str__(self):
-        return ("{0} object -> Number of responses: {1}, "
+        return ("{0} object -> Number of content items: {1}, "
                 "data key: {2!r}, available metadata keys: {3}\n"
                 "{4:>{5}}        -> Number of globals: {6}"
-                .format(self.__class__.__name__, len(self.responses),
+                .format(self.__class__.__name__, len(self.content),
                         self.data_key, sorted(self.keys()), "",
                         len(self.__class__.__name__), len(self.globals)))
 
     def __repr__(self):
-        return ("{0}, (Responses: {1!r}, Index: {2!r})"
-                .format(self.__class__, self.responses, self.index))
+        return ("{0}, (Content items: {1!r}, Index: {2!r})"
+                .format(self.__class__, self.content, self.index))
 
-    def _filter_resp_id_by(self, **kwargs):
-        '''Selection of responses indices according to kwargs criteria.
+    def _filter_items_id_by(self, **kwargs):
+        '''Selection of content items indices according to kwargs criteria.
 
         :param \\**\\kwargs: keyword arguments to specify the required
           response. More than one are allowed.
         :return: set of ids
         :rtype: set(int)
         '''
-        respids = set(range(len(self.responses)))
+        itemids = set(range(len(self.content)))
         for kwd in kwargs:
             if kwd not in self.index:
                 LOGGER.warning("%s not a valid key. Possible ones are %s",
@@ -539,72 +530,72 @@ class ResponseBook(Container):
             if kwargs[kwd] not in self.index[kwd]:
                 LOGGER.warning("%s is not a valid %s", kwargs[kwd], kwd)
                 return set()
-            respids = respids & self.index[kwd][kwargs[kwd]]
-        if not respids:
-            LOGGER.warning("Wrong selection, response might be not present. "
+            itemids = itemids & self.index[kwd][kwargs[kwd]]
+        if not itemids:
+            LOGGER.warning("Wrong selection, item might be not present. "
                            "Also check if requirements are consistent.")
             return set()
-        return respids
+        return itemids
 
     def _filter_index_by(self, **kwargs):
         '''Get index corresponding to selection given thanks to keyword
         arguments.
 
-        :param \\**\\kwargs: keyword arguments to specify the required
-          response. More than one are allowed.
+        :param \\**\\kwargs: keyword arguments to specify the required item.
+            More than one are allowed.
         :returns: :class:`Index` (stripped from useless keys)
         '''
-        respids = self._filter_resp_id_by(**kwargs)
-        return self.index.keep_only(respids)
+        itemids = self._filter_items_id_by(**kwargs)
+        return self.index.keep_only(itemids)
 
     def filter_by(self, include=(), exclude=(), **kwargs):
-        '''Get a ResponseBook corresponding to selection from keyword
+        '''Get a Browser corresponding to selection from keyword
         arguments.
 
-        :param \\**\\kwargs: keyword arguments to specify the required
-          response. More than one are allowed.
-        :param tuple(str) include: metadata keys required in the responses but
-          for which the value is not necessarly known
+        :param \\**\\kwargs: keyword arguments to specify the required item.
+            More than one are allowed.
+        :param tuple(str) include: metadata keys required in the content items
+            but for which the value is not necessarly known
         :param tuple(str) exclude: metadata that should not be present in the
-          responses and for which the value is not necessarly known
-        :returns: :class:`ResponseBook` (subset of the default one,
-          corresponding to the selection)
+            items and for which the value is not necessarly known
+        :returns: :class:`Browser` (subset of the default one, corresponding to
+            the selection)
         '''
         LOGGER.debug("in select_by, kwargs=%s", kwargs)
         sincl, sexcl = set(include), set(exclude)
-        respids = self._filter_resp_id_by(**kwargs)
-        lresp = [self.responses[i] for i in sorted(respids)
-                 if sincl.issubset(self.responses[i])
-                 and not sexcl.intersection(self.responses[i])]
-        sub_rb = ResponseBook(lresp, global_vars=self.globals)
-        return sub_rb
+        respids = self._filter_items_id_by(**kwargs)
+        lresp = [self.content[i] for i in sorted(respids)
+                 if sincl.issubset(self.content[i])
+                 and not sexcl.intersection(self.content[i])]
+        sub_br = Browser(lresp, global_vars=self.globals)
+        return sub_br
 
     def select_by(self, *, squeeze=False, include=(), exclude=(), **kwargs):
-        '''Get a the response or the list of responses corresponding to
+        '''Get an item or the list of items from content corresponding to
         selection from keyword arguments.
 
-        :param \\**\\kwargs: keyword arguments to specify the required
-          response. More than one are allowed.
+        :param \\**\\kwargs: keyword arguments to specify the required items.
+            More than one are allowed.
         :param bool squeeze: named parameter
-        :param tuple(str) include: metadata keys required in the responses but
-          for which the value is not necessarly known
+        :param tuple(str) include: metadata keys required in the items but for
+            which the value is not necessarly known
         :param tuple(str) exclude: metadata that should not be present in the
-          responses and for which the value is not necessarly known
-        :returns: first element of the list of responses if only one,
-          else list of responses matching the requirements
+          items and for which the value is not necessarly known
+        :returns: first element of the list of content items if only one,
+          else list of content items matching the requirements
         '''
-        respids = self._filter_resp_id_by(**kwargs)
+        respids = self._filter_items_id_by(**kwargs)
         sincl, sexcl = set(include), set(exclude)
-        lresp = [self.responses[i] for i in sorted(respids)
-                 if sincl.issubset(self.responses[i])
-                 and not sexcl.intersection(self.responses[i])]
+        litems = [self.content[i] for i in sorted(respids)
+                  if sincl.issubset(self.content[i])
+                  and not sexcl.intersection(self.content[i])]
         if squeeze:
-            if not lresp:
-                LOGGER.warning("No response corresponding to the selection.")
+            if not litems:
+                LOGGER.warning("No item corresponding to the selection.")
                 return None
-            if len(lresp) > 1:
-                LOGGER.warning("Squeeze cannot be applied, more than one "
-                               "response corresponds to your choice")
+            if len(litems) > 1:
+                LOGGER.warning("Squeeze cannot be applied, several content "
+                               "items correspond to your choice")
                 return None
-            return lresp[0]
-        return lresp
+            return litems[0]
+        return litems

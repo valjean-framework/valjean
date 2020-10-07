@@ -21,7 +21,7 @@ from pyparsing import ParseException
 from . import scan
 from .grammar import t4gram
 from .common import SpectrumDictBuilderException
-from ..response_book import ResponseBook
+from ..browser import Browser
 
 
 LOGGER = logging.getLogger('valjean')
@@ -221,8 +221,8 @@ class T4ParseResult:
             under ``'run_data'``, coming from the scanning step.
 
         It is possible to transform the ``res`` dictionary in a
-        :class:`~valjean.eponine.response_book.ResponseBook` thanks to the
-        method :meth:`to_response_book`.
+        :class:`~valjean.eponine.browser.Browser` thanks to the
+        method :meth:`to_browser`.
     '''
 
     def __init__(self, parse_res, scan_vars):
@@ -270,20 +270,19 @@ class T4ParseResult:
         pres['run_data'] = gvars
         return pres
 
-    def to_response_book(self):
-        '''Get a :class:`~valjean.eponine.response_book.ResponseBook` from the
+    def to_browser(self):
+        '''Get a :class:`~valjean.eponine.browser.Browser` from the
         :class:`T4ParseResult`.
 
-        The global variables in ResponseBook are the batch data. You can access
-        the `run data` only from the parsed result.
+        The global variables in Browser are the batch data. You can access the
+        `run data` only from the parsed result.
 
-        :rtype: ResponseBook
+        :rtype: Browser
         '''
         list_resps = [resp for key, lresp in self.res.items()
                       for resp in lresp
                       if key not in ('batch_data', 'run_data')]
-        resp_book = ResponseBook(list_resps,
-                                 global_vars=self.res['batch_data'])
-        if resp_book.is_empty():
-            LOGGER.error('ResponseBook creation failed, please check what')
-        return resp_book
+        browser = Browser(list_resps, global_vars=self.res['batch_data'])
+        if browser.is_empty():
+            LOGGER.error('Browser creation failed, please check what happened')
+        return browser

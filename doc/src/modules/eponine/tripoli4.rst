@@ -50,8 +50,8 @@ More details on parsing
 -----------------------
 
 Most of the TRIPOLI-4 functionalities are now parsed by `pyparsing`_.
-If a new score or a new response in implemented in Tripoli-4, it would be
-easier for its output to match the exisiting response, or else parsing will
+If a new score or a new response is implemented in Tripoli-4, it would be
+easier for its output to match the existing responses, or else parsing will
 have to be updated.
 
 When parsing fails it indicates the last line and column where parsing

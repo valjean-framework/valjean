@@ -6,7 +6,7 @@ Exclusion and matching are possible via ``--parsing-exclude`` and
 
 Tests are done on successful parsing of all the listed files and on possibility
 to access the results via the
-:class:`~valjean.eponine.response_book.ResponseBook`.
+:class:`~valjean.eponine.browser.Browser`.
 
 Expected variables in the configuration file are:
   * PATH: path to the folder containing the screened folder structure
@@ -94,7 +94,7 @@ def check_data(responses):
     '''Check content of data and conversion fo dataset.
 
     Check content of data: ``'results'`` key should be present in all the
-    responses of the *ResponseBook*, ``'_res'`` should have be removed from all
+    responses of the *Browser*, ``'_res'`` should have be removed from all
     ``response_type``, no key under ``'results'`` should contain ``'_res'``.
     Check the conversion in dataset: test conversion of all elements under
     ``'results'`` in a dataset.
@@ -114,27 +114,27 @@ def check_data(responses):
                 assert dcv.convert_data(iresp['results'], dname)
 
 
-def response_book_test(res):
-    '''Quick test of ResponseBook.
+def browser_test(res):
+    '''Quick test of Browser.
 
     Main goal of this test is not apparent: it is to check if the
-    *ResponseBook* can be built for all types of responses available in the T4
+    *Browser* can be built for all types of responses available in the T4
     outputs given set, else parsing, transform or common have to be updated to
     probably take into account a new type of response.
     '''
-    t4rb = res.to_response_book()
+    t4rb = res.to_browser()
     if t4rb is None:
         return
     ids = set()
     for _v0 in t4rb.index.values():
         for _v1 in _v0.values():
             ids |= _v1
-    assert ids == set(range(len(t4rb.responses)))
+    assert ids == set(range(len(t4rb.content)))
     assert t4rb.globals
-    if t4rb.responses:
+    if t4rb.content:
         assert not all(['_res' in rtype
                         for rtype in t4rb.available_values('response_type')])
-        check_data(t4rb.responses)
+        check_data(t4rb.content)
 
 
 def loop_on_files(filelist, cfile):
@@ -149,7 +149,7 @@ def loop_on_files(filelist, cfile):
              * **failed_jdds**, `list of string`: list of the failed jdds
     '''
     nb_jdds_ok = 0
-    failed_jdds, failed_time_jdds, failed_rb_jdds = [], [], []
+    failed_jdds, failed_time_jdds, failed_browser_jdds = [], [], []
     for ifile in filelist:
         print("Reading:", ifile)
         try:
@@ -172,14 +172,14 @@ def loop_on_files(filelist, cfile):
         else:
             failed_jdds.append(ifile)
         try:
-            response_book_test(pres)
+            browser_test(pres)
         except AssertionError as aerb:
-            print("Error in responsbook: {}".format(aerb))
-            failed_rb_jdds.append(ifile)
+            print("Error in browser: {}".format(aerb))
+            failed_browser_jdds.append(ifile)
     return {'jdds_ok': nb_jdds_ok,
             'failed_jdds': failed_jdds,
             'failed_time': failed_time_jdds,
-            'failed_respb': failed_rb_jdds}
+            'failed_browser': failed_browser_jdds}
 
 
 def print_summary(nb_used, excluded, summary):
@@ -198,10 +198,10 @@ def print_summary(nb_used, excluded, summary):
               .format(len(summary['failed_time'])))
         for ifile in summary['failed_time']:
             print(ifile)
-    if summary['failed_respb']:
-        print("Jdds where response book failed: {}"
-              .format(len(summary['failed_respb'])))
-        for ifile in summary['failed_respb']:
+    if summary['failed_browser']:
+        print("Jdds where browser failed: {}"
+              .format(len(summary['failed_browser'])))
+        for ifile in summary['failed_browser']:
             print(ifile)
 
 
@@ -249,5 +249,5 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     if len(vv_file.EXPECTED_RESULTS[(category, mode)]) > 3:
         assert (len(summary['failed_time'])
                 == vv_file.EXPECTED_RESULTS[(category, mode)][3])
-        assert (len(summary['failed_respb'])
+        assert (len(summary['failed_browser'])
                 == vv_file.EXPECTED_RESULTS[(category, mode)][4])

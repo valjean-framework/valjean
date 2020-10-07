@@ -1,6 +1,6 @@
 '''This module extends the functionalities provided by :mod:`~.cosette.use` to
 the commonplace task of parsing TRIPOLI-4 output files. The decorators defined
-by this module, :func:`using_parse_result` and :func:`using_response_book`,
+by this module, :func:`using_parse_result` and :func:`using_browser`,
 can be used to remove boilerplate code that parses and accesses the TRIPOLI-4
 results. At the same time, they simplify the integration of user-defined
 post-processing (tests) into the :mod:`valjean` workflow.
@@ -151,34 +151,33 @@ the right result at the end::
     81114.52
 
 
-Using a :class:`~.response_book.ResponseBook`
+Using a :class:`~.browser.Browser`
 =============================================
 
 The raw parse results are useful in some situations, but most of the time you
 probably want to work with a higher-level representation of the calculation
-result, such as a :class:`~.response_book.ResponseBook`. This module provides a
-function to construct a decorator that automatically creates the
-:class:`~.RunTask` from the :class:`~.RunTaskFactory`, runs the task, parses
-the resulting output and wraps the parse results in an
-:class:`~.response_book.ResponseBook`::
+result, such as a :class:`~.browser.Browser`. This module provides a function
+to construct a decorator that automatically creates the :class:`~.RunTask` from
+the :class:`~.RunTaskFactory`, runs the task, parses the resulting output and
+wraps the parse results in an :class:`~.browser.Browser`::
 
 
-    >>> using_response_book = use.using_response_book(echo_factory, 10)
-    >>> @using_response_book(text=example)
-    ... def extract_simulation_time(resp_book):
-    ...     return resp_book.globals['simulation_time']
+    >>> using_browser = use.using_browser(echo_factory, 10)
+    >>> @using_browser(text=example)
+    ... def extract_simulation_time(browser):
+    ...     return browser.globals['simulation_time']
 
 We can again check that everything went as expected by manually unwrapping the
 sequence of tasks and running them::
 
     >>> extract_task = extract_simulation_time.get_task()
-    >>> response_book_task = next(iter(extract_task.depends_on))
-    >>> parse_task = next(iter(response_book_task.depends_on))
+    >>> browse_task = next(iter(extract_task.depends_on))
+    >>> parse_task = next(iter(browse_task.depends_on))
     >>> make_parser_task = next(iter(parse_task.depends_on))
     >>> run_task = next(iter(make_parser_task.depends_on))
     >>> env = Env()
     >>> for task in [run_task, make_parser_task, parse_task,
-    ...              response_book_task, extract_task]:
+    ...              browse_task, extract_task]:
     ...     env_up, _ = task.do(env=env, config=config)
     ...     env.apply(env_up)
     >>> print(env[extract_task.name]['result'])
@@ -290,34 +289,34 @@ def using_last_parse_result(factory):
     return use_parser.map(partial(parse_batch_index, batch_index=-1))
 
 
-def to_response_book(result):
-    '''Create a :class:`~.ResponseBook` from the parsing result.
+def to_browser(result):
+    '''Create a :class:`~.Browser` from the parsing result.
 
     :param T4ParseResult result: result from T4 parser
-    :returns: the response book
-    :rtype: ResponseBook
+    :returns: the browser
+    :rtype: Browser
     '''
-    return result.to_response_book()
+    return result.to_browser()
 
 
-def using_response_book(factory, batch_number):
+def using_browser(factory, batch_number):
     '''Construct a decorator that injects an
-    :class:`~.response_book.ResponseBook` to the TRIPOLI-4 parse results into a
+    :class:`~.browser.Browser` to the TRIPOLI-4 parse results into a
     Python function.
 
     :param factory: a factory producing TRIPOLI-4 runs.
     :type factory: :class:`~.RunTaskFactory`
     :param int batch_number: the number of the required batch (will be parsed
-        then transformed in  :class:`~.response_book.ResponseBook`)
+        then transformed in  :class:`~.browser.Browser`)
     :returns: a decorator (see the module docstring for more information).
     '''
     use_parse_result = using_parse_result(factory, batch_number=batch_number)
-    return use_parse_result.map(to_response_book)
+    return use_parse_result.map(to_browser)
 
 
-def using_last_response_book(factory):
+def using_last_browser(factory):
     '''Construct a decorator that injects a
-    :class:`~.response_book.ResponseBook` to the TRIPOLI-4 last parse results
+    :class:`~.browser.Browser` to the TRIPOLI-4 last parse results
     into a Python function.
 
     :param factory: a factory producing TRIPOLI-4 runs.
@@ -325,4 +324,4 @@ def using_last_response_book(factory):
     :returns: a decorator (see the module docstring for more information).
     '''
     use_parse_result = using_last_parse_result(factory)
-    return use_parse_result.map(to_response_book)
+    return use_parse_result.map(to_browser)

@@ -22,22 +22,22 @@ class TestResultMetadata(TestResult):
         self.dict_res = dict_res
 
     def __bool__(self):
-        # aresp = [all(val.values()) for val in self.dict_res.values()]
-        # return all(aresp)
+        # aitem = [all(val.values()) for val in self.dict_res.values()]
+        # return all(aitem)
         return all(v for val in self.dict_res.values() for v in val.values())
 
     def per_key(self):
         '''Test result sorted by key.'''
-        dresp = {key: all(val.values()) for key, val in self.dict_res.items()}
-        return dresp
+        ditem = {key: all(val.values()) for key, val in self.dict_res.items()}
+        return ditem
 
     def only_failed_comparisons(self):
         '''Return only the failed comparisons. Structure is the same as the
         ``dict_res``.'''
-        dresp = {key: self.test.all_md[key]
+        ditem = {key: self.test.all_md[key]
                  for key, val in self.dict_res.items()
                  if not all(val.values())}
-        return dresp
+        return ditem
 
 
 class TestMetadata(Test):

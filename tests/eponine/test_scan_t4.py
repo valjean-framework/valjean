@@ -157,7 +157,7 @@ def test_gauss_spectrum(datadir):
     assert resp0['scoring_mode'] == "SCORE_SURF"
     assert all(x in resp0['results']
                for x in ('spectrum', 'integrated'))
-    t4rb = t4_res.to_response_book()
+    t4rb = t4_res.to_browser()
     assert len(t4rb.keys()) == 14
     assert (list(t4rb.available_values('response_function'))
             == ['COURANT'])
@@ -195,7 +195,7 @@ def test_tungstene_file(datadir):
     assert resp0['response_type'] == 'score'
     assert resp0['scoring_mode'] == "SCORE_TRACK"
     assert 'mesh' in resp0['results']
-    t4rb = t4_res.to_response_book()
+    t4rb = t4_res.to_browser()
     assert t4rb.globals['simulation_time'] == 423
     resp = t4rb.select_by(response_function='FLUX', squeeze=True)
     bd_mesh = dcv.convert_data(resp['results'], data_type='mesh')
@@ -384,21 +384,21 @@ def test_entropy(datadir):
         assert ires['response_function'] in ['REACTION', 'KEFFS']
     assert lastresps[1]['response_type'] == 'keff'
     # keffs_checks(lastresps[1]['results'])
-    t4rb = lastres.to_response_book()
+    t4rb = lastres.to_browser()
     assert t4rb.globals['simulation_time'] == 24
     check_last_entropy_result(t4rb)
     firstres = t4p.parse_from_index(0)
     firstresps = firstres.res['list_responses']
     assert firstresps[1]['response_type'] == 'keff'
     assert 'not_converged' in firstresps[1]['results']
-    t4rb_b0 = firstres.to_response_book()
+    t4rb_b0 = firstres.to_browser()
     assert t4rb_b0.globals['simulation_time'] == 2
     check_first_entropy_result(t4rb_b0)
-    t4rb_b5 = t4p.parse_from_index(5).to_response_book()
+    t4rb_b5 = t4p.parse_from_index(5).to_browser()
     assert t4rb_b5
     assert t4rb_b5.globals['simulation_time'] == 14
     assert t4rb_b5.globals['edition_batch_number'] == 6
-    t4rb_bn6 = t4p.parse_from_number(6).to_response_book()
+    t4rb_bn6 = t4p.parse_from_number(6).to_browser()
     assert t4rb_bn6
     assert t4rb_bn6.globals['simulation_time'] == 14
     assert t4rb_b5.globals == t4rb_bn6.globals
@@ -406,7 +406,7 @@ def test_entropy(datadir):
     assert t4_res
     assert len(t4p.scan_res) == 10
     assert t4_res.res['batch_data']['batch_number'] == 2
-    t4_rb = t4_res.to_response_book()
+    t4_rb = t4_res.to_browser()
     assert t4_rb
     assert t4_rb.globals['simulation_time'] == 5
 
@@ -447,7 +447,7 @@ def test_ifp(datadir):
             == "IFP ADJOINT WEIGHTED MIGRATION AREA")
     assert last_resp['response_type'] == 'adjoint'
     assert last_resp['results']['used_batches'] == 81
-    t4rb = t4_res.to_response_book()
+    t4rb = t4_res.to_browser()
     assert (len(list(t4rb.available_values('response_function')))
             == 22)
     resps = t4rb.select_by(
@@ -464,7 +464,7 @@ def test_ifp(datadir):
     rb_betai = t4rb.filter_by(
         response_function="BETA_i (DELAYED NEUTRON FRACTION FOR i-th FAMILY): "
                           "NUCLEI CONTRIBUTIONS")
-    assert len(rb_betai.responses) == 24
+    assert len(rb_betai.content) == 24
     assert (sorted(list(rb_betai.available_values('nucleus')))
             == ['PU239', 'PU240', 'PU241'])
     resp = rb_betai.select_by(family=5, nucleus='PU239', squeeze=True)
@@ -490,7 +490,7 @@ def test_ifp_adjoint_edition(datadir):
     assert t4p.scan_res.times['simulation_time'][20] == 77
     assert t4p.scan_res.times['initialization_time'] == 3
     t4_res = t4p.parse_from_index(-1)
-    t4rb = t4_res.to_response_book()
+    t4rb = t4_res.to_browser()
     assert (set(t4rb.available_values('response_type'))
             == set(('keff', 'ifp_adj_crit_edition', 'keff_auto')))
     assert (sorted(t4rb.keys())
@@ -527,9 +527,9 @@ def test_sensitivity(datadir):
     assert t4p.scan_res.times['simulation_time'][120] == 159
     assert t4p.scan_res.times['initialization_time'] == 1
     t4_res = t4p.parse_from_index(-1)
-    t4rb = t4_res.to_response_book()
+    t4rb = t4_res.to_browser()
     rb_sensitiv = t4rb.filter_by(response_type='sensitivity')
-    assert len(rb_sensitiv.responses) == 8
+    assert len(rb_sensitiv.content) == 8
     assert (sorted(rb_sensitiv.keys())
             == ['index', 'response_function', 'response_index',
                 'response_type', 'sensitivity_index', 'sensitivity_nucleus',
@@ -577,7 +577,7 @@ def test_kij(datadir):
     assert resp_list[13]['response_function'] == "KIJ_MATRIX"
     assert resp_list[14]['response_function'] == "KIJ_SOURCES"
     assert resp_list[15]['response_function'] == "KEFFS"
-    t4rb = t4_res.to_response_book()
+    t4rb = t4_res.to_browser()
     kijmat = t4rb.select_by(response_function='KIJ_MATRIX', squeeze=True)
     for res in kijmat['results']:
         assert dcv.convert_data(kijmat['results'], data_type=res)
@@ -599,7 +599,7 @@ def test_green_bands(datadir):
     assert t4p.scan_res.times['initialization_time'] == 2
     t4_res = t4p.parse_from_number(500)
     assert t4_res.res['batch_data']['batch_number'] == 500
-    t4rb = t4_res.to_response_book()
+    t4rb = t4_res.to_browser()
     resp = t4rb.select_by(response_function='FLUX', squeeze=True)
     bd_gb = dcv.convert_data(resp['results'], data_type='green_bands')
     assert bd_gb.shape == (2, 2, 1, 2, 4, 3)
@@ -643,7 +643,7 @@ def test_pertu(datadir):
     assert len(t4_res.res['list_responses']) == 3
     assert t4_res.res['list_responses'][-1]['response_index'] == 0
     assert len(t4_res.res['perturbation']) == 3
-    t4rb = t4_res.to_response_book()
+    t4rb = t4_res.to_browser()
     slkeys = sorted(list(t4rb.index.keys()))
     assert slkeys == [
         'energy_split_name', 'index', 'particle', 'perturbation_composition',
@@ -686,7 +686,7 @@ def test_phemep_balance(datadir):
     assert t4p.scan_res.normalend
     assert t4p.scan_res.phemep_balance
     assert len(t4p.scan_res.phemep_balance) == 10
-    t4res = t4p.parse_from_index(batch_index=-1).to_response_book()
+    t4res = t4p.parse_from_index(batch_index=-1).to_browser()
     assert len(t4res) == 4
     assert set(t4res.available_values('particle')) == {
         'PHOTON', 'ELECTRON', 'POSITRON', 'CUMUL on all particles'}
@@ -701,7 +701,7 @@ def test_homogenize_material(datadir):
     assert t4p.scan_res.normalend
     assert t4p.scan_res.homog_mat
     assert len(t4p.scan_res.homog_mat) == 2
-    t4res = t4p.parse_from_index(batch_index=-1).to_response_book()
+    t4res = t4p.parse_from_index(batch_index=-1).to_browser()
     assert len(t4res) == 17
 
 
@@ -803,7 +803,7 @@ def test_no_normal_completion(datadir, caplog):
     assert t4p.scan_res.partial is True
     t4_res = t4p.parse_from_index(-1)
     assert t4_res.res['batch_data']['batch_number'] == 37
-    t4rb = t4_res.to_response_book()
+    t4rb = t4_res.to_browser()
     assert not t4rb.is_empty()
     assert len(t4rb.globals) == 4
     assert len(t4rb) == 1
@@ -833,4 +833,4 @@ def test_no_simulation_time_debug(datadir, caplog):
     assert ('Remark: you are in parsing debug mode with an end flag not '
             'containing "time", this is expected.'
             in caplog.text)
-    _t4_res.to_response_book()
+    _t4_res.to_browser()

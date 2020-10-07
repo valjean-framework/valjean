@@ -21,7 +21,7 @@ from ...cosette.task import TaskStatus, close_dependency_graph
 from ...cosette.use import Use
 from ..test import Test, TestResult
 from ..eval_test_task import EvalTestTask
-from ...eponine.response_book import Index
+from ...eponine.browser import Index
 from ... import LOGGER
 
 
