@@ -13,7 +13,7 @@ from hypothesis.extra.numpy import arrays, array_shapes, floating_dtypes
 from collections import OrderedDict
 
 from ..context import valjean  # pylint: disable=unused-import
-from valjean.eponine.base_dataset import BaseDataset
+from valjean.eponine.dataset import Dataset
 from valjean.dyn_import import dyn_import
 
 
@@ -32,8 +32,8 @@ def finite(min_value=None, max_value=None, width=64):
 
 
 @composite
-def base_datasets(draw, elements=None, shape=None, dtype=None, coords=None):
-    '''Strategy for generating :class:`~.BaseDataset` objects.
+def datasets(draw, elements=None, shape=None, dtype=None, coords=None):
+    '''Strategy for generating :class:`~.Dataset` objects.
 
     :param elements: a strategy that generates array elements, or None for the
                      default strategy (:func:`~.floats(-1e5, 1e5)`).
@@ -74,7 +74,7 @@ def base_datasets(draw, elements=None, shape=None, dtype=None, coords=None):
     note('data_err: {}'.format(data_err))
     note('bins: {}'.format(bins))
 
-    return BaseDataset(data_val, data_err, bins=bins)
+    return Dataset(data_val, data_err, bins=bins)
 
 
 def cnames():
@@ -225,10 +225,10 @@ def repeat(stgy, min_size=0, max_size=6):
 
 
 @composite
-def perturbed_base_datasets(draw):
-    '''Strategy to generate a list of perturbed :class:`~.BaseDataset` objects.
+def perturbed_datasets(draw):
+    '''Strategy to generate a list of perturbed :class:`~.Dataset` objects.
 
-    This strategy generates lists of :class:`~.BaseDataset` objects of length
+    This strategy generates lists of :class:`~.Dataset` objects of length
     between `min_size` and `max_size`. The first dataset is taken as a
     reference and all subsequent list elements are perturbations of the first
     one. Errors are not perturbed.
@@ -236,12 +236,25 @@ def perturbed_base_datasets(draw):
     :param int min_size: the minimum list size.
     :param int max_size: the maximum list size.
     '''
-    dataset = draw(base_datasets())
+    dataset = draw(datasets())
     pert_value = draw(perturb(dataset.value))
     pert_datasets = (dataset,
-                     BaseDataset(pert_value, dataset.error.copy(),
-                                 bins=dataset.bins))
+                     Dataset(pert_value, dataset.error.copy(),
+                             bins=dataset.bins))
     return pert_datasets
+
+
+@composite
+def multiple_datasets(draw, size, *, elements=None):
+    '''Strategy for generating multiple gdatasets with the same shape and bins.
+    '''
+    gd0 = draw(datasets())
+    mult_gds = [gd0]
+    for _ in range(1, size):  # elt 0 is gds
+        gds = draw(datasets(elements=elements, shape=just(gd0.value.shape),
+                            coords=just(gd0.bins)))
+        mult_gds.append(gds)
+    return mult_gds
 
 
 @pytest.fixture

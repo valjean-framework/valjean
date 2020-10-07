@@ -225,7 +225,7 @@ def test_stats(*, name, description='', labels=None, tasks):
 
     >>> from collections import OrderedDict
     >>> import numpy as np
-    >>> from valjean.gavroche.dataset import Dataset
+    >>> from valjean.eponine.dataset import Dataset
     >>> x = np.linspace(-5., 5., num=100)
     >>> y = x**2
     >>> error = np.zeros_like(y)

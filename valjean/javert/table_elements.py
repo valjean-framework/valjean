@@ -32,7 +32,7 @@ def repr_bins(dsref):
     and their associated values in that case.
 
     Let's consider the following dataset:
-    >>> from valjean.eponine.base_dataset import BaseDataset
+    >>> from valjean.eponine.dataset import Dataset
     >>> import numpy as np
     >>> from collections import OrderedDict
 
@@ -43,7 +43,7 @@ def repr_bins(dsref):
     ...                     ('sausage', np.array([10, 20])),
     ...                     ('spam', np.array([-5, 0, 5])),
     ...                     ('tomato', np.array([-2, 2]))])
-    >>> ds = BaseDataset(vals, errs, bins=bins)
+    >>> ds = Dataset(vals, errs, bins=bins)
     >>> names, rbins = repr_bins(ds)
     >>> print(list(ds.bins.keys()))
     ['bacon', 'egg', 'sausage', 'spam', 'tomato']

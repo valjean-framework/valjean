@@ -15,6 +15,6 @@ eponine — ExPloratiON et INtErfaçage
 .. toctree::
    :caption: Submodules
 
-   eponine/base_dataset
+   eponine/dataset
    eponine/browser
    eponine/tripoli4

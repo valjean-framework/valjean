@@ -7,11 +7,10 @@ import numpy as np
 from hypothesis import given, note, settings, HealthCheck
 
 from ..context import valjean  # pylint: disable=unused-import
+from valjean.eponine.dataset import Dataset
 from valjean.gavroche import test
-from valjean.gavroche.dataset import Dataset
 
-from .conftest import datasets, perturbed_datasets
-from ..eponine.conftest import coord_odicts
+from ..eponine.conftest import datasets, perturbed_datasets, coord_odicts
 
 
 @given(bins_dict=coord_odicts())

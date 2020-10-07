@@ -62,7 +62,7 @@ The formula used for the test is then:
     {\sqrt{\sigma_1^2 + \sigma_2^2}} = \Delta
 
 
-Note that, with our :class:`~valjean.gavroche.dataset.Dataset`, this is
+Note that, with our :class:`~valjean.eponine.dataset.Dataset`, this is
 equivalent to
 
 .. code::
@@ -176,7 +176,7 @@ Examples
 Let's get an example: one simulation gave 5.3 ± 0.2, the other one 5.25 ± 0.08.
 Are these numbers in agreement ?
 
->>> from valjean.gavroche.dataset import Dataset
+>>> from valjean.eponine.dataset import Dataset
 >>> from valjean.gavroche.stat_tests.student import TestStudent
 >>> import numpy as np
 >>> ds1 = Dataset(np.float32(5.3), np.float32(0.2))
@@ -433,7 +433,7 @@ class TestStudent(TestDataset):
                             reports (for example category, input file name,
                             type of result, ...)
         :param dsref: reference dataset
-        :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
+        :type dsref: :class:`~valjean.eponine.dataset.Dataset`
         :param datasets: list of datasets to be compared to reference dataset
         :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
         :param float alpha: significance level, i.e. limit on the p-value
@@ -468,11 +468,11 @@ class TestStudent(TestDataset):
         datasets (**static method**).
 
         :param ds1: dataset 1
-        :type ds1: :class:`~valjean.gavroche.dataset.Dataset`
+        :type ds1: :class:`~valjean.eponine.dataset.Dataset`
         :param ds2: dataset 2
-        :type ds2: :class:`~valjean.gavroche.dataset.Dataset`
+        :type ds2: :class:`~valjean.eponine.dataset.Dataset`
         :returns: :obj:`numpy.generic` or :obj:`numpy.ndarray` depending on
-                  :class:`~valjean.gavroche.dataset.Dataset` type
+                  :class:`~valjean.eponine.dataset.Dataset` type
         '''
         diff = ds1 - ds2
         studentt = diff.value / diff.error

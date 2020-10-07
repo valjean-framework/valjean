@@ -103,7 +103,7 @@ Let's do the usual imports then use the quick example from Student test, with
 the p-value calculation:
 
 >>> import numpy as np
->>> from valjean.gavroche.dataset import Dataset
+>>> from valjean.eponine.dataset import Dataset
 >>> from valjean.gavroche.stat_tests.student import TestStudent
 >>> from valjean.gavroche.stat_tests.bonferroni import TestBonferroni
 >>> from valjean.gavroche.stat_tests.bonferroni import TestHolmBonferroni

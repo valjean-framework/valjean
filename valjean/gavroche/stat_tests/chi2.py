@@ -99,7 +99,7 @@ Examples of the test
 Let's consider a spectrum of 5 bins with their error and apply the χ²-test.
 
 
->>> from valjean.gavroche.dataset import Dataset
+>>> from valjean.eponine.dataset import Dataset
 >>> from valjean.gavroche.stat_tests.chi2 import TestChi2
 >>> import numpy as np
 >>> ds1 = Dataset(np.array([5.2, 5.3, 5.25, 5.4, 5.5]),
@@ -304,7 +304,7 @@ class TestChi2(TestDataset):
                             reports (for example category, input file name,
                             type of result, ...)
         :param dsref: reference dataset
-        :type dsref: :class:`~valjean.gavroche.dataset.Dataset`
+        :type dsref: :class:`~valjean.eponine.dataset.Dataset`
         :param datasets: list of datasets  to be compared to reference dataset
         :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
         :param float alpha: probability to accept of not the test (p-value is
@@ -359,9 +359,9 @@ class TestChi2(TestDataset):
         r'''Compute the χ² value for the given datasets.
 
         :param ds1: first dataset
-        :type ds1: :class:`~valjean.gavroche.dataset.Dataset`
+        :type ds1: :class:`~valjean.eponine.dataset.Dataset`
         :param ds2: second dataset
-        :type ds2: :class:`~valjean.gavroche.dataset.Dataset`
+        :type ds2: :class:`~valjean.eponine.dataset.Dataset`
         :param nonzero_bins: optional argument, booleans array of the same size
                              as ``ds1`` and ``ds2`` to identify zero bins and
                              possibly avoid them (see below)

@@ -9,53 +9,16 @@ from hypothesis.strategies import composite, just, integers, dictionaries, text
 import numpy as np
 
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
-from valjean.gavroche.dataset import Dataset
+from valjean.eponine.dataset import Dataset
 from valjean.gavroche.test import TestEqual, TestApproxEqual
 from valjean.gavroche.stat_tests.student import TestStudent
 from valjean.gavroche.stat_tests.bonferroni import (TestBonferroni,
                                                     TestHolmBonferroni)
 from valjean.gavroche.diagnostics.metadata import TestMetadata
-from ..eponine.conftest import base_datasets, perturbed_base_datasets
+from ..eponine.conftest import datasets
 from valjean.cosette.pythontask import PythonTask
 from valjean.cosette.task import TaskStatus
 from valjean.config import Config
-
-
-def datasets(*, elements=None, shape=None, dtype=None, coords=None):
-    '''Strategy for generating :class:`~.dataset.Dataset` objects.
-
-    This strategy uses the :func:`~.base_datasets` strategy to generate
-    :class:`~.BaseDataset` object and converts it to :class:`Dataset`.
-    '''
-    # pylint: disable=no-member
-    return (base_datasets(elements=elements, shape=shape, dtype=dtype,
-                          coords=coords)
-            .map(Dataset.from_dataset))
-
-
-@composite
-def multiple_datasets(draw, size, *, elements=None):
-    '''Strategy for generating multiple gdatasets with the same shape and bins.
-    '''
-    gd0 = draw(datasets())
-    mult_gds = [gd0]
-    for _ in range(1, size):  # elt 0 is gds
-        gds = draw(datasets(elements=elements, shape=just(gd0.value.shape),
-                            coords=just(gd0.bins)))
-        mult_gds.append(gds)
-    return mult_gds
-
-
-def perturbed_datasets():
-    '''Strategy to generate a pair of perturbed :class:`~.Dataset` objects.
-
-    This strategy uses the :func:`~.perturbed_base_datasets` strategy to
-    generate a pair of perturbed :class:`~.BaseDataset` objects, and converts
-    them to :class:`Dataset`.
-    '''
-    # pylint: disable=no-member
-    return (perturbed_base_datasets()
-            .map(lambda ds: (Dataset.from_dataset(d) for d in ds)))
 
 
 ##################################

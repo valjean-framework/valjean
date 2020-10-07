@@ -5,7 +5,7 @@ This module provides a few classes and functions to write numeric tests.
 Let us import the relevant modules first:
 
     >>> from collections import OrderedDict
-    >>> from valjean.eponine.base_dataset import BaseDataset
+    >>> from valjean.eponine.dataset import Dataset
     >>> import numpy as np
 
 Now we create a toy data set:
@@ -15,14 +15,14 @@ Now we create a toy data set:
     >>> error = np.zeros_like(y)
     >>> bins = OrderedDict()
     >>> bins['x'] = x
-    >>> parabola = BaseDataset(y, error, bins=bins)
+    >>> parabola = Dataset(y, error, bins=bins)
 
 We perturb the data by applying some small amount of noise:
 
     >>> eps = 1e-8
     >>> noise = np.random.uniform(-eps, eps, parabola.shape)
     >>> y2 = y + noise
-    >>> parabola2 = BaseDataset(y2, error, bins=bins)
+    >>> parabola2 = Dataset(y2, error, bins=bins)
 
 Now we can test if the new dataset is equal to the original one:
 
@@ -75,7 +75,7 @@ def same_bins_datasets(*datasets):
     '''Return `True` if all datasets have the same coordinates.
 
     :param datasets: any number of datasets.
-    :type datasets: :class:`~valjean.eponine.base_dataset.BaseDataset`
+    :type datasets: :class:`~valjean.eponine.dataset.Dataset`
     '''
     for dataset in datasets[1:]:
         if not same_bins(datasets[0].bins, dataset.bins):
@@ -162,10 +162,9 @@ class TestDataset(Test):
         :param dict labels: labels to be used for test classification in
                             reports (for example category, input file name,
                             type of result, ...)
-        :param dsref: reference dataset
-        :type dsref: :class:`~.dataset.Dataset`
-        :param datasets: list of datasets to be compared to reference dataset
-        :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
+        :param Dataset dsref: reference dataset
+        :param list(Dataset) datasets: list of datasets to be compared to
+                                       reference dataset
         '''
         super().__init__(name=name, description=description, labels=labels)
         self.dsref = dsref
@@ -311,10 +310,9 @@ class TestApproxEqual(TestDataset):
         :param dict labels: labels to be used for test classification in
                             reports (for example category, input file name,
                             type of result, ...)
-        :param dsref: reference dataset
-        :type dsref: :class:`~.dataset.Dataset`
-        :param datasets: list of datasets to be compared to reference dataset
-        :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
+        :param Dataset dsref: reference dataset
+        :param list(Dataset) datasets: list of datasets to be compared to
+                                       reference dataset
         :param float rtol: relative tolerance, default = :math:`10^{-5}`
         :param float atol: absolute tolerance, default = :math:`10^{-8}`
 

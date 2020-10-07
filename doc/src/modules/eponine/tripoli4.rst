@@ -19,7 +19,7 @@ the innest ones:
 
    * Integration of parsing in the :mod:`valjean` workflow is handled by
      :mod:`~.use`;
-   * Conversion of data to :class:`~.base_dataset.BaseDataset` in
+   * Conversion of data to :class:`~.dataset.Dataset` in
      :mod:`~.data_convertor`;
    * Parsing module :mod:`~.parse` calling the scanning one :mod:`~.scan`;
    * The parsing itself is done thanks to 3 modules:

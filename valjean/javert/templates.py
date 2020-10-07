@@ -259,7 +259,7 @@ array([0., 0., 0., 0., 0., 0., 0., 0.])]
 
         Slicing is done like in the usual `NumPy` arrays, see:
         `numpy indexing`_ for more informations. No treatment like in
-        :mod:`~valjean.gavroche.dataset` is done.
+        :mod:`~valjean.eponine.dataset` is done.
 
         :param index: index, slice or tuple of slices
         :type index: int, slice, tuple(slice)

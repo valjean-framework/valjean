@@ -11,10 +11,11 @@ from hypothesis.strategies import data, floats, one_of
 
 from ..context import valjean  # pylint: disable=unused-import,C0411
 
-from valjean.gavroche import dataset as gd
+from valjean.eponine import dataset as gd
 
-from ..eponine.conftest import repeat, slice_tuples
-from .conftest import datasets, multiple_datasets
+from .conftest import repeat, slice_tuples, datasets, multiple_datasets
+from ..gavroche.conftest import (some_dataset,  # pylint: disable=unused-import
+                                 other_dataset, different_dataset)
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))

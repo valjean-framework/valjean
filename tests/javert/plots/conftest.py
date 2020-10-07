@@ -3,7 +3,7 @@ from collections import OrderedDict
 import pytest
 import numpy as np
 
-from valjean.gavroche.dataset import Dataset
+from valjean.eponine.dataset import Dataset
 from valjean.gavroche.stat_tests.student import TestStudent
 from valjean.javert.representation import PlotRepresenter
 from ...context import valjean  # noqa: F401, pylint: disable=unused-import

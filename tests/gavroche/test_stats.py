@@ -4,7 +4,7 @@
 import numpy as np
 
 from ..context import valjean  # pylint: disable=unused-import
-from valjean.gavroche.dataset import Dataset
+from valjean.eponine.dataset import Dataset
 from valjean.gavroche.stat_tests.student import TestStudent
 
 

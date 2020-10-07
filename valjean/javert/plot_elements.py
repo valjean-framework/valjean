@@ -446,8 +446,8 @@ def repr_student_delta(result):
     :rtype: list(PlotTemplate)
 
     .. note::
-        if we have a member ``units`` in base_dataset the axis names
-        would be constructed like ``name + units['name']``.
+        if we have a member ``units`` in dataset the axis names would be
+        constructed like ``name + units['name']``.
 
     If the dimension cannot be determined an empty list is returned.
     '''
