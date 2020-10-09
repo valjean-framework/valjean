@@ -191,7 +191,8 @@ six-cent-six cyprès.
         :returns: the formatted test result.
         :rtype: str
         '''
-        lines = [self.formatter.text(result.test.description), '']
+        lines = [self.formatter.anchor(result.test.fingerprint()),
+                 self.formatter.text(result.test.description), '']
         res_repr = self.representation(result)
         if (not res_repr
                 and self.representation.verbosity in (Verbosity.SILENT,
@@ -238,6 +239,11 @@ class RstFormatter(Formatter):
         :rtype: str
         '''
         return text
+
+    @staticmethod
+    def anchor(fingerprint):
+        '''Format an anchor with the given fingerprint.'''
+        return '\n.. _anchor_{}:\n\n'.format(fingerprint)
 
     @staticmethod
     def format_tabletemplate(table):

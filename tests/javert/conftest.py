@@ -250,7 +250,20 @@ def report(report_section1, report_section2,
 def rstcheck():
     '''Import and return the :mod:`rstcheck` module, if it is installed. If it
     isn't, tests depending on this fixture will be automatically skipped.'''
-    return pytest.importorskip('rstcheck')
+
+    class RstCheckWrapper:
+        '''A wrapper class to ignore specific :mod:`rstcheck` warnings.'''
+
+        IGNORE = r'(Hyperlink target .* is not referenced)'
+        RSTCHECK = pytest.importorskip('rstcheck')
+
+        @classmethod
+        def check(cls, rst):
+            '''Call :func:`rstcheck.check` with the predefined ignore
+            pattern.'''
+            return cls.RSTCHECK.check(rst, ignore={'messages': cls.IGNORE})
+
+    return RstCheckWrapper
 
 
 @pytest.fixture(

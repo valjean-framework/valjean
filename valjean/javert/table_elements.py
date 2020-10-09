@@ -560,7 +560,12 @@ def repr_testresultstats(result, status_ok, label):
         if status_ok == status:
             continue
         text.append('List of {} with status {}:\n\n'.format(label, status_txt))
-        text.extend('#. {}'.format(item) for item in sorted(classify[status]))
+        for item in sorted(classify[status]):
+            if item.fingerprint:
+                text.append('#. :ref:`{} <anchor_{}>`'
+                            .format(item.name, item.fingerprint))
+            else:
+                text.append('#. {}'.format(item.name))
         text.append('\n')
     return [table, TextTemplate('\n'.join(text))]
 

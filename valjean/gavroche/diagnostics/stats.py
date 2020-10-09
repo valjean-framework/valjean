@@ -14,7 +14,7 @@ actually run.
 '''
 
 from collections import defaultdict
-from functools import partial, update_wrapper
+from functools import partial, update_wrapper, total_ordering
 from enum import IntEnum
 
 from ...cosette.task import TaskStatus, close_dependency_graph
@@ -100,6 +100,31 @@ def task_stats(*, name, description='', labels=None, tasks):
                         labels=labels, tasks=close_dependency_graph(tasks))
 
 
+@total_ordering
+class NameFingerprint:
+    '''A small helper class to store a name and an optional fingerprint for the
+    referenced item.'''
+
+    def __init__(self, name, fingerprint=None):
+        self.name = name
+        self.fingerprint = fingerprint
+
+    def __str__(self):
+        return str(self.name)
+
+    def __repr__(self):
+        return repr(self.name)
+
+    def __eq__(self, other):
+        return (self.name == other.name
+                and self.fingerprint == other.fingerprint)
+
+    def __lt__(self, other):
+        if self.name != other.name:
+            return self.name < other.name
+        return self.fingerprint < other.fingerprint
+
+
 class TestStatsTasks(Test):
     '''A test that evaluates statistics about the success/failure status of the
     given tasks.
@@ -124,7 +149,8 @@ class TestStatsTasks(Test):
         '''
         status_dict = defaultdict(list)
         for task_name, task_result in self.task_results:
-            status_dict[task_result['status']].append(task_name)
+            name_fing = NameFingerprint(task_name)
+            status_dict[task_result['status']].append(name_fing)
         return TestResultStatsTasks(test=self, classify=status_dict)
 
     def data(self):
@@ -311,17 +337,21 @@ class TestStatsTests(Test):
         status_dict = defaultdict(list)
         for task_name, task_result in self.task_results:
             if 'result' not in task_result:
-                status_dict[TestOutcome.MISSING].append(task_name)
+                name_fing = NameFingerprint(task_name)
+                status_dict[TestOutcome.MISSING].append(name_fing)
                 continue
             test_results = task_result['result']
             for test_result in test_results:
                 if not isinstance(test_result, TestResult):
-                    status_dict[TestOutcome.NOT_A_TEST].append(task_name)
+                    name_fing = NameFingerprint(task_name)
+                    status_dict[TestOutcome.NOT_A_TEST].append(name_fing)
                 if test_result:
                     test_lst = status_dict[TestOutcome.SUCCESS]
                 else:
                     test_lst = status_dict[TestOutcome.FAILURE]
-                test_lst.append(test_result.test.name)
+                name_fing = NameFingerprint(test_result.test.name,
+                                            test_result.test.fingerprint())
+                test_lst.append(name_fing)
         return TestResultStatsTests(test=self, classify=status_dict)
 
     def data(self):
