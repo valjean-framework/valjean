@@ -72,15 +72,12 @@ def one_label_case(ttask, env):
     assert len(env[tasks[1].name]['result']) == 1
     stats_day_res = env[tasks[1].name]['result'][0]
     assert not stats_day_res
-    assert len(stats_day_res.test.labels_lod) == 4
-    assert (sorted(list(stats_day_res.test.index.keys()))
-            == ['_result', '_test_name', 'day', 'meal'])
+    assert stats_day_res.n_labels == 4
     assert (stats_day_res.classify == [
         {'KO': 0, 'OK': 1, 'labels': ('Christmas Eve',), 'total': 1},
         {'KO': 1, 'OK': 2, 'labels': ('Wednesday',), 'total': 3}])
     assert stats_day_res.nb_missing_labels() == 0
     stats_meal_res = env[tasks[3].name]['result'][0]
-    assert stats_day_res.test.index.keys() == stats_meal_res.test.index.keys()
     assert (stats_meal_res.classify == [
         {'KO': 1, 'OK': 0, 'labels': ('dinner',), 'total': 1},
         {'KO': 0, 'OK': 1, 'labels': ('lunch',), 'total': 1}])

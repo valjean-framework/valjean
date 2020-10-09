@@ -496,8 +496,6 @@ class TestStatsTestsByLabels(Test):
         super().__init__(name=name, description=description, labels=labels)
         self.task_results = task_results
         self.by_labels = by_labels
-        self.labels_lod = None
-        self.index = None
 
     def _build_labels_lod(self):
         '''Build the labels list of dictionaries that allows the creation of
@@ -508,7 +506,7 @@ class TestStatsTestsByLabels(Test):
         one could be needed some time and is expected to be unique, the second
         one is filled with :class:`TestOutcome`.
         '''
-        self.labels_lod = []
+        labels_lod = []
         for _task_name, task_result in self.task_results:
             if 'result' not in task_result:
                 continue
@@ -528,13 +526,17 @@ class TestStatsTestsByLabels(Test):
                     ldic['_result'] = TestOutcome.SUCCESS
                 else:
                     ldic['_result'] = TestOutcome.FAILURE
-                self.labels_lod.append(ldic)
+                labels_lod.append(ldic)
 
-    def _build_index(self):
-        self.index = Index()
-        for itres, tres in enumerate(self.labels_lod):
+        return labels_lod
+
+    @staticmethod
+    def _build_index(labels_lod):
+        index = Index()
+        for itres, tres in enumerate(labels_lod):
             for lab in tres:
-                self.index[lab][tres[lab]].add(itres)
+                index[lab][tres[lab]].add(itres)
+        return index
 
     def _rloop_over_labels(self, index, labels, rok, rko, plab=()):
         '''Recursive method to select labels and calculate the relative
@@ -583,7 +585,7 @@ class TestStatsTestsByLabels(Test):
                          'total': len(labset)})
         return lres
 
-    def _stats_for_labels(self):
+    def _stats_for_labels(self, index):
         '''Check the presence of all required labels in the index, build the
         success and failures sets and return the dictionary of results.
 
@@ -591,23 +593,24 @@ class TestStatsTestsByLabels(Test):
         :returns: list of dictionaries of labels and states
         :rtype: list(dict)
         '''
-        if not set(self.by_labels) <= set(self.index):
+        if not set(self.by_labels) <= set(index):
             raise TestStatsTestsByLabelsException(
                 'TestStatsTestsByLabels: {} not found in tests labels'
                 .format(self.by_labels))
-        rok = self.index['_result'][TestOutcome.SUCCESS]
-        rko = self.index['_result'][TestOutcome.FAILURE]
-        res = self._rloop_over_labels(self.index, self.by_labels, rok, rko)
+        rok = index['_result'][TestOutcome.SUCCESS]
+        rko = index['_result'][TestOutcome.FAILURE]
+        res = self._rloop_over_labels(index, self.by_labels, rok, rko)
         return sorted(res, key=lambda x: x['labels'])
 
     def evaluate(self):
         '''Evaluate this test and turn it into a
         :class:`TestResultStatsTestsByLabels`.
         '''
-        self._build_labels_lod()
-        self._build_index()
-        sfl = self._stats_for_labels()
-        return TestResultStatsTestsByLabels(test=self, classify=sfl)
+        labels_lod = self._build_labels_lod()
+        index = self._build_index(labels_lod)
+        sfl = self._stats_for_labels(index)
+        return TestResultStatsTestsByLabels(test=self, classify=sfl,
+                                            n_labels=len(labels_lod))
 
     def data(self):
         '''Generator yielding objects supporting the buffer protocol that (as a
@@ -631,6 +634,11 @@ class TestResultStatsTestsByLabels(TestResultStatsTasks):
     ``self.classify`` is here a list of dictionaries with the following keys:
     ``['labels', 'OK', 'KO', 'total']``.
     '''
+
+    def __init__(self, *, test, classify, n_labels):
+        super().__init__(test=test, classify=classify)
+        self.n_labels = n_labels
+
     def __bool__(self):
         '''Test is successful if all tests are.'''
         return all(self.oracles())
@@ -648,5 +656,4 @@ class TestResultStatsTestsByLabels(TestResultStatsTasks):
 
         :rtype: int
         '''
-        return (len(self.test.labels_lod)
-                - sum([s['total'] for s in self.classify]))
+        return self.n_labels - sum([s['total'] for s in self.classify])
