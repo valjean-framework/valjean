@@ -18,6 +18,7 @@
 #
 '''Configuration file for sphinx documentation.'''
 
+from datetime import datetime
 from pkg_resources import get_distribution
 import matplotlib
 matplotlib.use('AGG')
@@ -57,7 +58,8 @@ master_doc = 'index'
 
 # General information about the project.
 author = u'Ève Le Ménédeu, Davide Mancusi'
-copyright = u'2017-2019, ' + author  # pylint: disable=redefined-builtin
+copyright = (u'2017-{}, {}'  # pylint: disable=redefined-builtin
+             .format(datetime.now().year, author))
 project = 'valjean'
 release = get_distribution(project).version
 version = '.'.join(release.split('.')[:2])
