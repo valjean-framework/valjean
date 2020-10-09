@@ -217,7 +217,7 @@ class RstFormatter(Formatter):
     def header(self, name, depth):
         '''Produce the header for formatting a :class:`~.TestResult`.
 
-        :param TestResult result: A test result.
+        :param str name: A header name
         :param int depth: the depth of this header, 0 being the top.
         :returns: the test header, for inclusion in a reST document.
         :rtype: str
