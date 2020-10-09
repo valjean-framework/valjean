@@ -9,6 +9,7 @@ syntax.
 '''
 
 
+from datetime import datetime
 from collections import defaultdict
 from pathlib import Path
 import pkg_resources as pkg
@@ -670,10 +671,11 @@ class FormattedRst:
         ensure(path / '.static', is_dir=True)
         ensure(path / '.templates', is_dir=True)
         ensure(path / 'figures', is_dir=True)
+        year = datetime.now().year
         self.configure(resource='conf.py.template', dest=path / 'conf.py',
                        author=self.author, project=self.title,
                        version=self.version, theme='alabaster',
-                       theme_options={})
+                       theme_options={}, year=year)
         self.configure(resource='valjean.css',
                        dest=path / '.static' / 'valjean.css',
                        formatting=False)
