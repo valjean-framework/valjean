@@ -17,7 +17,7 @@ from valjean.eponine.base_dataset import BaseDataset
 from valjean.dyn_import import dyn_import
 
 
-def finite(width=64):
+def finite(min_value=None, max_value=None, width=64):
     '''Create a strategy for generating reasonable floating-point values.
 
     The definition of "reasonable" here excludes NaN, ±∞ and values larger than
@@ -25,7 +25,9 @@ def finite(width=64):
 
     :returns: a `hypothesis` strategy.
     '''
-    return floats(min_value=-1e5, max_value=1e5,
+    min_value = -1e5 if min_value is None else min_value
+    max_value = 1e5 if max_value is None else max_value
+    return floats(min_value=min_value, max_value=max_value,
                   allow_nan=False, allow_infinity=False, width=width)
 
 

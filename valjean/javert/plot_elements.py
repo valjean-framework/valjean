@@ -109,6 +109,161 @@ def trim_range(bins):
     return blimits
 
 
+def fit_curve_ranges(curves, threshold=0.0):
+    '''Return a set of best-fit limits for the given curves.
+
+    This function suggests axis limits for the given curves that make all
+    curves fill the plot area. The limits are determined by looking at the
+    region where any of the curves exceed the given threshold.
+
+    :param list(CurveElements) curves: list of curves
+    :param float threshold: threshold for the detection
+    :returns: suggested limits for all dimensions
+    :rtype: list((float, float))
+
+    Example:
+
+    >>> bins = [np.array([-1.0, 0.0, 1.0]),
+    ...         np.array([0.0, 5.0, 10.0, 15.0])]
+    >>> curve1 = CurveElements(np.array([[1.0, 2.0, 3.0],
+    ...                                  [2.0, 3.0, 4.0]]),
+    ...                       bins=bins, legend='curve1')
+    >>> curve2 = CurveElements(np.array([[1.0, 4.0, 3.0],
+    ...                                  [2.0, 3.0, 2.0]]),
+    ...                       bins=bins, legend='curve2')
+    >>> fit_curve_ranges([curve1, curve2], threshold = 3.5)
+    [(-1.0, 1.0), (5.0, 15.0)]
+    '''
+    if not curves:
+        return []
+    c_limits = np.array([curve_limits(curve, threshold) for curve in curves])
+    # the shape of c_limits here is (n_curves, n_axes, 2)
+    unions = ranges_union(c_limits)
+    # the shape of unions here is (n_axes, 2)
+    return [(union[0], union[1]) for union in unions]
+
+
+def ranges_union(ranges, union_axis=0, minmax_axis=-1):
+    '''Return the union of the given ranges, axis by axis.
+
+    :param ranges: an n-dimensional array of range bounds. The array shape can
+        be anything, as long as one of the dimensions has length 2; this axis
+        is assumed to contain the ``(min_range, max_range)`` pair.
+    :type ranges: list or numpy.ndarray
+    :param union_axis: the axis along which the union will be computed. If
+        unspecified, the first axis will be assumed.
+    :type union_axis: anything that `NumPy` understands as an axis.
+    :param minmax_axis: the length-2 axis along which the range minimum and
+        maximum are stored. If unspecified, the last axis will be assumed.
+    :type minmax_axis: int
+    :returns: an array of union bounds, with the same shape as the input array
+        except for the suppression of `union_axis`.
+    :rtype: numpy.ndarray
+
+    Examples:
+
+    >>> ranges_union([[(-1, 1)]])
+    array([[-1,  1]])
+
+    >>> ranges_union([[(-5, 5)], [(-3, 8)]])
+    array([[-5,  8]])
+
+    >>> ranges_union([[(-5, 5), (-1, 1)],
+    ...               [(-3, 8), (-2, 2)]])
+    array([[-5,  8],
+           [-2,  2]])
+
+    >>> ranges_union([[(-5, 5), (-1, 1)],
+    ...               [(-3, 8), (-2, 2)],
+    ...               [(-7, 1), (0, 6)]])
+    array([[-7,  8],
+           [-2,  6]])
+    '''
+    if not isinstance(ranges, np.ndarray):
+        ranges = np.array(ranges)
+    min_limits = np.min(ranges.take(0, minmax_axis), axis=union_axis)
+    max_limits = np.max(ranges.take(1, minmax_axis), axis=union_axis)
+    result = np.stack((min_limits, max_limits), axis=minmax_axis)
+    return result
+
+
+def curve_limits(curve, threshold=0.0):
+    '''Return the set of bounds over each axis where the given curve exceeds
+    the given threshold.
+
+    For example, the following curve exceeds the threshold value of 50 in the
+    central bins, which corresponds to `2.0<x<4.0` and `-0.5<y<0.5`:
+
+    >>> bins = [np.linspace(0.0, 6.0, num=7),
+    ...         np.linspace(-2.5, 2.5, num=6)]
+    >>> curve = CurveElements(np.array([[  1,   1,   1,   1,   1],
+    ...                                 [  1,  10,  30,  10,   1],
+    ...                                 [  1,  10, 100,  10,   1],
+    ...                                 [  1,  10, 100,  10,   1],
+    ...                                 [  1,  10,  30,  10,   1],
+    ...                                 [  1,   1,   1,   1,   1]]),
+    ...                      bins=bins, legend='curve')
+    >>> curve_limits(curve, threshold=50)
+    [(2.0, 4.0), (-0.5, 0.5)]
+
+    Changing the threshold to 20 modifies the range for the first axis, but
+    not for the second one.
+
+    >>> curve_limits(curve, threshold=20)
+    [(1.0, 5.0), (-0.5, 0.5)]
+
+    The function also works if the number of bin edges is equal to the number
+    of values along a given direction (as opposed to the number of values plus
+    one):
+
+    >>> bins = [np.array([-1.0, 1.0]), np.array([0.0, 5.0, 10.0, 15.0])]
+    >>> curve = CurveElements(np.array([[1.0, 2.0, 3.0],
+    ...                                 [2.0, 3.0, 4.0]]),
+    ...                      bins=bins, legend='curve')
+    >>> curve_limits(curve, threshold = 3.5)
+    [(1.0, 1.0), (10.0, 15.0)]
+    '''
+    limits = []
+    n_dims = len(curve.bins)
+    mask_nd = curve.values > threshold
+    LOGGER.debug('mask_nd: %s', mask_nd)
+    for i_bin, a_bin in enumerate(curve.bins):
+        axis = tuple(i for i in range(n_dims) if i != i_bin)
+        mask = mask_nd.any(axis=axis)
+        LOGGER.debug('mask: %s', mask)
+        if len(a_bin) == len(mask):
+            over_thr_min = a_bin[mask]
+            over_thr_max = a_bin[mask]
+        else:  # here len(mask) + 1 == len(a_bin)
+            over_thr_min = a_bin[:-1][mask]
+            over_thr_max = a_bin[1:][mask]
+        limits.append((np.amin(over_thr_min), np.amax(over_thr_max)))
+    return limits
+
+
+def pad_range(limits, log, padding=0.05):
+    '''Pad the given limits.
+
+    This function adds a bit of padding to the input limit range. If `log` is
+    `False`, the new limits will be ``(limits[0] - padding * delta, limits[1] +
+    padding * delta)``, where ``delta = limits[1] - limits[0]``. In log scale
+    (`log=True`), the padded limits are ``(limits[0] * exp(-padding *
+    log_delta), limits[1] * exp(padding * log_delta)``, with ``log_delta =
+    log(limits[1] / limits[0])``.
+
+    :param (float, float) limits: a pair of floats.
+    :param bool log: whether we are in log scale.
+    :param float padding: the amount of padding to insert.
+    :returns: new limits
+    :rtype: (float, float)
+    '''
+    if log:
+        delta = np.exp(0.5 * padding * np.log(limits[1] / limits[0]))
+        return limits[0] / delta, limits[1] * delta
+    delta = 0.5 * padding * (limits[1] - limits[0])
+    return limits[0] - delta, limits[1] + delta
+
+
 def post_treatment(templates, result):
     '''Post-treatment of plots after template generate.
 

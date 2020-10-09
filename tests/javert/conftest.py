@@ -1,5 +1,6 @@
 '''Fixtures for the :mod:`~.valjean.javert` tests.'''
 
+from hypothesis import assume
 from hypothesis.strategies import (composite, tuples, integers, text, none,
                                    just, sampled_from, lists, booleans)
 from hypothesis.extra.numpy import arrays, array_shapes
@@ -261,3 +262,15 @@ def templates(request):
     fixtures = [request.getfixturevalue(fix_name)
                 for fix_name in request.param]
     return fixtures
+
+
+@composite
+def ranges(draw, min_value=None, max_value=None):
+    '''Strategy to generate valid float ranges.
+
+    A range `(l, h)` is valid if `l < h`.
+    '''
+    bounds = draw(tuples(finite(min_value=min_value, max_value=max_value),
+                         finite(min_value=min_value, max_value=max_value)))
+    assume(bounds[0] != bounds[1])
+    return min(bounds), max(bounds)
