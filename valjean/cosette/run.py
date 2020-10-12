@@ -8,7 +8,7 @@ Spawning external processes
    :hide:
 
    >>> from valjean.config import Config
-   >>> config = Config(paths=[])
+   >>> config = Config()
 
 The :class:`RunTask` class is the basic building block to run tasks that
 consist in spawning external processes and waiting for their completion.  It
@@ -68,7 +68,7 @@ and for all, for instance, and providing the missing arguments later.
 
     >>> import os
     >>> from valjean.config import Config
-    >>> config = Config(paths=[])
+    >>> config = Config()
     >>> def print_stdout(env_up, name):
     ...   """A small function to print the stdout of a task."""
     ...   stdout = env_up[name]['stdout']
@@ -343,7 +343,7 @@ class RunTask(PythonTask):
             from pathlib import Path
 
             clis = clis_closure(env, config)
-            output_dir = Path(config.get('path', 'output-root'),
+            output_dir = Path(config.query('path', 'output-root'),
                               sanitize_filename(name))
             stdout_path, stderr_path = make_cap_paths(output_dir)
 

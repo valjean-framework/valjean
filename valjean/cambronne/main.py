@@ -46,9 +46,8 @@ def make_parser():
                         help='show the code version number and exit')
     parser.add_argument('-v', '--verbose', action='count',
                         help='increase verbosity')
-    parser.add_argument('-c', '--config', action='append',
-                        help='use the specified configuration file; '
-                        'may be specified multiple times')
+    parser.add_argument('-c', '--config', action='store',
+                        help='use the specified configuration file')
     parser.add_argument('-l', '--log', help='path to the log file')
 
     # here come the subcommands
@@ -84,7 +83,10 @@ def process_options(args):
     :returns: The configuration.'''
 
     # configuration file
-    config = Config(paths=args.config)
+    if args.config is not None:
+        config = Config.from_file(args.config)
+    else:
+        config = Config()
 
     # verbosity
     if args.verbose is not None:

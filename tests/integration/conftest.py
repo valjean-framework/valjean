@@ -55,7 +55,7 @@ def run_valjean(*args, config, job_config, env_filename, job_file):
                    str(env_filename), str(job_file)))
     v_args.extend(args)
     call_valjean(*v_args)
-    output_root = config.get('path', 'output-root')
+    output_root = config.query('path', 'output-root')
     env = load_all_envs(output_root=output_root, filename=env_filename,
                         fmt='pickle')
     return env

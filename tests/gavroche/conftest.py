@@ -456,7 +456,7 @@ def generate_test_tasks():
 
 def run_tasks(tasks, env):
     '''Run the tasks and update the environnment.'''
-    config = Config(paths=[])
+    config = Config()
     for task in tasks:
         env_up, status = task.do(env=env, config=config)
         env.set_status(task, status)

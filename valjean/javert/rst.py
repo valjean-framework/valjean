@@ -733,7 +733,7 @@ class RstTestReportTask(PythonTask):
             rst = Rst(representation)
             fmt_report = rst.format_report(report=report, author=author,
                                            version=version)
-            report_root = Path(config.get('path', 'report-root'))
+            report_root = Path(config.query('path', 'report-root'))
             report_path = report_root / sanitize_filename(self.name)
             ensure(report_path, is_dir=True)
             fmt_report.write(report_path)

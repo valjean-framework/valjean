@@ -44,7 +44,7 @@ class RunCommand(JobCommand):
         LOGGER.info('soft_graph contains %d tasks', len(soft_graph))
         LOGGER.info('will schedule up to %d tasks in parallel', args.workers)
 
-        output_root = config.get('path', 'output-root')
+        output_root = config.query('path', 'output-root')
         # we extract the tasks from the hard-dependency graph; both graphs
         # contain the same nodes anyway
         tasks = hard_graph.nodes()
@@ -109,7 +109,7 @@ class RunCommand(JobCommand):
         '''
         if not failed:
             return
-        log_root = config.get('path', 'log-root')
+        log_root = config.query('path', 'log-root')
         ensure(log_root, is_dir=True)
         failed_fname = Path(log_root, 'failed-tasks')
         with failed_fname.open('w') as failed_file:

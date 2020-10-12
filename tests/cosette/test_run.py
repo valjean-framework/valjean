@@ -29,7 +29,7 @@ def do_test_task(task, env, config):
     assert env_up[task.name]['return_codes'] == [0]
     stdout = Path(env_up[task.name]['stdout'])
     stderr = Path(env_up[task.name]['stderr'])
-    output_dir = config.get('path', 'output-root')
+    output_dir = config.query('path', 'output-root')
     stdout.relative_to(str(output_dir))  # raises ValueError if impossible
     stderr.relative_to(str(output_dir))  # raises ValueError if impossible
     with stdout.open() as f_out:

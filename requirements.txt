@@ -2,3 +2,4 @@ pyparsing
 numpy
 scipy
 matplotlib
+toml

@@ -183,13 +183,13 @@ class CheckoutTask(PythonTask):
         def checkout(*, config):
             # setup log dir and file
             if self.log_root is None:
-                self.log_root = config.get('path', 'log-root')
+                self.log_root = config.query('path', 'log-root')
             log_file = ensure(self.log_root, self.name + '.log')
             ensure(log_file)
 
             # setup checkout dir
             if self.checkout_root is None:
-                self.checkout_root = config.get('path', 'output-root')
+                self.checkout_root = config.query('path', 'output-root')
             checkout_dir = ensure(self.checkout_root, self.name, is_dir=True)
 
             with log_file.open('w') as log:
@@ -286,13 +286,13 @@ class BuildTask(PythonTask):
         def build(*, config, env):
             # setup log dir and files
             if self.log_root is None:
-                self.log_root = config.get('path', 'log-root')
+                self.log_root = config.query('path', 'log-root')
             log_file = ensure(self.log_root, self.name + '.log')
             ensure(log_file)
 
             # setup build dir
             if self.build_root is None:
-                self.build_root = config.get('path', 'output-root')
+                self.build_root = config.query('path', 'output-root')
             build_dir = (ensure(self.build_root, self.name, is_dir=True)
                          .resolve())
 

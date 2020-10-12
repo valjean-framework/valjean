@@ -11,7 +11,7 @@ post-processing (tests) into the :mod:`valjean` workflow.
     >>> # pylint: disable=trailing-whitespace,line-too-long
     >>> # noqa: E501,W291
     >>> from valjean.config import Config
-    >>> config = Config(paths=[])
+    >>> config = Config()
 
 We will need to set up a few things to show an example of how to use the
 decorators. We don't want to build and run TRIPOLI-4 for the purpose of this

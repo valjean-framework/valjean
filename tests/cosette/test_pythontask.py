@@ -62,13 +62,13 @@ def test_pass_config():
     '''Test that the configuration is correctly passed to the function in the
     task.'''
     def task_with_config(sec, opt, *, config):
-        return config.get(sec, opt)
+        return config.query(sec, opt)
     sec, opt, val = 'tarapia', 'tapioco', 'antani'
     name = 'task'
     task = PythonTask(name, task_with_config, args=(sec, opt),
                       config_kwarg='config')
-    config = Config(paths=[])
-    config.add_section(sec)
+    config = Config()
+    config[sec] = {}
     config.set(sec, opt, val)
     ret = task.do(env=None, config=config)
     assert ret == val

@@ -1,79 +1,34 @@
 # pylint: disable=no-value-for-parameter
 '''Fixtures for the :mod:`~.valjean` tests.'''
 
-from string import ascii_lowercase
+import string
 
 import py
 import pytest
-from hypothesis.strategies import text, dictionaries, composite, lists
+from hypothesis.strategies import text, dictionaries, composite
 
 from .context import valjean  # pylint: disable=unused-import
 # pylint: disable=wrong-import-order
 from valjean.config import Config
 
-ID_CHARS = ascii_lowercase
 
-# normalized IDs are stripped lowercase strings
-IDS = text(ID_CHARS, min_size=1).map(lambda s: s.strip())
-
-STANDARD_SECS = ['build/{}', 'checkout/{}', 'executable/{}', 'run/{}',
-                 'other/{}']
+IDS = text(string.ascii_letters + string.digits + '-_', min_size=1)
 
 
 ###########################
 #  Hypothesis strategies  #
 ###########################
 
-def intercalate_strings(list1, list2):
-    '''Build a string by intercalating strings from `list1` and `list2`.
-
-    Returns a string by concatenating alternatively strings from `list1` and
-    `list2`.  For instance:
-
-        >>> list1 = ['a', 'b', 'c']
-        >>> list2 = ['A', 'B']
-        >>> intercalate_strings(list1, list2)
-        'aAbBc'
-
-    `list1` and `list2` must respect the following invariant::
-
-        len(list1) == len(list2) + 1
-
-    :param list1: a list of strings.
-    :type list1: list(str)
-    :paral list2: a list of strings.
-    :type list2: list(str)
-    '''
-    intercalated = ''.join(''.join((s1, s2)) for s1, s2 in zip(list1, list2))
-    return ''.join((intercalated, list1[-1]))
-
-
 @composite
-def section_names(draw, sec_ids):
-    '''Hypothesis strategy to generate section names, with or without slash
-    separator.'''
-    words = draw(lists(sec_ids, min_size=1))
-    n_blanks = len(words) + 1
-    blanks = draw(lists(spaces(), min_size=n_blanks, max_size=n_blanks))
-    return intercalate_strings(blanks, words)
-
-
-@composite
-def configs(draw, keys=IDS, vals=IDS, sec_names=section_names(IDS),
+def configs(draw, keys=IDS, vals=IDS, sec_names=IDS,
             min_size=0, max_size=None):
     # pylint: disable=too-many-arguments
     '''Composite Hypothesis strategy to generate Config objects.'''
     secs = dictionaries(keys, vals, min_size=min_size, max_size=max_size)
     as_dict = draw(dictionaries(sec_names, secs,
                                 min_size=min_size, max_size=max_size))
-    conf = Config.from_mapping(as_dict)
+    conf = Config(as_dict)
     return conf
-
-
-@composite
-def spaces(draw, min_size=0, max_size=None):
-    '''Generate strings of spaces.'''
-    return draw(text(' ', min_size=min_size, max_size=max_size))
 
 
 #####################
@@ -83,18 +38,17 @@ def spaces(draw, min_size=0, max_size=None):
 @pytest.fixture(scope='function')
 def empty_config():
     '''Return an empty :class:`~.Config` object.'''
-    return Config([])
+    return Config()
 
 
 @pytest.fixture(scope='function')
-def config_tmp(tmpdir_factory):
+def config_tmp(tmp_path_factory):
     '''Create a configuration object with the path options set to temporary
     directories.'''
-    log_dir = str(tmpdir_factory.mktemp('log'))
-    output_dir = str(tmpdir_factory.mktemp('output'))
-    config = Config(paths=[])
-    config.set('path', 'log-root', log_dir)
-    config.set('path', 'output-root', output_dir)
+    work_dir = tmp_path_factory.mktemp('work')
+    config = Config({'path': {'log-root': str(work_dir / 'log'),
+                              'output-root': str(work_dir / 'output'),
+                              'report-root': str(work_dir / 'report')}})
     return config
 
 

@@ -4,295 +4,102 @@
     >>> from valjean.config import Config
     >>> config = Config()
 
-The :class:`Config` constructor will look for the following configuration
-files, and read them in order if they exist:
-
-    * :file:`$HOME/.valjean.cfg`
-    * :file:`valjean.cfg` (in the current directory)
-
-The :file:`$HOME/.valjean.cfg` file is useful for setting user defaults. The
-:file:`valjean.cfg` file is where you should write the configuration for your
-current test run.
-
-If you want to read other files on object creation instead, you can pass them
-using the ``paths`` argument:
-
-    >>> config = Config(paths=['valjean.conf'])
-
-The default files are in the :data:`Config.DEFAULT_CONFIG_FILES` class
-attribute, so you can do
-
-    >>> config = Config(paths=list(Config.DEFAULT_CONFIG_FILES)
-    ...                 + ['valjean.conf'])
-
-to read the default files *and* :file:`valjean.conf`.
-
-If you don't want to read any files (useful for testing), just pass an empty
-list:
-
-    >>> config = Config(paths=[])
-
 By default, :class:`Config` objects come with a ``'path'`` configuration
 section, which may be used to set default values for any configuration option.
 A few options are set from the beginning:
 
-    >>> for opt, val in config.items('path', raw=True):
+    >>> for opt, val in sorted(config['path'].items()):
     ...     print('{} = {}'.format(opt, val))
-    work-dir = /...
-    log-root = ${work-dir}/log
-    output-root = ${work-dir}/output
-    report-root = ${work-dir}/report
+    log-root = /.../log
+    output-root = /.../output
+    report-root = /.../report
 
-The :class:`Config` class provides getters and setters:
+The :class:`Config` class behaves like a simple dictionary:
 
-    >>> print(config.get('path', 'report-root'))
+    >>> print(config.query('path', 'report-root'))
     /.../report
-
-    # value interpolation is possible
-    >>> config.set('path', 'log-root', '${work-dir}/log_dir')
-    >>> print(config.get('path', 'log-root'))
-    /.../log_dir
-
-It also provides some additional convenience methods:
-
-    >>> from pprint import pprint
-
-    # convert the configuration to a dictionary
-    # the as_dict method actually returns an OrderedDict
-    >>> for sec_name, section in config.as_dict(raw=True).items():
-    ...   for option, value in section.items():
-    ...     print('{}.{}: {}'.format(sec_name, option, value))
-    path.work-dir: /...
-    path.log-root: ${work-dir}/log_dir
-    path.output-root: ${work-dir}/output
-    path.report-root: ${work-dir}/report
-
-    # merge two configuration objects; options from the second
-    # configuration override those from the first one
-    >>> other_config = Config(paths=[])
-    >>> other_config.set('path', 'report-root', '${work-dir}/html')
-    >>> other_config.set('path', 'extra-option', 'definitely!')
-    >>> config += other_config
-    >>> print(config.get('path', 'report-root'))
-    /.../html
-    >>> print(config.get('path', 'extra-option'))
-    definitely!
-
-
-Automatic dependency discovery
-------------------------------
-
-.. todo:: Document it. Perhaps refactor it somewhere else?
-
 
 Module API
 ----------
 '''
 
-from configparser import ConfigParser, ExtendedInterpolation, _UNSET
-from collections import OrderedDict
-import os
-import re
-
-from . import LOGGER
+from collections.abc import MutableMapping
+from pathlib import Path
+import toml
 
 
-class Config:
+class Config(MutableMapping):
     '''The base configuration class for :mod:`valjean`.'''
 
-    #: Default configuration file paths.
-    DEFAULT_CONFIG_FILES = ('~/.valjean.cfg', 'valjean.cfg')
-
-    def __init__(self, paths=None):
-        '''Construct a configuration object.
-
-        :param paths: An iterable of paths for configuration files. If this is
-                      `None`, :class:`Config` will search the following paths,
-                      and read in the files in order if they exist:
-
-                        * :file:`$HOME/.valjean.cfg`
-                        * :file:`valjean.cfg` in the current directory
-
-                      If you want to disable this behaviour, use an empty list.
-                      If you want to read the default files **and** some
-                      additional ones, the default files are available as
-                      ``Config.DEFAULT_CONFIG_FILES``.
-        :type paths: :term:`iterable` or None
-        '''
-
-        self._conf = ConfigParser(interpolation=ExtendedInterpolation(),
-                                  delimiters=('=',),
-                                  comment_prefixes=('#',),
-                                  empty_lines_in_values=False,
-                                  default_section='path')
-        # skip leading and trailing spaces in section names
-        self._conf.SECTCRE = re.compile(r"\[ *(?P<header>[^]]+?) *\]")
-
-        # Set some default options
-        self.set('path', 'work-dir', os.path.realpath(os.getcwd()))
-        self.set('path', 'log-root', '${work-dir}/log')
-        self.set('path', 'output-root', '${work-dir}/output')
-        self.set('path', 'report-root', '${work-dir}/report')
-
-        if paths is None:
-            paths = self.DEFAULT_CONFIG_FILES
-
-        other_conf = ConfigParser(default_section='path')
-        other_conf.read([os.path.expanduser(p) for p in paths])
-        for sec_name, _ in other_conf.items():
-            if (not self.has_section(sec_name)
-                    and sec_name != self._conf.default_section):
-                self.add_section(sec_name)
-            for opt, val in other_conf.items(sec_name, raw=True):
-                self.set(sec_name, opt, val)
-
     @classmethod
-    def from_mapping(cls, mapping):
-        '''Construct a configuration object from an option mapping.
+    def from_file(cls, path):
+        '''Construct a configuration object from a TOML file.
 
-        The keys of `mapping` must be strings; its values must be string →
-        string mappings. Note that `mapping` may also be a :class:`Config`
-        or :class:`Config` object (in which case this method acts as a copy).
+        :param path: A path for the configuration file.
+        :type path: pathlib.Path or str
+        '''
+        file_content = toml.load(str(path))
+        return cls(file_content)
 
-        :param mapping: The mapping for initialization.
-        :type mapping: :term:`mapping`
+    def __init__(self, dictionary=None):
+        '''Construct a configuration object from a dictionary.
+
+        The configuration will be initialized to contain a few default options.
+
+        :param dict dictionary: The configuration object.
         :returns: The constructed Config object.
         '''
-        new = cls(paths=[])
-        normalized_mapping = {cls.normalize_section(sec): opts
-                              for sec, opts in mapping.items()}
-        new.merge(normalized_mapping)
-        return new
+        self.conf = dict(dictionary) if dictionary is not None else {}
 
-    @classmethod
-    def normalize_section(cls, section):
-        '''Normalize a section name by removing repeated spaces.'''
-        sec_split = section.split()
-        return ' '.join(w for w in sec_split)
+        # sanity check
+        if 'path' in self.conf and not isinstance(self.conf['path'], dict):
+            raise ValueError('the "path" option is forbidden at the top level')
 
-    def add_section(self, section):
-        '''Add a configuration section.'''
-        xsection = self.normalize_section(section)
-        self._conf.add_section(xsection)
+        # Set some default options
+        if 'path' not in self:
+            self['path'] = {}
+        conf_path = self['path']
+        work_dir = Path.cwd()
+        if 'log-root' not in conf_path:
+            conf_path['log-root'] = '{}/log'.format(work_dir)
+        if 'output-root' not in conf_path:
+            conf_path['output-root'] = '{}/output'.format(work_dir)
+        if 'report-root' not in conf_path:
+            conf_path['report-root'] = '{}/report'.format(work_dir)
 
-    def remove_section(self, section):
-        '''Remove a configuration section.'''
-        xsection = self.normalize_section(section)
-        self._conf.remove_section(xsection)
+    def __getitem__(self, key):
+        return self.conf[key]
 
-    def has_section(self, section):
-        '''Check if a configuration section exists.'''
-        xsection = self.normalize_section(section)
-        return self._conf.has_section(xsection)
+    def __setitem__(self, key, value):
+        self.conf[key] = value
 
-    def sections(self):
-        '''Yield the configuration sections, excluding ``'path'``.'''
-        yield from self._conf.sections()
+    def __delitem__(self, key):
+        del self.conf[key]
 
-    def remove_option(self, section, option):
-        '''Remove an option from a section.'''
-        xsection = self.normalize_section(section)
-        self._conf.remove_option(xsection, option)
+    def __iter__(self):
+        yield from self.conf
 
-    def has_option(self, section, option):
-        '''Check if a configuration option exists.'''
-        xsection = self.normalize_section(section)
-        return self._conf.has_option(xsection, option)
-
-    # pylint: disable=redefined-builtin,too-many-arguments
-    def get(self, section, option, raw=False, vars=None, fallback=_UNSET):
-        '''get(section, option, raw=False, fallback)
-
-        Get the value of an option.
-
-        :param str section: The name of the section.
-        :param str option: The name of the option.
-        :param bool raw: If `True`, interpolate any ``${section:option}``
-                         strings in the value with the value of the
-                         corresponding option (see
-                         :class:`configparser.ExtendedInterpolation` for more
-                         information).
-        :param vars: An option/value dictionary that will be looked up before
-                     the configuration itself, or `None` if not needed.
-        :type vars: :term:`mapping` or None
-        :param fallback: A value to return if the option cannot be found.
-        '''
-        xsection = self.normalize_section(section)
-        return self._conf.get(xsection, option,
-                              raw=raw, vars=vars, fallback=fallback)
-
-    def set(self, section, option, value):
-        '''Set the value of an option.'''
-        xsection = self.normalize_section(section)
-        self._conf.set(xsection, option, value)
-
-    def as_dict(self, *, raw=False):
-        '''Convert the object to a dictionary.'''
-        dct = OrderedDict()
-        for sec_name, _ in self._conf.items():
-            sec_dct = OrderedDict()
-            for opt, val in self.items(sec_name, raw=raw):
-                sec_dct[opt] = val
-            dct[sec_name] = sec_dct
-        return dct
-
-    def merge(self, other):
-        '''In-place merge two configurations. Options from the `other`
-        configuration override those from `self`.
-
-        :param Config other: The configuration to merge into `self`.
-        :returns: The modified configuration.
-        '''
-        self._conf.read_dict(other)
-        return self
-
-    def merge_section(self, other, section):
-        '''In-place merge a section of another configuration. Options from the
-        `other` configuration override those from `self`.
-
-        :param Config other: The configuration to merge into `self`.
-        :param str section: The name of the section to merge.
-        :returns: The modified configuration.
-        '''
-        if not self.has_section(section):
-            self.add_section(section)
-        for opt, val in other.items(section, raw=True):
-            LOGGER.debug('merging option %r:%r = %r', section, opt, val)
-            self.set(section, opt, val)
-        return self
-
-    def __add__(self, other):
-        '''Merge two configurations, return the result as a new object.'''
-        return self.from_mapping(self).merge(other)
-
-    def items(self, section=_UNSET, *, raw=False):
-        '''Yield the configuration items.
-
-        If `section` is not speficied, yield ``(section_name, section_proxy)``
-        pairs for each section. If `section` is given, yield all the ``(option,
-        value)`` pairs from the given section.
-        '''
-        if section is _UNSET:
-            yield from self._conf.items(raw=raw)
-        else:
-            yield from self._conf.items(section, raw=raw)
-
-    __iadd__ = merge
-
-    __radd__ = __add__
+    def __len__(self):
+        return len(self.conf)
 
     def __eq__(self, other):
         if not isinstance(other, Config):
             return False
-        return self._conf == other._conf  # pylint: disable=protected-access
+        return self.conf == other.conf
+
+    def __ne__(self, other):
+        return not self == other
 
     def __str__(self):
-        from itertools import chain
-        all_secs = chain(self.sections(), [self._conf.default_section])
-        return ('\n'.join('[{}]\n'.format(sec) + '\n'
-                          .join('{} = {}'.format(key, val)
-                                for key, val in self.items(sec, raw=True))
-                          for sec in all_secs))
+        return toml.dumps(self.conf)
 
     def __repr__(self):
-        return 'Config({})'.format(self.as_dict())
+        return 'Config({})'.format(self.conf)
+
+    def query(self, section, option):
+        '''Return the value of `option` from `section`.'''
+        return self.conf[section][option]
+
+    def set(self, section, option, value):
+        '''Set the value of `option` in `section` to be `value`.'''
+        self.conf[section][option] = value

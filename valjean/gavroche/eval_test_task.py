@@ -73,7 +73,7 @@ class EvalTestTask(PythonTask):
 
             results = [actually_eval_test(test) for test in tests]
 
-            output_dir = Path(config.get('path', 'output-root'),
+            output_dir = Path(config.query('path', 'output-root'),
                               sanitize_filename(self.name))
             ensure(output_dir, is_dir=True)
             env_up = {self.name: {'result': results,

@@ -223,10 +223,10 @@ The keyword is specified by the `config_kwarg` parameter to the
 
     >>> from valjean.config import Config
     >>> def print_output_dir(*, config):
-    ...     print(config.get('path', 'output-root'))
-    >>> task = PythonTask('work-dir', print_output_dir,
+    ...     print(config.query('path', 'output-root'))
+    >>> task = PythonTask('output-dir', print_output_dir,
     ...                   config_kwarg='config')
-    >>> config = Config([])
+    >>> config = Config()
     >>> task.do(env={}, config=config)
     /.../output
 

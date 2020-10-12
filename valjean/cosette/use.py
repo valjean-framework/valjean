@@ -87,7 +87,7 @@ a :class:`~.Task` object that depends on `run_task`.
     :hide:
 
     >>> from valjean.config import Config
-    >>> config = Config(paths=[])
+    >>> config = Config()
 
 We can test that `how_many_task` works by manually executing `run_task` first
 and passing the resulting environment to `how_many_task`:
@@ -723,7 +723,7 @@ class Use:
             result = self.wrapped(*args, **kwargs)
             env_up = {pytask_name: {'result': result}}
             if self.serialize:
-                output_dir = Path(config.get('path', 'output-root'),
+                output_dir = Path(config.query('path', 'output-root'),
                                   sanitize_filename(pytask_name))
                 ensure(output_dir, is_dir=True)
                 env_up[pytask_name]['output_dir'] = str(output_dir)

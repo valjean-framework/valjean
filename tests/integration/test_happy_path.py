@@ -155,7 +155,7 @@ def test_env(job_config, config_tmp, env_filename, job_file, capsys):
                 env_filename=env_filename, job_file=job_file)
     for name in ('checkout_cecho', 'build_cecho',
                  'pling.cecho', 'plong.cecho'):
-        output_root = config_tmp.get('path', 'output-root')
+        output_root = config_tmp.query('path', 'output-root')
         args = ['env', str(Path(output_root) / name / env_filename)]
         call_valjean(*args)
         captured = capsys.readouterr()

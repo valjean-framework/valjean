@@ -279,7 +279,7 @@ def test_stats(*, name, description='', labels=None, tasks):
     Let's run the tests:
 
     >>> from valjean.config import Config
-    >>> config = Config(paths=[])
+    >>> config = Config()
     >>> from valjean.cosette.env import Env
     >>> env = Env()
     >>> for task in [create_tests_task, create_stats, stats]:
