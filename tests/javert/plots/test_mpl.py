@@ -556,8 +556,8 @@ def test_plt_limits():
     assert any(b[1] for a in blimits for b in a)
     nlimits = []
     for idim in range(len(blimits[0])):
-        nlimits.append((min(crv[idim][0][0] for crv in blimits),
-                        max(crv[idim][0][1] for crv in blimits)))
+        nlimits.append((min(crv[idim][0] for crv in blimits),
+                        max(crv[idim][1] for crv in blimits)))
     plt1.subplots[0].attributes.limits = nlimits
     mplt = MplPlot(plt1)
     return mplt.draw()[0]
@@ -593,8 +593,8 @@ def test_plt_limits_2d():
     assert any(b[1] for a in blimits for b in a)
     nlimits = []
     for idim in range(len(blimits[0])):
-        nlimits.append((min(crv[idim][0][0] for crv in blimits),
-                        max(crv[idim][0][1] for crv in blimits)))
+        nlimits.append((min(crv[idim][0] for crv in blimits),
+                        max(crv[idim][1] for crv in blimits)))
     for splt in plt1.subplots:
         splt.attributes.limits = nlimits
     mplt = MplPlot(plt1)
@@ -624,8 +624,8 @@ def test_plt_limits_2d_2():
     assert any(b[1] for a in blimits for b in a)
     nlimits = []
     for idim in range(len(blimits[0])):
-        nlimits.append((min(crv[idim][0][0] for crv in blimits),
-                        max(crv[idim][0][1] for crv in blimits)))
+        nlimits.append((min(crv[idim][0] for crv in blimits),
+                        max(crv[idim][1] for crv in blimits)))
     for splt in plt1.subplots:
         splt.attributes.limits = nlimits
     mplt = MplPlot(plt1)
@@ -662,7 +662,7 @@ def test_mix_1d_and_2d():
                for c in s.curves]
     assert any(b[1] for a in blimits for b in a)
     for splt, lim in zip(plt1.subplots, blimits):
-        splt.attributes.limits = [li[0] for li in lim]
+        splt.attributes.limits = [(li[0], li[1]) for li in lim]
     mplt = MplPlot(plt1)
     return mplt.draw()[0]
 

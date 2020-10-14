@@ -58,24 +58,35 @@ def dimensions_and_bins(bins, array_shape):
     return subd
 
 
-def trim_range(bins):
+def trim_range(bins, max_ratio=1000):
     '''Adapt bins range when extreme bins are very large.
 
     This function suggests reasonable ranges for the given bin axes by trimming
     the extreme bins if they are too wide. For each axis, the extreme bins are
-    trimmed if their width is at least 1000 times larger than the width of the
-    neighbouring bin (the first bin is compared to the second one, and the last
-    bin is compared to the second-last one). If there is no need to change
-    the previous limits a tuple with initial limits is returned for the
+    trimmed if their width is at least `max_ratio` times larger than the width
+    of the neighbouring bin (the first bin is compared to the second one, and
+    the last bin is compared to the second-last one). If there is no need to
+    change the previous limits a tuple with initial limits is returned for the
     considered dimension. A boolean is associated to the tuple to precise if
     the limits have be changed.
 
     The trimmed ranges extend a bit over the clipped bins, so that their
     content is still visible in the plots.
 
-    :param list(numpy.ndarray) bins: bins of the :class:`~.PlotTemplate`
-    :returns: new limits for all dimensions
-    :rtype: list(list(tuple(int, int), bool), list(tuple(int, int), bool), )
+    :param list(numpy.ndarray) bins: bins of the :class:`~.PlotTemplate`.
+    :param float max_ratio: the bin size ratio above which bins will be
+        truncated.
+    :returns: new limits for all dimensions. The list has one item per
+        dimension; the bool indicates whether the axis was actually trimmed.
+    :rtype: list(tuple(float, float, bool))
+
+    Examples:
+
+    >>> bins = [np.array([-1e4, 0, 2, 4, 1e4]),
+    ...         np.array([-1e2, 0, 2, 4, 1e4]),
+    ...         np.array([-1e2, 0, 2, 4, 1e2])]
+    >>> trim_range(bins)
+    [(-0.2, 4.2, True), (-100.0, 9.2, True), (-100.0, 100.0, False)]
     '''
     LOGGER.debug('In plot_elements.trim_range')
     blimits = []
@@ -94,10 +105,10 @@ def trim_range(bins):
             LOGGER.warning('Will adapt range for %d bins, '
                            'binning might be not suitable', nbins.size)
         binw = np.ediff1d(lbins)
-        if binw[0]/binw[1] > 1e3:
+        if binw[0]/binw[1] > max_ratio:
             limits[0] = nbins[1]
             has_changed[0] = True
-        if binw[-1]/binw[-2] > 1e3:
+        if binw[-1]/binw[-2] > max_ratio:
             limits[1] = nbins[-2]
             has_changed[1] = True
         rwidth = limits[1] - limits[0]
@@ -105,7 +116,7 @@ def trim_range(bins):
             limits[0] -= 0.05 * rwidth
         if has_changed[1] or len(bins) == 1:
             limits[1] += 0.05 * rwidth
-        blimits.append([tuple(limits), any(has_changed)])
+        blimits.append((limits[0], limits[1], any(has_changed)))
     return blimits
 
 
@@ -283,8 +294,8 @@ def post_treatment(templates, result):
                 continue
             nlimits = []
             for idim in range(len(blimits[0])):
-                nlimits.append((min(crv[idim][0][0] for crv in blimits),
-                                max(crv[idim][0][1] for crv in blimits)))
+                nlimits.append((min(crv[idim][0] for crv in blimits),
+                                max(crv[idim][1] for crv in blimits)))
             splt.attributes.limits = nlimits
     return templates
 
