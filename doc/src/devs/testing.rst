@@ -31,11 +31,15 @@ The default `pytest` options are defined in the :file:`pytest.ini` file, and
 Extra options to `pytest` can be passed on the command line::
 
     $ pytest -k depgraph        # select tests whose name matches "depgraph"
-    $ pytest --valjean-verbose  # verbose test output
+    $ pytest -v                 # increase verbosity level by number of v
+    $ pytest --verbosity=N      # set verbosity test output
 
-The ``--valjean-verbose`` option sets all the :mod:`valjean` loggers to
-maximum verbosity. It is useful when debugging a failing test, in conjunction
-with the ``-k`` option.
+
+The ``--verbosity`` option sets all the :mod:`valjean` loggers to the verbosity
+level N. ``N=0`` is equivalent to ``WARNING``, ``N=1`` to ``INFO`` (default)
+and ``N>1`` to ``DEBUG``.  The verbosity level can also be increased by
+invoking the ``-v`` option, possibly multiple times. It is useful when
+debugging a failing test, in conjunction with the ``-k`` option.
 
 Property-based testing and the :mod:`hypothesis` package
 --------------------------------------------------------
