@@ -7,18 +7,18 @@ Main difference is the possibility of using the ``end_flag`` parameter in the
 import time
 import logging
 
-from .parse import T4Parser, T4ParseResult, T4ParserException
+from .parse import Parser, ParseResult, ParserException
 from . import scan
 from .grammar import t4debug_gram
 from ... import LOGGER
 
 
-class T4ParserDebug(T4Parser):
+class ParserDebug(Parser):
     '''Scan up to the end flag then parse. For parsing debugging.'''
 
     def __init__(self, jddname, *, mesh_lim=-1, end_flag="", ofile=""):
         # pylint: disable=too-many-arguments
-        '''Initialize the :class:`T4ParserDebug` object.
+        '''Initialize the :class:`ParserDebug` object.
 
         :param str jddname: path to the Tripoli-4 output
         :param int batch: batch to read (-1 = last, 0 = all, then X)
@@ -26,7 +26,7 @@ class T4ParserDebug(T4Parser):
         :param str end_flag: optional end flag to stop scanning and parsing
                              (empty string per default)
 
-        It also initalize the result of :class:`.scan.T4Scan` to ``None`` and
+        It also initalize the result of :class:`.scan.Scanner` to ``None`` and
         the parsing result, from *pyparsing*, to ``None``.
 
         If the path contains the ``"PARA"`` string, the checks will be done for
@@ -38,7 +38,7 @@ class T4ParserDebug(T4Parser):
 
     def _scan_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
-        self.scan_res = scan.T4Scan(self.jdd, self.mesh_limit, self.end_flag)
+        return scan.Scanner(self.jdd, self.mesh_limit, self.end_flag)
 
     def parse_from_number(self, batch_number):
         '''Parse from batch index or batch number.
@@ -48,7 +48,7 @@ class T4ParserDebug(T4Parser):
         :param int batch_number: the number of the batch to parse
         :returns: list(dict)
         '''
-        LOGGER.debug('Using parse from T4ParserDebug')
+        LOGGER.debug('Using parse from ParserDebug')
         start_time = time.time()
         batch_edition = self.scan_res[batch_number]
         if LOGGER.isEnabledFor(logging.DEBUG) and self.ofile:
@@ -60,14 +60,14 @@ class T4ParserDebug(T4Parser):
         self.check_parsing(pres)
         try:
             self._time_consistency(pres, batch_number)
-        except T4ParserException as tcve:
+        except ParserException as tcve:
             if not self.end_flag:
-                raise T4ParserException(tcve) from None
+                raise ParserException(tcve) from None
             LOGGER.info(tcve)
             LOGGER.info('Remark: you are in parsing debug mode with an end '
                         'flag not containing "time", this is expected.')
         scan_vars = self.scan_res.global_variables(batch_number)
-        return T4ParseResult(pres, scan_vars)
+        return ParseResult(pres, scan_vars)
 
     def check_parsing(self, parsed_res):
         '''Check if parsing went to the end:

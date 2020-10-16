@@ -60,7 +60,7 @@ and the problematic line. This should help debugging.
 
 Tests should be performed in the code to take the latter case into account
 (example: test presence of ``'simulation time'`` keyword, see
-:func:`~valjean.eponine.tripoli4.parse.T4Parser.check_times`).
+:func:`~valjean.eponine.tripoli4.parse.Parser.check_times`).
 
 
 .. toctree::

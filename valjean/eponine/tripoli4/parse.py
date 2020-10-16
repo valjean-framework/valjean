@@ -33,71 +33,76 @@ if 'profile' not in globals()['__builtins__']:
         return fprof
 
 
-class T4ParserException(Exception):
-    '''An error that may be raised by the :class:`T4Parser` class.'''
+class ParserException(Exception):
+    '''An error that may be raised by the :class:`Parser` class.'''
 
 
-class T4Parser:
+class Parser:
     '''Scan Tripoli-4 listings, then parse the required batches.'''
 
     @profile
     def __init__(self, jddname, *, mesh_lim=-1):
-        '''Initialize the :class:`T4Parser` object.
+        '''Initialize the :class:`Parser` object.
 
         :param str jddname: path to the Tripoli-4 output
         :param int mesh_lim: limit of meshes to read (-1 per default)
 
-        It also initalizes the result of :class:`.scan.T4Scan` to ``None``,
+        It also initalizes the result of :class:`.scan.Scanner` to ``None``,
         then executes the scan. If this step fails an exception is raised.
 
-        The T4Parser main object instance variable is:
+        The Parser main object instance variable is:
 
-        `scan_res` (:class:`~.scan.T4Scan`)
+        `scan_res` (:class:`~.scan.Scanner`)
             result from the scan of the Tripoli-4 output. See in the related
             documentation the various instance variables available (like
             ``times``). Inheriting from :class:`collections.abc.Mapping`
             various default methods are available like ``len``, ``[]``, etc.
-            The keys of :class:`~.scan.T4Scan` are the batch numbers available
+            The keys of :class:`~.scan.Scanner` are the batch numbers available
             from the Tripoli-4 output. To get their list, use
             :meth:`batch_numbers`.
 
         Parsing (e.g. :meth:`parse_from_number`) returns a
-        :class:`T4ParseResult`.
+        :class:`ParseResult`.
         '''
         LOGGER.info("Parsing %s", jddname)
         start_time = time.time()
         self.jdd = jddname
         self.mesh_limit = mesh_lim
-        self.scan_res = None
         try:
-            self._scan(start_time)
-        except scan.T4ScanException as t4se:
+            self.scan_res = self._scan(start_time)
+        except scan.ScannerException as t4se:
             LOGGER.error(t4se)
-            raise T4ParserException("Scan failed.") from None
-        except T4ParserException as t4pe:
+            raise ParserException("Scan failed.") from None
+        except ParserException as t4pe:
             LOGGER.error(t4pe)
-            raise T4ParserException("Scan failed.") from None
+            raise ParserException("Scan failed.") from None
 
     def _scan(self, start_time):
         '''Scan the parse the given jdd.'''
-        self._scan_listing()
-        self._check_scan()
+        scan_res = self._scan_listing()
+        self._check_scan(scan_res)
         LOGGER.info("Successful scan in %f s", time.time()-start_time)
+        return scan_res
 
     @profile
     def _scan_listing(self):
-        '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
-        self.scan_res = scan.T4Scan(self.jdd, self.mesh_limit)
+        '''Scan Tripoli-4 listing, calling :mod:`.scan`.
 
-    def _check_scan(self):
+        :rtype: Scanner
+        '''
+        return scan.Scanner(self.jdd, self.mesh_limit)
+
+    def _check_scan(self, scan_res):
         '''Check existence of scan result and presence of normal end (per
         default NORMAL COMPLETION).
+
+        :param Scanner scan_res: scan result
         '''
-        if not self.scan_res:
-            raise T4ParserException(
+        if not scan_res:
+            raise ParserException(
                 "No result found in Tripoli-4 listing {}\n{}"
-                .format(self.jdd, self.scan_res.fatal_error()))
-        if not self.scan_res.normalend:
+                .format(self.jdd, scan_res.fatal_error()))
+        if not scan_res.normalend:
             LOGGER.warning("Tripoli-4 listing did not finish with "
                            "NORMAL COMPLETION.")
 
@@ -119,22 +124,22 @@ class T4Parser:
                          "before re-running.", self.jdd)
             # from None allows to raise a new exception without traceback and
             # message of the previous one here.
-            raise T4ParserException("Error in parsing") from None
+            raise ParserException("Error in parsing") from None
         except SpectrumDictBuilderException as sdbe:
             LOGGER.error(sdbe)
-            raise T4ParserException("Error in parsing") from None
+            raise ParserException("Error in parsing") from None
         return result
 
     def _time_consistency(self, pres, batch_number):
         '''Check time consistency between parsed result and scan.'''
         if 'batch_data' not in pres:
-            raise T4ParserException('No batch_data in parsed result, '
-                                    'something looks wrong in the T4 output.')
+            raise ParserException('No batch_data in parsed result, '
+                                  'something looks wrong in the T4 output.')
         bdata = pres['batch_data']
         try:
             time_key = next(k for k in bdata if 'time' in k)
         except StopIteration as sit:
-            raise T4ParserException(
+            raise ParserException(
                 'No "time" variable found in the TRIPOLI-4 output, '
                 'please check it.') from sit
         if bdata[time_key] != self.scan_res.times[time_key][batch_number]:
@@ -144,22 +149,22 @@ class T4Parser:
             if self.scan_res.partial:
                 LOGGER.warning(msg)
             else:
-                raise T4ParserException(msg)
+                raise ParserException(msg)
 
     def parse_from_number(self, batch_number):
         '''Parse from batch index or batch number.
 
         :param int batch_number: number of the batch to parse
-        :rtype: T4ParseResult
+        :rtype: ParseResult
         '''
-        LOGGER.debug('Using parse from T4Parser')
+        LOGGER.debug('Using parse from Parser')
         start_parse = time.time()
         pres, = self._parse_listing_worker(
             t4gram, self.scan_res[batch_number])
         LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
         self._time_consistency(pres, batch_number)
         scan_vars = self.scan_res.global_variables(batch_number)
-        return T4ParseResult(pres, scan_vars)
+        return ParseResult(pres, scan_vars)
 
     def parse_from_index(self, batch_index=-1):
         '''Parse from batch index or batch number.
@@ -167,7 +172,7 @@ class T4Parser:
         Per default the last batch is parsed (index = -1).
 
         :param int batch_index: index of the batch in the list of batches
-        :rtype: T4ParseResult
+        :rtype: ParseResult
         '''
         batch_number = self.scan_res.batch_number(batch_index)
         return self.parse_from_number(batch_number)
@@ -203,18 +208,18 @@ class T4Parser:
             print(stime.capitalize(), "=", vtime)
 
 
-class T4ParseResult:
+class ParseResult:
     '''Class containing a parsing result from TRIPOLI-4 output for one batch.
 
 
-        The :class:`T4ParseResult` object is accessible from the instance
+        The :class:`ParseResult` object is accessible from the instance
         attribute
 
         `res`
             that is a unique dictionary containing all the results from
             scanning and parsing steps. Variables characteristic to a batch are
             stored under the key ``'batch_data'`` no matter if they come from
-            :class:`.T4Scan` or from :class:`T4Parser`. Variables
+            :class:`.Scanner` or from :class:`Parser`. Variables
             characteristic to a run (= one execution of TRIPOLI-4) are stored
             under ``'run_data'``, coming from the scanning step.
 
@@ -224,11 +229,11 @@ class T4ParseResult:
     '''
 
     def __init__(self, parse_res, scan_vars):
-        '''Initialize the :class:`T4ParseResult` from:
+        '''Initialize the :class:`ParseResult` from:
 
         :param dict parse_res: result from T4 parsing (for 1 batch)
-        :param dict scan_vars: variables coming from :class:`.T4Scan` global to
-            job or specific to the batch.
+        :param dict scan_vars: variables coming from :class:`.Scanner` global
+            to job or specific to the batch.
 
         Fill the `res` object.
         '''
@@ -243,21 +248,21 @@ class T4ParseResult:
         ebn = pres.get('edition_batch_number')
         sbn = svars.get('batch_number')
         if sbn is None:
-            LOGGER.warning('No batch number was set in T4Scan, please check.')
+            LOGGER.warning('No batch number was set in Scanner, please check.')
         if ebn is not None and ebn != sbn:
             LOGGER.warning('Edition batch number different from batch number')
 
     @staticmethod
     def _build_unique_dict(pres, svars):
         '''Build a unique dictionary from parsed result and globl variables
-        from T4Scan.
+        from Scanner.
 
         Variables specific to batch are added to the already existing
         dictionary under the key ``'batch_data'`` from parsed result, while a
         new item is created for the run data (key: ``'run_data'``).
 
         :param dict pres: parsed result
-        :param dict svars: global variables from T4Scan
+        :param dict svars: global variables from Scanner
         :returns: updated parsed result
         '''
         gvars = svars.copy()
@@ -270,7 +275,7 @@ class T4ParseResult:
 
     def to_browser(self):
         '''Get a :class:`~valjean.eponine.browser.Browser` from the
-        :class:`T4ParseResult`.
+        :class:`ParseResult`.
 
         The global variables in Browser are the batch data. You can access the
         `run data` only from the parsed result.

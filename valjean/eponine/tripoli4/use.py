@@ -189,10 +189,10 @@ Module API
 '''
 
 import functools
-from .parse import T4Parser
+from .parse import Parser
 from ...cosette.use import UseRun
 from ...cosette.pythontask import TaskException
-from ..tripoli4.parse import T4ParserException
+from ..tripoli4.parse import ParserException
 
 
 def partial(func, *args, **kwargs):
@@ -205,18 +205,18 @@ def partial(func, *args, **kwargs):
 
 
 def make_parser(filename):
-    '''Create a T4Parser object and scan a TRIPOLI-4 output file.
+    '''Create a Parser object and scan a TRIPOLI-4 output file.
 
     :param str filename: the name of the file to parse.
     :param int batch: the number of the batch to parse; see
-                      :meth:`~.T4Parser.__init__`.
+                      :meth:`~.Parser.__init__`.
     :raises ValueError: if parsing fails.
     :returns: the parser
-    :rtype: T4Parser
+    :rtype: Parser
     '''
     try:
-        parser = T4Parser(filename)
-    except T4ParserException as tpe:
+        parser = Parser(filename)
+    except ParserException as tpe:
         raise TaskException('cannot build parser {}: {}'
                             .format(filename, tpe)) from None
     return parser
@@ -226,11 +226,11 @@ def parse_batch_number(parser, *, batch_number):
     '''Parse a batch result from TRIPOLI-4.
 
     :param int batch_number: batch number
-    :rtype: T4ParseResult
+    :rtype: ParseResult
     '''
     try:
         pres = parser.parse_from_number(batch_number=batch_number)
-    except T4ParserException as t4pe:
+    except ParserException as t4pe:
         raise TaskException('cannot parse {}: {}'
                             .format(parser.jdd, t4pe)) from None
     return pres
@@ -240,11 +240,11 @@ def parse_batch_index(parser, *, batch_index=-1):
     '''Parse a batch result from TRIPOLI-4.
 
     :param int batch_index: index of the batch in the list of batches
-    :rtype: T4ParseResult
+    :rtype: ParseResult
     '''
     try:
         pres = parser.parse_from_index(batch_index=batch_index)
-    except T4ParserException as t4pe:
+    except ParserException as t4pe:
         raise TaskException('cannot parse {}: {}'
                             .format(parser.jdd, t4pe)) from None
     return pres
@@ -269,7 +269,7 @@ def using_parse_result(factory, batch_number):
     :param factory: a factory producing TRIPOLI-4 runs.
     :type factory: :class:`~.RunTaskFactory`
     :param int batch_number: the number of the batch to parse; see
-        :meth:`~.T4Parser.__init__`.
+        :meth:`~.Parser.__init__`.
     :returns: a decorator (see the module docstring for more information).
     '''
     use_parser = using_parser(factory)
@@ -292,7 +292,7 @@ def using_last_parse_result(factory):
 def to_browser(result):
     '''Create a :class:`~.Browser` from the parsing result.
 
-    :param T4ParseResult result: result from T4 parser
+    :param ParseResult result: result from T4 parser
     :returns: the browser
     :rtype: Browser
     '''

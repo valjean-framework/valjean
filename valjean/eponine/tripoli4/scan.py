@@ -29,13 +29,13 @@ Use of :mod:`~valjean.eponine.tripoli4.scan`
     ...           "NORMAL COMPLETION",
     ...           file=tmpfile)
 
-To use this module you need to create a :class:`T4Scan` object giving at least
+To use this module you need to create a :class:`Scanner` object giving at least
 the path to the file you want to read. This file should be a Tripoli-4 output
 containing at least the flags precised in :ref:`eponine-t4-scan-caveats`.
 
     >>> import os
-    >>> from valjean.eponine.tripoli4.scan import T4Scan
-    >>> results = T4Scan(os.path.join(work_dir, 'spam.res'))
+    >>> from valjean.eponine.tripoli4.scan import Scanner
+    >>> results = Scanner(os.path.join(work_dir, 'spam.res'))
     >>> results.normalend
     True
     >>> len(results)
@@ -43,7 +43,7 @@ containing at least the flags precised in :ref:`eponine-t4-scan-caveats`.
     >>> results.times['initialization_time']
     7
 
-    The expected key of the :class:`T4Scan` object is the batch number, not an
+    The expected key of the :class:`Scanner` object is the batch number, not an
     index. If you have the index you need to obtain the corresponding batch
     number first.
 
@@ -71,7 +71,7 @@ Beginning and end of results sections
 Important for the scan: results will be kept
 
 * **from** "RESULTS ARE GIVEN"
-* **to** an end flag available in the list ``T4Scan.end_flags``.
+* **to** an end flag available in the list ``Scanner.end_flags``.
   Possibilities are:
 
   * Default end flag is ``"simulation time"``;
@@ -298,11 +298,11 @@ class BatchResultScanner:
         return ''.join(self.result)
 
 
-class T4ScanException(Exception):
-    '''An error that may be raised by the :class:`T4Scan` class.'''
+class ScannerException(Exception):
+    '''An error that may be raised by the :class:`Scanner` class.'''
 
 
-class T4Scan(Mapping):
+class Scanner(Mapping):
     # pylint: disable=too-many-instance-attributes
     '''Class to scan the Tripoli-4 listing and keep the relevant parts of it
     like results per batch used for edition or times.
@@ -310,7 +310,7 @@ class T4Scan(Mapping):
     There are no class variables, but instance variables (initialized when
     the object is built or when the file is read). They are directly accessible
     from the object. Main results are accessible directly from the
-    :obj:`T4Scan` object.
+    :obj:`Scanner` object.
 
     **Instance variables:**
 
@@ -359,7 +359,7 @@ class T4Scan(Mapping):
 
     **Available methods:**
 
-    :class:`T4Scan` inherits from :class:`collections.abc.Mapping` so many
+    :class:`Scanner` inherits from :class:`collections.abc.Mapping` so many
     methods are implemented or available by default: ``keys``, ``items``,
     ``values``, ``get``, ``__contains__`` (used via ``in``). ``__getitem``
     (used with ``[]``), ``__iter__`` (when iterators are required), ``__len__``
@@ -556,8 +556,8 @@ class T4Scan(Mapping):
             LOGGER.warning("Number of mesh exceeding mesh_limit arg: %d",
                            count_mesh_exceeding)
         if not self._collres and _batch_scan:
-            raise T4ScanException("No scan result built: "
-                                  "no end flag found in the file")
+            raise ScannerException("No scan result built: "
+                                   "no end flag found in the file")
 
     def __getitem__(self, batch_number):
         '''Get result corresponding to batch_number.
@@ -566,12 +566,12 @@ class T4Scan(Mapping):
         the number of batchs required.
 
         :param int batch_number: batch number (>0), corresponding the keys of
-            T4Scan.
+            Scanner.
         :raises KeyError: if ``batch_number`` does not exist (for example if
             confusion between ``batch_number`` and ``batch_index`` using -1 or
             0)
 
-        Use: ``T4Scan[X]``
+        Use: ``Scanner[X]``
         '''
         LOGGER.debug("__getitem__, batch number = %d", batch_number)
         try:

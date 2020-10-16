@@ -12,8 +12,8 @@ from ..context import valjean  # pylint: disable=unused-import
 import numpy as np
 import logging
 import pytest
-from valjean.eponine.tripoli4.parse import T4Parser, T4ParserException
-from valjean.eponine.tripoli4.parse_debug import T4ParserDebug
+from valjean.eponine.tripoli4.parse import Parser, ParserException
+from valjean.eponine.tripoli4.parse_debug import ParserDebug
 import valjean.eponine.tripoli4.data_convertor as dcv
 
 
@@ -136,7 +136,7 @@ def test_gauss_spectrum(datadir):
     '''Test Tripoli-4 listing with spectrum in output depending on time, µ and
     φ angles. Also control number of batchs.
     '''
-    t4p = T4Parser(str(datadir/"gauss_time_mu_phi_E.d.res.ceav5"))
+    t4p = Parser(str(datadir/"gauss_time_mu_phi_E.d.res.ceav5"))
     assert t4p
     assert t4p.check_times()
     assert t4p.scan_res.normalend
@@ -179,7 +179,7 @@ def test_tungstene_file(datadir):
     '''Use Tripoli-4 output from tungstene.d to test meshes (also depending on
     energy).
     '''
-    t4p = T4Parser(str(datadir/"tungstene.d.res.ceav5"))
+    t4p = Parser(str(datadir/"tungstene.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
     assert list(t4p.scan_res.keys())[-1] == 1000
@@ -215,7 +215,7 @@ def test_tungstene_file(datadir):
 
 
 # def test_petit_coeur_para():
-#     t4_res = T4Parser.parse_jdd_with_mesh_lim(
+#     t4_res = Parser.parse_jdd_with_mesh_lim(
 #         "/home/el220326/valjean/tests/eponine/data/"
 #         "create_petitcoeur.d.PARA.res.ceav5",
 #         -1, -1, "simulation time")
@@ -240,8 +240,8 @@ def test_tt_simple_packet20_para(datadir):
     test parallel mode specific features (number of batchs used for edition,
     number of batchs required in case PACKET_LENGTH case, etc.
     '''
-    t4p = T4Parser(str(datadir/"ttsSimplePacket20.d.PARA.res.ceav5"),
-                   mesh_lim=-1)
+    t4p = Parser(str(datadir/"ttsSimplePacket20.d.PARA.res.ceav5"),
+                 mesh_lim=-1)
     assert t4p
     assert t4p.scan_res.normalend
     assert list(t4p.scan_res.keys())[-1] == 10
@@ -268,10 +268,10 @@ def test_debug_entropy(caplog, datadir):
     debug mode.
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
-    t4p = T4ParserDebug(str(datadir/"entropy.d.res.ceav5"),
-                        mesh_lim=10,
-                        end_flag="number of batches used",
-                        ofile="debug_ent.log")
+    t4p = ParserDebug(str(datadir/"entropy.d.res.ceav5"),
+                      mesh_lim=10,
+                      end_flag="number of batches used",
+                      ofile="debug_ent.log")
     assert t4p
     assert t4p.scan_res.normalend
     assert list(t4p.scan_res.keys())[-1] == 10
@@ -369,7 +369,7 @@ def test_entropy(datadir):
     '''Use Tripoli-4 result from entropy.d to test entropy, mesh, spectrum with
     progressively converging results.
     '''
-    t4p = T4Parser(str(datadir/"entropy.d.res.ceav5"))
+    t4p = Parser(str(datadir/"entropy.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
     assert t4p.check_times()
@@ -417,7 +417,7 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
     monkeypatch.setattr("valjean.eponine.tripoli4.dump.MAX_DEPTH", 8)
-    t4p = T4Parser(str(datadir/"entropy.d.res.ceav5"), mesh_lim=10)
+    t4p = Parser(str(datadir/"entropy.d.res.ceav5"), mesh_lim=10)
     t4_res = t4p.parse_from_index(batch_index=-1)
     assert t4_res
     assert t4p.scan_res.normalend
@@ -430,7 +430,7 @@ def test_ifp(datadir):
     '''Use Tripoli-4 result from  pu_met_fast_001_decompose_list_small.d to
     test IFP parsing.
     '''
-    t4p = T4Parser(
+    t4p = Parser(
         str(datadir/"pu_met_fast_001_decompose_list_small.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
@@ -483,7 +483,7 @@ def test_ifp_adjoint_edition(datadir):
 
     Caution: T4 output has been modified due to a bug in Equivalent keff.
     '''
-    t4p = T4Parser(str(datadir/"test_adjoint_small.d.res"))
+    t4p = Parser(str(datadir/"test_adjoint_small.d.res"))
     assert t4p
     assert t4p.scan_res.normalend
     assert list(t4p.scan_res.keys())[-1] == 20
@@ -520,7 +520,7 @@ def test_sensitivity(datadir):
     '''Use Tripoli-4 result from sensitivity_godiva.d to test sensitivity
     parsing and dataset construction.
     '''
-    t4p = T4Parser(str(datadir/"sensitivity_godiva.d.res"))
+    t4p = Parser(str(datadir/"sensitivity_godiva.d.res"))
     assert t4p
     assert t4p.scan_res.normalend
     assert list(t4p.scan_res.keys())[-1] == 120
@@ -563,7 +563,7 @@ def test_kij(datadir):
     r'''Use tripoli-4 result from cylindreDecR_with_kij_on_mesh.d to test
     k\ :sub:`ij` matrix parsing.
     '''
-    t4p = T4Parser(
+    t4p = Parser(
         str(datadir/"cylindreDecR_with_kij_on_mesh.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
@@ -590,7 +590,7 @@ def test_green_bands(datadir):
     '''Use Tripoli-4 result from greenband_exploit_T410_contrib.d to test Green
     bands parsing and exploitation jobs.
     '''
-    t4p = T4Parser(
+    t4p = Parser(
         str(datadir/"greenband_exploit_T410_contrib.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
@@ -610,7 +610,7 @@ def test_tt_simple_packet20_mono(datadir):
     '''Use Tripoli-4 result from ttsSimplePacket20.d run in mono-processor
     mode to test PACKET_LENGTH feature in MONO case.
     '''
-    t4p = T4Parser(str(datadir/"ttsSimplePacket20.d.res.ceav5"))
+    t4p = Parser(str(datadir/"ttsSimplePacket20.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
     assert t4p.check_times()
@@ -630,7 +630,7 @@ def test_pertu(datadir):
     '''Use Tripoli-4 result from pertu_covariances.d to test perturbations and
     uncertainty spectrum.
     '''
-    t4p = T4Parser(str(datadir/"pertu_covariances.d.res.ceav5"))
+    t4p = Parser(str(datadir/"pertu_covariances.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
     assert list(t4p.scan_res.keys())[-1] == 100
@@ -661,7 +661,7 @@ def test_pertu(datadir):
 
 def test_vov(datadir):
     '''Use Tripoli-4 result from vov.d to test vov spectra.'''
-    t4p = T4Parser(str(datadir/"vov.d.res.ceav5"))
+    t4p = Parser(str(datadir/"vov.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
     assert t4p.check_times()
@@ -681,7 +681,7 @@ def test_phemep_balance(datadir):
     '''Use Tripoli-4 result from ELECTRON_PHOTON_BALANCE.d to test
     photon-electron-positron balance.
     '''
-    t4p = T4Parser(str(datadir/"ELECTRON_PHOTON_BALANCE.d.res.ceav5"))
+    t4p = Parser(str(datadir/"ELECTRON_PHOTON_BALANCE.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
     assert t4p.scan_res.phemep_balance
@@ -696,7 +696,7 @@ def test_homogenize_material(datadir):
     '''Use Tripoli-4 result from angle.d to test the dump of homogenize
     materials.
     '''
-    t4p = T4Parser(str(datadir/"angle.d.res.ceav5"))
+    t4p = Parser(str(datadir/"angle.d.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
     assert t4p.scan_res.homog_mat
@@ -709,8 +709,8 @@ def test_empty_file(caplog):
     '''Test Tripoli-4 parsing on an empty file: this should fail.'''
     with open('empty_file.txt', 'w') as ofile:
         ofile.write("")
-    with pytest.raises(T4ParserException):
-        T4Parser('empty_file.txt')
+    with pytest.raises(ParserException):
+        Parser('empty_file.txt')
     assert ("No result found in Tripoli-4 listing empty_file.txt"
             in caplog.text)
 
@@ -721,8 +721,8 @@ def test_no_usual_output(datadir, caplog):
     while the particles tracked are photons, so Tripoli-4 fails at execution.
     '''
     tfile = str(datadir/"failure_test_segFault.d.res")
-    with pytest.raises(T4ParserException):
-        T4Parser(tfile)
+    with pytest.raises(ParserException):
+        Parser(tfile)
     assert ("No result found in Tripoli-4 listing {}".format(tfile)
             in caplog.text)
     assert "FATAL ERROR" in caplog.text
@@ -736,8 +736,8 @@ def test_no_a_t4_opt_no_spectrum(datadir, caplog):
     the output. Parsing succeeds to parse the spectrum columns (and units here)
     but fails after as it cannot find any row from the spectrum.
     '''
-    t4p = T4Parser(str(datadir/"failure_test_no_spec_res.d.res"))
-    with pytest.raises(T4ParserException):
+    t4p = Parser(str(datadir/"failure_test_no_spec_res.d.res"))
+    with pytest.raises(ParserException):
         t4p.parse_from_index(batch_index=-1)
     assert ("Parsing error in spectrum (_spectrumvals), "
             "please check you run Tripoli-4 with '-a' option"
@@ -752,8 +752,8 @@ def test_no_a_t4_opt_bad_bins(datadir, caplog):
     time for example an new energy bin could appear in the next time step). A
     specific error is sent.
     '''
-    t4p = T4Parser(str(datadir/"failure_test_no_a_opt.d.res"))
-    with pytest.raises(T4ParserException):
+    t4p = Parser(str(datadir/"failure_test_no_a_opt.d.res"))
+    with pytest.raises(ParserException):
         t4p.parse_from_index(-1)
     assert ("Problem with energy bins: some bins are probably missing. "
             "Please make sure you run Tripoli-4 with '-a' option."
@@ -768,8 +768,8 @@ def test_no_a_t4_opt_bad_bins_2(datadir, caplog):
     higher than in the first one, we get missing bins in the second step due to
     the use of '-a' optoin. A specific error is sent.
     '''
-    t4p = T4Parser(str(datadir/"failure_noaopt_uniform_sources.d.res"))
-    with pytest.raises(T4ParserException):
+    t4p = Parser(str(datadir/"failure_noaopt_uniform_sources.d.res"))
+    with pytest.raises(ParserException):
         t4p.parse_from_index(-1)
     assert ("IndexError: all (sub-)spectra should have the same bins."
             in caplog.text)
@@ -782,8 +782,8 @@ def test_bad_response_name(datadir, caplog):
     failing parsing. In this case a not foreseen character, @, has been used in
     a response name. Pyparsing does not know to do with it and fails.
     '''
-    t4p = T4Parser(str(datadir/"failure_test_bad_resp_name.d.res"))
-    with pytest.raises(T4ParserException):
+    t4p = Parser(str(datadir/"failure_test_bad_resp_name.d.res"))
+    with pytest.raises(ParserException):
         t4p.parse_from_index(-1)
     assert "Parsing error located at line: 12, col: 1" in caplog.text
 
@@ -795,7 +795,7 @@ def test_no_normal_completion(datadir, caplog):
     In this case parsing is successful: its result exists, but the
     ``normalend`` boolean in scan is ``False``.
     '''
-    t4p = T4Parser(str(datadir/"failure_test_no_normal_completion.d.res"))
+    t4p = Parser(str(datadir/"failure_test_no_normal_completion.d.res"))
     assert t4p
     assert ("Tripoli-4 listing did not finish with NORMAL COMPLETION."
             in caplog.text)
@@ -814,8 +814,8 @@ def test_no_simulation_time(datadir, caplog):
     lack of the end flag. In this case "NORMAL COMPLETION" is also missing but
     as pyparsing cannot find the end flag no parsing result can be built.
     '''
-    with pytest.raises(T4ParserException):
-        T4Parser(str(datadir/"failure_test_no_simu_time.d.res"))
+    with pytest.raises(ParserException):
+        Parser(str(datadir/"failure_test_no_simu_time.d.res"))
     assert "No scan result built: no end flag found in the file" in caplog.text
 
 
@@ -825,8 +825,8 @@ def test_no_simulation_time_debug(datadir, caplog):
     as pyparsing cannot find the end flag no parsing result can be built.
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
-    t4p = T4ParserDebug(str(datadir/"failure_test_no_simu_time.d.res"),
-                        end_flag='ENERGY INTEGRATED RESULTS')
+    t4p = ParserDebug(str(datadir/"failure_test_no_simu_time.d.res"),
+                      end_flag='ENERGY INTEGRATED RESULTS')
     _t4_res = t4p.parse_from_index(-1)
     assert ('No "time" variable found in the TRIPOLI-4 output, '
             'please check it.' in caplog.text)

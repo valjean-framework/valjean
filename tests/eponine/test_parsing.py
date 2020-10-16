@@ -31,7 +31,7 @@ import os
 from glob import glob
 import logging
 import pytest
-from valjean.eponine.tripoli4.parse import T4Parser, T4ParserException
+from valjean.eponine.tripoli4.parse import Parser, ParserException
 import valjean.eponine.tripoli4.data_convertor as dcv
 from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 
@@ -40,7 +40,7 @@ def result_test(t4pres):
     '''Test content of the parsing result: presence of times, ``'results'`` key
     if ``'list_responses'`` is found in the parsing result.
 
-    :param res: T4ParseResult
+    :param res: ParseResult
 
     :retrns: bool if time was found (but should always happen as there is an
              assert before)
@@ -153,10 +153,10 @@ def loop_on_files(filelist, cfile):
     for ifile in filelist:
         print("Reading:", ifile)
         try:
-            res = (T4Parser(ifile)
+            res = (Parser(ifile)
                    if os.path.basename(ifile) not in cfile.MESH_LIM_FILES
-                   else T4Parser(ifile, mesh_lim=2))
-        except T4ParserException:
+                   else Parser(ifile, mesh_lim=2))
+        except ParserException:
             failed_jdds.append(ifile)
             continue
         if not res.check_times():
@@ -164,7 +164,7 @@ def loop_on_files(filelist, cfile):
             failed_time_jdds.append(ifile)
         try:
             pres = res.parse_from_index(-1)
-        except T4ParserException:
+        except ParserException:
             failed_jdds.append(ifile)
             continue
         if result_test(pres):
