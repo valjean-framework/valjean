@@ -2,7 +2,10 @@
 
 `pytest`_ configuration file.
 '''
+import os
+import logging
 import pytest
+from valjean import set_log_level, LOGGER
 
 
 def pytest_addoption(parser):
@@ -20,20 +23,12 @@ def pytest_addoption(parser):
 
 def pytest_collection_modifyitems(config, items):
     '''Handle CLI options to pytest.'''
-    import logging
-    logger = logging.getLogger('valjean')
     if config.getoption('verbose') > 1:
-        logger.setLevel(logging.DEBUG)
-        for handler in logger.handlers:
-            handler.setLevel(logging.DEBUG)
+        set_log_level(logging.DEBUG)
     elif config.getoption('verbose') > 0:
-        logger.setLevel(logging.INFO)
-        for handler in logger.handlers:
-            handler.setLevel(logging.INFO)
+        set_log_level(logging.INFO)
     else:
-        logger.setLevel(logging.WARNING)
-        for handler in logger.handlers:
-            handler.setLevel(logging.WARNING)
+        set_log_level(logging.WARNING)
 
     if config.getoption("--runslow"):
         # --runslow given in cli: do not skip slow tests
@@ -75,10 +70,7 @@ def workdir(tmpdir):
 def cwd_testing(tmpdir_factory):
     '''Fixture that prepares the cwd for testing.'''
     test_dir = tmpdir_factory.mktemp('test_module')
-    import logging
-    import os
-    logger = logging.getLogger('valjean')
     with test_dir.as_cwd():
-        logger.debug("Look ma, I'm in %s!", os.getcwd())
+        LOGGER.debug("Look ma, I'm in %s!", os.getcwd())
         yield
-    logger.debug("Oh noes, now I'm in %s...", os.getcwd())
+    LOGGER.debug("Oh noes, now I'm in %s...", os.getcwd())

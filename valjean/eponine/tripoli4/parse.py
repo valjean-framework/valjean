@@ -14,7 +14,6 @@ Some options for debugging are available (end flag).
 '''
 
 import time
-import logging
 import threading
 from pyparsing import ParseException
 
@@ -22,9 +21,8 @@ from . import scan
 from .grammar import t4gram
 from .common import SpectrumDictBuilderException
 from ..browser import Browser
+from ... import LOGGER
 
-
-LOGGER = logging.getLogger('valjean')
 
 PYPARSING_LOCK = threading.RLock()
 

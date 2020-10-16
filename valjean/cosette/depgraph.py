@@ -252,10 +252,8 @@ Some things you should be aware of when using :class:`DepGraph`:
 import itertools
 import copy
 import enum
-import logging
 from .rlist import RList
-
-LOGGER = logging.getLogger('valjean')
+from .. import LOGGER
 
 
 class DepGraphError(Exception):

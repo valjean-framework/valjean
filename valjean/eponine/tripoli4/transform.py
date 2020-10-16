@@ -14,14 +14,11 @@ module :mod:`~valjean.eponine.tripoli4.common`.
     This module is not standalone, needs a `pyparsing` result in input.
 '''
 
-import logging
 from collections.abc import Iterable
 import numpy as np
 from pyparsing import ParseException
 from . import common
-
-
-LOGGER = logging.getLogger('valjean')
+from ... import LOGGER
 
 
 def compose2(f, g):  # pylint: disable=invalid-name

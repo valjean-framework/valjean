@@ -10,9 +10,7 @@ import logging
 from .parse import T4Parser, T4ParseResult, T4ParserException
 from . import scan
 from .grammar import t4debug_gram
-
-
-LOGGER = logging.getLogger('valjean')
+from ... import LOGGER
 
 
 class T4ParserDebug(T4Parser):

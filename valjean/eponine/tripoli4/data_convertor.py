@@ -2,13 +2,10 @@
 :class:`~valjean.eponine.dataset.Dataset`.
 '''
 
-import logging
 from collections import OrderedDict
 import numpy as np
 from ..dataset import Dataset
-
-
-LOGGER = logging.getLogger('valjean')
+from ... import LOGGER
 
 
 def bins_reduction(def_bins, def_array_shape, array_shape):

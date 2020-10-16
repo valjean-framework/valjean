@@ -542,7 +542,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 import numpy as np
-
+from ... import LOGGER
 
 # get profile from globals (cleaner)
 if 'profile' not in globals()['__builtins__']:
@@ -552,7 +552,6 @@ if 'profile' not in globals()['__builtins__']:
         return func
 
 
-LOGGER = logging.getLogger('valjean')
 ITYPE = np.int64
 FTYPE = np.float64
 

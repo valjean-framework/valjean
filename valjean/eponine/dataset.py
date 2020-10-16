@@ -637,13 +637,10 @@ numpy.ndarray, i.e. (# ',' = dim-1).
     TypeError: [] (__getitem__) can only be applied on numpy.ndarrays
 '''
 # pylint: enable=trailing-whitespace
-
-import logging
 from hashlib import sha256
 from collections import OrderedDict
 import numpy as np
-
-LOGGER = logging.getLogger('valjean')
+from .. import LOGGER
 
 
 class Dataset:

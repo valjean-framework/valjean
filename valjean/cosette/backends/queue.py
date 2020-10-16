@@ -11,9 +11,7 @@ from queue import Queue
 from functools import partial
 
 from ..task import TaskStatus
-
-
-LOGGER = logging.getLogger('valjean')
+from ... import LOGGER
 
 
 class QueueScheduling:

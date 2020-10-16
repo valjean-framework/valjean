@@ -181,12 +181,9 @@ Module API
 ----------
 '''
 
-import logging
 from collections import defaultdict
 from collections.abc import Mapping, Container
-
-
-LOGGER = logging.getLogger('valjean')
+from .. import LOGGER
 
 
 def _make_defaultdict_set():

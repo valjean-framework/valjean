@@ -190,7 +190,6 @@ level as the response block. These parsers and the associated dictionary key
 
 '''
 
-import logging
 from pyparsing import (Word, Keyword, White, alphas, alphanums,
                        Suppress, Optional, LineEnd, LineStart, CaselessKeyword,
                        Group, OneOrMore, ZeroOrMore, Forward,
@@ -199,9 +198,7 @@ from pyparsing import pyparsing_common as pyparscom
 from . import transform as trans
 from .transform import compose2
 from .dump import dump_in_logger
-
-
-LOGGER = logging.getLogger('valjean')
+from ... import LOGGER
 
 _fnums = pyparscom.fnumber.setParseAction(tokenMap(trans.common.FTYPE))
 _inums = pyparscom.number.setParseAction(tokenMap(trans.common.ITYPE))
