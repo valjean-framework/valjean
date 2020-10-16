@@ -10,7 +10,7 @@ from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 from valjean import LOGGER
 from valjean.javert.rst import RstTable
 from valjean.javert.templates import join
-from valjean.javert.table_elements import repr_bins
+from valjean.javert.table_repr import repr_bins
 from valjean.javert.verbosity import Verbosity
 from .conftest import int_matrices
 from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import

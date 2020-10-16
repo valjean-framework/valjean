@@ -1,4 +1,4 @@
-'''Tests for the :mod:`~valjean.javert.plot_elements` module.'''
+'''Tests for the :mod:`~valjean.javert.plot_repr` module.'''
 # pylint: disable=wrong-import-order
 
 import numpy as np
@@ -8,7 +8,7 @@ from ..eponine.conftest import finite
 from .conftest import ranges
 
 from ..context import valjean  # pylint: disable=unused-import
-from valjean.javert.plot_elements import pad_range
+from valjean.javert.plot_repr import pad_range
 
 
 @given(limits=ranges())  # pylint: disable=no-value-for-parameter

@@ -417,8 +417,8 @@ class TestSpam(Test):
 
 def test_spam_repr(caplog, str_choice, rfull_repr):
     '''Test representation outputs when the test result has not been
-    implemented in :mod:`~valjean.javert.table_elements` module or in
-    :mod:`~valjean.javert.plot_elements` module from the fake test
+    implemented in :mod:`~valjean.javert.table_repr` module or in
+    :mod:`~valjean.javert.plot_repr` module from the mock test
     :class:`TestSpam` defined in the current module.
 
     Outputs from :class:`~valjean.javert.representation.Representation` and

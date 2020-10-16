@@ -88,7 +88,7 @@ def trim_range(bins, max_ratio=1000):
     >>> trim_range(bins)
     [(-0.2, 4.2, True), (-100.0, 9.2, True), (-100.0, 100.0, False)]
     '''
-    LOGGER.debug('In plot_elements.trim_range')
+    LOGGER.debug('In plot_repr.trim_range')
     blimits = []
     for lbins in bins:
         nbins = lbins

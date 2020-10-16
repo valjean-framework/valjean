@@ -23,7 +23,7 @@ from valjean import LOGGER
 from valjean.javert.templates import (PlotTemplate, join, TableTemplate,
                                       CurveElements, SubPlotElements)
 from valjean.javert.mpl import MplPlot, MplPlotException
-from valjean.javert import plot_elements as plt_elts
+from valjean.javert import plot_repr as pltr
 from valjean.javert.representation import PlotRepresenter
 from ...gavroche.conftest import (some_1d_dataset, one_dim_dataset,
                                   other_1d_dataset, some_1d_dataset_edges,
@@ -166,7 +166,7 @@ def test_student_edges_with_fpi(student_test_edges_result, plot_repr):
                                baseline_dir='ref_plots')
 def test_student_with_fpi_d(student_test_result):
     '''Test plot of Student result.'''
-    template = plt_elts.repr_student_delta(student_test_result)
+    template = pltr.repr_student_delta(student_test_result)
     mplt = MplPlot(template[0])
     return mplt.draw()[0]
 
@@ -176,7 +176,7 @@ def test_student_with_fpi_d(student_test_result):
                                baseline_dir='ref_plots')
 def test_student_edges_with_fpi_v(student_test_edges_result):
     '''Test plot of Student result when bins are given by edges.'''
-    template = plt_elts.repr_datasets_values(student_test_edges_result)
+    template = pltr.repr_datasets_values(student_test_edges_result)
     mplt = MplPlot(template[0])
     return mplt.draw()[0]
 
@@ -225,7 +225,7 @@ def test_fplit_pjoin(student_test_result_with_pvals, plot_repr):
     '''Test concatenation of PlotTemplate from Student result.'''
     templ = plot_repr(student_test_result_with_pvals)[0]
     assert 'p-value' not in tuple(s.axnames[1] for s in templ.subplots)
-    pvaltempl = plt_elts.repr_student_pvalues(student_test_result_with_pvals)
+    pvaltempl = pltr.repr_student_pvalues(student_test_result_with_pvals)
     templ.join(pvaltempl[0])
     assert templ.nb_plots == 3
     mplt = MplPlot(templ)
@@ -344,7 +344,7 @@ def test_studentt_res_logx(studentt_res_range_lrbin):
 def test_studentt_res_logy(studentt_res_range_lrbin):
     '''Test logarithmic y-axis with 1D plot.'''
     def log_post(templates, tres):
-        plt_elts.post_treatment(templates, tres)
+        pltr.post_treatment(templates, tres)
         for templ in templates:
             templ.subplots[0].attributes.logy = True
         return templates
@@ -359,7 +359,7 @@ def test_studentt_res_logy(studentt_res_range_lrbin):
 def test_studentt_res_logy2(studentt_res_range_lrbin):
     '''Test logarithmic y-axis with 1D plot.'''
     def log_post(templates, tres):
-        plt_elts.post_treatment(templates, tres)
+        pltr.post_treatment(templates, tres)
         for templ in templates:
             for splt in templ.subplots:
                 splt.attributes.logy = True
@@ -406,7 +406,7 @@ def test_studentt_2d_logz(studentt_res_2d):
 def test_studentt_2d_logxy(studentt_res_2d_range_etlr):
     '''Test logarithmic x- and y-axis with 2D plot.'''
     def log_post(templates, tres):
-        plt_elts.post_treatment(templates, tres)
+        pltr.post_treatment(templates, tres)
         for templ in templates:
             for splt in templ.subplots:
                 splt.attributes.logx = True
@@ -423,7 +423,7 @@ def test_studentt_2d_logxy(studentt_res_2d_range_etlr):
 def test_studentt_2d_logxz(studentt_res_2d_range_etlr):
     '''Test logarithmic x-axis and colorbar with 2D plot.'''
     def log_post(templates, tres):
-        plt_elts.post_treatment(templates, tres)
+        pltr.post_treatment(templates, tres)
         for templ in templates:
             for splt in templ.subplots:
                 splt.attributes.logx = True
@@ -552,7 +552,7 @@ def test_plt_limits():
     plt1 = PlotTemplate(subplots=[
         SubPlotElements(curves=[celt1, celt2, celt3], axnames=('X', 'Y'))])
     for splt in plt1.subplots:
-        blimits = [plt_elts.trim_range(sc.bins) for sc in splt.curves]
+        blimits = [pltr.trim_range(sc.bins) for sc in splt.curves]
     assert any(b[1] for a in blimits for b in a)
     nlimits = []
     for idim in range(len(blimits[0])):
@@ -588,7 +588,7 @@ def test_plt_limits_2d():
         axnames=('X', 'Y', 'Z'), ptype='2D')
     plt1 = PlotTemplate(subplots=[spelt1, spelt2, spelt3],
                         small_subplots=False)
-    blimits = [plt_elts.trim_range(c.bins) for s in plt1.subplots
+    blimits = [pltr.trim_range(c.bins) for s in plt1.subplots
                for c in s.curves]
     assert any(b[1] for a in blimits for b in a)
     nlimits = []
@@ -619,7 +619,7 @@ def test_plt_limits_2d_2():
             legend='c1', index=1)],
         axnames=('X', 'Y', 'Z'), ptype='2D')
     plt1 = PlotTemplate(subplots=[spelt1, spelt2], small_subplots=False)
-    blimits = [plt_elts.trim_range(c.bins) for s in plt1.subplots
+    blimits = [pltr.trim_range(c.bins) for s in plt1.subplots
                for c in s.curves]
     assert any(b[1] for a in blimits for b in a)
     nlimits = []
@@ -658,7 +658,7 @@ def test_mix_1d_and_2d():
         axnames=('X', 'sum(Z) over Y'), ptype='1D')
     plt1 = PlotTemplate(subplots=[spelt2d, spelt1dsx, spelt1dsy],
                         small_subplots=False, suppress_legends=True)
-    blimits = [plt_elts.trim_range(c.bins) for s in plt1.subplots
+    blimits = [pltr.trim_range(c.bins) for s in plt1.subplots
                for c in s.curves]
     assert any(b[1] for a in blimits for b in a)
     for splt, lim in zip(plt1.subplots, blimits):

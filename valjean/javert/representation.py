@@ -31,12 +31,12 @@ Currently we have 3 main ``Representer`` classes:
   designed as a parent class for user's own representations of tables. Its
   :meth:`TableRepresenter.__call__` method first looks for a method called
   ``'repr_' + class.name``; if it does not exist call the default method from
-  the catalogue of table representation accessible in :mod:`.table_elements`;
+  the catalogue of table representation accessible in :mod:`.table_repr`;
 * :class:`PlotRepresenter`: inherited from :class:`Representer`, designed
   as a parent class for user's own representations of plots. Its
   :meth:`PlotRepresenter.__call__` method first looks for a method called
   ``'repr_' + class.name``; if it does not exist call the default method from
-  the catalogue of plot representation accessible in :mod:`.plot_elements`.
+  the catalogue of plot representation accessible in :mod:`.plot_repr`.
 
 
 An example of use of the ``Representer`` objects can be seen in the
@@ -50,15 +50,15 @@ Thus the use of the ``Representer`` is foreseen as:
 * use the default methods provided in :class:`TableRepresenter` and
   :class:`PlotRepresenter`;
 * if customisation is needed, you can easily call the additional method
-  available in :mod:`.table_elements` and :mod:`.plot_elements`;
+  available in :mod:`.table_repr` and :mod:`.plot_repr`;
 * you can also write your own representation method provided they follow the
   naming convention ``'repr_' + class.name``;
 * :mod:`valjean` calls the ``Representer`` classes through the
   :class:`Representation` class.
 '''
 from .. import LOGGER
-from . import table_elements as tab_elts
-from . import plot_elements as plt_elts
+from . import table_repr
+from . import plot_repr
 from .verbosity import Verbosity
 
 
@@ -151,7 +151,7 @@ class TableRepresenter(Representer):
             class_name = result.__class__.__name__
             meth_name = 'repr_' + class_name.lower()
             try:
-                meth = getattr(tab_elts, meth_name)
+                meth = getattr(table_repr, meth_name)
             except AttributeError:
                 LOGGER.info('no table representer %s', meth_name)
                 return None
@@ -180,11 +180,11 @@ class FullTableRepresenter(TableRepresenter):
         '''
         LOGGER.debug("In FullTableRepresenter.repr_testresultbonferroni")
         if verbosity == Verbosity.SILENT:
-            return tab_elts.repr_testresultholmbonferroni(result, verbosity)
+            return table_repr.repr_testresultholmbonferroni(result, verbosity)
         ftest_verb = (Verbosity(verbosity.value-1)
                       if verbosity not in (Verbosity.SILENT, None)
                       else verbosity)
-        return (tab_elts.repr_testresultbonferroni(result, verbosity)
+        return (table_repr.repr_testresultbonferroni(result, verbosity)
                 + super().__call__(result.first_test_res, ftest_verb))
 
     def repr_testresultholmbonferroni(self, result, verbosity=None):
@@ -203,11 +203,11 @@ class FullTableRepresenter(TableRepresenter):
         LOGGER.debug(
             "In FullTableRepresenter.repr_testresultholmbonferroni")
         if verbosity == Verbosity.SILENT:
-            return tab_elts.repr_testresultholmbonferroni(result, verbosity)
+            return table_repr.repr_testresultholmbonferroni(result, verbosity)
         ftest_verb = (Verbosity(verbosity.value-1)
                       if verbosity not in (Verbosity.SILENT, None)
                       else verbosity)
-        return (tab_elts.repr_testresultholmbonferroni(result, verbosity)
+        return (table_repr.repr_testresultholmbonferroni(result, verbosity)
                 + super().__call__(result.first_test_res, ftest_verb))
 
 
@@ -225,7 +225,7 @@ class PlotRepresenter(Representer):
         elif post.lower() == 'none':
             self.post = None
         elif post.lower() == 'default':
-            self.post = plt_elts.post_treatment
+            self.post = plot_repr.post_treatment
         else:
             LOGGER.warning('Plot post-treatment must be a callable.')
             self.post = None
@@ -237,7 +237,7 @@ class PlotRepresenter(Representer):
             class_name = result.__class__.__name__
             meth_name = 'repr_' + class_name.lower()
             try:
-                meth = getattr(plt_elts, meth_name)
+                meth = getattr(plot_repr, meth_name)
             except AttributeError:
                 LOGGER.info('no plot representer %s', meth_name)
                 return None
@@ -317,7 +317,7 @@ class FullRepresenter(Representer):
     :class:`FullRepresenter` will do it.
     '''
 
-    def __init__(self, post=plt_elts.post_treatment):
+    def __init__(self, post=plot_repr.post_treatment):
         '''Initialisation of :class:`FullRepresenter`.
 
         Two instance objects are built: a :class:`FullTableRepresenter` and
@@ -333,8 +333,8 @@ class FullRepresenter(Representer):
         instance attributes of :class:`FullRepresenter`, based on the name of
         the class of `result`.
 
-        If the representer does not exist in :mod:`~.table_elements` or
-        :mod:`~.plot_elements` a ``None`` is returned and replaced here by an
+        If the representer does not exist in :mod:`~.table_repr` or
+        :mod:`~.plot_repr` a ``None`` is returned and replaced here by an
         empty list. If none of them exist the global return will be an empty
         list (no ``None`` returned from this step).
         '''
