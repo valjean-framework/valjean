@@ -18,6 +18,8 @@
 #
 '''Configuration file for sphinx documentation.'''
 
+import sys
+from pathlib import Path
 from datetime import datetime
 from pkg_resources import get_distribution
 import matplotlib
@@ -75,6 +77,14 @@ language = None
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ['Thumbs.db', '.DS_Store']
+if not tags.has('tests'):
+    exclude_patterns.append('tests.rst')
+else:
+    # The tests are not installed along with the valjean package. Therefore, we
+    # need to set up Sphinx to import the modules from the source tree
+    src_path = Path().resolve().parents[1]
+    sys.path.insert(0, str(src_path))
+
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -138,7 +148,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'valjean.tex', 'valjean Documentation',
+    (master_doc, 'valjean.tex', 'The valjean documentation',
      u'Ève Le Ménédeu, Davide Mancusi', 'manual'),
 ]
 
@@ -148,7 +158,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'valjean', 'valjean Documentation',
+    (master_doc, 'valjean', 'The valjean documentation',
      [author], 1)
 ]
 
@@ -159,8 +169,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'valjean', 'valjean Documentation',
-     author, 'valjean', 'One line description of project.',
+    (master_doc, 'valjean', 'The valjean documentation',
+     author, 'valjean', "VALidation, Journal d'Évolution et ANalyse",
      'Miscellaneous'),
 ]
 

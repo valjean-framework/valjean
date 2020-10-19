@@ -1,5 +1,5 @@
-Welcome to the valjean documentation!
-=====================================
+The valjean documentation
+=========================
 
 .. figure:: images/valjean.jpg
    :align: center
@@ -18,14 +18,7 @@ Welcome to the valjean documentation!
    devs
    modules
    changelog
-
-
-.. _todolist:
-
-TODO list
-=========
-
-.. todolist::
+   todo
 
 
 Indices and tables

@@ -1,4 +1,4 @@
-'''Tests for the :mod:`~valjean.gavroche.dataset` module.
+'''Tests for the :mod:`~valjean.eponine.dataset` module.
 
 Most of them are silly tests for the moment...
 '''

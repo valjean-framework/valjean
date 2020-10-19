@@ -1,4 +1,4 @@
-'''Tests for the :mod:`~cosette.run` module.'''
+'''Tests for the :mod:`~valjean.cosette.run` module.'''
 
 import shlex
 from pathlib import Path
@@ -49,8 +49,8 @@ def test_echo(config_tmp):
 
 @requires_git
 def test_factory_checkout(git_myecho_repo, config_tmp, subdir):
-    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
-    objects from a :class:`CheckoutTask`.
+    '''Test that :class:`~.RunTaskFactory` produces working `:class:`~.RunTask`
+    objects from a :class:`~.CheckoutTask`.
     '''
     checkout = CheckoutTask('checkout_myecho',
                             repository=str(git_myecho_repo))
@@ -68,8 +68,8 @@ def test_factory_checkout(git_myecho_repo, config_tmp, subdir):
 
 @requires_cmake
 def test_factory_build(cmake_echo, config_tmp, subdir):
-    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
-    objects from a :class:`BuildTask`.
+    '''Test that :class:`~.RunTaskFactory` produces working `:class:`~.RunTask`
+    objects from a :class:`~.BuildTask`.
     '''
     build = BuildTask('build_echo', source=str(cmake_echo))
     cecho_path = str(Path(subdir) / 'cecho')
@@ -85,7 +85,7 @@ def test_factory_build(cmake_echo, config_tmp, subdir):
 
 
 def test_factory_exe(config_tmp):
-    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
+    '''Test that :class:`~.RunTaskFactory` produces working `:class:`~.RunTask`
     objects from an existing executable.
     '''
     factory = RunTaskFactory.from_executable('/bin/echo')
@@ -97,7 +97,7 @@ def test_factory_exe(config_tmp):
 
 
 def test_factory_exe_args(config_tmp):
-    '''Test that :class:`RunTaskFactory` produces working `:class:`RunTask`
+    '''Test that :class:`~.RunTaskFactory` produces working `:class:`~.RunTask`
     objects from an existing executable.
     '''
     factory = RunTaskFactory.from_executable('/bin/echo',
@@ -109,7 +109,7 @@ def test_factory_exe_args(config_tmp):
 
 
 def test_factory_exe_raise_missing(config_tmp):
-    '''Test that :class:`RunTaskFactory` raises if required run arguments are
+    '''Test that :class:`~.RunTaskFactory` raises if required run arguments are
     missing.
     '''
     factory = RunTaskFactory.from_executable('/bin/echo',

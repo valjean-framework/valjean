@@ -1,4 +1,4 @@
-'''Fixtures for the :mod:`eponine` module.'''
+'''Fixtures for the :mod:`~.valjean.eponine` module.'''
 
 # pylint: disable=wrong-import-order,no-value-for-parameter
 import pytest
@@ -36,9 +36,9 @@ def datasets(draw, elements=None, shape=None, dtype=None, coords=None):
     '''Strategy for generating :class:`~.Dataset` objects.
 
     :param elements: a strategy that generates array elements, or None for the
-                     default strategy (:func:`~.floats(-1e5, 1e5)`).
+                     default strategy (:func:`finite`).
     :param shape: a strategy that generates array shapes, or None for the
-                  default strategy (:func:`~.array_shapes`).
+                  default strategy (`array_shapes`).
     :param dtype: a strategy that generates `numpy` dtypes, or None for the
                   default strategy (`float64`).
     :param coords: a strategy that generates dictionaries of coordinate

@@ -80,7 +80,7 @@ def test_plot_with_errors(oneds):
 
 
 def test_pltatt_limits(caplog):
-    '''Test limits from :class:`PlotAttributes`.'''
+    '''Test limits from :class:`~.SubPlotAttributes`.'''
     pcelt = CurveElements(values=np.arange(5), bins=[np.arange(5)], legend='',
                           index=0)
     ptemp = PlotTemplate(subplots=[

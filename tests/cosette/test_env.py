@@ -1,6 +1,6 @@
 # pylint: disable=no-value-for-parameter
 
-'''Tests for the :mod:`~.env` module.'''
+'''Tests for the :mod:`~.cosette.env` module.'''
 
 import tempfile
 

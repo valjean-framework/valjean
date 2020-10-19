@@ -1,4 +1,4 @@
-'''Fixtures for the :mod:`gavroche` module.'''
+'''Fixtures for the :mod:`~.valjean.gavroche` module.'''
 
 # pylint: disable=wrong-import-order,no-value-for-parameter
 import string

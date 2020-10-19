@@ -32,6 +32,7 @@ dev_reqs = graphviz_reqs + testing_reqs + doc_reqs + lint_reqs
 setup(name=name,
       author=author,
       author_email=author_email,
+      description="VALidation, Journal d'Évolution et ANalyse",
       url=r'https://codev-tuleap.intra.cea.fr/projects/valjean',
       packages=find_packages(exclude=['doc', 'tests', 'tests.*']),
       package_data={'': ['conf.py.template', 'valjean.css']},

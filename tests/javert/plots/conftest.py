@@ -1,4 +1,4 @@
-'''Fixtures for the :mod:`~.valjean.javert.plots` tests.'''
+'''Fixtures for the :mod:`~.valjean.javert.plot_repr` tests.'''
 from collections import OrderedDict
 import pytest
 import numpy as np

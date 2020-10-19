@@ -129,7 +129,8 @@ def test_modif_text_fingerprint(text_t, sampler):
 
 def test_table_list():
     '''Check that fingerprint are equal when containing the same data.
-    Pretext to test list inside :class:`TableTemplate` and their fingerprints.
+    Pretext to test list inside :class:`~.TableTemplate` and their
+    fingerprints.
     '''
     tab1 = TableTemplate(['s', 'p', 'a', 'm'], np.arange(4)*0.5,
                          headers=['egg', 'bacon'])

@@ -177,7 +177,7 @@ def curve_elements(draw, legend=text(), index=integers(0, 10), shape=None):
 
 @composite
 def sub_plot_elements(draw, n_curves=integers(1, 3), xname=text()):
-    '''Strategy for generating :class:`SubPlotElements` objects.'''
+    '''Strategy for generating :class:`~.SubPlotElements` objects.'''
     a_n_curves = draw(n_curves)
     a_curves = [draw(curve_elements(shape=integers(1, 10)))
                 for _ in range(a_n_curves)]
@@ -248,7 +248,7 @@ def report(report_section1, report_section2,
 
 @pytest.fixture
 def rstcheck():
-    '''Import and return the :mod:`rstcheck` module, if it is installed. If it
+    '''Import and return the `rstcheck` module, if it is installed. If it
     isn't, tests depending on this fixture will be automatically skipped.'''
 
     class RstCheckWrapper:
