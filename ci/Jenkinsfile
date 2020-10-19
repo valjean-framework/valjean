@@ -88,15 +88,13 @@ pipeline {
         withFolderProperties {
           echo 'Running unit tests...'
           dir("${SRC}") {
-            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-              sh """#!/bin/bash
-                  if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-                    source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-                  fi
-                  source "${TOX_VENV}/bin/activate"
-                  TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 valjean/ tests/ | tee "${REPORTS}/testing.out"
-                  """
-            }
+            sh """#!/bin/bash
+                if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                  source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+                fi
+                source "${TOX_VENV}/bin/activate"
+                TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 valjean/ tests/ | tee "${REPORTS}/testing.out"
+                """
           }
         }
       }
