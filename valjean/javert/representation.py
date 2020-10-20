@@ -182,7 +182,7 @@ class FullTableRepresenter(TableRepresenter):
         if verbosity == Verbosity.SILENT:
             return table_repr.repr_testresultbonferroni(result, verbosity)
         ftest_verb = (Verbosity(verbosity.value-1)
-                      if verbosity != Verbosity.SILENT else verbosity)
+                      if bool(result) else verbosity)
         return (table_repr.repr_testresultbonferroni(result, verbosity)
                 + super().__call__(result.first_test_res, ftest_verb))
 
@@ -205,7 +205,7 @@ class FullTableRepresenter(TableRepresenter):
         if verbosity == Verbosity.SILENT:
             return table_repr.repr_testresultholmbonferroni(result, verbosity)
         ftest_verb = (Verbosity(verbosity.value-1)
-                      if verbosity != Verbosity.SILENT else verbosity)
+                      if bool(result) else verbosity)
         return (table_repr.repr_testresultholmbonferroni(result, verbosity)
                 + super().__call__(result.first_test_res, ftest_verb))
 
