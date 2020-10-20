@@ -4,13 +4,13 @@ Main difference is the possibility of using the ``end_flag`` parameter in the
 :mod:`~.scan`.
 '''
 
-import time
 import logging
 
 from .parse import Parser, ParseResult, ParserException
 from . import scan
 from .grammar import t4debug_gram
 from ... import LOGGER
+from ...chrono import Chrono
 
 
 class ParserDebug(Parser):
@@ -49,14 +49,15 @@ class ParserDebug(Parser):
         :returns: list(dict)
         '''
         LOGGER.debug('Using parse from ParserDebug')
-        start_time = time.time()
-        batch_edition = self.scan_res[batch_number]
-        if LOGGER.isEnabledFor(logging.DEBUG) and self.ofile:
-            with open(self.ofile, 'w') as fout:
-                fout.write(batch_edition)
-        pres, = self._parse_listing_worker(
-            t4debug_gram, self.scan_res[batch_number])
-        LOGGER.info("Successful parsing in %f s", time.time()-start_time)
+        chrono = Chrono()
+        with chrono:
+            batch_edition = self.scan_res[batch_number]
+            if LOGGER.isEnabledFor(logging.DEBUG) and self.ofile:
+                with open(self.ofile, 'w') as fout:
+                    fout.write(batch_edition)
+            pres, = self._parse_listing_worker(
+                t4debug_gram, self.scan_res[batch_number])
+        LOGGER.info("Successful parsing in %f s", chrono)
         self.check_parsing(pres)
         try:
             self._time_consistency(pres, batch_number)

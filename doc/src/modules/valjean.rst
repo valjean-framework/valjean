@@ -14,6 +14,7 @@ valjean — VALidation, Journal d'Évolution et ANalyse
 .. toctree::
    :caption: Submodules
 
+   valjean/chrono
    valjean/config
    valjean/dyn_import
    valjean/path

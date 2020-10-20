@@ -107,11 +107,11 @@ path to the `source` argument instead.
 
 import os
 import logging
-from time import time
 
-from .task import TaskStatus
 from ..path import ensure
+from ..chrono import Chrono
 from .run import run
+from .task import TaskStatus
 from .pythontask import PythonTask
 from .. import LOGGER
 
@@ -192,10 +192,10 @@ class CheckoutTask(PythonTask):
                 self.checkout_root = config.query('path', 'output-root')
             checkout_dir = ensure(self.checkout_root, self.name, is_dir=True)
 
+            chrono = Chrono()
             with log_file.open('w') as log:
-                start = time()
-                status = checkout_vcs(checkout_dir, log)
-                elapsed = time() - start
+                with chrono:
+                    status = checkout_vcs(checkout_dir, log)
 
             if status != TaskStatus.DONE:
                 LOGGER.warning('CheckoutTask %s did not succeed (status: %s)',
@@ -207,7 +207,7 @@ class CheckoutTask(PythonTask):
             env_up = {self.name: {'checkout_log': str(log_file),
                                   'output_dir': str(checkout_dir),
                                   'repository': str(repository),
-                                  'elapsed_time': elapsed}}
+                                  'elapsed_time': float(chrono)}}
             return env_up, status
 
         super().__init__(name, checkout, deps=deps, soft_deps=soft_deps,
@@ -301,10 +301,10 @@ class BuildTask(PythonTask):
             else:
                 source_dir = os.path.abspath(env[source.name]['output_dir'])
 
-            with log_file.open('w') as log:
-                start = time()
-                status = build_sys(source_dir, build_dir, log)
-                elapsed = time() - start
+            chrono = Chrono()
+            with chrono:
+                with log_file.open('w') as log:
+                    status = build_sys(source_dir, build_dir, log)
 
             if status != TaskStatus.DONE:
                 LOGGER.warning('BuildTask %s did not succeed (status: %s)',
@@ -315,7 +315,7 @@ class BuildTask(PythonTask):
 
             env_up = {self.name: {'build_log': str(log_file),
                                   'output_dir': str(build_dir),
-                                  'elapsed_time': elapsed}}
+                                  'elapsed_time': float(chrono)}}
             return env_up, status
 
         super().__init__(name, build, deps=deps, soft_deps=soft_deps,

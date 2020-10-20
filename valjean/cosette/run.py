@@ -185,9 +185,9 @@ import os
 import shlex
 from functools import partial
 from subprocess import call
-from time import time
 
 from .. import LOGGER
+from ..chrono import Chrono
 from ..path import ensure, sanitize_filename
 from .task import TaskStatus, det_hash
 from .pythontask import PythonTask
@@ -210,25 +210,24 @@ def run(clis, stdout, stderr, **subprocess_args):
     '''
     results = []    # collect the return codes of each cli
     status = TaskStatus.DONE    # will change to FAILED in case of trouble
-    start_time = time()
-    for cli in clis:
-        LOGGER.debug('Running cli: %s', cli)
-        print('$ ' + ' '.join(shlex.quote(token) for token in cli),
-              file=stderr, flush=True)
-        LOGGER.debug('subprocess_args: %s', subprocess_args)
-        result = call(cli, universal_newlines=True,
-                      stdout=stdout, stderr=stderr,
-                      **subprocess_args)
-        LOGGER.debug('Run result: %s', result)
-        results.append(result)
-        if result != 0:
-            LOGGER.warning('A subprocess ended with return code %s; will '
-                           'skip the remaining commands', result)
-            status = TaskStatus.FAILED
-            break
-    end_time = time()
-    elapsed = end_time - start_time
-    return results, status, elapsed
+    chrono = Chrono()
+    with chrono:
+        for cli in clis:
+            LOGGER.debug('Running cli: %s', cli)
+            print('$ ' + ' '.join(shlex.quote(token) for token in cli),
+                  file=stderr, flush=True)
+            LOGGER.debug('subprocess_args: %s', subprocess_args)
+            result = call(cli, universal_newlines=True,
+                          stdout=stdout, stderr=stderr,
+                          **subprocess_args)
+            LOGGER.debug('Run result: %s', result)
+            results.append(result)
+            if result != 0:
+                LOGGER.warning('A subprocess ended with return code %s; will '
+                               'skip the remaining commands', result)
+                status = TaskStatus.FAILED
+                break
+    return results, status, float(chrono)
 
 
 def make_cap_paths(base_path):

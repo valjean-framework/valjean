@@ -11,6 +11,7 @@ from queue import Queue
 from functools import partial
 
 from ..task import TaskStatus
+from ...chrono import Chrono
 from ... import LOGGER
 
 
@@ -163,7 +164,10 @@ class QueueScheduling:
             threads.append(thread)
 
         # process tasks; sort them in topological order
-        tasks_left = full_graph.topological_sort()
+        chrono = Chrono()
+        with chrono:
+            tasks_left = full_graph.topological_sort()
+        LOGGER.info('full graph sorted in %s seconds', chrono)
         while tasks_left:
             n_tasks_left = len(tasks_left)
             LOGGER.info('master: %d tasks left', n_tasks_left)

@@ -5,6 +5,7 @@ from pathlib import Path
 from ... import LOGGER
 from ..common import JobCommand, read_env, write_env, build_graphs
 from ...cosette.backends.queue import QueueScheduling
+from ...chrono import Chrono
 from ...cosette.scheduler import Scheduler
 from ...cosette.task import TaskStatus
 from ...path import ensure
@@ -39,7 +40,10 @@ class RunCommand(JobCommand):
     def execute(self, args, config):
         '''Execute the ``run`` command.'''
 
-        hard_graph, soft_graph = build_graphs(args)
+        chrono = Chrono()
+        with chrono:
+            hard_graph, soft_graph = build_graphs(args)
+        LOGGER.info('graphs built in %s seconds', chrono)
         LOGGER.info('hard_graph contains %d tasks', len(hard_graph))
         LOGGER.info('soft_graph contains %d tasks', len(soft_graph))
         LOGGER.info('will schedule up to %d tasks in parallel', args.workers)

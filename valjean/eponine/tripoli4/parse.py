@@ -13,13 +13,13 @@ Some options for debugging are available (end flag).
    :ref:`cambronne <cambronne-main>`.
 '''
 
-import time
 import threading
 from pyparsing import ParseException
 
 from . import scan
 from .grammar import t4gram
 from .common import SpectrumDictBuilderException
+from ...chrono import Chrono
 from ..browser import Browser
 from ... import LOGGER
 
@@ -65,23 +65,25 @@ class Parser:
         :class:`ParseResult`.
         '''
         LOGGER.info("Parsing %s", jddname)
-        start_time = time.time()
         self.jdd = jddname
         self.mesh_limit = mesh_lim
+        chrono = Chrono()
         try:
-            self.scan_res = self._scan(start_time)
+            with chrono:
+                self.scan_res = self._scan()
         except scan.ScannerException as t4se:
             LOGGER.error(t4se)
             raise ParserException("Scan failed.") from None
         except ParserException as t4pe:
             LOGGER.error(t4pe)
             raise ParserException("Scan failed.") from None
+        else:
+            LOGGER.info("Successful scan in %f s", chrono)
 
-    def _scan(self, start_time):
+    def _scan(self):
         '''Scan the parse the given jdd.'''
         scan_res = self._scan_listing()
         self._check_scan(scan_res)
-        LOGGER.info("Successful scan in %f s", time.time()-start_time)
         return scan_res
 
     @profile
@@ -158,10 +160,11 @@ class Parser:
         :rtype: ParseResult
         '''
         LOGGER.debug('Using parse from Parser')
-        start_parse = time.time()
-        pres, = self._parse_listing_worker(
-            t4gram, self.scan_res[batch_number])
-        LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
+        chrono = Chrono()
+        with chrono:
+            pres, = self._parse_listing_worker(
+                t4gram, self.scan_res[batch_number])
+        LOGGER.info("Successful parsing in %f s", chrono)
         self._time_consistency(pres, batch_number)
         scan_vars = self.scan_res.global_variables(batch_number)
         return ParseResult(pres, scan_vars, name)

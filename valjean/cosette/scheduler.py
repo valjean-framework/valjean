@@ -25,6 +25,7 @@ Example usage:
 from .depgraph import DepGraph
 from .backends.queue import QueueScheduling
 from .env import Env
+from ..chrono import Chrono
 from .. import LOGGER
 from ..config import Config
 
@@ -69,8 +70,19 @@ class Scheduler:
                              'DepGraph or None (`soft_graph`)')
 
         soft_graph = DepGraph() if soft_graph is None else soft_graph.copy()
-        self.hard_graph = hard_graph.copy().flatten()
-        self.full_graph = (hard_graph + soft_graph).flatten()
+        chrono = Chrono()
+        with chrono:
+            self.hard_graph = hard_graph.copy()
+        LOGGER.info('hard graph copied in %s seconds', chrono)
+        with chrono:
+            self.hard_graph.flatten()
+        LOGGER.info('hard graph flattened in %s seconds', chrono)
+        with chrono:
+            self.full_graph = (hard_graph + soft_graph)
+        LOGGER.info('full graph computed in %s seconds', chrono)
+        with chrono:
+            self.full_graph.flatten()
+        LOGGER.info('full graph flattened in %s seconds', chrono)
 
         # make sure that all nodes appear in the hard graph
         for node in self.full_graph.nodes():
