@@ -180,7 +180,7 @@ class FullTableRepresenter(TableRepresenter):
         '''
         LOGGER.debug("In FullTableRepresenter.repr_testresultbonferroni")
         if verbosity == Verbosity.SILENT:
-            return table_repr.repr_testresultholmbonferroni(result, verbosity)
+            return table_repr.repr_testresultbonferroni(result, verbosity)
         ftest_verb = (Verbosity(verbosity.value-1)
                       if verbosity not in (Verbosity.SILENT, None)
                       else verbosity)
