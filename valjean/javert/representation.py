@@ -70,7 +70,7 @@ class Representation:
     pattern.
     '''
 
-    def __init__(self, representer, verbosity=None):
+    def __init__(self, representer, verbosity=Verbosity.DEFAULT):
         ''''Initilialisation of the :class:`Representation` class with the
         Representer to use.
 
@@ -103,7 +103,7 @@ class Representer:
     pattern. Its subclasses play the role of `ConcreteStrategy`.
     '''
 
-    def __call__(self, result, verbosity=None):
+    def __call__(self, result, verbosity=Verbosity.DEFAULT):
         '''Dispatch handling of `result` to the appropriate subclass method,
         based on the name of the class of `result`. This methods essentially
         implements a simplified, run-time version of the Visitor pattern.
@@ -144,7 +144,7 @@ class TableRepresenter(Representer):
     relevant ``repr_*`` methods.
     '''
 
-    def __call__(self, result, verbosity=None):
+    def __call__(self, result, verbosity=Verbosity.DEFAULT):
         LOGGER.debug("In TableRepresenter.__call__, %s", verbosity)
         res = super().__call__(result, verbosity)
         if res is None:
@@ -165,7 +165,7 @@ class FullTableRepresenter(TableRepresenter):
     method like in Bonferroni and Holm-Bonferroni test results.
     '''
 
-    def repr_testresultbonferroni(self, result, verbosity=None):
+    def repr_testresultbonferroni(self, result, verbosity=Verbosity.DEFAULT):
         '''Represent the result of a :class:`~.TestBonferroni` test in two
         tables:
 
@@ -182,12 +182,12 @@ class FullTableRepresenter(TableRepresenter):
         if verbosity == Verbosity.SILENT:
             return table_repr.repr_testresultbonferroni(result, verbosity)
         ftest_verb = (Verbosity(verbosity.value-1)
-                      if verbosity not in (Verbosity.SILENT, None)
-                      else verbosity)
+                      if verbosity != Verbosity.SILENT else verbosity)
         return (table_repr.repr_testresultbonferroni(result, verbosity)
                 + super().__call__(result.first_test_res, ftest_verb))
 
-    def repr_testresultholmbonferroni(self, result, verbosity=None):
+    def repr_testresultholmbonferroni(self, result,
+                                      verbosity=Verbosity.DEFAULT):
         '''Represent the result of a :class:`~.TestHolmBonferroni` test in two
         tables:
 
@@ -205,8 +205,7 @@ class FullTableRepresenter(TableRepresenter):
         if verbosity == Verbosity.SILENT:
             return table_repr.repr_testresultholmbonferroni(result, verbosity)
         ftest_verb = (Verbosity(verbosity.value-1)
-                      if verbosity not in (Verbosity.SILENT, None)
-                      else verbosity)
+                      if verbosity != Verbosity.SILENT else verbosity)
         return (table_repr.repr_testresultholmbonferroni(result, verbosity)
                 + super().__call__(result.first_test_res, ftest_verb))
 
@@ -230,7 +229,7 @@ class PlotRepresenter(Representer):
             LOGGER.warning('Plot post-treatment must be a callable.')
             self.post = None
 
-    def __call__(self, result, verbosity=None):
+    def __call__(self, result, verbosity=Verbosity.DEFAULT):
         LOGGER.debug("In PlotRepresenter.__call__")
         res = super().__call__(result, verbosity)
         if res is None:
@@ -246,7 +245,7 @@ class PlotRepresenter(Representer):
             res = self.post(res, result)
         return res
 
-    def repr_testresultbonferroni(self, result, verbosity=None):
+    def repr_testresultbonferroni(self, result, verbosity=Verbosity.DEFAULT):
         '''Represent the result of a :class:`~.TestBonferroni` test one a plot
         (only the input test for the moment) (Student, equal, etc)
 
@@ -259,7 +258,8 @@ class PlotRepresenter(Representer):
         LOGGER.debug("In FullPlotRepresenter.repr_testresultbonferroni")
         return self(result.first_test_res, verbosity)
 
-    def repr_testresultholmbonferroni(self, result, verbosity=None):
+    def repr_testresultholmbonferroni(self, result,
+                                      verbosity=Verbosity.DEFAULT):
         '''Represent the result of a :class:`~.TestHolmBonferroni` test as a
         plot (Student, equal, etc)
 
@@ -279,7 +279,7 @@ class FullPlotRepresenter(PlotRepresenter):
     method like in Bonferroni and Holm-Bonferroni test results.
     '''
 
-    def repr_testresultbonferroni(self, result, verbosity=None):
+    def repr_testresultbonferroni(self, result, verbosity=Verbosity.DEFAULT):
         '''Represent the result of a :class:`~.TestBonferroni` test one a plot
         (only the input test for the moment) (Student, equal, etc)
 
@@ -292,7 +292,8 @@ class FullPlotRepresenter(PlotRepresenter):
         LOGGER.debug("In FullPlotRepresenter.repr_testresultbonferroni")
         return self(result.first_test_res, verbosity)
 
-    def repr_testresultholmbonferroni(self, result, verbosity=None):
+    def repr_testresultholmbonferroni(self, result,
+                                      verbosity=Verbosity.DEFAULT):
         '''Represent the result of a :class:`~.TestHolmBonferroni` test as a
         plot (Student, equal, etc)
 
@@ -328,7 +329,7 @@ class FullRepresenter(Representer):
         self.plot_repr = FullPlotRepresenter(post=post)
         self.ext_repr = ExternalRepresenter()
 
-    def __call__(self, result, verbosity=None):
+    def __call__(self, result, verbosity=Verbosity.DEFAULT):
         '''Dispatch handling of `result` to all the Representer subclass
         instance attributes of :class:`FullRepresenter`, based on the name of
         the class of `result`.

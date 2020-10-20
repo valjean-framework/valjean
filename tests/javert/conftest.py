@@ -287,3 +287,9 @@ def ranges(draw, min_value=None, max_value=None):
                          finite(min_value=min_value, max_value=max_value)))
     assume(bounds[0] != bounds[1])
     return min(bounds), max(bounds)
+
+
+@pytest.fixture(params=list(Verbosity), ids=list(v.name for v in Verbosity))
+def verb_level(request):
+    '''Return lists of valid :class:`~.Test` objects.'''
+    return request.param

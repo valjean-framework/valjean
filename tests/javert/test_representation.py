@@ -91,11 +91,6 @@ def test_student_edges_full(student_test_edges_result, rfull_repr,
     return mplt.draw()[0]
 
 
-@pytest.mark.parametrize('verb_level', [None, Verbosity.SILENT,
-                                        Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS,
-                                        Verbosity.DEVELOPMENT])
 def test_student_verb(verb_level, student_test_2d_result, rst_formatter,
                       rstcheck):
     '''Test Student templates with verbosity (2D plots).'''
@@ -111,15 +106,12 @@ def test_student_verb(verb_level, student_test_2d_result, rst_formatter,
         assert not ptempl
     else:
         assert len(ptempl) == 1
-        if verb_level in (None, Verbosity.INTERMEDIATE):
+        if verb_level in (Verbosity.DEFAULT, Verbosity.INTERMEDIATE):
             assert ptempl[0].nb_plots == 3
         else:
             assert ptempl[0].nb_plots == 4
 
 
-@pytest.mark.parametrize('verb_level', [Verbosity.SILENT, Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS])
 def test_student_pvals_verb(verb_level, student_test_result_with_pvals,
                             rst_formatter, rstcheck):
     '''Test Student templates with verbosity requiring p-values (1D plots).'''
@@ -171,9 +163,6 @@ def test_student_fail_scalar(student_test_fail_scalar, rfull_repr,
                 if isinstance(template, PlotTemplate)]) == 0
 
 
-@pytest.mark.parametrize('verb_level', [Verbosity.SILENT, Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS])
 def test_equal_verb(verb_level, equal_test_result, full_repr, rst_formatter,
                     rstcheck):
     '''Test equal templates with verbosity (2D plots).'''
@@ -189,9 +178,6 @@ def test_equal_verb(verb_level, equal_test_result, full_repr, rst_formatter,
     assert ptempl[0].nb_plots == 2
 
 
-@pytest.mark.parametrize('verb_level', [Verbosity.SILENT, Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS])
 def test_holm_bonferroni_verb(verb_level, holm_bonferroni_test_result,
                               full_repr, rst_formatter, rstcheck):
     '''Test Holm-Bonferroni templates with verbosity.'''
@@ -213,9 +199,6 @@ def test_holm_bonferroni_verb(verb_level, holm_bonferroni_test_result,
         assert ptempl[0].nb_plots == 2
 
 
-@pytest.mark.parametrize('verb_level', [Verbosity.SILENT, Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS])
 def test_bonferroni_verb(verb_level, bonferroni_test_result, full_repr,
                          rst_formatter, rstcheck):
     '''Test Bonferroni templates with verbosity.'''
@@ -237,10 +220,6 @@ def test_bonferroni_verb(verb_level, bonferroni_test_result, full_repr,
         assert ptempl[0].nb_plots == 2
 
 
-@pytest.mark.parametrize('verb_level', [None, Verbosity.SILENT,
-                                        Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS])
 def test_metadata_verb(verb_level, full_repr, rst_formatter, rstcheck):
     '''Test metadata templates with verbosity.'''
     mtest = TestMetadata({'md1': {'spam': 1, 'egg': 'wine'},
@@ -309,10 +288,6 @@ def stats_representation(sres, verb_level, full_repr, rst_formatter, rstcheck,
                                           expected_plot_types))
 
 
-@pytest.mark.parametrize('verb_level', [None, Verbosity.SILENT,
-                                        Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS])
 def test_stats_diagnostic_verb(verb_level, full_repr, rst_formatter, rstcheck):
     '''Test the statistics test by labels using a common set of tests.'''
     tasks = [generate_test_tasks()]
@@ -355,12 +330,12 @@ def test_full_concatenation(student_test_result, student_test_result_fail,
     student_test_result_fail.test.datasets[0].name = "other 1D dataset"
     templ1 = rfull_repr(student_test_result)
     templ2 = rfull_repr(student_test_result_fail)
+    LOGGER.debug('templates1 = %s', templ1)
+    LOGGER.debug('templates2 = %s', templ2)
     for it1, it2 in zip(templ1, templ2):
-        if isinstance(it1, TableTemplate) and isinstance(it2, TableTemplate):
-            conc = join(it1, it2)
-            assert (conc.columns[0].size
-                    == it1.columns[0].size + it2.columns[0].size)
-        else:
+        if isinstance(it1, PlotTemplate):
+            assert isinstance(it1, PlotTemplate)
+            assert type(it1) == type(it2)  # pylint: disable=C0123
             conc = join(it1, it2)
             assert conc.nb_plots == it1.nb_plots + it2.nb_plots
 
@@ -448,10 +423,6 @@ def test_spam_repr(caplog, str_choice, rfull_repr):
     assert caplog.text.count(loginfo_pltrepr) == 2
 
 
-@pytest.mark.parametrize('verb_level', [None, Verbosity.SILENT,
-                                        Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS])
 @pytest.mark.parametrize('success', [True, False])
 def test_external_repr(templates, verb_level, success,
                        full_repr, rst_formatter, rstcheck):

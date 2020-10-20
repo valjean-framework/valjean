@@ -363,7 +363,7 @@ def repr_datasets_values(result):
     return [pltemp] if pltemp else []
 
 
-def repr_testresultequal(result, _verbosity=None):
+def repr_testresultequal(result, _verbosity=Verbosity.DEFAULT):
     '''Represent the equal test result as a plot.
 
     :param TestResultEqual result: a test result.
@@ -372,7 +372,7 @@ def repr_testresultequal(result, _verbosity=None):
     return repr_datasets_values(result)
 
 
-def repr_testresultapproxequal(result, _verbosity=None):
+def repr_testresultapproxequal(result, _verbosity=Verbosity.DEFAULT):
     '''Represent the approx equal test result as a plot.
 
     :param TestResultApproxEqual result: a test result.
@@ -381,7 +381,7 @@ def repr_testresultapproxequal(result, _verbosity=None):
     return repr_datasets_values(result)
 
 
-def repr_testresultstudent(result, verbosity=None):
+def repr_testresultstudent(result, verbosity=Verbosity.DEFAULT):
     '''Plot the Student results according to verbosity.
 
     :param TestResultStudent result: a test result.
@@ -392,7 +392,7 @@ def repr_testresultstudent(result, verbosity=None):
     # faire une condition sur le bool dans le cas de SUMMARY ?
     if verbosity in (Verbosity.SILENT, Verbosity.SUMMARY):
         return []
-    if verbosity is None or verbosity == Verbosity.INTERMEDIATE:
+    if verbosity in (Verbosity.DEFAULT, Verbosity.INTERMEDIATE):
         return repr_student_intermediate(result)
     if verbosity.value >= Verbosity.FULL_DETAILS.value:
         return repr_student_full_details(result)
@@ -507,7 +507,7 @@ def repr_student_pvalues(result):
     return [pltemp]
 
 
-def repr_testresultmetadata(_result, _verbosity=None):
+def repr_testresultmetadata(_result, _verbosity=Verbosity.DEFAULT):
     '''Plot metadata test -> no plot done.
 
     :returns: empty list
@@ -515,7 +515,7 @@ def repr_testresultmetadata(_result, _verbosity=None):
     return []
 
 
-def repr_testresultexternal(_result, _verbosity=None):
+def repr_testresultexternal(_result, _verbosity=Verbosity.DEFAULT):
     '''Plot external test -> no plot done.
 
     If plots are required they are already done. Their representation in the
@@ -526,7 +526,7 @@ def repr_testresultexternal(_result, _verbosity=None):
     return []
 
 
-def repr_testresultfailed(_result, _verbosity=None):
+def repr_testresultfailed(_result, _verbosity=Verbosity.DEFAULT):
     '''Plot failed test -> no plot done.
 
     :returns: empty list
@@ -559,7 +559,7 @@ def repr_testresultstats(result, status_ok, label):
     return [PlotTemplate(subplots=[subplot], small_subplots=False)]
 
 
-def repr_testresultstatstasks(result, _verbosity=None):
+def repr_testresultstatstasks(result, _verbosity=Verbosity.DEFAULT):
     '''Represent result from statistical test on tasks as a plot (pie chart).
 
     :param TestResultStatsTasks result: result from tasks statistics
@@ -568,7 +568,7 @@ def repr_testresultstatstasks(result, _verbosity=None):
     return repr_testresultstats(result, TaskStatus.DONE, 'Tasks')
 
 
-def repr_testresultstatstests(result, _verbosity=None):
+def repr_testresultstatstests(result, _verbosity=Verbosity.DEFAULT):
     '''Represent result from statistical test on tests as a plot (pie chart).
 
     :param TestResultStatsTests result: result from tasks statistics
@@ -605,7 +605,7 @@ def repr_statstestsby2labels(result):
     return [PlotTemplate(subplots=[sbpeb, sbpebs], small_subplots=False)]
 
 
-def repr_testresultstatstestsbylabels(result, _verbosity=None):
+def repr_testresultstatstestsbylabels(result, _verbosity=Verbosity.DEFAULT):
     '''Plot statistics on the tests classified by labels if 1 or labels.
 
     :rtype: list(PlotTemplate)

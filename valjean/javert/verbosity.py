@@ -9,11 +9,12 @@ from enum import Enum
 class Verbosity(Enum):
     '''Verbosity enum.
 
-    Four levels are currently available: SILENT, SUMMARY, INTERMEDIATE,
-    FULL_DETAILS.
+    Six levels are currently available: SILENT, SUMMARY, DEFAULT,
+    INTERMEDIATE, FULL_DETAILS, DEVELOPMENT.
     '''
     SILENT = 0
     SUMMARY = 1
-    INTERMEDIATE = 2
-    FULL_DETAILS = 3
-    DEVELOPMENT = 4
+    DEFAULT = 2
+    INTERMEDIATE = 3
+    FULL_DETAILS = 4
+    DEVELOPMENT = 5

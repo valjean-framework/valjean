@@ -100,7 +100,7 @@ def repr_bins(dsref):
     return dim_names, tuple(bbins)
 
 
-def repr_testresultequal(result, verbosity=None):
+def repr_testresultequal(result, verbosity=Verbosity.DEFAULT):
     '''Represent the result of a :class:`~.TestEqual` test.
 
     :param TestResultEqual result: a test result.
@@ -113,9 +113,7 @@ def repr_testresultequal(result, verbosity=None):
         if verbosity != Verbosity.FULL_DETAILS:
             return []
         return repr_equal(result)
-    if verbosity is None:
-        return repr_equal(result)
-    if verbosity.value < Verbosity.INTERMEDIATE.value:
+    if verbosity.value < Verbosity.DEFAULT.value:
         return repr_equal_summary(result)
     return repr_equal(result)
 
@@ -160,7 +158,7 @@ def repr_equal(result):
     return [table_template]
 
 
-def repr_testresultapproxequal(result, verbosity=None):
+def repr_testresultapproxequal(result, verbosity=Verbosity.DEFAULT):
     '''Represent the result of a :class:`~.TestApproxEqual` test.
 
     :param TestResultApproxEqual result: a test result.
@@ -216,7 +214,7 @@ def repr_approx_equal(result):
     return [table_template]
 
 
-def repr_testresultstudent(result, verbosity=None):
+def repr_testresultstudent(result, verbosity=Verbosity.DEFAULT):
     '''Represent the result of a :class:`~.TestStudent` test.
 
     :param TestResultStudent result: a test result.
@@ -228,7 +226,7 @@ def repr_testresultstudent(result, verbosity=None):
         return []
     if verbosity == Verbosity.SUMMARY:
         return repr_student_summary(result)
-    if verbosity == Verbosity.INTERMEDIATE:
+    if verbosity in (Verbosity.DEFAULT, Verbosity.INTERMEDIATE):
         return repr_student_intermediate(result)
     return repr_student(result)
 
@@ -345,7 +343,7 @@ def repr_student_intermediate(result):
     return [table_template]
 
 
-def repr_testresultbonferroni(result, verbosity=None):
+def repr_testresultbonferroni(result, verbosity=Verbosity.DEFAULT):
     '''Represent the result of a :class:`~.TestBonferroni` test.
 
     Only represents the Bonferroni result, not the input test result.
@@ -403,7 +401,7 @@ def repr_bonferroni_summary(result):
                          'Bonferroni test: :hl:`KO`\n\n')]
 
 
-def repr_testresultholmbonferroni(result, verbosity=None):
+def repr_testresultholmbonferroni(result, verbosity=Verbosity.DEFAULT):
     '''Represent the result of a :class:`~.TestHolmBonferroni` test.
 
     :param TestResultHolmBonferroni result: a test result.
@@ -488,7 +486,7 @@ def percent_fmt(num, den):
     return '{:d}/{:d}{}(???%)'.format(num, den, nbsp)
 
 
-def repr_testresultstatstasks(result, verbosity=None):
+def repr_testresultstatstasks(result, verbosity=Verbosity.DEFAULT):
     '''Represent a :class:`~.TestResultStatsTasks` as a table. The table
     breaks down the tasks by status.
 
@@ -502,7 +500,7 @@ def repr_testresultstatstasks(result, verbosity=None):
     return repr_testresultstats(result, TaskStatus.DONE, 'tasks')
 
 
-def repr_testresultstatstests(result, verbosity=None):
+def repr_testresultstatstests(result, verbosity=Verbosity.DEFAULT):
     '''Represent a :class:`~.TestResultStatsTests` as a table. The table
     breaks down the tests by success status.
 
@@ -570,7 +568,7 @@ def repr_testresultstats(result, status_ok, label):
     return [table, TextTemplate('\n'.join(text))]
 
 
-def repr_testresultstatstestsbylabels(result, verbosity=None):
+def repr_testresultstatstestsbylabels(result, verbosity=Verbosity.DEFAULT):
     '''Represent a :class:`~.TestResultStatsTestsByLabels` as tables. Shape of
     the table may change according to the number of flags required.
 
@@ -687,7 +685,7 @@ def repr_testresultstatsbylabels_summary(result):
     return res
 
 
-def repr_testresultmetadata(result, verbosity=None):
+def repr_testresultmetadata(result, verbosity=Verbosity.DEFAULT):
     '''Represent the result of a :class:`~.TestMetadata` test.
 
     :param TestResultMetadata result: a test result.
@@ -695,12 +693,12 @@ def repr_testresultmetadata(result, verbosity=None):
     :returns: list of templates representing a :class:`~.TestResultMetadata`
     '''
     LOGGER.debug("metadata res, %s, res = %s", verbosity, bool(result))
-    if verbosity is None:
-        return repr_metadata(result)
     if verbosity == Verbosity.SILENT:
         return []
     if verbosity == Verbosity.SUMMARY:
         return repr_metadata_summary(result)
+    if verbosity == Verbosity.DEFAULT:
+        return repr_metadata(result)
     if verbosity == Verbosity.INTERMEDIATE:
         return repr_metadata_intermediate(result)
     if verbosity.value >= Verbosity.FULL_DETAILS.value:
@@ -801,7 +799,7 @@ def repr_metadata_silent(_result):
     return []
 
 
-def repr_testresultexternal(_result, _verbosity=None):
+def repr_testresultexternal(_result, _verbosity=Verbosity.DEFAULT):
     '''Represent external test as tables -> no table done.
 
     If tables are required they are already done. Their representation in the
@@ -812,7 +810,7 @@ def repr_testresultexternal(_result, _verbosity=None):
     return []
 
 
-def repr_testresultfailed(result, _verbosity=None):
+def repr_testresultfailed(result, _verbosity=Verbosity.DEFAULT):
     '''Represent a failed result as rst text.
 
     :param TestResultFailed result: a failed test result.

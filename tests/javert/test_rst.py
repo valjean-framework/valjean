@@ -2,7 +2,6 @@
 # pylint: disable=unused-argument
 
 import numpy as np
-import pytest
 from hypothesis import given, note
 
 # pylint: disable=wrong-import-order
@@ -83,10 +82,6 @@ def test_rst_equal_full(rstcheck, equal_test_result, rst_formatter,
     assert not list(errs)
 
 
-@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS,
-                                        Verbosity.DEVELOPMENT])
 def test_rst_equal_hl(verb_level, rstcheck, equal_test_result_fail,
                       rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
@@ -101,10 +96,6 @@ def test_rst_equal_hl(verb_level, rstcheck, equal_test_result_fail,
     assert not list(errs)
 
 
-@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS,
-                                        Verbosity.DEVELOPMENT])
 def test_rst_approx_equal(verb_level, rstcheck, approx_equal_test_result,
                           rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` yields syntactically correct reST
@@ -129,10 +120,6 @@ def test_rst_student(rstcheck, student_test_result, rst_formatter, table_repr):
     assert not list(errs)
 
 
-@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS,
-                                        Verbosity.DEVELOPMENT])
 def test_rst_student_hl(verb_level, rstcheck, student_test_result_fail,
                         rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` generates correct reST table for
@@ -147,10 +134,6 @@ def test_rst_student_hl(verb_level, rstcheck, student_test_result_fail,
     assert not list(errs)
 
 
-@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS,
-                                        Verbosity.DEVELOPMENT])
 def test_rst_bonferroni(verb_level, rstcheck, bonferroni_test_result,
                         rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` generates correct reST table for
@@ -163,10 +146,6 @@ def test_rst_bonferroni(verb_level, rstcheck, bonferroni_test_result,
     assert not list(errs)
 
 
-@pytest.mark.parametrize('verb_level', [None, Verbosity.SUMMARY,
-                                        Verbosity.INTERMEDIATE,
-                                        Verbosity.FULL_DETAILS,
-                                        Verbosity.DEVELOPMENT])
 def test_rst_holm_bonferroni(verb_level, rstcheck, holm_bonferroni_test_result,
                              rst_formatter, table_repr):
     '''Test that :class:`~.RstFormatter` generates correct reST table for
@@ -230,11 +209,13 @@ def test_tabletemplate_join(table_repr,
                             bonferroni_test_result,
                             bonferroni_test_result_fail):
     '''Test  :meth:`~valjean.javert.templates.join`.'''
-    templates1 = table_repr(bonferroni_test_result)
+    templates1 = table_repr(bonferroni_test_result,
+                            verbosity=Verbosity.INTERMEDIATE)
     LOGGER.debug("templates1 = %s", templates1)
     first_test = bonferroni_test_result_fail.first_test_res
     first_test.test.datasets[0].name = "other 1D dataset"
-    templates2 = table_repr(bonferroni_test_result_fail)
+    templates2 = table_repr(bonferroni_test_result_fail,
+                            verbosity=Verbosity.INTERMEDIATE)
     LOGGER.debug("templates2 = %s", templates2)
     templates3 = join(templates1[0], templates2[0])
     LOGGER.debug("templates1+templates2 = %s", templates3)
@@ -253,22 +234,14 @@ def test_tabletemplate_join(table_repr,
     templates4 = templates1 + templates2
     LOGGER.debug("templates1+templates2 = %s", templates4)
     assert len(templates4) == 4
-    templates5 = [join(it1, it2) for it1, it2 in zip(templates1, templates2)]
-    LOGGER.debug("templates1+templates2 = %s", templates5)
-    assert len(templates5) == 2
-    assert templates5[0].headers[-1] == 'Bonferroni?'
-    assert templates5[1].headers[-1] == 'Student?'
-    assert templates5[1].columns[0].size == 10
 
 
 def test_tabletemplate_join_array(table_repr,
-                                  student_test_result,
                                   student_test_result_fail):
     '''Test join table templates containing arrays.'''
-    template1 = table_repr(student_test_result)[0]
+    template1 = table_repr(student_test_result_fail)[0]
     template1_cc = template1.copy()
     LOGGER.debug('template1 = %s', template1)
-    student_test_result_fail.test.datasets[0].name = "other 1D dataset"
     template2 = table_repr(student_test_result_fail)[0]
     LOGGER.debug('template2 = %s', template2)
     template1.join(template2)
@@ -287,16 +260,14 @@ def test_tabletemplate_join_array(table_repr,
                for col, hlight in zip(template1.columns, template1.highlights))
 
 
-def test_tabletemplate_join_scalar(table_repr, student_test_scalar,
-                                   student_test_fail_scalar, rst_formatter,
-                                   rstcheck):
+def test_tabletemplate_join_scalar(table_repr, student_test_fail_scalar,
+                                   rst_formatter, rstcheck):
     '''Test join table templates containing scalars.'''
-    st1 = student_test_scalar.evaluate()
+    st1 = student_test_fail_scalar.evaluate()
     template1 = table_repr(st1)[0]
     template1_cc = template1.copy()
     LOGGER.debug('template1 = %s', template1)
     st2 = student_test_fail_scalar.evaluate()
-    st2.test.datasets[0].name = "other scalar dataset"
     template2 = table_repr(st2)[0]
     LOGGER.debug('template2 = %s', template2)
     template1.join(template2)

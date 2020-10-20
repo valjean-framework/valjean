@@ -969,6 +969,9 @@ class TextTemplate:
         return '{}(text={!r})'.format(self.__class__, self.text)
 
     def _binary_join(self, other):
+        if not isinstance(other, TextTemplate):
+            raise TypeError("Only a TextTemplate can be joined to another "
+                            "TextTemplate; got a {}".format(type(other)))
         self.text += other.text
 
     def copy(self):
