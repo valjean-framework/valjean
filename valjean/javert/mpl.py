@@ -621,6 +621,7 @@ class MplPlot:
         :param str name: name of the output file. Expected extensions: png,
             pdf, svg, eps.
         '''
+        LOGGER.info('drawing figure %s', name)
         fig, _ = self.draw()
         if fig is not None:
             fig.savefig(name)
