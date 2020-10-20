@@ -12,6 +12,7 @@ syntax.
 from datetime import datetime
 from collections import defaultdict
 from pathlib import Path
+import multiprocessing as mp
 import pkg_resources as pkg
 import numpy as np
 
@@ -30,7 +31,7 @@ class Rst:
     '''Class to convert :class:`~.TestResult` objects into `reStructuredText`_
     format.'''
 
-    def __init__(self, representation):
+    def __init__(self, representation, *, n_workers=None):
         '''Initialize a class instance with the given representation.
 
         :param Representation representation: A representation.
@@ -40,6 +41,7 @@ class Rst:
         self.plots = {}
         self.tree_dict = defaultdict(list)
         self.text_dict = defaultdict(list)
+        self.n_workers = n_workers
 
     def clear(self):
         '''Clear the content of `self`.'''
@@ -65,7 +67,8 @@ class Rst:
                                   version=version,
                                   tree_dict=self.tree_dict,
                                   text_dict=self.text_dict,
-                                  plots=self.plots)
+                                  plots=self.plots,
+                                  n_workers=self.n_workers)
         LOGGER.debug('formatted report: %s', fmt_report)
         return fmt_report
 
@@ -556,7 +559,7 @@ class FormattedRst:
     consists of an index file and of several sections.
     '''
     def __init__(self, *, author, title, version,
-                 tree_dict, text_dict, plots):
+                 tree_dict, text_dict, plots, n_workers=None):
         '''Create a :class:`FormattedRst` object. The `author`, `title` and
         `version` arguments are expected to be strings and are
         self-explanatory.
@@ -584,6 +587,10 @@ class FormattedRst:
             of strings.
         :param plots: list of plots to be written to disk.
         :type plots: list(MplPlot)
+        :param n_workers: number of subprocesses to use to write out the plots
+            in parallel.  If `None` is given, write the plots in sequential
+            mode.
+        :type n_workers: int or None
         '''
         if not isinstance(tree_dict, dict):
             raise TypeError("expecting a dictionary as 'tree_dict'"
@@ -598,6 +605,7 @@ class FormattedRst:
         self.tree_dict = tree_dict.copy()
         self.text_dict = text_dict.copy()
         self.plots = plots.copy()
+        self.n_workers = n_workers
 
     def write(self, path):
         '''Write the text files and the plots into the directory specified by
@@ -612,9 +620,22 @@ class FormattedRst:
         self.setup(path)
         self._write_rec(tree=(), path=path)
 
-        for fingerprint, plot in self.plots.items():
-            plot_path = path / 'figures' / 'plot_{}.png'.format(fingerprint)
-            plot.save(str(plot_path))
+        items = [(plot, str(path / 'figures'
+                            / 'plot_{}.png'.format(fingerprint)))
+                 for fingerprint, plot in self.plots.items()]
+        if self.n_workers is not None:
+            LOGGER.info('writing %d plots using %d subprocesses',
+                        len(items), self.n_workers)
+            with mp.Pool(self.n_workers) as pool:
+                pool.map(self._static_writer, items)
+        else:
+            LOGGER.info('writing %d plots in sequential mode', len(items))
+            for item in items:
+                self._static_writer(item)
+
+    @staticmethod
+    def _static_writer(plot_path_pair):
+        plot_path_pair[0].save(plot_path_pair[1])
 
     def _write_rec(self, *, tree, path):
 
@@ -730,7 +751,14 @@ class RstTestReportTask(PythonTask):
 
         def write_rst(*, env, config):
             report = env[report_task.name]['result']
-            rst = Rst(representation)
+            if 'args' in config and 'workers' in config['args']:
+                n_workers = config['args']['workers']
+                LOGGER.debug('will use %d subprocesses to write the report',
+                             n_workers)
+            else:
+                n_workers = None
+                LOGGER.debug('will write the report in sequential mode')
+            rst = Rst(representation, n_workers=n_workers)
             fmt_report = rst.format_report(report=report, author=author,
                                            version=version)
             report_root = Path(config.query('path', 'report-root'))

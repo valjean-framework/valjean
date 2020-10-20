@@ -44,6 +44,9 @@ class RunCommand(JobCommand):
         LOGGER.info('soft_graph contains %d tasks', len(soft_graph))
         LOGGER.info('will schedule up to %d tasks in parallel', args.workers)
 
+        # store the args in the config, for later retrieval
+        config['args'] = vars(args)
+
         output_root = config.query('path', 'output-root')
         # we extract the tasks from the hard-dependency graph; both graphs
         # contain the same nodes anyway
