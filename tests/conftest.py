@@ -5,6 +5,7 @@ import string
 
 import py
 import pytest
+from hypothesis import assume
 from hypothesis.strategies import text, dictionaries, composite
 
 from .context import valjean  # pylint: disable=unused-import
@@ -21,12 +22,13 @@ IDS = text(string.ascii_letters + string.digits + '-_', min_size=1)
 
 @composite
 def configs(draw, keys=IDS, vals=IDS, sec_names=IDS,
-            min_size=0, max_size=None):
+            min_size=0, max_size=5):
     # pylint: disable=too-many-arguments
     '''Composite Hypothesis strategy to generate Config objects.'''
     secs = dictionaries(keys, vals, min_size=min_size, max_size=max_size)
     as_dict = draw(dictionaries(sec_names, secs,
                                 min_size=min_size, max_size=max_size))
+    assume('path' not in as_dict)
     conf = Config(as_dict)
     return conf
 

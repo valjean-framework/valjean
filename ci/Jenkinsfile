@@ -39,7 +39,7 @@ pipeline {
     stage('Setup') {
       steps {
         cleanWs()
-        sh """mkdir -p ${REPORTS}"""
+        sh """ mkdir -p "${REPORTS}" """
         dir("${SRC}") {
           checkout scm
         }
@@ -93,7 +93,7 @@ pipeline {
                   source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
                 fi
                 source "${TOX_VENV}/bin/activate"
-                TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 valjean/ tests/ | tee "${REPORTS}/testing.out"
+                TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 -- valjean/ tests/ | tee "${REPORTS}/testing.out"
                 """
           }
         }

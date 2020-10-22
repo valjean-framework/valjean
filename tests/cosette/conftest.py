@@ -282,7 +282,7 @@ def cmake_echo(tmpdir_factory, subdir):
 
 # pylint: disable=too-many-arguments
 @composite
-def dep_dicts(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
+def dep_dicts(draw, elements=integers(0, 10), min_deps=0, max_deps=10,
               **kwargs):
     '''Composite Hypothesis strategy to generate acyclic dependency
     dictionaries.'''
@@ -306,7 +306,7 @@ class DoNothingTask(Task):
 
 
 @composite
-def dep_tasks(draw, names=text(min_size=1), min_deps=0, max_deps=None,
+def dep_tasks(draw, names=text(min_size=1), min_deps=0, max_deps=10,
               **kwargs):
     '''Composite Hypothesis strategy to generate a list of
     interdependent :class:`DoNothingTask` objects (no dependency cycles
@@ -332,7 +332,7 @@ def dep_tasks(draw, names=text(min_size=1), min_deps=0, max_deps=None,
 
 # pylint: disable=too-many-arguments
 @composite
-def depgraphs(draw, elements=integers(0, 10), min_deps=0, max_deps=None,
+def depgraphs(draw, elements=integers(0, 10), min_deps=0, max_deps=10,
               **kwargs):
     '''Composite Hypothesis strategy to generate acyclic DepGraph objects.'''
     dag = draw(dep_dicts(elements,
@@ -459,7 +459,7 @@ def delay_tasks(draw, min_duration=1e-15, max_duration=1e-5,
 
 
 @composite
-def failing_tasks(draw, min_size=1, max_size=20):
+def failing_tasks(draw, min_size=1, max_size=10):
     '''Composite Hypothesis strategy to generate a list of failing tasks.'''
     n_tasks = draw(integers(min_value=min_size, max_value=max_size))
     tasks = [FailingTask('FailingTask {}'.format(i)) for i in range(n_tasks)]

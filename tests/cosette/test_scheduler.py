@@ -89,8 +89,8 @@ def test_one_task_many_workers(graph, n_workers):
 #  tests for the scheduler's behaviour in the presence of failing tasks  #
 ##########################################################################
 
-@given(graph=graphs(failing_tasks()),
-       n_workers=integers(min_value=0, max_value=100))
+@given(graph=graphs(failing_tasks(max_size=10)),
+       n_workers=integers(min_value=1, max_value=10))
 @settings(max_examples=30)
 def test_failing_task(graph, n_workers,
                       quiet):  # pylint:disable=unused-argument
