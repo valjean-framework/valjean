@@ -73,8 +73,8 @@ def task_name(request):
 #  fixture for project generation  ##
 #####################################
 
-CMAKELISTS = r'''project(TestCodeTasks C)
-cmake_minimum_required(VERSION ''' + _CMAKE_VERSION + ''')
+CMAKELISTS = r'''cmake_minimum_required(VERSION ''' + _CMAKE_VERSION + ''')
+project(TestCodeTasks C)
 set(SOURCE_FILENAME "${PROJECT_BINARY_DIR}/test.c")
 file(WRITE "${SOURCE_FILENAME}" "int main(){return 0;}")
 add_executable(test_exe "${SOURCE_FILENAME}")

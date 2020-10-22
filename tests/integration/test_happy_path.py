@@ -149,6 +149,8 @@ def test_graph_on_file(dependencies, job_file, tmp_path):
     pydot.graph_from_dot_data(graph)
 
 
+@requires_git
+@requires_cmake
 def test_env(job_config, config_tmp, env_filename, job_file, capsys):
     '''Test the `env` command.'''
     run_valjean(job_config=job_config, config=config_tmp,
