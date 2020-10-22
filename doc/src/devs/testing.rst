@@ -84,10 +84,8 @@ If you want some examples within :mod:`valjean`, a good place to start is the
 ``tests.cosette.test_depgraph`` test module, which tests the invariants of the
 :class:`~valjean.cosette.depgraph.DepGraph` class.
 
-.. _doctest-tests:
-
-Testing example docstrings with :mod:`~sphinx.ext.doctest`
-----------------------------------------------------------
+Testing example docstrings with `pytest`_
+-----------------------------------------
 
 Sometimes the docstrings contain example code such as the following:
 
@@ -96,6 +94,4 @@ Sometimes the docstrings contain example code such as the following:
    >>> print(1+2)
    3
 
-These examples can be automatically tested with :mod:`~sphinx.ext.doctest`, a
-`sphinx` extension. `pytest`_ automatically runs all the doctest examples and
-checks their output.
+These examples can be automatically tested with `pytest`_.
