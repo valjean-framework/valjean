@@ -40,7 +40,7 @@ class ParserDebug(Parser):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
         return scan.Scanner(self.jdd, self.mesh_limit, self.end_flag)
 
-    def parse_from_number(self, batch_number):
+    def parse_from_number(self, batch_number, name=''):
         '''Parse from batch index or batch number.
 
         Per default the last batch is parsed (index = -1).
@@ -67,7 +67,7 @@ class ParserDebug(Parser):
             LOGGER.info('Remark: you are in parsing debug mode with an end '
                         'flag not containing "time", this is expected.')
         scan_vars = self.scan_res.global_variables(batch_number)
-        return ParseResult(pres, scan_vars)
+        return ParseResult(pres, scan_vars, name=name)
 
     def check_parsing(self, parsed_res):
         '''Check if parsing went to the end:

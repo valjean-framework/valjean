@@ -801,11 +801,12 @@ def test_no_normal_completion(datadir, caplog):
             in caplog.text)
     assert t4p.scan_res.normalend is False
     assert t4p.scan_res.partial is True
-    t4_res = t4p.parse_from_index(-1)
+    t4_res = t4p.parse_from_index(-1, name='bad end')
     assert t4_res.res['batch_data']['batch_number'] == 37
+    assert t4_res.res['batch_data']['name'] == 'bad end'
     t4rb = t4_res.to_browser()
     assert not t4rb.is_empty()
-    assert len(t4rb.globals) == 4
+    assert len(t4rb.globals) == 5
     assert len(t4rb) == 1
 
 

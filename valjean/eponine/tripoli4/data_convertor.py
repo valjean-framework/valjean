@@ -28,25 +28,37 @@ def bins_reduction(def_bins, def_array_shape, array_shape):
     return bins
 
 
-def special_array(array, score, bins):
+def special_array(array, score, bins, name='', what=''):
     '''Convert special arrays in :class:`~.dataset.Dataset`.
 
     These special cases are typically vov results or uncertainty spectrum
     associated to a perturbation result. No error is associated to the score in
     that case. Bins are given by the spectrum.
+
+    :param dict array: result
+    :param str score: key of the score to get
+    :param collections.OrderedDict bins: bins correspondig to required array
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
+    :rtype: Dataset
     '''
     the_array = array['array'][score]
     return Dataset(
-        the_array.copy(), np.full_like(the_array, np.nan), bins=bins)
+        the_array.copy(), np.full_like(the_array, np.nan), bins=bins,
+        name=name, what=what)
 
 
-def array_result(farray_res, res_type, array_type='array', score='score'):
+def array_result(farray_res, res_type, name='', what='', array_type='array',
+                 score='score'):
+    # pylint: disable=too-many-arguments
     '''Conversion of arrays in :class:`~.dataset.Dataset`.
 
     :param dict farray_res: results dictionary containing ``res_type`` key
     :param str res_type: result type, like ``'spectrum'``, ``'mesh'``
     :param str array_type: default=``'array'`` but it can be an integrated
         array for example, should be a key inside ``farray_res``
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :returns: :class:`~.dataset.Dataset`
     '''
     array_res = farray_res[res_type]
@@ -60,14 +72,15 @@ def array_result(farray_res, res_type, array_type='array', score='score'):
                                 array_res['array'].shape,
                                 array_res[array_type].shape))
     if score != 'score':
-        return special_array(array_res, score, bins)
+        return special_array(array_res, score, bins, name, what)
     return Dataset(
         array_res[array_type][score].copy(),
         array_res[array_type]['sigma'] * array_res[array_type][score] * 0.01,
-        bins=bins)
+        bins=bins, name=name, what=what)
 
 
-def integrated_result(result, res_type='integrated', score='score'):
+def integrated_result(result, res_type='integrated', name='', what='',
+                      score='score'):
     '''Conversion of generic score (or energy integrated result) in
     :class:`~valjean.eponine.dataset.Dataset`.
 
@@ -77,12 +90,14 @@ def integrated_result(result, res_type='integrated', score='score'):
 
     :param dict result: results dictionary containing ``res_type`` key
     :param str res_type: should be 'integrated'
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     LOGGER.debug("In integrated_result")
     intres = result[res_type] if res_type in result else result
     if isinstance(intres, dict) and 'not_converged' in intres:
-        return nan_result()
+        return nan_result(name=name, what=what)
     other_res = [x for x in result
                  if x != res_type and ('spectrum' in x or 'mesh' in x)]
     # if other_res:
@@ -101,106 +116,124 @@ def integrated_result(result, res_type='integrated', score='score'):
                               intres.shape)
         return Dataset(intres[score],
                        intres['sigma'] * intres[score] * 0.01,
-                       bins=bins)
+                       bins=bins, name=name, what=what)
     ishape = tuple([1]*result[other_res[0]]['array'].ndim)
     bins = bins_reduction(result[other_res[0]]['bins'],
                           result[other_res[0]]['array'].shape,
                           ishape)
     return Dataset(np.full(ishape, intres[score]),
                    np.full(ishape, intres['sigma']*intres[score]*0.01),
-                   bins=bins)
+                   bins=bins, name=name, what=what)
 
 
-def generic_score(result, res_type='generic'):
+def generic_score(result, res_type='generic', name='', what=''):
     '''Conversion of generic score (or energy integrated result) in
     :class:`~valjean.eponine.dataset.Dataset`.
 
     :param dict result: results dictionary containing ``res_type`` key
     :param str res_type: should be 'generic'
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     LOGGER.debug("In generic_score")
     intres = result[res_type]
     if isinstance(intres, dict) and 'not_converged' in intres:
-        return nan_result()
+        return nan_result(name=name, what=what)
     if set(('sigma', 'sigma%')).issubset(intres):
         # used for mean weight leakage for example
-        return Dataset(intres['score'].copy(), intres['sigma'].copy())
+        return Dataset(intres['score'].copy(), intres['sigma'].copy(),
+                       name=name, what=what)
     return Dataset(intres['score'].copy(),
-                   intres['sigma'] * intres['score'] * 0.01)
+                   intres['sigma'] * intres['score'] * 0.01,
+                   name=name, what=what)
 
 
-def keff_matrix(result, res_type, *, estimator):
+def keff_matrix(result, res_type, name='', what='', *, estimator):
     '''Conversion of keff in :class:`~.dataset.Dataset` for a given
     estimator.
 
     :param dict result: results dictionary containing ``res_type`` key
     :param str res_type: should be ``'keff_per_estimator'``
     :param str estimator: estimator among ``['KSTEP', 'KTRACK', 'KCOLL']``
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     res = result[res_type]
     id_estim = res['estimators'].index(estimator)
     return Dataset(res['keff_matrix'][id_estim][id_estim],
                    (res['sigma_matrix'][id_estim][id_estim]
-                    * res['keff_matrix'][id_estim][id_estim] * 0.01))
+                    * res['keff_matrix'][id_estim][id_estim] * 0.01),
+                   name=name, what=what)
 
 
-def keff_combination(result, res_type):
+def keff_combination(result, res_type, name='', what=''):
     '''Conversion of keff combination in :class:`~.dataset.Dataset`.
 
     :param dict result: results dictionary containing ``res_type`` key
     :param str res_type: should be ``'keff_combination'``
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     kcomb = result[res_type]
     return Dataset(kcomb['keff'].copy(),
-                   kcomb['sigma'] * kcomb['keff'] * 0.01)
+                   kcomb['sigma'] * kcomb['keff'] * 0.01,
+                   name=name, what=what)
 
 
-def keff_auto(result, res_type):
+def keff_auto(result, res_type, name='', what=''):
     '''Conversion of "automatic" keff estimation in
     :class:`~.dataset.Dataset`.
 
     :dict result: results dictionary containing ``res_type`` key
     :param str res_type: should be ``'keff_auto'``
-    :param str estimator: estimator name (to construct the dataset name)
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     akeff = result[res_type]
-    return Dataset(akeff['keff'].copy(), akeff['sigma'].copy())
+    return Dataset(akeff['keff'].copy(), akeff['sigma'].copy(),
+                   name=name, what=what)
 
 
-def keff(result, res_type, *, correlation=False):
+def keff(result, res_type, name='', what='', correlation=False):
     '''Conversion of "automatic" keff estimation in
     :class:`~.dataset.Dataset`.
 
     :dict result: results dictionary containing ``res_type`` key
     :param str res_type: should be ``'keff_auto'``
-    :param str estimator: estimator name (to construct the dataset name)
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
+    :param bool correlation: if correlations are required
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     akeff = result[res_type]
     if correlation:
-        return value_wo_error(akeff, 'correlation')
+        return value_wo_error(akeff, 'correlation', name=name, what=what)
     return Dataset(akeff['keff'].copy(),
-                   akeff['sigma%'] * akeff['keff'] * 0.01)
+                   akeff['sigma%'] * akeff['keff'] * 0.01,
+                   name=name, what=what)
 
 
-def complex_values_wo_error(result, res_type):
+def complex_values_wo_error(result, res_type, name='', what=''):
     '''Conversion of a result given with complex number without errors.
 
     This is for example the case for kij eigen values.
 
     :dict result: results dictionary containing ``res_type`` key
     :param str res_type: data type, for example: ``'kij_eigenval'``
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     cplxres = result[res_type]
-    return Dataset(cplxres, np.full(cplxres.shape, np.nan))
+    return Dataset(cplxres, np.full(cplxres.shape, np.nan),
+                   name=name, what=what)
 
 
-def matrix_wo_error(result, res_type):
+def matrix_wo_error(result, res_type, name='', what=''):
     '''Conversion of a matrix in a :class:`~.dataset.Dataset` without
     error.
 
@@ -209,13 +242,16 @@ def matrix_wo_error(result, res_type):
     :dict result: results dictionary containing ``res_type`` key
     :param str res_type: data type, for example: ``'kij_eigenval'`` or
         ``'kij_matrix'``
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     matrixres = result[res_type]
-    return Dataset(matrixres, np.full_like(matrixres, np.nan))
+    return Dataset(matrixres, np.full_like(matrixres, np.nan),
+                   name=name, what=what)
 
 
-def value_wo_error(result, res_type):
+def value_wo_error(result, res_type, name='', what=''):
     '''Conversion of a value provided without error in
     :class:`~.dataset.Dataset`.
 
@@ -224,13 +260,15 @@ def value_wo_error(result, res_type):
 
     :dict result: results dictionary containing ``res_type`` key
     :param str res_type: key in result allowing access to the desired quantity
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     LOGGER.debug("value without error %s", result[res_type])
-    return Dataset(result[res_type], np.float_(np.nan))
+    return Dataset(result[res_type], np.float_(np.nan), name=name, what=what)
 
 
-def nan_result():
+def nan_result(name='', what=''):
     '''Returns a NaN :class:`~.dataset.Dataset` (value and error).
 
     This :class:`~.dataset.Dataset` can be returned for example in
@@ -238,11 +276,13 @@ def nan_result():
 
     Values are scalar per default, not arrays.
 
+    :param str name: name of dataset
+    :param str what: what attribute of dataset
     :rtype: :class:`~.dataset.Dataset`
     :returns: dataset containing NaN as value and error
     '''
     LOGGER.warning('Result not converged, return dataset with NaN value')
-    return Dataset(np.float_(np.nan), np.float_(np.nan))
+    return Dataset(np.float_(np.nan), np.float_(np.nan), name=name, what=what)
 
 
 CONVERT_IN_DATASET = {
@@ -277,7 +317,7 @@ CONVERT_IN_DATASET = {
 }
 
 
-def convert_data(data, data_type, **kwargs):
+def convert_data(data, data_type, name='', what='', **kwargs):
     '''Test for data conversion using dict or default.
 
     An exception for integrated is for the moment needed as they can come
@@ -291,13 +331,13 @@ def convert_data(data, data_type, **kwargs):
     '''
     if data_type not in data:
         if 'not_converged' in data:
-            return nan_result()
+            return nan_result(name, what)
         LOGGER.warning("%s not found in data", data_type)
         return None
     if isinstance(data[data_type], str):
         if 'not_converged' in data[data_type] or data_type == 'not_converged':
-            return nan_result()
+            return nan_result(name, what)
         LOGGER.warning("Dataset cannot be built from a string.")
-        return nan_result()
+        return nan_result(name, what)
     return CONVERT_IN_DATASET.get(data_type, value_wo_error)(
-        data, data_type, **kwargs)
+        data, data_type, name, what, **kwargs)

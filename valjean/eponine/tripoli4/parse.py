@@ -151,7 +151,7 @@ class Parser:
             else:
                 raise ParserException(msg)
 
-    def parse_from_number(self, batch_number):
+    def parse_from_number(self, batch_number, name=''):
         '''Parse from batch index or batch number.
 
         :param int batch_number: number of the batch to parse
@@ -164,9 +164,9 @@ class Parser:
         LOGGER.info("Successful parsing in %f s", time.time()-start_parse)
         self._time_consistency(pres, batch_number)
         scan_vars = self.scan_res.global_variables(batch_number)
-        return ParseResult(pres, scan_vars)
+        return ParseResult(pres, scan_vars, name)
 
-    def parse_from_index(self, batch_index=-1):
+    def parse_from_index(self, batch_index=-1, name=''):
         '''Parse from batch index or batch number.
 
         Per default the last batch is parsed (index = -1).
@@ -175,7 +175,7 @@ class Parser:
         :rtype: ParseResult
         '''
         batch_number = self.scan_res.batch_number(batch_index)
-        return self.parse_from_number(batch_number)
+        return self.parse_from_number(batch_number, name)
 
     def print_stats(self):
         '''Print Tripoli-4 statistics (warnings and errors).'''
@@ -228,17 +228,19 @@ class ParseResult:
         method :meth:`to_browser`.
     '''
 
-    def __init__(self, parse_res, scan_vars):
+    def __init__(self, parse_res, scan_vars, name=''):
         '''Initialize the :class:`ParseResult` from:
 
         :param dict parse_res: result from T4 parsing (for 1 batch)
         :param dict scan_vars: variables coming from :class:`.Scanner` global
             to job or specific to the batch.
+        :param str name: name to give to the parse result (will be propagated
+            to data)
 
         Fill the `res` object.
         '''
         self._check_batch_number(parse_res, scan_vars)
-        self.res = self._build_unique_dict(parse_res, scan_vars)
+        self.res = self._build_unique_dict(parse_res, scan_vars, name)
 
     @staticmethod
     def _check_batch_number(pres, svars):
@@ -253,8 +255,8 @@ class ParseResult:
             LOGGER.warning('Edition batch number different from batch number')
 
     @staticmethod
-    def _build_unique_dict(pres, svars):
-        '''Build a unique dictionary from parsed result and globl variables
+    def _build_unique_dict(pres, svars, name):
+        '''Build a unique dictionary from parsed result and global variables
         from Scanner.
 
         Variables specific to batch are added to the already existing
@@ -263,6 +265,8 @@ class ParseResult:
 
         :param dict pres: parsed result
         :param dict svars: global variables from Scanner
+        :param str name: name of the parsed result (be considered as
+            ``'batch_data'``)
         :returns: updated parsed result
         '''
         gvars = svars.copy()
@@ -270,6 +274,7 @@ class ParseResult:
                       'exploitation_time'}
         for key in bdata_keys & set(gvars.keys()):
             pres['batch_data'].update({key: gvars.pop(key)})
+        pres['batch_data'].update({'name': name})
         pres['run_data'] = gvars
         return pres
 
