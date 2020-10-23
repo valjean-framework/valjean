@@ -92,8 +92,7 @@ def test_one_task_many_workers(graph, n_workers):
 @given(graph=graphs(failing_tasks(max_size=10)),
        n_workers=integers(min_value=1, max_value=10))
 @settings(max_examples=30)
-def test_failing_task(graph, n_workers,
-                      quiet):  # pylint:disable=unused-argument
+def test_failing_task(graph, n_workers):
     '''Check that a failing task is marked as failed in the environment.'''
     env = run(hard_graph=graph, n_workers=n_workers)
     for task in graph.nodes():
@@ -105,8 +104,7 @@ def test_failing_task(graph, n_workers,
                     dep_frac=0.5),
        n_workers=integers(min_value=0, max_value=10),
        sampler=data())
-def test_failing_blocks(graph, n_workers, sampler,
-                        quiet):  # pylint:disable=unused-argument
+def test_failing_blocks(graph, n_workers, sampler):
     '''Check that tasks depending on a failing task are not executed.'''
 
     # add a failing task to the dependency of one of the tasks
@@ -152,8 +150,7 @@ def test_failing_blocks(graph, n_workers, sampler,
                     dep_frac=0.5),
        n_workers=integers(min_value=0, max_value=10),
        sampler=data())
-def test_failing_soft_not_blocks(graph, n_workers, sampler,
-                                 quiet):  # pylint:disable=unused-argument
+def test_failing_soft_not_blocks(graph, n_workers, sampler):
     '''Check that tasks having a soft dependenciy on a failing task wait for
     the failing task, but are executed anyway.'''
 

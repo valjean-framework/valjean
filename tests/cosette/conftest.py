@@ -1,5 +1,4 @@
 '''Fixtures for the :mod:`~.valjean.cosette` tests.'''
-import logging
 import locale
 import re
 from subprocess import check_call, check_output, CalledProcessError
@@ -464,11 +463,3 @@ def failing_tasks(draw, min_size=1, max_size=10):
     n_tasks = draw(integers(min_value=min_size, max_value=max_size))
     tasks = [FailingTask('FailingTask {}'.format(i)) for i in range(n_tasks)]
     return tasks
-
-
-@pytest.fixture
-def quiet(caplog):
-    '''This fixture will temporarily set the level of the ``valjean`` logger to
-    CRITICAL, in order to silence any warning/error that may be produced.'''
-    with caplog.at_level(logging.CRITICAL, logger='valjean'):
-        yield
