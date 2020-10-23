@@ -133,9 +133,8 @@ class Test(ABC):
         yield self.__class__.__name__.encode('utf-8')
         yield self.name.encode('utf-8')
         yield self.description.encode('utf-8')
-        for key, value in self.labels.items():
-            yield key.encode('utf-8')
-            yield value.encode('utf-8')
+        # labels intentionally excluded; this makes it possible to put any type
+        # of items in the label values, and not just strings
 
     def fingerprint(self):
         '''Compute a fingerprint for `self`. The fingerprint must be a good
