@@ -12,9 +12,12 @@ def pytest_addoption(parser):
     '''Add command-line options to `pytest`.'''
     parser.addoption("--runslow", action="store_true",
                      default=False, help="run slow tests")
-    parser.addoption("--parsing-config-file", action="append", default=[],
+    parser.addoption("--parsing-config-file-t4", action="append", default=[],
                      help="list of python configuration files to test "
-                          "intensively the parsing")
+                          "intensively Tripoli4 parsing")
+    parser.addoption("--parsing-config-file-ap3", action="append", default=[],
+                     help="list of python configuration files to test "
+                          "intensively Apollo3 reader")
     parser.addoption("--parsing-exclude", action="store",
                      default=None, help="list of patterns to exclude in paths")
     parser.addoption("--parsing-match", action="store",

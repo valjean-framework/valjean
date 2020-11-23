@@ -15,6 +15,7 @@ from collections import OrderedDict
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.eponine.dataset import Dataset
 from valjean.dyn_import import dyn_import
+from valjean import LOGGER
 
 
 def finite(min_value=None, max_value=None, width=64):
@@ -258,12 +259,23 @@ def multiple_datasets(draw, size, *, elements=None):
 
 
 @pytest.fixture
-def parsing_config_files(request):
-    '''Fixture to read configuration files to test parsing coverage.
+def parsing_config_file_t4(request):
+    '''Fixture to read configuration files to test parsing coverage for
+    Tripoli4.
 
     This is for example used during nightly tests.
     '''
-    return request.config.getoption('--parsing-config-file')
+    return request.config.getoption('--parsing-config-file-t4')
+
+
+@pytest.fixture
+def parsing_config_file_ap3(request):
+    '''Fixture to read configuration files to test parsing coverage for
+    Apollo3.
+
+    This is for example used during nightly tests.
+    '''
+    return request.config.getoption('--parsing-config-file-ap3')
 
 
 @pytest.fixture
@@ -285,24 +297,36 @@ def parsing_match(request):
     return request.config.getoption('--parsing-match')
 
 
+def skip_parsing_files(vv_folder, parsing_exclude, parsing_match):
+    '''Skip excluded files or not matching ones for parsing tests.'''
+    if parsing_exclude:
+        if any(pat in vv_folder for pat in parsing_exclude.split(',')):
+            pytest.skip(str(parsing_exclude)+" excluded")
+    if parsing_match:
+        if not any(pat in vv_folder for pat in parsing_match.split(',')):
+            pytest.skip("No matching with '"+str(parsing_match)+"' found")
+
+
 def pytest_generate_tests(metafunc):
-    '''Handle the ``--parsing-config-file`` option in order to make one test
+    '''Handle the ``--parsing-config-file-*`` option in order to make one test
     per folder required for comparison simplicity.
     '''
-    if metafunc.function.__name__ in ("test_listing_parsing",
-                                      "test_apollo3_hdf"):
-        confiles = metafunc.config.getoption("--parsing-config-file")
-        list_params = []
-        if len(set(os.path.basename(x) for x in confiles)) != len(confiles):
-            from valjean import LOGGER
-            LOGGER.error("Several parsing configuration files share the same "
-                         "name, only one among them will be read.")
-        for cfile in confiles:
-            try:
-                config = dyn_import(cfile)
-            except FileNotFoundError:
-                print('Cannot find config file %s', parsing_config_files)
-                sys.exit(1)
-            list_params.extend((x, config) for x in config.ALL_FOLDERS)
-        ids = list(config.__name__ + '/' + x for x, config in list_params)
-        metafunc.parametrize('vv_params', list_params, ids=ids)
+    slow_parsing_test = {"test_listing_parsing": "--parsing-config-file-t4",
+                         "test_apollo3_hdf": "--parsing-config-file-ap3"}
+    parsing_conf = slow_parsing_test.get(metafunc.function.__name__)
+    if parsing_conf is None:
+        return
+    confiles = metafunc.config.getoption(parsing_conf)
+    list_params = []
+    if len(set(os.path.basename(x) for x in confiles)) != len(confiles):
+        LOGGER.error("Several parsing configuration files share the same "
+                     "name, only one among them will be read.")
+    for cfile in confiles:
+        try:
+            config = dyn_import(cfile)
+        except ModuleNotFoundError:
+            LOGGER.error('Cannot find config file %s', cfile)
+            sys.exit(1)
+        list_params.extend((x, config) for x in config.ALL_FOLDERS)
+    ids = list(config.__name__ + '/' + x for x, config in list_params)
+    metafunc.parametrize('vv_params', list_params, ids=ids)

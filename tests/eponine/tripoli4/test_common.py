@@ -11,7 +11,7 @@ from hypothesis.strategies import (integers, lists, composite, tuples, text,
                                    floats, nothing, booleans, just, recursive)
 from hypothesis.extra.numpy import arrays
 
-from ..context import valjean  # pylint: disable=unused-import
+from ...context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 # pylint: disable=no-value-for-parameter

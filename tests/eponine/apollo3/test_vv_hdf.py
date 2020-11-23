@@ -1,15 +1,15 @@
 '''Test parsing of all listings contained in the selected folders from
-``--parsing-config-file`` option.
+``--parsing-config-file-ap3`` option.
 
 Exclusion and matching are possible via ``--parsing-exclude`` and
 ``--parsing-match`` options.
 
 
 Expected variables in the configuration file are:
-  * PATH: path to the folder containing the screened folder structure
-  * ALL_FOLDERS: folders structures, typically, in Apollo3 VV case, the case
-    name as the hdf file with name ``'case_name.hdf'`` is in folder
-    ``'case_name'``.
+  * PATH: path to the folder containing the scanned folder structure
+  * ALL_FOLDERS: folders structures. In Apollo3 VV case, in most of the cases
+    the folder name is the ``basename`` of the hdf file, i.e. ``'case_name'``
+    if ``'case_name.hdf'``.
   * END_FILES: common file extension (like ``hdf``)
   * EXCLUDED_STRINGS: strings excluded from case names (to avoid too long ones
     for example)
@@ -19,7 +19,8 @@ from glob import glob
 import logging
 import pytest
 from valjean.eponine.apollo3.hdf5_reader import Reader
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from ...context import valjean  # noqa: F401, pylint: disable=unused-import
+from ..conftest import skip_parsing_files
 
 
 def loop_on_files(filelist):
@@ -60,12 +61,7 @@ def test_apollo3_hdf(caplog, vv_params, parsing_exclude, parsing_match):
     '''
     caplog.set_level(logging.WARNING, logger='valjean')
     vv_folder, vv_file = vv_params
-    if parsing_exclude:
-        if any(pat in vv_folder for pat in parsing_exclude.split(',')):
-            pytest.skip(str(parsing_exclude)+" excluded")
-    if parsing_match:
-        if not any(pat in vv_folder for pat in parsing_match.split(',')):
-            pytest.skip("No matching with '"+str(parsing_match)+"' found")
+    skip_parsing_files(vv_folder, parsing_exclude, parsing_match)
     folder = os.path.join(vv_file.PATH, vv_folder)
     all_files = sorted(glob(os.path.join(folder, "*."+vv_file.END_FILES)))
     excluded_patterns = vv_file.EXCLUDED_STRINGS

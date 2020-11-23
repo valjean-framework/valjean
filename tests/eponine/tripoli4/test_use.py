@@ -1,9 +1,9 @@
 '''Tests for the :mod:`~.eponine.tripoli4.use` module.'''
 
-from ..context import valjean  # pylint: disable=unused-import
+from ...context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
-from ..conftest import foreach_data
+from ...conftest import foreach_data
 from valjean.cosette.task import TaskStatus
 from valjean.cosette.pythontask import PythonTask
 from valjean.eponine.tripoli4.use import make_parser, parse_batch_index

@@ -1,8 +1,8 @@
-'''Tests for the :mod:`~.readhdf5` module: read Apollo3 HDF outputs and build
-a ResponseBook from them.
+'''Tests for the :mod:`~.hdf5_picker` module: read Apollo3 HDF outputs and
+build Datasets from them.
 '''
 
-from ..context import valjean  # pylint: disable=unused-import
+from ...context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 import numpy as np

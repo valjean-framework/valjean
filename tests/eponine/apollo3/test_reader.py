@@ -2,7 +2,7 @@
 build a Browser from them.
 '''
 import numpy as np
-from ..context import valjean  # pylint: disable=unused-import
+from ...context import valjean  # pylint: disable=unused-import
 
 # pylint: disable=wrong-import-order
 from valjean.eponine.apollo3.hdf5_reader import Reader, hdf_to_browser

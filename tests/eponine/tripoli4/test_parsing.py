@@ -1,5 +1,5 @@
 '''Test parsing of all listings contained in the selected folders from
-``--parsing-config-file`` option.
+``--parsing-config-file-t4`` option.
 
 Exclusion and matching are possible via ``--parsing-exclude`` and
 ``--parsing-match`` options.
@@ -11,7 +11,7 @@ to access the results via the
 Expected variables in the configuration file are:
   * PATH: path to the folder containing the screened folder structure
   * ALL_FOLDERS: folders structures (like ``MONO/qualtrip_main/tripoli44/``)
-  * OUTPUTS: final folsers (like ``output/ceav5/``)
+  * OUTPUTS: final folders (like ``output/ceav5/``)
   * END_FILES: common file extension (like ``res.ceav5``)
   * MONO: path part to idenity listings run in mono-processor
   * PARA: path part to idenity listings run in parallel
@@ -26,14 +26,14 @@ Expected variables in the configuration file are:
                                   number of jobs that failed,
                                   number of files excluded from strings)
 '''
-
 import os
 from glob import glob
 import logging
 import pytest
 from valjean.eponine.tripoli4.parse import Parser, ParserException
 import valjean.eponine.tripoli4.data_convertor as dcv
-from ..context import valjean  # noqa: F401, pylint: disable=unused-import
+from ...context import valjean  # noqa: F401, pylint: disable=unused-import
+from ..conftest import skip_parsing_files
 
 
 def result_test(t4pres):
@@ -220,12 +220,7 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     '''
     caplog.set_level(logging.WARNING, logger='valjean')
     vv_folder, vv_file = vv_params
-    if parsing_exclude:
-        if any(pat in vv_folder for pat in parsing_exclude.split(',')):
-            pytest.skip(str(parsing_exclude)+" excluded")
-    if parsing_match:
-        if not any(pat in vv_folder for pat in parsing_match.split(',')):
-            pytest.skip("No matching with '"+str(parsing_match)+"' found")
+    skip_parsing_files(vv_folder, parsing_exclude, parsing_match)
     folder = os.path.join(vv_file.PATH, vv_folder, vv_file.OUTPUTS)
     all_files = sorted(glob(os.path.join(folder, "*."+vv_file.END_FILES)))
     excluded_patterns = (
