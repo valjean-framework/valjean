@@ -13,12 +13,18 @@ lists:
     >>> del parrot[1]
     >>> print(parrot)
     ['dead', 'bereft of life', 'rests in peace']
+    >>> parrot == ['dead', 'bereft of life', 'rests in peace']
+    True
+    >>> parrot == RList(['a stiff'])
+    False
 
 Additionally, you can quickly (in `O(1)` time on average) look up the index of
-an item:
+an item or check if an item is contained in the list:
 
-    >>> parrot.index(rests)
+    >>> parrot.index(rests)  # this call is O(1)
     2
+    >>> rests in parrot  # and so is this
+    True
 
 This operation takes `O(n)` average time in normal lists.
 
@@ -26,19 +32,24 @@ The most important differences with respect to the semantics of traditional
 Python lists are:
 
   1. Slicing operations are not supported.
-  2. The notion of containment is :func:`id()`-based, and not equality-based.
-     What this means is that lists check for containment with the ``==``
-     operator, while :class:`RList` compares object IDs.  Objects that compare
-     equal (with the standard ``==`` operator) may be used interchangeably in a
-     list, but not in a :class:`RList`.  For example:
+  2. The notion of "containment" is user-defined. By default, a value belongs
+     to an :class:`RList` if it has the same `key` as one of the list elements.
+     The `key`, by default, is the value :func:`id`.  In other words, normal
+     lists compare items with the ``==`` operator, while :class:`RList`
+     compares object IDs by default.  Objects that compare equal (with the
+     standard ``==`` operator) may be used interchangeably in a list, but not
+     in a :class:`RList`.  For example, here is a simple class:
 
         >>> class A:
+        ...    def __init__(self, x):
+        ...        self.x = x
         ...    def __eq__(self, other):
         ...        return self.x == other.x
-        >>> a1 = A()
-        >>> a1.x = 2
-        >>> a2 = A()
-        >>> a2.x = 2
+
+     and here is how it behaves in a normal list:
+
+        >>> a1 = A(42)
+        >>> a2 = A(42)
         >>> a1 == a2
         True
         >>> a1 in [a2]
@@ -46,7 +57,7 @@ Python lists are:
 
      The objects ``a1`` and ``a2`` compare equal, so to the eyes of the list
      ``[a2]`` they are "the same". :class:`RList`, on the other hand, does not
-     play along with this charade:
+     play along with this charade by default:
 
         >>> a1 is a2
         False
@@ -74,6 +85,27 @@ Python lists are:
 
      This weird behaviour is actually a well-documented quirk of the CPython
      implementation.
+
+     If you want, you can define your own notion of `key` for your objects by
+     passing a suitable function to the ``key`` argument of the :class:`RList`
+     constructor; the only constraint is that the value returned by `key` must
+     be hashable. For example, if you have a list of strings, you can use the
+     string itself as a key as follows:
+
+        >>> parrot_by_value = RList(['Norwegian blue', 'plumage', 'pining'],
+        ...                         key=lambda x: x)
+        >>> 'plumage' in parrot_by_value
+        True
+        >>> 'bereft of life' in parrot_by_value
+        False
+
+     You can also use more sophisticated `key` functions:
+
+        >>> a_rlist = RList([A(0), A(1), A(2)], key=lambda a: a.x)
+        >>> A(2) in a_rlist
+        True
+        >>> A(5) in a_rlist
+        False
 '''
 
 from collections import defaultdict
@@ -86,9 +118,10 @@ class RList(MutableSequence):
     :param args: An iterable containing some elements.
     '''
 
-    def __init__(self, args=None):
+    def __init__(self, args=None, *, key=id):
         self._seq = list()
         self._index = defaultdict(list)
+        self._key = key
         if args is not None:
             for element in args:
                 self.append(element)
@@ -99,13 +132,13 @@ class RList(MutableSequence):
     def __setitem__(self, index, value):
         if index < 0:
             index += len(self)
-        old_id = id(self._seq[index])
+        old_id = self._key(self._seq[index])
         indices = self._index[old_id]
         indices.remove(index)
         if not indices:
             del self._index[old_id]
         self._seq[index] = value
-        self._index[id(value)].append(index)
+        self._index[self._key(value)].append(index)
 
     def __delitem__(self, index):
         if index < 0:
@@ -133,6 +166,16 @@ class RList(MutableSequence):
     def __str__(self):
         return self._seq.__str__()
 
+    def __eq__(self, other):
+        if isinstance(other, list):
+            return self._seq == other
+        if isinstance(other, RList):
+            return self._seq == other._seq
+        raise TypeError('RList can only be compared to lists or RLists')
+
+    def __ne__(self, other):
+        return not self == other
+
     def insert(self, index, value):
         '''Insert an element at a given index.'''
         n_elems = len(self)
@@ -150,7 +193,7 @@ class RList(MutableSequence):
             new_indices = [i if i < index else i+1 for i in indices]
             self._index[obj_id] = new_indices
         self._seq.insert(index, value)
-        self._index[id(value)].append(index)
+        self._index[self._key(value)].append(index)
 
     def index(self, value, start=0, stop=None):
         '''Return the index of the given value, if present.
@@ -162,7 +205,7 @@ class RList(MutableSequence):
         :returns: The index of (the first occurrence of) `value` in the list.
                   The returned value `i` always satisfies `start <= i < stop`.
         '''
-        indices = self._index.get(id(value), None)
+        indices = self._index.get(self._key(value), None)
         if indices is None:
             raise ValueError('{} is not in list'.format(value))
         found = next((ind for ind in indices
@@ -179,9 +222,9 @@ class RList(MutableSequence):
         :raises KeyError: if the element is not present in the container.
         :returns: All the list indices where `value` occurs.
         '''
-        i = self._index.get(id(value), None)
+        i = self._index.get(self._key(value), None)
         if i is None:
-            raise KeyError(id(value))
+            raise KeyError(self._key(value))
         return i
 
     def get_index(self, value, default):
@@ -192,13 +235,13 @@ class RList(MutableSequence):
         :param default: The value to be returned if `value` is not present in
                         the container.
         '''
-        ind = self._index.get(id(value), None)
+        ind = self._index.get(self._key(value), None)
         if ind is None:
             return default
         return ind[0]
 
     def __contains__(self, value):
-        return id(value) in self._index
+        return self._key(value) in self._index
 
     def swap(self, i, j):
         '''Swap two elements of the list.
