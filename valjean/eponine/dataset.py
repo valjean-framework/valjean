@@ -673,6 +673,9 @@ class Dataset:
         if not isinstance(value, (np.ndarray, np.generic)):
             raise TypeError("value does not have the expected type "
                             "(numpy.ndarray or numpy.generic = scalar)")
+        if not isinstance(error, (np.ndarray, np.generic)):
+            raise TypeError("error does not have the expected type "
+                            "(numpy.ndarray or numpy.generic = scalar)")
         LOGGER.debug("Type of value: %s", type(value))
         LOGGER.debug("Value charac: ndim = %s, shape = %s, size = %s",
                      value.ndim, value.shape, value.size)
