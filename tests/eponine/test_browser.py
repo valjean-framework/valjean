@@ -14,6 +14,7 @@ from hypothesis.strategies import (integers, lists, composite, text, booleans,
 from valjean.cosette.env import Env
 from valjean.eponine.browser import Index, Browser
 from ..context import valjean  # pylint: disable=unused-import
+from ..conftest import CaptureLog
 
 
 @composite
@@ -143,7 +144,7 @@ def fixed_metadata_items(draw, choices):
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
 @given(sampler=data())
-def test_selection(sampler, caplog):
+def test_selection(sampler):
     '''Test the selection from Browser.
 
     For easier comparison the metadata list of dict is also retrived.
@@ -170,12 +171,12 @@ def test_selection(sampler, caplog):
     browser = Browser(fmdr)
     for key, lval in choices.items():
         for val in lval:
-            caplog.clear()
-            tmpl = [x for x in mdd if x[key] == val]
-            sbr = browser.select_by(**{key: val})
-            assert len(tmpl) == len(sbr)
-            if not tmpl:
-                assert 'not a valid' in caplog.text
+            with CaptureLog(valjean.LOGGER) as caplog:
+                tmpl = [x for x in mdd if x[key] == val]
+                sbr = browser.select_by(**{key: val})
+                assert len(tmpl) == len(sbr)
+                if not tmpl:
+                    assert 'not a valid' in caplog
     # all results metadata are supposed to contain 'drink', 'ingredient' and
     # 'menu'
     assert len(browser.select_by(include=('drink', 'ingredient'))) == len(fmdr)

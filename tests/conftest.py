@@ -2,6 +2,7 @@
 '''Fixtures for the :mod:`~.valjean` tests.'''
 
 import string
+import logging
 
 import py
 import pytest
@@ -104,3 +105,55 @@ def foreach_data(*args, **kwargs):
         ids = [str(path.basename) for path in datafiles]
         return pytest.mark.parametrize(fix_name, datafiles, ids=ids)(wrapped)
     return _decorator
+
+
+class CaptureLogHandler(logging.NullHandler):
+    '''A logger handler that keeps track of all the logging records it has
+    seen. Useful for testing.'''
+
+    def __init__(self):
+        super().__init__()
+        self.records = []
+
+    def handle(self, record):
+        '''Handle the given record.'''
+        self.records.append(record)
+        super().handle(record)
+
+    def __contains__(self, string):
+        '''Returns `True` if the given string appears in the stored records.'''
+        return any(string in record.message for record in self.records)
+
+
+class CaptureLog:
+    '''A context manager that captures log messages directed to a logger and
+    exposes them so you can analyse them.
+
+    It works by temporarily installing a special additional handler
+    (:class:`CaptureLogHandler`) in the logger and returning the handler itself
+    in the `as` clause. You can use the `in` operator to look for messages:
+
+    >>> import logging
+    >>> logger = logging.getLogger('my_logger')
+    >>> with CaptureLog(logger) as log_messages:
+    ...     logger.warning('some log message')
+    >>> 'some log message' in log_messages
+    True
+
+    You can also search the list of :class:`logging.LogRecord` objects:
+    >>> log_messages.records
+    [<LogRecord: my_logger, ... <doctest tests.conftest.CaptureLog[2]>, 2, \
+"some log message">]
+    '''
+    def __init__(self, logger):
+        self.logger = logger
+        self.caplog_handler = None
+
+    def __enter__(self):
+        self.caplog_handler = CaptureLogHandler()
+        self.logger.addHandler(self.caplog_handler)
+        return self.caplog_handler
+
+    def __exit__(self, _exc_type, _exc_value, _traceback):
+        self.logger.removeHandler(self.caplog_handler)
+        self.caplog_handler = None
