@@ -85,6 +85,7 @@ def check_gauss_e_spectrum(resp):
     '''Check gauss spectrum: usual spectrum in energy with default integrated
     results.
     '''
+    assert resp['score_name'] == 'courant_E'
     bds = dcv.convert_data(resp['results'], data_type='spectrum')
     assert bds.shape == (1, 1, 1, 4, 1, 1, 1)
     bdsi = dcv.convert_data(resp['results'], data_type='integrated')
@@ -100,6 +101,7 @@ def check_gauss_et_spectrum(resp):
     '''Check gauss spectrum: spectrum in time and energy. Integrated results
     are given by time bins.
     '''
+    assert resp['score_name'] == 'courant_Et'
     bds = dcv.convert_data(resp['results'], data_type='spectrum')
     assert bds.shape == (1, 1, 1, 4, 4, 1, 1)
     bdsi = dcv.convert_data(resp['results'], data_type='spectrum',
@@ -117,6 +119,7 @@ def check_gauss_etmuphi_spectrum(resp):
     '''Check gauss spectrum: spectrum in time, energy, mu and phi. No
     integrated results are available.
     '''
+    assert resp['score_name'] == 'courant_Etmuphi'
     bds = dcv.convert_data(resp['results'], data_type='spectrum')
     assert bds.shape == (1, 1, 1, 4, 4, 4, 2)
     assert list(bds.bins.keys()) == ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
@@ -136,7 +139,7 @@ def test_gauss_spectrum(datadir):
     '''Test Tripoli-4 listing with spectrum in output depending on time, µ and
     φ angles. Also control number of batchs.
     '''
-    t4p = Parser(str(datadir/"gauss_time_mu_phi_E.d.res.ceav5"))
+    t4p = Parser(str(datadir/"gauss_E_time_mu_phi.res.ceav5"))
     assert t4p
     assert t4p.check_times()
     assert t4p.scan_res.normalend
@@ -144,8 +147,8 @@ def test_gauss_spectrum(datadir):
     assert t4p.scan_res.times['simulation_time'] == {200: 1, 400: 2}
     assert len(t4p.scan_res) == 2
     t4_res = t4p.parse_from_index(-1)
-    assert len(t4_res.res['list_responses']) == 6
-    assert t4_res.res['list_responses'][-1]['response_index'] == 5
+    assert len(t4_res.res['list_responses']) == 7
+    assert t4_res.res['list_responses'][-1]['response_index'] == 6
     for ibatch, batch in enumerate(t4p.scan_res):
         assert batch == 200*(ibatch+1)
     for rbatch, batch in enumerate(reversed(t4p.scan_res)):
@@ -155,13 +158,14 @@ def test_gauss_spectrum(datadir):
     assert resp0['response_function'] == "COURANT"
     assert resp0['response_type'] == 'score'
     assert resp0['scoring_mode'] == "SCORE_SURF"
+    assert resp0['score_name'] == "courant_E"
     assert all(x in resp0['results']
                for x in ('spectrum', 'integrated'))
     t4rb = t4_res.to_browser()
-    assert len(t4rb.keys()) == 14
-    assert (list(t4rb.available_values('response_function'))
-            == ['COURANT'])
-    assert len(list(t4rb.available_values('response_index'))) == 6
+    assert len(t4rb.keys()) == 16
+    assert list(t4rb.available_values('response_function')) == ['COURANT']
+    assert list(t4rb.available_values('response_name')) == ['courant']
+    assert len(list(t4rb.available_values('response_index'))) == 7
     # use response 0: usual spectrum
     selresp0 = t4rb.select_by(response_index=0, squeeze=True)
     check_gauss_e_spectrum(selresp0)
@@ -169,9 +173,9 @@ def test_gauss_spectrum(datadir):
     # speciticity: integrated result in energy per time bin
     selresp1 = t4rb.select_by(response_index=1, squeeze=True)
     check_gauss_et_spectrum(selresp1)
-    # use response 4: spectrum in e, t, mu and phi
+    # use response 5 from score_name: spectrum in e, t, mu and phi
     # no integral available
-    selresp = t4rb.select_by(response_index=4, squeeze=True)
+    selresp = t4rb.select_by(score_name='courant_Etmuphi', squeeze=True)
     check_gauss_etmuphi_spectrum(selresp)
 
 

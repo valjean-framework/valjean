@@ -1,25 +1,25 @@
 
 =====================================================================
-$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+$Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
  hostname: is232540
- pid: 20674
+ pid: 32102
 
 =====================================================================
-$Id: t4main.cc,v 2.73.2.1 2015/10/07 14:12:44 tv232747 Exp $
+$Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 
  HOSTNAME : is232540
 
- PROCESS ID is : 20674
+ PROCESS ID is : 32102
 
- DATE : Mon Feb 12 16:29:49 2018
+ DATE : Thu Jan 14 10:22:42 2021
 
- Version is $Name: tripoli4_10_2 $.
+ Version is $Name: tripoli4_11 $.
 
 =====================================================================
 
- data filename = gauss_time_mu_phi_E.d
- catalogname = /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512
- execution call = tripoli4 -s NJOY -a -c /home/tripoli4.10/tripoli4.10.2/Env/t4path.ceav512 -d gauss_time_mu_phi_E.d -o gauss_time_mu_phi_E.d.res.ceav5 
+ data filename = gauss_E_time_mu_phi.t4
+ catalogname = /home/tripoli4.11/tripoli4.11.0/Env/t4path.ceav512
+ execution call = tripoli4 -s NJOY -a -c /home/tripoli4.11/tripoli4.11.0/Env/t4path.ceav512 -d gauss_E_time_mu_phi.t4 -o gauss_E_time_mu_phi.res.ceav5 
 
 
  dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
@@ -68,75 +68,86 @@ FIN_GEOMCOMP
 LIST_SOURCE
    1
    SOURCE NORME 1.
-     NEUTRON
-	PONCTUAL 0. 0. 0.
-     ANGULAR_DISTRIBUTION
-		ISOTROPIC
-     ENERGETIC_DISTRIBUTION
-
-	SPECTRE GAUSS_SPECTRUM 2. 10.
-
-
-     TIME_DISTRIBUTION
-	GAUSS 0.5 3
-
+   NEUTRON
+   PONCTUAL 0. 0. 0.
+   ANGULAR_DISTRIBUTION ISOTROPIC
+   ENERGETIC_DISTRIBUTION SPECTRE GAUSS_SPECTRUM 2. 10.
+   TIME_DISTRIBUTION GAUSS 0.5 3
    FIN_SOURCE 
 FIN_LIST_SOURCE
 
 LIST_DECOUPAGE
 	5
-	DEC_SPECTRE
-		5
+	DEC_SPECTRE 5
 		20. 15. 10. 5. 1E-11
 
-	DEC_TIME
-		5
-1E35 4.0 3.0 2.0 0.0
+	DEC_TIME 5
+        1E35 4.0 3.0 2.0 0.0
 
-    	DEC_MU_ANGLE
-		5
+    DEC_MU_ANGLE 5
 		-1.0 -0.5 0.0 0.5 1.0
 
-	DEC_PHI_ANGLE
-		3
+	DEC_PHI_ANGLE 3
 		0. 3.141592653589793 6.28318530718
 		
-	DEC_PHI_ANGLE_INT
-		2
+	DEC_PHI_ANGLE_INT 2
 		0. 6.28318530718
 
 FIN_LIST_DECOUPAGE
 
 REPONSES
-1
-COURANT NEUTRON
+    1
+    NAME courant COURANT NEUTRON
 FIN_REPONSE
 
 SCORE 
-6
-	1 SURF  DECOUPAGE DEC_SPECTRE  FRONTIERE LIST 1    2 1
-	1 SURF  CINETIQUE DECOUPAGE DEC_TIME DECOUPAGE DEC_SPECTRE  FRONTIERE LIST 1    2 1
-	1 SURF  ANGULAR DECOUPAGE DEC_MU_ANGLE DECOUPAGE DEC_SPECTRE  FRONTIERE LIST 1    2 1
-	1 SURF  CINETIQUE DECOUPAGE DEC_TIME ANGULAR DECOUPAGE DEC_MU_ANGLE
-	DECOUPAGE DEC_SPECTRE  FRONTIERE LIST 1    2 1
-	1 SURF  CINETIQUE DECOUPAGE DEC_TIME 2D_ANGULAR DECOUPAGE DEC_MU_ANGLE DEC_PHI_ANGLE
-	DECOUPAGE DEC_SPECTRE  FRONTIERE LIST 1    2 1  
-	1 SURF  CINETIQUE DECOUPAGE DEC_TIME 2D_ANGULAR DECOUPAGE DEC_MU_ANGLE DEC_PHI_ANGLE_INT
-	DECOUPAGE DEC_SPECTRE  FRONTIERE LIST 1    2 1  
+    7
+	NAME courant_E        courant SURF
+        DECOUPAGE DEC_SPECTRE
+        FRONTIERE LIST 1    2 1
+	NAME courant_Et       courant SURF
+        DECOUPAGE DEC_SPECTRE
+        CINETIQUE DECOUPAGE DEC_TIME
+        FRONTIERE LIST 1    2 1
+	NAME courant_Emu      courant SURF
+        DECOUPAGE DEC_SPECTRE
+        ANGULAR DECOUPAGE DEC_MU_ANGLE
+        FRONTIERE LIST 1    2 1
+	NAME courant_Etmu     courant SURF
+        DECOUPAGE DEC_SPECTRE
+        CINETIQUE DECOUPAGE DEC_TIME
+        ANGULAR DECOUPAGE DEC_MU_ANGLE
+        FRONTIERE LIST 1    2 1
+	NAME courant_Emuphi  courant SURF
+        DECOUPAGE DEC_SPECTRE
+        2D_ANGULAR DECOUPAGE DEC_MU_ANGLE DEC_PHI_ANGLE
+        FRONTIERE LIST 1    2 1  
+	NAME courant_Etmuphi  courant SURF
+        DECOUPAGE DEC_SPECTRE
+        CINETIQUE DECOUPAGE DEC_TIME
+        2D_ANGULAR DECOUPAGE DEC_MU_ANGLE DEC_PHI_ANGLE
+        FRONTIERE LIST 1    2 1  
+	NAME courant_EtmuphiI courant SURF
+        DECOUPAGE DEC_SPECTRE
+        CINETIQUE DECOUPAGE DEC_TIME
+        2D_ANGULAR DECOUPAGE DEC_MU_ANGLE DEC_PHI_ANGLE_INT
+        FRONTIERE LIST 1    2 1  
 FIN_SCORE
 
 SIMULATION
 	BATCH 400
 	SIZE 1000
-        PARTICULES   1
-		 NEUTRON 
+    PARTICULES 1 NEUTRON 
 	EDITION 200
-	XML_EXPORT
 FIN_SIMULATION
 
 
 
-Total concentration of material vacuum (1.E24at/cm3) is: 1.000000e-10
+
+
+ data reading time (s): 0
+
+ Total concentration of material vacuum (1.E24at/cm3) is: 1.000000e-10
 
 
  Loading response functions ...
@@ -146,6 +157,7 @@ Total concentration of material vacuum (1.E24at/cm3) is: 1.000000e-10
  Constructing score  ...3
  Constructing score  ...4
  Constructing score  ...5
+ Constructing score  ...6
  SOURCE INITIALIZATION ...
 
 	 initializing source number : 0
@@ -185,100 +197,160 @@ Total concentration of material vacuum (1.E24at/cm3) is: 1.000000e-10
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 2
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 3
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 4
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 5
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 6
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 7
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 8
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 9
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 10
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 11
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 12
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 13
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 14
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 15
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 16
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 17
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 18
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 19
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
 
+ simulation time (s) : 0
+
+
  batch number : 20
 
   quota sampling and descendant statistics: 
 	 mean number of collision per neutron history: 0.000000e+00	 sigma_n : 0.000000e+00
+
+ simulation time (s) : 0
+
 
  batch number : 21
 
@@ -1199,7 +1271,8 @@ Total concentration of material vacuum (1.E24at/cm3) is: 1.000000e-10
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_E
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -1239,7 +1312,8 @@ number of batches used: 200	1.000000e+00	0.000000e+00
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_Et
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -1350,7 +1424,8 @@ number of batches used: 200	2.465000e-03	4.836773e+00
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_Emu
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -1437,7 +1512,8 @@ ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_Etmu
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -1736,7 +1812,180 @@ ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_Emuphi
+ENERGY DECOUPAGE NAME : DEC_SPECTRE
+
+
+ PARTICULE : NEUTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : SCORE_SURF
+	 scoring zone : 	 Frontier 	 volumes : 2,1
+
+
+	 MU ANGULAR ZONE : 0
+	 ------------------------------------
+		 mu min. = -1.000000e+00
+		 mu max. = -5.000000e-01
+
+		 PHI ANGULAR ZONE : 0
+		 ------------------------------------
+			 phi min. = 0.000000e+00
+			 phi max. = 3.141593e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	3.500000e-05	3.722229e+01	1.216621e-04
+1.500000e+01 - 1.000000e+01	6.238000e-02	1.004763e+00	1.538480e-01
+1.000000e+01 - 5.000000e+00	6.207000e-02	7.824212e-01	8.954808e-02
+5.000000e+00 - 1.000000e-11	1.000000e-05	7.053279e+01	3.712245e-07
+
+
+		 PHI ANGULAR ZONE : 1
+		 ------------------------------------
+			 phi min. = 3.141593e+00
+			 phi max. = 6.283185e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	3.000000e-05	4.030869e+01	1.042818e-04
+1.500000e+01 - 1.000000e+01	6.328000e-02	9.108478e-01	1.560677e-01
+1.000000e+01 - 5.000000e+00	6.175500e-02	8.907454e-01	8.909363e-02
+5.000000e+00 - 1.000000e-11	2.500000e-05	4.426962e+01	9.280614e-07
+
+
+	 MU ANGULAR ZONE : 1
+	 ------------------------------------
+		 mu min. = -5.000000e-01
+		 mu max. = 0.000000e+00
+
+		 PHI ANGULAR ZONE : 0
+		 ------------------------------------
+			 phi min. = 0.000000e+00
+			 phi max. = 3.141593e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	2.500000e-05	4.426962e+01	8.690149e-05
+1.500000e+01 - 1.000000e+01	6.234000e-02	8.302104e-01	1.537494e-01
+1.000000e+01 - 5.000000e+00	6.296000e-02	8.314956e-01	9.083208e-02
+5.000000e+00 - 1.000000e-11	1.500000e-05	5.744417e+01	5.568368e-07
+
+
+		 PHI ANGULAR ZONE : 1
+		 ------------------------------------
+			 phi min. = 3.141593e+00
+			 phi max. = 6.283185e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	3.000000e-05	4.030869e+01	1.042818e-04
+1.500000e+01 - 1.000000e+01	6.209500e-02	8.821161e-01	1.531451e-01
+1.000000e+01 - 5.000000e+00	6.268000e-02	8.374978e-01	9.042813e-02
+5.000000e+00 - 1.000000e-11	1.000000e-05	7.053279e+01	3.712245e-07
+
+
+	 MU ANGULAR ZONE : 2
+	 ------------------------------------
+		 mu min. = 0.000000e+00
+		 mu max. = 5.000000e-01
+
+		 PHI ANGULAR ZONE : 0
+		 ------------------------------------
+			 phi min. = 0.000000e+00
+			 phi max. = 3.141593e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	3.500000e-05	3.722229e+01	1.216621e-04
+1.500000e+01 - 1.000000e+01	6.270500e-02	8.640613e-01	1.546496e-01
+1.000000e+01 - 5.000000e+00	6.257500e-02	8.195324e-01	9.027664e-02
+5.000000e+00 - 1.000000e-11	3.500000e-05	3.722229e+01	1.299286e-06
+
+
+		 PHI ANGULAR ZONE : 1
+		 ------------------------------------
+			 phi min. = 3.141593e+00
+			 phi max. = 6.283185e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	1.500000e-05	5.744417e+01	5.214089e-05
+1.500000e+01 - 1.000000e+01	6.364500e-02	8.023956e-01	1.569679e-01
+1.000000e+01 - 5.000000e+00	6.162500e-02	8.882362e-01	8.890608e-02
+5.000000e+00 - 1.000000e-11	2.000000e-05	4.962168e+01	7.424491e-07
+
+
+	 MU ANGULAR ZONE : 3
+	 ------------------------------------
+		 mu min. = 5.000000e-01
+		 mu max. = 1.000000e+00
+
+		 PHI ANGULAR ZONE : 0
+		 ------------------------------------
+			 phi min. = 0.000000e+00
+			 phi max. = 3.141593e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	3.500000e-05	3.722229e+01	1.216621e-04
+1.500000e+01 - 1.000000e+01	6.268500e-02	9.017576e-01	1.546002e-01
+1.000000e+01 - 5.000000e+00	6.257000e-02	8.944144e-01	9.026943e-02
+5.000000e+00 - 1.000000e-11	2.000000e-05	4.962168e+01	7.424491e-07
+
+
+		 PHI ANGULAR ZONE : 1
+		 ------------------------------------
+			 phi min. = 3.141593e+00
+			 phi max. = 6.283185e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	5.000000e-06	1.000000e+02	1.738030e-05
+1.500000e+01 - 1.000000e+01	6.198000e-02	8.627332e-01	1.528615e-01
+1.000000e+01 - 5.000000e+00	6.229500e-02	8.627223e-01	8.987269e-02
+5.000000e+00 - 1.000000e-11	1.500000e-05	5.744417e+01	5.568368e-07
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : COURANT
+RESPONSE NAME : courant
+SCORE NAME : courant_Etmuphi
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -2371,7 +2620,8 @@ ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_EtmuphiI
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -3689,7 +3939,8 @@ ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_E
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -3729,7 +3980,8 @@ number of batches used: 400	1.000000e+00	0.000000e+00
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_Et
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -3840,7 +4092,8 @@ number of batches used: 400	2.312500e-03	3.429692e+00
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_Emu
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -3927,7 +4180,8 @@ ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_Etmu
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -4226,7 +4480,180 @@ ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_Emuphi
+ENERGY DECOUPAGE NAME : DEC_SPECTRE
+
+
+ PARTICULE : NEUTRON 
+ temperature :0
+
+ composition : none 
+
+ concentration : 1.000000e+00
+
+ reaction consists in tabulated data
+
+******************************************************************************
+
+	 scoring mode : SCORE_SURF
+	 scoring zone : 	 Frontier 	 volumes : 2,1
+
+
+	 MU ANGULAR ZONE : 0
+	 ------------------------------------
+		 mu min. = -1.000000e+00
+		 mu max. = -5.000000e-01
+
+		 PHI ANGULAR ZONE : 0
+		 ------------------------------------
+			 phi min. = 0.000000e+00
+			 phi max. = 3.141593e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	2.500000e-05	3.126409e+01	8.690149e-05
+1.500000e+01 - 1.000000e+01	6.234750e-02	6.590728e-01	1.537679e-01
+1.000000e+01 - 5.000000e+00	6.231000e-02	5.980881e-01	8.989433e-02
+5.000000e+00 - 1.000000e-11	2.000000e-05	3.504383e+01	7.424491e-07
+
+
+		 PHI ANGULAR ZONE : 1
+		 ------------------------------------
+			 phi min. = 3.141593e+00
+			 phi max. = 6.283185e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	2.000000e-05	3.504383e+01	6.952119e-05
+1.500000e+01 - 1.000000e+01	6.294750e-02	6.061305e-01	1.552476e-01
+1.000000e+01 - 5.000000e+00	6.197750e-02	6.128138e-01	8.941463e-02
+5.000000e+00 - 1.000000e-11	2.000000e-05	3.504383e+01	7.424491e-07
+
+
+	 MU ANGULAR ZONE : 1
+	 ------------------------------------
+		 mu min. = -5.000000e-01
+		 mu max. = 0.000000e+00
+
+		 PHI ANGULAR ZONE : 0
+		 ------------------------------------
+			 phi min. = 0.000000e+00
+			 phi max. = 3.141593e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	2.000000e-05	3.504383e+01	6.952119e-05
+1.500000e+01 - 1.000000e+01	6.218000e-02	5.943899e-01	1.533547e-01
+1.000000e+01 - 5.000000e+00	6.259500e-02	5.932235e-01	9.030550e-02
+5.000000e+00 - 1.000000e-11	2.500000e-05	3.126409e+01	9.280614e-07
+
+
+		 PHI ANGULAR ZONE : 1
+		 ------------------------------------
+			 phi min. = 3.141593e+00
+			 phi max. = 6.283185e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	2.500000e-05	3.126409e+01	8.690149e-05
+1.500000e+01 - 1.000000e+01	6.251250e-02	6.143549e-01	1.541748e-01
+1.000000e+01 - 5.000000e+00	6.275500e-02	6.189868e-01	9.053633e-02
+5.000000e+00 - 1.000000e-11	2.000000e-05	3.504383e+01	7.424491e-07
+
+
+	 MU ANGULAR ZONE : 2
+	 ------------------------------------
+		 mu min. = 0.000000e+00
+		 mu max. = 5.000000e-01
+
+		 PHI ANGULAR ZONE : 0
+		 ------------------------------------
+			 phi min. = 0.000000e+00
+			 phi max. = 3.141593e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	3.250000e-05	2.731476e+01	1.129719e-04
+1.500000e+01 - 1.000000e+01	6.253250e-02	6.301984e-01	1.542241e-01
+1.000000e+01 - 5.000000e+00	6.233750e-02	5.820524e-01	8.993400e-02
+5.000000e+00 - 1.000000e-11	2.500000e-05	3.126409e+01	9.280614e-07
+
+
+		 PHI ANGULAR ZONE : 1
+		 ------------------------------------
+			 phi min. = 3.141593e+00
+			 phi max. = 6.283185e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	1.750000e-05	3.751119e+01	6.083104e-05
+1.500000e+01 - 1.000000e+01	6.314000e-02	5.997696e-01	1.557224e-01
+1.000000e+01 - 5.000000e+00	6.216000e-02	5.970948e-01	8.967792e-02
+5.000000e+00 - 1.000000e-11	3.250000e-05	2.731476e+01	1.206480e-06
+
+
+	 MU ANGULAR ZONE : 3
+	 ------------------------------------
+		 mu min. = 5.000000e-01
+		 mu max. = 1.000000e+00
+
+		 PHI ANGULAR ZONE : 0
+		 ------------------------------------
+			 phi min. = 0.000000e+00
+			 phi max. = 3.141593e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	2.750000e-05	2.977090e+01	9.559164e-05
+1.500000e+01 - 1.000000e+01	6.268500e-02	6.172070e-01	1.546002e-01
+1.000000e+01 - 5.000000e+00	6.232750e-02	6.306687e-01	8.991958e-02
+5.000000e+00 - 1.000000e-11	2.250000e-05	3.299747e+01	8.352552e-07
+
+
+		 PHI ANGULAR ZONE : 1
+		 ------------------------------------
+			 phi min. = 3.141593e+00
+			 phi max. = 6.283185e+00
+
+	 SPECTRUM RESULTS
+	 number of first discarded batches : 0
+
+	 group (MeV) 		 score   	 sigma_% 	 score/lethargy
+
+2.000000e+01 - 1.500000e+01	1.750000e-05	4.261778e+01	6.083104e-05
+1.500000e+01 - 1.000000e+01	6.251500e-02	6.071636e-01	1.541810e-01
+1.000000e+01 - 5.000000e+00	6.229500e-02	5.969843e-01	8.987269e-02
+5.000000e+00 - 1.000000e-11	3.250000e-05	2.731476e+01	1.206480e-06
+
+
+
+
+******************************************************************************
+RESPONSE FUNCTION : COURANT
+RESPONSE NAME : courant
+SCORE NAME : courant_Etmuphi
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
@@ -4861,7 +5288,8 @@ ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 ******************************************************************************
 RESPONSE FUNCTION : COURANT
-RESPONSE NAME : 
+RESPONSE NAME : courant
+SCORE NAME : courant_EtmuphiI
 ENERGY DECOUPAGE NAME : DEC_SPECTRE
 
 
