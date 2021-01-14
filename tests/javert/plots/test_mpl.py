@@ -324,6 +324,38 @@ def test_student_2d_no_post(studentt_res_2d, plot_no_post_repr):
 
 
 @pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='student_2d_centbins.png',
+                               baseline_dir='ref_plots')
+def test_student_2d_centbins(studentt_res_2d_cbins, plot_no_post_repr):
+    '''2D plot for Student test (bins by centers).'''
+    templ = plot_no_post_repr(studentt_res_2d_cbins)
+    mplt = MplPlot(templ[0])
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='student_2d_irrcbins.png',
+                               baseline_dir='ref_plots')
+def test_student_2d_irrcbins(studentt_res_2d_irrcbins, plot_no_post_repr):
+    '''2D plot for Student test (irregular bins by centers).'''
+    templ = plot_no_post_repr(studentt_res_2d_irrcbins)
+    mplt = MplPlot(templ[0])
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='student_2d_vbins.png',
+                               baseline_dir='ref_plots')
+def test_student_2d_vbins(studentt_res_2d_vbins, plot_no_post_repr):
+    '''2D plot for Student test (irregular bins by edges on x-axis and centers
+    on y-axis).
+    '''
+    templ = plot_no_post_repr(studentt_res_2d_vbins)
+    mplt = MplPlot(templ[0])
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(tolerance=50,
                                filename='student_logx.png',
                                baseline_dir='ref_plots')
 def test_studentt_res_logx(studentt_res_range_lrbin):

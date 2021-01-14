@@ -78,6 +78,54 @@ def studentt_res_2d():
 
 
 @pytest.fixture
+def studentt_res_2d_cbins():
+    '''Return a Student test result from 2-dimensions datasets with axes given
+    by center of bins.
+    '''
+    bins = OrderedDict([('e', np.array([-1, 0, 1, 2])),
+                        ('t', np.array([0.5, 1, 1.5]))])
+    tarr = np.arange(12).reshape(4, 3)
+    ds1 = Dataset(tarr, tarr*0.5,
+                  bins=bins, name="ds1", what='the quantity')
+    tarr = np.arange(12)[::-1].reshape(4, 3)
+    ds2 = Dataset(tarr, tarr*0.5,
+                  bins=bins, name="ds2", what='the quantity')
+    return TestStudent(ds1, ds2, name='A Student test').evaluate()
+
+
+@pytest.fixture
+def studentt_res_2d_irrcbins():
+    '''Return a Student test result from 2-dimensions datasets with axes given
+    by center of bins with irregular bins.
+    '''
+    bins = OrderedDict([('e', np.array([0, 0.5, 1, 2])),
+                        ('t', np.array([0.5, 1, 2]))])
+    tarr = np.arange(12).reshape(4, 3)
+    ds1 = Dataset(tarr, tarr*0.5,
+                  bins=bins, name="ds1", what='the quantity')
+    tarr = np.arange(12)[::-1].reshape(4, 3)
+    ds2 = Dataset(tarr, tarr*0.5,
+                  bins=bins, name="ds2", what='the quantity')
+    return TestStudent(ds1, ds2, name='A Student test').evaluate()
+
+
+@pytest.fixture
+def studentt_res_2d_vbins():
+    '''Return a Student test result from 2-dimensions datasets with x-axis
+    given by bin edges and y-axis given by bin centers. Both are irregular.
+    '''
+    bins = OrderedDict([('e', np.array([0, 0.5, 1, 2, 3])),
+                        ('t', np.array([0.5, 1, 2]))])
+    tarr = np.arange(12).reshape(4, 3)
+    ds1 = Dataset(tarr, tarr*0.5,
+                  bins=bins, name="ds1", what='the quantity')
+    tarr = np.arange(12)[::-1].reshape(4, 3)
+    ds2 = Dataset(tarr, tarr*0.5,
+                  bins=bins, name="ds2", what='the quantity')
+    return TestStudent(ds1, ds2, name='A Student test').evaluate()
+
+
+@pytest.fixture
 def studentt_res_2d_range_elr():
     '''Return a Student test result from 2-dimensions datasets with large first
     and last bins in e.'''

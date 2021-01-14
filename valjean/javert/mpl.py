@@ -685,7 +685,7 @@ class _MplPlot1D:
                 curve.bins[0], np.append(curve.values, [np.nan]),
                 linestyle='-', color=data_fmt[0], drawstyle='steps-post')
             markers = splt.errorbar(
-                (curve.bins[0][1:] + curve.bins[0][:-1])/2,
+                (curve.bins[0][1:] + curve.bins[0][:-1]) * 0.5,
                 curve.values, yerr=curve.errors,
                 color=data_fmt[0], marker=data_fmt[1], fillstyle=data_fmt[2],
                 linestyle='')
@@ -781,23 +781,32 @@ class _MplPlot2D:
         build the (x, y) grid for all bins.
 
         :param CurveElements curve: data to plot
-        :rtype: numpy.ndarray
+        :rtype: list(numpy.ndarray), list(numpy.ndarray), list(numpy.ndarray)
+        :returns: grid, bin edges, bin centers
         '''
-        bins, rsbins = [], []
+        bins, cbins, rsbins = [], [], []
         for idim, tbin in enumerate(curve.bins):
             shape = ([curve.values.shape[idim]]
                      + [1] * (curve.values.ndim - 1 - idim))
-            cbins = ((tbin[1:] + tbin[:-1]) * 0.5
-                     if tbin.size == curve.values.shape[idim]+1
-                     else tbin)
             if tbin.dtype.kind == 'U':
-                cbins = np.arange(tbin.size)+0.5
+                cbins.append(np.arange(tbin.size)+0.5)
                 bins.append(np.arange(tbin.size+1))
+            elif tbin.size == curve.values.shape[idim]:
+                # here tbin represents the bin centers
+                assert tbin.size > 1, 'The axis should not be trivial, > 1 bin'
+                cbins.append(tbin)
+                hbwidth = np.ediff1d(tbin) * 0.5
+                rbins = np.concatenate([[tbin[0]-hbwidth[0]],
+                                        tbin[:-1]+hbwidth,
+                                        [tbin[-1]+hbwidth[-1]]])
+                bins.append(rbins)
             else:
+                # here tbin represents the bin edges
+                cbins.append((tbin[1:] + tbin[:-1]) * 0.5)
                 bins.append(tbin)
-            rsbins.append(np.array(cbins).reshape(shape))
-        bbins = np.broadcast_arrays(*rsbins)
-        return bbins, bins
+            rsbins.append(np.array(cbins[-1]).reshape(shape))
+        gbins = np.broadcast_arrays(*rsbins)
+        return gbins, bins, cbins
 
     def itwod_plot(self, fig, splt, curve, axnames, norm):
         # pylint: disable=too-many-arguments
@@ -811,22 +820,23 @@ class _MplPlot2D:
             normalisation and scale (linear or logarithmic)
         :type norm: function from :obj:`matplotlib.colors`
         '''
-        cbins, bins = self.broadcast_bin_centers(curve)
+        gbins, bins, cbins = self.broadcast_bin_centers(curve)
         h2d = splt.hist2d(
-            cbins[0].flatten(), cbins[1].flatten(),
+            gbins[0].flatten(), gbins[1].flatten(),
             bins=bins, norm=norm, weights=curve.values.flatten())
         cbar = fig.colorbar(h2d[3], ax=splt)
         splt.set_xlabel(axnames[0])
-        if curve.bins[0].dtype.kind == 'U':
-            splt.set_xticks(bins[0][:-1]+0.5)
+        if curve.bins[0].size == curve.values.shape[0]:
+            splt.set_xticks(cbins[0])
             splt.set_xticklabels(list(curve.bins[0]))
-            bmax = max([len(b) for b in self.data.curves[0].bins[0]])
-            if bmax * self.data.curves[0].bins[0].size > 60:
-                splt.tick_params(axis='x', rotation=90)
+            if curve.bins[0].dtype.kind == 'U':
+                bmax = max([len(b) for b in self.data.curves[0].bins[0]])
+                if bmax * self.data.curves[0].bins[0].size > 60:
+                    splt.tick_params(axis='x', rotation=90)
         splt.set_ylabel(axnames[1])
-        if curve.bins[1].dtype.kind == 'U':
-            splt.set_yticks(bins[1][:-1] + 0.5)
-            splt.set_yticklabels(curve.bins[1])
+        if curve.bins[1].size == curve.values.shape[1]:
+            splt.set_yticks(cbins[1])
+            splt.set_yticklabels(list(curve.bins[1]))
         cbar.set_label(axnames[2])
         if curve.legend:
             splt.set_title(curve.legend)
