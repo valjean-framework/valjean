@@ -70,8 +70,7 @@ class Scheduler:
                              'DepGraph or None (`soft_graph`)')
 
         soft_graph = DepGraph() if soft_graph is None else soft_graph.copy()
-        chrono = Chrono()
-        with chrono:
+        with Chrono() as chrono:
             self.hard_graph = hard_graph.copy()
         LOGGER.info('hard graph copied in %s seconds', chrono)
         with chrono:

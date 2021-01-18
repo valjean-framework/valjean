@@ -67,9 +67,8 @@ class Parser:
         LOGGER.info("Parsing %s", jddname)
         self.jdd = jddname
         self.mesh_limit = mesh_lim
-        chrono = Chrono()
         try:
-            with chrono:
+            with Chrono() as chrono:
                 self.scan_res = self._scan()
         except scan.ScannerException as t4se:
             LOGGER.error(t4se)
@@ -160,8 +159,7 @@ class Parser:
         :rtype: ParseResult
         '''
         LOGGER.debug('Using parse from Parser')
-        chrono = Chrono()
-        with chrono:
+        with Chrono() as chrono:
             pres, = self._parse_listing_worker(
                 t4gram, self.scan_res[batch_number])
         LOGGER.info("Successful parsing in %f s", chrono)

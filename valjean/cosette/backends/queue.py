@@ -164,8 +164,7 @@ class QueueScheduling:
             threads.append(thread)
 
         # process tasks; sort them in topological order
-        chrono = Chrono()
-        with chrono:
+        with Chrono() as chrono:
             tasks_left = full_graph.topological_sort()
         LOGGER.info('full graph sorted in %s seconds', chrono)
         while tasks_left:

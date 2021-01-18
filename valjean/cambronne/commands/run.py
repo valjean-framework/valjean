@@ -40,8 +40,7 @@ class RunCommand(JobCommand):
     def execute(self, args, config):
         '''Execute the ``run`` command.'''
 
-        chrono = Chrono()
-        with chrono:
+        with Chrono() as chrono:
             hard_graph, soft_graph = build_graphs(args)
         LOGGER.info('graphs built in %s seconds', chrono)
         LOGGER.info('hard_graph contains %d tasks', len(hard_graph))

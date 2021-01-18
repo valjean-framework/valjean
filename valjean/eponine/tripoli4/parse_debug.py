@@ -49,8 +49,7 @@ class ParserDebug(Parser):
         :returns: list(dict)
         '''
         LOGGER.debug('Using parse from ParserDebug')
-        chrono = Chrono()
-        with chrono:
+        with Chrono() as chrono:
             batch_edition = self.scan_res[batch_number]
             if LOGGER.isEnabledFor(logging.DEBUG) and self.ofile:
                 with open(self.ofile, 'w') as fout:

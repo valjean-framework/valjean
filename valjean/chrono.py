@@ -12,8 +12,7 @@ class Chrono:
 
     Examples:
 
-    >>> chrono = Chrono()
-    >>> with chrono:
+    >>> with Chrono() as chrono:
     ...     print(42)
     42
     >>> print('printing 42 took {} seconds'.format(chrono))

@@ -210,8 +210,7 @@ def run(clis, stdout, stderr, **subprocess_args):
     '''
     results = []    # collect the return codes of each cli
     status = TaskStatus.DONE    # will change to FAILED in case of trouble
-    chrono = Chrono()
-    with chrono:
+    with Chrono() as chrono:
         for cli in clis:
             LOGGER.debug('Running cli: %s', cli)
             print('$ ' + ' '.join(shlex.quote(token) for token in cli),

@@ -196,8 +196,7 @@ class Reader:
         self.geom = {}
         self.info = {}
         self.res = {}
-        chrono = Chrono()
-        with chrono:
+        with Chrono() as chrono:
             hfile = h5py.File(fname, 'r')
         LOGGER.info('hdf5 loading done in %f s', chrono)
         with chrono:

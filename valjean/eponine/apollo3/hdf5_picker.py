@@ -109,8 +109,7 @@ class Picker:
         '''
         LOGGER.info('Reading %s', fname)
         self.error_value = error_value
-        chrono = Chrono()
-        with chrono:
+        with Chrono() as chrono:
             self.hfile = h5py.File(fname, 'r')
         LOGGER.info('HDF5 loading done in %f s', chrono)
 

@@ -192,9 +192,8 @@ class CheckoutTask(PythonTask):
                 self.checkout_root = config.query('path', 'output-root')
             checkout_dir = ensure(self.checkout_root, self.name, is_dir=True)
 
-            chrono = Chrono()
             with log_file.open('w') as log:
-                with chrono:
+                with Chrono() as chrono:
                     status = checkout_vcs(checkout_dir, log)
 
             if status != TaskStatus.DONE:
@@ -301,8 +300,7 @@ class BuildTask(PythonTask):
             else:
                 source_dir = os.path.abspath(env[source.name]['output_dir'])
 
-            chrono = Chrono()
-            with chrono:
+            with Chrono() as chrono:
                 with log_file.open('w') as log:
                     status = build_sys(source_dir, build_dir, log)
 
