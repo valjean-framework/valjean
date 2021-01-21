@@ -709,6 +709,37 @@ def test_homogenize_material(datadir):
     assert len(t4res) == 17
 
 
+def test_box_dyn(datadir):
+    '''Use Tripoli-4 result from box_dyn.t4 to test meshes with energy and time
+    splitting and precursors results.'''
+    t4p = Parser(str(datadir/"box_dyn.res.ceav5"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    t4b = t4p.parse_from_index().to_browser()
+    assert t4b
+    # mesh with energy and time bins
+    etmesh = t4b.select_by(score_name='neutron_flux_mesh_score', squeeze=True)
+    assert etmesh['energy_split_name'] == 'grid_rough'
+    dsmesh = dcv.convert_data(etmesh['results'], data_type='mesh').squeeze()
+    assert dsmesh.shape == (3, 3, 3, 2, 10)
+    assert list(dsmesh.bins.keys()) == ['s0', 's1', 's2', 'e', 't']
+    # precursor weight
+    precweight = t4b.select_by(response_function='PRECURSOR WEIGHT')
+    assert len(precweight) == 11
+    pweight_t3 = t4b.select_by(response_function='PRECURSOR WEIGHT',
+                               time_step=3, squeeze=True)
+    assert pweight_t3['response_type'] == 'kinetic_generic'
+    # neutron weight
+    # time_step = 0 corresponds to criticality source (for both weights)
+    nweight_t0 = t4b.select_by(response_function='NEUTRON WEIGHT',
+                               time_step=0, squeeze=True)
+    dsnwt0 = dcv.convert_data(nweight_t0['results'], 'generic')
+    assert dsnwt0.shape == ()
+    dynom = t4b.select_by(response_function='DYNAMIC NORMALIZATION',
+                          squeeze=True)
+    assert dynom['response_type'] == 'generic'
+
+
 def test_empty_file(caplog):
     '''Test Tripoli-4 parsing on an empty file: this should fail.'''
     with open('empty_file.txt', 'w') as ofile:

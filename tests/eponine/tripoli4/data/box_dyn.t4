@@ -1,0 +1,85 @@
+/* This input file tests kinetic transport. It describes a homogeneous box. The
+ * system is very nearly critical with ceav512 (keff = 0.99996 ± 0.00001);
+ * therefore, the total flux in the system should be constant over time.
+ * D. Mancusi, 1/7/2020
+ */
+
+LANG ENGLISH
+GEOMETRY
+  TITLE box
+  TYPE 1 BOX 10 20 24
+  VOLU 1 COMBI 1 0 0 0 ENDV
+ENDGEOM
+
+COMPOSITION 1
+PONCTUAL 824 FUEL 1 U235 0.044925
+END_COMPOSITION
+
+GEOMCOMP
+  FUEL 1 1
+END_GEOMCOMP
+
+SOURCES_LIST  1
+    SOURCE
+    NORM 1.
+    NEUTRON
+    FACTORIZED
+      FRAME CARTESIAN
+      0 0 0
+      1 0 0
+      0 1 0
+      0 0 1
+    ALL_VOLUMES_INSIDE_MESH
+    GEOMETRIC_DISTRIBUTION TABULATED
+      TYPE F_UVW
+      VAR_U X 2 -5 5
+      VAR_V Y 2 -10 10
+      VAR_W Z 2 -12 12
+      F_UVW 1
+    ANGULAR_DISTRIBUTION ISOTROPIC.
+    ENERGETIC_DISTRIBUTION SPECTRUM WATT_SPECTRUM
+    TIME_DISTRIBUTION DIRAC 0.			 	   
+    END_SOURCE		 	 
+END_SOURCES_LIST
+
+GRID_LIST 2
+  grid_rough 3 1e-11 1e-3 20
+  grid_time 11 0 IN_LIN 9 3.13e-6
+END_GRID_LIST
+
+
+RESPONSES 1
+ NAME neutron_flux_response FLUX NEUTRON
+END_RESPONSES
+
+SCORE 1
+    NAME neutron_flux_mesh_score
+    neutron_flux_response
+    TRACK
+    TIME GRID grid_time
+    GRID grid_rough
+    EXTENDED_MESH
+      WINDOW
+        -5.0 -5.0 -12.0
+        5.0 5.0 12.0
+        3 3 3
+      FRAME CARTESIAN
+        0 0 0
+        1 0 0
+        0 1 0
+        0 0 1
+END_SCORE
+
+SIMULATION
+    DYNAMIC
+        GRID grid_time
+        POPULATION_CONTROL COMBING
+        CRITICALITY_SOURCE 200 1
+        POPULATION_IMPORTANCE_RATIO 7e-8
+    BATCH 10
+    SIZE 1000
+    EDITION 10
+    PARTICLES 2 NEUTRON PRECURSOR
+    TIME_INF NEUTRON 0
+    TIME_SUP NEUTRON 3.13e-6
+END_SIMULATION
