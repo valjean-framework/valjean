@@ -390,7 +390,8 @@ def convert_keff_auto(toks):
         if akeff_key in akeffr:
             akeffra = akeffr[akeff_key]
             akeffr['used_batches'] = akeffra.pop('used_batches')
-            akeffr['discarded_batches'] = akeffra.pop('best_disc_batchs')
+            if 'best_disc_batchs' in akeffra:
+                akeffr['discarded_batches'] = akeffra.pop('best_disc_batchs')
         akeffd['results'] = akeffr
         res.append(akeffd)
     return res

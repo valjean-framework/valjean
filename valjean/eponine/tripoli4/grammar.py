@@ -208,10 +208,7 @@ _inums = pyparscom.number.setParseAction(tokenMap(trans.common.ITYPE))
 ###################################
 
 # General keywords
-_integratedres_kw = (Keyword("ENERGY INTEGRATED RESULTS")
-                     | Keyword("NU INTEGRATED RESULTS")
-                     | Keyword("ZA INTEGRATED RESULTS")
-                     | Keyword("INTEGRATED RESULTS"))
+_integratedres_kw = Keyword("INTEGRATED RESULTS")
 _numbatchsused_kw = (Keyword("number of")
                      + (Keyword("batches") | Keyword("batch"))
                      + Optional(Keyword("used")))
@@ -735,6 +732,7 @@ def _rm_blanks(toks):
 _numdiscbatch = (Suppress(_numbatchs1stdiscarded_kw + ':')
                  + _inums('discarded_batches'))
 _numusedbatch = Suppress(_numbatchsused_kw + ':') + _inums('used_batches')
+_integratedres_name = _integratedres_kw | Word(alphas) + _integratedres_kw
 _integratedres = _fnums('score') + _fnums('sigma')
 _unitsres = (Suppress(_units_kw)
              + (Word('%').setParseAction(_set_no_unit_case)
@@ -761,7 +759,7 @@ bestres = (Group(Suppress(_bestresdiscbatchs_kw) + _inums('discarded_batches')
            ('best_result_res'))
 
 
-integratedres = (Group(Optional(Suppress(_integratedres_kw))
+integratedres = (Group(Optional(Suppress(_integratedres_name))
                        + Optional(_numdiscbatch)
                        + ((_numusedbatch
                            + _integratedres
@@ -769,7 +767,7 @@ integratedres = (Group(Optional(Suppress(_integratedres_kw))
                           | _notconverged_kw('not_converged')
                           ))('integrated_res'))
 
-genericscoreblock = (Group(Optional(Suppress(_integratedres_kw))
+genericscoreblock = (Group(Optional(Suppress(_integratedres_name))
                            + ((_numusedbatch
                                + _integratedres
                                + Optional(_unitsres))
@@ -868,7 +866,7 @@ def _printtoks(toks):
 _mesh_energyrange = (Group(Suppress(_energyrange_kw + "(in") + Word(alphas)
                            + Suppress('):') + _fnums + Suppress('-') + _fnums)
                      ('mesh_energyrange'))
-_mesh_energyintegrated = ((Suppress(_integratedres_kw) + Suppress(':'))
+_mesh_energyintegrated = ((Suppress(_integratedres_name) + Suppress(':'))
                           ('mesh_energyintegrated'))
 _mesh_energyline = _mesh_energyrange | _mesh_energyintegrated
 _meshspacecoord = Group(Suppress('(') + delimitedList(_inums, delim=',')
@@ -912,7 +910,7 @@ _kijeigenvectab = ((Suppress(_kijeigenvec_kw) + (OneOrMore(_kijeigenvec)))
 _kijmatrixtab = (Suppress(_kijmatrix_kw)
                  + ((OneOrMore(_kijmatrix)) | _kijmatrixnotprint_kw)
                  ('kij_matrix'))
-kijres = (Group(Suppress(_integratedres_kw)
+kijres = (Group(Suppress(_integratedres_name)
                 + _numusedbatch
                 + _kijsum
                 + _kijeigenvaltab
@@ -925,7 +923,7 @@ kijres = (Group(Suppress(_integratedres_kw)
 _kijsourcesorder = (Suppress(_kijsourcesorder_kw)
                     + Word(alphas)('kij_sources_order') + Suppress(':'))
 _kijsourcesval = Group(OneOrMore(_fnums))('kij_sources_vals')
-kijsources = (Group(Suppress(_integratedres_kw)
+kijsources = (Group(Suppress(_integratedres_name)
                     + _numusedbatch
                     + Suppress(_kijsources_kw)
                     + Optional(_kijsourcesorder)
@@ -1002,7 +1000,7 @@ _autokeffres = ((_keffresblock + _correlationblock + _fullcombestimation)
                 | _notconverged_kw('not_converged'))
 _warnkeff = (Suppress(_warning_kw)
              + _warn_combkeff_kw.setParseAction(' '.join)('warning'))
-keffblock = Group(Suppress(_integratedres_kw)
+keffblock = Group(Suppress(_integratedres_name)
                   + _numusedbatch
                   + (_autokeffres | _warnkeff)
                   ).setParseAction(trans.convert_keff)('keff_res')
@@ -1020,7 +1018,7 @@ _bestkeff = (Suppress(Keyword("keff") + '=') + _fnums('keff')
              + Suppress(Keyword("sigma%") + '=') + _fnums('sigma%'))
 _equivkeff = Suppress(_equivkeff_kw) + _fnums('equivalent_keff')
 _bestkeffpestim = (Group(_notconverged_kw('not_converged')
-                         | Group(_bestresdiscbatch
+                         | Group(Optional(_bestresdiscbatch)
                                  + _numusedbatch
                                  + _bestkeff
                                  + Optional(_equivkeff))('keff_auto'))
@@ -1090,7 +1088,7 @@ _cvgline = Group(Suppress("L =") + _inums + _generic_score)
 _cvgstat = (Suppress(_cvgstat_kw)
             + ZeroOrMore(_cvgline)('score_per_length'))
 # results from adjoint calculation
-adjointres = (Group(Group(Suppress(_integratedres_kw)
+adjointres = (Group(Group(Suppress(_integratedres_name)
                           + _numusedbatch
                           + Group(_nuclfamorder
                                   | _nucleiorder
@@ -1106,7 +1104,7 @@ _kingtimestepline = Group(Suppress("END OF TIME STEP ") + Suppress(_inums)
                           + _fnums + _fnums)
 _kingstat = Group(_kingcritline
                   + ZeroOrMore(_kingtimestepline))('kin_generic_res')
-kingres = (Group(Suppress(_integratedres_kw)
+kingres = (Group(Suppress(_integratedres_name)
                  + _numusedbatch
                  + _kingstat
                  + Optional(_unitsres)('units')
@@ -1146,7 +1144,7 @@ _sensitivity_res = Group(_sensitivity_index('charac')
 _sensitivity = (Suppress(_sensitivityorder)
                 + (OneOrMore(Group(_sensitivity_type('sensitivity_type')
                                    + OneOrMore(_sensitivity_res)('res')))))
-sensitivityres = Group(Group(Optional(Suppress(_integratedres_kw))
+sensitivityres = Group(Group(Optional(Suppress(_integratedres_name))
                              + _numusedbatch
                              + Group(_sensitivity)('sensit_res')
                              + Optional(_unitsres)('units'))
