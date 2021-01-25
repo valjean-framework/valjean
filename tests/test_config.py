@@ -2,7 +2,7 @@
 
 '''Tests for the :mod:`~.valjean.config` module.'''
 
-from hypothesis import given, note, settings
+from hypothesis import given, note
 
 from .context import valjean  # pylint: disable=unused-import
 # pylint: disable=wrong-import-order
@@ -26,7 +26,6 @@ def test_copy_roundtrip(conf):
     assert conf == reconf
 
 
-@settings(deadline=None)  # the runtime for this test varies wildly, unclear
 @given(conf=configs())
 def test_file_roundtrip(conf, tmp_path_factory):
     '''Test roundtrip to file.'''

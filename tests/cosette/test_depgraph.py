@@ -1,7 +1,7 @@
 '''Tests for the :mod:`.depgraph` module.'''
 # pylint: disable=no-value-for-parameter
 
-from hypothesis import given, note, assume, event, settings, HealthCheck
+from hypothesis import given, note, assume, event, HealthCheck, settings
 from hypothesis.strategies import text, booleans, integers
 import pytest
 
@@ -479,7 +479,6 @@ def test_dependees(graph):
         assert node0 in graph[dep]
 
 
-@settings(deadline=None)
 @given(graph=depgraphs(min_size=1))
 def test_to_graphviz(graph):
     '''Test that DepGraph produces syntactically correct `dot` files.'''

@@ -338,7 +338,6 @@ def make_mesh_t4_output(meshes, ebins, tbins):
     return ''.join(t4out)
 
 
-@settings(deadline=None)
 @given(array_bins=array_and_bins(
     dtype=np.dtype([('score', FTYPE), ('sigma', FTYPE)]),
     max_dim=(3, 3, 3, 3, 3, 1, 1),
@@ -590,7 +589,6 @@ def compare_bins(bins, spectrum_res):
             assert np.allclose(spectrum_res[key+'bins'], bins[key])
 
 
-@settings(deadline=None)
 @given(array_bins=array_and_bins(dtype=np.dtype([('score', FTYPE),
                                                  ('sigma', FTYPE),
                                                  ('score/lethargy', FTYPE)]),
@@ -781,7 +779,7 @@ def green_bands(draw, max_dims=(5, 3, 2, 2, 2, 5)):
     return array, the_bins
 
 
-@settings(max_examples=100, deadline=None)
+@settings(max_examples=100)
 @given(array_bins=green_bands(max_dims=(5, 3, 2, 2, 2, 5)),
        disc_batch=integers(0, 5))
 def test_parse_greenbands_roundtrip(array_bins, disc_batch):
@@ -1226,7 +1224,6 @@ def extract_list_from_keff_res(keff_res, key):
     return list(map(lambda x: x['results']['keff_auto_res'][key], keff_res))
 
 
-@settings(deadline=None)
 @given(kij_res=kij_results(5), keff_res=keff_auto_estimation(3))
 def test_parse_kij_roundtrip(kij_res, keff_res):
     r'''Test printing k\ :sub:`ij` results as Tripoli-4 output from random

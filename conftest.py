@@ -5,7 +5,12 @@
 import os
 import logging
 import pytest
+from hypothesis import settings
 from valjean import set_log_level, LOGGER
+
+
+settings.register_profile('no_deadline', deadline=None)
+settings.load_profile('no_deadline')
 
 
 def pytest_addoption(parser):

@@ -44,7 +44,7 @@ def run(*, hard_graph, soft_graph=None, n_workers):
     return env
 
 
-@settings(deadline=None, max_examples=25)
+@settings(max_examples=25)
 @given(graph=graphs(task_strategy=delay_tasks(min_duration=1e-15,
                                               max_duration=1e-5),
                     dep_frac=0.0),
@@ -54,7 +54,7 @@ def test_indep_tasks(graph, n_workers):
     run(hard_graph=graph, n_workers=n_workers)
 
 
-@settings(deadline=None, max_examples=25)
+@settings(max_examples=25)
 @given(graph=graphs(task_strategy=delay_tasks(min_duration=0.0,
                                               max_duration=0.0),
                     dep_frac=0.02),
@@ -64,7 +64,6 @@ def test_dep_tasks(graph, n_workers):
     run(hard_graph=graph, n_workers=n_workers)
 
 
-@settings(deadline=None)
 @given(graph=graphs(task_strategy=delay_tasks(min_duration=0,
                                               max_duration=1e-2),
                     dep_frac=0.1),
@@ -79,7 +78,7 @@ def test_few_dep_tasks_few_workers(graph, n_workers):
                                               min_size=1,
                                               max_size=1)),
        n_workers=integers(min_value=0, max_value=1000))
-@settings(max_examples=1, deadline=2000)
+@settings(max_examples=1)
 def test_one_task_many_workers(graph, n_workers):
     '''Test scheduling of one task with many workers.'''
     run(hard_graph=graph, n_workers=n_workers)

@@ -50,8 +50,7 @@ def test_plot_1d_dataset(some_1d_dataset):
     assert plt.nb_plots == 1
 
 
-@settings(suppress_health_check=(HealthCheck.too_slow,), deadline=None,
-          max_examples=10)
+@settings(suppress_health_check=(HealthCheck.too_slow,), max_examples=10)
 @given(oneds=one_dim_dataset())  # pylint: disable=no-value-for-parameter
 def test_plot_bins_edges(oneds):
     '''Test plot where bins are given by edges.'''
@@ -66,8 +65,7 @@ def test_plot_bins_edges(oneds):
     assert len(plt.subplots[0].axnames) == len(crv0.bins)+1
 
 
-@settings(suppress_health_check=(HealthCheck.too_slow,), deadline=None,
-          max_examples=10)
+@settings(suppress_health_check=(HealthCheck.too_slow,), max_examples=10)
 @given(oneds=one_dim_dataset())  # pylint: disable=no-value-for-parameter
 def test_plot_with_errors(oneds):
     '''Test plot where bins are given by edges.'''
