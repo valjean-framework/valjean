@@ -248,6 +248,7 @@ _respfiltered_kw = Keyword("RESPONSE FILTERED BY")
 _respfiltcompos_kw = Keyword("COMPOSITIONS")
 _particule_kw = Keyword("PARTICULE")
 _incparticle_kw = Keyword("INCIDENT PARTICULE")
+_noise_equation_kw = Keyword("NOISE EQUATION")
 _reactiononnucl_kw = Keyword("reaction on nucleus")
 _temperature_kw = Keyword("temperature")
 _composition_kw = Keyword("composition")
@@ -522,7 +523,9 @@ _particle = (Suppress(_particule_kw + ':')
              .setParseAction(' '.join)('particle'))
 _incparticle = (Suppress(_incparticle_kw + ':')
                 + Word(alphas)('incident_particle'))
-
+_noise_equation = (Suppress(_noise_equation_kw + ':')
+                   + OneOrMore(Word(alphas), stopOn=LineEnd())
+                   .setParseAction(' '.join)('noise_equation'))
 # response characteristics written in lower case
 _reactiononnucl = (Suppress(_reactiononnucl_kw + ':')
                    + Word(alphanums+'_.')('reaction_on_nucleus'))
@@ -601,6 +604,7 @@ _filters = (Suppress(_filters_kw + ':')
 respcarac = (_respfilter
              | _particle
              | _incparticle
+             | _noise_equation
              | _nuclflags
              | _filters
              | _required
