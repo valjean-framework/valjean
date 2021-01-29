@@ -20,7 +20,7 @@ from valjean import LOGGER
 
 
 def make_skip_marker(command, regex):
-    '''Create a :func:`pytest.pytest.mark.skipif` marker for a command.
+    '''Create a :func:`pytest.mark.skipif` marker for a command.
 
     :param str command: the name of a command (an executable). If the command
                         is not available, the marker will flag the tests as
