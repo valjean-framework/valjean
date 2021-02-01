@@ -317,8 +317,9 @@ class Scanner(Mapping):
     `fname` (:class:`str`)
         name of the file that will be scanned
 
-    `reqbatchs` (:class:`int`)
-        number of batchs required (read from file `fname`)
+    `batches` (:class:`dict`)
+        keep the number of batches and the packet_length
+        (read from file `fname`)
 
     `normalend` (:class:`bool`)
         presence of "NORMAL COMPLETION"
@@ -398,7 +399,8 @@ class Scanner(Mapping):
         :param str end_flag: end flag of the results block in Tripoli-4 listing
         '''
         self.fname = fname
-        self.reqbatchs = None
+        self.batches = {"batches": None,
+                        "packet_length": 1}
         self.tasks = 1
         self.normalend = False
         self.end_flags = ["simulation time", "exploitation time",
@@ -426,23 +428,24 @@ class Scanner(Mapping):
         '''
         if "BATCH" in line and '_' not in line and "THIS" not in line:
             indbatch = line.split().index('BATCH')
-            self.reqbatchs = (int(line.split()[indbatch+1])
-                              if len(line.split()) > 1
-                              else None)
+            self.batches["batches"] = (int(line.split()[indbatch+1])
+                                       if len(line.split()) > 1
+                                       else None)
         elif "number of tasks is" in line:
             self.para = True
             self.tasks = int(line.split()[5])
         elif "BATCH_PER_SIMULATOR" in line:
-            self.reqbatchs = (int(line.split()[1])
-                              * (self.tasks-2 if self.tasks > 1 else 1))
+            self.batches["batches"] = (int(line.split()[1])
+                                       * (self.tasks-2
+                                          if self.tasks > 1 else 1))
         elif "PACKET_LENGTH" in line:
             LOGGER.info("Batchs grouped by packets -> "
                         "number of batchs expected divided "
                         "by PACKET_LENGTH in PARA")
             indpacket = line.split().index('PACKET_LENGTH')
             if self.para:
-                self.reqbatchs //= int(line.split()[indpacket+1])
-            LOGGER.debug("new number of batchs = %d", self.reqbatchs)
+                self.batches["packet_length"] = int(line.split()[indpacket+1])
+            LOGGER.debug("Packet length = %d", self.batches["packet_length"])
         elif "initialization time" in line:  # correspond to end of data file
             self.times['initialization_time'] = int(line.split()[3])
 
@@ -636,7 +639,10 @@ class Scanner(Mapping):
                  'errors': self.counterrors,
                  'number_of_tasks': self.tasks,
                  'normal_end': self.normalend,
-                 'required_batches': self.reqbatchs,
+                 'required_batches': (self.batches["batches"]
+                                      // self.batches["packet_length"]
+                                      if self.batches["batches"] is not None
+                                      else None),
                  'partial': self.partial,
                  'batch_number': batch_number,
                  't4_file': self.fname}
