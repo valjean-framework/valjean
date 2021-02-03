@@ -14,7 +14,7 @@ Some options for debugging are available (end flag).
 '''
 
 import threading
-from pyparsing import ParseException
+from pyparsing import ParseException, ParserElement
 
 from . import scan
 from .grammar import t4gram
@@ -118,6 +118,8 @@ class Parser:
         '''Parse the given string and raise exception if parsing failed.'''
         try:
             with PYPARSING_LOCK:
+                # pylint: disable=protected-access
+                ParserElement._parse = ParserElement._parseNoCache
                 result = gram.parseString(str_to_parse).asList()
         except ParseException:
             LOGGER.error("Parsing failed in %s, you are probably trying to "
