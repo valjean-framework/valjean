@@ -46,7 +46,7 @@ class GraphCommand(JobCommand):
                 try:
                     from pydot import graph_from_dot_data
                 except ImportError:
-                    LOGGER.critical('you need to install pydot to use the '
+                    LOGGER.error('you need to install pydot to use the '
                                     '--output option.')
                     raise
                 graph_pydot = graph_from_dot_data(graph_str)[0]
