@@ -42,6 +42,7 @@ from ..context import valjean  # noqa: F401, pylint: disable=unused-import
 from valjean.eponine.dataset import Dataset
 from valjean.gavroche.test import TestEqual, TestApproxEqual
 from valjean.gavroche.stat_tests.student import TestStudent
+from valjean.gavroche.stat_tests.chi2 import TestChi2
 from valjean.gavroche.stat_tests.bonferroni import (TestBonferroni,
                                                     TestHolmBonferroni)
 from valjean.gavroche.diagnostics.metadata import TestMetadata
@@ -411,6 +412,21 @@ def holm_bonf_test_result_fail(holm_bonferroni_test_fail):
     return holm_bonferroni_test_fail.evaluate()
 
 
+@pytest.fixture
+def chi2_test(some_1d_dataset, other_1d_dataset):
+    '''Return a Student test between datasets.'''
+    return TestChi2(some_1d_dataset, other_1d_dataset,
+                    name='A Student test',
+                    description='Do the datasets have the same mean taking '
+                                'into account the errors?')
+
+
+@pytest.fixture
+def chi2_test_result(chi2_test):
+    '''Return a Chi2 test.'''
+    return chi2_test.evaluate()
+
+
 @composite
 def one_dim_dataset(draw):
     '''Strategy for generating 1-dimension datasets.'''
@@ -460,9 +476,9 @@ def metadata_dicts(draw, min_size=1):
 def generate_test_tasks():
     '''Generate :class:`~.TestMetadata` to test the statistics diagnostics
     based on labels.'''
-    menu1 = {'food': 'egg + spam', 'drink': 'beer'}
-    menu2 = {'food': 'egg + bacon', 'drink': 'beer'}
-    menu3 = {'food': 'lobster thermidor', 'drink': 'brandy'}
+    menu1 = {'food': 'egg + spam', 'drink': 'beer', 'menu': 1}
+    menu2 = {'food': 'egg + bacon', 'drink': 'beer', 'menu': 2}
+    menu3 = {'food': 'lobster thermidor', 'drink': 'brandy', 'menu': 3}
 
     def test_generator():
         result = [TestMetadata({'Graham': menu1, 'Terry': menu1},

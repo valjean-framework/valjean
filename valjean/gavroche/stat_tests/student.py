@@ -468,7 +468,7 @@ class TestStudent(TestDataset):
         :type datasets: :class:`list` (:class:`~.dataset.Dataset`)
         :param float alpha: significance level, i.e. limit on the p-value
                             (expected values are typically 0.01, 0.05),
-                            default is ``None``
+                            default is ``0.01``
         :param int ndf: default is ``None``, if given p-value will be
                         calculated for ndf degrees of freedom
                         (should correspond to number of batches),
@@ -575,5 +575,4 @@ class TestStudent(TestDataset):
         yield self.__class__.__name__.encode('utf-8')
         yield float(self.alpha).hex().encode('utf-8')
         if self.ndf is not None:
-            n_bytes = (self.ndf.bit_length() - 1) // 8 + 1
-            yield self.ndf.to_bytes(n_bytes, 'little')
+            yield hex(self.ndf).encode('utf-8')

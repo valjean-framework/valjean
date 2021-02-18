@@ -137,6 +137,6 @@ class TestMetadata(Test):
             yield key.encode('utf-8')
             for mdkey, mdval in tmd.items():
                 yield mdkey.encode('utf-8')
-                yield mdval.encode('utf-8')
+                yield str(mdval).encode('utf-8')
         for key in self.exclude:
             yield key.encode('utf-8')

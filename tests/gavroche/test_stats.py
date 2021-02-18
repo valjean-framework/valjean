@@ -32,6 +32,7 @@
 
 # pylint: disable=wrong-import-order,no-value-for-parameter
 import numpy as np
+import pytest
 
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.eponine.dataset import Dataset
@@ -109,3 +110,48 @@ def test_student_array_nan():
     assert not bool(d12_res)
     oracles = d12_res.oracles()
     assert np.array_equal(oracles, [[False, False, True, False]])
+
+
+def test_student_comp(student_test_result, student_test_result_fail):
+    '''Test data method of TestStudent.'''
+    assert bool(student_test_result) != bool(student_test_result_fail)
+    assert (student_test_result.test.fingerprint()
+            != student_test_result_fail.test.fingerprint())
+    assert (student_test_result.test.fingerprint()
+            == student_test_result.test.fingerprint())
+
+
+@pytest.mark.parametrize('ndf', [20, np.int_(20)])
+def test_student_ndf_int(student_test_result_with_pvals, ndf):
+    '''Test serialization of TestStudent for ndf type as int (OK).'''
+    student_test_result_with_pvals.test.ndf = ndf
+    assert student_test_result_with_pvals.test.fingerprint()
+
+
+@pytest.mark.parametrize('ndf', [np.float_(20), 20.])
+def test_student_ndf_float(student_test_result_with_pvals, ndf):
+    '''Test serialization of TestStudent for ndf type as float (failing).'''
+    student_test_result_with_pvals.test.ndf = ndf
+    with pytest.raises(TypeError):
+        student_test_result_with_pvals.test.fingerprint()
+
+
+@pytest.mark.parametrize('alpha', [0.02, np.float_(0.02)])
+def test_student_alpha(student_test_result_with_pvals, alpha):
+    '''Test serialization of TestStudent for ndf type as int (OK).'''
+    student_test_result_with_pvals.test.alpha = alpha
+    assert student_test_result_with_pvals.test.fingerprint()
+
+
+def test_chi2(chi2_test_result):
+    '''Test Chi2 test in successful case.'''
+    assert bool(chi2_test_result)
+    assert isinstance(chi2_test_result.chi2, list)
+    oracles = chi2_test_result.oracles()
+    assert isinstance(oracles, np.ndarray)
+    assert len(oracles) == len(chi2_test_result.test.datasets)
+
+
+def test_chi2_fingerprint(chi2_test_result):
+    '''Test serialization of TestChi2.'''
+    assert chi2_test_result.test.fingerprint()

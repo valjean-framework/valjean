@@ -151,7 +151,7 @@ Test with empty bins
 ^^^^^^^^^^^^^^^^^^^^
 
 One "empty bin" at the same position in the 2 compared datasets prevents the
-test to work. An empty bin being defined as a bin with zero error. In Monte
+test to work. An empty bin is defined as a bin with zero error. In Monte
 Carlo codes a zero error can happen for example when only one batch has been
 run, no variance can be calculated in that case (``n-1`` usually used with
 ``n`` the number of batches).
@@ -300,9 +300,9 @@ class TestResultChi2(TestResult):
     def oracles(self):
         '''Final test for the list of compared datasets.
 
-        :returns: list(bool)
+        :returns: :obj:`numpy.ndarray`
         '''
-        return [pval > self.test.alpha for pval in self.pvalue]
+        return np.greater(self.pvalue, self.test.alpha)
 
     def __bool__(self):
         return all(self.oracles())
