@@ -125,11 +125,11 @@ def trim_range(bins, max_ratio=1000):
         has_changed = [False, False]
         limits = [nbins[0], nbins[-1]]
         if lbins.dtype.kind == 'U':
-            blimits.append([tuple(limits), False])
+            blimits.append(tuple(limits + [False]))
             continue
         if nbins.size < 3:
             LOGGER.warning('Not enough bins to adapt range.')
-            blimits.append([tuple(limits), False])
+            blimits.append(tuple(limits + [False]))
             continue
         if nbins.size < 4:
             LOGGER.warning('Will adapt range for %d bins, '
@@ -320,7 +320,7 @@ def post_treatment(templates, result):
             if splt.ptype not in ('1D', '2D'):
                 continue
             blimits = [trim_range(sc.bins) for sc in splt.curves]
-            if all(not b[1] for a in blimits for b in a):
+            if all(not b[2] for a in blimits for b in a):
                 continue
             nlimits = []
             for idim in range(len(blimits[0])):

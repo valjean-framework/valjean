@@ -720,7 +720,7 @@ def test_mix_1d_and_2d():
                         small_subplots=False, suppress_legends=True)
     blimits = [pltr.trim_range(c.bins) for s in plt1.subplots
                for c in s.curves]
-    assert any(b[1] for a in blimits for b in a)
+    assert any(b[2] for a in blimits for b in a)
     for splt, lim in zip(plt1.subplots, blimits):
         splt.attributes.limits = [(li[0], li[1]) for li in lim]
     mplt = MplPlot(plt1)
@@ -765,6 +765,9 @@ def test_string_bins_1d_diff_axes():
     plti = PlotTemplate(
         subplots=[SubPlotElements(curves=[pelt1, pelt2], axnames=('X', 'Y')),
                   SubPlotElements(curves=[pelt3], axnames=('X', 'Y'))])
+    blimits = [pltr.trim_range(c.bins) for s in plti.subplots
+               for c in s.curves]
+    assert all(not b[2] for a in blimits for b in a)
     mplt = MplPlot(plti)
     return mplt.draw()[0]
 
