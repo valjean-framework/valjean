@@ -482,10 +482,9 @@ class RstTable:
                 type_ = val.dtype.type
             except AttributeError:
                 return str(val)
-            if issubclass(type_, (bool, int, np.integer, np.int32, np.int64,
-                                  np.str_)):
-                return str(val)
-            return num_fmt.format(val)
+            if issubclass(type_, (float, np.inexact)):
+                return num_fmt.format(val)
+            return str(val)
         for row, hlrow in zip(cls.transpose(columns),
                               cls.transpose(highlights)):
             yield [cls.highlight(_format_val(val), high)
