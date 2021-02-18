@@ -798,7 +798,7 @@ class PlotTemplate:
 
     '''
     def __init__(self, *, subplots, small_subplots=True, suppress_xaxes=False,
-                 suppress_legends=False):
+                 suppress_legends=False, backend_kw=None):
         '''Construction of the PlotTemplate from a list of
         :class:`SubPlotElements`.
 
@@ -809,12 +809,14 @@ class PlotTemplate:
             x-axis of subplots except the last one, default = ``False``
         :param bool suppress_legends: suppress legend on all subplots except
             the first one, default = ``False``
+        :param dict backend_kw: dictionary with backend-specific options
         '''
         self.subplots = subplots
         self.nb_plots = len(self.subplots)
         self.small_subplots = small_subplots
         self.suppress_xaxes = suppress_xaxes
         self.suppress_legends = suppress_legends
+        self.backend_kw = backend_kw if backend_kw else {}
 
         if not isinstance(self.subplots, list):
             raise TypeError("The 'subplots' argument must a list of "
@@ -832,7 +834,8 @@ class PlotTemplate:
         ccplt = PlotTemplate(subplots=[pelt.copy() for pelt in self.subplots],
                              small_subplots=self.small_subplots,
                              suppress_xaxes=self.suppress_xaxes,
-                             suppress_legends=self.suppress_legends)
+                             suppress_legends=self.suppress_legends,
+                             backend_kw=self.backend_kw)
         return ccplt
 
     def _binary_join(self, other):
@@ -867,6 +870,9 @@ class PlotTemplate:
             LOGGER.warning('Not same value for suppress_legends in self and '
                            'other, keeping self one (%s)',
                            self.suppress_legends)
+        if other.backend_kw != self.backend_kw:
+            LOGGER.warning('Not same values for backend_kw in self and other,'
+                           ' keeping self one (%s)', self.backend_kw)
 
     def join(self, *others):
         '''Join a given number a :class:`PlotTemplate` to the current one.

@@ -40,6 +40,7 @@ To be sure the comparison with the reference plots is done, don't forget the
 '''
 # pylint: disable=unused-import
 
+import sys
 from collections import namedtuple
 import pytest
 import numpy as np
@@ -448,6 +449,8 @@ def test_studentt_res_logxy(studentt_res_range_lrbin):
 @pytest.mark.mpl_image_compare(tolerance=50,
                                filename='student_2d_logz.png',
                                baseline_dir='ref_plots')
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='matplotlib version different')
 def test_studentt_2d_logz(studentt_res_2d):
     '''Test logarithmic colorbar with 2D plot.'''
     def log_post(templates, tres):  # pylint: disable=unused-argument
@@ -496,6 +499,42 @@ def test_studentt_2d_logxz(studentt_res_2d_range_etlr):
 
 
 @pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='student_2d_logz_cols.png',
+                               baseline_dir='ref_plots')
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='matplotlib version different')
+def test_studentt_2d_logz_cols(studentt_res_2d):
+    '''Test plots with 1 row and 3 columns.'''
+    def log_post(templates, _):
+        for templ in templates:
+            templ.subplots[0].attributes.logz = True
+            templ.subplots[1].attributes.logz = True
+            templ.backend_kw.update({'ncols': 3, 'nrows': 1})
+        return templates
+    templ = PlotRepresenter(post=log_post)(studentt_res_2d)
+    mplt = MplPlot(templ[0])
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='student_2d_logz_cols_l37.png',
+                               baseline_dir='ref_plots')
+@pytest.mark.skipif(sys.version_info > (3, 7),
+                    reason='matplotlib version different')
+def test_studentt_2d_logz_cols_l37(studentt_res_2d):
+    '''Test plots with 1 row and 3 columns (python version < 3.7).'''
+    def log_post(templates, tres):  # pylint: disable=unused-argument
+        for templ in templates:
+            templ.subplots[0].attributes.logz = True
+            templ.subplots[1].attributes.logz = True
+            templ.backend_kw.update({'ncols': 3, 'nrows': 1})
+        return templates
+    templ = PlotRepresenter(post=log_post)(studentt_res_2d)
+    mplt = MplPlot(templ[0])
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(tolerance=50,
                                filename='mult_curves.png',
                                baseline_dir='ref_plots')
 def test_mult_curves():
@@ -506,8 +545,28 @@ def test_mult_curves():
                           legend='c1', index=1)
     pelt3 = CurveElements(values=np.arange(5)*0.7, bins=[np.arange(6)],
                           legend='c2', index=2)
-    plti = PlotTemplate(subplots=[SubPlotElements(
-        curves=[pelt, pelt2, pelt3], axnames=('X', 'Y'))])
+    plti = PlotTemplate(
+        subplots=[SubPlotElements(
+            curves=[pelt, pelt2, pelt3], axnames=('X', 'Y'))])
+    mplt = MplPlot(plti)
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='mult_curves_equal.png',
+                               baseline_dir='ref_plots')
+def test_mult_curves_equal():
+    '''Test for multiple curves on the same subplot.'''
+    pelt = CurveElements(values=np.arange(5), bins=[np.arange(6)], legend='c0',
+                         index=0)
+    pelt2 = CurveElements(values=np.arange(5)*1.2, bins=[np.arange(6)],
+                          legend='c1', index=1)
+    pelt3 = CurveElements(values=np.arange(5)*0.7, bins=[np.arange(6)],
+                          legend='c2', index=2)
+    plti = PlotTemplate(
+        subplots=[SubPlotElements(curves=[pelt, pelt2, pelt3],
+                                  axnames=('X', 'Y'))],
+        backend_kw={'subplot_kw': {'aspect': 'equal'}})
     mplt = MplPlot(plti)
     return mplt.draw()[0]
 
@@ -646,8 +705,45 @@ def test_plt_limits_2d():
             bins=[np.array([-1, 0, 1, 2]), np.array([1, 2, 4, 6, 7])],
             legend='c2', index=2)],
         axnames=('X', 'Y', 'Z'), ptype='2D')
+    plt1 = PlotTemplate(subplots=[spelt1, spelt2, spelt3])
+    blimits = [pltr.trim_range(c.bins) for s in plt1.subplots
+               for c in s.curves]
+    assert any(b[1] for a in blimits for b in a)
+    nlimits = []
+    for idim in range(len(blimits[0])):
+        nlimits.append((min(crv[idim][0] for crv in blimits),
+                        max(crv[idim][1] for crv in blimits)))
+    for splt in plt1.subplots:
+        splt.attributes.limits = nlimits
+    mplt = MplPlot(plt1)
+    return mplt.draw()[0]
+
+
+@pytest.mark.mpl_image_compare(tolerance=50,
+                               filename='diff_axes_limits_2d_bekw.png',
+                               baseline_dir='ref_plots')
+def test_plt_limits_2d_backendkw():
+    '''Test limits modifications using 2D plots.'''
+    spelt1 = SubPlotElements(
+        curves=[CurveElements(
+            values=np.arange(12).reshape(3, 4),
+            bins=[np.array([0, 2, 4, 10000]), np.array([1, 3, 5, 7, 9])],
+            legend='c0', index=0)],
+        axnames=('X', 'Y', 'Z'), ptype='2D')
+    spelt2 = SubPlotElements(
+        curves=[CurveElements(
+            values=np.arange(12).reshape(3, 4)*1.2,
+            bins=[np.array([0, 1, 2, 3]), np.array([0, 1, 2, 3, 10000])],
+            legend='c1', index=1)],
+        axnames=('X', 'Y', 'Z'), ptype='2D')
+    spelt3 = SubPlotElements(
+        curves=[CurveElements(
+            values=np.arange(12).reshape(3, 4)*1.2,
+            bins=[np.array([-1, 0, 1, 2]), np.array([1, 2, 4, 6, 7])],
+            legend='c2', index=2)],
+        axnames=('X', 'Y', 'Z'), ptype='2D')
     plt1 = PlotTemplate(subplots=[spelt1, spelt2, spelt3],
-                        small_subplots=False)
+                        backend_kw={'figsize': (6, 15), 'gridspec_kw': None})
     blimits = [pltr.trim_range(c.bins) for s in plt1.subplots
                for c in s.curves]
     assert any(b[1] for a in blimits for b in a)

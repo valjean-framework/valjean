@@ -183,7 +183,7 @@ Legends
 ```````
 
 By default the legend is represented on all panels at the location
-**Matplotlib** determines like in `plot 3 panels`_.
+:mod:`matplotlib.pyplot` determines like in `plot 3 panels`_.
 
 If you would prefer to get only one legend for all panels, the
 ``suppress_legends`` argument in :class:`~.templates.PlotTemplate` should be
@@ -355,6 +355,69 @@ Using the previous 1D example:
     >>> sbpe3.attributes.logy = True
     >>> pltit = PlotTemplate(subplots=[sbpe1, sbpe2, sbpe3],
     ...                      small_subplots=False)
+    >>> from valjean.javert.mpl import MplPlot, MplStyle
+    >>> mplplt = MplPlot(pltit)
+    >>> fig, _ = mplplt.draw()
+
+
+Customizations specific to the backend, here :mod:`matplotlib.pyplot`, are
+passed thanks to the ``backend_kw`` argument of
+:class:`~.templates.PlotTemplate`. The keywords that are currently supported by
+the :mod:`matplotlib.pyplot` backend and used in :mod:`valjean` are:
+
+``nrows`` and ``ncols``
+    These keys should be associated to integers. They determine the number of
+    subplots, in case the :class:`~.templates.PlotTemplate` object contains
+    several :class:`~.templates.SubPlotElements`. If ``ncols`` is given,
+    ``nrows`` also has to be given.
+
+``figsize``
+    This key should be associated to tuple of floats (width and height in
+    inches) to specify the figure size.
+
+``subplot_kw``
+    This key should be associated to a dictionary of keywords that will be
+    passed as-is to :func:`matplotlib.pyplot.subplots`.
+
+``gridspec_kw``
+    This key should be associated to a dictionary to be passed to the grid
+    constructor, see :func:`matplotlib.pyplot.subplots` and
+    :class:`matplotlib.gridspec.GridSpec`.
+
+All possible keyword arguments that can be passed to
+:func:`matplotlib.pyplot.subplots` are normally supported.
+
+Example is given from the previous 1D one:
+
+.. plot::
+    :include-source:
+
+    >>> import numpy as np
+    >>> from valjean.javert.templates import (PlotTemplate, CurveElements,
+    ...                                       SubPlotElements)
+    >>> bins = [np.array(np.arange(10))]
+    >>> lcurves1 = [CurveElements(
+    ...     values=bins[0][1:]*0.5*(icurve+1) + icurve*(-1)**(icurve),
+    ...     bins=bins, legend=str(icurve), index=icurve)
+    ...             for icurve in range(3)]
+    >>> sbpe1 = SubPlotElements(curves=lcurves1, axnames=['the x-axis', ''])
+    >>> lcurves2 = [CurveElements(
+    ...     values=lcurves1[icurve].values/lcurves1[0].values, bins=bins,
+    ...     legend=str(icurve+1)+' vs 0', index=icurve)
+    ...             for icurve in range(1, 3)]
+    >>> sbpe2 = SubPlotElements(curves=lcurves2,
+    ...                         axnames=['the x-axis', 'C/ref'])
+    >>> lcurves3 = [CurveElements(
+    ...     values=((lcurves1[icurve].values-lcurves1[0].values)
+    ...             /lcurves1[0].values),
+    ...     bins=bins, legend=str(icurve+1)+' vs 0', index=icurve)
+    ...             for icurve in range(1, 3)]
+    >>> sbpe3 = SubPlotElements(curves=lcurves3,
+    ...                         axnames=['the x-axis', '(C-ref)/ref'])
+    >>> pltit = PlotTemplate(subplots=[sbpe1, sbpe2, sbpe3],
+    ...                      small_subplots=False,
+    ...                      backend_kw={'ncols': 3, 'nrows': 1,
+    ...                                  'subplot_kw': {'aspect': 'equal'}})
     >>> from valjean.javert.mpl import MplPlot, MplStyle
     >>> mplplt = MplPlot(pltit)
     >>> fig, _ = mplplt.draw()
@@ -576,13 +639,32 @@ class MplPlot:
         :returns: dictionary of keyword arguments directly used by matplotlib
         :rtype: dict
         '''
-        splts_kwargs = {'figsize': (6.4, 6.4+2*(data.nb_plots-1))}
-        if data.small_subplots:
-            splts_kwargs['figsize'] = (6.4, 4.8+1.2*(data.nb_plots-1))
-            splts_kwargs['gridspec_kw'] = {
-                'height_ratios': [4] + [1]*(data.nb_plots-1)}
-        if 'pie' in [s.ptype for s in data.subplots]:
-            splts_kwargs = {'figsize': (6.4, 4)}
+        splts_kwargs = {}
+        if 'nrows' not in data.backend_kw:
+            splts_kwargs['nrows'] = data.nb_plots
+        if 'ncols' in data.backend_kw:
+            assert 'nrows' in data.backend_kw, (
+                'nrows is also required when ncols is given')
+        if 'figsize' not in data.backend_kw:
+            splts_kwargs['figsize'] = (6.4, 6.4+2*(data.nb_plots-1))
+            if data.small_subplots:
+                splts_kwargs['figsize'] = (6.4, 4.8+1.2*(data.nb_plots-1))
+            if 'pie' in [s.ptype for s in data.subplots]:
+                splts_kwargs['figsize'] = (6.4, 4)
+            if 'ncols' in data.backend_kw:
+                splts_kwargs['figsize'] = (
+                    6.4 + 6.4*(data.backend_kw['ncols']-1),
+                    6.4 + 4.3*(data.backend_kw['nrows']-1))
+        if data.backend_kw and data.small_subplots:
+            LOGGER.warning('small_subplots=True may conflict with '
+                           'backend-specific options passed via backend_kw')
+        if 'gridspec_kw' not in data.backend_kw:
+            if data.small_subplots:
+                splts_kwargs['gridspec_kw'] = {
+                    'height_ratios': [4] + [1]*(data.nb_plots-1)}
+            if 'ncols' in data.backend_kw:
+                splts_kwargs['gridspec_kw'] = {
+                    'hspace': 0.4*data.backend_kw['nrows']}
         return splts_kwargs
 
     def initialize_figure(self):
@@ -591,10 +673,10 @@ class MplPlot:
         :rtype: tuple(matplotlib.figure.Figure, list(matplotlib.axes.Axes))
         '''
         fig, splts = plt.subplots(
-            self.data.nb_plots, **self.figure_properties(self.data),
+            **self.figure_properties(self.data), **self.data.backend_kw,
             constrained_layout=True)
         if self.data.nb_plots == 1:
-            splts = [splts]
+            splts = np.array([splts])
         return fig, splts
 
     def finalize_figure(self, splts):
@@ -630,7 +712,7 @@ class MplPlot:
                 .format([s.ptype for s in self.data.subplots], self.PTYPES))
         fig, splts = self.initialize_figure()
         fmts = self.style.styles_sequence(self.data.curves_index())
-        for splt, sdat in zip(splts, self.data.subplots):
+        for splt, sdat in zip(splts.flatten(), self.data.subplots):
             if sdat.ptype == '1D':
                 mpl_plot = _MplPlot1D(sdat, self.style)
             elif sdat.ptype == '2D':
