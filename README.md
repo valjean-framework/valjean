@@ -2,6 +2,8 @@
 
 Quick installation guide:
 
+*valjean* needs at least python3.6 (deprecated on December 23, 2021).
+
 ## Installation using *pip* ##
 
 ### Setup a virtual environment ###
