@@ -222,7 +222,7 @@ def convert_batch_numbers(score):
     return res
 
 
-def convert_score(toks):
+def convert_score(toks):  # pylint: disable=too-many-branches
     '''Convert score to :obj:`numpy` and python objects.
     Calls various conversion functions depending on input key (mesh, spectrum,
     Green bands, default python `dict`, etc.).
@@ -259,6 +259,8 @@ def convert_score(toks):
                 res['scoring_zone_id'] = convert_scoring_zone_id(score[key])
             elif key == 'correspondence_table':
                 res[key] = convert_correspondence_table(score[key])
+            elif key in ('cell_unit', 'vol_unit'):
+                res[key] = common.convert_list_to_tuple(score[key])
             else:
                 res[key] = score[key]
     return res

@@ -70,13 +70,12 @@ Number of responses: 8
         scoring_zone_type Mesh
         temperature (300.0,)
       results (<class 'dict'>) -> score
-        Dict with keys = ['boltzmann_entropy', 'discarded_batches', 'integrated', 'mesh', 'shannon_entropy', 'spectrum', 'used_batches']
-          boltzmann_entropy 8.342621e-01, dtype: float64
+        Dict with keys = ['discarded_batches', 'integrated', 'mesh', 'spectrum', 'used_batches']
           discarded_batches 1, dtype: int64
           integrated           Dict with keys = ['score', 'sigma']
             score 3.536549e-01, dtype: float64
             sigma 7.371170e-01, dtype: float64
-          mesh           Dict with keys = ['array', 'bins', 'units']
+          mesh           Dict with keys = ['array', 'bins', 'boltzmann_entropy', 'shannon_entropy', 'units']
             array <class 'numpy.ndarray'>, shape: (24, 3, 1, 1, 1, 1, 1), dtype: [('score', '<f8'), ('sigma', '<f8')], squeezed:
 [[(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
   (0.000000e+00, 0.000000e+00)]
@@ -141,6 +140,10 @@ Number of responses: 8
 []
               phi <class 'numpy.ndarray'>, shape: (0,), dtype: float64, squeezed:
 []
+            boltzmann_entropy <class 'numpy.ndarray'>, shape: (1, 1, 1, 1, 1, 1, 1), dtype: [('score', '<f8'), ('sigma', '<f8')], squeezed:
+(8.342621e-01, nan)
+            shannon_entropy <class 'numpy.ndarray'>, shape: (1, 1, 1, 1, 1, 1, 1), dtype: [('score', '<f8'), ('sigma', '<f8')], squeezed:
+(9.047529e-01, nan)
             units             Dict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 'score', 'sigma', 't']
               e MeV
               mu 
@@ -151,7 +154,6 @@ Number of responses: 8
               score unknown
               sigma %
               t s
-          shannon_entropy 9.047529e-01, dtype: float64
           spectrum           Dict with keys = ['array', 'bins', 'units']
             array <class 'numpy.ndarray'>, shape: (1, 1, 1, 1, 1, 1, 1), dtype: [('score', '<f8'), ('sigma', '<f8'), ('score/lethargy', '<f8')], squeezed:
 (0.000000e+00, 0.000000e+00, 0.000000e+00)

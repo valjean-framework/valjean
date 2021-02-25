@@ -800,7 +800,7 @@ class MeshDictBuilder(KinematicDictBuilder):
         LOGGER.debug("Initialisation of MeshDictBuilder")
         super().__init__(colnames, lnbins)
 
-    def fill_space_bins(self, nb_elts, vals):
+    def fill_space_bins(self, nb_tokens, vals):
         '''Fill the mesh space bins.
 
         Two different cases are possible:
@@ -809,21 +809,24 @@ class MeshDictBuilder(KinematicDictBuilder):
           bins are set to all possible cell index in the 3 dimensions. For
           example: if there are 3 cells in `s0`, the bins will be 0, 1, 2.
           Only center of bins are given here (no possibility of calculation of
-          a width). In that case the mesh contains 3 elements: cell indices
-          comma separated (no whitespaces), value and sigma.
+          a width). In that case the mesh contains 3 tokens: a comma-separated
+          list of cell indices (without intervening whitespace), the value and
+          the sigma.
         * a standard MESH was required with the option ``MESH_INFO`` in
           Tripoli-4: center of cells are given in all dimensions, the space
           bins will be set to these values. Width can be calculated (regular
           binning but possible in any case), but not done here. If needed for
           plot representation this will be proposed at the plotting step. In
-          that case the mesh line contains 6 elements: cell indices, the three
-          space coordinates of cell middle, value and sigma.
+          that case the mesh line contains 6 or 7 tokens, depending on
+          Tripoli-4 version: the comma-separated list of cell indices (as
+          above), the three space coordinates of the midpoint of the cell, [the
+          cell volume], the value and the sigma.
 
-        :param int nb_elts: number of elements by line of mesh result
+        :param int nb_tokens: number of tokens by line of mesh result
         :param list vals: mesh results
         '''
         LOGGER.debug("Filling space bins")
-        if nb_elts == 3:
+        if nb_tokens == 3:
             self.bins['s0'] = np.arange(self.arrays['default'].shape[0])
             self.bins['s1'] = np.arange(self.arrays['default'].shape[1])
             self.bins['s2'] = np.arange(self.arrays['default'].shape[2])
@@ -852,13 +855,34 @@ class MeshDictBuilder(KinematicDictBuilder):
                      'eintegrated_mesh') for the moment
         :param int ebin: energy bin to fill in the array
         '''
-        npt = np.loadtxt(StringIO(meshvals[0]), usecols=(-2, -1),
-                         dtype=np.dtype([('value', 'f8'), ('sigma', 'f8')]))
+        if 'volume' in self.arrays[name].dtype.names:
+            npt = np.loadtxt(StringIO(meshvals[0]), usecols=(-3, -2, -1),
+                             dtype=self.arrays[name].dtype)
+        else:
+            npt = np.loadtxt(
+                StringIO(meshvals[0]), usecols=(-2, -1),
+                dtype=self.arrays[name].dtype)
         try:
-            res = npt[['value', 'sigma']].reshape(self.arrays[name].shape[:3])
+            res = npt[list(npt.dtype.names)].reshape(
+                self.arrays[name].shape[:3])
         except ValueError as verr:
             raise MeshDictBuilderException('Mesh looks incomplete') from verr
         self.arrays[name][:, :, :, ebin, self.itime, self.imu, self.iphi] = res
+
+    def _fill_entropy_array(self, meshvals, ebin):
+        '''Fill mesh array.
+
+        :param list meshvals: mesh data for a given energy bin
+                         ``[[[s0, s1, s2], score, sigma],...]``
+        :param int ebin: energy bin to fill in the array
+        '''
+        LOGGER.debug("dans entropy for ebin: %d", ebin)
+        self.arrays['boltzmann_entropy'][
+            :, :, :, ebin, self.itime, self.imu, self.iphi]['score'] = (
+                meshvals['boltzmann_entropy_res'])
+        self.arrays['shannon_entropy'][
+            :, :, :, ebin, self.itime, self.imu, self.iphi]['score'] = (
+                meshvals['shannon_entropy_res'])
 
     def fill_arrays_and_bins(self, data):
         '''Fill arrays and bins for mesh data.
@@ -889,6 +913,9 @@ class MeshDictBuilder(KinematicDictBuilder):
                     LOGGER.debug("Will fill mesh integrated in energy")
                     self._fill_mesh_array(emesh['mesh_vals'],
                                           'eintegrated_mesh', 0)
+                if 'entropy' in emesh:
+                    LOGGER.debug("Will entropies integrated in energy")
+                    self._fill_entropy_array(emesh['entropy'], inde)
             if 'integrated_res' in ires:
                 iintres = ires['integrated_res']
                 index = (0, 0, 0, 0, self.itime, 0, 0)
@@ -1149,7 +1176,6 @@ def convert_mesh(meshres):
     LOGGER.debug("keys of meshes: %s", list(meshres[0]['meshes'].keys()))
     LOGGER.debug("elts in meshes: %d", len(meshres[0]['meshes']))
     LOGGER.debug('keys in elt 0: %s', list(meshres[0]['meshes'][0].keys()))
-    assert len(meshres[0]['meshes'][0]['mesh_vals']) == 1
     mvals = meshres[0]['meshes'][0]['mesh_vals'][0]
     lcell = mvals.rpartition('\n')[-1].split()
     olcell = np.array([int(b) for b in lcell[0].strip('()').split(',')])
@@ -1163,17 +1189,26 @@ def convert_mesh(meshres):
     nebins = get_energy_bins(meshres[0]['meshes'])
     LOGGER.debug("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
                  "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
+    colnames = (['score', 'sigma'] if len(lcell) < 7
+                else ['volume', 'score', 'sigma'])
     # up to now no mesh splitted in mu or phi angle seen, update easy now
-    vals = MeshDictBuilder(['score', 'sigma'],
+    vals = MeshDictBuilder(colnames,
                            [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
     # mesh integrated on energy (normally the last mesh)
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
-        vals.add_array('eintegrated_mesh', ['score', 'sigma'],
+        vals.add_array('eintegrated_mesh', colnames,
                        [ns0bins, ns1bins, ns2bins, 1, ntbins, 1, 1])
     # integrated result (space and energy)
     if 'integrated_res' in meshres[0]:
-        vals.add_array('integrated_res', ['score', 'sigma'],
+        vals.add_array('integrated_res', colnames,
                        [1, 1, 1, 1, ntbins, 1, 1])
+    # entropy results (Boltzmann and Shannon entropy come together, only in
+    # results in energy range)
+    if 'entropy' in meshres[0]['meshes'][0]:
+        vals.add_array('boltzmann_entropy', colnames,
+                       [1, 1, 1, nebins, 1, 1, 1])
+        vals.add_array('shannon_entropy', colnames,
+                       [1, 1, 1, nebins, 1, 1, 1])
     # fill arrays, bins, put them in increasing order
     vals.fill_space_bins(len(lcell), mvals)
     vals.fill_arrays_and_bins(meshres)
@@ -1189,6 +1224,9 @@ def convert_mesh(meshres):
         convmesh['eintegrated_array'] = vals.arrays['eintegrated_mesh']
     if 'integrated_res' in meshres[0]:
         convmesh['seintegrated_array'] = vals.arrays['integrated_res']
+    if 'entropy' in meshres[0]['meshes'][0]:
+        convmesh['boltzmann_entropy'] = vals.arrays['boltzmann_entropy']
+        convmesh['shannon_entropy'] = vals.arrays['shannon_entropy']
     return convmesh
 
 

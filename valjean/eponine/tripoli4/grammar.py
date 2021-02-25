@@ -304,7 +304,8 @@ _scoreallsources_kw = (Keyword("Results cumulated on all sources")
                        .setParseAction(replaceWith('All sources')))
 _scorevol_kw = Keyword("Volume")
 _scorevolvol_kw = Keyword("num of volume")
-_scorevolume_kw = Keyword("Volume in cm3")
+_scorevolume_kw = (Keyword("Volume in cm3")
+                   | Keyword('Volume in 1.000000e+00 cm3'))
 _scorevolumeint_kw = (Keyword("The result is integrated over the volume")
                       | Keyword("The result is integrated in volume"))
 _scorevolumenotint_kw = (
@@ -336,7 +337,7 @@ _scoremaillecell_kw = Keyword("num of cell")
 # Correspondence table (volumes and their names)
 _corresptable_kw = Keyword("Correspondence table between volumes "
                            "ids and names :")
-_vol_kw = Keyword("Volume")
+_vol_kw = CaselessKeyword("Volume")
 
 # KEFF keywords
 _fullcomb_kw = Keyword("full combined estimator")
@@ -654,15 +655,26 @@ scoremode = Suppress(_scoremode_kw + ':') + Word(alphas+'_')('scoring_mode')
 _score_mesh_unit = (Suppress("(in")
                     + Word(alphanums+'.^-+')('unit')
                     + Suppress(')'))
+_score_meshinfo_cell_unit = (Suppress(_scoremeshinfobins_kw + '[')
+                             + _fnums + Word(alphanums+' .^-+')
+                             + Suppress(']'))('cell_unit')
+_score_meshinfo_volume = (Suppress(_vol_kw + '[')
+                          + _fnums + Word(alphanums+'.^-+')
+                          + Suppress(']'))('vol_unit')
+_score_meshcols = Suppress(Word(alphas)
+                           + Optional(_scoremeshinfobins_kw)
+                           + Word(alphas)
+                           + Word(alphas+'() '))
+_score_meshinfounit_cols = (Suppress(Word(alphas))
+                            + _score_meshinfo_cell_unit
+                            + _score_meshinfo_volume
+                            + Suppress(Word(alphas) + Word(alphas+'() ')))
 _score_mesh = (Optional(Suppress(_scorevolume_kw + ':')
-                        + _fnums('scoring_zone_volsurf')
-                        + Suppress(_scorevolumecell_kw + ':')
-                        + _fnums('scoring_zone_cellvol'))
+                        + _fnums('scoring_zone_volsurf'))
+               + Optional(Suppress(_scorevolumecell_kw + ':')
+                          + _fnums('scoring_zone_cellvol'))
                + _scoremesh_kw('scoring_zone_type') + Suppress(':')
-               + Suppress(Word(alphas)
-                          + Optional(_scoremeshinfobins_kw)
-                          + Word(alphas)
-                          + Word(alphas+'() '))
+               + (_score_meshinfounit_cols | _score_meshcols)
                + Optional(_score_mesh_unit))
 _score_allgeom = _scoreallgeom_kw('scoring_zone_type')
 _score_allsources = _scoreallsources_kw('scoring_zone_type')
@@ -896,6 +908,13 @@ def _printtoks(toks):
     print(toks)
 
 
+# Entropy
+_boltzmannentropy = (Suppress(_boltzmannentropy_kw)
+                     + _fnums('boltzmann_entropy_res'))
+_shannonentropy = Suppress(_shannonentropy_kw) + _fnums('shannon_entropy_res')
+entropy = _boltzmannentropy + _shannonentropy
+
+
 # Mesh
 _mesh_energyrange = (Group(Suppress(_energyrange_kw + "(in") + Word(alphas)
                            + Suppress('):') + _fnums + Suppress('-') + _fnums)
@@ -905,8 +924,9 @@ _mesh_energyintegrated = ((Suppress(_integratedres_name) + Suppress(':'))
 _mesh_energyline = _mesh_energyrange | _mesh_energyintegrated
 _meshres = Group(
     _mesh_energyline
-    + Group(originalTextFor(OneOrMore(Word(printables), stopOn=_endtable)))
-    ('mesh_vals'))
+    + Group(originalTextFor(
+        OneOrMore(Word(printables), stopOn=_endtable)))('mesh_vals')
+    + Optional(Group(entropy)('entropy')))
 meshblock = Group(OneOrMore(Group(_timestep
                                   + Optional(_score_mesh_unit)
                                   + Group(OneOrMore(_meshres))('meshes')
@@ -1067,13 +1087,6 @@ autokeffblock = Group(Group(Optional(_warnfixedsources)
 medfile = (Suppress((_creationmedfile_kw | _creationfile_kw) + ':')
            + Word(alphanums+'/_.')('med_file')
            + Suppress(_medmeshid_kw + Word(alphanums+'_.')))
-
-
-# Entropy
-_boltzmannentropy = (Suppress(_boltzmannentropy_kw)
-                     + _fnums('boltzmann_entropy_res'))
-_shannonentropy = Suppress(_shannonentropy_kw) + _fnums('shannon_entropy_res')
-entropy = _boltzmannentropy + _shannonentropy
 
 
 # Greenbands exploitation
@@ -1283,7 +1296,6 @@ scoreblock = (Group(scoredesc + (OneOrMore(vovspectrumblock
                                            | nuspectrumblock
                                            | zaspectrumblock
                                            | meshblock
-                                           | entropy
                                            | medfile
                                            | integratedres
                                            | bestres

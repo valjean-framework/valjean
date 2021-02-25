@@ -316,10 +316,10 @@ def test_debug_entropy(caplog, datadir):
     resp0 = t4_res.res['list_responses'][0]
     assert resp0['response_type'] == 'score'
     res0 = resp0['results']
-    scorecontent = ['mesh', 'boltzmann_entropy', 'shannon_entropy',
-                    'spectrum', 'integrated', 'discarded_batches',
-                    'used_batches']
-    assert "{0:6e}".format(res0['boltzmann_entropy']) == "8.342621e-01"
+    scorecontent = ['mesh', 'spectrum', 'integrated',
+                    'discarded_batches', 'used_batches']
+    bentrop = res0['mesh']['boltzmann_entropy'].squeeze()
+    assert "{0:6e}".format(bentrop['score']) == "8.342621e-01"
     assert sorted(list(res0.keys())) == sorted(scorecontent)
     assert "You are running with an end flag" in caplog.text
     assert "debug_ent.log" in os.listdir()
@@ -336,17 +336,16 @@ def check_last_entropy_result(entropy_rb):
     resp = entropy_rb.select_by(response_function='REACTION',
                                 squeeze=True)
     assert (sorted(list(resp['results'].keys()))
-            == ['boltzmann_entropy', 'discarded_batches',
-                'integrated', 'mesh', 'shannon_entropy',
-                'spectrum', 'used_batches'])
+            == ['discarded_batches', 'integrated', 'mesh', 'spectrum',
+                'used_batches'])
     bd_mesh = dcv.convert_data(resp['results'], data_type='mesh')
     assert bd_mesh.shape == (24, 3, 1, 1, 1, 1, 1)
-    bd_entropy = dcv.convert_data(resp['results'],
-                                  data_type='shannon_entropy')
-    assert np.isnan(bd_entropy.error)
-    bd_entropy = dcv.convert_data(resp['results'],
-                                  data_type='boltzmann_entropy')
-    assert np.isnan(bd_entropy.error)
+    # bd_entropy = dcv.convert_data(resp['results'],
+    #                               data_type='shannon_entropy')
+    # assert np.isnan(bd_entropy.error)
+    # bd_entropy = dcv.convert_data(resp['results'],
+    #                               data_type='boltzmann_entropy')
+    # assert np.isnan(bd_entropy.error)
     bd_spectrum = dcv.convert_data(resp['results'], data_type='spectrum')
     assert bd_spectrum.shape == (1, 1, 1, 1, 1, 1, 1)
     assert bd_spectrum.bins['e'].size == 2
