@@ -42,7 +42,7 @@ def loop_on_files(filelist):
             assert ap3b.globals['geometry']
             assert len(ap3b.globals['info']) == len(ap3r.res)
             assert (len(ap3b.globals['info'])
-                    == len(list(ap3b.available_values('output'))))
+                    == len(ap3b.available_values('output')))
         else:
             assert not ap3b.globals['info']
             assert not ap3b.globals['geometry']

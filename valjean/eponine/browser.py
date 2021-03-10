@@ -484,7 +484,7 @@ Index: ...)"
         '''Get the available keys in the index (so in the items list). As
         usual it returns a generator.
         '''
-        return self.index.keys()
+        return tuple(self.index.keys())
 
     def available_values(self, key):
         '''Get the available keys in the *second* level, i.e. under the given
@@ -494,9 +494,8 @@ Index: ...)"
         :returns: generator with corresponding keys (or empty one)
         '''
         if key in self:
-            yield from self.index[key].keys()
-        else:
-            yield from ()
+            return tuple(self.index[key].keys())
+        return ()
 
     def __str__(self):
         return ("{0} object -> Number of content items: {1}, "

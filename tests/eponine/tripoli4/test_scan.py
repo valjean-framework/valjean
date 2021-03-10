@@ -165,7 +165,7 @@ def test_gauss_spectrum(datadir):
     assert len(t4rb.keys()) == 16
     assert list(t4rb.available_values('response_function')) == ['COURANT']
     assert list(t4rb.available_values('response_name')) == ['courant']
-    assert len(list(t4rb.available_values('response_index'))) == 7
+    assert len(t4rb.available_values('response_index')) == 7
     # use response 0: usual spectrum
     selresp0 = t4rb.select_by(response_index=0, squeeze=True)
     check_gauss_e_spectrum(selresp0)
@@ -452,8 +452,7 @@ def test_ifp(datadir):
     assert last_resp['response_type'] == 'adjoint'
     assert last_resp['results']['used_batches'] == 81
     t4rb = t4_res.to_browser()
-    assert (len(list(t4rb.available_values('response_function')))
-            == 22)
+    assert len(t4rb.available_values('response_function')) == 22
     resps = t4rb.select_by(
         response_function="IFP ADJOINT WEIGHTED ROSSI ALPHA")
     assert len(resps) == 20  # number of IFP cycles

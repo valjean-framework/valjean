@@ -14,21 +14,22 @@ def test_rnr_a3c_api(datadir):
     assert ap3r.res
     ap3b = ap3r.to_browser()
     assert ap3b
-    assert len(list(ap3b.keys())) == 5
-    assert {'result_name', 'zone', 'output', 'index', 'isotope'} == ap3b.keys()
+    assert len(ap3b.keys()) == 5
+    assert set(ap3b.keys()) == {'result_name', 'zone', 'output', 'index',
+                                'isotope'}
     assert all('results' in res for res in ap3b.content)
     assert ({'keff', 'production', 'Eigen value Minos', 'Eigen value Minaret',
              'flux', 'nufission', 'total'}
             == set(ap3b.available_values('result_name')))
     assert ['output_0'] == list(ap3b.available_values('output'))
     assert ['macro'] == list(ap3b.available_values('isotope'))
-    assert len(list(ap3b.available_values('zone'))) == 21
+    assert len(ap3b.available_values('zone')) == 21
     assert set(ap3b.globals.keys()) == {'info', 'geometry'}
     assert len(ap3b.globals['info']) == len(ap3r.res)
     assert (len(ap3b.globals['info'])
-            == len(list(ap3b.available_values('output'))))
+            == len(ap3b.available_values('output')))
     assert (sum([len(g) for g in ap3b.globals['geometry'].values()])
-            == len(list(ap3b.available_values('zone'))) - 1)
+            == len(ap3b.available_values('zone')) - 1)
     assert 'totaloutput' in ap3b.available_values('zone')
     flux = ap3b.select_by(result_name='flux', zone='zone_1', squeeze=True)
     assert flux['results'].shape == (33,)
@@ -40,15 +41,15 @@ def test_mosteller(datadir):
     assert ap3r.res
     ap3b = ap3r.to_browser()
     assert ap3b
-    assert len(list(ap3b.keys())) == 5
+    assert len(ap3b.keys()) == 5
     isotopes = list(ap3b.available_values('isotope'))
     assert len(isotopes) == 17
     assert 'macro' in isotopes
     rbfiss = ap3b.filter_by(result_name='fission')
-    assert len(list(rbfiss.available_values('isotope'))) == 7
+    assert len(rbfiss.available_values('isotope')) == 7
     rbconc = ap3b.filter_by(result_name='concentration')
-    assert len(list(rbconc.available_values('isotope'))) == len(isotopes) - 1
-    assert len(list(ap3b.available_values('output'))) == 6
+    assert len(rbconc.available_values('isotope')) == len(isotopes) - 1
+    assert len(ap3b.available_values('output')) == 6
     assert all(o['ngroups'] == 10 for o in ap3b.globals['info'].values())
     flux = ap3b.select_by(result_name='flux', zone='totaloutput',
                           output='output_2', squeeze=True)
@@ -61,9 +62,9 @@ def test_hexarot_kinetic(datadir):
     assert ap3r.res
     ap3b = ap3r.to_browser()
     assert ap3b
-    assert len(list(ap3b.keys())) == 5
+    assert len(ap3b.keys()) == 5
     assert list(ap3b.available_values('isotope')) == ['macro']
-    assert len(list(ap3b.available_values('output'))) == 3
+    assert len(ap3b.available_values('output')) == 3
     assert set(ap3b.available_values('result_name')) == {
         'keff', 'production', 'RelativePower', 'flux', 'nufission', 'total'}
     relpow = ap3b.select_by(result_name='RelativePower')
@@ -99,7 +100,7 @@ def test_minicoeur_kinetics(datadir):
     ap3b = ap3r.to_browser()
     assert ap3b
     assert set(ap3b.keys()) == {'result_name', 'output', 'index'}
-    assert len(list(ap3b.available_values('result_name'))) == 21
+    assert len(ap3b.available_values('result_name')) == 21
     assert set(ap3b.globals.keys()) == {'info', 'geometry'}
     assert not ap3b.globals['info']
     assert not ap3b.globals['geometry']
@@ -115,15 +116,15 @@ def test_mosteller_to_brow(datadir):
     '''Test Apollo3 rates output in Mosteller case: various isotopes.'''
     ap3b = hdf_to_browser(str(datadir/"Mosteller.hdf"))
     assert ap3b
-    assert len(list(ap3b.keys())) == 5
+    assert len(ap3b.keys()) == 5
     isotopes = list(ap3b.available_values('isotope'))
     assert len(isotopes) == 17
     assert 'macro' in isotopes
     rbfiss = ap3b.filter_by(result_name='fission')
-    assert len(list(rbfiss.available_values('isotope'))) == 7
+    assert len(rbfiss.available_values('isotope')) == 7
     rbconc = ap3b.filter_by(result_name='concentration')
-    assert len(list(rbconc.available_values('isotope'))) == len(isotopes) - 1
-    assert len(list(ap3b.available_values('output'))) == 6
+    assert len(rbconc.available_values('isotope')) == len(isotopes) - 1
+    assert len(ap3b.available_values('output')) == 6
     assert all(o['ngroups'] == 10 for o in ap3b.globals['info'].values())
     flux = ap3b.select_by(result_name='flux', zone='totaloutput',
                           output='output_2', squeeze=True)
