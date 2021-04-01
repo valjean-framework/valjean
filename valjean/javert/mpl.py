@@ -544,13 +544,11 @@ class MplPlot:
         :returns: dictionary of keyword arguments directly used by matplotlib
         :rtype: dict
         '''
-        hspace = 0.05 if data.suppress_xaxes else 0.4
-        splts_kwargs = {'figsize': (6.4, 6.4+2*(data.nb_plots-1)),
-                        'gridspec_kw': {'hspace': hspace}}
+        splts_kwargs = {'figsize': (6.4, 6.4+2*(data.nb_plots-1))}
         if data.small_subplots:
             splts_kwargs['figsize'] = (6.4, 4.8+1.2*(data.nb_plots-1))
             splts_kwargs['gridspec_kw'] = {
-                'height_ratios': [4] + [1]*(data.nb_plots-1), 'hspace': hspace}
+                'height_ratios': [4] + [1]*(data.nb_plots-1)}
         if 'pie' in [s.ptype for s in data.subplots]:
             splts_kwargs = {'figsize': (6.4, 4)}
         return splts_kwargs
