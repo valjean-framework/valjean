@@ -47,7 +47,7 @@ class GraphCommand(JobCommand):
                     from pydot import graph_from_dot_data
                 except ImportError:
                     LOGGER.error('you need to install pydot to use the '
-                                    '--output option.')
+                                 '--output option.')
                     raise
                 graph_pydot = graph_from_dot_data(graph_str)[0]
                 try:

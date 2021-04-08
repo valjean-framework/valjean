@@ -24,8 +24,8 @@ def test_rnr_a3c_api(datadir):
     zvols = ap3p.geometry(output='output_0')
     assert len(zvols) == len(zones) - 1
     assert 'macro' in ap3p.isotopes(output='output_0', zone='zone_1')
-    assert all([ap3p.results(output='output_0', zone=z) == ['FLUX']
-                for z in zones if z != 'totaloutput'])
+    assert all(ap3p.results(output='output_0', zone=z) == ['FLUX']
+               for z in zones if z != 'totaloutput')
     assert (ap3p.results(output='output_0', zone='totaloutput')
             == ['KEFF', 'LOCALNAME', 'LOCALVALUE', 'PRODUCTION'])
     keff = ap3p.pick_standard_value(output='output_0', zone='totaloutput',
@@ -51,7 +51,7 @@ def test_mosteller(datadir):
     outputs = ap3p.outputs()
     assert len(outputs) == 6
     nb_grps = ap3p.nb_groups(output='output_0')
-    assert all([ap3p.nb_groups(output=o) == nb_grps for o in outputs])
+    assert all(ap3p.nb_groups(output=o) == nb_grps for o in outputs)
     assert ap3p.zones(output='output_0') == ['1', '2', '3', 'totaloutput']
     assert (ap3p.results(output='output_0', zone='totaloutput')
             == ['ABSORPTION', 'FLUX', 'KEFF', 'PRODUCTION'])

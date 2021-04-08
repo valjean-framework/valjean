@@ -104,7 +104,7 @@ def check_data(responses):
     '''
     for iresp in responses:
         assert 'results' in iresp
-        assert not all(['_res' in dtype for dtype in iresp['results']])
+        assert not all('_res' in dtype for dtype in iresp['results'])
         for dname, data in iresp['results'].items():
             if isinstance(data, str):
                 continue
@@ -132,8 +132,8 @@ def browser_test(res):
     assert ids == set(range(len(t4rb.content)))
     assert t4rb.globals
     if t4rb.content:
-        assert not all(['_res' in rtype
-                        for rtype in t4rb.available_values('response_type')])
+        assert not all('_res' in rtype
+                       for rtype in t4rb.available_values('response_type'))
         check_data(t4rb.content)
 
 
