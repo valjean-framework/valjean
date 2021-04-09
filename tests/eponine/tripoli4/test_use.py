@@ -10,7 +10,7 @@ from valjean.eponine.tripoli4.use import make_parser, parse_batch_index
 
 
 def parse_task(datafile, batch_index=-1):
-    '''Create a :class:`~.PythonTask` that parses the given TRIPOLI-4 output
+    '''Create a :class:`~.PythonTask` that parses the given Tripoli-4 output
     file.'''
     task_name = 'parse_task'
 

@@ -280,7 +280,7 @@ _scorevolumeint_kw = (Keyword("The result is integrated over the volume")
 _scorevolumenotint_kw = (
     Keyword("The volume has been provided by the user "
             "(the user requested a score per unit volume)")
-    | Keyword("The volume has been calculated by TRIPOLI-4 "
+    | Keyword("The volume has been calculated by Tripoli-4 "
               "or provided by the user"))
 _scorevolsum_kw = Keyword("Volume Sum")
 _scorevolsumvol_kw = Keyword("num of volumes")

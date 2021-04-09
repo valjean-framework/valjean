@@ -1,7 +1,7 @@
 '''This module extends the functionalities provided by :mod:`~.cosette.use` to
-the commonplace task of parsing TRIPOLI-4 output files. The decorators defined
+the commonplace task of parsing Tripoli-4 output files. The decorators defined
 by this module, :func:`using_parse_result` and :func:`using_browser`,
-can be used to remove boilerplate code that parses and accesses the TRIPOLI-4
+can be used to remove boilerplate code that parses and accesses the Tripoli-4
 results. At the same time, they simplify the integration of user-defined
 post-processing (tests) into the :mod:`valjean` workflow.
 
@@ -14,8 +14,8 @@ post-processing (tests) into the :mod:`valjean` workflow.
     >>> config = Config()
 
 We will need to set up a few things to show an example of how to use the
-decorators. We don't want to build and run TRIPOLI-4 for the purpose of this
-documentation, but we can mock a TRIPOLI-4 run by writing an existing TRIPOLI-4
+decorators. We don't want to build and run Tripoli-4 for the purpose of this
+documentation, but we can mock a Tripoli-4 run by writing an existing Tripoli-4
 output to a file. Here is the sample output::
 
     >>> example = """BATCH 10
@@ -85,13 +85,13 @@ an argument::
     ...                                               default_args=['{text}'])
 
 In the real world, the :class:`~.RunTaskFactory` would actually generate tasks
-to run a TRIPOLI-4 executable.
+to run a Tripoli-4 executable.
 
 
 Injecting the raw parse results
 ===============================
 
-Now we can construct the decorator that parses the TRIPOLI-4 results and apply
+Now we can construct the decorator that parses the Tripoli-4 results and apply
 it to a Python function::
 
     >>> from valjean.eponine.tripoli4 import use
@@ -205,7 +205,7 @@ def partial(func, *args, **kwargs):
 
 
 def make_parser(filename):
-    '''Create a Parser object and scan a TRIPOLI-4 output file.
+    '''Create a Parser object and scan a Tripoli-4 output file.
 
     :param str filename: the name of the file to parse.
     :param int batch: the number of the batch to parse; see
@@ -223,7 +223,7 @@ def make_parser(filename):
 
 
 def parse_batch_number(parser, *, batch_number):
-    '''Parse a batch result from TRIPOLI-4.
+    '''Parse a batch result from Tripoli-4.
 
     :param int batch_number: batch number
     :rtype: ParseResult
@@ -237,7 +237,7 @@ def parse_batch_number(parser, *, batch_number):
 
 
 def parse_batch_index(parser, *, batch_index=-1):
-    '''Parse a batch result from TRIPOLI-4.
+    '''Parse a batch result from Tripoli-4.
 
     :param int batch_index: index of the batch in the list of batches
     :rtype: ParseResult
@@ -251,10 +251,10 @@ def parse_batch_index(parser, *, batch_index=-1):
 
 
 def using_parser(factory):
-    '''Construct a decorator that injects TRIPOLI-4 parser into a Python
+    '''Construct a decorator that injects Tripoli-4 parser into a Python
     function.
 
-    :param factory: a factory producing TRIPOLI-4 runs.
+    :param factory: a factory producing Tripoli-4 runs.
     :type factory: :class:`~.RunTaskFactory`
     :returns: a decorator (see the module docstring for more information).
     '''
@@ -263,10 +263,10 @@ def using_parser(factory):
 
 
 def using_parse_result(factory, batch_number):
-    '''Construct a decorator that injects the raw TRIPOLI-4 parse results into
+    '''Construct a decorator that injects the raw Tripoli-4 parse results into
     a Python function.
 
-    :param factory: a factory producing TRIPOLI-4 runs.
+    :param factory: a factory producing Tripoli-4 runs.
     :type factory: :class:`~.RunTaskFactory`
     :param int batch_number: the number of the batch to parse; see
         :meth:`~.Parser.__init__`.
@@ -278,10 +278,10 @@ def using_parse_result(factory, batch_number):
 
 
 def using_last_parse_result(factory):
-    '''Construct a decorator that injects the last raw TRIPOLI-4 parse results
+    '''Construct a decorator that injects the last raw Tripoli-4 parse results
     into a Python function.
 
-    :param factory: a factory producing TRIPOLI-4 runs.
+    :param factory: a factory producing Tripoli-4 runs.
     :type factory: :class:`~.RunTaskFactory`
     :returns: a decorator (see the module docstring for more information).
     '''
@@ -301,10 +301,10 @@ def to_browser(result):
 
 def using_browser(factory, batch_number):
     '''Construct a decorator that injects an
-    :class:`~.browser.Browser` to the TRIPOLI-4 parse results into a
+    :class:`~.browser.Browser` to the Tripoli-4 parse results into a
     Python function.
 
-    :param factory: a factory producing TRIPOLI-4 runs.
+    :param factory: a factory producing Tripoli-4 runs.
     :type factory: :class:`~.RunTaskFactory`
     :param int batch_number: the number of the required batch (will be parsed
         then transformed in  :class:`~.browser.Browser`)
@@ -316,10 +316,10 @@ def using_browser(factory, batch_number):
 
 def using_last_browser(factory):
     '''Construct a decorator that injects a
-    :class:`~.browser.Browser` to the TRIPOLI-4 last parse results
+    :class:`~.browser.Browser` to the Tripoli-4 last parse results
     into a Python function.
 
-    :param factory: a factory producing TRIPOLI-4 runs.
+    :param factory: a factory producing Tripoli-4 runs.
     :type factory: :class:`~.RunTaskFactory`
     :returns: a decorator (see the module docstring for more information).
     '''

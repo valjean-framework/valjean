@@ -19,7 +19,7 @@ def pytest_addoption(parser):
                      default=False, help="run slow tests")
     parser.addoption("--parsing-config-file-t4", action="append", default=[],
                      help="list of python configuration files to test "
-                          "intensively Tripoli4 parsing")
+                          "intensively Tripoli-4 parsing")
     parser.addoption("--parsing-config-file-ap3", action="append", default=[],
                      help="list of python configuration files to test "
                           "intensively Apollo3 reader")

@@ -261,7 +261,7 @@ def multiple_datasets(draw, size, *, elements=None):
 @pytest.fixture
 def parsing_config_file_t4(request):
     '''Fixture to read configuration files to test parsing coverage for
-    Tripoli4.
+    Tripoli-4.
 
     This is for example used during nightly tests.
     '''

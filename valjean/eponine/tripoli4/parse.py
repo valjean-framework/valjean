@@ -143,7 +143,7 @@ class Parser:
             time_key = next(k for k in bdata if 'time' in k)
         except StopIteration as sit:
             raise ParserException(
-                'No "time" variable found in the TRIPOLI-4 output, '
+                'No "time" variable found in the Tripoli-4 output, '
                 'please check it.') from sit
         if bdata[time_key] != self.scan_res.times[time_key][batch_number]:
             msg = ('{} looks inconsistent between parsing ({}) and scanning '
@@ -212,7 +212,7 @@ class Parser:
 
 
 class ParseResult:
-    '''Class containing a parsing result from TRIPOLI-4 output for one batch.
+    '''Class containing a parsing result from Tripoli-4 output for one batch.
 
 
         The :class:`ParseResult` object is accessible from the instance
@@ -223,7 +223,7 @@ class ParseResult:
             scanning and parsing steps. Variables characteristic to a batch are
             stored under the key ``'batch_data'`` no matter if they come from
             :class:`.Scanner` or from :class:`Parser`. Variables
-            characteristic to a run (= one execution of TRIPOLI-4) are stored
+            characteristic to a run (= one execution of Tripoli-4) are stored
             under ``'run_data'``, coming from the scanning step.
 
         It is possible to transform the ``res`` dictionary in a

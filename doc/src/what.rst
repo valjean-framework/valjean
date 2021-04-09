@@ -9,8 +9,8 @@ generation of test reports.
 
 :mod:`valjean` is developed by the French Alternative Energies and Atomic
 Energy Commission (CEA) as a tool for the verification and validation (V&V)
-suite of the `TRIPOLI-4®`_ Monte-Carlo particle-transport code. It includes a
-parser for TRIPOLI-4 calculation results, but its aim is to be more broadly
+suite of the `Tripoli-4®`_ Monte-Carlo particle-transport code. It includes a
+parser for Tripoli-4 calculation results, but its aim is to be more broadly
 useful to the whole community of scientific computing.
 
-.. _TRIPOLI-4®: https://www.cea.fr/energies/tripoli-4/
+.. _Tripoli-4®: https://www.cea.fr/energies/tripoli-4/

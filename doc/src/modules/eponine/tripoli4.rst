@@ -1,4 +1,4 @@
-:mod:`~valjean.eponine.tripoli4` – Parsing for TRIPOLI-4
+:mod:`~valjean.eponine.tripoli4` – Parsing for Tripoli-4
 ========================================================
 
 .. automodule:: valjean.eponine.tripoli4
@@ -10,10 +10,10 @@
 Introduction
 ------------
 
-The goal of this sub-package is to parse TRIPOLI-4 results giving them an easy
+The goal of this sub-package is to parse Tripoli-4 results giving them an easy
 access and transforming them in the standard data format of :mod:`~valjean`.
 
-It contains various modules from scanning the TRIPOLI-4 output to conversion of
+It contains various modules from scanning the Tripoli-4 output to conversion of
 its data in datasets, listed here starting from the most external modules to
 the innest ones:
 
@@ -24,17 +24,17 @@ the innest ones:
    * Parsing module :mod:`~.parse` calling the scanning one :mod:`~.scan`;
    * The parsing itself is done thanks to 3 modules:
 
-      * :mod:`~.grammar`: the grammar of the TRIPOLI-4 ASCII output using
+      * :mod:`~.grammar`: the grammar of the Tripoli-4 ASCII output using
         `pyparsing`;
       * :mod:`~.transform`: methods to transform the parsing result in standard
         `python` and `NumPy` objects called in :mod:`~.grammar` via
         ``setParseAction`` applied on the ``pyparsing.ParseResults``;
-      * :mod:`~valjean.eponine.tripoli4.common`: methods to transform TRIPOLI-4
+      * :mod:`~valjean.eponine.tripoli4.common`: methods to transform Tripoli-4
         data in `NumPy` objects.
       * One additional module parsing module is available for debugging and
         development: :mod:`~.parse_debug`
 
-    * Access to TRIPOLI-4 results from depletion, so reading ROOT files is
+    * Access to Tripoli-4 results from depletion, so reading ROOT files is
       handled by :mod:`~.depletion`.
 
 
@@ -53,7 +53,7 @@ Main modules
 More details on parsing
 -----------------------
 
-Most of the TRIPOLI-4 functionalities are now parsed by `pyparsing`_.
+Most of the Tripoli-4 functionalities are now parsed by `pyparsing`_.
 If a new score or a new response is implemented in Tripoli-4, it would be
 easier for its output to match the existing responses, or else parsing will
 have to be updated.

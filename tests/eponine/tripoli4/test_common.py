@@ -91,7 +91,7 @@ def bins(draw, elements=floats(0, 10), nbins=1, reverse=booleans()):
 
     Edges for the bins can be chosen to get more realistic cases.
     '''
-    # we require that the bins are unique when converted to the TRIPOLI-4
+    # we require that the bins are unique when converted to the Tripoli-4
     # output format; otherwise bins that are sufficiently close together will
     # fail to pass the roundtrip tests
     revers = draw(reverse)

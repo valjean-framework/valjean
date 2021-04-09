@@ -478,7 +478,7 @@ class Scanner(Mapping):
         elif "ERROR" in line:
             self.counterrors += 1
             if "FATAL ERROR" in line:
-                self._fatal_error = ["fatal error in TRIPOLI-4:\n\n"]
+                self._fatal_error = ["fatal error in Tripoli-4:\n\n"]
         elif "PARTIAL EDITION" in line:
             self.partial = True
         elif "NORMAL COMPLETION" in line:
@@ -627,7 +627,7 @@ class Scanner(Mapping):
         * required batches
         * partial (if the job as been stopped)
         * batch number, especially when 'edition after batch number' is not in
-          the TRIPOLI-4 output
+          the Tripoli-4 output
         * t4_file: path to the scanned file
         * times of the required batch (can be simulation time, initialisation
           time, elapsed time)

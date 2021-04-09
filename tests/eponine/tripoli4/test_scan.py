@@ -864,7 +864,7 @@ def test_no_simulation_time_debug(datadir, caplog):
     t4p = ParserDebug(str(datadir/"failure_test_no_simu_time.d.res"),
                       end_flag='ENERGY INTEGRATED RESULTS')
     _t4_res = t4p.parse_from_index(-1)
-    assert ('No "time" variable found in the TRIPOLI-4 output, '
+    assert ('No "time" variable found in the Tripoli-4 output, '
             'please check it.' in caplog.text)
     assert ('Remark: you are in parsing debug mode with an end flag not '
             'containing "time", this is expected.'
