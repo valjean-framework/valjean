@@ -1,0 +1,213 @@
+# -*- coding: utf-8 -*-
+# Copyright French Alternative Energies and Atomic Energy Commission
+# Contributors: Ève le Ménédeu, Davide Mancusi (2021)
+# eve.le-menedeu@cea.fr, davide.mancusi@cea.fr
+#
+# This software is a computer program whose purpose is to analyze and
+# post-process numerical simulation results.
+#
+# This software is governed by the CeCILL license under French law and abiding
+# by the rules of distribution of free software. You can use, modify and/ or
+# redistribute the software under the terms of the CeCILL license as circulated
+# by CEA, CNRS and INRIA at the following URL: http://www.cecill.info.
+#
+# As a counterpart to the access to the source code and rights to copy, modify
+# and redistribute granted by the license, users are provided only with a
+# limited warranty and the software's author, the holder of the economic
+# rights, and the successive licensors have only limited liability.
+#
+# In this respect, the user's attention is drawn to the risks associated with
+# loading, using, modifying and/or developing or reproducing the software by
+# the user in light of its specific status of free software, that may mean that
+# it is complicated to manipulate, and that also therefore means that it is
+# reserved for developers and experienced professionals having in-depth
+# computer knowledge. Users are therefore encouraged to load and test the
+# software's suitability as regards their requirements in conditions enabling
+# the security of their systems and/or data to be ensured and, more generally,
+# to use and operate it in the same conditions as regards security.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL license and that you accept its terms.
+
+[build-system]
+requires = ["poetry-core >= 1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "valjean"
+version = "0.5.0"
+description = "VALidation, Journal d'Évolution et ANalyse"
+authors = ["Ève Le Ménédeu <eve.le-menedeu@cea.fr>",
+           "Davide Mancusi <davide.mancusi@cea.fr>"]
+maintainers = ["Ève Le Ménédeu <eve.le-menedeu@cea.fr>",
+               "Davide Mancusi <davide.mancusi@cea.fr>"]
+license = "CeCILL-C Free Software License Agreement (CECILL-C)"
+readme = "README.md"
+homepage = "https://codev-tuleap.intra.cea.fr/projects/valjean"
+repository = "https://codev-tuleap.intra.cea.fr/plugins/git/valjean/valjean"
+# documentation = "https://valjean.readthedocs.io/"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Operating System :: POSIX :: Linux",
+  "Topic :: Scientific/Engineering :: Physics"
+]
+packages = [{ include = "valjean" }]
+exclude = ["**/.gitignore", "doc", "tests"]
+
+# [tool.poetry.urls]
+# "Bug tracker" = "https://github.com/arekfu/valjean/issues/"
+
+[tool.poetry.scripts]
+valjean = "valjean.cambronne.main:main"
+
+[tool.poetry.dependencies]
+python = "^3.5.2"
+pyparsing = "^2.4"
+toml = "^0.10"
+numpy = [
+    {version = "^1.18", python = "<3.8"},
+    {version = "^1.20", python = "^3.8"},
+]
+matplotlib = [
+    {version = "^3.0", python = "<3.8"},
+    {version = "^3.3", python = "^3.8"},
+]
+scipy = [
+    {version = "^1.4", python = "<3.8"},
+    {version = "^1.6", python = "^3.8"},
+]
+h5py = [
+    {version = "~2.10", python = "~3.5"},
+    {version = "~3.1", python = ">=3.6.0, <3.9"},
+    {version = "~3.1", python = "^3.9"},
+]
+pydot = {version = "^1.4.2", optional = true}
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.1"
+pytest-cov = "^2.11"
+pytest-mpl = "^0.10"
+pytest-timeout = "^1.4"
+rstcheck = "^3.3"
+Sphinx = "^3.5.2"
+sphinx-rtd-theme = "^0.5"
+pylint = "^2.6"
+flake8 = "^3.9"
+hypothesis = {version = "^5.3", extras = ["numpy"]}
+
+[tool.poetry.extras]
+graphviz = ["pydot"]
+
+[tool.pytest.ini_options]
+addopts = "-v -s -ra --doctest-modules"
+norecursedirs = ["data", ".eggs", "doc", ".git", "build", "dist", "*.egg"]
+markers = [
+  "slow: marks tests as slow (using runslow argument)",
+  "mpl_image_compare: marks tests using plot comparison with mpl (using mpl argument)"
+]
+junit_family = "xunit2"
+
+[tool.pylint.basic]
+good-names=["i", "j", "k", "ex", "Run", "x", "y", "z", "on", "do"]
+
+[tool.pylint.message_control]
+disable = [
+  "apply-builtin", "backtick", "bad-inline-option", "bad-python3-import",
+  "basestring-builtin", "buffer-builtin", "cmp-builtin", "cmp-method",
+  "coerce-builtin", "coerce-method", "delslice-method", "deprecated-pragma",
+  "deprecated-str-translate-call", "deprecated-string-function",
+  "dict-iter-method", "dict-view-method", "div-method", "eq-without-hash",
+  "exception-message-attribute", "execfile-builtin", "file-builtin",
+  "file-ignored", "filter-builtin-not-iterating", "getslice-method",
+  "hex-method", "idiv-method", "import-outside-toplevel",
+  "import-star-module-level", "indexing-exception", "input-builtin",
+  "intern-builtin", "invalid-str-codec", "locally-disabled", "locally-enabled",
+  "long-builtin", "long-suffix", "map-builtin-not-iterating",
+  "metaclass-assignment", "next-method-called", "no-absolute-import",
+  "nonzero-method", "oct-method", "old-division", "old-ne-operator",
+  "old-octal-literal", "old-raise-syntax", "parameter-unpacking",
+  "print-statement", "raising-string", "range-builtin-not-iterating",
+  "raw-checker-failed", "raw_input-builtin", "rdiv-method",
+  "redefined-outer-name", "reduce-builtin", "reload-builtin", "round-builtin",
+  "setslice-method", "standarderror-builtin", "suppressed-message",
+  "sys-max-int", "unichr-builtin", "unicode-builtin", "unpacking-in-except",
+  "useless-suppression", "using-cmp-argument", "xrange-builtin",
+  "zip-builtin-not-iterating",
+  ]
+
+[tool.pylint.typecheck]
+ignored-modules = "py"
+
+[tool.pylint.format]
+max-line-length = 79
+
+[tool.pylint.design]
+max-parents = 8
+max-public-methods = 25
+min-public-methods = 0
+
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+minversion = 3.17.0
+isolated_build = true
+envlist = py{35,36,37,38,39}
+
+[tox:jenkins]
+skip_missing_interpreters = true
+
+[testenv]
+whitelist_externals = poetry
+setenv =
+  COVERAGE_FILE=.coverage.{envname}
+description = invoke pytest with coverage, XML output and mpl
+extras = graphviz
+commands = poetry install -v -E graphviz
+           poetry run pytest --basetemp="{toxworkdir}/tmp-{envname}" \
+                --durations=20 --cov-report term-missing \
+                --cov-config "{toxinidir}/.coveragerc" \
+                --cov-report=xml:"{toxworkdir}/coverage-{envname}.xml" \
+                --cov=valjean --junit-xml="{toxworkdir}/pytest-{envname}.xml" \
+                --junit-prefix="{envname}" --mpl \
+                --mpl-results-path="{toxworkdir}/{envname}/mpl_image_compare" \
+                --timeout=30 {posargs}
+
+[testenv:py39]
+passenv = PYTHONPATH
+
+[testenv:docs]
+description = invoke sphinx-build to build the HTML docs
+# be nitpicky on the HTML documentation
+commands = poetry install -v
+           poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E -W \
+                --keep-going -b html -w "{toxworkdir}/sphinx-html.out" \
+                "{toxinidir}/doc/src" "{toxworkdir}/doc/html"
+           poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E -W \
+                --keep-going -b html -w "{toxworkdir}/sphinx-html-tests.out" \
+                -t tests "{toxinidir}/doc/src" \
+                "{toxworkdir}/doc/html-with-tests"
+           poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -W \
+                --keep-going -b linkcheck -t tests "{toxinidir}/doc/src" \
+                "{toxworkdir}/doc/linkcheck"
+
+[testenv:linting]
+description = invoke pylint and flake8 on the source package
+commands = poetry install -v
+           poetry run pylint -f parseable --exit-zero \
+                --rcfile "{toxinidir}/pyproject.toml" {posargs}
+           poetry run flake8 --config "{toxinidir}/.flake8" \
+                --exit-zero {posargs}
+
+[testenv:parsing]
+description = invoke pytest on the nightly parsing tests
+extras = graphviz
+commands = poetry install -v
+           poetry run pytest --runslow --cov-report term-missing \
+                --durations=20 --cov-config "{toxinidir}/.coveragerc" \
+                --cov=valjean --mpl \
+                --mpl-results-path="{toxworkdir}/{envname}/mpl_image_compare" \
+                {posargs}
+"""

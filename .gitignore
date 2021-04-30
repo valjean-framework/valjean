@@ -5,7 +5,7 @@ doc/build
 doc/build-tests
 *.pyc
 htmlcov
-.coverage
+.coverage*
 .eggs
 build
 dist

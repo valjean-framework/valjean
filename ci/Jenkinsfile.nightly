@@ -38,7 +38,7 @@ pipeline {
           python3 -m venv "${TOX_VENV}"
           source "${TOX_VENV}/bin/activate"
           python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install tox
+          python3 -m pip install tox poetry
           """
         }
       }
