@@ -1,6 +1,0 @@
-pyparsing
-numpy
-scipy
-matplotlib
-toml
-h5py

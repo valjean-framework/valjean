@@ -1,8 +1,0 @@
-hypothesis[numpy]
-pytest
-pytest-cov
-pytest-mpl == 0.10 ; python_version <= '3.5'
-pytest-mpl; python_version > '3.5'
-pytest-timeout
-pytest-xdist
-rstcheck
