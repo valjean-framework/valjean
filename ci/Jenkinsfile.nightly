@@ -49,17 +49,19 @@ pipeline {
           echo 'Running parsing tests...'
           dir("${SRC}") {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-              sh """#!/bin/bash
-                  if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-                    source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-                  fi
-                  source "${TOX_VENV}/bin/activate"
-                  for script in "${NIGHTLIES}"/scripts/valjean_nightly*.py; do
-                    script_base=\$(basename \${script})
-                    echo "Running tests for \${script_base}"
-                    ${TOX} -e parsing -- --parsing-config-file-t4="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
-                  done
-                  """
+              withFolderProperties {
+                sh """#!/bin/bash
+                    if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                      source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+                    fi
+                    source "${TOX_VENV}/bin/activate"
+                    for script in "${NIGHTLIES}"/scripts/valjean_nightly*.py; do
+                      script_base=\$(basename \${script})
+                      echo "Running tests for \${script_base}"
+                      ${TOX} -e parsing -- --parsing-config-file-t4="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
+                    done
+                    """
+              }
             }
           }
         }

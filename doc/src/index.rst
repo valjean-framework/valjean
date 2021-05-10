@@ -15,6 +15,7 @@ The valjean documentation
 
    what
    getting_started
+   examples/examples
    devs
    modules
    changelog

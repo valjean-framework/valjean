@@ -66,10 +66,15 @@ pipeline {
         echo 'Building and checking documentation...'
         dir("${SRC}") {
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh """
-                source "${TOX_VENV}/bin/activate"
-                ${TOX} -e docs
-                """
+            withFolderProperties {
+              sh """
+                  if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                    source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+                  fi
+                  source "${TOX_VENV}/bin/activate"
+                  ${TOX} -e docs
+                  """
+            }
           }
         }
       }
@@ -79,10 +84,15 @@ pipeline {
         echo 'Linting...'
         dir("${SRC}") {
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh """
-                source "${TOX_VENV}/bin/activate"
-                ${TOX} -e linting valjean/ tests/ | tee "${REPORTS}/linting.out"
-                """
+            withFolderProperties {
+              sh """
+                  if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                    source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+                  fi
+                  source "${TOX_VENV}/bin/activate"
+                  ${TOX} -e linting valjean/ tests/ | tee "${REPORTS}/linting.out"
+                  """
+            }
           }
         }
       }
@@ -92,13 +102,15 @@ pipeline {
         withFolderProperties {
           echo 'Running unit tests...'
           dir("${SRC}") {
-            sh """#!/bin/bash
-                if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-                  source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-                fi
-                source "${TOX_VENV}/bin/activate"
-                TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 -- valjean/ tests/ | tee "${REPORTS}/testing.out"
-                """
+            withFolderProperties {
+              sh """#!/bin/bash
+                  if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                    source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+                  fi
+                  source "${TOX_VENV}/bin/activate"
+                  TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 -- valjean/ tests/ | tee "${REPORTS}/testing.out"
+                  """
+            }
           }
         }
       }

@@ -1,0 +1,7 @@
+input
+output
+report/html/.buildinfo
+report/html/.doctrees
+report/report/.static
+valjean.env
+__pycache__
