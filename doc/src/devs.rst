@@ -8,4 +8,5 @@ For developers
    devs/linting
    devs/documentation
    devs/sdist
+   devs/tox
    devs/release_checklist

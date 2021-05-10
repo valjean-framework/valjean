@@ -13,8 +13,7 @@ of the PEP 8 recommendations with linters such as :command:`flake8` or
 the following from the source folder::
 
     $ flake8
-    $ pylint valjean
-    $ pylint tests
+    $ pylint valjean tests
 
 As a rule, try hard to keep :mod:`valjean` lint-free by running these commands
 often. If the linter emits a warning, you can do one of the following:
@@ -22,57 +21,36 @@ often. If the linter emits a warning, you can do one of the following:
 1. Fix the warning;
 2. No, really, fix the warning;
 3. If there's a warning you really can't fix, you can shut up the linter about
-   that particular code line by adding special annotations (see :ref:`below
-   <flake8_shutup>`). But really, you should fix the warning instead.
+   that particular code line by adding special annotations (see below). But
+   really, you should fix the warning instead.
 
-:command:`flake8`
------------------
+Suppressing linter warnings
+---------------------------
 
-The :command:`flake8` linter is integrated with :ref:`setuptools` and can also
-be invoked as an option to the ``setup.py`` script::
-
-    $ ./setup.py flake8
-
-.. _flake8_shutup:
-
-Sometimes, :command:`flake8` emits a warning, but you **know** that the warning
-is actually benign. For instance, the `sphinx` configuration file
-:file:`doc/src/conf.py` contains the following lines:
+Sometimes, linters emit warning, but you **know** that the warning is actually
+benign. You can tell :command:`flake8` or :command:`pylint` to shut up about a
+specific warning by adding a comment with a special annotation in the source
+code. For :command:`flake8`, suppression annotations look like this:
 
 .. code-block:: python
 
-   import os
-   import sys
-   sys.path.insert(0, os.path.abspath(
-       os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))))
-   import valjean
+   <code raising a warning>  # noqa: E402
 
-:command:`flake8` complains about the fact that all imports should appear at
-the beginning of the file, before any other instructions::
-
-   $ flake8 doc/src/conf.py
-   doc/src/conf.py:24:1: E402 module level import not at top of file
-
-However, there is no way we can add :mod:`valjean` to the import path without
-making :command:`flake8` sad. So instead we shut :command:`flake8` up by
-telling it that we know what we are doing. We add a special annotation at the
-end of the line:
+Note the ``E402`` error code, which must matches :command:`flake8`'s output
+message. For :command:`pylint`, annotations look like this:
 
 .. code-block:: python
 
-   import valjean  # noqa: E402
+   <code raising a warning>  # pylint: disable=trailing-whitespace
 
-Note the ``E402`` error code, which matches :command:`flake8`'s output message.
-Now :command:`flake8` will see the annotation and will not complain any more.
+Again, the string after ``disable=`` must match the name of the warning in the
+:command:`pylint` output.
 
-At the time of writing, both :mod:`valjean` and the unit tests are
-:command:`flake8`-clean.
+See the :command:`flake8` and :command:`pylint` documentation for more details.
 
-:command:`pylint`
------------------
 
-The :command:`pylint` linter is much more aggressive than :command:`flake8`; it
-seems to have very clear (albeit configurable) ideas about what your variable
-names should and should not be, how many public methods your classes should
-have... At the time of writing, :mod:`valjean` is :command:`pylint`-clean, but
-the tests are not.
+``tox`` integration
+-------------------
+
+There is a specific ``tox`` test environment to run the linters. Check the
+page about :ref:`using tox for continuous integration <tox-integration>`.

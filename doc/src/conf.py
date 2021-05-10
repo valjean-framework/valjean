@@ -205,6 +205,10 @@ intersphinx_mapping = {
     'h5py': ('https://docs.h5py.org/en/stable/', None)}
 
 
+# Ignore internal CEA links in linkcheck
+linkcheck_ignore = [r'https://.*\.intra.cea.fr/.*']
+
+
 # -- doctest options ------------------------------------------------------
 
 # Do not use doctest to test code examples that are not explicitly marked as

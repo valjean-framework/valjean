@@ -7,8 +7,18 @@ Installing :mod:`valjean`
 .. _sphinx: https://www.sphinx-doc.org/en/master/
 .. _pyparsing: https://pythonhosted.org/pyparsing
 .. _pip: https://pip.pypa.io/en/stable
+.. _PEP 517: https://www.python.org/dev/peps/pep-0517/
+.. _PEP 518: https://www.python.org/dev/peps/pep-0518/
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _anaconda: https://www.anaconda.com/products/individual
+.. _jupyter: https://jupyter.readthedocs.io/en/latest/
+.. _h5py: https://docs.h5py.org/en/stable/
+
+Requirements
+------------
+
+:mod:`valjean` requires Python >= 3.5. The package dependencies are handled by
+the build system.
 
 Quick start
 -----------
@@ -17,10 +27,10 @@ Quick start
 
 For those in a rush::
 
-    $ python3 -m venv ~/.venv/valjean
-    $ source ~/.venv/valjean/bin/activate
-    (valjean) $ pip3 install --upgrade setuptools pip
-    (valjean) $ pip3 install /path/to/valjean
+    $ python3 -m venv ~/venv-valjean
+    $ source ~/venv-valjean/bin/activate
+    (venv-valjean) $ pip install --upgrade pip
+    (venv-valjean) $ pip install /path/to/valjean
 
 .. note::
 
@@ -29,101 +39,80 @@ For those in a rush::
 Using virtual environments
 --------------------------
 
-The :mod:`valjean` package can be installed like a normal Python package.
-However, you will need to have ``root`` priviliges to touch the system-wide
-installation; plus, the installation may interfere with your machine's
-package-management system. The way to do this is::
+The :mod:`valjean` package can be installed like a normal Python package, using
+the `pip`_ package manager.
 
-    $ sudo pip3 install /path/to/valjean-x.y.z    # bad
+The recommended way to install :mod:`valjean` is to use a *virtual
+environment*.  At the time of writing, the preferred solution to create virtual
+environments is the :mod:`venv` module from the standard Python distribution::
 
-It is probably simpler (and cleaner) to install the package into your local
-package repository::
+     $ python3 -m venv ~/venv-valjean
+     $ source ~/venv-valjean/bin/activate
+     (valjean) $ pip install /path/to/valjean-x.y.z
 
-    $ pip3 install --user /path/to/valjean-x.y.z  # better
+.. note::
 
-This will typically install the package somewhere in ``$HOME/.local``, and you
-are responsible for updating all the relevant environment variables
-(``PYTHONPATH``, ``PATH``, possibly ``LD_LIBRARY_PATH``...). Packages installed
-in the local repository (and their dependencies) will then be accessible from
-any Python session. This may not be what you want, especially if you need to
-use/develop packages with conflicting dependencies.
+        Ancient versions of ``pip`` (``<19.0``) will not be able to install
+        :mod:`valjean`, because :mod:`valjean` uses a ``pyproject.toml`` file
+        to describe the build, as specified in the `PEP 517`_ and `PEP 518`_
+        formats. If you are using an old version of ``pip``, you should upgrade
+        it (after activating the virtual environment) with::
 
-The best way to avoid cluttering your Python installation and escape dependency
-hell is to install :mod:`valjean` (or any package, for that matter) in a
-*virtual environment*.  At the time of writing, the preferred solution to
-create virtual environments is the :mod:`venv` module from the standard Python
-distribution::
-
-     $ python3 -m venv ~/.venv/valjean
-     $ source ~/.venv/valjean/bin/activate
-     (valjean) $ pip3 install /path/to/valjean-x.y.z
-
-For the record, the `virtualenvwrapper`_ package also provides a practical
-alternative to manage virtual Python environments.
+            (venv-valjean) $ pip install --upgrade pip
 
 Prerequisites
 -------------
 
-In order to use :mod:`valjean`, you will need at least Python v3.4. Some of the
-prerequisites for testing and documentation generation (*looking at you,*
-`sphinx`_) have known installation problems with old versions of the
-:ref:`setuptools` standard library package. This is the case, for instance, of
-boxes running Ubuntu 14.04, that ships by default with :ref:`setuptools` v2.2.
-You can work around these problems by upgrading your :ref:`setuptools` package
-(and `pip`_, since you're at it) in your virtual environment, before
-installing :mod:`valjean` or its dependencies. The command is::
-
-    (valjean) $ pip3 install --upgrade setuptools pip
-
-.. todo::
-
-   Document the real dependencies (`pyparsing`_, etc.) as soon as the code
-   that requires them lands in the repository.
+:mod:`valjean` depends on a number of Python packages. You don't have to do
+anything special to install most of these packages, since ``pip`` should take
+care of everything. The one exception for the moment is `h5py`_, which will not
+work unless the HDF5 library is installed on your machine.
 
 Using conda
 -----------
 
-It is also possible to use :mod:`valjean` from a **conda** environment. The
+It is also possible to use :mod:`valjean` from a ``conda`` environment. The
 first step is to install `miniconda`_ or `anaconda`_. The former is a light
-installation of python, only required packages will be installed. The latter is
-a full installation and can be used offline. Once the installation is done, if
-not automatic in the shell::
+installation of python and only required packages will be installed. The latter
+is a full installation and can be used offline. Once the installation is done,
+you should run::
 
     $ source PATH/TO/CONDA/bin/activate
 
-The recommended way to install valjean is to create a conda environment for the
-package and all of its dependencies::
+unless you have set up your shell to do that automatically for you.
+
+The recommended way to install :mod:`valjean` with ``conda`` is to create a
+``conda`` environment for the package and all of its dependencies::
 
     (base) $ conda create -n MY_ENV python=PY_VERSION
     (base) $ conda activate MY_ENV
     (MY_ENV) $ conda install -c file://PATH/TO/valjean-DETAILS.tar.bz2 --use-local valjean
 
-``DETAILS`` stands for ``vVERSION-NUMBER_HASH_pyPY_VERSION`` with:
+``DETAILS`` stands for :samp:`v{VERSION}-{NUMBER_HASH}_{pyPY_VERSION}` with:
 
-* VERSION: last tag from valjean in the branch used to build the archive
-* NUMBER: number of commits since this tag
-* HASH: short hash of the commit used
-* PY_VERSION: python version used to build the archive, the version used for the
-  installation should be the same.
+* ``VERSION``: last tag from valjean in the branch used to build the archive
+* ``NUMBER``: number of commits since this tag
+* ``HASH``: short hash of the commit used
+* ``PY_VERSION``: python version used to build the archive, the version used
+  for the installation should be the same.
 
 This procedure should allow to use :mod:`valjean` from the python interpreter,
-from jupyter or directly with the ``valjean`` command.
+from a `jupyter`_ notebook or directly with the ``valjean`` command.
 
-Note: only the valjean package is installed at that step, the others (`numpy`,
-`pyparsing`, ...) will be installed when running :mod:`valjean`. If you want to
-use :mod:`valjean` directly in python you'll probably need to install the
-needed packages thanks to ``conda install PACKAGE``.
+Note: only the :mod:`valjean` package is installed at that step, the others
+(`numpy`, `pyparsing`, ...) will be installed when running :mod:`valjean`. If
+you want to use :mod:`valjean` directly in python you'll probably need to
+install the required packages using ``conda install PACKAGE``.
 
 An offline installation is possible adding the ``--offline`` option in the
 installation command line. As a consequence updates of packages won't be
 possible, i.e. they will come from the available ones in the local installation
-of conda. The python version of the package should probably be the default one
-of conda.
+of ``conda``. The Python version of the package should probably be the default
+one of ``conda``.
 
-Checking package
-----------------
+Checking package integrity
+--------------------------
 
 The ``md5sum`` of the archives (``pip`` or ``conda`` installation) are given in
 Tuleap. To check them, just type ``md5sum MY_ARCHIVE`` and compare the obtained
 hash with the one stored on Tuleap.
-

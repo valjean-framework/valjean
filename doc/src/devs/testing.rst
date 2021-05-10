@@ -18,8 +18,6 @@ defined in the :file:`tests` folder and are automatically discovered by
 
 You can run the unit-test suite with::
 
-    $ ./setup.py test
-    $ ./setup.py pytest  # equivalently
     $ pytest
 
 This will run the tests and produce a summary report. Additionally, `pytest`_
@@ -30,16 +28,19 @@ The default `pytest` options are defined in the :file:`pytest.ini` file, and
 `coverage` options are defined in :file:`.coveragerc`, using `pytest-doc`_.
 Extra options to `pytest` can be passed on the command line::
 
-    $ pytest -k depgraph        # select tests whose name matches "depgraph"
+    $ pytest tests/cosette/test_rlist.py  # run all tests in the named file
+    $ pytest tests/cosette/test_rlist.py::test_insert  # run this test only
+    $ pytest -k depgraph        # only run tests whose name matches "depgraph"
     $ pytest -v                 # increase verbosity level by number of v
     $ pytest --verbosity=N      # set verbosity test output
-
+    $ pytest -x                 # stop on the first test failure
+    $ pytest --ff               # run previously failed tests first
 
 The ``--verbosity`` option sets all the :mod:`valjean` loggers to the verbosity
 level N. ``N=0`` is equivalent to ``WARNING``, ``N=1`` to ``INFO`` (default)
 and ``N>1`` to ``DEBUG``.  The verbosity level can also be increased by
 invoking the ``-v`` option, possibly multiple times. It is useful when
-debugging a failing test, in conjunction with the ``-k`` option.
+debugging a failing test.
 
 Property-based testing and the :mod:`hypothesis` package
 --------------------------------------------------------
@@ -74,15 +75,14 @@ The testing library will generate a number of random inputs, call the sorting
 algorithm on each of them and check that the properties specified by the
 developer hold. If a counterexample is found, it will be shown to the user.
 
-In Python, the standard property-based test library is :mod:`hypothesis`, which
-offers a flexible and `well-documented API
-<https://hypothesis.readthedocs.io/en/latest/>`_. Additionally,
-:mod:`hypothesis` is well integrated with `pytest`. :mod:`valjean` unit tests
-leverage :mod:`hypothesis` whenever possible.
+In Python, the :mod:`hypothesis` library offers a flexible and `well-documented
+API <https://hypothesis.readthedocs.io/en/latest/>`_ for property-based
+testing. Additionally, :mod:`hypothesis` is well integrated with `pytest`.
+:mod:`valjean` unit tests leverage :mod:`hypothesis` whenever possible.
 
 If you want some examples within :mod:`valjean`, a good place to start is the
-``tests.cosette.test_depgraph`` test module, which tests the invariants of the
-:class:`~valjean.cosette.depgraph.DepGraph` class.
+``tests.cosette.test_rlist`` test module, which tests the invariants of the
+:class:`~valjean.cosette.rlist.RList` class.
 
 Testing example docstrings with `pytest`_
 -----------------------------------------
@@ -94,4 +94,10 @@ Sometimes the docstrings contain example code such as the following:
    >>> print(1+2)
    3
 
-These examples can be automatically tested with `pytest`_.
+These examples are also automatically tested with `pytest`_.
+
+``tox`` integration
+-------------------
+
+There are specific ``tox`` test environments to run the unit tests. Check the
+page about :ref:`using tox for continuous integration <tox-integration>`.

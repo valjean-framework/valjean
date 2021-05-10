@@ -151,8 +151,10 @@ min-public-methods = 0
 
 [tool.tox]
 legacy_tox_ini = """
+# See doc/src/devs/tox.rst if you have questions about the tox configuration
 [tox]
 minversion = 3.17.0
+# isolated_build is required by poetry
 isolated_build = true
 envlist = py{35,36,37,38,39}
 

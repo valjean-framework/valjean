@@ -5,15 +5,14 @@ Distributing the code
 
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _anaconda: https://www.anaconda.com/products/individual
+.. _Tuleap: https://codev-tuleap.intra.cea.fr/projects/valjean
 
 .. highlight:: bash
 
 Two package management systems are currently supported: ``pip`` and ``conda``.
 
 All the packages, including the documentation package, are available in
-the `Fichiers` area of valjean's **Tuleap**
-(``https://codev-tuleap.intra.cea.fr/projects/valjean``).
-
+the `Fichiers` area of the valjean `Tuleap`_ page.
 
 Source distribution
 -------------------
@@ -23,11 +22,12 @@ Creation
 
 A source distribution can be created with the command::
 
-	$ python setup.py sdist
+	$ poetry build
 
-This will produce a :samp:`valjean-{x.y.z}.tar.gz` archive in the :file:`dist`
-folder. The archive is suitable for distribution of :mod:`valjean` to users,
-for example by unpacking it to a shared folder.
+This will produce a :samp:`valjean-{x.y.z}.tar.gz` source archive and a
+:samp:`valjean-{x.y.z}-py3-none-any.whl` in the :file:`dist` folder. These
+files are suitable for the distribution of :mod:`valjean` to users and for
+installing it.
 
 Installation
 ^^^^^^^^^^^^
@@ -36,10 +36,17 @@ The source distribution may be installed with::
 
 	$ pip install /path/to/valjean-{x.y.z}.tar.gz
 
+You can also install the wheel::
+
+	$ pip install /path/to/valjean-{x.y.z}-py3-none-any.whl
+
+Both commands should work.
+
 .. note::
-	If the archive is built from a commit not corresponding to a tag, the
-	archive name will contain the hash of the commit, like
-	:samp:`valjean-{x.y}.dev{z}+g{hash}.tar.gz`.
+
+        If the archives are built from an untagged commit, the archive name
+        will contain the hash of the commit, like
+        :samp:`valjean-{x.y}.dev{z}+g{hash}.tar.gz`.
 
 
 Conda package
@@ -53,26 +60,26 @@ steps:
 
 1. Install `conda` with `miniconda`_ or `anaconda`_
 2. Setup your conda workspace (``source MY/CONDA/PATH/bin/activate``)
-3. Create the **conda** package::
+3. Create the ``conda`` package::
 
 	$ cd /path/to/valjean
 	$ conda build conda.recipe --python=PY_VERSION
 
 The conda package should appear in the conda installation at the path:
-``MY/CONDA/PATH/conda-bld/linux-64/valjean-vVERSION-NUMBER_HASH_pyPY_VERSION.tar.bz2``
+:samp:`MY/CONDA/PATH/conda-bld/linux-64/valjean-v{VERSION}-{NUMBER}_{HASH}_py{PY_VERSION}.tar.bz2`
 with:
 
-* VERSION: last tag from valjean in the branch used to build the archive
-* NUMBER: number of commits since this tag
-* HASH: short hash of the commit used
-* PY_VERSION: python version.
+* ``VERSION``: last tag from valjean in the branch used to build the archive
+* ``NUMBER``: number of commits since this tag
+* ``HASH``: short hash of the commit used
+* ``PY_VERSION``: Python version.
 
 The option ``--python`` is needed in the command to get the correct python
 version in the archive name (else it uses the default version of conda).
 
 If the build corresponds to the tag and the hash seems useless, it is possible
 to modify or comment the string. Without the string the default name would be
-``valjean-vVERSION-pyPY_VERSION_NUMBER.tar.bz2``
+:samp:`valjean-v{VERSION}-py{PY_VERSION}_{NUMBER}.tar.bz2`.
 
 Installation
 ^^^^^^^^^^^^
@@ -84,7 +91,7 @@ To install the conda package:
 
 	$ conda install -c file://PATH/TO/valjean-DETAILS.tar.bz2 --use-local valjean
 
-with ``DETAILS = vVERSION-NUMBER_HASH_pyPY_VERSION``.
+with :samp:`DETAILS=v{VERSION}-{NUMBER}_{HASH}_py{PY_VERSION}`.
 
 Offline installation can be done adding the ``--offline`` option.
 
