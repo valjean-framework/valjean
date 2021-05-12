@@ -146,7 +146,7 @@ this:
 
     >>> import numpy as np
     >>> def pascal(n):
-    ...   res = np.zeros((n, n), dtype=np.int)
+    ...   res = np.zeros((n, n), dtype=int)
     ...   res[:, 0] = 1
     ...   res[0, :] = 1
     ...   for i in range(2, n):

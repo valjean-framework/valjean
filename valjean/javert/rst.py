@@ -482,8 +482,8 @@ class RstTable:
                 type_ = val.dtype.type
             except AttributeError:
                 return str(val)
-            if type_ in (np.bool, np.bool_, np.int, np.integer, np.int32,
-                         np.int64, np.str_):
+            if issubclass(type_, (bool, int, np.integer, np.int32, np.int64,
+                                  np.str_)):
                 return str(val)
             return num_fmt.format(val)
         for row, hlrow in zip(cls.transpose(columns),
