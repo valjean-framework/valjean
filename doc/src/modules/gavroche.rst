@@ -14,7 +14,6 @@ gavroche — Gestion AVancée de Routines et Oracles en CHaînE (nom temporaire)
 .. toctree::
    :caption: Submodules
 
-   gavroche/harvest
    gavroche/test
    gavroche/stat_tests
    gavroche/eval_test_task

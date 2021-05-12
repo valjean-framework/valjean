@@ -30,7 +30,6 @@ Automatic documentation for the unit tests
 .. automodule:: tests.gavroche.conftest
 .. automodule:: tests.gavroche.test_diagnostics
 .. automodule:: tests.gavroche.test_eval_test_task
-.. automodule:: tests.gavroche.test_harvest
 .. automodule:: tests.gavroche.test_stats
 .. automodule:: tests.gavroche.test_test
 .. automodule:: tests.integration.conftest
