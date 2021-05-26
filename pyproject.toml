@@ -43,9 +43,9 @@ maintainers = ["Ève Le Ménédeu <eve.le-menedeu@cea.fr>",
                "Davide Mancusi <davide.mancusi@cea.fr>"]
 license = "CeCILL-C Free Software License Agreement (CECILL-C)"
 readme = "README.md"
-homepage = "https://codev-tuleap.intra.cea.fr/projects/valjean"
-repository = "https://codev-tuleap.intra.cea.fr/plugins/git/valjean/valjean"
-# documentation = "https://valjean.readthedocs.io/"
+homepage = "https://github.com/valjean-framework/valjean"
+repository = "https://github.com/valjean-framework/valjean.git"
+documentation = "https://valjean.readthedocs.io/"
 classifiers = [
   "Programming Language :: Python :: 3",
   "Development Status :: 4 - Beta",
@@ -56,8 +56,8 @@ classifiers = [
 packages = [{ include = "valjean" }]
 exclude = ["**/.gitignore", "doc", "tests"]
 
-# [tool.poetry.urls]
-# "Bug tracker" = "https://github.com/arekfu/valjean/issues/"
+[tool.poetry.urls]
+"Bug tracker" = "https://github.com/valjean-framework/valjean/issues"
 
 [tool.poetry.scripts]
 valjean = "valjean.cambronne.main:main"
@@ -85,9 +85,11 @@ h5py = [
     {version = "~3.1", python = ">=3.6.0, <3.9"},
     {version = "~3.1", python = "^3.9"},
 ]
+
+# dependencies for the [graphviz] extra
 pydot = {version = "^1.4.2", optional = true}
 
-[tool.poetry.dev-dependencies]
+# dependencies for the [dev] extra
 pytest = "^6.1"
 pytest-cov = "^2.11"
 pytest-mpl = "^0.10"
@@ -98,12 +100,28 @@ sphinx-rtd-theme = "^0.5"
 pylint = "^2.6"
 flake8 = "^3.9"
 hypothesis = {version = "^5.3", extras = ["numpy"]}
+Jinja2 = "<3.0"
 nbsphinx = "^0.7"
 jupyter-client = "6.1.12"
 ipykernel = "^5.5.4"
 
 [tool.poetry.extras]
 graphviz = ["pydot"]
+dev = [
+  "pytest",
+  "pytest-cov",
+  "pytest-mpl",
+  "pytest-timeout",
+  "rstcheck",
+  "Sphinx",
+  "sphinx-rtd-theme",
+  "pylint",
+  "flake8",
+  "hypothesis",
+  "nbsphinx",
+  "jupyter-client",
+  "ipykernel",
+]
 
 [tool.pytest.ini_options]
 addopts = "-v -s -ra --doctest-modules"
