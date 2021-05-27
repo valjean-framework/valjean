@@ -190,7 +190,7 @@ setenv =
         COVERAGE_FILE=.coverage.{envname}
 description = invoke pytest with coverage, XML output and mpl
 extras = graphviz
-commands = poetry install -v -E graphviz --no-root
+commands = poetry install -v -E graphviz -E dev --no-root
            poetry run pytest --basetemp="{toxworkdir}/tmp-{envname}" \
                 --durations=20 --cov-report term-missing \
                 --cov-config "{toxinidir}/.coveragerc" \
@@ -207,7 +207,7 @@ passenv =
 [testenv:docs]
 description = invoke sphinx-build to build the HTML docs
 # be nitpicky on the HTML documentation
-commands = poetry install -v --no-root
+commands = poetry install -v --no-root -E dev
            poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E -W \
                 --keep-going -b html -w "{toxworkdir}/sphinx-html.out" \
                 "{toxinidir}/doc/src" "{toxworkdir}/doc/html"
@@ -221,7 +221,7 @@ commands = poetry install -v --no-root
 
 [testenv:linting]
 description = invoke pylint and flake8 on the source package
-commands = poetry install -v --no-root
+commands = poetry install -v --no-root -E dev
            poetry run pylint -f parseable --exit-zero \
                 --rcfile "{toxinidir}/pyproject.toml" {posargs}
            poetry run flake8 --config "{toxinidir}/.flake8" \
@@ -230,7 +230,7 @@ commands = poetry install -v --no-root
 [testenv:parsing]
 description = invoke pytest on the nightly parsing tests
 extras = graphviz
-commands = poetry install -v --no-root
+commands = poetry install -v --no-root -E dev
            poetry run pytest --runslow --cov-report term-missing \
                 --durations=20 --cov-config "{toxinidir}/.coveragerc" \
                 --cov=valjean --mpl \
