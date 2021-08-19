@@ -677,7 +677,8 @@ class Scanner(Mapping):
                  'batch_number': batch_number,
                  't4_file': self.fname}
         for ktime, val in self.times.items():
-            gvars[ktime] = val if isinstance(val, int) else val[batch_number]
+            gvars[ktime] = (val if isinstance(val, int)
+                            else val.get(batch_number, None))
         return gvars
 
     def print_statistics(self):
