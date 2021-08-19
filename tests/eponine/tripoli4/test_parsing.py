@@ -267,12 +267,14 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     print_summary(len(used_files), excluded_files, summary)
     category = used_files[0].split('/')[-4]
     mode = vv_file.MONO if vv_file.MONO in folder else vv_file.PARA
-    assert len(used_files) == vv_file.EXPECTED_RESULTS[(category, mode)][0]
-    assert (len(summary['failed_jdds'])
-            == vv_file.EXPECTED_RESULTS[(category, mode)][1])
-    assert len(excluded_files) == vv_file.EXPECTED_RESULTS[(category, mode)][2]
-    if len(vv_file.EXPECTED_RESULTS[(category, mode)]) > 3:
-        assert (len(summary['failed_time'])
-                == vv_file.EXPECTED_RESULTS[(category, mode)][3])
-        assert (len(summary['failed_browser'])
-                == vv_file.EXPECTED_RESULTS[(category, mode)][4])
+
+    counts = vv_file.EXPECTED_RESULTS.get((category, mode), None)
+    if counts is None:
+        return
+
+    assert len(used_files) == counts[0]
+    assert len(summary['failed_jdds']) == counts[1]
+    assert len(excluded_files) == counts[2]
+    if len(counts) > 3:
+        assert len(summary['failed_time']) == counts[3]
+        assert len(summary['failed_browser']) == counts[4]
