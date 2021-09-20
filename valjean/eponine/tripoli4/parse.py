@@ -48,7 +48,7 @@ from pyparsing import ParseException, ParserElement
 
 from . import scan
 from .grammar import t4gram
-from .common import SpectrumDictBuilderException
+from .common import SpectrumDictBuilderException, MeshDictBuilderException
 from ...chrono import Chrono
 from ..browser import Browser
 from ... import LOGGER
@@ -158,8 +158,8 @@ class Parser:
             # from None allows to raise a new exception without traceback and
             # message of the previous one here.
             raise ParserException("Error in parsing") from None
-        except SpectrumDictBuilderException as sdbe:
-            LOGGER.error(sdbe)
+        except (SpectrumDictBuilderException, MeshDictBuilderException) as dbe:
+            LOGGER.error(dbe)
             raise ParserException("Error in parsing") from None
         return result
 

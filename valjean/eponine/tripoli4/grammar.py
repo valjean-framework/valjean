@@ -222,7 +222,7 @@ level as the response block. These parsers and the associated dictionary key
 
 from pyparsing import (Word, Keyword, White, alphas, alphanums,
                        Suppress, Optional, LineEnd, LineStart, CaselessKeyword,
-                       Group, OneOrMore, ZeroOrMore, Forward,
+                       Group, OneOrMore, ZeroOrMore, Forward, originalTextFor,
                        tokenMap, delimitedList, printables, replaceWith)
 from pyparsing import pyparsing_common as pyparscom
 from . import transform as trans
@@ -903,14 +903,10 @@ _mesh_energyrange = (Group(Suppress(_energyrange_kw + "(in") + Word(alphas)
 _mesh_energyintegrated = ((Suppress(_integratedres_name) + Suppress(':'))
                           ('mesh_energyintegrated'))
 _mesh_energyline = _mesh_energyrange | _mesh_energyintegrated
-_meshspacecoord = Group(Suppress('(') + delimitedList(_inums, delim=',')
-                        + Suppress(')'))
-_meshspacebins = Group(Suppress('(') + delimitedList(_fnums, delim=',')
-                       + Suppress(')'))
-_meshvals = Group(_meshspacecoord + Optional(_meshspacebins) + _fnums + _fnums)
-_meshres = Group(_mesh_energyline
-                 + Group(OneOrMore(_meshvals))
-                 ('mesh_vals'))
+_meshres = Group(
+    _mesh_energyline
+    + Group(originalTextFor(OneOrMore(Word(printables), stopOn=_endtable)))
+    ('mesh_vals'))
 meshblock = Group(OneOrMore(Group(_timestep
                                   + Optional(_score_mesh_unit)
                                   + Group(OneOrMore(_meshres))('meshes')

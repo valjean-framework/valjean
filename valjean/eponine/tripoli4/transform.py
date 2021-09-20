@@ -128,7 +128,6 @@ def convert_mesh(toks):
        <valjean.eponine.tripoli4.common.convert_mesh>`
        and more generally :mod:`valjean.eponine.tripoli4.common`
     '''
-    # mesh = common.convert_mesh_with_time(toks)
     mesh = common.convert_mesh(toks)
     return mesh
 

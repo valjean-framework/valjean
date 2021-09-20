@@ -303,7 +303,6 @@ def test_debug_entropy(caplog, datadir):
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
     t4p = ParserDebug(str(datadir/"entropy.d.res.ceav5"),
-                      mesh_lim=10,
                       end_flag="number of batches used",
                       ofile="debug_ent.log")
     assert t4p
@@ -327,7 +326,7 @@ def test_debug_entropy(caplog, datadir):
     assert "debug_ent.log" in os.listdir()
     with open("debug_ent.log") as ofile:
         lines = ofile.readlines()
-        assert len(lines) == 62
+        assert len(lines) == 124
         assert "RESULTS ARE GIVEN FOR SOURCE INTENSITY" in lines[0]
         assert "number of batches used" in lines[-1]
 
@@ -451,7 +450,7 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     '''
     caplog.set_level(logging.DEBUG, logger='valjean')
     monkeypatch.setattr("valjean.eponine.tripoli4.dump.MAX_DEPTH", 8)
-    t4p = Parser(str(datadir/"entropy.d.res.ceav5"), mesh_lim=10)
+    t4p = Parser(str(datadir/"entropy.d.res.ceav5"))
     t4_res = t4p.parse_from_index(batch_index=-1)
     assert t4_res
     assert t4p.scan_res.normalend
@@ -839,6 +838,18 @@ def test_no_a_t4_opt_bad_bins_2(datadir, caplog):
             in caplog.text)
     assert ("Please make sure you run Tripoli-4 with option '-a'."
             in caplog.text)
+
+
+def test_tungstene_missing_vals(datadir, caplog):
+    '''Use Tripoli-4 output from tungstene.d to test meshes (also depending on
+    energy).
+    '''
+    t4p = Parser(str(datadir/"tungstene_missing_vals.d.res"))
+    assert t4p
+    assert t4p.scan_res.normalend
+    with pytest.raises(ParserException):
+        t4p.parse_from_index(-1)
+    assert "Mesh looks incomplete" in caplog.text
 
 
 def test_bad_response_name(datadir, caplog):

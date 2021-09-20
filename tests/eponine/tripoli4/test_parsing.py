@@ -183,9 +183,10 @@ def loop_on_files(filelist, cfile):
     for ifile in filelist:
         print("Reading:", ifile)
         try:
-            res = (Parser(ifile)
-                   if os.path.basename(ifile) not in cfile.MESH_LIM_FILES
-                   else Parser(ifile, mesh_lim=2))
+            res = Parser(ifile)
+            # res = (Parser(ifile)
+            #        if os.path.basename(ifile) not in cfile.MESH_LIM_FILES
+            #        else Parser(ifile, mesh_lim=2))
         except ParserException:
             failed_jdds.append(ifile)
             continue

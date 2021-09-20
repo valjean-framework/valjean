@@ -571,8 +571,10 @@ Module API
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from io import StringIO
 import numpy as np
 from ... import LOGGER
+
 
 # get profile from globals (cleaner)
 if 'profile' not in globals()['__builtins__']:
@@ -771,6 +773,10 @@ class KinematicDictBuilder(DictBuilder):
         '''
 
 
+class MeshDictBuilderException(Exception):
+    '''Exception to mesh builder'''
+
+
 class MeshDictBuilder(KinematicDictBuilder):
     '''Class specific to mesh dictionary -> mainly filling of bins and arrays.
 
@@ -794,8 +800,8 @@ class MeshDictBuilder(KinematicDictBuilder):
         LOGGER.debug("Initialisation of MeshDictBuilder")
         super().__init__(colnames, lnbins)
 
-    def _fill_space_bins(self, meshvals):
-        '''Fill the space bins.
+    def fill_space_bins(self, nb_elts, vals):
+        '''Fill the mesh space bins.
 
         Two different cases are possible:
 
@@ -803,25 +809,39 @@ class MeshDictBuilder(KinematicDictBuilder):
           bins are set to all possible cell index in the 3 dimensions. For
           example: if there are 3 cells in `s0`, the bins will be 0, 1, 2.
           Only center of bins are given here (no possibility of calculation of
-          a width).
+          a width). In that case the mesh contains 3 elements: cell indices
+          comma separated (no whitespaces), value and sigma.
         * a standard MESH was required with the option ``MESH_INFO`` in
           Tripoli-4: center of cells are given in all dimensions, the space
           bins will be set to these values. Width can be calculated (regular
           binning but possible in any case), but not done here. If needed for
-          plot representation this will be proposed at the plotting step.
+          plot representation this will be proposed at the plotting step. In
+          that case the mesh line contains 6 elements: cell indices, the three
+          space coordinates of cell middle, value and sigma.
 
-        :param list meshvals: mesh data for a given energy bin
-                         ``[[[s0, s1, s2], score, sigma],...]``
+        :param int nb_elts: number of elements by line of mesh result
+        :param list vals: mesh results
         '''
         LOGGER.debug("Filling space bins")
-        if isinstance(meshvals[0][1], float):
+        if nb_elts == 3:
             self.bins['s0'] = np.arange(self.arrays['default'].shape[0])
             self.bins['s1'] = np.arange(self.arrays['default'].shape[1])
             self.bins['s2'] = np.arange(self.arrays['default'].shape[2])
         else:
-            self.bins['s0'] = np.unique([smesh[1][0] for smesh in meshvals])
-            self.bins['s1'] = np.unique([smesh[1][1] for smesh in meshvals])
-            self.bins['s2'] = np.unique([smesh[1][2] for smesh in meshvals])
+            LOGGER.debug('coordinates to be done')
+
+            def convstr(x):
+                '''Convert coordinates string in float.'''
+                return float(x.decode('utf-8').strip('(),'))
+
+            npt = np.loadtxt(
+                StringIO(vals),
+                dtype=np.dtype([('c0', 'f8'), ('c1', 'f8'), ('c2', 'f8')]),
+                usecols=list(range(1, 4)),
+                converters={1: convstr, 2: convstr, 3: convstr})
+            self.bins['s0'] = np.unique(npt['c0'])
+            self.bins['s1'] = np.unique(npt['c1'])
+            self.bins['s2'] = np.unique(npt['c2'])
 
     def _fill_mesh_array(self, meshvals, name, ebin):
         '''Fill mesh array.
@@ -832,11 +852,13 @@ class MeshDictBuilder(KinematicDictBuilder):
                      'eintegrated_mesh') for the moment
         :param int ebin: energy bin to fill in the array
         '''
-        for smesh in meshvals:
-            index = (smesh[0][0], smesh[0][1], smesh[0][2],
-                     ebin, self.itime, self.imu, self.iphi)
-            self.arrays[name][index] = np.array(tuple(smesh[-2:]),
-                                                dtype=self.arrays[name].dtype)
+        npt = np.loadtxt(StringIO(meshvals[0]), usecols=(-2, -1),
+                         dtype=np.dtype([('value', 'f8'), ('sigma', 'f8')]))
+        try:
+            res = npt[['value', 'sigma']].reshape(self.arrays[name].shape[:3])
+        except ValueError as verr:
+            raise MeshDictBuilderException('Mesh looks incomplete') from verr
+        self.arrays[name][:, :, :, ebin, self.itime, self.imu, self.iphi] = res
 
     def fill_arrays_and_bins(self, data):
         '''Fill arrays and bins for mesh data.
@@ -850,7 +872,7 @@ class MeshDictBuilder(KinematicDictBuilder):
           (facultative, integrated over energy, still splitted in space)
         * ``'integrated_res'`` (over energy and space, splitted in time)
         '''
-        self._fill_space_bins(data[0]['meshes'][0]['mesh_vals'])
+        LOGGER.debug('in mesh fill_arrays_and_bins')
         for ires in data:
             LOGGER.debug("MeshDictBuilder.fill_arrays_bins, "
                          "keys: %s, number of elements: %d",
@@ -1126,9 +1148,14 @@ def convert_mesh(meshres):
     LOGGER.debug("Number of mesh results: %d", len(meshres))
     LOGGER.debug("keys of meshes: %s", list(meshres[0]['meshes'].keys()))
     LOGGER.debug("elts in meshes: %d", len(meshres[0]['meshes']))
+    LOGGER.debug('keys in elt 0: %s', list(meshres[0]['meshes'][0].keys()))
+    assert len(meshres[0]['meshes'][0]['mesh_vals']) == 1
+    mvals = meshres[0]['meshes'][0]['mesh_vals'][0]
+    lcell = mvals.rpartition('\n')[-1].split()
+    olcell = np.array([int(b) for b in lcell[0].strip('()').split(',')])
+    shape = olcell + 1
     # dimensions/number of bins of space coordinates are given by last bin
-    ns0bins, ns1bins, ns2bins = _get_number_of_space_bins(
-        meshres[0]['meshes'][0]['mesh_vals'])
+    ns0bins, ns1bins, ns2bins = shape
     # ntbins supposes for the moment no mu or phi bins
     ntbins = (meshres[-1]['time_step'][0]+1
               if "time_step" in meshres[0]
@@ -1147,7 +1174,8 @@ def convert_mesh(meshres):
     if 'integrated_res' in meshres[0]:
         vals.add_array('integrated_res', ['score', 'sigma'],
                        [1, 1, 1, 1, ntbins, 1, 1])
-    # fill arrays, bins, put them in inceasing order
+    # fill arrays, bins, put them in increasing order
+    vals.fill_space_bins(len(lcell), mvals)
     vals.fill_arrays_and_bins(meshres)
     vals.add_last_bins(meshres)
     vals.flip_bins()
