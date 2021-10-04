@@ -116,13 +116,12 @@ def check_gauss_e_spectrum(resp):
     results.
     '''
     assert resp['score_name'] == 'courant_E'
-    bds = dcv.convert_data(resp['results'], data_type='spectrum')
-    assert bds.shape == (1, 1, 1, 4, 1, 1, 1)
-    bdsi = dcv.convert_data(resp['results'], data_type='integrated')
-    assert bdsi.shape == (1, 1, 1, 1, 1, 1, 1)
-    assert bdsi.bins['e'].size == 2
-    assert bds.bins['e'].size == 5
-    assert np.array_equal(bdsi.bins['e'], bds.bins['e'][::4])
+    assert resp["results"]['score'].shape == (1, 1, 1, 4, 1, 1, 1)
+    assert resp["results"]['score_integrated'].shape == (1, 1, 1, 1, 1, 1, 1)
+    assert resp["results"]['score_integrated'].bins['e'].size == 2
+    assert resp["results"]['score'].bins['e'].size == 5
+    assert np.array_equal(resp["results"]['score_integrated'].bins['e'],
+                          resp["results"]['score'].bins['e'][::4])
     assert 'discarded_batches' in resp['results']
     assert 'used_batches' in resp['results']
 
@@ -132,10 +131,9 @@ def check_gauss_et_spectrum(resp):
     are given by time bins.
     '''
     assert resp['score_name'] == 'courant_Et'
-    bds = dcv.convert_data(resp['results'], data_type='spectrum')
+    bds = resp["results"]['score']
     assert bds.shape == (1, 1, 1, 4, 4, 1, 1)
-    bdsi = dcv.convert_data(resp['results'], data_type='spectrum',
-                            array_type='eintegrated_array')
+    bdsi = resp["results"]['score_eintegrated']
     assert bdsi.shape == (1, 1, 1, 1, 4, 1, 1)
     assert bdsi.bins['e'].size == 2
     assert bds.bins['e'].size == 5
@@ -150,18 +148,32 @@ def check_gauss_etmuphi_spectrum(resp):
     integrated results are available.
     '''
     assert resp['score_name'] == 'courant_Etmuphi'
-    bds = dcv.convert_data(resp['results'], data_type='spectrum')
+    bds = resp["results"]['score']
     assert bds.shape == (1, 1, 1, 4, 4, 4, 2)
     assert list(bds.bins.keys()) == ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
     assert ([x for x, y in bds.bins.items() if y.size > 0]
             == list(bds.squeeze().bins.keys()))
     assert list(bds.squeeze().bins.keys()) == ['e', 't', 'mu', 'phi']
+    assert 'score_integrated' not in resp["results"]
+    assert 'score_eintegrated' not in resp["results"]
+
+
+def check_gauss_no_res(resp):
+    '''Check gauss results: raw response (without datasets).
+    Spectrum in time, energy, mu and phi. No integrated results are available.
+    '''
+    assert resp['score_name'] == 'courant_Etmuphi'
+    bds = dcv.convert_data(resp['results'], data_type='spectrum')
+    assert bds.shape == (1, 1, 1, 4, 4, 4, 2)
     bdsi = dcv.convert_data(resp['results'], data_type='integrated')
     assert bdsi is None
     bdsei = dcv.convert_data(resp['results'], data_type='spectrum',
-                             array_type='eintegrated_array')
+                             array_key='eintegrated_array')
     assert bdsei is None
     assert 'discarded_batches' in resp['results']
+    ddb = dcv.convert_data(resp['results'], data_type='discarded_batches')
+    assert np.isscalar(ddb.value)
+    assert ddb.value == 0
     assert 'used_batches' not in resp['results']
 
 
@@ -184,13 +196,20 @@ def test_gauss_spectrum(datadir):
     for rbatch, batch in enumerate(reversed(t4p.scan_res)):
         assert batch == 200*(len(t4p.scan_res)-rbatch)
     assert t4p.scan_res.batch_number(-1) == 400
-    resp0 = t4_res.res['list_responses'][0]
+    resp0 = t4_res.pres['list_responses'][0]
     assert resp0['response_function'] == "COURANT"
     assert resp0['response_type'] == 'score'
     assert resp0['scoring_mode'] == "SCORE_SURF"
     assert resp0['score_name'] == "courant_E"
     assert all(x in resp0['results']
                for x in ('spectrum', 'integrated'))
+    resp1 = t4_res.pres['list_responses'][1]
+    assert all(x in resp1['results']['spectrum']
+               for x in ('array', 'bins', 'units', 'eintegrated_array'))
+    dresp0 = t4_res.res['list_responses'][0]
+    assert all(x in dresp0['results']
+               for x in ('discarded_batches', 'used_batches', 'score',
+                         'score/lethargy', 'units', 'score_integrated'))
     t4rb = t4_res.to_browser()
     assert len(t4rb.keys()) == 16
     assert list(t4rb.available_values('response_function')) == ['COURANT']
@@ -207,9 +226,12 @@ def test_gauss_spectrum(datadir):
     # no integral available
     selresp = t4rb.select_by(score_name='courant_Etmuphi', squeeze=True)
     check_gauss_etmuphi_spectrum(selresp)
+    # checks on datasets not available in response result (integrals)
+    resp5 = t4_res.pres['list_responses'][5]
+    check_gauss_no_res(resp5)
 
 
-def test_tungstene_file(datadir):
+def test_tungstene(datadir):
     '''Use Tripoli-4 output from tungstene.d to test meshes (also depending on
     energy).
     '''
@@ -228,45 +250,28 @@ def test_tungstene_file(datadir):
     assert resp0['particle'] == "PHOTON"
     assert resp0['response_type'] == 'score'
     assert resp0['scoring_mode'] == "SCORE_TRACK"
-    assert 'mesh' in resp0['results']
+    assert resp0['scoring_zone_type'] == "Mesh"
     t4rb = t4_res.to_browser()
     assert t4rb.globals['simulation_time'] == 423
     resp = t4rb.select_by(response_function='FLUX', squeeze=True)
     bd_mesh = dcv.convert_data(resp['results'], data_type='mesh')
+    assert bd_mesh is None
+    bd_mesh = resp['results']['score']
     bd_mesh_squeeze = bd_mesh.squeeze()
     assert bd_mesh.shape == (1, 1, 17, 3, 1, 1, 1)
+    assert bd_mesh_squeeze.shape == (17, 3)
     assert list(bd_mesh_squeeze.bins.keys()) == ['s2', 'e']
-    bd_int = dcv.convert_data(resp['results'], data_type='integrated')
+    bd_int = resp['results']['score_integrated']
     assert bd_int.shape == (1, 1, 1, 1, 1, 1, 1)
     assert bd_int.bins['e'].size == 2
+    assert bd_int.bins['t'].size == 0
     bd_int_squeeze = bd_int.squeeze()
     assert bd_int_squeeze.shape == ()
+    assert bd_int_squeeze.ndim == 0
     assert not bd_int_squeeze.bins
-    bd_eintm = dcv.convert_data(resp['results'], data_type='mesh',
-                                array_type='eintegrated_array')
+    bd_eintm = resp['results']['score_eintegrated']
     assert bd_eintm.shape == (1, 1, 17, 1, 1, 1, 1)
     assert bd_eintm.bins['e'].size == 2
-
-
-# def test_petit_coeur_para():
-#     t4_res = Parser.parse_jdd_with_mesh_lim(
-#         "/home/el220326/valjean/tests/eponine/data/"
-#         "create_petitcoeur.d.PARA.res.ceav5",
-#         -1, -1, "simulation time")
-#     if t4_res:
-#         t4_res.print_t4_stats()
-#         print("result of the function =", t4_res.check_t4_times())
-#         t4_res.print_t4_times()
-#         assert t4_res.scan_res.normalend is True
-#         assert t4_res.scan_res.times['simulation time'] == 0
-#         assert t4_res.scan_res.times['initialization time'] == 11
-#         assert t4_res.scan_res.times['elapsed time'] == 47
-#         assert len(t4_res.scan_res) == 1
-#         print("len(t4_res.result) =", len(t4_res.result))
-#         assert len(t4_res.result) == 1
-#         print("keys in results:", list(t4_res.result[-1].keys()))
-#         print("nbre respinbses :", len(t4_res.result[-1]['list_responses']))
-#         assert len(t4_res.result[-1]['list_responses']) == 2
 
 
 def test_tt_simple_packet20_para(datadir):
@@ -294,6 +299,9 @@ def test_tt_simple_packet20_para(datadir):
     assert resp5['reaction_on_nucleus'] == ("U235",)
     assert resp5['temperature'] == (300,)
     assert resp5['composition'] == ("COMBUSTIBLE",)
+    t4rb = t4_res.to_browser()
+    assert t4rb
+    assert len(t4rb) == 17
 
 
 def test_debug_entropy(caplog, datadir):
@@ -313,14 +321,24 @@ def test_debug_entropy(caplog, datadir):
     t4_res = t4p.parse_from_index(-1)
     assert t4_res.res['batch_data']['batch_number'] == 10
     assert len(t4_res.res['list_responses']) == 1
+    presp0 = t4_res.pres['list_responses'][0]
+    assert presp0['response_type'] == 'score'
+    pres0 = presp0['results']
+    scorecontent = ['mesh', 'spectrum', 'integrated',
+                    'discarded_batches', 'used_batches']
+    assert {'array', 'bins', 'units', 'boltzmann_entropy_array',
+            'shannon_entropy_array'}.difference(pres0['mesh']) == set()
+    bentrop = pres0['mesh']['boltzmann_entropy_array'].squeeze()
+    assert "{0:6e}".format(bentrop['entropy']) == "8.342621e-01"
+    assert sorted(list(pres0.keys())) == sorted(scorecontent)
     resp0 = t4_res.res['list_responses'][0]
     assert resp0['response_type'] == 'score'
     res0 = resp0['results']
-    scorecontent = ['mesh', 'spectrum', 'integrated',
-                    'discarded_batches', 'used_batches']
-    bentrop = res0['mesh']['boltzmann_entropy'].squeeze()
-    assert "{0:6e}".format(bentrop['score']) == "8.342621e-01"
-    assert sorted(list(res0.keys())) == sorted(scorecontent)
+    rescontent = ['discarded_batches', 'used_batches', 'score', 'units',
+                  'boltzmann_entropy', 'shannon_entropy', 'score_integrated']
+    bentrop2 = res0['boltzmann_entropy'].squeeze()
+    assert np.isclose(bentrop2.value, 8.342621e-01)
+    assert sorted(list(res0.keys())) == sorted(rescontent)
     assert "You are running with an end flag" in caplog.text
     assert "debug_ent.log" in os.listdir()
     with open("debug_ent.log") as ofile:
@@ -330,70 +348,74 @@ def test_debug_entropy(caplog, datadir):
         assert "number of batches used" in lines[-1]
 
 
-def check_last_entropy_result(entropy_rb):
+def check_last_entropy_result(lastres):
     '''Check last entropy result (all converged).'''
+    assert len(lastres.res['list_responses']) == 8
+    assert len(lastres.pres['list_responses']) == 8
+    lastresps = lastres.res['list_responses']
+    for ires in lastresps:
+        assert ires['response_function'] in ['REACTION', 'KEFFS']
+    assert lastresps[1]['response_type'] == 'keff'
+    assert lastres.pres['list_responses'][0]['response_function'] == 'REACTION'
+    assert set(lastres.pres['list_responses'][0]['results']) == {
+        'discarded_batches', 'integrated', 'mesh', 'spectrum', 'used_batches'}
+    # keffs_checks(lastresps[1]['results'])
+    t4rb = lastres.to_browser()
+    assert t4rb.globals['simulation_time'] == 24
     # response_function = reaction
-    resp = entropy_rb.select_by(response_function='REACTION',
-                                squeeze=True)
-    assert (sorted(list(resp['results'].keys()))
-            == ['discarded_batches', 'integrated', 'mesh', 'spectrum',
-                'used_batches'])
-    bd_mesh = dcv.convert_data(resp['results'], data_type='mesh')
-    assert bd_mesh.shape == (24, 3, 1, 1, 1, 1, 1)
-    # bd_entropy = dcv.convert_data(resp['results'],
-    #                               data_type='shannon_entropy')
-    # assert np.isnan(bd_entropy.error)
-    # bd_entropy = dcv.convert_data(resp['results'],
-    #                               data_type='boltzmann_entropy')
-    # assert np.isnan(bd_entropy.error)
-    bd_spectrum = dcv.convert_data(resp['results'], data_type='spectrum')
-    assert bd_spectrum.shape == (1, 1, 1, 1, 1, 1, 1)
-    assert bd_spectrum.bins['e'].size == 2
-    assert np.array_equal(bd_spectrum.bins['e'], bd_mesh.bins['e'])
-    bd_int = dcv.convert_data(resp['results'], data_type='integrated')
-    assert np.array_equal(bd_spectrum.bins['e'], bd_int.bins['e'])
+    resp = t4rb.select_by(response_function='REACTION', squeeze=True)
+    assert set(resp['results']) == {
+        'discarded_batches', 'used_batches', 'score', 'boltzmann_entropy',
+        'shannon_entropy', 'score_integrated', 'units'}
+    assert resp['results']['score'].shape == (24, 3, 1, 1, 1, 1, 1)
+    assert resp['results']['score'].what == 'reaction'
+    assert np.isnan(resp['results']['shannon_entropy'].error)
+    assert resp['results']['shannon_entropy'].what == 'entropy'
+    assert resp['results']['boltzmann_entropy'].shape == (1, 1, 1, 1, 1, 1, 1)
+    assert np.isclose(resp['results']['shannon_entropy'].value.squeeze(),
+                      0.9047529)
+    assert np.array_equal(resp['results']['score'].bins['e'],
+                          resp['results']['score_integrated'].bins['e'])
+    assert np.array_equal(resp['results']['score'].bins['e'],
+                          resp['results']['boltzmann_entropy'].bins['e'])
     # response_function = keff
-    resps = entropy_rb.select_by(response_type='keff')
+    resps = t4rb.select_by(response_type='keff')
     assert len(resps) == 7
     for resp in resps:
-        bd_keff = dcv.convert_data(resp['results'], data_type='keff')
-        assert bd_keff.shape == ()
-        assert not bd_keff.bins
-        bd_corr = dcv.convert_data(resp['results'], data_type='keff',
-                                   correlation=True)
-        assert bd_corr
-        assert np.isnan(bd_corr.error)
+        assert set(resp['results']) == {'keff', 'correlation_keff',
+                                        'used_batches'}
+        assert resp['results']['keff'].shape == ()
+        assert resp['results']['keff'].what == 'keff'
+        assert not resp['results']['keff'].bins
+        assert resp['results']['correlation_keff'].what == 'correlation'
+        assert np.isnan(resp['results']['correlation_keff'].error)
         if resp['keff_estimator'] in ('KSTEP', 'KCOLL', 'KTRACK'):
-            assert bd_corr.value == 1
+            assert resp['results']['correlation_keff'].value == 1
         if resp['keff_estimator'] == 'full_combination':
-            assert np.isnan(bd_corr.value)
-    assert 'KSTEP-KCOLL' in entropy_rb.available_values('keff_estimator')
-    assert 'full combination' in entropy_rb.available_values('keff_estimator')
-    resps = entropy_rb.select_by(response_type='keff_auto')
+            assert np.isnan(resp['results']['correlation_keff'].value)
+        if resp['keff_estimator'] == 'KSTEP':
+            assert np.isclose(resp['results']['keff'].value, 0.916915)
+            assert np.isclose(resp['results']['keff'].error, 7.127724e-3)
+    assert 'KSTEP-KCOLL' in t4rb.available_values('keff_estimator')
+    assert 'full combination' in t4rb.available_values('keff_estimator')
+    resps = t4rb.select_by(response_type='keff_auto')
     assert len(resps) == 4
     for resp in resps:
-        bd_keff = dcv.convert_data(resp['results'], data_type='keff_auto')
-        assert bd_keff.shape == ()
+        assert set(resp['results']) == {'keff', 'used_batches',
+                                        'discarded_batches'}
+        assert resp['response_type'] == 'keff_auto'
+        assert resp['results']['keff'].ndim == 0
 
 
 def check_first_entropy_result(entropy_rb):
     '''Check first entropy result (not converged).'''
     resp0 = entropy_rb.select_by(response_function='REACTION',
                                  squeeze=True)
-    bd_int0 = dcv.convert_data(resp0['results'], data_type='integrated')
-    assert bd_int0 is not None
-    assert np.isnan(bd_int0.value)
+    assert np.isnan(resp0['results']['score_integrated'].value)
     resp0 = entropy_rb.select_by(response_type='keff',
                                  squeeze=True)
-    bd_keff = dcv.convert_data(resp0['results'],
-                               data_type='keff_per_estimator',
-                               estimator='KSTEP')
-    assert bd_keff is not None
-    assert np.isnan(bd_keff.value)
-    bd_keff = dcv.convert_data(resp0['results'],
-                               data_type='keff_combination')
-    assert bd_keff is not None
-    assert np.isnan(bd_keff.value)
+    assert set(resp0['results']) == {'used_batches', 'keff'}
+    assert np.isnan(resp0['results']['keff'].value)
 
 
 def test_entropy(datadir):
@@ -409,19 +431,13 @@ def test_entropy(datadir):
     assert t4p.scan_res.times['initialization_time'] == 6
     assert len(t4p.scan_res) == 10
     lastres = t4p.parse_from_number(10)
-    assert len(lastres.res['list_responses']) == 8
-    lastresps = lastres.res['list_responses']
-    for ires in lastresps:
-        assert ires['response_function'] in ['REACTION', 'KEFFS']
-    assert lastresps[1]['response_type'] == 'keff'
-    # keffs_checks(lastresps[1]['results'])
-    t4rb = lastres.to_browser()
-    assert t4rb.globals['simulation_time'] == 24
-    check_last_entropy_result(t4rb)
+    check_last_entropy_result(lastres)
     firstres = t4p.parse_from_index(0)
     firstresps = firstres.res['list_responses']
+    firstpresps = firstres.pres['list_responses']
     assert firstresps[1]['response_type'] == 'keff'
-    assert 'not_converged' in firstresps[1]['results']
+    assert 'not_converged' in firstpresps[1]['results']
+    assert np.isnan(firstresps[1]['results']['keff'].value)
     t4rb_b0 = firstres.to_browser()
     assert t4rb_b0.globals['simulation_time'] == 2
     check_first_entropy_result(t4rb_b0)
@@ -473,11 +489,16 @@ def test_ifp(datadir):
     assert max([v['response_index']
                 for v in t4_res.res['list_responses']]) + 1 == 22
     assert len(t4_res.res['list_responses']) == 198
+    last_presp = t4_res.pres['list_responses'][-1]
+    assert (last_presp['response_function']
+            == "IFP ADJOINT WEIGHTED MIGRATION AREA")
+    assert last_presp['response_type'] == 'adjoint'
+    assert last_presp['results']['used_batches'] == 81
     last_resp = t4_res.res['list_responses'][-1]
     assert (last_resp['response_function']
             == "IFP ADJOINT WEIGHTED MIGRATION AREA")
     assert last_resp['response_type'] == 'adjoint'
-    assert last_resp['results']['used_batches'] == 81
+    assert last_resp['results']['used_batches'].value == 81
     t4rb = t4_res.to_browser()
     assert len(t4rb.available_values('response_function')) == 22
     resps = t4rb.select_by(
@@ -487,9 +508,12 @@ def test_ifp(datadir):
                                              'response_function',
                                              'response_index', 'response_type',
                                              'results']
-    bd_cycle = dcv.convert_data(resps[0]['results'],
-                                data_type='generic')
+    bd_cycle = resps[0]['results']['score_generic']
     assert bd_cycle.shape == ()
+    assert bd_cycle.name == ''
+    assert bd_cycle.what == 'ifp adjoint weighted rossi alpha'
+    assert np.isclose(bd_cycle.value, -694660.3)
+    assert np.isclose(bd_cycle.error, -39568.08)
     assert not bd_cycle.bins
     rb_betai = t4rb.filter_by(
         response_function="BETA_i (DELAYED NEUTRON FRACTION FOR i-th FAMILY): "
@@ -500,10 +524,14 @@ def test_ifp(datadir):
     resp = rb_betai.select_by(family=5, nucleus='PU239', squeeze=True)
     assert resp['response_type'] == 'adjoint'
     assert (sorted(list(resp['results'].keys()))
-            == ['generic', 'used_batches'])
-    assert resp['results']['used_batches'] == 81
-    bd_pu239_f5 = dcv.convert_data(resp['results'], data_type='generic')
+            == ['score_generic', 'used_batches'])
+    assert resp['results']['used_batches'].value == 81
+    bd_pu239_f5 = resp['results']['score_generic']
     assert bd_pu239_f5.shape == ()
+    assert bd_pu239_f5.what == ("beta_i (delayed neutron fraction "
+                                "for i-th family): nuclei contributions")
+    assert np.isclose(bd_pu239_f5.value, 7.262777e-4)
+    assert np.isclose(bd_pu239_f5.error, 4.567255e-5)
     assert not bd_pu239_f5.bins
 
 
@@ -522,28 +550,32 @@ def test_ifp_adjoint_edition(datadir):
     t4_res = t4p.parse_from_index(-1)
     t4rb = t4_res.to_browser()
     assert (set(t4rb.available_values('response_type'))
-            == set(('keff', 'ifp_adj_crit_edition', 'keff_auto')))
-    assert (sorted(t4rb.keys())
-            == ['ifp_cycle_length', 'ifp_response', 'index', 'keff_estimator',
-                'response_function', 'response_index', 'response_type',
-                'score_name'])
+            == {'keff', 'ifp_adj_crit_edition', 'keff_auto'})
+    assert (set(t4rb.keys()) == {
+        'ifp_cycle_length', 'ifp_response', 'index', 'keff_estimator',
+        'response_function', 'response_index', 'response_type', 'score_name'})
     resp = t4rb.select_by(score_name='FluxAdj_1', squeeze=True)
-    bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed')
+    bd_adj = resp['results']['score']
     assert bd_adj.shape == (2, 2, 2, 1, 1, 3, 1)
     assert (list(bd_adj.bins.keys())
             == ['X', 'Y', 'Z', 'Phi', 'Theta', 'E', 'T'])
     assert bd_adj.bins['X'].size == bd_adj.shape[0]+1
     resp = t4rb.select_by(score_name='FluxAdj_ang_1', squeeze=True)
-    bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed')
+    bd_adj = resp['results']['score']
     assert bd_adj.shape == (2, 2, 2, 2, 2, 3, 1)
     assert (list(bd_adj.bins.keys())
             == ['X', 'Y', 'Z', 'Phi', 'Theta', 'E', 'T'])
     resp = t4rb.select_by(score_name='flux_vol', squeeze=True)
-    bd_adj = dcv.convert_data(resp['results'], data_type='adj_crit_ed')
+    bd_adj = resp['results']['score']
     assert bd_adj.shape == (2, 3)
     assert list(bd_adj.bins.keys()) == ['Vol', 'E']
     assert bd_adj.bins['Vol'].size == bd_adj.shape[0]
     assert np.array_equal(bd_adj.bins['Vol'], [10, 11])
+    resp = t4rb.select_by(response_type='keff_auto')
+    assert resp[-1]['results']['equivalent_keff'].value == 8.135012e-01
+    assert np.isnan(resp[-1]['results']['equivalent_keff'].error)
+    resp = t4rb.select_by(response_type='keff')
+    assert set(resp[0]['results']) == {'used_batches', 'warning'}
 
 
 def test_sensitivity(datadir):
@@ -567,26 +599,29 @@ def test_sensitivity(datadir):
     resp = rb_sensitiv.select_by(sensitivity_nucleus='U235',
                                  sensitivity_reaction='TOTAL FISSION_NU',
                                  squeeze=True)
-    bds = dcv.convert_data(resp['results'],
-                           data_type='sensitivity_spectrum')
+    assert set(resp['results']) == {'score', 'integrated', 'units',
+                                    'used_batches'}
+    assert resp['response_type'] == 'sensitivity'
+    bds = resp['results']['score']
     assert bds.shape == (1, 33, 1)
     assert list(bds.bins.keys()) == ['einc', 'e', 'mu']
-    bds_int = dcv.convert_data(resp['results'],
-                               data_type='integrated')
+    assert bds.what == 'sensitivity'
+    bds_int = resp['results']['integrated']
     assert bds_int.shape == (1, 1, 1)
+    assert np.isclose(bds_int.value, 0.9824915)
+    assert np.isclose(bds_int.error, 3.4555267e-4)
     assert list(bds_int.bins.keys()) == list(bds.bins.keys())
     resp = rb_sensitiv.select_by(
         sensitivity_nucleus='U238',
         sensitivity_reaction='SCATTERING LAW 21 (CONSTRAINED)',
         squeeze=True)
-    bds = dcv.convert_data(resp['results'],
-                           data_type='sensitivity_spectrum')
+    bds = resp['results']['score']
     assert bds.shape == (2, 3, 4)
     assert list(bds.bins.keys()) == ['einc', 'e', 'mu']
-    bds_int = dcv.convert_data(resp['results'],
-                               data_type='integrated')
+    bds_int = resp['results']['integrated']
     assert bds_int.shape == (1, 1, 1)
-    assert list(bds_int.bins.keys()) == list(bds.bins.keys())
+    assert list(bds_int.bins.keys()) == list(bds.bins)
+    assert bds_int.what == 'sensitivity'
 
 
 def test_kij(datadir):
@@ -609,11 +644,34 @@ def test_kij(datadir):
     assert resp_list[15]['response_function'] == "KEFFS"
     t4rb = t4_res.to_browser()
     kijmat = t4rb.select_by(response_function='KIJ_MATRIX', squeeze=True)
-    for res in kijmat['results']:
-        assert dcv.convert_data(kijmat['results'], data_type=res)
+    assert set(kijmat['results']) == {
+        'used_batches', 'kij_mkeff', 'kij_domratio', 'kij_reigenval',
+        'kij_reigenvec', 'kij_matrix'}
+    assert kijmat['results']['kij_matrix'].shape == (10, 10)
+    assert kijmat['results']['kij_reigenvec'].what == 'kij_reigenvec'
+    assert kijmat['results']['kij_reigenvec'].shape == (10, 10)
+    assert kijmat['results']['kij_reigenval'].shape == (10,)
+    assert kijmat['results']['kij_reigenval'].value.dtype.name == 'complex128'
+    assert kijmat['results']['kij_reigenval'].error.dtype.name == 'float64'
+    assert kijmat['results']['kij_domratio'].ndim == 0
+    assert kijmat['results']['kij_mkeff'].shape == ()
     kijakeff = t4rb.select_by(response_type='kijkeff', squeeze=True)
-    for res in kijakeff['results']:
-        assert dcv.convert_data(kijakeff['results'], data_type=res)
+    assert set(kijakeff['results']) == {
+        'used_batches', 'kij_leigenvec', 'kij_matrix', 'space_bins',
+        'kij_mkeff', 'kij_stddev_matrix', 'kij_sensibility_matrix'}
+    for key, res in kijakeff['results'].items():
+        if 'matrix' in key:
+            assert res.shape == (10, 10)
+    assert kijakeff['results']['space_bins'].shape == (10, 3)
+    assert kijakeff['results']['kij_leigenvec'].shape == (10,)
+    assert kijakeff['results']['kij_leigenvec'].what == 'kij_leigenvec'
+    # check error in case of changes (no percentage for auto)
+    keffa = t4rb.select_by(response_type='keff_auto', keff_estimator='KSTEP',
+                           squeeze=True)
+    assert np.isclose(keffa['results']['keff'].error, 1.345008e-03)
+    keff = t4rb.select_by(response_type='keff', keff_estimator='KSTEP',
+                          squeeze=True)
+    assert np.isclose(keff['results']['keff'].error, 1.451522e-03)
 
 
 def test_green_bands(datadir):
@@ -629,11 +687,19 @@ def test_green_bands(datadir):
     assert t4p.scan_res.times['initialization_time'] == 2
     t4_res = t4p.parse_from_number(500)
     assert t4_res.res['batch_data']['batch_number'] == 500
+    assert set(t4_res.pres['list_responses'][0]['results']) == {
+        'green_bands', 'discarded_batches'}
     t4rb = t4_res.to_browser()
     resp = t4rb.select_by(response_function='FLUX', squeeze=True)
-    bd_gb = dcv.convert_data(resp['results'], data_type='green_bands')
+    assert set(resp['results']) == {'score', 'score/lethargy', 'units',
+                                    'discarded_batches'}
+    bd_gb = resp['results']['score']
     assert bd_gb.shape == (2, 2, 1, 2, 4, 3)
     assert list(bd_gb.bins.keys()) == ['se', 'ns', 'u', 'v', 'w', 'e']
+    assert bd_gb.what == 'flux'
+    assert resp['results']['score/lethargy'].shape == (2, 2, 1, 2, 4, 3)
+    assert np.all(np.isnan(resp['results']['score/lethargy'].error))
+    assert resp['results']['score/lethargy'].bins == bd_gb.bins
 
 
 def test_tt_simple_packet20_mono(datadir):
@@ -687,6 +753,18 @@ def test_pertu(datadir):
     assert pertu_vol2['score_index'] == 0
     assert pertu_vol2['response_type'] == 'score'
     assert pertu_vol2['perturbation_rank'] == 0
+    assert set(pertu_vol2['results']) == {
+        'discarded_batches', 'used_batches', 'score', 'score/lethargy',
+        'units', 'score_integrated', 'score_vov', 'sigma2(means)',
+        'mean(sigma_n2)', 'sigma(sigma_n2)', 'fisher test',
+        'sigma2(means)_integrated', 'mean(sigma_n2)_integrated',
+        'sigma(sigma_n2)_integrated', 'fisher test_integrated'}
+    pres = pertu_vol2['results']
+    assert pres['fisher test'].bins['e'].size <= pres['score'].bins['e'].size
+    assert pres['sigma(sigma_n2)'].shape == (1, 1, 1, 10, 1, 1, 1)
+    assert np.isnan(pres['mean(sigma_n2)_integrated'].error)
+    assert pres['mean(sigma_n2)_integrated'].shape == (1, 1, 1, 1, 1, 1, 1)
+    assert pres['mean(sigma_n2)_integrated'].bins['e'].size == 2
 
 
 def test_vov(datadir):
@@ -746,7 +824,7 @@ def test_box_dyn(datadir):
     # mesh with energy and time bins
     etmesh = t4b.select_by(score_name='neutron_flux_mesh_score', squeeze=True)
     assert etmesh['energy_split_name'] == 'grid_rough'
-    dsmesh = dcv.convert_data(etmesh['results'], data_type='mesh').squeeze()
+    dsmesh = etmesh['results']['score'].squeeze()
     assert dsmesh.shape == (3, 3, 3, 2, 10)
     assert list(dsmesh.bins.keys()) == ['s0', 's1', 's2', 'e', 't']
     # precursor weight
@@ -759,7 +837,9 @@ def test_box_dyn(datadir):
     # time_step = 0 corresponds to criticality source (for both weights)
     nweight_t0 = t4b.select_by(response_function='NEUTRON WEIGHT',
                                time_step=0, squeeze=True)
-    dsnwt0 = dcv.convert_data(nweight_t0['results'], 'generic')
+    assert set(nweight_t0['results']) == {'used_batches', 'score_generic',
+                                          'units'}
+    dsnwt0 = nweight_t0['results']['score_generic']
     assert dsnwt0.shape == ()
     dynom = t4b.select_by(response_function='DYNAMIC NORMALIZATION',
                           squeeze=True)

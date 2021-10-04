@@ -245,11 +245,12 @@ def convert_score(toks):  # pylint: disable=too-many-branches
             if key == 'mesh_res':
                 res['mesh_res'] = convert_mesh(score['mesh_res'])
             elif 'spectrum_res' in key:
+                # uncert_spectrum_res singularized as spectrum_res also exists
+                # in same response
                 keystr = 'spectrum_res' if 'uncert' not in key else key
                 res[keystr] = convert_spectrum(score[key], key)
-            elif 'integrated_res' in key:
-                res[key] = score[key].asDict()
-            elif 'best_result_res' in key:
+            elif key in ('integrated_res', 'uncert_integrated_res', 'vov_res',
+                         'vovstar_res', 'sensibility_res', 'best_result_res'):
                 res[key] = score[key].asDict()
             elif key == 'green_bands_res':
                 res[key] = convert_green_bands(score[key])

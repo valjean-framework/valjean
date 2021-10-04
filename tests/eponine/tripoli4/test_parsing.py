@@ -60,8 +60,8 @@ import os
 from glob import glob
 import logging
 import pytest
+from valjean.eponine.dataset import Dataset
 from valjean.eponine.tripoli4.parse import Parser, ParserException
-import valjean.eponine.tripoli4.data_convertor as dcv
 from ...context import valjean  # noqa: F401, pylint: disable=unused-import
 from ..conftest import skip_parsing_files, skip_excluded_files
 
@@ -89,37 +89,6 @@ def result_test(t4pres):
     return t4pres.res['run_data']['normal_end']
 
 
-def check_array_datasets(response, dname, data):
-    '''Check datasets for arrays.
-
-    This function is mainly meant to deal with the spectrum special cases as
-    spectra containing variance of variance or uncertainty spectra (subcase of
-    perturbations, old way). Related integrated results are also checked in
-    these special cases.
-    '''
-    if dname == 'uncert_spectrum':
-        for elt in data['array'].dtype.names:
-            assert dcv.convert_data(response['results'], dname, score=elt)
-    elif dname == 'uncert_integrated':
-        for elt in data:
-            assert dcv.convert_data(data, elt)
-    else:
-        if isinstance(data, dict) and 'array' in data:
-            for akey in data:
-                if 'array' not in akey:
-                    continue
-                assert dcv.convert_data(response['results'], dname,
-                                        array_type=akey)
-        else:
-            assert dcv.convert_data(response['results'], dname)
-    if dname == 'spectrum' and 'vov' in data['array'].dtype.names:
-        assert dcv.convert_data(response['results'], dname, score='vov')
-    if 'integrated' in dname and 'vov' in data:
-        assert dcv.convert_data(data, 'vov')
-    if 'best_result' in dname and 'discarded_batches' in data:
-        assert dcv.convert_data(data, 'discarded_batches')
-
-
 def check_data(responses):
     '''Check content of data and conversion fo dataset.
 
@@ -136,12 +105,8 @@ def check_data(responses):
         assert 'results' in iresp
         assert not all('_res' in dtype for dtype in iresp['results'])
         for dname, data in iresp['results'].items():
-            if isinstance(data, str):
-                continue
-            if iresp['response_type'] == 'score':
-                check_array_datasets(iresp, dname, data)
-            else:
-                assert dcv.convert_data(iresp['results'], dname)
+            if not isinstance(data, str) and dname != 'units':
+                assert isinstance(data, Dataset), 'Not a Dataset'
 
 
 def browser_test(res):

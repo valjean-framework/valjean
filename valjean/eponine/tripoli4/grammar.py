@@ -787,15 +787,16 @@ _unitsres = (Suppress(_units_kw)
 # rejection in vov and sensibility cases
 _rejection = (Suppress('[')
               + OneOrMore(Word(alphanums+'<>.+-')).setParseAction(' '.join)
+              ('rejection')
               + Suppress(']'))
-_vovnostar = Suppress(_vov_kw) + _fnums('vov')
-_vovstar = Group(Suppress(_vovstar_kw)
-                 + _fnums
-                 + Suppress('[') + _fnums + Suppress(']')
-                 + Optional(_rejection))('vovstar')
-_sensibtomaxval = Group(Suppress(_sensibtomaxval_kw)
-                        + _fnums
-                        + Optional(_rejection))('sensibility_max_val')
+_vovnostar = Suppress(_vov_kw) + Group(_fnums('score'))('vov_res')
+_vovstar = Group(
+    Suppress(_vovstar_kw) + _fnums('score')
+    + Suppress('[') + _fnums('sigma') + Suppress(']')
+    + Optional(_rejection))('vovstar_res')
+_sensibtomaxval = Group(
+    Suppress(_sensibtomaxval_kw) + _fnums('max_val')
+    + Optional(_rejection))('sensibility_res')
 _vov = (_vovnostar | _vovstar + _sensibtomaxval)
 # best result
 bestres = (Group(Suppress(_bestresdiscbatchs_kw) + _inums('discarded_batches')
@@ -807,11 +808,10 @@ bestres = (Group(Suppress(_bestresdiscbatchs_kw) + _inums('discarded_batches')
 
 integratedres = (Group(Optional(Suppress(_integratedres_name))
                        + Optional(_numdiscbatch)
-                       + ((_numusedbatch
-                           + _integratedres
-                           + Optional(_vov))
-                          | _notconverged_kw('not_converged')
-                          ))('integrated_res'))
+                       + ((_numusedbatch + _integratedres)
+                          | _notconverged_kw('not_converged')))
+                 ('integrated_res')
+                 + Optional(_vov))
 
 genericscoreblock = (Group(Optional(Suppress(_integratedres_name))
                            + ((_numusedbatch

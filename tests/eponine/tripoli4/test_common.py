@@ -168,7 +168,7 @@ def test_flip_mesh(array_bins):
     mesh.bins['e'] = lbins['e']
     mesh.bins['t'] = lbins['t']
     mesh.arrays = larray.copy()
-    mesh.flip_bins()
+    mesh.convert_bins_to_increasing_arrays()
     assert np.all(np.diff(mesh.bins['e']) > 0.0)
     assert np.all(np.diff(mesh.bins['t']) > 0.0)
 
@@ -215,7 +215,7 @@ def test_flip_spectrum(array_bins):
         spectrum.bins[dim] = lbins[dim]
     note("larray: {}".format(hex(id(larray))))
     spectrum.arrays = larray.copy()
-    spectrum.flip_bins()
+    spectrum.convert_bins_to_increasing_arrays()
     note("apres flip id = {0}, {1}".format(hex(id(spectrum.bins)),
                                            spectrum.bins))
     for var in ['e', 't', 'mu', 'phi']:

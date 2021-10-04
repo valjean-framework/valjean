@@ -51,6 +51,7 @@ from .grammar import t4gram
 from .common import SpectrumDictBuilderException, MeshDictBuilderException
 from ...chrono import Chrono
 from ..browser import Browser
+from .data_convertor import convert_data
 from ... import LOGGER
 
 
@@ -270,8 +271,11 @@ class ParseResult:
 
         Fill the `res` object.
         '''
+        self.name = name
         self._check_batch_number(parse_res, scan_vars)
-        self.res = self._build_unique_dict(parse_res, scan_vars, name)
+        self.pres = parse_res
+        self.res = self._build_unique_dict(self._build_datasets(),
+                                           scan_vars, name)
 
     @staticmethod
     def _check_batch_number(pres, svars):
@@ -284,6 +288,108 @@ class ParseResult:
             LOGGER.warning('No batch number was set in Scanner, please check.')
         if ebn is not None and ebn != sbn:
             LOGGER.warning('Edition batch number different from batch number')
+
+    def _build_datasets(self):
+        ares = {}
+        for key, val in self.pres.items():
+            if key == 'batch_data':
+                ares[key] = val.copy()
+            else:
+                ares[key] = [self._make_datasets(r) for r in val]
+        return ares
+
+    @staticmethod
+    def _set_array_what(score, resp):
+        if resp['response_type'] == 'sensitivity':
+            return 'sensitivity'
+        # score_name for adjoint criticality edition
+        what = resp.get('response_function', resp.get('score_name'))
+        return score.replace('score', what).lower()
+
+    @staticmethod
+    def _set_scalar_what(resn, resp):
+        if resp['response_type'] == 'sensitivity':
+            return 'sensitivity'
+        if 'batches' in resn or 'kij' in resn:
+            return resn
+        return resp.get('response_function', resp.get('response_type')).lower()
+
+    @staticmethod
+    def _set_args(score, resn, resp):
+        rname = '_'.join((score, resn)).replace('not_converged',
+                                                resp['response_type'])
+        sigma = 'sigma' if 'sigma' in resp['results'][resn] else None
+        if score == 'keff':
+            sigma = 'sigma%'
+            rname = score
+            what = 'keff'
+        elif 'correlation' in score:
+            what = 'correlation'
+            sigma = None
+        elif score == 'equivalent_keff':
+            what = 'keff'
+            rname = score
+            sigma = None
+        elif 'vovstar' in score:
+            sigma = 'vovstar_sigma'
+            what = 'vovstar'
+        elif 'uncert' in resn:
+            rname = rname.replace('uncert_', '')
+            what = score
+        else:
+            what = resp['response_function'].lower()
+        return rname, sigma, what
+
+    def _dset_from_dict(self, resn, res, resp):
+        tdict = {}
+        for arr in res:
+            if arr == 'units':
+                tdict[arr] = res[arr]
+                continue
+            if isinstance(res[arr], str) and arr != 'not_converged':
+                tdict[arr] = res[arr]
+                continue
+            if arr in ('bins', 'sigma', 'sigma%'):
+                continue
+            if 'array' in arr:
+                scores = [k for k in res[arr].dtype.names if k != 'sigma']
+                for score in scores:
+                    rname = ('_'.join([score, arr]) if score not in arr
+                             else arr).replace('_array', '')
+                    what = self._set_array_what(score, resp)
+                    tdict[rname] = convert_data(
+                        resp['results'], resn, array_key=arr, score=score,
+                        name=self.name, what=what)
+            else:
+                rname, sigma, what = self._set_args(arr, resn, resp)
+                tdict[rname] = convert_data(
+                    resp['results'], resn, name=self.name,
+                    what=what, score=arr, sigma=sigma)
+        return tdict
+
+    def _make_datasets(self, resp):
+        ress = {k: v for k, v in resp.items() if k != 'results'}
+        res = {}
+        resp_res = resp['results']
+        for resn, ires in resp_res.items():
+            if resn == 'spectrum' and {'mesh', 'spectrum'}.issubset(resp_res):
+                if not any('entropy' in n for n in resp_res['mesh']):
+                    LOGGER.warning(
+                        'Mesh and spectrum in same result, skipping spectrum. '
+                        'Not foreseen case, please contact a developer')
+                continue
+            if isinstance(ires, dict):
+                res.update(self._dset_from_dict(resn, ires, resp))
+            elif isinstance(res, str) and resn != 'not_converged':
+                res[resn] = ires
+            else:
+                rname = (resp['response_type'] if resn == 'not_converged'
+                         else resn)
+                what = self._set_scalar_what(resn, resp)
+                res[rname] = convert_data(resp_res, resn, name=self.name,
+                                          what=what)
+        ress['results'] = res
+        return ress
 
     @staticmethod
     def _build_unique_dict(pres, svars, name):

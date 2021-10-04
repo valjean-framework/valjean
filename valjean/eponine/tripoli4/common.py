@@ -647,7 +647,8 @@ class DictBuilder(ABC):
             self.arrays[key] = np.flip(array, axis=axis)
         LOGGER.debug("et apres: %s", self.bins[dim])
 
-    def flip_bins(self):
+    def convert_bins_to_increasing_arrays(self):
+        # pylint: disable=invalid-name
         '''Flip bins if given in decreasing order in the output listing.
 
         Depending on the required grid (GRID or DECOUPAGE) energies, times, mu
@@ -660,7 +661,7 @@ class DictBuilder(ABC):
         dimension with the number of the axis:
         ('e' → 3, 't' → 4, 'mu' → 5, 'phi' → 6)
         '''
-        LOGGER.debug("In DictBuilder.flip_bins")
+        LOGGER.debug("In DictBuilder.convert_bins_to_increasing_arrays")
         key_axis = [(d, a) for a, d in enumerate(self.bins)]
         for key, axis in key_axis:
             bins = self.bins[key]
@@ -800,6 +801,27 @@ class MeshDictBuilder(KinematicDictBuilder):
         LOGGER.debug("Initialisation of MeshDictBuilder")
         super().__init__(colnames, lnbins)
 
+    @classmethod
+    def from_data(cls, data):
+        '''Initialize MeshDictBuilder from data.'''
+        mvals = data[0]['meshes'][0]['mesh_vals'][0]
+        lcell = mvals.rpartition('\n')[-1].split()
+        olcell = np.array([int(b) for b in lcell[0].strip('()').split(',')])
+        shape = olcell + 1
+        # dimensions/number of bins of space coordinates are given by last bin
+        ns0bins, ns1bins, ns2bins = shape
+        # ntbins supposes for the moment no mu or phi bins
+        ntbins = (data[-1]['time_step'][0]+1
+                  if "time_step" in data[0]
+                  else 1)
+        nebins = get_energy_bins(data[0]['meshes'])
+        LOGGER.debug("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
+                     "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
+        colnames = (['score', 'sigma'] if len(lcell) < 7
+                    else ['volume', 'score', 'sigma'])
+        return cls(colnames,
+                   [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
+
     def fill_space_bins(self, nb_tokens, vals):
         '''Fill the mesh space bins.
 
@@ -878,10 +900,10 @@ class MeshDictBuilder(KinematicDictBuilder):
         '''
         LOGGER.debug("dans entropy for ebin: %d", ebin)
         self.arrays['boltzmann_entropy'][
-            :, :, :, ebin, self.itime, self.imu, self.iphi]['score'] = (
+            :, :, :, ebin, self.itime, self.imu, self.iphi]['entropy'] = (
                 meshvals['boltzmann_entropy_res'])
         self.arrays['shannon_entropy'][
-            :, :, :, ebin, self.itime, self.imu, self.iphi]['score'] = (
+            :, :, :, ebin, self.itime, self.imu, self.iphi]['entropy'] = (
                 meshvals['shannon_entropy_res'])
 
     def fill_arrays_and_bins(self, data):
@@ -922,6 +944,23 @@ class MeshDictBuilder(KinematicDictBuilder):
                 self.arrays['integrated_res'][index] = np.array(
                     (iintres['score'], iintres['sigma']),
                     dtype=self.arrays['integrated_res'].dtype)
+
+    def fill_score_units(self, data):
+        '''Fill score units if available in data, else leave to unknown.'''
+        if 'unit' in data[0]:
+            self.units['score'] = data[0]['unit']
+        if 'shannon_entropy' in self.arrays:
+            self.units['shannon_entropy'] = ''
+            self.units['boltzmann_entropy'] = ''
+
+    def fill(self, nb_elts, data):
+        '''Fill data in mesh.
+        '''
+        self.fill_space_bins(nb_elts, data[0]['meshes'][0]['mesh_vals'][0])
+        self.fill_arrays_and_bins(data)
+        self.add_last_bins(data)
+        self.convert_bins_to_increasing_arrays()
+        self.fill_score_units(data)
 
     def _add_last_energy_bin(self, data):
         '''Add last bin in energy from mesh data.
@@ -987,7 +1026,6 @@ class SpectrumDictBuilder(KinematicDictBuilder):
                         "bins.\n"
                         "Please make sure you run Tripoli-4 with option '-a'.")
                     raise
-
             # Fill integrated result if exist
             if 'integrated_res' in ispec and 'integrated_res' in self.arrays:
                 iintres = ispec['integrated_res']
@@ -1009,6 +1047,13 @@ class SpectrumDictBuilder(KinematicDictBuilder):
         :param list data: spectrum results
         '''
         self.bins['e'].append(data[-1]['spectrum_vals'][-1][1])
+
+    def fill_score_units(self, data):
+        '''Fill score units if available in data, else leave to unknown.'''
+        if 'unit' in data[0]:
+            self.units['e'] = data[0]['units'][0]
+            self.units['score'] = data[0]['units'][1]
+            self.units['sigma'] = data[0]['units'][2]
 
 
 def _get_number_of_bins(spectrum):
@@ -1075,15 +1120,12 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
     vals.fill_arrays_and_bins(spectrum)
     vals.add_last_bins(spectrum)
     # Flip bins
-    vals.flip_bins()
+    vals.convert_bins_to_increasing_arrays()
+    vals.fill_score_units(spectrum)
     # Build dictionary to be returned
     convspec = {'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
-    if 'units' in spectrum[0]:
-        convspec['units']['e'] = spectrum[0]['units'][0]
-        convspec['units']['score'] = spectrum[0]['units'][1]
-        convspec['units']['sigma'] = spectrum[0]['units'][2]
     if 'integrated_res' in spectrum[0]:
         convspec['eintegrated_array'] = vals.arrays['integrated_res']
     return convspec
@@ -1205,28 +1247,23 @@ def convert_mesh(meshres):
     # entropy results (Boltzmann and Shannon entropy come together, only in
     # results in energy range)
     if 'entropy' in meshres[0]['meshes'][0]:
-        vals.add_array('boltzmann_entropy', colnames,
+        vals.add_array('boltzmann_entropy', ['entropy'],
                        [1, 1, 1, nebins, 1, 1, 1])
-        vals.add_array('shannon_entropy', colnames,
+        vals.add_array('shannon_entropy', ['entropy'],
                        [1, 1, 1, nebins, 1, 1, 1])
     # fill arrays, bins, put them in increasing order
-    vals.fill_space_bins(len(lcell), mvals)
-    vals.fill_arrays_and_bins(meshres)
-    vals.add_last_bins(meshres)
-    vals.flip_bins()
+    vals.fill(len(lcell), meshres)
     # build dictionary to be returned
     convmesh = {'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
-    if 'unit' in meshres[0]:
-        convmesh['units']['score'] = meshres[0]['unit']
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
         convmesh['eintegrated_array'] = vals.arrays['eintegrated_mesh']
     if 'integrated_res' in meshres[0]:
         convmesh['seintegrated_array'] = vals.arrays['integrated_res']
     if 'entropy' in meshres[0]['meshes'][0]:
-        convmesh['boltzmann_entropy'] = vals.arrays['boltzmann_entropy']
-        convmesh['shannon_entropy'] = vals.arrays['shannon_entropy']
+        convmesh['boltzmann_entropy_array'] = vals.arrays['boltzmann_entropy']
+        convmesh['shannon_entropy_array'] = vals.arrays['shannon_entropy']
     return convmesh
 
 
@@ -1293,6 +1330,13 @@ class NuSpectrumDictBuilder(DictBuilder):
         '''
         self.bins['nu'].append(data[-1]['spectrum_vals'][-1][1])
 
+    def fill_score_units(self, data):
+        '''Fill score units if available in data, else leave to unknown.'''
+        if 'unit' in data[0]:
+            self.units['nu'] = data[0]['units'][0]
+            self.units['score'] = data[0]['units'][1]
+            self.units['sigma'] = data[0]['units'][2]
+
 
 def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
     '''Convert nu spectrum results in 1D NumPy structured array.
@@ -1321,15 +1365,12 @@ def convert_nu_spectrum(spectrum, colnames=('score', 'sigma')):
     vals.fill_arrays_and_bins(spectrum)
     vals.add_last_bins(spectrum)
     # Flip bins
-    vals.flip_bins()
+    vals.convert_bins_to_increasing_arrays()
+    vals.fill_score_units(spectrum)
     # Build dictionary to be returned
     convspec = {'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
-    if 'units' in spectrum[0]:
-        convspec['units']['nu'] = spectrum[0]['units'][0]
-        convspec['units']['score'] = spectrum[0]['units'][1]
-        convspec['units']['sigma'] = spectrum[0]['units'][2]
     if 'integrated_res' in spectrum[0]:
         convspec['integrated_array'] = vals.arrays['integrated_res']
     return convspec
@@ -1353,7 +1394,7 @@ class ZASpectrumDictBuilder(DictBuilder):
             (str, :obj:`numpy.ndarray` (int))
         '''
         super().__init__(colnames, [bins['Z'].size, bins['A'].size])
-        self.bins = bins  # OrderedDict([('Z', []), ('A', [])])
+        self.bins = bins
         self.units = {'Z': '', 'A': '', 'score': 'unknown', 'sigma': '%'}
 
     def fill_arrays_and_bins(self, data):
@@ -1398,6 +1439,12 @@ class ZASpectrumDictBuilder(DictBuilder):
         :param list data: spectrum results
         '''
 
+    def fill_score_units(self, data):
+        '''Fill score units if available in data, else leave to unknown.'''
+        if 'unit' in data[0]:
+            self.units['score'] = data[0]['units'][0]
+            self.units['sigma'] = data[0]['units'][1]
+
 
 def _get_za_bins(values):
     '''Determine the bins in Z, A before filling the array from the values.
@@ -1436,8 +1483,8 @@ def convert_za_spectrum(spectrum, colnames=('score', 'sigma')):
       * ``'integrated_array'``: 1 dimension NumPy structured array
         ``v[Z, A] = ('score', 'sigma')``
 
-    Remark: no call to add_last_bins or flip_bins is done here as no energy,
-    time or space bins are given for the moment.
+    Remark: no call to add_last_bins or convert_bins_to_increasing_arrays is
+    done here as no energy, time or space bins are given for the moment.
     '''
     LOGGER.debug("nzabins = %d", len(spectrum[0]["spectrum_vals"]))
     bins = _get_za_bins(spectrum[0]["spectrum_vals"])
@@ -1446,6 +1493,7 @@ def convert_za_spectrum(spectrum, colnames=('score', 'sigma')):
         vals.add_array('integrated_res', ['score', 'sigma'], [1]*len(bins))
     # Fill spectrum, bins and integrated result if exists
     vals.fill_arrays_and_bins(spectrum)
+    vals.fill_score_units(spectrum)
     # Build dictionary to be returned
     convspec = {'array': vals.arrays['default'],
                 'bins': vals.bins,
@@ -1651,7 +1699,7 @@ def convert_green_bands(gbs):
     gbdb = GreenBandsDictBuilder(('score', 'sigma', 'score/lethargy'), lnbins)
     gbdb.fill_arrays_and_bins(gbs)
     gbdb.add_last_bins(gbs)
-    gbdb.flip_bins()
+    gbdb.convert_bins_to_increasing_arrays()
     spectrum = gbs[0]['gb_step_res'][0]['spectrum_res'][0]
     return {'array': gbdb.arrays['default'],
             'bins': gbdb.bins,
@@ -1685,6 +1733,7 @@ def convert_generic_adjoint(res):
     ubatch = res.get('used_batches', None)
     # deal with units (stored in all results)
     units = {}
+    # check names of units
     if 'uscore' in res:
         units['uscore'] = res.pop('uscore')
         units['usigma'] = res.pop('usigma')
@@ -1729,6 +1778,7 @@ def convert_generic_kinetic(res):
     This structure is compatible with the browser and the index.
     Selections are done like in the default score cases.
     '''
+    LOGGER.debug('kinetic generic scores')
     scores = res['kin_generic_res']
     ubatch = res['used_batches']
     # deal with units (stored in all results)
@@ -1736,8 +1786,8 @@ def convert_generic_kinetic(res):
     for i, (score, sigma) in enumerate(scores):
         generic_res = {'score': score, 'sigma': sigma}
         if 'units' in res:
-            generic_res.update({'uscore': res['units'][0]['uscore'],
-                                'usigma': res['units'][0]['usigma']})
+            generic_res['units'] = {'score': res['units'][0]['uscore'],
+                                    'sigma': res['units'][0]['usigma']}
         dicts.append({'used_batches_res': ubatch,
                       'time_step': i,
                       'generic_res': generic_res})
@@ -1900,7 +1950,7 @@ def convert_crit_edition(res):
     '''Convert IFP adjpint criticality edition results in standard kinematic
     result.
     '''
-    LOGGER.debug('In convert_crit_edition')
+    LOGGER.warning('In convert_crit_edition')
     if 'score' not in res['columns'][-2]:
         raise ValueError("Issue with the columns names, not foreseen case "
                          "(score should be second to last, last being sigma)")
@@ -1908,7 +1958,7 @@ def convert_crit_edition(res):
         res['columns'][:-2],
         np.array([dval[:-2] for dval in res['values']]))
     acedb.fill_arrays_and_bins([vals[-2:] for vals in res['values']])
-    acedb.flip_bins()
+    acedb.convert_bins_to_increasing_arrays()
     convres = {'array': acedb.arrays['default'],
                'bins': acedb.bins,
                'units': acedb.units}
@@ -2134,7 +2184,7 @@ def convert_sensitivities(res):
                                   [1]*sensidb.arrays['default'].ndim)
             sensidb.fill_arrays_and_bins(iindex)
             sensidb.add_last_bins(iindex['vals'])
-            sensidb.flip_bins()
+            sensidb.convert_bins_to_increasing_arrays()
             if 'units' in res:
                 sensidb.units['score'] = res['units'][0]['uscore']
             datadict = {
