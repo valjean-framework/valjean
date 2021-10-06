@@ -29,9 +29,11 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 # pylint: disable=trailing-whitespace
+# pylint: disable=too-many-lines
 '''Common module to structure data in same way for all codes.
 
 .. _numpy indexing: https://numpy.org/doc/stable/user/basics.indexing.html
+.. _numpy masked: https://numpy.org/doc/stable/reference/maskedarray.html
 
 .. doctest:: dataset
     :hide:
@@ -665,6 +667,49 @@ numpy.ndarray, i.e. (# ',' = dim-1).
     Traceback (most recent call last):
         [...]
     TypeError: [] (__getitem__) can only be applied on numpy.ndarrays
+
+
+Masked datasets
+---------------
+
+In some case it can be useful to mask some elements of a dataset. This
+functionality is provided by the `numpy masked`_ arrays module. In the case of
+datasets, once the mask is given it is applied to both the value and the error.
+
+>>> mask = np.ma.masked_greater(ds1.value, 6).mask
+>>> np.array_equal(mask, [[False, False, False, False, False],
+...                       [False, False, True, True, True]])
+True
+>>> mds = ds1.mask(mask)
+>>> np.ma.is_masked(ds1.value)
+False
+>>> np.ma.is_masked(mds.value)
+True
+>>> np.ma.is_masked(mds.error)
+True
+
+Bins and shape are kept.
+
+>>> mds.shape == ds1.shape
+True
+>>> np.array_equal(mds.bins['e'], ds1.bins['e'])
+True
+>>> np.array_equal(mds.bins['t'], ds1.bins['t'])
+True
+
+The mask is propagated when performing operations on dataset.
+
+>>> np.sum(ds1.value) == 45
+True
+>>> np.sum(mds.value) == 21
+True
+>>> sds = ds1 + mds
+>>> np.ma.is_masked(sds.value)
+True
+>>> np.ma.is_masked(sds.error)
+True
+>>> np.sum(sds.value) == 42
+True
 '''
 # pylint: enable=trailing-whitespace
 from hashlib import sha256
@@ -963,6 +1008,19 @@ class Dataset:
         LOGGER.debug("Shape: %s -> %s", self.shape, value.shape)
         LOGGER.debug("Bins:%s -> %s", self.bins, bins)
         return Dataset(value, error, bins=bins, name=self.name, what=self.what)
+
+    def mask(self, mask):
+        '''Apply a mask to the Dataset value and error.
+
+        Value and error become in that case masked_arrays instead of usual
+        arrays, calcuations are preserved, not using the masked elements.
+
+        :rtype: Dataset
+        '''
+        return Dataset(value=np.ma.masked_array(self.value, mask),
+                       error=np.ma.masked_array(self.error, mask),
+                       bins=self.bins.copy(),
+                       name=self.name, what=self.what)
 
 
 def consistent_datasets(dss1, dss2):
