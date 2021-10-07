@@ -46,13 +46,12 @@ from ...chrono import Chrono
 class ParserDebug(Parser):
     '''Scan up to the end flag then parse. For parsing debugging.'''
 
-    def __init__(self, jddname, *, mesh_lim=-1, end_flag="", ofile=""):
+    def __init__(self, jddname, *, end_flag="", ofile=""):
         # pylint: disable=too-many-arguments
         '''Initialize the :class:`ParserDebug` object.
 
         :param str jddname: path to the Tripoli-4 output
         :param int batch: batch to read (-1 = last, 0 = all, then X)
-        :param int mesh_lim: limit of meshes to read (-1 per default)
         :param str end_flag: optional end flag to stop scanning and parsing
                              (empty string per default)
 
@@ -64,11 +63,11 @@ class ParserDebug(Parser):
         '''
         self.end_flag = end_flag
         self.ofile = ofile
-        super().__init__(jddname, mesh_lim=mesh_lim)
+        super().__init__(jddname)
 
     def _scan_listing(self):
         '''Scan Tripoli-4 listing, calling :mod:`.scan`.'''
-        return scan.Scanner(self.jdd, self.mesh_limit, self.end_flag)
+        return scan.Scanner(self.jdd, self.end_flag)
 
     def parse_from_number(self, batch_number, name=''):
         '''Parse from batch index or batch number.

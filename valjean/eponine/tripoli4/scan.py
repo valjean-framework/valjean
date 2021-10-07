@@ -109,19 +109,6 @@ Important for the scan: results will be kept
   * for jobs running in parallel, ``"elapsed time"`` will also appear, after
     ``"simulation time"`` normal.
 
-
-Mesh results
-^^^^^^^^^^^^
-Mesh results can be really long, so they can be long to read and mainly,
-afterwards to parse. If meshes are not used in the rest of the job
-(for example: you are only interested in integrated results), a limit can be
-set on the number of lines read using the argument ``mesh_limit``:
-
-* ``mesh_limit`` can take all values except 0.
-* Default is -1: all the lines of mesh result will be read
-* Else **Minimum is 1**: to avoid crash in parsing as it needs to parse at
-  least one line of mesh result
-
 Module API
 ----------
 '''
@@ -198,9 +185,8 @@ class BatchResultScanner:
     # pylint: disable=too-many-instance-attributes
     '''Class to build batchs collection.
 
-    :param int count_excess: current count of meshes
     :param int current_batch: current batch number
-    :param int mesh_limit: limit of number of lines of mesh
+    :param bool para: flag to identify outputs run in parallel
     :param str line: current line in file
 
     .. note::
@@ -213,61 +199,23 @@ class BatchResultScanner:
 
     '''
 
-    def __init__(self, count_excess, current_batch, mesh_limit, para, line):
-        # pylint: disable=too-many-arguments
-        self.count_mesh_exceeding = count_excess
+    def __init__(self, current_batch, para, line):
         self.batch_counts = {'number': -1,
                              'current': current_batch,
                              'greater': 0}
         self.result = [line]
         self.para = para
-        self.mesh_limit = mesh_limit
-        self.in_mesh = False
-        self.nb_mesh_lines = 0
-        self.prev_line_mesh = False
         self.phemep_balance = PhEmEpBalanceOutput()
         self.homog_mat = HomogMatOutput()
 
-    def add_meshline(self, line):
-        '''Add mesh line to result if stop mesh is not reached.
-
-        :param int count_excess: counter for mesh lines excess
-        :param list(str) result: batch result
-        :param str line: mesh line
-        '''
-        if self.nb_mesh_lines > self.mesh_limit and self.mesh_limit != -1:
-            if self.nb_mesh_lines == self.mesh_limit+1:
-                self.count_mesh_exceeding += 1
-                if self.count_mesh_exceeding < 5:
-                    LOGGER.warning("Too much mesh lines, keeping %d "
-                                   "lines, if needed change mesh_limit ",
-                                   self.mesh_limit)
-        else:
-            self.result.append(line)
-
     def build_result(self, line):
-        '''Scan line to build batch result: mainly deals with mesh
-        specificities and store line.
+        '''Scan line to build batch result: mainly deals with specific patterns
+        and store line.
 
         :param str line: last line to be taken into account
         '''
-        if self.in_mesh:
-            if "(" in line and ")" in line and "," in line:
-                self.nb_mesh_lines += 1
-                self.prev_line_mesh = True
-                if ((self.mesh_limit != -1
-                     and self.nb_mesh_lines > self.mesh_limit+2)):
-                    return
-            elif "****" in line:
-                self.in_mesh = False
-            elif line.isspace() and self.prev_line_mesh:
-                self.prev_line_mesh = False
-                self.nb_mesh_lines = 0
-        elif "Edition after batch number" in line:
+        if "Edition after batch number" in line:
             self.batch_counts['number'] = int(line.split()[-1])
-        elif "Results on a mesh" in line:
-            self.in_mesh = True
-            assert self.mesh_limit != 0
         elif '#'*64 in line and not self.phemep_balance.in_phemep:
             LOGGER.debug('phe+e- balance')
             self.phemep_balance.in_phemep = True
@@ -279,9 +227,7 @@ class BatchResultScanner:
         self._store_line(line)
 
     def _store_line(self, line):
-        if self.in_mesh:
-            self.add_meshline(line)
-        elif self.phemep_balance.in_phemep:
+        if self.phemep_balance.in_phemep:
             self.phemep_balance.add_line(line)
         elif self.homog_mat.in_dump:
             self.homog_mat.add_line(line)
@@ -357,9 +303,6 @@ class Scanner(Mapping):
     `end_flags` (:class:`list` (:class:`str`))
         possible end flags to stop the saving of results
 
-    `mesh_limit` (:class:`int`)
-        maximum lines of mesh to be stored
-
     `para` (:class:`bool`)
         `True` in parallel mode
 
@@ -402,7 +345,7 @@ class Scanner(Mapping):
     '''
 
     @profile
-    def __init__(self, fname, mesh_lim=-1, end_flag=""):
+    def __init__(self, fname, end_flag=""):
         '''Initialize the instance from the file `fname`, meaning reads the
         file and store the relevant parts of it, i.e. result block for each
         batch edition.
@@ -417,15 +360,6 @@ class Scanner(Mapping):
         Members needed at initialization:
 
         :param str fname: name of the input file
-        :param int mesh_lim: limit on number of lines to read in meshes outputs
-                      (can be really long).
-
-                      * default = -1, all cells will be read
-                      * Minimum value is 1, use it to skip the mesh.
-                      * If 0 is used, AssertException will be raised (else
-                        parsing would fail)
-
-        :param bool para: run in mono-processor or parallel mode
         :param str end_flag: end flag of the results block in Tripoli-4 listing
         '''
         self.fname = fname
@@ -437,9 +371,6 @@ class Scanner(Mapping):
                           "elapsed time"]
         if end_flag:
             self.end_flags.insert(0, end_flag)
-        # keep mesh_lim as instance variable and not class variable to prevent
-        # risk of changing its value for all instances of the class
-        self.mesh_limit = mesh_lim
         self.para = False
         self.partial = False
         self.countwarnings = 0
@@ -528,7 +459,6 @@ class Scanner(Mapping):
         # pylint: disable=too-many-branches
         '''Read the file and store all relevant information.
         '''
-        count_mesh_exceeding = 0
         generator_state = []
         current_batch = 0
         _batch_scan = None
@@ -549,7 +479,6 @@ class Scanner(Mapping):
                         _batch_scan.check_batch_number()
                         batch_number = _batch_scan.batch_counts['number']
                         self._collres[batch_number] = _batch_scan.get_result()
-                        count_mesh_exceeding = _batch_scan.count_mesh_exceeding
                         self._additional_outputs(_batch_scan)
                         _batch_scan = None
                         # ordered dictionary -> unique keys, so only last kept
@@ -561,9 +490,8 @@ class Scanner(Mapping):
                     self._check_input_data(line)
                     continue
                 elif "RESULTS ARE GIVEN" in line:
-                    _batch_scan = BatchResultScanner(
-                        count_mesh_exceeding, current_batch,
-                        self.mesh_limit, self.para, line)
+                    _batch_scan = BatchResultScanner(current_batch, self.para,
+                                                     line)
                 elif (self.partial and line.startswith(' number of batch')
                       or line.startswith(' batch number :')):
                     current_batch = int(line.split()[-1])
@@ -585,9 +513,6 @@ class Scanner(Mapping):
                     if "COUNTER" in line:
                         self.last_generator_state = ''.join(generator_state)
                         generator_state = []
-        if count_mesh_exceeding > 4:
-            LOGGER.warning("Number of mesh exceeding mesh_limit arg: %d",
-                           count_mesh_exceeding)
         if not self._collres and _batch_scan:
             raise ScannerException("No scan result built: "
                                    "no end flag found in the file")

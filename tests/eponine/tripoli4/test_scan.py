@@ -274,8 +274,7 @@ def test_tt_simple_packet20_para(datadir):
     test parallel mode specific features (number of batchs used for edition,
     number of batchs required in case PACKET_LENGTH case, etc.
     '''
-    t4p = Parser(str(datadir/"ttsSimplePacket20.d.PARA.res.ceav5"),
-                 mesh_lim=-1)
+    t4p = Parser(str(datadir/"ttsSimplePacket20.d.PARA.res.ceav5"))
     assert t4p
     assert t4p.scan_res.normalend
     assert list(t4p.scan_res.keys())[-1] == 10

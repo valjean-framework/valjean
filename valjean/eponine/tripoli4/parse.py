@@ -71,11 +71,10 @@ class Parser:
     '''Scan Tripoli-4 listings, then parse the required batches.'''
 
     @profile
-    def __init__(self, jddname, *, mesh_lim=-1):
+    def __init__(self, jddname):
         '''Initialize the :class:`Parser` object.
 
         :param str jddname: path to the Tripoli-4 output
-        :param int mesh_lim: limit of meshes to read (-1 per default)
 
         It also initalizes the result of :class:`.scan.Scanner` to ``None``,
         then executes the scan. If this step fails an exception is raised.
@@ -96,7 +95,6 @@ class Parser:
         '''
         LOGGER.info("Parsing %s", jddname)
         self.jdd = jddname
-        self.mesh_limit = mesh_lim
         try:
             with Chrono() as chrono:
                 self.scan_res = self._scan()
@@ -121,7 +119,7 @@ class Parser:
 
         :rtype: Scanner
         '''
-        return scan.Scanner(self.jdd, self.mesh_limit)
+        return scan.Scanner(self.jdd)
 
     def _check_scan(self, scan_res):
         '''Check existence of scan result and presence of normal end (per

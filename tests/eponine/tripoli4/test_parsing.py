@@ -167,7 +167,7 @@ def browser_test(res):
         check_data(t4rb.content)
 
 
-def loop_on_files(filelist, cfile):
+def loop_on_files(filelist):
     '''Perform the loop over the file list, parse all of them and returns
     result of this parsing.
 
@@ -184,9 +184,6 @@ def loop_on_files(filelist, cfile):
         print("Reading:", ifile)
         try:
             res = Parser(ifile)
-            # res = (Parser(ifile)
-            #        if os.path.basename(ifile) not in cfile.MESH_LIM_FILES
-            #        else Parser(ifile, mesh_lim=2))
         except ParserException:
             failed_jdds.append(ifile)
             continue
@@ -264,7 +261,7 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     excluded_files = [
         fil for fil in excluded_files
         if not any(pat in fil for pat in vv_file.EXCLUDED_STRINGS)]
-    summary = loop_on_files(used_files, vv_file)
+    summary = loop_on_files(used_files)
     print_summary(len(used_files), excluded_files, summary)
     category = used_files[0].split('/')[-4]
     mode = vv_file.MONO if vv_file.MONO in folder else vv_file.PARA
