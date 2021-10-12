@@ -92,6 +92,7 @@ language = None
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ['Thumbs.db', '.DS_Store']
+
 if not tags.has('tests'):
     exclude_patterns.append('tests.rst')
 else:
@@ -100,6 +101,8 @@ else:
     src_path = Path().resolve().parents[1]
     sys.path.insert(0, str(src_path))
 
+if not tags.has('notebooks'):
+    exclude_patterns.append('**/*.ipynb')
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'

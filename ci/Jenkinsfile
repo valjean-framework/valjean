@@ -129,8 +129,12 @@ pipeline {
                     sourceDirectory: "${SRC_REL}",
                     tools: [pep8(pattern: "${REPORTS_REL}/linting.out", reportEncoding: 'UTF-8'),
                             pyLint(pattern: "${REPORTS_REL}/linting.out", reportEncoding: 'UTF-8'),
-                            sphinxBuild(name: 'Sphinx-build errors', pattern: "${REPORTS_REL}/sphinx-*.out", reportEncoding: 'UTF-8', id: 'sphinx'),
+                            sphinxBuild(name: 'Sphinx-build errors', pattern: "${REPORTS_REL}/sphinx-html.out", reportEncoding: 'UTF-8', id: 'sphinx'),
                             sphinxBuild(name: 'Sphinx-build linkcheck errors', pattern: "${REPORTS_REL}/doc/linkcheck/output.txt", reportEncoding: 'UTF-8', id: 'sphinx-linkcheck')])
+      recordIssues (enabledForFailure: true,
+                    sourceDirectory: "${SRC_REL}",
+                    tool: sphinxBuild(name: 'Sphinx-build errors without notebooks and tests', pattern: "${REPORTS_REL}/sphinx-html-notags.out", reportEncoding: 'UTF-8', id: 'sphinx-notags'),
+                    filters: [excludeFile('examples.rst'), excludeMessage("""toctree glob pattern 'notebooks/\\*/\\*' didn't match any documents""")])
       cobertura (autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: "${REPORTS_REL}/coverage-*.xml",
                  failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false,
                  sourceEncoding: 'UTF_8', zoomCoverageChart: false)

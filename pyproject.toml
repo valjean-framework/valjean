@@ -208,16 +208,16 @@ passenv =
 description = invoke sphinx-build to build the HTML docs
 # be nitpicky on the HTML documentation
 commands = poetry install -v --no-root -E dev
+           poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E \
+                --keep-going -b html -w "{toxworkdir}/sphinx-html-notags.out" \
+                "{toxinidir}/doc/src" "{toxworkdir}/doc/html-notags"
            poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E -W \
                 --keep-going -b html -w "{toxworkdir}/sphinx-html.out" \
-                "{toxinidir}/doc/src" "{toxworkdir}/doc/html"
-           poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E -W \
-                --keep-going -b html -w "{toxworkdir}/sphinx-html-tests.out" \
-                -t tests "{toxinidir}/doc/src" \
-                "{toxworkdir}/doc/html-with-tests"
+                -t tests -t notebooks "{toxinidir}/doc/src" \
+                "{toxworkdir}/doc/html"
            poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -W \
-                --keep-going -b linkcheck -t tests "{toxinidir}/doc/src" \
-                "{toxworkdir}/doc/linkcheck"
+                --keep-going -b linkcheck -t tests -t notebooks \
+                "{toxinidir}/doc/src" "{toxworkdir}/doc/linkcheck"
 
 [testenv:linting]
 description = invoke pylint and flake8 on the source package

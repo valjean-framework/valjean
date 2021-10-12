@@ -6,15 +6,23 @@ Examples (in French)
 Notebooks
 ---------
 
-.. toctree::
+.. only:: not notebooks
 
-   livermore_exps/spheres_example.ipynb
-   replica/replica_example.ipynb
-   sensitivities/sensitivities_example.ipynb
+   .. note::
+
+     The example notebooks were not converted to HTML because the ``notebooks``
+     tag was not defined.  Pass ``-t notebooks`` to ``sphinx-build`` to convert
+     notebooks to HTML (requires the ``pandoc`` executable).
+
+.. toctree::
+   :glob:
+
+   notebooks/*/*
 
 Jobs
 ----
 
 .. toctree::
+   :glob:
 
-   spherical_cows/job.rst
+   jobs/*/*

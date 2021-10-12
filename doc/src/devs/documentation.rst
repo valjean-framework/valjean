@@ -27,6 +27,21 @@ starting with the :file:`index.html` file.
 This will dump the LaTeX sources in :file:`doc/build/latex`, where you can
 compile them to PDF with :command:`make`.
 
+The automatic documentation for the tests can be built by adding the ``-t
+tests`` option to ``sphinx-build``::
+
+      $ sphinx-build -a -t tests src build/html
+
+The documentation also contains a few examples in IPython notebook format.
+Conversion of the notebooks to HTML requires ``pandoc``, which needs to be
+separately installed; for this reason, conversion of the notebooks is disabled
+by default. To activate it, pass the ``-t notebooks`` option to
+``sphinx-build``::
+
+      $ sphinx-build -a -t notebooks src build/html
+
+The ``-t tests`` and ``-t notebooks`` can be used together.
+
 The `sphinx` system is deeply customizable; most of the options are set in
 :file:`doc/src/conf.py`, which is fairly well documented.
 
