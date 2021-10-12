@@ -1,4 +1,4 @@
-.. _tox: https://tox.readthedocs.io/en/latest/
+.. _tox: https://tox.wiki/en/latest/
 .. _ROOT: https://root.cern.ch/
 
 .. _tox-integration:
