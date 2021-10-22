@@ -47,18 +47,16 @@ pipeline {
         dir("${SRC}") {
           checkout scm
         }
-        withFolderProperties {
-          echo "Starting build ${env.BUILD_ID} on ${env.JENKINS_URL}..."
-          sh """#!/bin/bash
-          if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-            source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-          fi
-          python3 -m venv "${TOX_VENV}"
-          source "${TOX_VENV}/bin/activate"
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install tox poetry
-          """
-        }
+        echo "Starting build ${env.BUILD_ID} on ${env.JENKINS_URL}..."
+        sh """#!/bin/bash
+        if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+          source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+        fi
+        python3 -m venv "${TOX_VENV}"
+        source "${TOX_VENV}/bin/activate"
+        python3 -m pip install --upgrade pip setuptools wheel
+        python3 -m pip install tox poetry
+        """
       }
     }
     stage('Build and check HTML doc') {
@@ -66,15 +64,13 @@ pipeline {
         echo 'Building and checking documentation...'
         dir("${SRC}") {
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            withFolderProperties {
-              sh """
-                  if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-                    source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-                  fi
-                  source "${TOX_VENV}/bin/activate"
-                  ${TOX} -e docs
-                  """
-            }
+            sh """
+                if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                  source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+                fi
+                source "${TOX_VENV}/bin/activate"
+                ${TOX} -e docs
+                """
           }
         }
       }
@@ -84,34 +80,28 @@ pipeline {
         echo 'Linting...'
         dir("${SRC}") {
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            withFolderProperties {
-              sh """
-                  if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-                    source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-                  fi
-                  source "${TOX_VENV}/bin/activate"
-                  ${TOX} -e linting valjean/ tests/ | tee "${REPORTS}/linting.out"
-                  """
-            }
+            sh """
+                if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                  source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+                fi
+                source "${TOX_VENV}/bin/activate"
+                ${TOX} -e linting valjean/ tests/ | tee "${REPORTS}/linting.out"
+                """
           }
         }
       }
     }
     stage('Run unit tests') {
       steps {
-        withFolderProperties {
-          echo 'Running unit tests...'
-          dir("${SRC}") {
-            withFolderProperties {
-              sh """#!/bin/bash
-                  if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-                    source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-                  fi
-                  source "${TOX_VENV}/bin/activate"
-                  TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 -- valjean/ tests/ | tee "${REPORTS}/testing.out"
-                  """
-            }
-          }
+        echo 'Running unit tests...'
+        dir("${SRC}") {
+          sh """#!/bin/bash
+              if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
+                source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+              fi
+              source "${TOX_VENV}/bin/activate"
+              TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 -- valjean/ tests/ | tee "${REPORTS}/testing.out"
+              """
         }
       }
     }
@@ -138,18 +128,7 @@ pipeline {
       cobertura (autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: "${REPORTS_REL}/coverage-*.xml",
                  failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false,
                  sourceEncoding: 'UTF_8', zoomCoverageChart: false)
-      publishHTML (target: [allowMissing: false,
-                            alwaysLinkToLastBuild: true,
-                            keepAll: false,
-                            reportDir: "${REPORTS_REL}/doc/html",
-                            reportFiles: 'index.html',
-                            reportName: "Sphinx documentation"])
       junit "${REPORTS_REL}/pytest-*.xml"
-      dir("${REPORTS}") {
-        archiveArtifacts (artifacts: "*.out,distshare/valjean*.zip,mpl_image_compare/**/*.png,**/log/*.log",
-                          excludes: "**/tmp-py*/**/*",
-                          fingerprint: true)
-      }
     }
   }
 }
