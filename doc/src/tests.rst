@@ -1,6 +1,7 @@
 :orphan:
 
 .. _pytest: https://docs.pytest.org/en/latest
+.. _hypothesis: https://hypothesis.readthedocs.io/en/latest/
 
 Automatic documentation for the unit tests
 ==========================================

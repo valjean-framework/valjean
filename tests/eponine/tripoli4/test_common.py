@@ -30,7 +30,7 @@
 
 # pylint: disable=too-many-lines
 '''Tests for the :mod:`~valjean.eponine.tripoli4.common` module using
-`pytest`_: random generation of data thanks to :mod:`hypothesis` then test
+`pytest`_: random generation of data thanks to `hypothesis`_ then test
 parsing and building output objects (typically from :mod:`numpy`).
 '''
 

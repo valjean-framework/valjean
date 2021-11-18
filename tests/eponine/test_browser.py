@@ -29,7 +29,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 '''Tests for the :mod:`~valjean.eponine.browser` module using `pytest`_:
-random generation of data thanks to :mod:`hypothesis` then test access to
+random generation of data thanks to `hypothesis`_ then test access to
 various objects typically coming from parsing result.
 '''
 

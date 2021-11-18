@@ -3,6 +3,7 @@ Testing
 
 .. _pytest: https://docs.pytest.org/en/latest
 .. _pytest-doc: https://pytest-cov.readthedocs.io/en/latest/
+.. _hypothesis: https://hypothesis.readthedocs.io/en/latest/
 
 .. highlight:: bash
 
@@ -12,7 +13,7 @@ Unit tests
 ----------
 
 :mod:`valjean` uses `pytest`_ as a unit-test framework; some of the unit tests
-rely on the :mod:`hypothesis` package for property-based testing. The tests are
+rely on the `hypothesis`_ package for property-based testing. The tests are
 defined in the :file:`tests` folder and are automatically discovered by
 `pytest`_.
 
@@ -42,8 +43,8 @@ and ``N>1`` to ``DEBUG``.  The verbosity level can also be increased by
 invoking the ``-v`` option, possibly multiple times. It is useful when
 debugging a failing test.
 
-Property-based testing and the :mod:`hypothesis` package
---------------------------------------------------------
+Property-based testing and the `hypothesis`_ package
+----------------------------------------------------
 
 In traditional unit testing, one verifies that the code gives the expected
 answer for a given, fixed set of input values. For instance, one may test a
@@ -75,10 +76,10 @@ The testing library will generate a number of random inputs, call the sorting
 algorithm on each of them and check that the properties specified by the
 developer hold. If a counterexample is found, it will be shown to the user.
 
-In Python, the :mod:`hypothesis` library offers a flexible and `well-documented
+In Python, the `hypothesis`_ library offers a flexible and `well-documented
 API <https://hypothesis.readthedocs.io/en/latest/>`_ for property-based
-testing. Additionally, :mod:`hypothesis` is well integrated with `pytest`.
-:mod:`valjean` unit tests leverage :mod:`hypothesis` whenever possible.
+testing. Additionally, `hypothesis`_ is well integrated with `pytest`.
+:mod:`valjean` unit tests leverage `hypothesis`_ whenever possible.
 
 If you want some examples within :mod:`valjean`, a good place to start is the
 ``tests.cosette.test_rlist`` test module, which tests the invariants of the
