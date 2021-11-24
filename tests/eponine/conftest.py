@@ -41,6 +41,7 @@ from hypothesis.strategies import (lists, floats, composite, just, booleans,
                                    integers, text, none, one_of)
 from hypothesis.extra.numpy import arrays, array_shapes, floating_dtypes
 from collections import OrderedDict
+from glob import glob
 
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.eponine.dataset import Dataset
@@ -337,6 +338,12 @@ def skip_parsing_files(vv_folder, parsing_exclude, parsing_match):
             pytest.skip("No matching with '"+str(parsing_match)+"' found")
 
 
+def skip_excluded_files(vv_file, excluded_patterns):
+    '''Skip excluded files when running in one test per file case)'''
+    if any(pat in vv_file for pat in excluded_patterns):
+        pytest.skip('Excluded file')
+
+
 def pytest_generate_tests(metafunc):
     '''Handle the ``--parsing-config-file-*`` option in order to make one test
     per folder required for comparison simplicity.
@@ -348,6 +355,7 @@ def pytest_generate_tests(metafunc):
         return
     confiles = metafunc.config.getoption(parsing_conf)
     list_params = []
+    ids = []
     if len(set(os.path.basename(x) for x in confiles)) != len(confiles):
         LOGGER.error("Several parsing configuration files share the same "
                      "name, only one among them will be read.")
@@ -357,6 +365,17 @@ def pytest_generate_tests(metafunc):
         except ModuleNotFoundError:
             LOGGER.error('Cannot find config file %s', cfile)
             sys.exit(1)
-        list_params.extend((x, config) for x in config.ALL_FOLDERS)
-    ids = list(config.__name__ + '/' + x for x, config in list_params)
+        if config.PER_FILE:
+            for fold in config.ALL_FOLDERS:
+                tfiles = sorted(glob(
+                    os.path.join(config.PATH, fold, config.OUTPUTS,
+                                 '*.'+config.END_FILES)))
+                for fil in tfiles:
+                    list_params.append((fil, config))
+                    ids.append(os.path.join(config.__name__, fold,
+                                            os.path.basename(fil)))
+        else:
+            list_params.extend((x, config) for x in config.ALL_FOLDERS)
+    if not ids:
+        ids = list(config.__name__ + '/' + x for x, config in list_params)
     metafunc.parametrize('vv_params', list_params, ids=ids)

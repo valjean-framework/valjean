@@ -63,7 +63,7 @@ import pytest
 from valjean.eponine.tripoli4.parse import Parser, ParserException
 import valjean.eponine.tripoli4.data_convertor as dcv
 from ...context import valjean  # noqa: F401, pylint: disable=unused-import
-from ..conftest import skip_parsing_files
+from ..conftest import skip_parsing_files, skip_excluded_files
 
 
 def result_test(t4pres):
@@ -240,8 +240,9 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
 
     By default all files are included, independent of the mode (MONO or PARA),
     and of the report section (main or aux). Restrictions are possible from
-    command line, via options ``'--parsing-exclude='["spam", "egg"]'`` and
-    ``'--parsing-match='["bacon"]'``.
+    command line, via options ``'--parsing-exclude=spam,egg`` and
+    ``'--parsing-match=bacon`` (comma separated strings in both case meaning
+    logical OR).
     Currently adapted to version 11 of Tripoli-4.
 
     Tests performed on number of input files used, excluded and failed.
@@ -249,30 +250,39 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     caplog.set_level(logging.WARNING, logger='valjean')
     vv_folder, vv_file = vv_params
     skip_parsing_files(vv_folder, parsing_exclude, parsing_match)
-    folder = os.path.join(vv_file.PATH, vv_folder, vv_file.OUTPUTS)
-    all_files = sorted(glob(os.path.join(folder, "*."+vv_file.END_FILES)))
+    folder = (os.path.dirname(vv_folder) if vv_file.PER_FILE
+              else os.path.join(vv_file.PATH, vv_folder, vv_file.OUTPUTS))
     excluded_patterns = (
         vv_file.EXCLUDED_STRINGS_MONO + vv_file.EXCLUDED_STRINGS
         if vv_file.MONO in folder
         else vv_file.EXCLUDED_STRINGS_PARA + vv_file.EXCLUDED_STRINGS)
-    excluded_files = [fil for fil in all_files
-                      if any(pat in fil for pat in excluded_patterns)]
-    used_files = list(filter(lambda x: x not in excluded_files, all_files))
-    excluded_files = [
-        fil for fil in excluded_files
-        if not any(pat in fil for pat in vv_file.EXCLUDED_STRINGS)]
+    if vv_file.PER_FILE:
+        skip_excluded_files(vv_folder, excluded_patterns)
+        used_files = [vv_folder]
+        excluded_files = []
+    else:
+        all_files = sorted(glob(os.path.join(folder, "*."+vv_file.END_FILES)))
+        excluded_files = [fil for fil in all_files
+                          if any(pat in fil for pat in excluded_patterns)]
+        used_files = list(filter(lambda x: x not in excluded_files, all_files))
+        excluded_files = [
+            fil for fil in excluded_files
+            if not any(pat in fil for pat in vv_file.EXCLUDED_STRINGS)]
     summary = loop_on_files(used_files)
-    print_summary(len(used_files), excluded_files, summary)
+    if not vv_file.PER_FILE:
+        print_summary(len(used_files), excluded_files, summary)
     category = used_files[0].split('/')[-4]
     mode = vv_file.MONO if vv_file.MONO in folder else vv_file.PARA
 
     counts = vv_file.EXPECTED_RESULTS.get((category, mode), None)
-    if counts is None:
-        return
-
-    assert len(used_files) == counts[0]
-    assert len(summary['failed_jdds']) == counts[1]
-    assert len(excluded_files) == counts[2]
-    if len(counts) > 3:
-        assert len(summary['failed_time']) == counts[3]
-        assert len(summary['failed_browser']) == counts[4]
+    if counts is not None:
+        assert len(used_files) == counts[0]
+        assert len(summary['failed_jdds']) == counts[1]
+        assert len(excluded_files) == counts[2]
+        if len(counts) > 3:
+            assert len(summary['failed_time']) == counts[3]
+            assert len(summary['failed_browser']) == counts[4]
+    if vv_file.PER_FILE:
+        assert len(summary['failed_jdds']) == 0
+        assert len(summary['failed_browser']) == 0
+        print('failed time:', summary['failed_time'])
