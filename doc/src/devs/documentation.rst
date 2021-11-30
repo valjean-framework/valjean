@@ -34,13 +34,12 @@ tests`` option to ``sphinx-build``::
 
 The documentation also contains a few examples in IPython notebook format.
 Conversion of the notebooks to HTML requires ``pandoc``, which needs to be
-separately installed; for this reason, conversion of the notebooks is disabled
-by default. To activate it, pass the ``-t notebooks`` option to
-``sphinx-build``::
+separately installed. Conversion of the notebooks is enabled by default. To
+deactivate it, pass the ``-t no_notebooks`` option to ``sphinx-build``::
 
-      $ sphinx-build -a -t notebooks src build/html
+      $ sphinx-build -a -t no_notebooks src build/html
 
-The ``-t tests`` and ``-t notebooks`` can be used together.
+The ``-t tests`` and ``-t no_notebooks`` can be used together.
 
 The `sphinx` system is deeply customizable; most of the options are set in
 :file:`doc/src/conf.py`, which is fairly well documented.
