@@ -210,13 +210,14 @@ description = invoke sphinx-build to build the HTML docs
 commands = poetry install -v --no-root -E dev
            poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E \
                 --keep-going -b html -w "{toxworkdir}/sphinx-html-notags.out" \
-                "{toxinidir}/doc/src" "{toxworkdir}/doc/html-notags"
+                -t no_notebooks "{toxinidir}/doc/src" \
+                "{toxworkdir}/doc/html-notags"
            poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E -W \
                 --keep-going -b html -w "{toxworkdir}/sphinx-html.out" \
-                -t tests -t notebooks "{toxinidir}/doc/src" \
+                -t tests "{toxinidir}/doc/src" \
                 "{toxworkdir}/doc/html"
            poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -W \
-                --keep-going -b linkcheck -t tests -t notebooks \
+                --keep-going -b linkcheck -t tests \
                 "{toxinidir}/doc/src" "{toxworkdir}/doc/linkcheck"
 
 [testenv:linting]

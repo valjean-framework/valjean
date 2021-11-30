@@ -101,7 +101,7 @@ else:
     src_path = Path().resolve().parents[1]
     sys.path.insert(0, str(src_path))
 
-if not tags.has('notebooks'):
+if tags.has('no_notebooks'):
     exclude_patterns.append('**/*.ipynb')
 
 # The name of the Pygments (syntax highlighting) style to use.
