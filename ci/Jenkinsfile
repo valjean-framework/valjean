@@ -49,14 +49,16 @@ pipeline {
         }
         echo "Starting build ${env.BUILD_ID} on ${env.JENKINS_URL}..."
         sh """#!/bin/bash
-        if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-          source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-        fi
-        python3 -m venv "${TOX_VENV}"
-        source "${TOX_VENV}/bin/activate"
-        python3 -m pip install --upgrade pip setuptools wheel
-        python3 -m pip install tox poetry
-        """
+           if [ "x${env.VALJEAN_SPACK_ROOT}" == x ]; then
+             echo "The VALJEAN_SPACK_ROOT environment variable is undefined. The pipeline fails here."
+             exit 1
+           fi
+           source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+           python3 -m venv "${TOX_VENV}"
+           source "${TOX_VENV}/bin/activate"
+           python3 -m pip install --upgrade pip setuptools wheel
+           python3 -m pip install tox poetry
+           """
       }
     }
     stage('Build and check HTML doc') {
@@ -64,12 +66,10 @@ pipeline {
         echo 'Building and checking documentation...'
         dir("${SRC}") {
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh """
-                if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-                  source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-                fi
-                source "${TOX_VENV}/bin/activate"
-                ${TOX} -e docs
+            sh """#!/bin/bash
+               source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+               source "${TOX_VENV}/bin/activate"
+               ${TOX} -e docs
                 """
           }
         }
@@ -80,13 +80,11 @@ pipeline {
         echo 'Linting...'
         dir("${SRC}") {
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh """
-                if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-                  source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-                fi
-                source "${TOX_VENV}/bin/activate"
-                ${TOX} -e linting valjean/ tests/ | tee "${REPORTS}/linting.out"
-                """
+            sh """#!/bin/bash
+               source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+               source "${TOX_VENV}/bin/activate"
+               ${TOX} -e linting valjean/ tests/ | tee "${REPORTS}/linting.out"
+               """
           }
         }
       }
@@ -96,12 +94,10 @@ pipeline {
         echo 'Running unit tests...'
         dir("${SRC}") {
           sh """#!/bin/bash
-              if [ "x${env.VALJEAN_SPACK_ROOT}" != x ]; then
-                source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-              fi
-              source "${TOX_VENV}/bin/activate"
-              TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 -- valjean/ tests/ | tee "${REPORTS}/testing.out"
-              """
+             source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+             source "${TOX_VENV}/bin/activate"
+             TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 -- valjean/ tests/ | tee "${REPORTS}/testing.out"
+             """
         }
       }
     }
