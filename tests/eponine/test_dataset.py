@@ -35,8 +35,9 @@ Most of them are silly tests for the moment...
 
 # pylint: disable=no-value-for-parameter
 
+from collections import OrderedDict
 import numpy as np
-
+import pytest  # pylint: disable=unused-import
 from hypothesis import given, note, settings, HealthCheck
 from hypothesis.strategies import data, floats, one_of
 
@@ -396,3 +397,28 @@ def test_fingerprint_different(some_dataset, other_dataset, different_dataset):
     assert fgpr1 != fgpr2
     assert fgpr2 != fgpr3
     assert fgpr3 != fgpr1
+
+
+def test_bins_coordinates(caplog):
+    '''Test dataset with different number of bins and shape.
+
+    This can correspond to an mesh in Tripoli4 with 3 coordinates by space bin.
+    '''
+    value = np.arange(12).reshape(3, 2, 2)
+    error = value * 0.01
+    bins = OrderedDict([
+        ('x', np.arange(3)), ('y', np.arange(2)), ('z', np.arange(2))])
+    dset = gd.Dataset(value, error, bins=bins)
+    assert dset.shape == (3, 2, 2)
+    assert [len(b) for b in dset.bins.values()] == [3, 2, 2]
+    coords = [(x+0.1*i, y+0.1*i, z+0.1*i)
+              for i, (x, y, z) in enumerate(np.ndindex(value.shape))]
+    assert np.unique([c[0] for c in coords]).size == 12
+    bins = OrderedDict([
+        ('x', np.array([c[0] for c in coords])),
+        ('y', np.array([c[1] for c in coords])),
+        ('z', np.array([c[2] for c in coords]))])
+    with pytest.raises(ValueError):
+        gd.Dataset(value, error, bins=bins)
+        assert ("Number of bins does not correspond to value shape"
+                in caplog.text)

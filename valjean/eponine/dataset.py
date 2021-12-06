@@ -126,7 +126,8 @@ TypeError: bins should be an OrderedDict
 ...               bins=OrderedDict([('spam', [1, 2])]))
 Traceback (most recent call last):
         [...]
-ValueError: Number of bins do not correspond to dimension of value
+ValueError: Number of dimensions of bins does not correspond to number of \
+dimensions of value
 
 
 Squeezing a dataset
@@ -761,8 +762,15 @@ class Dataset:
                 raise TypeError("bins should be an OrderedDict")
             LOGGER.debug("Number of dimensions from bins: %s", len(bins))
             if bins and len(bins) != value.ndim:
-                raise ValueError("Number of bins do not correspond to "
-                                 "dimension of value")
+                raise ValueError("Number of dimensions of bins does not "
+                                 "correspond to number of dimensions of value")
+            if bins and any(b.size != s and b.size != s+1
+                            for b, s in zip(bins.values(), value.shape)
+                            if b.size):
+                raise ValueError('Number of bins does not correspond to value '
+                                 'shape, bins=%s, shape=%s',
+                                 str([len(b) for b in bins.values()]),
+                                 str(value.shape))
         self.value = value
         self.error = error
         self.bins = bins.copy() if bins is not None else OrderedDict()

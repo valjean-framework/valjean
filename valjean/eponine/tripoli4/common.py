@@ -800,6 +800,7 @@ class MeshDictBuilder(KinematicDictBuilder):
         '''
         LOGGER.debug("Initialisation of MeshDictBuilder")
         super().__init__(colnames, lnbins)
+        self.coords = None
 
     @classmethod
     def from_data(cls, data):
@@ -835,38 +836,46 @@ class MeshDictBuilder(KinematicDictBuilder):
           list of cell indices (without intervening whitespace), the value and
           the sigma.
         * a standard MESH was required with the option ``MESH_INFO`` in
-          Tripoli-4: center of cells are given in all dimensions, the space
-          bins will be set to these values. Width can be calculated (regular
-          binning but possible in any case), but not done here. If needed for
-          plot representation this will be proposed at the plotting step. In
-          that case the mesh line contains 6 or 7 tokens, depending on
-          Tripoli-4 version: the comma-separated list of cell indices (as
-          above), the three space coordinates of the midpoint of the cell, [the
-          cell volume], the value and the sigma.
+          Tripoli-4: center of cells are given on the 3 dimensions, the space
+          bins will be set to these values if the mesh is Cartesian and its
+          axes coincide with the coordinate axes. In MESH_INFO case the mesh
+          line contains 6 or 7 tokens, depending on Tripoli-4 version: the
+          comma-separated list of cell indices (as above), the three space
+          coordinates of the midpoint of the cell, [the cell volume], the value
+          and the sigma. When the cell coordinates are not aligned on the axes,
+          the bins stay the cell indices and the coordinates stay available.
 
         :param int nb_tokens: number of tokens by line of mesh result
         :param list vals: mesh results
         '''
         LOGGER.debug("Filling space bins")
-        if nb_tokens == 3:
-            self.bins['s0'] = np.arange(self.arrays['default'].shape[0])
-            self.bins['s1'] = np.arange(self.arrays['default'].shape[1])
-            self.bins['s2'] = np.arange(self.arrays['default'].shape[2])
+        self.bins['s0'] = np.arange(self.arrays['default'].shape[0])
+        self.bins['s1'] = np.arange(self.arrays['default'].shape[1])
+        self.bins['s2'] = np.arange(self.arrays['default'].shape[2])
+        if nb_tokens <= 3:
+            return
+        LOGGER.debug('coordinates to be done')
+
+        def convstr(x):
+            '''Convert coordinates string in float.'''
+            return float(x.decode('utf-8').strip('(),'))
+
+        self.coords = np.loadtxt(
+            StringIO(vals),
+            dtype=np.dtype([('c0', 'f8'), ('c1', 'f8'), ('c2', 'f8')]),
+            usecols=list(range(1, 4)),
+            converters={1: convstr, 2: convstr, 3: convstr})
+        uniq = [np.unique(self.coords['c0']),
+                np.unique(self.coords['c1']),
+                np.unique(self.coords['c2'])]
+        if all([a.size == b.size
+                for a, b in zip(uniq, self.bins.values())]):
+            LOGGER.debug("same number of bins and coords, use coords as bins")
+            self.bins['s0'] = uniq[0]
+            self.bins['s1'] = uniq[1]
+            self.bins['s2'] = uniq[2]
         else:
-            LOGGER.debug('coordinates to be done')
-
-            def convstr(x):
-                '''Convert coordinates string in float.'''
-                return float(x.decode('utf-8').strip('(),'))
-
-            npt = np.loadtxt(
-                StringIO(vals),
-                dtype=np.dtype([('c0', 'f8'), ('c1', 'f8'), ('c2', 'f8')]),
-                usecols=list(range(1, 4)),
-                converters={1: convstr, 2: convstr, 3: convstr})
-            self.bins['s0'] = np.unique(npt['c0'])
-            self.bins['s1'] = np.unique(npt['c1'])
-            self.bins['s2'] = np.unique(npt['c2'])
+            LOGGER.debug("not same number of bins and coords")
 
     def _fill_mesh_array(self, meshvals, name, ebin):
         '''Fill mesh array.
@@ -1257,6 +1266,8 @@ def convert_mesh(meshres):
     convmesh = {'array': vals.arrays['default'],
                 'bins': vals.bins,
                 'units': vals.units}
+    if vals.coords is not None:
+        convmesh['coordinates'] = vals.coords
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
         convmesh['eintegrated_array'] = vals.arrays['eintegrated_mesh']
     if 'integrated_res' in meshres[0]:

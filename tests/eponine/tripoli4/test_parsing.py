@@ -105,7 +105,8 @@ def check_data(responses):
         assert 'results' in iresp
         assert not all('_res' in dtype for dtype in iresp['results'])
         for dname, data in iresp['results'].items():
-            if not isinstance(data, str) and dname != 'units':
+            if ((not isinstance(data, str)
+                 and dname not in ('units', 'coordinates'))):
                 assert isinstance(data, Dataset), 'Not a Dataset'
 
 

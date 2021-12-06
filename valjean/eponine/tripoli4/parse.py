@@ -343,7 +343,7 @@ class ParseResult:
     def _dset_from_dict(self, resn, res, resp):
         tdict = {}
         for arr in res:
-            if arr == 'units':
+            if arr in ('units', 'coordinates'):
                 tdict[arr] = res[arr]
                 continue
             if isinstance(res[arr], str) and arr != 'not_converged':
