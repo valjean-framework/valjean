@@ -226,6 +226,8 @@ autodoc_default_options = {'members': True,
                            'member-order': 'bysource',
                            'special-members': True}
 
+# nbsphinx options
+nbsphinx_allow_errors = True
 
 # pylint: disable=missing-docstring, unused-argument, too-many-arguments
 def skip_weakref(app, what, name, obj, skip, options):

@@ -63,47 +63,31 @@ exclude = ["**/.gitignore", "doc", "tests"]
 valjean = "valjean.cambronne.main:main"
 
 [tool.poetry.dependencies]
-python = "^3.5.2"
-pyparsing = "^2.4"
+python = "^3.6.1"
+pyparsing = "^3.0"
 toml = "^0.10"
-numpy = [
-    {version = "^1.18", python = "<3.8"},
-    {version = "^1.20", python = "^3.8"},
-]
-matplotlib = [
-    {version = "^3.0", python = "<3.8"},
-    {version = "^3.3", python = "^3.8"},
-]
-scipy = [
-    {version = "^1.4", python = "<3.6"},
-    {version = "^1.4", python = ">=3.6 <3.7"},
-    {version = "^1.4", python = ">=3.7 <3.8"},
-    {version = "^1.6", python = "^3.8"},
-]
-h5py = [
-    {version = "~2.10", python = "~3.5"},
-    {version = "~3.1", python = ">=3.6.0, <3.9"},
-    {version = "~3.1", python = "^3.9"},
-]
+numpy = "^1.19"
+matplotlib = "^3.3"
+scipy = "^1.5"
+h5py = "~3.1"
 
 # dependencies for the [graphviz] extra
 pydot = {version = "^1.4.2", optional = true}
 
 # dependencies for the [dev] extra
-pytest = "^6.1"
-pytest-cov = "^2.11"
-pytest-mpl = "^0.10"
-pytest-timeout = "^1.4"
+pytest = "^6.2"
+pytest-cov = "^3.0"
+pytest-mpl = "^0.13"
+pytest-timeout = "^2.0"
 rstcheck = "^3.3"
-Sphinx = "^3.5.2"
-sphinx-rtd-theme = "^0.5"
-pylint = "^2.6"
-flake8 = "^3.9"
-hypothesis = {version = "^5.3", extras = ["numpy"]}
-Jinja2 = "<3.0"
-nbsphinx = "^0.7"
-jupyter-client = "6.1.12"
-ipykernel = "^5.5.4"
+Sphinx = "^4.3"
+sphinx-rtd-theme = "^1.0"
+pylint = "^2.12"
+flake8 = "^4.0"
+hypothesis = {version = "^6.31", extras = ["numpy"]}
+nbsphinx = "^0.8"
+jupyter-client = "^7.1"
+ipykernel = "^5.5"
 
 [tool.poetry.extras]
 graphviz = ["pydot"]
@@ -179,7 +163,7 @@ legacy_tox_ini = """
 minversion = 3.17.0
 # isolated_build is required by poetry
 isolated_build = true
-envlist = py{35,36,37,38,39}
+envlist = py{36,37,38,39}
 
 [tox:jenkins]
 skip_missing_interpreters = true
