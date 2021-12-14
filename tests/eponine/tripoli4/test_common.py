@@ -331,8 +331,8 @@ def make_mesh_t4_output(meshes, ebins, tbins):
     If only one time bin, build the T4 mesh output string directly, else loop
     on tbins and fill the output.
 
-    :param list of numpy.ndarray meshes: meshes from Hypothesis
-    :param list ebins: energy bins
+    :param list(numpy.ndarray) meshes: meshes from Hypothesis
+    :param list(float) ebins: energy bins
     :param int tbin: time bin
     :returns: T4 output as a string
     '''
@@ -569,8 +569,8 @@ def spectrum_t4_output(spectra, bins, units):
     output if there are at least 2 bins, except for µ bins when there are more
     than 2 bins in φ (as it is done in "real" outputs).
 
-    :param list of numpy.ndarray spectrum: spectra list containing spectrum
-                                           arrays from Hypothesis
+    :param list(numpy.ndarray) spectrum: spectra list containing spectrum
+                                         arrays from Hypothesis
     :param dict bins: dictionary of lists representing binnings. Keys are
                       ``['e', 't', 'mu', 'phi']``.
     '''
