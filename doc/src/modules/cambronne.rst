@@ -6,7 +6,7 @@ cambronne — Commandes, Actions et MoBilisation Rapide des OpératioNs Exécuta
 .. figure:: ../images/cambronne.jpg
    :align: center
    :figwidth: 50%
-   :alt: Cosette
+   :alt: Cambronne
 
    Pierre Cambronne (1770-1842), général de Napoléon, dans une gravure de
    l'époque.
