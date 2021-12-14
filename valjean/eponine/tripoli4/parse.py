@@ -147,8 +147,11 @@ class Parser:
         '''Parse the given string and raise exception if parsing failed.'''
         try:
             with PYPARSING_LOCK:
-                # pylint: disable=protected-access
-                ParserElement._parse = ParserElement._parseNoCache
+                # Disable packrat caching: it degrades the performance of our
+                # grammar. We have to disable it globally here, because other
+                # packages (matplotlib for example) may have enabled it
+                # globally
+                ParserElement.disable_memoization()
                 result = gram.parseString(str_to_parse).asList()
         except ParseException as err:
             LOGGER.error("Parsing failed in %s, you are probably trying to "
