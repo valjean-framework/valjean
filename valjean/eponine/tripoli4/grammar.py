@@ -221,7 +221,7 @@ level as the response block. These parsers and the associated dictionary key
 '''
 
 from pyparsing import (Word, Keyword, White, alphas, alphanums,
-                       Suppress, Optional, LineEnd, LineStart, CaselessKeyword,
+                       Suppress, Optional, LineEnd, CaselessKeyword,
                        Group, OneOrMore, ZeroOrMore, Forward, originalTextFor,
                        tokenMap, delimitedList, printables, replaceWith)
 from pyparsing import pyparsing_common as pyparscom
@@ -486,8 +486,8 @@ _nbcontribpart_kw = Keyword("NUMBER OF CONTRIBUTING PARTICLES")
 _endcontribpart_kw = Keyword("--- end of CONTRIBUTING PARTICLES ---")
 
 # Symbol lines
-_star_line = Suppress(LineStart() + Word('*'))
-_equal_line = Suppress(LineStart() + Word('='))
+_star_line = Suppress(Word('*'))
+_equal_line = Suppress(Word('='))
 _minus_line = Suppress(White() + Word('-'))
 
 

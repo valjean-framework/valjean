@@ -150,10 +150,11 @@ class Parser:
                 # pylint: disable=protected-access
                 ParserElement._parse = ParserElement._parseNoCache
                 result = gram.parseString(str_to_parse).asList()
-        except ParseException:
+        except ParseException as err:
             LOGGER.error("Parsing failed in %s, you are probably trying to "
                          "read a new response. Please update the parser "
                          "before re-running.", self.jdd)
+            LOGGER.debug("Exception explanation:\n%s", err.explain(depth=None))
             # from None allows to raise a new exception without traceback and
             # message of the previous one here.
             raise ParserException("Error in parsing") from None
