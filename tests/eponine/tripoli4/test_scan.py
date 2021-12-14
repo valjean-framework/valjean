@@ -150,7 +150,7 @@ def check_gauss_etmuphi_spectrum(resp):
     assert resp['score_name'] == 'courant_Etmuphi'
     bds = resp["results"]['score']
     assert bds.shape == (1, 1, 1, 4, 4, 4, 2)
-    assert list(bds.bins.keys()) == ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
+    assert list(bds.bins.keys()) == ['u', 'v', 'w', 'e', 't', 'mu', 'phi']
     assert ([x for x, y in bds.bins.items() if y.size > 0]
             == list(bds.squeeze().bins.keys()))
     assert list(bds.squeeze().bins.keys()) == ['e', 't', 'mu', 'phi']
@@ -260,7 +260,7 @@ def test_tungstene(datadir):
     bd_mesh_squeeze = bd_mesh.squeeze()
     assert bd_mesh.shape == (1, 1, 17, 3, 1, 1, 1)
     assert bd_mesh_squeeze.shape == (17, 3)
-    assert list(bd_mesh_squeeze.bins.keys()) == ['s2', 'e']
+    assert list(bd_mesh_squeeze.bins.keys()) == ['w', 'e']
     bd_int = resp['results']['score_integrated']
     assert bd_int.shape == (1, 1, 1, 1, 1, 1, 1)
     assert bd_int.bins['e'].size == 2
@@ -826,7 +826,7 @@ def test_box_dyn(datadir):
     assert etmesh['energy_split_name'] == 'grid_rough'
     dsmesh = etmesh['results']['score'].squeeze()
     assert dsmesh.shape == (3, 3, 3, 2, 10)
-    assert list(dsmesh.bins.keys()) == ['s0', 's1', 's2', 'e', 't']
+    assert list(dsmesh.bins.keys()) == ['u', 'v', 'w', 'e', 't']
     # precursor weight
     precweight = t4b.select_by(response_function='PRECURSOR WEIGHT')
     assert len(precweight) == 11

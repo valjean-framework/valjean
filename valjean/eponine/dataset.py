@@ -768,9 +768,9 @@ class Dataset:
                             for b, s in zip(bins.values(), value.shape)
                             if b.size):
                 raise ValueError('Number of bins does not correspond to value '
-                                 'shape, bins=%s, shape=%s',
-                                 str([len(b) for b in bins.values()]),
-                                 str(value.shape))
+                                 'shape, bins={}, shape={}'.format(
+                                     [len(b) for b in bins.values()],
+                                     value.shape))
         self.value = value
         self.error = error
         self.bins = bins.copy() if bins is not None else OrderedDict()

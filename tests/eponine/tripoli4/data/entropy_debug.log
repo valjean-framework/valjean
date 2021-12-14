@@ -125,12 +125,12 @@ Number of responses: 8
   (0.000000e+00, 0.000000e+00)]
  [(0.000000e+00, 0.000000e+00) (0.000000e+00, 0.000000e+00)
   (0.000000e+00, 0.000000e+00)]]
-            bins             Dict with keys = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
-              s0 <class 'numpy.ndarray'>, shape: (24,), dtype: int64, squeezed:
+            bins             Dict with keys = ['u', 'v', 'w', 'e', 't', 'mu', 'phi']
+              u <class 'numpy.ndarray'>, shape: (24,), dtype: int64, squeezed:
 [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23]
-              s1 <class 'numpy.ndarray'>, shape: (3,), dtype: int64, squeezed:
+              v <class 'numpy.ndarray'>, shape: (3,), dtype: int64, squeezed:
 [0 1 2]
-              s2 <class 'numpy.ndarray'>, shape: (1,), dtype: int64, squeezed:
+              w <class 'numpy.ndarray'>, shape: (1,), dtype: int64, squeezed:
 0
               e <class 'numpy.ndarray'>, shape: (2,), dtype: float64, squeezed:
 [1.000000e-11 2.000000e+01]
@@ -144,14 +144,14 @@ Number of responses: 8
 (8.342621e-01,)
             shannon_entropy_array <class 'numpy.ndarray'>, shape: (1, 1, 1, 1, 1, 1, 1), dtype: [('entropy', '<f8')], squeezed:
 (9.047529e-01,)
-            units             Dict with keys = ['boltzmann_entropy', 'e', 'mu', 'phi', 's0', 's1', 's2', 'score', 'shannon_entropy', 'sigma', 't']
+            units             Dict with keys = ['boltzmann_entropy', 'e', 'mu', 'phi', 'score', 'shannon_entropy', 'sigma', 't', 'u', 'v', 'w']
               boltzmann_entropy 
               e MeV
               mu 
               phi rad
-              s0 cm
-              s1 unknown
-              s2 unknown
+              u cm
+              v unknown
+              w unknown
               score unknown
               shannon_entropy 
               sigma %
@@ -159,12 +159,12 @@ Number of responses: 8
           spectrum           Dict with keys = ['array', 'bins', 'units']
             array <class 'numpy.ndarray'>, shape: (1, 1, 1, 1, 1, 1, 1), dtype: [('score', '<f8'), ('sigma', '<f8'), ('score/lethargy', '<f8')], squeezed:
 (0.000000e+00, 0.000000e+00, 0.000000e+00)
-            bins             Dict with keys = ['s0', 's1', 's2', 'e', 't', 'mu', 'phi']
-              s0 <class 'numpy.ndarray'>, shape: (0,), dtype: float64, squeezed:
+            bins             Dict with keys = ['u', 'v', 'w', 'e', 't', 'mu', 'phi']
+              u <class 'numpy.ndarray'>, shape: (0,), dtype: float64, squeezed:
 []
-              s1 <class 'numpy.ndarray'>, shape: (0,), dtype: float64, squeezed:
+              v <class 'numpy.ndarray'>, shape: (0,), dtype: float64, squeezed:
 []
-              s2 <class 'numpy.ndarray'>, shape: (0,), dtype: float64, squeezed:
+              w <class 'numpy.ndarray'>, shape: (0,), dtype: float64, squeezed:
 []
               e <class 'numpy.ndarray'>, shape: (2,), dtype: float64, squeezed:
 [1.000000e-11 2.000000e+01]
@@ -174,13 +174,13 @@ Number of responses: 8
 []
               phi <class 'numpy.ndarray'>, shape: (0,), dtype: float64, squeezed:
 []
-            units             Dict with keys = ['e', 'mu', 'phi', 's0', 's1', 's2', 'score', 'sigma', 't']
+            units             Dict with keys = ['e', 'mu', 'phi', 'score', 'sigma', 't', 'u', 'v', 'w']
               e MeV
               mu 
               phi rad
-              s0 cm
-              s1 unknown
-              s2 unknown
+              u cm
+              v unknown
+              w unknown
               score unknown
               sigma %
               t s

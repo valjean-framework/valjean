@@ -145,7 +145,7 @@ def test_flip_mesh(array_bins):
     '''Test flipping mesh.
 
     Generate with hypothesis a mesh with maximum sides
-    ``[s0, s1, s2, E, t, mu, phi] = [3, 3, 3, 5, 5, 1, 1]``
+    ``[u, v, w, E, t, mu, phi] = [3, 3, 3, 5, 5, 1, 1]``
     as no mu or phi bins are available for the moment for meshes.
 
     Generate energy and time binnings. They can be increasing or decreasing
@@ -195,7 +195,7 @@ def test_flip_spectrum(array_bins):
     '''Test flipping spectrum.
 
     Generate with hypothesis a mesh with max dimensions
-    ``[s0, s1, s2, E, t, mu, phi] = [1, 1, 1, 5, 5, 3, 3]``.
+    ``[u, v, w, E, t, mu, phi] = [1, 1, 1, 5, 5, 3, 3]``.
 
     Generate energy, time, mu and phi angle binnings. They can be increasing or
     decreasing depending on the value of the boolean chosen by hypothesis in
@@ -272,12 +272,12 @@ def mesh_str(mesh, ebin, tbin):
     '''
     t4out = []
     shape = mesh.shape
-    for is0 in range(shape[0]):
-        for is1 in range(shape[1]):
-            for is2 in range(shape[2]):
-                index = (is0, is1, is2, ebin, tbin, 0, 0)
+    for iu_ in range(shape[0]):
+        for iv_ in range(shape[1]):
+            for iw_ in range(shape[2]):
+                index = (iu_, iv_, iw_, ebin, tbin, 0, 0)
                 t4out.append("\t({0},{1},{2})\t\t{3:.6e}\t{4:.6e}\n"
-                             .format(is0, is1, is2,
+                             .format(iu_, iv_, iw_,
                                      mesh[index]['score'],
                                      mesh[index]['sigma']))
     return ''.join(t4out)

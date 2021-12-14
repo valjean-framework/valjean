@@ -84,7 +84,7 @@ array** from `NumPy`, see `numpy structured array`_.
 
 Kinematic dimensions are:
 
-:s0, s1, s2:
+:u, v, w:
     space coordinates (typically (x, y, z), (r, θ, z) or (r, θ, φ), depending
     on frame reference)
 :e: energy
@@ -95,7 +95,7 @@ Kinematic dimensions are:
 Order should always be that one.
 
 
-The result for each bin ``(s0, s1, s2, e, t, mu, phi)`` is filled in a
+The result for each bin ``(u, v, w, e, t, mu, phi)`` is filled in a
 `numpy structured array`_ whose :obj:`numpy.dtype` can be:
 
 :meshes: normally ``'score'`` and ``'sigma'`` where *sigma* is in % and
@@ -184,7 +184,7 @@ mesh:
         (facultative)
 
       A mesh line in the list under ``'mesh_vals'`` key is constructed as a
-      list of ``[[s0, s1, s2], score, sigma]``. In ``'mesh_energyrange'``,
+      list of ``[[u, v, w], score, sigma]``. In ``'mesh_energyrange'``,
       energy range is given as ``['unit', e1, e2]``.
 
     :``'time_step'``: if a time splitting is available
@@ -249,7 +249,7 @@ mesh:
 
    :``'eintegrated_array'``: 7-dimensions `numpy structured array`_ with
      dtype ``('score', 'sigma')`` and list of number of bins (``lnbins``) is
-     ``[n_s0, n_s1, n_s2, 1, n_t, 1, 1]``
+     ``[n_u, n_v, n_w, 1, n_t, 1, 1]``
    :``'integrated'``: 7-dimensions `numpy structured array`_ with
      dtype ``('score', 'sigma')`` and list of number of bins (``lnbins``) is
      ``[1, 1, 1, 1, n_t, 1, 1]``
@@ -531,7 +531,7 @@ specified):
     considered (:obj:`numpy.ndarray` of
 
     * :class:`int` for volumes,
-    * :class:`tuple` of :class:`int` (s0, s1, s2) for mesh elements,
+    * :class:`tuple` of :class:`int` (u, v, w) for mesh elements,
 
   :``'kij_leigenvec'``: eigenvector corresponding dominant **left**
     eigenvector (:obj:`numpy.ndarray` of N elements)
@@ -681,7 +681,7 @@ class DictBuilder(ABC):
 class KinematicDictBuilder(DictBuilder):
     '''Class to build the dictionary for spectrum and mesh results as
     7-dimensions structured arrays.
-    7-dimensions are: space (3, written ``'s0', 's1', 's2'``), energy
+    7-dimensions are: space (3, written ``'u', 'v', 'w'``), energy
     (``'e'``), time (``'t'``), mu (``mu'``) and phi (``'phi'``) (direction
     angles).
 
@@ -717,10 +717,10 @@ class KinematicDictBuilder(DictBuilder):
                          "1 energy, 1 time, 2 direction angles)")
             raise
         super().__init__(colnames, lnbins)
-        self.bins = OrderedDict([('s0', []), ('s1', []), ('s2', []),
+        self.bins = OrderedDict([('u', []), ('v', []), ('w', []),
                                  ('e', []), ('t', []),
                                  ('mu', []), ('phi', [])])
-        self.units = {'s0': 'cm', 's1': 'unknown', 's2': 'unknown',
+        self.units = {'u': 'cm', 'v': 'unknown', 'w': 'unknown',
                       'e': 'MeV', 't': 's', 'mu': '', 'phi': 'rad',
                       'score': 'unknown', 'sigma': '%'}
 
@@ -810,18 +810,18 @@ class MeshDictBuilder(KinematicDictBuilder):
         olcell = np.array([int(b) for b in lcell[0].strip('()').split(',')])
         shape = olcell + 1
         # dimensions/number of bins of space coordinates are given by last bin
-        ns0bins, ns1bins, ns2bins = shape
+        nubins, nvbins, nwbins = shape
         # ntbins supposes for the moment no mu or phi bins
         ntbins = (data[-1]['time_step'][0]+1
                   if "time_step" in data[0]
                   else 1)
         nebins = get_energy_bins(data[0]['meshes'])
-        LOGGER.debug("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
-                     "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
+        LOGGER.debug("nubins = %d, nvbins = %d, nwbins = %d, ntbins = %d, "
+                     "nebins = %d", nubins, nvbins, nwbins, ntbins, nebins)
         colnames = (['score', 'sigma'] if len(lcell) < 7
                     else ['volume', 'score', 'sigma'])
         return cls(colnames,
-                   [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
+                   [nubins, nvbins, nwbins, nebins, ntbins, 1, 1])
 
     def fill_space_bins(self, nb_tokens, vals):
         '''Fill the mesh space bins.
@@ -830,7 +830,7 @@ class MeshDictBuilder(KinematicDictBuilder):
 
         * the default one, where only the cell indices are given: the space
           bins are set to all possible cell index in the 3 dimensions. For
-          example: if there are 3 cells in `s0`, the bins will be 0, 1, 2.
+          example: if there are 3 cells in `u`, the bins will be 0, 1, 2.
           Only center of bins are given here (no possibility of calculation of
           a width). In that case the mesh contains 3 tokens: a comma-separated
           list of cell indices (without intervening whitespace), the value and
@@ -849,9 +849,9 @@ class MeshDictBuilder(KinematicDictBuilder):
         :param list vals: mesh results
         '''
         LOGGER.debug("Filling space bins")
-        self.bins['s0'] = np.arange(self.arrays['default'].shape[0])
-        self.bins['s1'] = np.arange(self.arrays['default'].shape[1])
-        self.bins['s2'] = np.arange(self.arrays['default'].shape[2])
+        self.bins['u'] = np.arange(self.arrays['default'].shape[0])
+        self.bins['v'] = np.arange(self.arrays['default'].shape[1])
+        self.bins['w'] = np.arange(self.arrays['default'].shape[2])
         if nb_tokens <= 3:
             return
         LOGGER.debug('coordinates to be done')
@@ -871,9 +871,9 @@ class MeshDictBuilder(KinematicDictBuilder):
         if all([a.size == b.size
                 for a, b in zip(uniq, self.bins.values())]):
             LOGGER.debug("same number of bins and coords, use coords as bins")
-            self.bins['s0'] = uniq[0]
-            self.bins['s1'] = uniq[1]
-            self.bins['s2'] = uniq[2]
+            self.bins['u'] = uniq[0]
+            self.bins['v'] = uniq[1]
+            self.bins['w'] = uniq[2]
         else:
             LOGGER.debug("not same number of bins and coords")
 
@@ -881,7 +881,7 @@ class MeshDictBuilder(KinematicDictBuilder):
         '''Fill mesh array.
 
         :param list meshvals: mesh data for a given energy bin
-                         ``[[[s0, s1, s2], score, sigma],...]``
+                         ``[[[u, v, w], score, sigma],...]``
         :param str name: name of the array to be filled ('default',
                      'eintegrated_mesh') for the moment
         :param int ebin: energy bin to fill in the array
@@ -904,7 +904,7 @@ class MeshDictBuilder(KinematicDictBuilder):
         '''Fill mesh array.
 
         :param list meshvals: mesh data for a given energy bin
-                         ``[[[s0, s1, s2], score, sigma],...]``
+                         ``[[[u, v, w], score, sigma],...]``
         :param int ebin: energy bin to fill in the array
         '''
         LOGGER.debug("dans entropy for ebin: %d", ebin)
@@ -1108,12 +1108,12 @@ def convert_spectrum(spectrum, colnames=('score', 'sigma', 'score/lethargy')):
 
       * ``'array'``: 7 dimensions NumPy structured array with related
         binnings as NumPy arrays
-        ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma', 'score/lethargy')``
+        ``v[u, v, w, E, t, mu, phi] = ('score', 'sigma', 'score/lethargy')``
       * ``'bins'``: :class:`collections.OrderedDict` of the available bins
       * ``'units'``: dict containing units of dimensions (bins), score and
         sigma
       * ``'eintegrated_array'``: 7 dimensions NumPy structured array
-        ``v[s0, s1, s2, E, t, mu, phi] = ('score', 'sigma')``;
+        ``v[u, v, w, E, t, mu, phi] = ('score', 'sigma')``;
         facultative, seen when time required alone and sometimes
         when neither time nor mu nor phi are required
     '''
@@ -1148,40 +1148,40 @@ def _get_number_of_space_bins(meshvals):
     in the listing does not necessarly match a completed mesh dimension.
 
     :param list meshvals: list of meshes, with mesh
-                          ``[[s0, s1, s2] score sigma]``
-                          s0, s1 and s2 being the space coordinates
+                          ``[[u, v, w] score sigma]``
+                          u, v and w being the space coordinates
     :returns: 3 integers in following order
 
-        :ns0bins: number of bins in the s0 dimension
-        :ns1bins: number of bins in the s1 dimension
-        :ns2bins: number of bins in the s2 dimension
+        :nubins: number of bins in the u dimension
+        :nvbins: number of bins in the v dimension
+        :nwbins: number of bins in the w dimension
     '''
     lastspacebin = meshvals[-1][0]
-    ns0bins = lastspacebin[0]+1
-    ns2bins = (meshvals[-int(lastspacebin[2]+2)][0][2]+1
-               if lastspacebin[2]+1 < len(meshvals)
-               else lastspacebin[2]+1)
-    maxbins1 = (lastspacebin[1]*ns2bins+lastspacebin[2]+2
-                if lastspacebin[0] != 0
-                else lastspacebin[2]+2)
+    nubins = lastspacebin[0]+1
+    nwbins = (meshvals[-int(lastspacebin[2]+2)][0][2]+1
+              if lastspacebin[2]+1 < len(meshvals)
+              else lastspacebin[2]+1)
+    maxbinv = (lastspacebin[1]*nwbins+lastspacebin[2]+2
+               if lastspacebin[0] != 0
+               else lastspacebin[2]+2)
     if LOGGER.isEnabledFor(logging.DEBUG):
-        if len(meshvals) > maxbins1:
-            if meshvals[-int(maxbins1)][0][1] > lastspacebin[1]:
-                LOGGER.debug("will use meshvals[-int(maxbins1)] = %s instead "
+        if len(meshvals) > maxbinv:
+            if meshvals[-int(maxbinv)][0][1] > lastspacebin[1]:
+                LOGGER.debug("will use meshvals[-int(maxbinv)] = %s instead "
                              "of lastspacebin = %s",
-                             meshvals[-int(maxbins1)], lastspacebin)
+                             meshvals[-int(maxbinv)], lastspacebin)
             else:
                 LOGGER.debug("will use lastspacebin = %s instead of "
-                             "meshvals[-int(maxbins1)] = %s",
-                             lastspacebin, meshvals[-int(maxbins1)])
+                             "meshvals[-int(maxbinv)] = %s",
+                             lastspacebin, meshvals[-int(maxbinv)])
         else:
             LOGGER.debug("will use lastspacebin = %s as "
-                         "len(meshvals) > maxbins1", lastspacebin)
-    ns1bins = (meshvals[-int(maxbins1)][0][1]+1
-               if (len(meshvals) > maxbins1
-                   and meshvals[-int(maxbins1)][0][1] > lastspacebin[1])
-               else lastspacebin[1]+1)
-    return ns0bins, ns1bins, ns2bins
+                         "len(meshvals) > maxbinv", lastspacebin)
+    nvbins = (meshvals[-int(maxbinv)][0][1]+1
+              if (len(meshvals) > maxbinv
+                  and meshvals[-int(maxbinv)][0][1] > lastspacebin[1])
+              else lastspacebin[1]+1)
+    return nubins, nvbins, nwbins
 
 
 def get_energy_bins(meshes):
@@ -1208,15 +1208,15 @@ def convert_mesh(meshres):
     :returns: python dictonary with keys
 
         * ``'array'``: NumPy structured array of dimension 7
-          ``v[s0, s1 ,s2, E, t, mu, phi] = ('score', 'sigma')``
+          ``v[u, v ,w, E, t, mu, phi] = ('score', 'sigma')``
         * ``'bins'``: :class:`collections.OrderedDict` of the available bins
         * ``'units'``: dict containing units of dimensions (bins), score and
           sigma
         * ``'eintegrated_array'``: 7-dimensions NumPy structured array
-          ``v[s0,s1,s2,E,t,mu,phi] = ('score', 'sigma')``
+          ``v[u,v,w,E,t,mu,phi] = ('score', 'sigma')``
           corresponding to mesh integrated on energy (facultative)
         * ``'integrated'``: 7 dimensions NumPy structured array
-          ``v[s0,s1,s2,E,t,mu,phi] = (score, sigma)``
+          ``v[u,v,w,E,t,mu,phi] = (score, sigma)``
           corresponding to mesh integrated over energy and space;
           *facultative*, available when time grid is required (so
           corresponds to integrated results splitted in time)
@@ -1232,23 +1232,23 @@ def convert_mesh(meshres):
     olcell = np.array([int(b) for b in lcell[0].strip('()').split(',')])
     shape = olcell + 1
     # dimensions/number of bins of space coordinates are given by last bin
-    ns0bins, ns1bins, ns2bins = shape
+    nubins, nvbins, nwbins = shape
     # ntbins supposes for the moment no mu or phi bins
     ntbins = (meshres[-1]['time_step'][0]+1
               if "time_step" in meshres[0]
               else 1)
     nebins = get_energy_bins(meshres[0]['meshes'])
-    LOGGER.debug("ns0bins = %d, ns1bins = %d, ns2bins = %d, ntbins = %d, "
-                 "nebins = %d", ns0bins, ns1bins, ns2bins, ntbins, nebins)
+    LOGGER.debug("nubins = %d, nvbins = %d, nwbins = %d, ntbins = %d, "
+                 "nebins = %d", nubins, nvbins, nwbins, ntbins, nebins)
     colnames = (['score', 'sigma'] if len(lcell) < 7
                 else ['volume', 'score', 'sigma'])
     # up to now no mesh splitted in mu or phi angle seen, update easy now
     vals = MeshDictBuilder(colnames,
-                           [ns0bins, ns1bins, ns2bins, nebins, ntbins, 1, 1])
+                           [nubins, nvbins, nwbins, nebins, ntbins, 1, 1])
     # mesh integrated on energy (normally the last mesh)
     if 'mesh_energyintegrated' in meshres[0]['meshes'][-1]:
         vals.add_array('eintegrated_mesh', colnames,
-                       [ns0bins, ns1bins, ns2bins, 1, ntbins, 1, 1])
+                       [nubins, nvbins, nwbins, 1, ntbins, 1, 1])
     # integrated result (space and energy)
     if 'integrated_res' in meshres[0]:
         vals.add_array('integrated_res', colnames,
