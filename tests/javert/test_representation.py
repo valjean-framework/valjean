@@ -41,7 +41,6 @@ from valjean.javert.templates import (TableTemplate, PlotTemplate,
 from valjean.javert.representation import (TableRepresenter, EmptyRepresenter,
                                            PlotRepresenter, FullRepresenter,
                                            Representation)
-from valjean.javert.mpl import MplPlot
 from valjean.javert.verbosity import Verbosity
 from valjean.javert.test_external import TestExternal
 from valjean.gavroche.test import Test, TestResult
@@ -83,42 +82,6 @@ def test_full_repr(test_name, request):
     assert isinstance(templates, list)
     assert any(isinstance(template, TableTemplate) for template in templates)
     assert any(isinstance(template, PlotTemplate) for template in templates)
-
-
-@pytest.mark.mpl_image_compare(tolerance=50,
-                               filename='student_comp_points.png',
-                               baseline_dir='plots/ref_plots')
-def test_student_full(student_test_result, rfull_repr, rst_formatter,
-                      rstcheck):
-    '''Test plot of student result when bins are given by centers of bins.'''
-    templates = rfull_repr(student_test_result)
-    rst = '\n'.join(str(rst_formatter.template(template))
-                    for template in templates
-                    if isinstance(template, TableTemplate))
-    LOGGER.debug('generated rst:\n%s', rst)
-    errs = rstcheck.check(rst)
-    assert not list(errs)
-    mplt = MplPlot([template for template in templates
-                    if isinstance(template, PlotTemplate)][0])
-    return mplt.draw()[0]
-
-
-@pytest.mark.mpl_image_compare(tolerance=50,
-                               filename='student_comp_edges.png',
-                               baseline_dir='plots/ref_plots')
-def test_student_edges_full(student_test_edges_result, rfull_repr,
-                            rst_formatter, rstcheck):
-    '''Test plot of student result when bins are given by edges.'''
-    templates = rfull_repr(student_test_edges_result)
-    rst = '\n'.join(str(rst_formatter.template(template))
-                    for template in templates
-                    if isinstance(template, TableTemplate))
-    LOGGER.debug('generated rst:\n%s', rst)
-    errs = rstcheck.check(rst)
-    assert not list(errs)
-    mplt = MplPlot([template for template in templates
-                    if isinstance(template, PlotTemplate)][0])
-    return mplt.draw()[0]
 
 
 def test_student_verb(verb_level, student_test_2d_result, rst_formatter,
@@ -368,26 +331,6 @@ def test_full_concatenation(student_test_result, student_test_result_fail,
             assert type(it1) == type(it2)  # pylint: disable=C0123
             conc = join(it1, it2)
             assert conc.nb_plots == it1.nb_plots + it2.nb_plots
-
-
-@pytest.mark.mpl_image_compare(tolerance=50,
-                               filename='student_fplit_3ds.png',
-                               baseline_dir='plots/ref_plots')
-def test_full_repr_3d(student_test_result_3ds, rfull_repr, rst_formatter,
-                      rstcheck):
-    '''Test full representation with 3 datasets (1 reference, 2 test datasets).
-    '''
-    templ = rfull_repr(student_test_result_3ds)
-    rst = '\n'.join(str(rst_formatter.template(template)) for template in templ
-                    if isinstance(template, TableTemplate))
-    LOGGER.debug('generated rst:\n%s', rst)
-    rst = '.. role:: hl\n\n' + rst
-    errs = rstcheck.check(rst)
-    assert not list(errs)
-    assert len([_tp for _tp in templ if isinstance(_tp, PlotTemplate)]) == 1
-    mplt = MplPlot([template for template in templ
-                    if isinstance(template, PlotTemplate)][0])
-    return mplt.draw()[0]
 
 
 @pytest.fixture(scope='function', params=['spam', 'egg'])
