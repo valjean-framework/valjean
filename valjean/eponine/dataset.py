@@ -92,9 +92,9 @@ No matter how the dataset is generated, attributes can be changed afterwards:
 >>> nds = ds1.copy()
 >>> nds.name = 'egg'
 >>> nds.what = ''
->>> print('name: ds1={!r}, nds={!r}'.format(ds1.name, nds.name))
+>>> print(f'name: ds1={ds1.name!r}, nds={nds.name!r}')
 name: ds1='ds1', nds='egg'
->>> print('what: ds1={!r}, nds={!r}'.format(ds1.what, nds.what))
+>>> print(f'what: ds1={ds1.what!r}, nds={nds.what!r}')
 what: ds1='spam', nds=''
 >>> np.array_equal(ds1.value, nds.value)
 True
@@ -307,8 +307,8 @@ Bins of the dataset on the left are kept.
 Like in `NumPy` array addition, values need to have the same shape:
 
     >>> ds4 = Dataset(np.arange(5), np.array([0.01]*5), name='ds4')
-    >>> "shape ds1 {0}, ds4 {1} -> comp = {2}".format(
-    ...   ds1.value.shape, ds4.value.shape, ds1.value.shape == ds4.value.shape)
+    >>> f"shape ds1 {ds1.value.shape}, ds4 {ds4.value.shape} -> "
+    ... f"comp = {ds1.value.shape == ds4.value.shape}"
     'shape ds1 (2, 5), ds4 (5,) -> comp = False'
     >>> ds1 + ds4
     Traceback (most recent call last):
@@ -324,9 +324,8 @@ If bins are given, they need to have the same keys and the same values.
     >>> ds1 + ds5
     Traceback (most recent call last):
         [...]
-    ValueError: Datasets to add do not have same bins names
-    >>> "bins ds1: {0}, bins ds5: {1}".format(list(ds1.bins.keys()),
-    ...                                     list(ds5.bins.keys()))
+    ValueError: Datasets to add do not have same bin names
+    >>> f"bins ds1: {list(ds1.bins.keys())}, bins ds5: {list(ds5.bins.keys())}"
     "bins ds1: ['e', 't'], bins ds5: ['E', 't']"
 
     >>> bins6 = OrderedDict([('e', np.array([1, 2, 30])), ('t', np.arange(5))])
@@ -336,7 +335,7 @@ If bins are given, they need to have the same keys and the same values.
     >>> ds1 - ds6
     Traceback (most recent call last):
         [...]
-    ValueError: Datasets to subtract do not seem to have the same bins
+    ValueError: Datasets to subtract do not have the same bins
     >>> same_coords(ds1, ds6)
     False
     >>> list(ds1.bins.keys()) == list(ds6.bins.keys())
@@ -764,13 +763,12 @@ class Dataset:
             if bins and len(bins) != value.ndim:
                 raise ValueError("Number of dimensions of bins does not "
                                  "correspond to number of dimensions of value")
-            if bins and any(b.size != s and b.size != s+1
+            if bins and any(b.size not in (s, s+1)
                             for b, s in zip(bins.values(), value.shape)
                             if b.size):
+                _lens = [len(b) for b in bins.values()]
                 raise ValueError('Number of bins does not correspond to value '
-                                 'shape, bins={}, shape={}'.format(
-                                     [len(b) for b in bins.values()],
-                                     value.shape))
+                                 f'shape, bins={_lens}, shape={value.shape}')
         self.value = value
         self.error = error
         self.bins = bins.copy() if bins is not None else OrderedDict()
@@ -786,37 +784,34 @@ class Dataset:
 
     def __repr__(self):
         if isinstance(self.value, np.ndarray):
-            return ("class: {}, data type: {}\n"
-                    "        shape: {}\n"
-                    "        value: {},\n"
-                    "        error: {},\n"
-                    "        bins: {},\n"
-                    "        name: {!r}, what: {!r}"
-                    .format(self.__class__, type(self.value), self.value.shape,
-                            self.value.squeeze(), self.error.squeeze(),
-                            self.bins, self.name, self.what))
+            return (f"class: {self.__class__}, data type: {type(self.value)}\n"
+                    f"        shape: {self.value.shape}\n"
+                    f"        value: {self.value.squeeze()},\n"
+                    f"        error: {self.error.squeeze()},\n"
+                    f"        bins: {self.bins},\n"
+                    f"        name: {self.name!r}, what: {self.what!r}")
         return (
-            "class: {}, data type: {}\n"
-            "value: {:6e}, error: {:6e}, bins: {}\n"
-            "name: {!r}, what: {!r}\n"
-            .format(self.__class__, type(self.value),
-                    self.value, self.error, self.bins,
-                    self.name, self.what))
+            f"class: {self.__class__}, data type: {self.value}\n"
+            f"value: {self.value:6e}, error: {self.error:6e}, "
+            f"bins: {self.bins}\n"
+            f"name: {self.name!r}, what: {self.what!r}\n"
+        )
 
     def __str__(self):
         if isinstance(self.value, np.ndarray):
-            return ("shape: {}, dim: {}, type: {}, bins: {},"
-                    "name: {}, what: {}"
-                    .format(self.value.shape, self.value.ndim,
-                            type(self.value),
-                            ["{}: {}".format(k, str(v).replace('\n', ''))
-                             for k, v in self.bins.items()],
-                            self.name, self.what))
+            bins_str = []
+            for key, val in self.bins.items():
+                str_val = str(val).replace('\n', '')
+                bins_str.append(f"{key}: {str_val}")
+            return (f"shape: {self.value.shape}, dim: {self.value.ndim}, "
+                    f"type: {type(self.value)}, bins: {bins_str}, "
+                    f"name: {self.name}, what: {self.what}")
+
         return (
-            "value: {:6e}, error: {:6e}, bins: {}, type: {},"
-            "name: {}, what: {}"
-            .format(self.value, self.error, self.bins, type(self.value),
-                    self.name, self.what))
+            f"value: {self.value:6e}, error: {self.error:6e}, "
+            f"bins: {self.bins}, type: {type(self.value)},"
+            f"name: {self.name}, what: {self.what}"
+        )
 
     def squeeze(self):
         '''Squeeze dataset: remove useless dimensions.
@@ -906,16 +901,15 @@ class Dataset:
 
     def _check_datasets_consistency(self, other, operation=""):
         if other.shape != self.shape:
-            raise ValueError("Datasets to {} do not have same shape"
-                             .format(operation))
+            raise ValueError("fDatasets to {operation} do not have same shape")
         if other.bins != OrderedDict():
             if any((s != o) for s, o in zip(self.bins, other.bins)):
-                raise ValueError("Datasets to {} do not have same bins names"
-                                 .format(operation))
+                raise ValueError(f"Datasets to {operation} do not have same "
+                                 "bin names")
             if not all(np.array_equal(self.bins[s], other.bins[o])
                        for s, o in zip(self.bins, other.bins)):
-                raise ValueError("Datasets to {} do not seem to have the same "
-                                 "bins".format(operation))
+                raise ValueError(f"Datasets to {operation} do not have the "
+                                 "same bins")
 
     def __add__(self, other):
         LOGGER.debug("in %s.__add__", self.__class__.__name__)

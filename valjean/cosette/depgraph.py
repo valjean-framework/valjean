@@ -125,7 +125,7 @@ You can also iterate over graphs:
 
    >>> for k, vs in sorted(g):
    ...     for v in sorted(vs):
-   ...         print("You can't have {} without {}!".format(k, v))
+   ...         print(f"You can't have {k} without {v}!")
    You can't have bacon without spam!
    You can't have sausage without eggs!
    You can't have sausage without spam!
@@ -373,8 +373,7 @@ class DepGraph:
         return str(assoc_list)
 
     def __repr__(self):
-        return ('DepGraph(nodes={nodes}, edges={edges})'
-                .format(nodes=repr(self._nodes), edges=repr(self._edges)))
+        return f'DepGraph(nodes={self._nodes!r}, edges={self._edges!r})'
 
     def __iter__(self):
         for i, node in enumerate(self._nodes):
@@ -522,8 +521,8 @@ class DepGraph:
         try:
             self._edges[i_node].remove(i_on)
         except KeyError as kerr:
-            raise KeyError('trying to remove missing edge {} -> {}'
-                           .format(node, on)) from kerr
+            raise KeyError(f'trying to remove missing edge {node} -> '
+                           f'{on}') from kerr
         return self
 
     def invert(self):

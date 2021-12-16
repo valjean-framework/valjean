@@ -616,7 +616,7 @@ def repr_statstestsby2labels(result):
         else:
             dko[res['labels'][0]] += 1
     labs = result.test.by_labels
-    yname = '# of {} in {}'.format(labs[1], labs[0])
+    yname = f'# of {labs[1]} in {labs[0]}'
     curve_ok = CurveElements(np.array(list(dok.values())), bins=[keys],
                              index=0, legend='OK')
     curve_ko = CurveElements(np.array(list(dko.values())), bins=[keys],

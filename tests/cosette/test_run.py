@@ -62,9 +62,9 @@ def do_test_task(task, env, config):
     output_dir = config.query('path', 'output-root')
     stdout.relative_to(str(output_dir))  # raises ValueError if impossible
     stderr.relative_to(str(output_dir))  # raises ValueError if impossible
-    with stdout.open() as f_out:
+    with stdout.open(encoding='utf-8') as f_out:
         stdout_content = f_out.read()
-    with stderr.open() as f_out:
+    with stderr.open(encoding='utf-8') as f_out:
         stderr_content = f_out.read()
     return stdout_content, stderr_content
 

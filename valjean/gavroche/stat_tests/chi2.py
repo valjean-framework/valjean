@@ -139,11 +139,11 @@ Let's consider a spectrum of 5 bins with their error and apply the χ²-test.
 >>> tchi2 = TestChi2(ds1, ds2, alpha=0.05, name="comp",
 ...                  description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
->>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf[0]))
+>>> print(f'{tchi2_res.chi2_per_ndf[0]:.7f}')
 0.3080328
 >>> bool(tchi2_res)
 True
->>> print('{:.7f}'.format(tchi2_res.pvalue[0]))
+>>> print(f'{tchi2_res.pvalue[0]:.7f}')
 0.9083889
 
 
@@ -184,7 +184,7 @@ calculation.
 >>> tchi2 = TestChi2(ds3, ds4, alpha=0.05, ignore_empty=True,
 ...                  name="comp", description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
->>> print('{:.7f}'.format(tchi2_res.chi2[0]))
+>>> print(f'{tchi2_res.chi2[0]:.7f}')
 1.3401639
 >>> tchi2_res.test.ndf[0]
 4
@@ -192,7 +192,7 @@ calculation.
 5
 >>> print(np.array2string(tchi2_res.test.nonzero_bins[0]))
 [ True  True False  True  True]
->>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf[0]))
+>>> print(f'{tchi2_res.chi2_per_ndf[0]:.7f}')
 0.3350410
 >>> bool(tchi2_res)
 True
@@ -212,11 +212,11 @@ Test with multiple dimensions datasets
 >>> tchi2 = TestChi2(ds5, ds6, alpha=0.05, name="comp",
 ...                  description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
->>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf[0]))
+>>> print(f'{tchi2_res.chi2_per_ndf[0]:.7f}')
 0.2900273
 >>> bool(tchi2_res)
 True
->>> print('{:.7f}'.format(tchi2_res.pvalue[0]))
+>>> print(f'{tchi2_res.pvalue[0]:.7f}')
 0.9419786
 
 And when we have at least one empty bin, using the ``ignore_empty`` argument:
@@ -232,7 +232,7 @@ And when we have at least one empty bin, using the ``ignore_empty`` argument:
 >>> tchi2 = TestChi2(ds7, ds8, alpha=0.05, ignore_empty=True,
 ...                  name="comp", description="Comparison using Chi2 test")
 >>> tchi2_res = tchi2.evaluate()
->>> print('{:.7f}'.format(tchi2_res.chi2[0]))
+>>> print(f'{tchi2_res.chi2[0]:.7f}')
 5.3401639
 >>> tchi2_res.test.ndf[0]
 5
@@ -241,7 +241,7 @@ And when we have at least one empty bin, using the ``ignore_empty`` argument:
 >>> print(np.array2string(tchi2_res.test.nonzero_bins[0]))
 [[ True  True False]
  [ True  True  True]]
->>> print('{:.7f}'.format(tchi2_res.chi2_per_ndf[0]))
+>>> print(f'{tchi2_res.chi2_per_ndf[0]:.7f}')
 1.0680328
 >>> bool(tchi2_res)
 True

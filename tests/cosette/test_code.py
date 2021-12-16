@@ -69,11 +69,11 @@ def do_git_checkout(name, config, project, *, env=None, ref, flags):
         assert env_up[name]['repository'] == project
         checkout_dir = env_up[name]['output_dir']
         filename = os.path.join(checkout_dir, 'CMakeLists.txt')
-        with open(filename) as cmake_file:
+        with open(filename, encoding='utf-8') as cmake_file:
             content = cmake_file.read()
         assert content == CMAKELISTS
     except AssertionError:
-        with open(env_up[name]['checkout_log']) as c_f:
+        with open(env_up[name]['checkout_log'], encoding='utf-8') as c_f:
             LOGGER.debug('checkout_log:\n%s', c_f.read())
         raise
 
@@ -102,7 +102,7 @@ def do_cmake_build(name, config, source, *, env=None, configure_flags,
         build_log_dir = os.path.dirname(env_up[name]['build_log'])
         assert os.path.samefile(build_log_dir, log_root)
     except AssertionError:
-        with open(env_up[name]['build_log']) as build_f:
+        with open(env_up[name]['build_log'], encoding='utf-8') as build_f:
             LOGGER.debug('build_log:\n%s', build_f.read())
         raise
 

@@ -55,7 +55,7 @@ def event_frac(name, frac):
     frac_rounded = int(n_tiers * frac)
     lower_perc = int(100. * min(n_tiers - 1, frac_rounded) / n_tiers)
     higher_perc = int(100. * min(n_tiers, frac_rounded + 1) / n_tiers)
-    event('{}% < {} < {}%'.format(lower_perc, name, higher_perc))
+    event(f'{lower_perc}% < {name} < {higher_perc}%')
 
 
 ###########
@@ -123,10 +123,10 @@ def test_merge_done_tasks(env, data):
     '''Test merging two environments.'''
     # generate a new environment with keys taken from those of the first
     env_keys = list(env.keys())
-    note('env_keys: {}'.format(env_keys))
+    note(f'env_keys: {env_keys}')
     assume(env_keys)
     env_to_merge = data.draw(envs(lists(sampled_from(env_keys))))
-    note('env_to_merge: {}'.format(env_to_merge))
+    note(f'env_to_merge: {env_to_merge}')
     old_env = env.copy()
     env.merge_done_tasks(env_to_merge)
 
@@ -159,5 +159,5 @@ def test_merge_done_tasks(env, data):
             count_merge_done += 1
 
     # do some bookkeeping to make sure we are testing deeply enough
-    event('no merge (status == DONE): {}'.format(count_merge_done))
-    event('real merge: {}'.format(count_real_merge))
+    event(f'no merge (status == DONE): {count_merge_done}')
+    event(f'real merge: {count_real_merge}')

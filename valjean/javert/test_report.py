@@ -69,8 +69,8 @@ class TestReport:
         for sec in self.content:
             if not isinstance(sec, (TestReport, TestResult)):
                 raise TypeError('expected a list of TestReport or TestResult '
-                                'objects, but one of the items is a {} instead'
-                                .format(type(sec)))
+                                'objects, but one of the items is a '
+                                f'{type(sec)} instead')
 
 
 class TestReportTask(PythonTask):

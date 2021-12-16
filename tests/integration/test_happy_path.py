@@ -46,9 +46,9 @@ from .conftest import call_valjean, run_valjean
 def assert_task_done(env, name):
     '''Assert that the task with the given name is present in the environment
     and has been successfully completed.'''
-    assert name in env, '{} missing in env keys: {}'.format(name, list(env))
-    assert 'status' in env[name], ("'status' missing in env[{!r}] = {}"
-                                   .format(name, env[name]))
+    assert name in env, f'{name} missing in env keys: {list(env)}'
+    assert 'status' in env[name], (f"'status' missing in env[{name!r}] = "
+                                   f"{env[name]}")
     assert env[name]['status'] == TaskStatus.DONE
 
 
@@ -79,7 +79,7 @@ def do_test_run(*args, job_config,  # pylint: disable=too-many-arguments
         assert 'stdout' in env[task]
         assert 'result' in env[task]
         assert env[task]['stdout'] == env[task]['result']
-        content = Path(env[task]['stdout']).read_text()
+        content = Path(env[task]['stdout']).read_text(encoding='utf-8')
         assert content == prefix + expected
 
 
@@ -191,7 +191,7 @@ def test_env(job_config, config_tmp, env_filename, job_file, capsys):
         args = ['env', str(Path(output_root) / name / env_filename)]
         call_valjean(*args)
         captured = capsys.readouterr()
-        assert captured.out.startswith('{{{!r}:'.format(name)), captured
+        assert captured.out.startswith(f'{{{name!r}:'), captured
         assert "'output_dir':" in captured.out
         assert "'status':" in captured.out
         assert "'start_clock':" in captured.out

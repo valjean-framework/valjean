@@ -707,9 +707,10 @@ class MplPlot:
         :rtype: tuple(matplotlib.figure.Figure, list(matplotlib.axes.Axes))
         '''
         if any(s.ptype not in MplPlot.PTYPES for s in self.data.subplots):
+            ptypes = [s.ptype for s in self.data.subplots]
             raise MplPlotException(
-                "ptype from {} not taken into account. Expected ones are {}."
-                .format([s.ptype for s in self.data.subplots], self.PTYPES))
+                f"ptype from {ptypes} not taken into account. Expected ones "
+                f"are {self.PTYPES}.")
         fig, splts = self.initialize_figure()
         fmts = self.style.styles_sequence(self.data.curves_index())
         for splt, sdat in zip(splts.flatten(), self.data.subplots):

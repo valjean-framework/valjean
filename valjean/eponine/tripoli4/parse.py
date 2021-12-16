@@ -130,8 +130,8 @@ class Parser:
         '''
         if not scan_res:
             raise ParserException(
-                "No result found in Tripoli-4 listing {}\n{}"
-                .format(self.jdd, scan_res.fatal_error()))
+                f"No result found in Tripoli-4 listing {self.jdd}\n"
+                f"{scan_res.fatal_error()}")
         if not scan_res.normalend:
             LOGGER.warning("Tripoli-4 listing did not finish with "
                            "NORMAL COMPLETION.")
@@ -179,9 +179,9 @@ class Parser:
                 'No "time" variable found in the Tripoli-4 output, '
                 'please check it.') from sit
         if bdata[time_key] != self.scan_res.times[time_key][batch_number]:
-            msg = ('{} looks inconsistent between parsing ({}) and scanning '
-                   '({})'.format(time_key, bdata[time_key],
-                                 self.scan_res.times[time_key][batch_number]))
+            msg = (f'{time_key} looks inconsistent between parsing '
+                   f'({bdata[time_key]}) and scanning '
+                   f'({self.scan_res.times[time_key][batch_number]})')
             if self.scan_res.partial:
                 LOGGER.warning(msg)
             else:

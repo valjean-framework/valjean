@@ -105,8 +105,8 @@ def test_equal_bins_raises(dataset):
     modified = dataset.copy()
     new_bins = {k: (b+1.0)*1.1 for k, b in modified.bins.items()}
     modified.bins = new_bins
-    note('dataset.bins: {}'.format(dataset.bins))
-    note('modified.bins: {}'.format(modified.bins))
+    note(f'dataset.bins: {dataset.bins}')
+    note(f'modified.bins: {modified.bins}')
     thetest = test.TestEqual(dataset, modified, name="equal",
                              description="dataset equality")
     with pytest.raises(test.CheckBinsException):
@@ -120,8 +120,8 @@ def test_approx_equal_bins_raises(dataset):
     modified = dataset.copy()
     new_bins = {k: (b+1.0)*1.1 for k, b in modified.bins.items()}
     modified.bins = new_bins
-    note('dataset.bins: {}'.format(dataset.bins))
-    note('modified.bins: {}'.format(modified.bins))
+    note(f'dataset.bins: {dataset.bins}')
+    note(f'modified.bins: {modified.bins}')
     thetest = test.TestApproxEqual(dataset, modified, name="approx_equal",
                                    description="dataset approx equality")
     with pytest.raises(test.CheckBinsException):
@@ -134,8 +134,8 @@ def test_not_equal_data(dataset):
     modified = dataset.copy()
     modified.value += 1.0
     modified.value *= 1.1
-    note('dataset.value: {}'.format(dataset.value))
-    note('modified.value: {}'.format(modified.value))
+    note(f'dataset.value: {dataset.value}')
+    note(f'modified.value: {modified.value}')
     thetest = test.TestEqual(dataset, modified, name="equal",
                              description="dataset equality")
     thetest_res = thetest.evaluate()
@@ -149,8 +149,8 @@ def test_not_approx_equal_data(dataset):
     modified = dataset.copy()
     modified.value += 1.0
     modified.value *= 1.1
-    note('dataset.value: {}'.format(dataset.value))
-    note('modified.value: {}'.format(modified.value))
+    note(f'dataset.value: {dataset.value}')
+    note(f'modified.value: {modified.value}')
     thetest = test.TestEqual(dataset, modified, name="equal",
                              description="dataset equality")
     thetest_res = thetest.evaluate()

@@ -299,8 +299,8 @@ def test_browser_serializable(iteml, tmp_path_factory):
                    / 'env.pickle')
     env.to_file(env_file)
     env_roundtrip = Env.from_file(env_file)
-    note('env = {}'.format(env))
-    note('env_roundtrip = {}'.format(env_roundtrip))
+    note(f'env = {env}')
+    note(f'env_roundtrip = {env_roundtrip}')
     assert env == env_roundtrip
 
 
@@ -317,12 +317,12 @@ def test_browser_merge(iteml1, iteml2, glob1, glob2):
     variables.'''
     rb1 = Browser(iteml1, global_vars=glob1)
     rb2 = Browser(iteml2, global_vars=glob2)
-    note('rb1: {!r}'.format(rb1))
-    note('rb2: {!r}'.format(rb2))
+    note(f'rb1: {rb1!r}')
+    note(f'rb2: {rb2!r}')
     assert len(rb1.globals) == len(glob1)
     assert sorted(glob2) == sorted(rb2.globals)
     jrb = rb1.merge(rb2)
-    note('jrb: {!r}'.format(jrb))
+    note(f'jrb: {jrb!r}')
     assert len(jrb) == len(rb1) + len(rb2)
     assert len(jrb.globals) == len(set(glob1).union(glob2))
     if glob1 == glob2:
@@ -332,6 +332,6 @@ def test_browser_merge(iteml1, iteml2, glob1, glob2):
     assert jrb.content[len(rb1)]['index'] == len(rb1)
     jr20 = {k: v for k, v in jrb.content[len(rb1)].items() if k != 'index'}
     r20 = {k: v for k, v in rb2.content[0].items() if k != 'index'}
-    note('jr20: {}'.format(jr20))
-    note('r20: {}'.format(r20))
+    note(f'jr20: {jr20}')
+    note(f'r20: {r20}')
     assert jr20 == r20

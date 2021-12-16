@@ -168,7 +168,7 @@ def loop_on_files(filelist):
         try:
             browser_test(pres)
         except AssertionError as aerb:
-            print("Error in browser: {}".format(aerb))
+            print(f"Error in browser: {aerb}")
             failed_browser_jdds.append(ifile)
     return {'jdds_ok': nb_jdds_ok,
             'failed_jdds': failed_jdds,
@@ -188,13 +188,11 @@ def print_summary(nb_used, excluded, summary):
     for ifile in excluded:
         print(ifile)
     if summary['failed_time']:
-        print("Jdds where times check failed: {}"
-              .format(len(summary['failed_time'])))
+        print(f"Jdds where times check failed: {len(summary['failed_time'])}")
         for ifile in summary['failed_time']:
             print(ifile)
     if summary['failed_browser']:
-        print("Jdds where browser failed: {}"
-              .format(len(summary['failed_browser'])))
+        print(f"Jdds where browser failed: {len(summary['failed_browser'])}")
         for ifile in summary['failed_browser']:
             print(ifile)
 

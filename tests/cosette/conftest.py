@@ -491,5 +491,5 @@ def delay_tasks(draw, min_duration=1e-15, max_duration=1e-5,
 def failing_tasks(draw, min_size=1, max_size=10):
     '''Composite Hypothesis strategy to generate a list of failing tasks.'''
     n_tasks = draw(integers(min_value=min_size, max_value=max_size))
-    tasks = [FailingTask('FailingTask {}'.format(i)) for i in range(n_tasks)]
+    tasks = [FailingTask(f'FailingTask {i}') for i in range(n_tasks)]
     return tasks

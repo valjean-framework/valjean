@@ -695,8 +695,8 @@ class Use:
         self.func_name = func_name
         expected_deps_type = ['hard', 'soft']
         if deps_type not in expected_deps_type:
-            raise ValueError('deps_type argument to Use must be one of {}'
-                             .format(expected_deps_type))
+            raise ValueError('deps_type argument to Use must be one of '
+                             f'{expected_deps_type}')
         self.deps_type = deps_type
         self.serialize = bool(serialize)
 

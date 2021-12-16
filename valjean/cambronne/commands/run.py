@@ -128,8 +128,8 @@ class RunCommand(JobCommand):
                            len(missing), '\n  '.join(missing))
 
         total_graph = len(tasks)
-        msgs = ('{:>7}: {}/{} ({:5.1f}%)'
-                .format(status.name, count, total_graph, 100*count/total_graph)
+        msgs = (f'{status.name:>7}: {count}/{total_graph} '
+                f'({100*count/total_graph:5.1f}%)'
                 for status, count in count_status.items())
         LOGGER.info('final environment statistics:\n  %s',
                     '\n  '.join(msgs))
@@ -148,7 +148,7 @@ class RunCommand(JobCommand):
         log_root = config.query('path', 'log-root')
         ensure(log_root, is_dir=True)
         failed_fname = Path(log_root, 'failed-tasks')
-        with failed_fname.open('w') as failed_file:
+        with failed_fname.open('w', encoding='utf-8') as failed_file:
             for task in failed:
                 failed_file.write(task + '\n')
 

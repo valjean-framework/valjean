@@ -224,11 +224,9 @@ sorting order is also given for the Holm-Bonferroni method.
 >>> while not it.finished:
 ...     if it.iterindex == 0:
 ...         print("index  | pvalue(B) |   α(B)    |  reject B | order(HB) |"
-...               "   α(HB)   | reject HB\n{0:->77}".format('-'))
-...     print("{i} | {bp:.3e} | {ba:.3e} | {br!s:^9} | {hbo:^7}   |"
-...           " {hba:.3e} |   {hbr!s:<}"
-...           .format(i=it.multi_index, bp=it[0], ba=it[1], br=it[2],
-...                   hbo=it[3], hba=it[4], hbr=it[5]))
+...               f"   α(HB)   | reject HB\n{'-':->77}")
+...     print(f"{it.multi_index} | {it[0]:.3e} | {it[1]:.3e} | {it[2]!s:^9} | "
+...           f"{it[3]:^7}   | {it[4]:.3e} |   {it[5]!s:<}")
 ...     _ = it.iternext()
 index  | pvalue(B) |   α(B)    |  reject B | order(HB) |   α(HB)   | reject HB
 -----------------------------------------------------------------------------
@@ -266,14 +264,14 @@ Tests with multi-dimension datasets
 ...                        test=tstudent_45, alpha=0.05)
 >>> tbonf.ntests
 6
->>> print('{:.6f}'.format(tbonf.bonf_signi_level))
+>>> print(f'{tbonf.bonf_signi_level:.6f}')
 0.004167
 >>> tbonf_res = tbonf.evaluate()
 >>> bool(tbonf_res)
 False
 >>> tbonf_res.nb_rejected
 [1]
->>> print('{:.3f} %'.format(tbonf_res.rejected_proportion[0]))
+>>> print(f'{tbonf_res.rejected_proportion[0]:.3f} %')
 16.667 %
 
 >>> tholmbonf = TestHolmBonferroni(name="holm-bonf",
@@ -286,7 +284,7 @@ False
 False
 >>> thb_res.nb_rejected
 [2]
->>> print('{:.3f} %'.format(thb_res.rejected_proportion[0]))
+>>> print(f'{thb_res.rejected_proportion[0]:.3f} %')
 33.333 %
 
 The detailed comparison also works for multi-dimensions arrays:
@@ -298,11 +296,9 @@ The detailed comparison also works for multi-dimensions arrays:
 >>> while not it.finished:
 ...     if it.iterindex == 0:
 ...         print("index     | pvalue(B) |   α(B)   | reject B | order(HB) |"
-...               "   α(HB)  | reject HB\n{0:->79}".format('-'))
-...     print("{i} |  {bp:.2e} | {ba:.2e} | {br!s:^7}  | {hbo:^7}   |"
-...           " {hba:.2e} |   {hbr!s:<}"
-...           .format(i=it.multi_index, bp=it[0], ba=it[1], br=it[2],
-...                   hbo=it[3], hba=it[4], hbr=it[5]))
+...               f"   α(HB)  | reject HB\n{'-':->79}")
+...     print(f"{it.multi_index} |  {it[0]:.2e} | {it[1]:.2e} | {it[2]!s:^7}  "
+...           f"| {it[3]:^7}   | {it[4]:.2e} |   {it[5]!s:<}")
 ...     _ = it.iternext()
 index     | pvalue(B) |   α(B)   | reject B | order(HB) |   α(HB)  | reject HB
 -------------------------------------------------------------------------------

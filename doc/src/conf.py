@@ -75,8 +75,7 @@ master_doc = 'index'
 
 # General information about the project.
 author = u'Ève Le Ménédeu, Davide Mancusi'
-copyright = (u'2017-{}, {}'  # pylint: disable=redefined-builtin
-             .format(datetime.now().year, author))
+copyright = f'2017-{datetime.now().year}, {author}'
 project = 'valjean'
 release = get_distribution(project).version
 version = '.'.join(release.split('.')[:2])

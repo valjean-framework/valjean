@@ -50,6 +50,7 @@ from valjean.gavroche.diagnostics.stats import (test_stats_by_labels,
 from valjean.cosette.env import Env
 from valjean.cosette.task import TaskStatus
 
+from .conftest import check_rst
 from ..gavroche.conftest import (equal_test,  # pylint: disable=unused-import
                                  equal_test_result, approx_equal_test,
                                  approx_equal_test_result, some_dataset,
@@ -131,12 +132,7 @@ def test_student_scalar(student_test_scalar, rfull_repr, rst_formatter,
                         rstcheck):
     '''Test representation of Student result when datasets contain scalars.'''
     templates = rfull_repr(student_test_scalar.evaluate())
-    rst = '\n'.join(str(rst_formatter.template(template))
-                    for template in templates
-                    if isinstance(template, TableTemplate))
-    LOGGER.debug('generated rst:\n%s', rst)
-    errs = rstcheck.check(rst)
-    assert not list(errs)
+    check_rst(rstcheck, rst_formatter, templates)
     assert len([template for template in templates
                 if isinstance(template, PlotTemplate)]) == 0
 
@@ -146,12 +142,7 @@ def test_student_fail_scalar(student_test_fail_scalar, rfull_repr,
     '''Test representation of Student result when datasets contain scalars and
     test fails.'''
     templates = rfull_repr(student_test_fail_scalar.evaluate())
-    rst = '\n'.join(str(rst_formatter.template(template))
-                    for template in templates
-                    if isinstance(template, TableTemplate))
-    LOGGER.debug('generated rst:\n%s', rst)
-    errs = rstcheck.check(rst)
-    assert not list(errs)
+    check_rst(rstcheck, rst_formatter, templates)
     assert len([template for template in templates
                 if isinstance(template, PlotTemplate)]) == 0
 

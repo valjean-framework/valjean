@@ -60,10 +60,9 @@ def sanitize_filename(name):
     '''
     if '\0' in name:
         raise ValueError(r"NULL character ('\0') is not allowed in filename "
-                         "{!r}".format(name))
+                         f"{name!r}")
     if '/' in name:
-        raise ValueError(r"slash ('/') is not allowed in filename {!r}"
-                         .format(name))
+        raise ValueError(f"slash ('/') is not allowed in filename {name!r}")
     if name in ('.', '..'):
-        raise ValueError('{!r} is not a valid filename'.format(name))
+        raise ValueError(f'{name!r} is not a valid filename')
     return name

@@ -655,8 +655,8 @@ class TestStatsTestsByLabels(Test):
         '''
         if not set(self.by_labels) <= set(index):
             raise TestStatsTestsByLabelsException(
-                'TestStatsTestsByLabels: {} not found in tests labels'
-                .format(self.by_labels))
+                f'TestStatsTestsByLabels: {self.by_labels} not found in test '
+                'labels')
         rok = index['_result'][TestOutcome.SUCCESS]
         rko = index['_result'][TestOutcome.FAILURE]
         res = self._rloop_over_labels(index, self.by_labels, rok, rko)

@@ -58,8 +58,8 @@ class DictKwargAction(argparse.Action):
         try:
             key, value = option.split('=', maxsplit=1)
         except ValueError:
-            raise ValueError('cannot parse -k argument {!r} as a '
-                             'NAME=VALUE pair'.format(option)) from None
+            raise ValueError(f'cannot parse -k argument {option!r} as a '
+                             'NAME=VALUE pair') from None
         kwargs[key] = value
 
 
@@ -79,7 +79,7 @@ class JobCommand(Command):
                             'given')
         parser.add_argument('-k', '--job-kwarg', metavar='NAME=VALUE',
                             dest='job_kwargs', action=DictKwargAction,
-                            default=dict(), help='keyword arguments that will '
+                            default={}, help='keyword arguments that will '
                             'be passed to the job() function; may be '
                             'specified multiple times')
 
@@ -110,11 +110,11 @@ def run_job(job_file, job_args, job_kwargs):
         if str(err).startswith('job()'):
             signature = inspect.signature(module.job)
             msg = ['argument mismatch to job() function',
-                   '  signature:\n    job{}'.format(signature)]
+                   f'  signature:\n    job{signature}']
             docstr = inspect.getdoc(module.job)
             if docstr is not None:
-                msg.append('  docstring:\n    {}'
-                           .format(docstr.replace('\n', '\n    ')))
+                docstr = docstr.replace('\n', '\n    ')
+                msg.append(f'  docstring:\n    {docstr}')
             err = TypeError('\n'.join(msg))
         raise err
     LOGGER.debug('job tasks: %s', tasks)
@@ -135,9 +135,8 @@ def check_unique_task_names(tasks):
         names.add(task.name)
     if dups:
         dups_str = '\n  '.join(dups)
-        err = ('Task names must be unique; the following task names appear '
-               'more than once:\n  {}'.format(dups_str))
-        raise ValueError(err)
+        raise ValueError('Task names must be unique; the following task names '
+                         f'appear more than once:\n  {dups_str}')
 
 
 def collect_tasks(job_file, job_args, job_kwargs):

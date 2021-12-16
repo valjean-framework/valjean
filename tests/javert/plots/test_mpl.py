@@ -56,17 +56,17 @@ from valjean.javert.templates import (PlotTemplate, join, TableTemplate,
 from valjean.javert.mpl import MplPlot, MplPlotException
 from valjean.javert import plot_repr as pltr
 from valjean.javert.representation import PlotRepresenter
+from ..conftest import check_rst
 from ...gavroche.conftest import (some_1d_dataset, one_dim_dataset,
                                   other_1d_dataset, some_1d_dataset_edges,
-                                  other_1d_dataset_edges, different_1d_dataset)
-from ...gavroche.conftest import (student_test, student_test_result,
+                                  other_1d_dataset_edges, different_1d_dataset,
+                                  student_test, student_test_result,
                                   student_test_fail, student_test_result_fail,
                                   student_test_edges,
                                   student_test_edges_result,
                                   student_test_3ds, student_test_result_3ds,
                                   student_test_with_pvals,
-                                  student_test_result_with_pvals)
-from ...gavroche.conftest import datasets
+                                  student_test_result_with_pvals, datasets)
 
 
 def test_plot_1d_dataset(some_1d_dataset):
@@ -91,8 +91,7 @@ def test_plot_bins_edges(oneds):
         curves=[pelt], axnames=tuple(list(oneds.bins.keys()) + ['score']))])
     assert plt.nb_plots == 1
     crv0 = plt.subplots[0].curves[0]
-    assert (crv0.values.size == crv0.bins[0].size
-            or crv0.values.size+1 == crv0.bins[0].size)
+    assert crv0.bins[0].size in (crv0.values.size, crv0.values.size+1)
     assert len(plt.subplots[0].axnames) == len(crv0.bins)+1
 
 
@@ -189,7 +188,7 @@ def test_student_with_fpi_delta(student_test_result):
 
 
 @pytest.mark.mpl_image_compare
-def test_student_edges_with_fpi_values(student_test_edges_result):
+def test_student_edges_wfpi_values(student_test_edges_result):
     '''Test plot of Student result when bins are given by edges.'''
     template = pltr.repr_datasets_values(student_test_edges_result)
     mplt = MplPlot(template[0])
@@ -628,7 +627,7 @@ def test_diff_axes_limits_2d():
 
 
 @pytest.mark.mpl_image_compare
-def test_diff_axes_limits_2d_backendkw():
+def test_diff_axes_limits_2d_bekw():
     '''Test limits modifications using 2D plots.'''
     spelt1 = SubPlotElements(
         curves=[CurveElements(
@@ -824,12 +823,7 @@ def test_student_comp_points(student_test_result, rfull_repr, rst_formatter,
                              rstcheck):
     '''Test plot of student result when bins are given by centers of bins.'''
     templates = rfull_repr(student_test_result)
-    rst = '\n'.join(str(rst_formatter.template(template))
-                    for template in templates
-                    if isinstance(template, TableTemplate))
-    LOGGER.debug('generated rst:\n%s', rst)
-    errs = rstcheck.check(rst)
-    assert not list(errs)
+    check_rst(rstcheck, rst_formatter, templates)
     mplt = MplPlot([template for template in templates
                     if isinstance(template, PlotTemplate)][0])
     return mplt.draw()[0]
@@ -840,12 +834,7 @@ def test_student_comp_edges(student_test_edges_result, rfull_repr,
                             rst_formatter, rstcheck):
     '''Test plot of student result when bins are given by edges.'''
     templates = rfull_repr(student_test_edges_result)
-    rst = '\n'.join(str(rst_formatter.template(template))
-                    for template in templates
-                    if isinstance(template, TableTemplate))
-    LOGGER.debug('generated rst:\n%s', rst)
-    errs = rstcheck.check(rst)
-    assert not list(errs)
+    check_rst(rstcheck, rst_formatter, templates)
     mplt = MplPlot([template for template in templates
                     if isinstance(template, PlotTemplate)][0])
     return mplt.draw()[0]

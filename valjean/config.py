@@ -39,7 +39,7 @@ section, which may be used to set default values for any configuration option.
 A few options are set from the beginning:
 
     >>> for opt, val in sorted(config['path'].items()):
-    ...     print('{} = {}'.format(opt, val))
+    ...     print(f'{opt} = {val}')
     log-root = /.../log
     output-root = /.../output
     report-root = /.../report
@@ -91,11 +91,11 @@ class Config(MutableMapping):
         conf_path = self['path']
         work_dir = Path.cwd()
         if 'log-root' not in conf_path:
-            conf_path['log-root'] = '{}/log'.format(work_dir)
+            conf_path['log-root'] = f'{work_dir}/log'
         if 'output-root' not in conf_path:
-            conf_path['output-root'] = '{}/output'.format(work_dir)
+            conf_path['output-root'] = f'{work_dir}/output'
         if 'report-root' not in conf_path:
-            conf_path['report-root'] = '{}/report'.format(work_dir)
+            conf_path['report-root'] = f'{work_dir}/report'
 
     def __getitem__(self, key):
         return self.conf[key]
@@ -124,7 +124,7 @@ class Config(MutableMapping):
         return toml.dumps(self.conf)
 
     def __repr__(self):
-        return 'Config({})'.format(self.conf)
+        return f'Config({self.conf})'
 
     def query(self, section, option):
         '''Return the value of `option` from `section`.'''

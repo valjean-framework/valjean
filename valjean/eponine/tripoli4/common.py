@@ -868,8 +868,7 @@ class MeshDictBuilder(KinematicDictBuilder):
         uniq = [np.unique(self.coords['c0']),
                 np.unique(self.coords['c1']),
                 np.unique(self.coords['c2'])]
-        if all([a.size == b.size
-                for a, b in zip(uniq, self.bins.values())]):
+        if all(a.size == b.size for a, b in zip(uniq, self.bins.values())):
             LOGGER.debug("same number of bins and coords, use coords as bins")
             self.bins['u'] = uniq[0]
             self.bins['v'] = uniq[1]
@@ -1921,9 +1920,9 @@ def _get_ace_kin_bins(columns, values):
     total_dim = np.prod([val.size-1 for val in bins.values()])
     if total_dim != values.shape[0]:
         raise AdjointCritEdDictBuilderException(
-            "Issue with the bins: the total dimension ({0}) does not match "
-            "the length of the table in the output ({1}), please check the "
-            "-a option has been used.".format(total_dim, values.shape[0]))
+            f"Issue with the bins: the total dimension ({total_dim}) does not "
+            f"match the length of the table in the output ({values.shape[0]}),"
+            " please check the -a option has been used.")
     return bins
 
 
@@ -1935,9 +1934,9 @@ def _get_ace_vol_bins(values):
     total_dim = bins['Vol'].size * (bins['E'].size-1)
     if total_dim != values.shape[0]:
         raise AdjointCritEdDictBuilderException(
-            "Issue with the bins: the total dimension ({0}) does not match "
-            "the length of the table in the output ({1}), please check the "
-            "-a option has been used.".format(total_dim, values.shape[0]))
+            f"Issue with the bins: the total dimension ({total_dim}) does not "
+            f"match the length of the table in the output ({values.shape[0]}),"
+            " please check the -a option has been used.")
     return bins
 
 

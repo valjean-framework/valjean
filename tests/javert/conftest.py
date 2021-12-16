@@ -43,6 +43,7 @@ import numpy as np
 from ..context import valjean  # noqa: F401
 from ..eponine.conftest import finite
 from ..gavroche.conftest import some_dataset, other_dataset, run_tasks
+from valjean import LOGGER
 from valjean.javert.verbosity import Verbosity
 from valjean.javert.representation import (FullRepresenter, EmptyRepresenter,
                                            FullTableRepresenter,
@@ -323,3 +324,13 @@ def ranges(draw, min_value=None, max_value=None):
 def verb_level(request):
     '''Return lists of valid :class:`~.Test` objects.'''
     return request.param
+
+
+def check_rst(rstcheck, rst_formatter, templates):
+    '''Factorized checks for rst generation'''
+    rst = '\n'.join(str(rst_formatter.template(template))
+                    for template in templates
+                    if isinstance(template, TableTemplate))
+    LOGGER.debug('generated rst:\n%s', rst)
+    errs = rstcheck.check(rst)
+    assert not list(errs)

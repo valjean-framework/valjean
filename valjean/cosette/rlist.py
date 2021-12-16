@@ -149,7 +149,7 @@ class RList(MutableSequence):
     '''
 
     def __init__(self, args=None, *, key=id):
-        self._seq = list()
+        self._seq = []
         self._index = defaultdict(list)
         self._key = key
         if args is not None:
@@ -191,7 +191,7 @@ class RList(MutableSequence):
         return len(self._seq)
 
     def __repr__(self):
-        return 'RList({!r})'.format(self._seq)
+        return f'RList({self._seq!r})'
 
     def __str__(self):
         return self._seq.__str__()
@@ -237,12 +237,12 @@ class RList(MutableSequence):
         '''
         indices = self._index.get(self._key(value), None)
         if indices is None:
-            raise ValueError('{} is not in list'.format(value))
+            raise ValueError(f'{value} is not in list')
         found = next((ind for ind in indices
                       if ind >= start and (stop is None or ind < stop)),
                      None)
         if found is None:
-            raise ValueError('{} is not in list'.format(value))
+            raise ValueError(f'{value} is not in list')
         return found
 
     def indices(self, value):

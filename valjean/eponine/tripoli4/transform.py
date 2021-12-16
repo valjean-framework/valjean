@@ -534,7 +534,7 @@ def finalize_response_dict(s, loc, toks):
     '''
     LOGGER.debug("In finalize_response_dict")
     assert len(toks[0]['results'].asDict()) == 1, \
-        "More than one entry in dict: %r" % len(toks[0]['results'].asDict())
+        f"More than one entry in dict: {len(toks[0]['results'].asDict())!r}"
     res = toks[0]['results']
     key, val = next(res.items())
     # in keff case, results are stored in a list

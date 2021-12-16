@@ -208,7 +208,7 @@ class CheckoutTask(PythonTask):
         elif vcs == 'copy':
             raise NotImplementedError('copy checkout not implemented yet')
         else:
-            raise ValueError('unrecognized VCS: {}'.format(vcs))
+            raise ValueError(f'unrecognized VCS: {vcs}')
 
         def checkout(*, config):
             # setup log dir and file
@@ -222,7 +222,7 @@ class CheckoutTask(PythonTask):
                 self.checkout_root = config.query('path', 'output-root')
             checkout_dir = ensure(self.checkout_root, self.name, is_dir=True)
 
-            with log_file.open('w') as log:
+            with log_file.open('w', encoding='utf-8') as log:
                 with Chrono() as chrono:
                     status = checkout_vcs(checkout_dir, log)
 
@@ -230,7 +230,7 @@ class CheckoutTask(PythonTask):
                 LOGGER.warning('CheckoutTask %s did not succeed (status: %s)',
                                self.name, status)
                 if LOGGER.isEnabledFor(logging.DEBUG):
-                    with log_file.open() as log:
+                    with log_file.open(encoding='utf-8') as log:
                         LOGGER.debug('checkout log:\n%s', log.read())
 
             env_up = {self.name: {'checkout_log': str(log_file),
@@ -309,8 +309,7 @@ class BuildTask(PythonTask):
         elif build_system in ('autoconf', 'configure'):
             raise NotImplementedError('configure build not implemented yet')
         else:
-            raise ValueError('unrecognized build system: {}'
-                             .format(build_system))
+            raise ValueError(f'unrecognized build system: {build_system}')
 
         def build(*, config, env):
             # setup log dir and files
@@ -331,14 +330,14 @@ class BuildTask(PythonTask):
                 source_dir = os.path.abspath(env[source.name]['output_dir'])
 
             with Chrono() as chrono:
-                with log_file.open('w') as log:
+                with log_file.open('w', encoding='utf-8') as log:
                     status = build_sys(source_dir, build_dir, log)
 
             if status != TaskStatus.DONE:
                 LOGGER.warning('BuildTask %s did not succeed (status: %s)',
                                self.name, status)
                 if LOGGER.isEnabledFor(logging.DEBUG):
-                    with log_file.open() as log:
+                    with log_file.open(encoding='utf-8') as log:
                         LOGGER.debug('build log:\n%s', log.read())
 
             env_up = {self.name: {'build_log': str(log_file),

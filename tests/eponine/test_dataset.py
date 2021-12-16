@@ -84,16 +84,16 @@ def test_multiplication(gds):
     assert gd.same_coords(gds[0], gds[1])
     sgds = gds[0] * gds[1]
     assert gd.same_coords(gds[0], sgds)
-    note('gds0: {}'.format(gds[0]))
-    note('gds1: {}'.format(gds[1]))
-    note('product = {}'.format(sgds))
+    note(f'gds0: {gds[0]}')
+    note(f'gds1: {gds[1]}')
+    note(f'product = {sgds}')
     val = gds[0].value * gds[1].value
-    note('v0*v1 = {}'.format(val))
+    note(f'v0*v1 = {val}')
     assert np.allclose(sgds.value, val)
     error = np.sqrt((gds[0].error*gds[1].value)**2
                     + (gds[1].error*gds[0].value)**2)
-    note("error = {}".format(error))
-    note("sgds err = {}".format(sgds.error))
+    note(f"error = {error}")
+    note(f"sgds err = {sgds.error}")
     assert np.allclose(sgds.error, error, equal_nan=True)
 
 
@@ -107,16 +107,16 @@ def test_division(gds):
     assert gd.same_coords(gds[0], gds[1])
     sgds = gds[0] / gds[1]
     assert gd.same_coords(gds[0], sgds)
-    note('gds0: {}'.format(gds[0]))
-    note('gds1: {}'.format(gds[1]))
-    note('ratio = {}'.format(sgds))
+    note(f'gds0: {gds[0]}')
+    note(f'gds1: {gds[1]}')
+    note(f'ratio = {sgds}')
     val = gds[0].value / gds[1].value
-    note('v0/v1 = {}'.format(val))
+    note(f'v0/v1 = {val}')
     assert np.allclose(sgds.value, val, equal_nan=True)
     error = np.sqrt((gds[0].error/gds[1].value)**2
                     + (gds[1].error*gds[0].value/gds[1].value**2)**2)
-    note("error = {}".format(error))
-    note("sgds err = {}".format(sgds.error))
+    note(f"error = {error}")
+    note(f"sgds err = {sgds.error}")
     assert np.allclose(sgds.error, error, equal_nan=True)
 
 
@@ -151,8 +151,8 @@ def test_difference_commutativity(gds):
     assert gd.same_coords(gds[0], gds[1])
     gds_01 = gds[0] - gds[1]
     gds_10 = gds[1] - gds[0]
-    note("a - b = {}".format(gds_01))
-    note("b - a = {}".format(gds_10))
+    note(f"a - b = {gds_01}")
+    note(f"b - a = {gds_10}")
     assert gd.same_coords(gds[0], gds_01)
     assert gd.same_coords(gds[0], gds_10)
     assert np.allclose(gds_01.value, -gds_10.value)
@@ -285,13 +285,13 @@ def test_left_distributivity(gds):
     roots.
     '''
     np.seterr(divide='ignore', invalid='ignore')
-    note("a = {}".format(gds[0]))
-    note("b = {}".format(gds[1]))
-    note("c = {}".format(gds[2]))
+    note(f"a = {gds[0]}")
+    note(f"b = {gds[1]}")
+    note(f"c = {gds[2]}")
     gds_d = gds[0] * (gds[1] + gds[2])
     gds_c = gds[0] * gds[1] + gds[0] * gds[2]
-    note("a*(b+c) = {}".format(gds_d))
-    note("a*b + a*c = {}".format(gds_c))
+    note(f"a*(b+c) = {gds_d}")
+    note(f"a*b + a*c = {gds_c}")
     assert gd.same_coords(gds_d, gds[0])
     assert gd.same_coords(gds_c, gds[0])
     assert gd.same_coords(gds_d, gds_c)
@@ -308,13 +308,13 @@ def test_right_distributivity(gds):
     roots.
     '''
     np.seterr(divide='ignore', invalid='ignore')
-    note("a = {}".format(gds[0]))
-    note("b = {}".format(gds[1]))
-    note("c = {}".format(gds[2]))
+    note(f"a = {gds[0]}")
+    note(f"b = {gds[1]}")
+    note(f"c = {gds[2]}")
     gds_d = (gds[0] + gds[1]) * gds[2]
     gds_c = gds[0] * gds[2] + gds[1] * gds[2]
-    note("(a+b)*c = {}".format(gds_d))
-    note("a*c + b*c = {}".format(gds_c))
+    note(f"(a+b)*c = {gds_d}")
+    note(f"a*c + b*c = {gds_c}")
     assert gd.same_coords(gds_d, gds[0])
     assert gd.same_coords(gds_c, gds[0])
     assert gd.same_coords(gds_d, gds_c)
@@ -328,10 +328,10 @@ def test_inverse_add(gds):
 
     No checks are performed on errors: they are cumulative with errors on b.
     '''
-    note("a = {}".format(gds[0]))
-    note("b = {}".format(gds[1]))
+    note(f"a = {gds[0]}")
+    note(f"b = {gds[1]}")
     gds_b = (gds[0] + gds[1]) - gds[1]
-    note("(a + b) - b = {}".format(gds_b))
+    note(f"(a + b) - b = {gds_b}")
     assert gd.same_coords(gds_b, gds[0])
     assert np.allclose(gds_b.value, gds[0].value)
 
@@ -348,10 +348,10 @@ def test_inverse_mult(gds):
     nan to be compared to something else.
     '''
     np.seterr(divide='ignore', invalid='ignore')
-    note("a = {}".format(gds[0]))
-    note("b = {}".format(gds[1]))
+    note(f"a = {gds[0]}")
+    note(f"b = {gds[1]}")
     gds_b = (gds[0] * gds[1]) / gds[1]
-    note("(a * b) / b = {}".format(gds_b))
+    note(f"(a * b) / b = {gds_b}")
     assert gd.same_coords(gds_b, gds[0])
     assert np.allclose(gds_b.value, gds[0].value)
 
@@ -364,11 +364,11 @@ def test_slicing(sampler):
     gds = sampler.draw(datasets())
     slices = sampler.draw(slice_tuples(gds.value.shape))
     gdssl = gds[slices]
-    note('initial dataset shape: {}'.format(gds.value.shape))
-    note('initial bins: {}'.format(gds.bins))
-    note('applied slices: {}'.format(slices))
-    note('sliced dataset shape: {}'.format(gdssl.value.shape))
-    note('sliced bins: {}'.format(gdssl.bins))
+    note(f'initial dataset shape: {gds.value.shape}')
+    note(f'initial bins: {gds.bins}')
+    note(f'applied slices: {slices}')
+    note(f'sliced dataset shape: {gdssl.value.shape}')
+    note(f'sliced bins: {gdssl.bins}')
     assert all(x >= y for x, y in zip(gds.value.shape, gdssl.value.shape))
     assert gdssl.value.shape == gdssl.error.shape
     assert len(gdssl.value.shape) == len(gdssl.bins) or not gdssl.bins

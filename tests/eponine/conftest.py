@@ -101,10 +101,10 @@ def datasets(draw, elements=None, shape=None, dtype=None, coords=None):
     else:
         bins = draw(coords)
 
-    note('data shape: {}'.format(data_val.shape))
-    note('data_val: {}'.format(data_val))
-    note('data_err: {}'.format(data_err))
-    note('bins: {}'.format(bins))
+    note(f'data shape: {data_val.shape}')
+    note(f'data_val: {data_val}')
+    note(f'data_err: {data_err}')
+    note(f'bins: {bins}')
 
     return Dataset(data_val, data_err, bins=bins)
 
@@ -219,8 +219,8 @@ def perturb(draw, array, *, absolute=None, atol=1e-8, rtol=1e-5):
     width = array.dtype.itemsize*8
     pert = draw(arrays(array.dtype, array.shape,
                        elements=floats(-tol, tol, width=width)))
-    note('perturbation: {}'.format(pert))
-    note('is absolute: {}'.format(abs_pert))
+    note(f'perturbation: {pert}')
+    note(f'is absolute: {abs_pert}')
     if abs_pert:
         pert_array = array + pert
     else:

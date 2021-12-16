@@ -72,12 +72,12 @@ def test_rsttable_col_widths(matrix):
     column widths for rows with known shapes.'''
     expected = np.amax(matrix, axis=0)
     headers = ['☺'*n for n in matrix[0, :]]
-    note('headers: {}'.format(headers))
+    note(f'headers: {headers}')
     rows = [['☹'*n for n in row] for row in matrix[1:, :]]
-    note('rows: {}'.format(rows))
+    note(f'rows: {rows}')
     result = RstTable.compute_column_widths(headers, rows)
-    note('expecting: {}'.format(expected))
-    note('result: {}'.format(result))
+    note(f'expecting: {expected}')
+    note(f'result: {result}')
     assert np.equal(expected, result).all()
 
 
@@ -363,10 +363,10 @@ def test_rst_report(rstcheck, report, rst_full, tmpdir):
 @given(dset=datasets())  # pylint: disable=no-value-for-parameter
 def test_repr_bins(dset):
     '''Check bins representation'''
-    note('dataset: {}'.format(dset))
+    note(f'dataset: {dset}')
     names, bins = repr_bins(dset)
     dset_squeezed = dset.squeeze()
-    note('squeezed dataset: {}'.format(dset_squeezed))
+    note(f'squeezed dataset: {dset_squeezed}')
     squeezed_ndim = len(dset.shape) - dset.shape.count(1)
     assert len(names) == squeezed_ndim
     assert len(bins) == squeezed_ndim

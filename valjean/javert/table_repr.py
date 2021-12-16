@@ -118,11 +118,11 @@ def repr_bins(dsref):
         if dsref.value.shape[:idim] == tuple([1]*idim):
             shape = [1]*idim + shape
         if dsref.bins[dim].size == dsref.value.shape[idim]+1:
-            dbins = ["{0:.4g} - {1:.4g}".format(a, b)
+            dbins = [f"{a:.4g} - {b:.4g}"
                      for a, b in zip(dsref.bins[dim][:-1],
                                      dsref.bins[dim][1:])]
         else:
-            dbins = (["{0:.4g}".format(a) for a in dsref.bins[dim]]
+            dbins = ([f"{a:.4g}" for a in dsref.bins[dim]]
                      if dsref.bins[dim].dtype.kind != 'U'
                      else dsref.bins[dim])
         bins.append(np.array(dbins).reshape(shape))
@@ -176,7 +176,7 @@ def repr_equal(result):
     heads = nbins + [result.test.dsref.name]
     for ds in result.test.datasets:
         heads.extend([ds.name,
-                      'equal({})?'.format(ds.name)
+                      f'equal({ds.name})?'
                       if len(result.test.datasets) > 1 else 'equal?'])
     falses = np.full_like(result.test.dsref.value, False, dtype=bool)
     highlights = [falses] * (len(nbins) + 1)
@@ -231,7 +231,7 @@ def repr_approx_equal(result):
     heads = nbins + [result.test.dsref.name]
     for ds in result.test.datasets:
         heads.extend([ds.name,
-                      'approx equal({})?'.format(ds.name)
+                      f'approx equal({ds.name})?'
                       if len(result.test.datasets) > 1
                       else 'approx equal?'])
     falses = np.full_like(result.test.dsref.value, False, dtype=bool)
@@ -404,7 +404,7 @@ def repr_bonferroni(result):
     highlights = [[False] * ndatasets] * 5  # 5 non-highlighted columns
     highlights.append([not oracle for oracle in oracles])
     table_template = TableTemplate(
-        ["{0} vs {1}".format(result.first_test_res.test.dsref.name, dtest.name)
+        [f"{result.first_test_res.test.dsref.name} vs {dtest.name}"
          for dtest in result.first_test_res.test.datasets],
         [result.test.ntests] * ndatasets,
         [result.test.alpha] * ndatasets,
@@ -464,7 +464,7 @@ def repr_holm_bonferroni(result):
     highlights = [[False] * ndatasets] * 6  # 6 non-highlighted columns
     highlights.append([not oracle for oracle in oracles])
     table_template = TableTemplate(
-        ["{0} vs {1}".format(result.first_test_res.test.dsref.name, dtest.name)
+        [f"{result.first_test_res.test.dsref.name} vs {dtest.name}"
          for dtest in result.first_test_res.test.datasets],
         [result.test.ntests] * ndatasets,
         [result.test.alpha] * ndatasets,
@@ -512,8 +512,8 @@ def percent_fmt(num, den):
     nbsp = ' '
     if den != 0:
         percent = 100.0 * num / den
-        return '{:d}/{:d}{}({:.1f}%)'.format(num, den, nbsp, percent)
-    return '{:d}/{:d}{}(???%)'.format(num, den, nbsp)
+        return f'{num:d}/{den:d}{nbsp}({percent:.1f}%)'
+    return f'{num:d}/{den:d}{nbsp}(???%)'
 
 
 def repr_testresultstatstasks(result, verbosity=Verbosity.DEFAULT):
@@ -576,13 +576,13 @@ def repr_testresultstats(result, status_ok, label):
     for status, status_txt in zip(statuses, statuses_txt):
         if status_ok == status:
             continue
-        text.append('List of {} with status {}:\n\n'.format(label, status_txt))
+        text.append(f'List of {label} with status {status_txt}:\n\n')
         for item in sorted(classify[status]):
             if item.fingerprint:
-                text.append('#. :ref:`{} <anchor_{}>`'
-                            .format(item.name, item.fingerprint))
+                text.append(f'#. :ref:`{item.name} '
+                            f'<anchor_{item.fingerprint}>`')
             else:
-                text.append('#. {}'.format(item.name))
+                text.append(f'#. {item.name}')
         text.append('\n')
     return [table, TextTemplate('\n'.join(text))]
 
@@ -662,9 +662,8 @@ def repr_testresultstatsbylabels(result):
         result.test.by_labels, result.classify, result.oracles()))
     if result.nb_missing_labels() != 0:
         res.append(TextTemplate('At least one of the labels used for sorting '
-                                '{} is missing in {} tests\n\n'
-                                .format(result.test.by_labels,
-                                        result.nb_missing_labels())))
+                                f'{result.test.by_labels} is missing in '
+                                f'{result.nb_missing_labels()} tests\n\n'))
     return res
 
 
@@ -698,9 +697,8 @@ def repr_testresultstatsbylabels_summary(result):
         res.append(TextTemplate('No failed test found.\n\n'))
     if result.nb_missing_labels() != 0:
         res.append(TextTemplate('At least one of the labels used for sorting '
-                                '{} is missing in {} tests\n\n'
-                                .format(result.test.by_labels,
-                                        result.nb_missing_labels())))
+                                f'{result.test.by_labels} is missing in '
+                                f'{result.nb_missing_labels()} tests\n\n'))
     return res
 
 
@@ -838,5 +836,5 @@ def repr_testresultfailed(result, _verbosity=Verbosity.DEFAULT):
     LOGGER.debug("In repr_testresultfailed")
     defmsg = ' failed with message:'
     cname = result.test.__class__.__name__
-    text = ':hl:`{}{}`\n{}\n'.format(cname, defmsg, result.msg)
+    text = f':hl:`{cname}{defmsg}`\n{result.msg}\n'
     return [TextTemplate('.. role:: hl\n\n' + text.replace('\n', '\n\n'))]

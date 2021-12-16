@@ -201,8 +201,8 @@ six-cent-six cyprès.
                 self.text_dict[tree].extend(res_text)
             else:
                 raise TypeError('expected TestReport or TestResult in '
-                                'TestReport content, found {} instead'
-                                .format(type(stuff)))
+                                f'TestReport content, found {type(stuff)} '
+                                'instead')
 
     def format_section(self, section, *, depth):
         '''Format a report section.
@@ -257,8 +257,8 @@ class RstFormatter(Formatter):
         :rtype: str
         '''
         if depth >= len(self.HEADER_CHARS):
-            raise ValueError('maximum depth exceeded: {} > {}'
-                             .format(depth, len(self.HEADER_CHARS)))
+            raise ValueError(f'maximum depth exceeded: {depth} > '
+                             f'{self.HEADER_CHARS}')
         lines = [name]
         lines.append(self.HEADER_CHARS[depth]*len(name))
         lines.append('')
@@ -276,7 +276,7 @@ class RstFormatter(Formatter):
     @staticmethod
     def anchor(fingerprint):
         '''Format an anchor with the given fingerprint.'''
-        return '\n.. _anchor_{}:\n\n'.format(fingerprint)
+        return f'\n.. _anchor_{fingerprint}:\n\n'
 
     @staticmethod
     def format_tabletemplate(table):
@@ -390,8 +390,7 @@ class RstTable:
         LOGGER.debug('widths: %s', widths)
 
         sep_row = cls.COL_SEP.join('='*w for w in widths)
-        header_row = cls.COL_SEP.join('{:^{width}}'
-                                      .format(header, width=w)
+        header_row = cls.COL_SEP.join(f'{header:^{w}}'
                                       for w, header in zip(widths, headers))
         lines = [' '*indent + sep_row, header_row, sep_row]
         lines.extend(cls.concat_rows(widths, rows))
@@ -527,7 +526,7 @@ class RstTable:
         ':hl:`DAT`'
         '''
         if flag:
-            return ':{}:`{}`'.format(cls.HIGHLIGHT_ROLE, val.strip())
+            return f':{cls.HIGHLIGHT_ROLE}:`{val.strip()}`'
         return val
 
     @classmethod
@@ -545,8 +544,7 @@ class RstTable:
         :rtype: str
         '''
         for row in rows:
-            centered = list('{val:{just}{width}}'
-                            .format(val=val, width=width, just=just)
+            centered = list(f'{val:{just}{width}}'
                             for width, val in zip(widths, row))
             yield cls.COL_SEP.join(centered)
 
@@ -561,7 +559,7 @@ class RstPlot:
         self.mpl_plot = MplPlot(plot)
 
     def __str__(self):
-        return '.. image:: /figures/{}\n'.format(self.filename())
+        return f'.. image:: /figures/{self.filename()}\n'
 
     def filename(self):
         '''Make up a(n almost) unique filename for this plot.
@@ -569,7 +567,7 @@ class RstPlot:
         :returns: the filename from fingerprint (png format)
         :rtype: str
         '''
-        return 'plot_{}.png'.format(self.fingerprint)
+        return f'plot_{self.fingerprint}.png'
 
 
 class RstText:
@@ -623,10 +621,10 @@ class FormattedRst:
         '''
         if not isinstance(tree_dict, dict):
             raise TypeError("expecting a dictionary as 'tree_dict'"
-                            ", got {}".format(type(tree_dict)))
+                            f", got {type(tree_dict)}")
         if not isinstance(text_dict, dict):
             raise TypeError("expecting a dictionary as 'text_dict'"
-                            ", got {}".format(type(tree_dict)))
+                            f", got {type(tree_dict)}")
 
         self.author = author
         self.title = title
@@ -650,7 +648,7 @@ class FormattedRst:
         self._write_rec(tree=(), path=path)
 
         items = [(plot, str(path / 'figures'
-                            / 'plot_{}.png'.format(fingerprint)))
+                            / f'plot_{fingerprint}.png'))
                  for fingerprint, plot in self.plots.items()]
         if self.n_workers is not None:
             LOGGER.info('writing %d plots using %d subprocesses',
@@ -706,8 +704,8 @@ class FormattedRst:
         :param str toc_title: the title for the table of contents (e.g.
                               ``'Contents'``).
         '''
-        lines = ['\n\n.. toctree::\n    :titlesonly:\n    :caption: {}:\n'
-                 .format(toc_title)]
+        lines = ['\n\n.. toctree::\n    :titlesonly:\n    '
+                 f':caption: {toc_title}:\n']
         for subtree in subtrees:
             # need to remove upper level to subtree in toc else they appear N
             # times in the toc, depending on level, breaking the links

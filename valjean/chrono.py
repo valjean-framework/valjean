@@ -45,7 +45,7 @@ class Chrono:
     >>> with Chrono() as chrono:
     ...     print(42)
     42
-    >>> print('printing 42 took {} seconds'.format(chrono))
+    >>> print(f'printing 42 took {chrono} seconds')
     printing 42 took ... seconds
     '''
 
@@ -78,9 +78,9 @@ class Chrono:
 
         >>> chrono = Chrono()
         >>> chrono.elapsed = 1e-6
-        >>> '{}'.format(chrono)
+        >>> f'{chrono}'
         '1e-06'
-        >>> '{:f}'.format(chrono)
+        >>> f'{chrono:f}'
         '0.000001'
         '''
         return format(self.elapsed, format_spec)

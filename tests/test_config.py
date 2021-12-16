@@ -50,9 +50,9 @@ from .conftest import IDS, configs
 def test_copy_roundtrip(conf):
     '''Test roundtrip (i.e. copy).'''
     reconf = Config(conf)
-    note('conf={!r}'.format(conf))
-    note('reconf={!r}'.format(reconf))
-    note('reconf.conf={!r}'.format(reconf.conf))
+    note(f'conf={conf!r}')
+    note(f'reconf={reconf!r}')
+    note(f'reconf.conf={reconf.conf!r}')
     assert conf == reconf
 
 
@@ -63,8 +63,8 @@ def test_file_roundtrip(conf, tmp_path_factory):
     conf_file = tmp_path / 'conf.toml'
     conf_file.write_text(str(conf))
     reconf = Config.from_file(str(conf_file))
-    note('conf={!r}'.format(conf))
-    note('reconf={!r}'.format(reconf))
+    note(f'conf={conf!r}')
+    note(f'reconf={reconf!r}')
     assert conf == reconf
 
 

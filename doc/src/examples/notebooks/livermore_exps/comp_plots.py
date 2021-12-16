@@ -15,10 +15,9 @@ class CompPlot():
         '''Customize plot: axis labels, title, scale and legend.
         '''
         self.splt[0].set_yscale("log", nonpositive='clip')
-        self.splt[0].set_title("{elt}, {mfp} mfp, detector at {deg}°"
-                               .format(elt=self.charac[0].capitalize(),
-                                       mfp=self.charac[1],
-                                       deg=self.charac[2]))
+        self.splt[0].set_title(f'{self.charac[0].capitalize()}, '
+                               f'{self.charac[1]} mfp, detector at '
+                               f'{self.charac[2]}°')
         # self.splt[0].set_ylabel("N cnt rate [1/(ns.source)]", labelpad=40)
         self.splt[0].set_ylabel("Neutron count rate [1/(ns.source)]")
         self.splt[0].set_ylim(ymin=2e-4)
@@ -90,10 +89,9 @@ class ExtendedCompPlot():
         '''Customize plot: axis labels, title, scale and legend.
         '''
         self.splt[0].set_yscale("log", nonpositive='clip')
-        self.splt[0].set_title("{elt}, {mfp} mfp, detector at {deg}°"
-                               .format(elt=self.charac[0].capitalize(),
-                                       mfp=self.charac[1],
-                                       deg=self.charac[2]))
+        self.splt[0].set_title(f'{self.charac[0].capitalize()}, '
+                               f'{self.charac[1]} mfp, detector at '
+                               f'{self.charac[2]}°')
         # self.splt[0].set_ylabel("N cnt rate [1/(ns.source)]", labelpad=40)
         self.splt[0].set_ylabel("Neutron count rate [1/(ns.source)]")
         self.splt[0].set_ylim(ymin=2e-4)

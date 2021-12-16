@@ -122,8 +122,8 @@ class Scheduler:
         for node in self.full_graph.nodes():
             if not hasattr(node, 'do') or not hasattr(node.do, '__call__'):
                 raise SchedulerError('Cannot schedule tasks for execution: '
-                                     'node {} does not have a do() method'
-                                     .format(node))
+                                     f'node {node} does not have a do() '
+                                     'method')
 
         if backend is None:
             self.backend = QueueScheduling()

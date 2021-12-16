@@ -130,8 +130,8 @@ def generic_docstrings(res_type, *list_params):
                 'Return the {thing} from the MeanBurnupResults object as a '
                 'function of time.\n'])
         else:
-            raise DepletionReaderException('Not foreseen result type: {}'
-                                           .format(res_type))
+            raise DepletionReaderException('Not foreseen result type: '
+                                           f'{res_type}')
         docstrings.append(
             '''.. note::
 

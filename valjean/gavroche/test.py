@@ -119,9 +119,8 @@ def check_bins(*datasets):
     :raises ValueError: if the datasets do not have compatible coordinates.
     '''
     if not same_bins_datasets(*datasets):
-        msg = 'Inconsistent coordinates: \n{}'.format(
-            '\n'.join(["{}".format(dat) for dat in datasets]))
-        raise CheckBinsException(msg)
+        datasets_str = '\n'.join(str(dat) for dat in datasets)
+        raise CheckBinsException(f'Inconsistent coordinates: \n{datasets_str}')
 
 
 class Test(ABC):

@@ -214,9 +214,9 @@ Are these numbers in agreement ?
 >>> tstudent = TestStudent(ds1, ds2, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> print('{:.7f}'.format(tstudent_res.delta[0]))
+>>> print(f'{tstudent_res.delta[0]:.7f}')
 0.2321201
->>> print('{:.7f}'.format(tstudent_res.test.threshold))
+>>> print(f'{tstudent_res.test.threshold:.7f}')
 2.5758293
 >>> bool(tstudent_res)
 True
@@ -226,13 +226,13 @@ To obtain the p-value, a number of degrees of freedom should be given:
 >>> tstudent = TestStudent(ds1, ds2, ndf=1000, name="comp",
 ...                        description="Comparison using Student's t- test")
 >>> tstudent_res = tstudent.evaluate()
->>> print('{:.7f}'.format(tstudent_res.delta[0]))
+>>> print(f'{tstudent_res.delta[0]:.7f}')
 0.2321201
->>> print('{:.7f}'.format(tstudent_res.test.threshold))
+>>> print(f'{tstudent_res.test.threshold:.7f}')
 2.5807547
 >>> bool(tstudent_res)
 True
->>> print('{:.7f}'.format(tstudent_res.pvalue[0]))
+>>> print(f'{tstudent_res.pvalue[0]:.7f}')
 0.4082461
 >>> tstudent_res.test_pvalue()
 [True]
@@ -263,7 +263,7 @@ It is possible to get a detailed bin-by-bin comparisons, including bad bins:
 >>> tstudent = TestStudent(ds3, ds5, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> print('{:.7f}'.format(tstudent_res.test.threshold))
+>>> print(f'{tstudent_res.test.threshold:.7f}')
 2.5758293
 >>> print(np.array2string(tstudent_res.oracles()))
 [[ True  True False  True False]]
@@ -280,11 +280,11 @@ case:
 >>> tstudent = TestStudent(ds3, ds5, name="comp", alpha=0.05, ndf=1000,
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> print('{:.7f}'.format(tstudent_res.test.threshold))
+>>> print(f'{tstudent_res.test.threshold:.7f}')
 1.9623391
 >>> print(np.array2string(tstudent_res.oracles()))
 [[ True False False  True False]]
->>> print('{:.7f}'.format(tstudent_res.delta[0][1]))
+>>> print(f'{tstudent_res.delta[0][1]:.7f}')
 -2.2283441
 
 This last value is in-between the thresholds at 1 % and 5 %, so accepted in the
@@ -309,7 +309,7 @@ datasets containing :obj:`numpy.generic`:
 >>> print(np.array2string(tstudent_res.delta[0],
 ...                       formatter={'float_kind':'{:.7f}'.format}))
 [0.2321192]
->>> print('{:.7f}'.format(tstudent_res.test.threshold))
+>>> print(f'{tstudent_res.test.threshold:.7f}')
 2.5758293
 >>> bool(tstudent_res)
 True

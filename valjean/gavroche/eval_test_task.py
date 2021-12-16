@@ -93,13 +93,12 @@ class EvalTestTask(PythonTask):
             tests = from_env(env=env, task_name=test_task_name, key='result')
             if not isinstance(tests, list):
                 raise TypeError('Expected a list of tests in EvalTestTask '
-                                '{!r}; got a {} instead'
-                                .format(self.name, type(tests)))
+                                f'{self.name!r}; got a {type(tests)} instead')
             for test in tests:
                 if not isinstance(test, Test):
                     raise TypeError('Expected a list of tests in EvalTestTask '
-                                    '{!r}, but one of the list elements is a '
-                                    '{}'.format(self.name, type(test)))
+                                    f'{self.name!r}, but one of the list '
+                                    'elements is a {type(test)}')
 
             results = [actually_eval_test(test) for test in tests]
 

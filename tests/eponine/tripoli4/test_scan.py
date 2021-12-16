@@ -329,7 +329,7 @@ def test_debug_entropy(caplog, datadir):
     assert {'array', 'bins', 'units', 'boltzmann_entropy_array',
             'shannon_entropy_array'}.difference(pres0['mesh']) == set()
     bentrop = pres0['mesh']['boltzmann_entropy_array'].squeeze()
-    assert "{0:6e}".format(bentrop['entropy']) == "8.342621e-01"
+    assert np.isclose(bentrop['entropy'], 8.342621e-01)
     assert sorted(list(pres0.keys())) == sorted(scorecontent)
     resp0 = t4_res.res['list_responses'][0]
     assert resp0['response_type'] == 'score'
@@ -338,10 +338,10 @@ def test_debug_entropy(caplog, datadir):
                   'boltzmann_entropy', 'shannon_entropy', 'score_integrated']
     bentrop2 = res0['boltzmann_entropy'].squeeze()
     assert np.isclose(bentrop2.value, 8.342621e-01)
-    assert sorted(list(res0.keys())) == sorted(rescontent)
+    assert sorted(res0.keys()) == sorted(rescontent)
     assert "You are running with an end flag" in caplog.text
     assert "debug_ent.log" in os.listdir()
-    with open("debug_ent.log") as ofile:
+    with open("debug_ent.log", encoding='utf-8') as ofile:
         lines = ofile.readlines()
         assert len(lines) == 124
         assert "RESULTS ARE GIVEN FOR SOURCE INTENSITY" in lines[0]
@@ -468,9 +468,9 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     t4_res = t4p.parse_from_index(batch_index=-1)
     assert t4_res
     assert t4p.scan_res.normalend
-    with open(str(datadir/"entropy_debug.log"), 'r') as ifile:
-        for line in ifile:
-            assert line in caplog.text, "Line %r not found in caplog." % line
+    with open(str(datadir/"entropy_debug.log"), 'r', encoding='utf-8') as ifil:
+        for line in ifil:
+            assert line in caplog.text, f"Line {line!r} not found in caplog."
 
 
 def test_ifp(datadir):
@@ -848,7 +848,7 @@ def test_box_dyn(datadir):
 
 def test_empty_file(caplog):
     '''Test Tripoli-4 parsing on an empty file: this should fail.'''
-    with open('empty_file.txt', 'w') as ofile:
+    with open('empty_file.txt', 'w', encoding='utf-8') as ofile:
         ofile.write("")
     with pytest.raises(ParserException):
         Parser('empty_file.txt')
@@ -864,8 +864,7 @@ def test_no_usual_output(datadir, caplog):
     tfile = str(datadir/"failure_test_segFault.d.res")
     with pytest.raises(ParserException):
         Parser(tfile)
-    assert ("No result found in Tripoli-4 listing {}".format(tfile)
-            in caplog.text)
+    assert f"No result found in Tripoli-4 listing {tfile}" in caplog.text
     assert "FATAL ERROR" in caplog.text
     assert "error message" in caplog.text
 

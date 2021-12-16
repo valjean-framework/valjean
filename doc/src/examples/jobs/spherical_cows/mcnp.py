@@ -135,10 +135,9 @@ class MCTALResult:
         if len(xs) != len(ys)+1 or \
                 (eys and len(ys) != len(eys)) or \
                 (exs and len(exs) != len(xs)):
-            raise Exception('Inconsistent lengths of x ({})/y ({})/'
-                            'ey ({})/ex ({}) arrays'.format(len(xs), len(ys),
-                                                            len(eys), len(exs))
-                            )
+            raise Exception(f'Inconsistent lengths of x ({len(xs)})/y '
+                            f'({len(ys)})/ey ({len(eys)})/ex ({len(exs)}) '
+                            'arrays')
 
         LOGGER.debug('Parsing succeeded')
         LOGGER.debug('xs=%s', xs)

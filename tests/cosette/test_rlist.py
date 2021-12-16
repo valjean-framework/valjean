@@ -53,8 +53,8 @@ def test_swap_indices(rlst, sampler):
     j = sampler.draw(integers(-n_elems, n_elems-1))
     rlst_swapped = rlst.copy()
     rlst_swapped.swap(i, j)
-    note('rlst = {}'.format(rlst))
-    note('rlst_swapped = {}'.format(rlst_swapped))
+    note(f'rlst = {rlst}')
+    note(f'rlst_swapped = {rlst_swapped}')
     check_revlist_invariant(rlst)
     check_revlist_invariant(rlst_swapped)
     assert len(rlst) == len(rlst_swapped)
@@ -68,8 +68,8 @@ def test_insert(rlst, new, sampler):
     i = sampler.draw(integers(-n_elems-2, n_elems+1))
     rlst_inserted = rlst.copy()
     rlst_inserted.insert(i, new)
-    note('rlst = {}'.format(rlst))
-    note('rlst_inserted = {}'.format(rlst_inserted))
+    note(f'rlst = {rlst}')
+    note(f'rlst_inserted = {rlst_inserted}')
     check_revlist_invariant(rlst)
     check_revlist_invariant(rlst_inserted)
     assert len(rlst_inserted) == len(rlst) + 1
@@ -82,8 +82,8 @@ def test_delete(rlst, sampler):
     i = sampler.draw(integers(-n_elems, n_elems-1))
     rlst_deleted = rlst.copy()
     del rlst_deleted[i]
-    note('rlst = {}'.format(rlst))
-    note('rlst_deleted = {}'.format(rlst_deleted))
+    note(f'rlst = {rlst}')
+    note(f'rlst_deleted = {rlst_deleted}')
     check_revlist_invariant(rlst)
     check_revlist_invariant(rlst_deleted)
     assert len(rlst_deleted) == len(rlst) - 1
@@ -96,8 +96,8 @@ def test_setitem(rlst, new, sampler):
     i = sampler.draw(integers(-n_elems, n_elems-1))
     rlst_modified = rlst.copy()
     rlst_modified[i] = new
-    note('rlst = {}'.format(rlst))
-    note('rlst_modified = {}'.format(rlst_modified))
+    note(f'rlst = {rlst}')
+    note(f'rlst_modified = {rlst_modified}')
     check_revlist_invariant(rlst)
     check_revlist_invariant(rlst_modified)
     assert len(rlst_modified) == len(rlst)

@@ -83,11 +83,11 @@ class GraphCommand(JobCommand):
                 try:
                     writer = getattr(graph_pydot, 'write_' + ext[1:].lower())
                 except AttributeError as aerr:
-                    raise ValueError('graph output format {} is not supported'
-                                     .format(ext)) from aerr
+                    raise ValueError(f'graph output format {ext} is not '
+                                     'supported') from aerr
                 writer(args.output)
             else:
-                with open(args.output, 'w') as fout:
+                with open(args.output, 'w', encoding='utf-8') as fout:
                     fout.write(graph_str)
         else:
             print(graph_str)

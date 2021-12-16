@@ -127,7 +127,7 @@ def bins(draw, elements=floats(0, 10), nbins=1, reverse=booleans()):
     revers = draw(reverse)
     as_list = sorted(
         draw(lists(elements, min_size=nbins+1, max_size=nbins+1,
-                   unique_by=lambda x: '{0:.6e}'.format(abs(x)))),
+                   unique_by=lambda x: f'{abs(x):.6e}')),
         reverse=revers)
     arr = np.array(as_list)
     note('nbins=' + str(nbins))
@@ -210,18 +210,17 @@ def test_flip_spectrum(array_bins):
         lbins.items()))
 
     spectrum = SpectrumDictBuilder(array.dtype.names, array.shape)
-    note("bins to flip: {}".format(incr))
+    note(f"bins to flip: {incr}")
     for dim in lbins:
         spectrum.bins[dim] = lbins[dim]
-    note("larray: {}".format(hex(id(larray))))
+    note(f"larray: {hex(id(larray))}")
     spectrum.arrays = larray.copy()
     spectrum.convert_bins_to_increasing_arrays()
-    note("apres flip id = {0}, {1}".format(hex(id(spectrum.bins)),
-                                           spectrum.bins))
+    note(f"apres flip id = {hex(id(spectrum.bins))}, {spectrum.bins}")
     for var in ['e', 't', 'mu', 'phi']:
         assert np.all(np.diff(spectrum.bins[var]) > 0.0)
 
-    note("KEYS IN larray: {}".format(list(larray.keys())))
+    note(f"KEYS IN larray: {list(larray.keys())}")
     for comp in array.dtype.names:
         assert np.array_equal(
             array[comp],
@@ -230,18 +229,14 @@ def test_flip_spectrum(array_bins):
         if 'integrated' in larray:
             if array.shape[4] > 1:
                 note("dans le if avec un flip")
-                note("larray[{0}] = {1}".format(comp,
-                                                larray['integrated'][comp]))
-                note("spectrum['integrated'][{0}][::::incr::] = {1} {2}"
-                     .format(comp,
-                             spectrum.arrays['integrated'][comp]
-                             [:, :, :, :, ::incr['t'], :, :],
-                             hex(id(spectrum.arrays['integrated'][comp]
-                                    [:, :, :, :, ::incr['t'], :, :]))))
-                note("spectrum['integrated'][{0}] = {1} {2}"
-                     .format(comp,
-                             spectrum.arrays['integrated'][comp],
-                             hex(id(spectrum.arrays['integrated'][comp]))))
+                note(f"larray[{comp}] = {larray['integrated'][comp]}")
+                _debug = (spectrum.arrays['integrated'][comp]
+                          [:, :, :, :, ::incr['t'], :, :])
+                note(f"spectrum['integrated'][{comp}][::::incr::] = "
+                     f"{_debug} {hex(id(_debug))}")
+                _debug = spectrum.arrays['integrated'][comp]
+                note(f"spectrum['integrated'][{comp}] = "
+                     f"{_debug} {hex(id(_debug))}")
                 assert np.array_equal(
                     larray['integrated'][comp],
                     spectrum.arrays['integrated'][comp]
@@ -276,10 +271,9 @@ def mesh_str(mesh, ebin, tbin):
         for iv_ in range(shape[1]):
             for iw_ in range(shape[2]):
                 index = (iu_, iv_, iw_, ebin, tbin, 0, 0)
-                t4out.append("\t({0},{1},{2})\t\t{3:.6e}\t{4:.6e}\n"
-                             .format(iu_, iv_, iw_,
-                                     mesh[index]['score'],
-                                     mesh[index]['sigma']))
+                t4out.append(f"\t({iu_},{iv_},{iw_})\t\t"
+                             f"{mesh[index]['score']:.6e}\t"
+                             f"{mesh[index]['sigma']:.6e}\n")
     return ''.join(t4out)
 
 
@@ -299,8 +293,8 @@ def build_mesh_t4_output(mesh, ebins, tbin):
         t4out.append("\n")
     else:
         for iebin in range(len(ebins)-1):
-            t4out.append("Energy range (in MeV): {0:.6e} - {1:.6e}\n"
-                         .format(ebins[iebin], ebins[iebin+1]))
+            t4out.append(f"Energy range (in MeV): {ebins[iebin]:.6e} - "
+                         f"{ebins[iebin+1]:.6e}\n")
             t4out.append(mesh_str(mesh, iebin, tbin))
             t4out.append("\n")
     return ''.join(t4out)
@@ -317,12 +311,12 @@ def integres_str(res, tbin, flag=False):
     '''
     t4out = []
     if flag:
-        t4out.append("{0:>9}ENERGY INTEGRATED RESULTS\n\n".format(""))
+        t4out.append(f"{'':>9}ENERGY INTEGRATED RESULTS\n\n")
         t4out.append("         number of first discarded batches : 1\n\n")
     quantity = res.dtype.names[0]
-    t4out.append("number of batches used: 1000    {0:.6e}    {1:6e}\n\n"
-                 .format(res[(0, 0, 0, 0, tbin, 0, 0)][quantity],
-                         res[(0, 0, 0, 0, tbin, 0, 0)]['sigma']))
+    array = res[(0, 0, 0, 0, tbin, 0, 0)]
+    t4out.append(f"number of batches used: 1000    {array[quantity]:.6e}"
+                 f"    {array['sigma']:6e}\n\n")
     return ''.join(t4out)
 
 
@@ -354,12 +348,12 @@ def make_mesh_t4_output(meshes, ebins, tbins):
                        else tbins[itbin+1])
             maxtime = (tbins[itbin+1] if tbins[itbin] < tbins[itbin+1]
                        else tbins[itbin])
-            time_str = '''
-         TIME STEP NUMBER: {0}
+            time_str = f'''
+         TIME STEP NUMBER: {itbin}
          ------------------------------------
-                 time min. = {1:.6e}
-                 time max. = {2:.6e}
-            '''.format(itbin, mintime, maxtime)
+                 time min. = {mintime:.6e}
+                 time max. = {maxtime:.6e}
+            '''
             t4out.append(time_str)
             t4out.append("\n")
             t4out.append(build_mesh_t4_output(meshes['default'], ebins, itbin))
@@ -452,22 +446,22 @@ def spectrum_beginning_str(units=False, disc_batch=0):
     '''Beginning of spectrum block in Tripoli-4 output.
     Possibility to add units.
     '''
-    spec_str = ('''\
+    spec_str = f'''\
          SPECTRUM RESULTS
-         number of first discarded batches : {0}
+         number of first discarded batches : {disc_batch}
 
-'''.format(disc_batch))
+'''
     if units:
-        spec_str += ('''\
+        spec_str += '''\
          group                   score           sigma_%         score/lethargy
 Units:   MeV                     neut.s^-1       %               neut.s^-1
 
-''')
+'''
     else:
-        spec_str += ('''\
+        spec_str += '''\
          group (MeV)             score           sigma_%         score/lethargy
 
-''')
+'''
     return spec_str
 
 
@@ -487,11 +481,10 @@ def spectrum_str(spectrum, ebins, it_index, units=False, disc_batch=0):
         index = it_index[0] + (iebin,)
         if len(it_index) > 1:
             index += it_index[1]
-        t4out.append("{0:.6e} - {1:.6e} \t {2:.6e} \t {3:.6e} \t {4:.6e}\n"
-                     .format(ebins[iebin], ebins[iebin+1],
-                             spectrum[index]['score'],
-                             spectrum[index]['sigma'],
-                             spectrum[index]['score/lethargy']))
+        spi = spectrum[index]
+        t4out.append(f"{ebins[iebin]:.6e} - {ebins[iebin+1]:.6e} \t "
+                     f"{spi['score']:.6e} \t {spi['sigma']:.6e} \t "
+                     f"{spi['score/lethargy']:.6e}\n")
     t4out.append("\n")
     return ''.join(t4out)
 
@@ -510,10 +503,10 @@ def time_step_str(itbin, tbins):
     else:
         mintime = tbins[itbin+1]
         maxtime = tbins[itbin]
-    t4out.append("         TIME STEP NUMBER : {0}\n".format(itbin))
+    t4out.append(f"         TIME STEP NUMBER : {itbin}\n")
     t4out.append("         ------------------------------------\n")
-    t4out.append("                 time min. = {0:.6e}\n".format(mintime))
-    t4out.append("                 time max. = {0:.6e}\n\n".format(maxtime))
+    t4out.append(f"                 time min. = {mintime:.6e}\n")
+    t4out.append(f"                 time max. = {maxtime:.6e}\n\n")
     return ''.join(t4out)
 
 
@@ -531,10 +524,10 @@ def mu_angle_str(imubin, mubins):
     else:
         minmu = mubins[imubin+1]
         maxmu = mubins[imubin]
-    t4out.append("         MU ANGULAR ZONE : {0}\n".format(imubin))
+    t4out.append(f"         MU ANGULAR ZONE : {imubin}\n")
     t4out.append("         ------------------------------------\n")
-    t4out.append("                 mu min. = {0:.6e}\n".format(minmu))
-    t4out.append("                 mu max. = {0:.6e}\n\n".format(maxmu))
+    t4out.append(f"                 mu min. = {minmu:.6e}\n")
+    t4out.append(f"                 mu max. = {maxmu:.6e}\n\n")
     return ''.join(t4out)
 
 
@@ -552,11 +545,10 @@ def phi_angle_str(iphibin, phibins):
     else:
         minphi = phibins[iphibin+1]
         maxphi = phibins[iphibin]
-    t4out.append("                 PHI ANGULAR ZONE : {0}\n"
+    t4out.append(f"                 PHI ANGULAR ZONE : {iphibin}\n"
                  "                 ------------------------------------\n"
-                 "                         phi min. = {1:.6e}\n"
-                 "                         phi max. = {2:.6e}\n\n"
-                 .format(iphibin, minphi, maxphi))
+                 f"                         phi min. = {minphi:.6e}\n"
+                 f"                         phi max. = {maxphi:.6e}\n\n")
     return ''.join(t4out)
 
 
@@ -695,10 +687,10 @@ def gb_step_str(istep, sebins):
     else:
         minse = sebins[istep+1]
         maxse = sebins[istep]
-    t4out.append(" "*9 + "* SOURCE SPECTRUM STEP NUMBER : {}\n".format(istep))
+    t4out.append(" "*9 + f"* SOURCE SPECTRUM STEP NUMBER : {istep}\n")
     t4out.append(" "*9 + "------------------------------------\n")
-    t4out.append(" "*17 + "source energy min. = {0:.6e}\n".format(minse))
-    t4out.append(" "*17 + "source energy max. = {0:.6e}\n".format(maxse))
+    t4out.append(" "*17 + f"source energy min. = {minse:.6e}\n")
+    t4out.append(" "*17 + f"source energy max. = {maxse:.6e}\n")
     t4out.append("\n")
     return ''.join(t4out)
 
@@ -718,10 +710,9 @@ def gb_with_tab_str(array, bins, disc_batch, istep):
         for utab in range(array.shape[2]):
             for vtab in range(array.shape[3]):
                 for wtab in range(array.shape[4]):
-                    t4out.append(" "*9 + "SOURCE NUMBER : {0}".format(isource))
+                    t4out.append(" "*9 + f"SOURCE NUMBER : {isource}")
                     t4out.append("       SOURCE TABULATION : "
-                                 "u = {0}, v = {1}, w = {2}\n"
-                                 .format(utab, vtab, wtab))
+                                 f"u = {utab}, v = {vtab}, w = {wtab}\n")
                     t4out.append(" "*9 + "-"*72 + "\n\n")
                     t4out.append(spectrum_str(
                         array, bins['e'],
@@ -743,7 +734,7 @@ def gb_without_tab_str(array, bins, disc_batch, istep):
     '''
     t4out = []
     for isource in range(array.shape[1]):
-        t4out.append(" "*9 + "SOURCE NUMBER : {}\n".format(isource))
+        t4out.append(" "*9 + f"SOURCE NUMBER : {isource}\n")
         t4out.append(" "*9 + "------------------------------------\n\n")
         t4out.append(spectrum_str(array, bins['e'],
                                   ((istep, isource, 0, 0, 0),),
@@ -864,22 +855,21 @@ def keff_t4_genoutput(keffmat, sigmat, corrmat, fcomb):
     t4out.append("number of batches used: 80\n\n")
     keffs = ['KSTEP ', 'KCOLL ', 'KTRACK']
     for ikeff in range(3):
-        t4out.append(" {0} {1:.6e}    {2:.6e}\n"
-                     .format(keffs[ikeff], keffmat[ikeff][ikeff],
-                             sigmat[ikeff][ikeff]))
+        t4out.append(f" {keffs[ikeff]} {keffmat[ikeff][ikeff]:.6e}    "
+                     f"{sigmat[ikeff][ikeff]:.6e}\n")
     t4out.append("\n")
     t4out.append(" "*10 + "estimators" + " "*19 + "correlations" + " "*8
                  + "combined values" + " "*5 + "combined sigma%\n")
     for ikeff in range(2):
         for jkeff in range(ikeff+1, 3):
             t4out.append(" "*10
-                         + "{0} <-> {1}".format(keffs[ikeff], keffs[jkeff])
-                         + " "*12 + "{0:.6e}".format(corrmat[ikeff][jkeff])
-                         + " "*8 + "{0:.6e}".format(keffmat[ikeff][jkeff])
-                         + " "*8 + "{0:.6e}\n".format(sigmat[ikeff][jkeff]))
+                         + f"{keffs[ikeff]} <-> {keffs[jkeff]}"
+                         + " "*12 + f"{corrmat[ikeff][jkeff]:.6e}"
+                         + " "*8 + f"{keffmat[ikeff][jkeff]:.6e}"
+                         + " "*8 + f"{sigmat[ikeff][jkeff]:.6e}\n")
     t4out.append("\n")
-    t4out.append(" "*10 + "full combined estimator  {0:.6e} {1:.6e}"
-                 .format(fcomb[0], fcomb[1]))
+    t4out.append(" "*10 + f"full combined estimator  {fcomb[0]:.6e} "
+                 f"{fcomb[1]:.6e}")
     t4out.append("\n")
     return ''.join(t4out)
 
@@ -984,17 +974,16 @@ def bekeff_t4_output(be_keff):
     t4out = []
     for bestim in be_keff:
         t4out.append(" "*10
-                     + "{0} ESTIMATOR\n".format(bestim['keff_estimator']))
+                     + f"{bestim['keff_estimator']} ESTIMATOR\n")
         t4out.append(" "*9 + "-"*(len(t4out[-1])+4) + "\n\n\n")
         t4out.append(" "*9
-                     + "best results are obtained with discarding {} batches"
-                     .format(bestim['best_disc_batchs'])
-                     + "\n\n")
+                     + "best results are obtained with discarding "
+                     f"{bestim['best_disc_batchs']} batches" + "\n\n")
         t4out.append(
-            " "*9 + "number of batch used: {}".format(bestim['used_batches'])
-            + " "*8 + "keff = {0:.6e}".format(bestim['keff'])
-            + " "*5 + "sigma = {0:.6e}".format(bestim['sigma'])
-            + " "*5 + "sigma% = {0:.6e}".format(bestim['sigma%']) + "\n\n\n")
+            " "*9 + f"number of batch used: {bestim['used_batches']}"
+            + " "*8 + f"keff = {bestim['keff']:.6e}"
+            + " "*5 + f"sigma = {bestim['sigma']:.6e}"
+            + " "*5 + f"sigma% = {bestim['sigma%']:.6e}" + "\n\n\n")
     return ''.join(t4out)
 
 
@@ -1030,24 +1019,24 @@ def kij_t4_output(evals, evecs, matrix):
     t4out = []
     t4out.append(" "*8 + "ENERGY INTEGRATED RESULTS\n\n")
     t4out.append("number of batches used: 80\n\n\n")
-    t4out.append(" "*12 + "kij-keff = {0:.6e}\n\n".format(np.real(evals[0])))
-    t4out.append(" "*12 + "dominant ratio = {0:.6e}\n\n\n"
-                 .format(np.real(evals[1])/np.real(evals[0])))
+    t4out.append(" "*12 + f"kij-keff = {np.real(evals[0]):.6e}\n\n")
+    t4out.append(" "*12 + "dominant ratio = "
+                 f"{np.real(evals[1])/np.real(evals[0]):.6e}\n\n\n")
     t4out.append("eigenvalues (re, im)\n\n")
     for ival in evals:
-        t4out.append("{0:.6e}".format(np.real(ival)) + " "*4
-                     + "{0:.6e}".format(np.imag(ival)) + "\n")
+        t4out.append(f"{np.real(ival):.6e}" + " "*4
+                     + f"{np.imag(ival):.6e}" + "\n")
     t4out.append("\n\n")
     t4out.append("eigenvectors\n\n")
     for ivec in evecs:
         for icoord in ivec:
-            t4out.append("{0:.6e}".format(icoord) + " "*4)
+            t4out.append(f"{icoord:.6e}" + " "*4)
         t4out.append("\n")
     t4out.append("\n\n")
     t4out.append("KIJ_MATRIX :\n\n")
     for kij_i in matrix:
         for kij_j in kij_i:
-            t4out.append("{0:.6e}".format(kij_j) + " "*4)
+            t4out.append(f"{kij_j:.6e}" + " "*4)
         t4out.append("\n")
     t4out.append("\n")
     return ''.join(t4out)
@@ -1157,13 +1146,12 @@ def kij_sources_t4_output(kijdict):
     :returns: string corresponding to T4 output
     '''
     t4out = []
-    t4out.append("{0:>8}ENERGY INTEGRATED RESULTS\n\n".format(""))
-    t4out.append("number of batches used: {}\n\n"
-                 .format(kijdict['used_batches']))
+    t4out.append(f"{'':>8}ENERGY INTEGRATED RESULTS\n\n")
+    t4out.append(f"number of batches used: {kijdict['used_batches']}\n\n")
     t4out.append("SOURCES VECTOR :\n\n")
     t4out.append("Sources are ordered following GEOMCOMP:\n\n")
     for source in kijdict['kij_leigenvec']:
-        t4out.append("{0:.6e}\n".format(source))
+        t4out.append(f"{source:.6e}\n")
     t4out.append("\n")
     return ''.join(t4out)
 
@@ -1181,22 +1169,23 @@ def matrix_t4_output(matrix, spacebins):
     tabwidth = 16*spacebins.shape[0]
     for spacebin in spacebins:
         if isinstance(spacebin, np.ndarray):
-            t4out.append(" {0:<15}".format("({0},{1},{2})".format(*spacebin)))
+            _spacebin_str = f"({spacebin[0]}, {spacebin[1]}, {spacebin[2]})"
+            t4out.append(f" {_spacebin_str:<15}")
         else:
-            t4out.append(" {0:^15}".format(spacebin))
+            t4out.append(f" {spacebin:^15}")
     t4out.append("\n")
-    t4out.append("{0:>24}{0:->{width}}\n".format("", width=tabwidth))
+    t4out.append(f"{'':>24}{'':->{tabwidth}}\n")
     for ilin, kij_line in enumerate(matrix):
         if isinstance(spacebins[ilin], np.ndarray):
-            t4out.append("{0:>9}{1:<15}"
-                         .format("", "({0},{1},{2})".format(*spacebins[ilin])))
+            _spacebin = spacebins[ilin]
+            _spacebin_str = f"({_spacebin[0]},{_spacebin[1]},{_spacebin[2]})"
+            t4out.append(f"{'':>9}{_spacebin_str:<15}")
         else:
-            t4out.append("{0:>16}{1:<8}"
-                         .format("", spacebins[ilin]))
+            t4out.append(f"{'':>16}{spacebins[ilin]:<8}")
         for kij_col in kij_line:
-            t4out.append("| {0:<14.6e}".format(kij_col))
+            t4out.append(f"| {kij_col:<14.6e}")
         t4out.append("|\n")
-        t4out.append("{0:>24}{0:->{width}}\n".format("", width=tabwidth))
+        t4out.append(f"{'':>24}{'':->{tabwidth}}\n")
     return ''.join(t4out)
 
 
@@ -1209,30 +1198,27 @@ def kijkeff_t4_output(kijdict):
     :returns: string corresponding to the T4 output
     '''
     t4out = []
-    t4out.append("{0:>10}{1} ESTIMATOR\n".format("",
-                                                 kijdict['keff_estimator']))
-    t4out.append("{0:>10}{1:->13}\n\n".format("", ""))
-    t4out.append("{0:>12}number of last batches kept : {1}\n\n"
-                 .format("", kijdict['used_batches']))
-    t4out.append("{0:>12}kij-keff = {1:.6e}\n\n"
-                 .format("", kijdict['kij_mkeff']))
-    t4out.append("{0:>12}EIGENVECTOR :{0:>6}index{0:>6}source rate\n\n"
-                 .format(""))
+    t4out.append(f"{'':>10}{kijdict['keff_estimator']} ESTIMATOR\n")
+    t4out.append(f"{'':>10}{'':->13}\n\n")
+    t4out.append(f"{'':>12}number of last batches kept : "
+                 f"{kijdict['used_batches']}\n\n")
+    t4out.append(f"{'':>12}kij-keff = {kijdict['kij_mkeff']:.6e}\n\n")
+    t4out.append(f"{'':>12}EIGENVECTOR :{'':>6}index{'':>6}source rate\n\n")
     for ind, ivec in enumerate(kijdict['kij_leigenvec']):
-        t4out.append("{0:>33}{1:<8}{2:.6e}\n\n".format("", ind, np.real(ivec)))
+        t4out.append(f"{'':>33}{ind:<8}{np.real(ivec):.6e}\n\n")
     t4out.append("\n")
-    t4out.append("{0:>12}K-IJ MATRIX :\n\n".format(""))
-    t4out.append("{0:>24}".format(""))
+    t4out.append(f"{'':>12}K-IJ MATRIX :\n\n")
+    t4out.append(f"{'':>24}")
     t4out.append(matrix_t4_output(kijdict['kij_matrix'],
                                   kijdict['space_bins']))
     t4out.append("\n\n\n")
-    t4out.append("{0:>12}STANDARD DEVIATION MATRIX :\n\n".format(""))
-    t4out.append("{0:>24}".format(""))
+    t4out.append(f"{'':>12}STANDARD DEVIATION MATRIX :\n\n")
+    t4out.append(f"{'':>24}")
     t4out.append(matrix_t4_output(kijdict['kij_stddev_matrix'],
                                   kijdict['space_bins']))
     t4out.append("\n\n\n")
-    t4out.append("{0:>12}SENSIBILITY MATRIX :\n\n".format(""))
-    t4out.append("{0:>24}".format(""))
+    t4out.append(f"{'':>12}SENSIBILITY MATRIX :\n\n")
+    t4out.append(f"{'':>24}")
     t4out.append(matrix_t4_output(kijdict['kij_sensibility_matrix'],
                                   kijdict['space_bins']))
     t4out.append("\n\n\n")

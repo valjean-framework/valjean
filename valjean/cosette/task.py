@@ -103,7 +103,7 @@ class Task(ABC):
             if not isinstance(deps, (tuple, list, set)):
                 errmsg = ('The `deps` task argument must '
                           'be either a collection of tasks or None; '
-                          'type {} found'.format(type(deps)))
+                          f'type {type(deps)} found')
                 raise TypeError(errmsg)
             self.depends_on.update(deps)
 
@@ -112,7 +112,7 @@ class Task(ABC):
             if not isinstance(soft_deps, (tuple, list, set)):
                 errmsg = ('The `soft_deps` task argument must '
                           'be either a collection of tasks or None; '
-                          'type {} found'.format(type(soft_deps)))
+                          f'type {type(soft_deps)} found')
                 raise TypeError(errmsg)
             self.soft_depends_on.update(soft_deps)
 
@@ -128,7 +128,7 @@ class Task(ABC):
         return repr(self.name)  # use repr() to add quotes around the task name
 
     def __repr__(self):
-        return "Task('{}')".format(self.name)
+        return f"Task('{self.name}')"
 
     def add_dependency(self, dep):
         '''Add an item to the list of dependencies of this task.'''
@@ -168,7 +168,7 @@ class DelayTask(Task):
                     self, self.delay)
         sleep(self.delay)
         LOGGER.info('DelayTask %s waking up!', self)
-        return dict(), TaskStatus.DONE
+        return {}, TaskStatus.DONE
 
 
 def det_hash(*args):

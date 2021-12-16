@@ -462,7 +462,7 @@ class Scanner(Mapping):
         generator_state = []
         current_batch = 0
         _batch_scan = None
-        with open(self.fname, errors='ignore') as fil:
+        with open(self.fname, errors='ignore', encoding='utf-8') as fil:
             for line in fil:
                 if line.lstrip().startswith("//"):  # comment in the jdd
                     continue
@@ -535,10 +535,9 @@ class Scanner(Mapping):
         try:
             return self._collres[batch_number]
         except KeyError:
-            message = ("Wrong batch number required, batch number {} doesn't "
-                       "exist, please change it to an existing one."
-                       .format(batch_number))
-            LOGGER.error(message)
+            LOGGER.error("Wrong batch number required, batch number %s "
+                         "doesn't exist, please change it to an existing "
+                         "one.", batch_number)
             raise
 
     def __iter__(self):

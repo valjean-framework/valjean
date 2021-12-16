@@ -144,7 +144,7 @@ def test_failing_blocks(graph, n_workers, sampler):
         graph.add_dependency(task, on=failing_task)
         deps = graph.invert().dependencies(task, recurse=True)
         deps.append(task)
-        note('selected task for dependency: {}'.format(task))
+        note(f'selected task for dependency: {task}')
     else:
         task = None
         deps = []
@@ -153,11 +153,11 @@ def test_failing_blocks(graph, n_workers, sampler):
 
     # schedule the graph
     env = run(hard_graph=graph, n_workers=n_workers)
-    note('environment after scheduling: {}'.format(env))
+    note(f'environment after scheduling: {env}')
 
     n_blocked = 0
     for node in graph.nodes():
-        note('node = {}'.format(node))
+        note(f'node = {node}')
         if node in deps:
             # check that the failing task blocked `task` and all the other
             # tasks that depended on it
@@ -171,7 +171,7 @@ def test_failing_blocks(graph, n_workers, sampler):
             assert env[node.name]['status'] == TaskStatus.DONE
 
     # record the number of blocked tasks
-    event('blocked tasks = {}'.format(n_blocked))
+    event(f'blocked tasks = {n_blocked}')
 
 
 @given(graph=graphs(delay_tasks(min_duration=0.0, max_duration=0.0,
@@ -191,7 +191,7 @@ def test_failing_soft_not_blocks(graph, n_workers, sampler):
         graph.add_dependency(task, on=failing_task)
         deps = graph.invert().dependencies(task, recurse=True)
         deps.append(task)
-        note('selected task for dependency: {}'.format(task))
+        note(f'selected task for dependency: {task}')
     else:
         task = None
         deps = []
@@ -200,13 +200,13 @@ def test_failing_soft_not_blocks(graph, n_workers, sampler):
 
     # schedule the graph
     env = run(hard_graph=DepGraph(), soft_graph=graph, n_workers=n_workers)
-    note('environment after scheduling: {}'.format(env))
+    note(f'environment after scheduling: {env}')
 
     n_blocked = 0
     assert failing_task.name in env
     for node in graph.nodes():
         name = node.name
-        note('node = {}'.format(node))
+        note(f'node = {node}')
         if node in deps:
             # check that the failing task blocked `task` and all the other
             # tasks that depended on it
@@ -224,7 +224,7 @@ def test_failing_soft_not_blocks(graph, n_workers, sampler):
             assert env[name]['status'] == TaskStatus.DONE
 
     # record the number of blocked tasks
-    event('blocked tasks = {}'.format(n_blocked))
+    event(f'blocked tasks = {n_blocked}')
 
 
 ########################################

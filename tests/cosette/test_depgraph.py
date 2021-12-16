@@ -55,7 +55,7 @@ def is_complete(graph):
         all_keys.add(key)
         for val in vals:
             all_values.add(val)
-    note('keys: {}\nvalues: {}'.format(all_keys, all_values))
+    note(f'keys: {all_keys}\nvalues: {all_values}')
     return all_values <= all_keys
 
 
@@ -98,11 +98,11 @@ def do_test_topological_sort(graph):
     the items appearing earlier.
     '''
     sorted_list = list(graph.topological_sort())
-    note('topological sort: {}'.format(sorted_list))
+    note(f'topological sort: {sorted_list}')
     seen = set()
     for item in sorted_list:
         dependencies = graph.dependencies(item)
-        note('dependencies: {}'.format(dependencies))
+        note(f'dependencies: {dependencies}')
         assert all(list(x in seen for x in dependencies))
         seen.add(item)
 
@@ -125,8 +125,8 @@ def test_equivalent_constructors(graph):
             graph_incr.add_node(val)
             graph_incr.add_dependency(key, val)
 
-    note('graph: {!r}'.format(graph))
-    note('graph_incr: {!r}'.format(graph_incr))
+    note(f'graph: {graph!r}')
+    note(f'graph_incr: {graph_incr!r}')
     assert graph.isomorphic_to(graph_incr)
 
 
@@ -240,7 +240,7 @@ def test_merge_commutative(graph1, graph2):
 def test_merge_containment(graph1, graph2):
     '''Test that the merged graph contains both operands as subgraphs.'''
     graph = graph1 + graph2
-    note('merged graph: {!r}'.format(graph))
+    note(f'merged graph: {graph!r}')
     assert graph1 <= graph
     assert graph2 <= graph
 
@@ -249,7 +249,7 @@ def test_merge_containment(graph1, graph2):
 def test_trans_red_subgraph(graph):
     '''Test that transitive reduction results in a subgraph.'''
     graph_tr = graph.copy().transitive_reduction()
-    note('reduced graph: {!r}'.format(graph_tr))
+    note(f'reduced graph: {graph_tr!r}')
     assert graph_tr <= graph
 
 
@@ -258,7 +258,7 @@ def test_trans_red_same_nodes(graph):
     '''Test that transitive reduction results in a graph over the same
     nodes.'''
     graph_tr = graph.copy().transitive_reduction()
-    note('reduced graph: {!r}'.format(graph_tr))
+    note(f'reduced graph: {graph_tr!r}')
     assert sorted(graph_tr.nodes()) == sorted(graph.nodes())
 
 
@@ -285,7 +285,7 @@ def test_trans_red_idempotent(graph):
 def test_trans_closure_supergraph(graph):
     '''Test that transitive closure results in a supergraph.'''
     graph_cl = graph.copy().transitive_closure()
-    note('closure graph: {!r}'.format(graph_cl))
+    note(f'closure graph: {graph_cl!r}')
     assert graph <= graph_cl
 
 
@@ -294,7 +294,7 @@ def test_trans_closure_same_nodes(graph):
     '''Test that transitive closure results in a graph over the same
     nodes.'''
     graph_cl = graph.copy().transitive_closure()
-    note('closure graph: {!r}'.format(graph_cl))
+    note(f'closure graph: {graph_cl!r}')
     assert sorted(graph_cl.nodes()) == sorted(graph.nodes())
 
 
@@ -342,14 +342,14 @@ def test_depends(graph, recurse):
             assert not graph.depends(node, dep, recurse)
             count_no_deps += 1
     if count_deps < 5:
-        event('count_deps = {}'.format(count_deps))
+        event(f'count_deps = {count_deps}')
     else:
         event('count_deps > 5')
     if count_no_deps < 5:
-        event('count_no_deps = {}'.format(count_no_deps))
+        event(f'count_no_deps = {count_no_deps}')
     else:
         event('count_no_deps > 5')
-    event('recurse = {}'.format(recurse))
+    event(f'recurse = {recurse}')
 
 
 @given(graph=depgraphs())
@@ -415,7 +415,7 @@ def test_flatten_dependencies(graph1, graph2):
     for node in graph2.nodes():
         assert graph1.depends(node0, node, recurse=True)
         assert graph1.depends(node, node1, recurse=True)
-    event('min_graph_size={}'.format(min(len(graph1), len(graph2))))
+    event(f'min_graph_size={min(len(graph1), len(graph2))}')
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))
@@ -425,19 +425,19 @@ def test_flatten_size(graph1, graph2):
     correct size.
     '''
     expected_nodes = set(graph1.nodes()) | set(graph2.nodes())
-    note('graph1: {!r}'.format(graph1))
-    note('graph2: {!r}'.format(graph2))
-    note('expected_nodes: {}'.format(expected_nodes))
+    note(f'graph1: {graph1!r}')
+    note(f'graph2: {graph2!r}')
+    note(f'expected_nodes: {expected_nodes}')
     expected_n_nodes = len(expected_nodes)
     # add graph2 into graph1; graph1 has at least two nodes
     nodes = graph1.nodes()
     graph1.add_dependency(nodes[0], on=graph2)
     graph1.add_dependency(graph2, on=nodes[1])
-    note('before flattening: {!r}'.format(graph1))
+    note(f'before flattening: {graph1!r}')
     graph1.flatten()
-    note('after flattening: {!r}'.format(graph1))
+    note(f'after flattening: {graph1!r}')
     observed_n_nodes = len(graph1)
-    event('min_graph_size={}'.format(min(len(graph1), len(graph2))))
+    event(f'min_graph_size={min(len(graph1), len(graph2))}')
     assert expected_n_nodes == observed_n_nodes
 
 
@@ -449,7 +449,7 @@ def test_flatten_size3(graph1, graph2, graph3):
     correct size.
     '''
     expected_nodes = set(graph1.nodes()) | set(graph2.nodes())
-    note('expected_nodes: {}'.format(expected_nodes))
+    note(f'expected_nodes: {expected_nodes}')
     expected_n_nodes = len(expected_nodes) + 1
     # add g3 into graph2; graph2 has at least two nodes
     graph2.add_dependency(graph2.nodes()[0], on=graph3)
@@ -457,15 +457,14 @@ def test_flatten_size3(graph1, graph2, graph3):
     # add graph2 into graph1; graph1 has at least two nodes
     graph1.add_dependency(graph1.nodes()[0], on=graph2)
     graph1.add_dependency(graph2, on=graph1.nodes()[1])
-    note('graph1: {!r}'.format(graph1))
-    note('graph2: {!r}'.format(graph2))
-    note('graph3: {!r}'.format(graph3))
-    note('before flattening: {!r}'.format(graph1))
+    note(f'graph1: {graph1!r}')
+    note(f'graph2: {graph2!r}')
+    note(f'graph3: {graph3!r}')
+    note(f'before flattening: {graph1!r}')
     graph1.flatten(recurse=False)
-    note('after flattening: {!r}'.format(graph1))
+    note(f'after flattening: {graph1!r}')
     observed_n_nodes = len(graph1)
-    event('min_graph_size={}'.format(min(len(graph1), len(graph2),
-                                         len(graph3))))
+    event(f'min_graph_size={min(len(graph1), len(graph2), len(graph3))}')
     assert expected_n_nodes == observed_n_nodes
 
 
@@ -480,7 +479,7 @@ def test_recursive_flatten_size3(graph1, graph2, graph3):
     nodes2 = graph2.nodes()
     nodes3 = graph3.nodes()
     expected_nodes = set(nodes1) | set(nodes2) | set(nodes3)
-    note('expected_nodes: {}'.format(expected_nodes))
+    note(f'expected_nodes: {expected_nodes}')
     expected_n_nodes = len(expected_nodes)
     # add graph3 into graph2; graph2 has at least two nodes
     graph2.add_dependency(nodes2[0], on=graph3)
@@ -488,15 +487,14 @@ def test_recursive_flatten_size3(graph1, graph2, graph3):
     # add graph2 into graph1; graph1 has at least two nodes
     graph1.add_dependency(nodes1[0], on=graph2)
     graph1.add_dependency(graph2, on=nodes1[1])
-    note('graph1: {!r}'.format(graph1))
-    note('graph2: {!r}'.format(graph2))
-    note('graph3: {!r}'.format(graph3))
-    note('before flattening: {!r}'.format(graph1))
+    note(f'graph1: {graph1!r}')
+    note(f'graph2: {graph2!r}')
+    note(f'graph3: {graph3!r}')
+    note(f'before flattening: {graph1!r}')
     graph1.flatten()
-    note('after flattening: {!r}'.format(graph1))
+    note(f'after flattening: {graph1!r}')
     observed_n_nodes = len(graph1)
-    event('min_graph_size={}'.format(min(len(graph1), len(graph2),
-                                         len(graph3))))
+    event(f'min_graph_size={min(len(graph1), len(graph2), len(graph3))}')
     assert expected_n_nodes == observed_n_nodes
 
 

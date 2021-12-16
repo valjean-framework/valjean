@@ -64,7 +64,7 @@ class TableTemplate:
     2
     >>> print(stab12.columns[0].size)
     2
-    >>> print("{!r}".format(stab12))
+    >>> print(f"{stab12!r}")
     class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [1.5 1.2]
@@ -96,7 +96,7 @@ class TableTemplate:
     2 5
     >>> stab14.columns[0].size == tit1.columns[0].size + tit4.columns[0].size
     True
-    >>> print("{!r}".format(stab14))
+    >>> print(f"{stab14!r}")
     class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [1.5 0.  1.  2.  3. ]
@@ -112,7 +112,7 @@ class TableTemplate:
     >>> stab45 = join(tit4, tit5)
     >>> print(len(stab45.columns), len(stab45.columns[0]))
     2 7
-    >>> print("{!r}".format(stab45))
+    >>> print(f"{stab45!r}")
     class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [0.  1.  2.  3.  0.  0.1 0.2]
@@ -124,7 +124,7 @@ array([0., 0., 0., 0., 0., 0., 0.])]
     requirements).
 
     >>> stab145 = join(tit1, tit4, tit5)
-    >>> print("{!r}".format(stab145))
+    >>> print(f"{stab145!r}")
     class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [1.5 0.  1.  2.  3.  0.  0.1 0.2]
@@ -136,7 +136,7 @@ array([0., 0., 0., 0., 0., 0., 0., 0.])]
     :class:`TableTemplate` as expected:
 
     >>> tit1.join(tit4, tit5)
-    >>> print("{!r}".format(tit1))
+    >>> print(f"{tit1!r}")
     class: <class 'valjean.javert.templates.TableTemplate'>
     headers: ['egg', 'spam']
     egg: [1.5 0.  1.  2.  3.  0.  0.1 0.2]
@@ -189,27 +189,27 @@ array([0., 0., 0., 0., 0., 0., 0., 0.])]
             self.highlights = highlights
 
         if len(self.headers) != len(self.columns):
-            err = ('number of column headers ({}) must match number of '
-                   'columns ({})'.format(len(self.headers), len(self.columns)))
+            err = (f'number of column headers ({len(self.headers)}) must '
+                   f'match number of columns ({len(self.columns)})')
             raise ValueError(err)
 
         if len(self.units) != len(self.columns):
-            err = ('number of column units ({}) must match number of '
-                   'columns ({})'.format(len(self.units), len(self.columns)))
+            err = (f'number of column units ({len(self.units)}) must match '
+                   f'number of columns ({len(self.columns)})')
             raise ValueError(err)
 
         if not isinstance(self.highlights, list):
             raise TypeError('expected a list as the `highlights` argument, '
-                            'got a {} instead'.format(type(self.highlights)))
+                            f'got a {type(self.highlights)} instead')
         if len(self.highlights) != len(self.columns):
-            raise ValueError('expected a list of {} elements as the '
-                             '`highlights` argument, got {} elements instead'
-                             .format(len(self.columns), len(self.highlights)))
+            raise ValueError(f'expected a list of {len(self.columns)} '
+                             'elements as the `highlights` argument, got '
+                             f'{len(self.highlights)} elements instead')
 
         for i, col in enumerate(self.columns):
             if not isinstance(col, (np.ndarray, np.generic, list)):
                 raise TypeError('table columns must be lists or Numpy arrays, '
-                                'not {}'.format(type(col)))
+                                f'not {type(col)}')
 
             col_size = (col.size if isinstance(col, (np.ndarray, np.generic))
                         else len(col))
@@ -217,8 +217,8 @@ array([0., 0., 0., 0., 0., 0., 0., 0.])]
                 n_elems = col_size
             elif col_size != n_elems:
                 err = ('columns must have the same number of elements; '
-                       'column 0 has size {}, but column {} has size {}'
-                       .format(n_elems, i, col_size))
+                       f'column 0 has size {n_elems}, but column {i} has size '
+                       f'{col_size}')
                 raise ValueError(err)
 
     def copy(self):
@@ -275,12 +275,11 @@ array([0., 0., 0., 0., 0., 0., 0., 0.])]
 
     def __repr__(self):
         '''Print TableTemplate details.'''
-        intro = ["class: {0}\n"
-                 "headers: {1}\n".format(self.__class__, self.headers)]
+        intro = [f"class: {self.__class__}\nheaders: {self.headers}\n"]
         elts = []
         for header, col in zip(self.headers, self.columns):
-            elts.append("{0}: {1}\n".format(header, col))
-        hlight = ['highlights: {}'.format(self.highlights)]
+            elts.append(f"{header}: {col}\n")
+        hlight = [f'highlights: {self.highlights}']
         return ''.join(intro + elts + hlight)
 
     def __getitem__(self, index):
@@ -394,20 +393,18 @@ class CurveElements:
 
     def __repr__(self):
         '''Printing of :class:`CurveElements`.'''
-        elts = ("  legend:  {}\n"
-                "  index:   {}\n"
-                "  bins:    {}\n"
-                "  values:  {}\n"
-                "  errors:  {}\n".format(
-                    self.legend, self.index, self.bins, self.values,
-                    self.errors))
+        elts = (f"  legend:  {self.legend}\n"
+                f"  index:   {self.index}\n"
+                f"  bins:    {self.bins}\n"
+                f"  values:  {self.values}\n"
+                f"  errors:  {self.errors}\n")
         return elts
 
     def __str__(self):
         '''Printing of :class:`CurveElements`.'''
-        elts = ("  legend:  {}\n"
-                "  index:   {}\n"
-                "  bins:    {}\n".format(self.legend, self.index, self.bins))
+        elts = (f"  legend:  {self.legend}\n"
+                f"  index:   {self.index}\n"
+                f"  bins:    {self.bins}\n")
         return elts
 
     def data(self):
@@ -574,12 +571,10 @@ class SubPlotElements:
                 'Inconsistent number of axis names and bins')
         if self.ptype == '1D' and len(self.axnames) != 2:
             raise SubPlotElementsException(
-                'Expecting a 1D plot but got {} axes'
-                .format(len(self.axnames)))
+                f'Expecting a 1D plot but got {len(self.axnames)} axes')
         if self.ptype == '2D' and len(self.axnames) != 3:
             raise SubPlotElementsException(
-                'Expecting a 2D plot but got {} axes'
-                .format(len(self.axnames)))
+                f'Expecting a 2D plot but got {len(self.axnames)} axes')
         if self.ptype == '2D' and len(self.curves) > 1:
             LOGGER.warning('Only one subplot expected by SubPlotElements in '
                            '2D case')
@@ -597,18 +592,17 @@ class SubPlotElements:
 
     def __repr__(self):
         '''Printing of :class:`SubPlotElements`'''
-        elts = [" axnames: {}, plot type: {}, N curves: {}\n"
-                .format(self.axnames, self.ptype, len(self.curves))]
+        elts = [f" axnames: {self.axnames}, plot type: {self.ptype}, "
+                f"N curves: {self.curves}\n"]
         for j, curve in enumerate(self.curves):
-            elts.append(" Curve {}\n{!r}".format(j, curve))
+            elts.append(f" Curve {j}\n{curve!r}")
         return ''.join(elts)
 
     def __str__(self):
         '''Printing of :class:`SubPlotElements`'''
-        elts = [" axnames: {}, plot type: {}\n"
-                .format(self.axnames, self.ptype)]
+        elts = [f" axnames: {self.axnames}, plot type: {self.ptype}\n"]
         for j, curve in enumerate(self.curves):
-            elts.append(" Curve {}\n{!s}".format(j, curve))
+            elts.append(f" Curve {j}\n{curve!s}")
         return ''.join(elts)
 
     def data(self):
@@ -655,7 +649,7 @@ class PlotTemplate:
     ...     curves=[CurveElements(d13, legend='d13', bins=[bins1], index=2)],
     ...     axnames=['egg', 'wine'])])
     >>> splt123 = join(pit1, pit2, pit3)
-    >>> print("{!r}".format(splt123))
+    >>> print(f"{splt123!r}")
     class:   <class 'valjean.javert.templates.PlotTemplate'>
     N subplots: 3
     Subplot 0
@@ -761,7 +755,7 @@ class PlotTemplate:
     ...                           legend='d32', index=1)],
     ...     axnames=['egg', 'spam', 'lobster'], ptype='2D')])
     >>> splt78 = join(pit7, pit8)
-    >>> print("{!s}".format(splt78))
+    >>> print(f"{splt78!s}")
     class:   <class 'valjean.javert.templates.PlotTemplate'>
     Subplot 0
      axnames: ['egg', 'spam', 'bacon'], plot type: 2D
@@ -780,7 +774,7 @@ class PlotTemplate:
     It is also possible to mix 1D and 2D plots:
 
     >>> splt27 = join(pit2, pit7)
-    >>> print("{!s}".format(splt27))
+    >>> print(f"{splt27!s}")
     class:   <class 'valjean.javert.templates.PlotTemplate'>
     Subplot 0
      axnames: ['egg', 'beer'], plot type: 1D
@@ -889,19 +883,18 @@ class PlotTemplate:
 
     def __repr__(self):
         '''Printing of :class:`PlotTemplate`.'''
-        intro = ["class:   {}\n"
-                 "N subplots: {}\n".format(self.__class__, self.nb_plots)]
+        intro = [f"class:   {self.__class__}\nN subplots: {self.nb_plots}\n"]
         elts = []
         for i, splt in enumerate(self.subplots):
-            elts.append("Subplot {}\n{!r}".format(i, splt))
+            elts.append(f"Subplot {i}\n{splt!r}")
         return ''.join(intro + elts)
 
     def __str__(self):
         '''Printing of :class:`PlotTemplate`.'''
-        intro = ["class:   {0}\n".format(self.__class__)]
+        intro = [f"class:   {self.__class__}\n"]
         elts = []
         for i, splt in enumerate(self.subplots):
-            elts.append("Subplot {}\n{!s}".format(i, splt))
+            elts.append(f"Subplot {i}\n{splt!s}")
         return ''.join(intro + elts)
 
     def fingerprint(self):
@@ -949,16 +942,16 @@ class TextTemplate:
     of different TextTemplate.
 
     >>> ttplt1 = TextTemplate('Spam egg bacon')
-    >>> print("{!r}".format(ttplt1))
+    >>> print(f"{ttplt1!r}")
     <class 'valjean.javert.templates.TextTemplate'>\
 (text='Spam egg bacon')
     >>> ttplt2 = TextTemplate('**Spam** egg bacon')
-    >>> print("{!r}".format(ttplt2))
+    >>> print(f"{ttplt2!r}")
     <class 'valjean.javert.templates.TextTemplate'>\
 (text='**Spam** egg bacon')
     >>> ttplt3 = TextTemplate(r".. role:: hl\\n\\nsausage :hl:`tomato`")
     >>> ttplt1.join(ttplt3)
-    >>> print("{!r}".format(ttplt1))
+    >>> print(f"{ttplt1!r}")
     <class 'valjean.javert.templates.TextTemplate'>\
 (text='Spam egg bacon.. role:: hl\\\\n\\\\nsausage :hl:`tomato`')
 
@@ -969,14 +962,14 @@ class TextTemplate:
     >>> ttplt1 = TextTemplate('Spam egg bacon\\n\\n')
     >>> ttplt3 = TextTemplate('.. role:: hl\\n\\nsausage :hl:`tomato`\\n\\n')
     >>> ttplt1.join(ttplt3)
-    >>> print("{!r}".format(ttplt1))
+    >>> print(f"{ttplt1!r}")
     <class 'valjean.javert.templates.TextTemplate'>\
 (text='Spam egg bacon\\n\\n.. role:: hl\\n\\nsausage :hl:`tomato`\\n\\n')
 
     Test of the external function :meth:`join`:
 
     >>> ttplt4 = join(ttplt3, ttplt3)
-    >>> print("{!r}".format(ttplt4))
+    >>> print(f"{ttplt4!r}")
     <class 'valjean.javert.templates.TextTemplate'>\
 (text='.. role:: hl\\n\\nsausage :hl:`tomato`\\n\\n\
 .. role:: hl\\n\\nsausage :hl:`tomato`\\n\\n')
@@ -985,10 +978,10 @@ class TextTemplate:
 
     >>> ttplt5 = ttplt2.copy()
     >>> ttplt5.text += ' sausage'
-    >>> print("{!r}".format(ttplt2))
+    >>> print(f"{ttplt2!r}")
     <class 'valjean.javert.templates.TextTemplate'>\
 (text='**Spam** egg bacon')
-    >>> print("{!r}".format(ttplt5))
+    >>> print(f"{ttplt5!r}")
     <class 'valjean.javert.templates.TextTemplate'>\
 (text='**Spam** egg bacon sausage')
     '''
@@ -1002,12 +995,12 @@ class TextTemplate:
 
     def __repr__(self):
         '''Print :class:`TextTemplate` details.'''
-        return '{}(text={!r})'.format(self.__class__, self.text)
+        return f'{self.__class__}(text={self.text!r})'
 
     def _binary_join(self, other):
         if not isinstance(other, TextTemplate):
             raise TypeError("Only a TextTemplate can be joined to another "
-                            "TextTemplate; got a {}".format(type(other)))
+                            f"TextTemplate; got a {type(other)}")
         self.text += other.text
 
     def copy(self):

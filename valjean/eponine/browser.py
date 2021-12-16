@@ -294,9 +294,9 @@ class Index(Mapping):
     def __str__(self):
         lstr = ["{"]
         for i, (key, dset) in enumerate(list(self.index.items())):
-            lstr.append('{0!r}: {{'.format(key))
+            lstr.append(f'{key!r}: {{')
             for j, (dkey, ind) in enumerate(list(dset.items())):
-                lstr.append('{0!r}: {1!r}'.format(dkey, ind))
+                lstr.append(f'{dkey!r}: {ind!r}')
                 if j < len(dset) - 1:
                     lstr.append(', ')
             lstr.append('}')
@@ -348,9 +348,9 @@ class Index(Mapping):
         if sort:
             lstr = ["{"]
             for i, (key, dset) in enumerate(sorted(self.index.items())):
-                lstr.append('{0!r}: {{'.format(key))
+                lstr.append(f'{key!r}: {{')
                 for j, (dkey, ind) in enumerate(sorted(dset.items(), key=str)):
-                    lstr.append('{0!r}: {1!r}'.format(dkey, ind))
+                    lstr.append(f'{dkey!r}: {ind!r}')
                     if j < len(dset) - 1:
                         lstr.append(', ')
                 lstr.append('}')
@@ -434,7 +434,7 @@ class Browser(Container):
 
     >>> small_order = [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}]
     >>> so_br = Browser(small_order)
-    >>> "{0!r}".format(so_br)
+    >>> "{so_br!r}"
     "<class 'valjean.eponine.browser.Browser'>, (Content items: ..., \
 Index: ...)"
     '''
@@ -528,16 +528,17 @@ Index: ...)"
         return ()
 
     def __str__(self):
-        return ("{0} object -> Number of content items: {1}, "
-                "data key: {2!r}, available metadata keys: {3}\n"
-                "{4:>{5}}        -> Number of globals: {6}"
-                .format(self.__class__.__name__, len(self.content),
-                        self.data_key, sorted(self.keys()), "",
-                        len(self.__class__.__name__), len(self.globals)))
+        cls_name = self.__class__.__name__
+        return (f"{cls_name} object -> "
+                f"Number of content items: {len(self.content)}, "
+                f"data key: {self.data_key!r}, "
+                f"available metadata keys: {sorted(self.keys())}\n"
+                f"{'':>{len(cls_name)}}        "
+                f"-> Number of globals: {len(self.globals)}")
 
     def __repr__(self):
-        return ("{0}, (Content items: {1!r}, Index: {2!r})"
-                .format(self.__class__, self.content, self.index))
+        return (f"{self.__class__}, (Content items: {self.content!r}, "
+                f"Index: {self.index!r})")
 
     def _filter_items_id_by(self, **kwargs):
         '''Selection of content items indices according to kwargs criteria.
@@ -548,15 +549,15 @@ Index: ...)"
         :rtype: set(int)
         '''
         itemids = set(range(len(self.content)))
-        for kwd in kwargs:
+        for kwd, kwarg in kwargs.items():
             if kwd not in self.index:
                 LOGGER.warning("%s not a valid key. Possible ones are %s",
                                kwd, sorted(self.keys()))
                 return set()
-            if kwargs[kwd] not in self.index[kwd]:
-                LOGGER.warning("%s is not a valid %s", kwargs[kwd], kwd)
+            if kwarg not in self.index[kwd]:
+                LOGGER.warning("%s is not a valid %s", kwarg, kwd)
                 return set()
-            itemids = itemids & self.index[kwd][kwargs[kwd]]
+            itemids = itemids & self.index[kwd][kwarg]
         if not itemids:
             LOGGER.warning("Wrong selection, item might be not present. "
                            "Also check if requirements are consistent.")

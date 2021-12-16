@@ -100,7 +100,7 @@ def job_file(cmake_echo, tmpdir, subdir):
     content = JOB_FILE.format(repo_path=str(cmake_echo), subdir=subdir)
     hasher = sha256()
     hasher.update(content.encode('utf-8'))
-    jfile = tmpdir.join('some_job_{}.py'.format(hasher.hexdigest()))
+    jfile = tmpdir.join(f'some_job_{hasher.hexdigest()}.py')
     jfile.write(content, ensure=True)
     yield jfile
 

@@ -427,8 +427,7 @@ def hdfdataset_to_dataset(hdf_data, ngroups, error):
     :rtype: Dataset
     '''
     if not isinstance(hdf_data, h5py.Dataset):
-        raise TypeError('Expected a h5py.Dataset, got a {}'
-                        .format(type(hdf_data)))
+        raise TypeError(f'Expected a h5py.Dataset, got a {type(hdf_data)}')
     if hdf_data.shape == (1,) and ngroups == 0:
         val = hdf_data[...][0]
     else:
@@ -557,9 +556,7 @@ def inspect(hfile, name_spaces=50):
         default = 50
     '''
     def find_subobj(name, obj):
-        tstr = '{:<{name_spaces}}  {}'.format(name, obj,
-                                              name_spaces=name_spaces)
-        LOGGER.info(tstr)
+        LOGGER.info(f'{name:<{name_spaces}}  {obj}')  # pylint: disable=W1203
     hfile.visititems(find_subobj)
 
 

@@ -44,7 +44,7 @@ from ... import LOGGER
 
 
 MAX_DEPTH = 0
-MAX_DEPTH_STR = "MAX_DEPTH = {} reached\n".format(MAX_DEPTH)
+MAX_DEPTH_STR = f"MAX_DEPTH = {MAX_DEPTH} reached\n"
 
 
 def array_to_str(array):
@@ -55,16 +55,15 @@ def array_to_str(array):
     '''
     lstr = []
     if array.shape != ():
-        lstr.append("{}, shape: {}, dtype: {}, squeezed:"
-                    .format(type(array), array.shape, array.dtype))
+        lstr.append(f"{type(array)}, shape: {array.shape}, "
+                    f"dtype: {array.dtype}, squeezed:")
         lstr.append(np.array2string(np.squeeze(array), precision=6,
                                     suppress_small=True,
                                     formatter={'float_kind': '{:.6e}'.format}))
     else:
-        lstr.append("{0}, dtype: {1}".format(
-            np.array2string(array, precision=6, suppress_small=True,
-                            formatter={'float_kind': '{:.6e}'.format}),
-            array.dtype))
+        arr_str = np.array2string(array, precision=6, suppress_small=True,
+                                  formatter={'float_kind': '{:.6e}'.format})
+        lstr.append(f"{arr_str}, dtype: {array.dtype}")
     return '\n'.join(lstr)
 
 
@@ -87,7 +86,7 @@ def result_to_str_according_type(res, depth=0):
     elif isinstance(res, (np.ndarray, np.generic)):
         lstr.append(array_to_str(res))
     else:
-        lstr.append("{}{!s}".format(spaces, res))
+        lstr.append(f"{spaces}{res!s}")
     return '\n'.join(lstr)
 
 
@@ -103,7 +102,7 @@ def dict_to_str(diction, depth=0):
     lstr = []
     dictkeys = (list(diction.keys()) if isinstance(diction, OrderedDict)
                 else sorted(diction))
-    lstr.append("{}Dict with keys = {}".format(spaces, dictkeys))
+    lstr.append(f"{spaces}Dict with keys = {dictkeys}")
     if depth > MAX_DEPTH:
         return MAX_DEPTH_STR
     for key in dictkeys:
@@ -111,10 +110,10 @@ def dict_to_str(diction, depth=0):
         spaces = "  "*depth
         key_str = spaces + key
         if isinstance(diction[key], (dict, list, np.ndarray, np.generic)):
-            lstr.append("{0} {1}".format(
-                key_str, result_to_str_according_type(diction[key], depth)))
+            res_str = result_to_str_according_type(diction[key], depth)
+            lstr.append(f"{key_str} {res_str}")
         else:
-            lstr.append("{0} {1}".format(key_str, diction[key]))
+            lstr.append(f"{key_str} {diction[key]}")
         depth -= 1
     return '\n'.join(lstr)
 
@@ -129,21 +128,18 @@ def list_to_str(liste, depth=0):
     '''
     spaces = "  "*depth
     lstr = []
-    lstr.append("{}list of {} elements -> ".format(spaces, len(liste)))
-    # if not liste:
-    #     return "\n"
+    lstr.append(f"{spaces}list of {len(liste)} elements -> ")
     if isinstance(liste[0], (dict, list, np.ndarray)):
         if depth > MAX_DEPTH:
             lstr.append(MAX_DEPTH_STR)
             return '\n'.join(lstr)
         for ielt, elt in enumerate(liste):
             depth += 1
-            lstr.append("{}elt {}: {}"
-                        .format(spaces, ielt,
-                                result_to_str_according_type(elt, depth)))
+            res_str = result_to_str_according_type(elt, depth)
+            lstr.append(f"{spaces}elt {ielt}: {res_str}")
             depth -= 1
     else:
-        lstr.append("{}{}".format(spaces, liste))
+        lstr.append(f"{spaces}{liste}")
     return '\n'.join(lstr)
 
 
@@ -170,17 +166,15 @@ def response_to_str(res, depth=0):
     lstr.append(dict_to_str({k: v for k, v in res.items() if k != 'results'},
                             depth))
     # Then print the results
-    lstr.append("{}{} ({}) -> {}".format(spaces, 'results',
-                                         type(res['results']),
-                                         res['response_type']))
+    lstr.append(f"{spaces}results ({type(res['results'])}) -> "
+                f"{res['response_type']}")
     rres = res['results']
     depth += 1
     if not isinstance(rres, (list, dict)):
         if isinstance(rres, np.ndarray):
             lstr.append(array_to_str(rres))
         else:
-            lstr.append("{0}".format(rres))
-            print(rres)
+            lstr.append(str(rres))
     elif isinstance(rres, list):
         lstr.append(list_to_str(rres, depth))
     else:
@@ -204,18 +198,18 @@ def parsing_result_to_str(toks):
         depth += 1
         if depth > MAX_DEPTH:
             break
-        lstr.append("\nKeys: {}".format(sorted(list(res.keys()))))
+        lstr.append(f"\nKeys: {sorted(res.keys())}")
         for key in sorted(res):
             depth += 1
             if depth > MAX_DEPTH:
                 break
-            lstr.append("\n{} ".format(key))
+            lstr.append(f"\n{key} ")
             if key == 'list_responses':
-                lstr.append("\nNumber of responses: {}".format(len(res[key])))
+                lstr.append(f"\nNumber of responses: {len(res[key])}")
                 for iresp, resp in enumerate(res[key]):
                     depth += 1
                     spaces = "  "*depth
-                    lstr.append("\n\n{}RESPONSE {}".format(spaces, iresp))
+                    lstr.append(f"\n\n{spaces}RESPONSE {iresp}")
                     lstr.append(response_to_str(resp, depth))
                     depth -= 1
             else:

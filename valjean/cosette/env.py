@@ -124,14 +124,13 @@ def _add_enum_accessors(enum):
             '''Produce a getter with a suitable docstring.'''
             def _getter(self, task):
                 return self.get_status(task) == status
-            _getter.__doc__ = ("Returns True if `task`'s "
-                               "status is `{}`.".format(name))
+            _getter.__doc__ = f"Returns True if `task`'s status is `{name}`."
             return _getter
 
         def _setter_factory(name, status):
             def _setter(self, task):
                 self.set_status(task, status)
-            _setter.__doc__ = "Sets `task`'s status to `{}`.".format(name)
+            _setter.__doc__ = f"Sets `task`'s status to `{name}`."
             return _setter
 
         for name, status in enum.__members__.items():
@@ -181,8 +180,7 @@ class Env(MutableMapping):
         return len(self.dictionary)
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__,
-                               repr(self.dictionary))
+        return f'{self.__class__.__name__}({self.dictionary!r})'
 
     @classmethod
     def from_file(cls, path, *, fmt='pickle'):

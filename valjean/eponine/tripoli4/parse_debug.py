@@ -81,7 +81,7 @@ class ParserDebug(Parser):
         with Chrono() as chrono:
             batch_edition = self.scan_res[batch_number]
             if LOGGER.isEnabledFor(logging.DEBUG) and self.ofile:
-                with open(self.ofile, 'w') as fout:
+                with open(self.ofile, 'w', encoding='utf-8') as fout:
                     fout.write(batch_edition)
             pres, = self._parse_listing_worker(
                 t4debug_gram, self.scan_res[batch_number])
