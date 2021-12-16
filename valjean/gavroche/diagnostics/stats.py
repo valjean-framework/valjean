@@ -717,3 +717,26 @@ class TestResultStatsTestsByLabels(TestResultStatsTasks):
         :rtype: int
         '''
         return self.n_labels - sum([s['total'] for s in self.classify])
+
+
+def classification_counts(classify, status_first):
+    '''Count the occurrences of different statuses in the `classify`
+    dictionary.
+
+    :param dict classify: a dictionary associating *things* to statuses. The
+        statuses must have the same type as `status_first`
+    :param status_first: the status that is considered as success. This must be
+        an enum class
+    :returns: a pair of lists of equal length. The first element of the pair is
+        the list of statuses appearing in `classify` (`status_first` is
+        guaranteed to come first in this list); the second element is the
+        number of times the corresponding status appears in `classify`.
+    '''
+    statuses = [status_first]
+    statuses.extend(status for status in status_first.__class__
+                    if status != status_first)
+    counts = [len(classify[status]) for status in statuses]
+    statuses = [status for status, count in zip(statuses, counts)
+                if count != 0]
+    counts = [count for count in counts if count != 0]
+    return statuses, counts

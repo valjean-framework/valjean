@@ -35,7 +35,7 @@ from itertools import chain
 import numpy as np
 from .. import LOGGER
 from ..cosette.task import TaskStatus
-from ..gavroche.diagnostics.stats import TestOutcome
+from ..gavroche.diagnostics.stats import TestOutcome, classification_counts
 from .templates import TableTemplate, TextTemplate
 from .verbosity import Verbosity
 
@@ -561,23 +561,12 @@ def repr_testresultstats(result, status_ok, label):
     :rtype: list(TableTemplate)
     '''
     classify = result.classify
-
-    statuses = [status_ok]
-    statuses.extend(status for status in status_ok.__class__
-                    if status != status_ok)
-
-    counts = [len(classify[status]) for status in statuses]
-    n_tasks = sum(counts)
-    percents = [percent_fmt(count, n_tasks) for count in counts
-                if count != 0]
-    statuses = [status for status, count in zip(statuses, counts)
-                if count != 0]
-    counts = [count for count in counts if count != 0]
+    statuses, counts = classification_counts(classify, status_ok)
     statuses_txt = [status.name for status in statuses]
-
+    n_tasks = sum(counts)
     statuses_txt.append('total')
     counts.append(n_tasks)
-    percents.append(percent_fmt(n_tasks, n_tasks))
+    percents = [percent_fmt(count, n_tasks) for count in counts]
 
     hl_column = [False]
     hl_column.extend(count > 0 for count in counts[1:-1])

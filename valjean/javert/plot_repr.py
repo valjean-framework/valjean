@@ -35,7 +35,7 @@ from collections import OrderedDict
 import numpy as np
 from .. import LOGGER
 from ..cosette.task import TaskStatus
-from ..gavroche.diagnostics.stats import TestOutcome
+from ..gavroche.diagnostics.stats import TestOutcome, classification_counts
 from .templates import PlotTemplate, CurveElements, SubPlotElements, join
 from .verbosity import Verbosity
 
@@ -572,14 +572,7 @@ def repr_testresultstats(result, status_ok, label):
     :param TestResult result: result from a statistical test
     :rtype: list(PlotTemplate)
     '''
-    classify = result.classify
-    statuses = [status_ok]
-    statuses.extend(status for status in status_ok.__class__
-                    if status != status_ok)
-    counts = [len(classify[status]) for status in statuses]
-    statuses = [status for status, count in zip(statuses, counts)
-                if count != 0]
-    counts = [count for count in counts if count != 0]
+    statuses, counts = classification_counts(result.classify, status_ok)
     statuses_txt = [status.name for status in statuses]
     subplot = SubPlotElements(
         curves=[CurveElements(values=np.array(counts),
