@@ -17,11 +17,11 @@ repository, you may want to use ``poetry`` to install the package in
     $ python3 -m venv ~/venv-valjean-dev
     $ source ~/venv-valjean-dev/bin/activate
     (venv-valjean-dev) $ cd /path/to/valjean-X.Y.Z
-    (venv-valjean-dev) $ poetry install
+    (venv-valjean-dev) $ poetry install -E dev
 
 This will install :mod:`valjean` and all of its dependencies in your current
 virtual environment. The development dependencies (e.g. `sphinx`, `pytest`,
-etc.) will also be installed; if you want to skip them, pass the ``--no-dev``
+etc.) will also be installed; if you want to skip them, omit the ``-E dev``
 flag to ``poetry install``.
 
 This procedure should install just a link to your source folder
