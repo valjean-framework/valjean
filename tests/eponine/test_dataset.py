@@ -44,6 +44,7 @@ from hypothesis.strategies import data, floats, one_of
 from ..context import valjean  # pylint: disable=unused-import,C0411
 
 from valjean.eponine import dataset as gd
+from valjean.fingerprint import fingerprint
 
 from .conftest import repeat, slice_tuples, datasets, multiple_datasets
 from ..gavroche.conftest import (some_dataset,  # pylint: disable=unused-import
@@ -383,17 +384,17 @@ def test_slicing(sampler):
 @given(gds=datasets())
 def test_fingerprint_copy(gds):
     '''Test dataset fingerprinting.'''
-    fgpr = gds.fingerprint()
+    fgpr = fingerprint(gds)
     gds_copy = gds.copy()
-    fgpr_copy = gds_copy.fingerprint()
+    fgpr_copy = fingerprint(gds_copy)
     assert fgpr == fgpr_copy
 
 
 def test_fingerprint_different(some_dataset, other_dataset, different_dataset):
     '''Test that different datasets have different fingerprints.'''
-    fgpr1 = some_dataset.fingerprint()
-    fgpr2 = other_dataset.fingerprint()
-    fgpr3 = different_dataset.fingerprint()
+    fgpr1 = fingerprint(some_dataset)
+    fgpr2 = fingerprint(other_dataset)
+    fgpr3 = fingerprint(different_dataset)
     assert fgpr1 != fgpr2
     assert fgpr2 != fgpr3
     assert fgpr3 != fgpr1

@@ -37,6 +37,7 @@ import numpy as np
 from hypothesis import given, note, settings, HealthCheck
 
 from ..context import valjean  # pylint: disable=unused-import
+from valjean.fingerprint import fingerprint
 from valjean.eponine.dataset import Dataset
 from valjean.gavroche import test
 
@@ -161,6 +162,6 @@ def test_fingerprint(valid_tests):
     '''Test that fingerprinting works on all the types of tests.'''
     all_fingerprints = set()
     for valid_test in valid_tests:
-        fgpr = valid_test.fingerprint()
+        fgpr = fingerprint(valid_test)
         all_fingerprints.add(fgpr)
     assert len(all_fingerprints) == len(valid_tests)

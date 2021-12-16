@@ -72,7 +72,6 @@ However, they are approximately equal:
     >>> print(bool(test_approx_res))
     True
 '''
-from hashlib import sha256
 from abc import ABC, abstractmethod
 import numpy as np
 
@@ -164,15 +163,6 @@ class Test(ABC):
         yield self.description.encode('utf-8')
         # labels intentionally excluded; this makes it possible to put any type
         # of items in the label values, and not just strings
-
-    def fingerprint(self):
-        '''Compute a fingerprint for `self`. The fingerprint must be a good
-        hash of the contents of the test.
-        '''
-        hasher = sha256()
-        for data in self.data():
-            hasher.update(data)
-        return hasher.hexdigest()
 
     # tell pytest that this class and derived classes should NOT be collected
     # as tests

@@ -47,6 +47,7 @@ import pkg_resources as pkg
 import numpy as np
 
 from .. import LOGGER
+from ..fingerprint import fingerprint
 from ..path import ensure, sanitize_filename
 from ..cosette.task import TaskStatus
 from ..cosette.pythontask import PythonTask
@@ -224,7 +225,7 @@ six-cent-six cyprès.
         :returns: the formatted test result.
         :rtype: str
         '''
-        lines = [self.formatter.anchor(result.test.fingerprint()),
+        lines = [self.formatter.anchor(fingerprint(result.test)),
                  self.formatter.text(result.test.description), '']
         res_repr = self.representation(result)
         if (not res_repr
@@ -555,7 +556,7 @@ class RstPlot:
     provides the ``.. image::`` directive to include in the .rst file.
     '''
     def __init__(self, plot):
-        self.fingerprint = plot.fingerprint()
+        self.fingerprint = fingerprint(plot)
         self.mpl_plot = MplPlot(plot)
 
     def __str__(self):

@@ -47,6 +47,7 @@ from collections import defaultdict
 from functools import partial, update_wrapper, total_ordering
 from enum import IntEnum
 
+from ...fingerprint import fingerprint
 from ...cosette.task import TaskStatus, close_dependency_graph
 from ...cosette.use import Use
 from ..test import Test, TestResult
@@ -380,7 +381,7 @@ class TestStatsTests(Test):
                 else:
                     test_lst = status_dict[TestOutcome.FAILURE]
                 name_fing = NameFingerprint(test_result.test.name,
-                                            test_result.test.fingerprint())
+                                            fingerprint(test_result.test))
                 test_lst.append(name_fing)
         return TestResultStatsTests(test=self, classify=status_dict)
 
@@ -627,7 +628,7 @@ class TestStatsTestsByLabels(Test):
         # pylint: disable=too-many-arguments
         label = labels[0]
         if label not in index:
-            LOGGER.warning('%s not found in some tests labels', label)
+            LOGGER.warning('%s not found in some test labels', label)
             return []
         if len(labels) > 1:
             lres = []

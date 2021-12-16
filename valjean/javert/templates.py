@@ -38,7 +38,6 @@ are handled by suitable formatting classes, such as :class:`~.Rst`.
 
 .. _numpy indexing: https://numpy.org/doc/stable/user/basics.indexing.html
 '''
-from hashlib import sha256
 import numpy as np
 from .. import LOGGER
 
@@ -303,19 +302,15 @@ array([0., 0., 0., 0., 0., 0., 0., 0.])]
                              units=self.units.copy(),
                              highlights=self.highlights.copy())
 
-    def fingerprint(self):
-        '''Compute a fingerprint (a SHA256 hash) for `self`. The fingerprint
-        depends only on the content of `self`. Two :class:`TableTemplate`
-        objects containing equal data have the same fingerprint. The converse
-        is not true, but very likely.'''
-        hasher = sha256()
+    def data(self):
+        '''Yield bytes representing `self`. Two :class:`TableTemplate` objects
+        containing equal data yield the same data.'''
         for col, head, unit, high in zip(self.columns, self.headers,
                                          self.units, self.highlights):
-            hasher.update(np.require(col, requirements='C').data.cast('b'))
-            hasher.update(head.encode('utf-8'))
-            hasher.update(unit.encode('utf-8'))
-            hasher.update(high.data.cast('b'))
-        return hasher.hexdigest()
+            yield np.require(col, requirements='C').data.cast('b')
+            yield head.encode('utf-8')
+            yield unit.encode('utf-8')
+            yield high.data.cast('b')
 
     def __eq__(self, other):
         '''Test for equality of `self` and another :class:`TableTemplate`.'''
@@ -593,7 +588,7 @@ class SubPlotElements:
     def __repr__(self):
         '''Printing of :class:`SubPlotElements`'''
         elts = [f" axnames: {self.axnames}, plot type: {self.ptype}, "
-                f"N curves: {self.curves}\n"]
+                f"N curves: {len(self.curves)}\n"]
         for j, curve in enumerate(self.curves):
             elts.append(f" Curve {j}\n{curve!r}")
         return ''.join(elts)
@@ -883,30 +878,23 @@ class PlotTemplate:
 
     def __repr__(self):
         '''Printing of :class:`PlotTemplate`.'''
-        intro = [f"class:   {self.__class__}\nN subplots: {self.nb_plots}\n"]
-        elts = []
+        elts = [f"class:   {self.__class__}\nN subplots: {self.nb_plots}\n"]
         for i, splt in enumerate(self.subplots):
             elts.append(f"Subplot {i}\n{splt!r}")
-        return ''.join(intro + elts)
+        return ''.join(elts)
 
     def __str__(self):
         '''Printing of :class:`PlotTemplate`.'''
-        intro = [f"class:   {self.__class__}\n"]
-        elts = []
+        elts = [f"class:   {self.__class__}\n"]
         for i, splt in enumerate(self.subplots):
             elts.append(f"Subplot {i}\n{splt!s}")
-        return ''.join(intro + elts)
+        return ''.join(elts)
 
-    def fingerprint(self):
-        '''Compute a fingerprint (a SHA256 hash) for `self`. The fingerprint
-        depends only on the content of `self`. Two :class:`PlotTemplate`
-        objects containing equal data have the same fingerprint. The converse
-        is not true, but very likely.'''
-        hasher = sha256()
+    def data(self):
+        '''Yield bytes representing `self`. Two :class:`TableTemplate` objects
+        containing equal data yield the same data.'''
         for splt in self.subplots:
-            for data in splt.data():
-                hasher.update(data)
-        return hasher.hexdigest()
+            yield from splt.data()
 
     def __eq__(self, other):
         '''Test for equality of `self` and another :class:`PlotTemplate`.'''
@@ -1015,14 +1003,10 @@ class TextTemplate:
         for oti in others:
             self._binary_join(oti)
 
-    def fingerprint(self):
-        '''Compute a fingerprint (a SHA256 hash) for `self`. The fingerprint
-        depends only on the content of `self`. Two :class:`TextTemplate`
-        objects containing equal data have the same fingerprint. The converse
-        is not true, but very likely.'''
-        hasher = sha256()
-        hasher.update(self.text.encode('utf-8'))
-        return hasher.hexdigest()
+    def data(self):
+        '''Yield bytes representing `self`. Two :class:`TableTemplate` objects
+        containing equal data yield the same data.'''
+        yield self.text.encode('utf-8')
 
     def __eq__(self, other):
         '''Test for equality of `self` and another :class:`TextTemplate`.'''

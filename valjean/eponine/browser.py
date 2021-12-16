@@ -434,7 +434,7 @@ class Browser(Container):
 
     >>> small_order = [{'dessert': 1, 'drink': 'beer', 'results': ['spam']}]
     >>> so_br = Browser(small_order)
-    >>> "{so_br!r}"
+    >>> f"{so_br!r}"
     "<class 'valjean.eponine.browser.Browser'>, (Content items: ..., \
 Index: ...)"
     '''

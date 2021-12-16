@@ -307,8 +307,8 @@ Bins of the dataset on the left are kept.
 Like in `NumPy` array addition, values need to have the same shape:
 
     >>> ds4 = Dataset(np.arange(5), np.array([0.01]*5), name='ds4')
-    >>> f"shape ds1 {ds1.value.shape}, ds4 {ds4.value.shape} -> "
-    ... f"comp = {ds1.value.shape == ds4.value.shape}"
+    >>> f"shape ds1 {ds1.value.shape}, ds4 {ds4.value.shape} -> \
+comp = {ds1.value.shape == ds4.value.shape}"
     'shape ds1 (2, 5), ds4 (5,) -> comp = False'
     >>> ds1 + ds4
     Traceback (most recent call last):
@@ -712,7 +712,6 @@ True
 True
 '''
 # pylint: enable=trailing-whitespace
-from hashlib import sha256
 from collections import OrderedDict
 import numpy as np
 from .. import LOGGER
@@ -848,44 +847,26 @@ class Dataset:
         read-only property.'''
         return self.value.size
 
-    def fingerprint(self):
-        '''Return a hash of the content of the dataset.
-
-        >>> vals = np.arange(10).reshape(2, 5)
-        >>> errs = np.array([1]*10).reshape(2, 5)
-        >>> ds = Dataset(vals, errs)
-        >>> ds.fingerprint()
-        'a8411470d7766c543e90f0f38241dc918b9448d1b9d19b0a9b8b6c91f61944d0'
-        >>> bins = OrderedDict([('bacon', np.arange(3)),
-        ...                     ('egg', np.arange(5))])
-        >>> ds = Dataset(vals, errs, bins=bins)
-        >>> ds.fingerprint()
-        'dfec4e6ac118d30b7a83cfc500fefaec94f93a76a024d7550732cd08fbfb0fee'
-        '''
-        hasher = sha256()
-        for data in self.data():
-            hasher.update(data)
-        return hasher.hexdigest()
-
     def data(self):
         '''Generator yielding objects supporting the buffer protocol that (as a
         whole) represent a serialized version of `self`.
 
+        >>> from valjean.fingerprint import fingerprint
         >>> vals = np.arange(10).reshape(2, 5)
         >>> errs = np.array([1]*10).reshape(2, 5)
         >>> ds = Dataset(vals, errs)
-        >>> ds.fingerprint()
+        >>> fingerprint(ds)
         'a8411470d7766c543e90f0f38241dc918b9448d1b9d19b0a9b8b6c91f61944d0'
         >>> bins = OrderedDict([('bacon', np.arange(3)),
         ...                     ('egg', np.arange(5))])
         >>> ds = Dataset(vals, errs, bins=bins)
-        >>> ds.fingerprint()
+        >>> fingerprint(ds)
         'dfec4e6ac118d30b7a83cfc500fefaec94f93a76a024d7550732cd08fbfb0fee'
         >>> ds = Dataset(vals, errs, bins=bins, name='name')
-        >>> ds.fingerprint()
+        >>> fingerprint(ds)
         '441623c096bf917414013ebbfe345c66124f9a8dfbbd7051cf733ea20d7b651a'
         >>> ds = Dataset(vals, errs, bins=bins, name='name', what='what!')
-        >>> ds.fingerprint()
+        >>> fingerprint(ds)
         '9a42c91381d696c1af651665f84efc43efa14d9c471c4ac851239ed0779a48a0'
         '''
         yield self.__class__.__name__.encode('utf-8')
@@ -901,7 +882,7 @@ class Dataset:
 
     def _check_datasets_consistency(self, other, operation=""):
         if other.shape != self.shape:
-            raise ValueError("fDatasets to {operation} do not have same shape")
+            raise ValueError(f"Datasets to {operation} do not have same shape")
         if other.bins != OrderedDict():
             if any((s != o) for s, o in zip(self.bins, other.bins)):
                 raise ValueError(f"Datasets to {operation} do not have same "

@@ -142,7 +142,7 @@ def exception_case(ttask, env):
     assert status == TaskStatus.DONE
     badlab_res = env[task_badlab[1].name]['result'][0]
     assert isinstance(badlab_res, TestResultFailed)
-    assert ("TestStatsTestsByLabels: ('consumer',) not found in tests labels"
+    assert ("TestStatsTestsByLabels: ('consumer',) not found in test labels"
             in str(badlab_res.msg))
 
 

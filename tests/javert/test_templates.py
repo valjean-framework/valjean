@@ -36,6 +36,7 @@ from hypothesis.strategies import text, data, integers
 # pylint: disable=wrong-import-order
 from .conftest import (plot_templates, table_templates, valid_index,
                        text_templates)
+from valjean.fingerprint import fingerprint
 from valjean.javert.templates import TableTemplate
 
 
@@ -45,7 +46,7 @@ def test_copy_plot_fingerprint(plot_t):
     fingerprint.'''
     copy = plot_t.copy()
     assert plot_t == copy
-    assert plot_t.fingerprint() == copy.fingerprint()
+    assert fingerprint(plot_t) == fingerprint(copy)
 
 
 @given(plot_t=plot_templates(),  # pylint: disable=no-value-for-parameter
@@ -56,7 +57,7 @@ def test_xname_plot_fingerprint(plot_t, more_text):
     copy = plot_t.copy()
     copy.subplots[0].axnames[0] += more_text
     assert plot_t != copy
-    assert plot_t.fingerprint() != copy.fingerprint()
+    assert fingerprint(plot_t) != fingerprint(copy)
 
 
 @given(plot_t=plot_templates())  # pylint: disable=no-value-for-parameter
@@ -68,7 +69,7 @@ def test_bins_plot_fingerprint(plot_t):
     copy.subplots[0].curves[0].bins[0][-1] *= 1.1
     copy.subplots[0].curves[0].bins[0][-1] += 1.0
     assert plot_t != copy
-    assert plot_t.fingerprint() != copy.fingerprint()
+    assert fingerprint(plot_t) != fingerprint(copy)
 
 
 @given(plot_t=plot_templates(),  # pylint: disable=no-value-for-parameter
@@ -80,7 +81,7 @@ def test_clegend_plot_fingerprint(plot_t, more_text, sampler):
     index = sampler.draw(integers(0, len(copy.subplots[0].curves) - 1))
     copy.subplots[0].curves[index].legend += more_text
     assert plot_t != copy
-    assert plot_t.fingerprint() != copy.fingerprint()
+    assert fingerprint(plot_t) != fingerprint(copy)
 
 
 @given(plot_t=plot_templates(),  # pylint: disable=no-value-for-parameter
@@ -92,7 +93,7 @@ def test_yname_plot_fingerprint(plot_t, more_text, sampler):
     index = sampler.draw(integers(0, len(copy.subplots) - 1))
     copy.subplots[index].axnames[1] += more_text
     assert plot_t != copy
-    assert plot_t.fingerprint() != copy.fingerprint()
+    assert fingerprint(plot_t) != fingerprint(copy)
 
 
 @given(plot_t=plot_templates(),  # pylint: disable=no-value-for-parameter
@@ -109,7 +110,7 @@ def test_cvals_plot_fingerprint(plot_t, sampler):
     values[values_index] *= 1.1
     values[values_index] += 1.0
     assert plot_t != copy
-    assert plot_t.fingerprint() != copy.fingerprint()
+    assert fingerprint(plot_t) != fingerprint(copy)
 
 
 @given(table_t=table_templates())  # pylint: disable=no-value-for-parameter
@@ -118,7 +119,7 @@ def test_copy_table_fingerprint(table_t):
     fingerprint.'''
     copy = table_t.copy()
     assert table_t == copy
-    assert table_t.fingerprint() == copy.fingerprint()
+    assert fingerprint(table_t) == fingerprint(copy)
 
 
 @given(table_t=table_templates(),  # pylint: disable=no-value-for-parameter
@@ -134,7 +135,7 @@ def test_tcolumns_table_fingerprint(table_t, sampler):
     column[column_index] *= 1.1
     column[column_index] += 1.0
     assert table_t != copy
-    assert table_t.fingerprint() != copy.fingerprint()
+    assert fingerprint(table_t) != fingerprint(copy)
 
 
 @given(text_t=text_templates())  # pylint: disable=no-value-for-parameter
@@ -143,7 +144,7 @@ def test_copy_text_fingerprint(text_t):
     fingerprint.'''
     copy = text_t.copy()
     assert text_t == copy
-    assert text_t.fingerprint() == copy.fingerprint()
+    assert fingerprint(text_t) == fingerprint(copy)
 
 
 @given(text_t=text_templates(),  # pylint: disable=no-value-for-parameter
@@ -154,7 +155,7 @@ def test_modif_text_fingerprint(text_t, sampler):
     copy = text_t.copy()
     copy.text += sampler.draw(text(alphabet='azertyuiop', min_size=1))
     assert text_t != copy
-    assert text_t.fingerprint() != copy.fingerprint()
+    assert fingerprint(text_t) != fingerprint(copy)
 
 
 def test_table_list():
@@ -166,4 +167,4 @@ def test_table_list():
                          headers=['egg', 'bacon'])
     tab2 = TableTemplate(np.array(['s', 'p', 'a', 'm']), np.arange(4)*0.5,
                          headers=['egg', 'bacon'])
-    assert tab1.fingerprint() == tab2.fingerprint()
+    assert fingerprint(tab1) == fingerprint(tab2)
