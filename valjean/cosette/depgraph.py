@@ -363,7 +363,7 @@ class DepGraph:
         LOGGER.debug('incomplete graph edges: %s', edges)
         with Chrono() as chrono:
             self._edges = DepGraph._complete(edges)
-        LOGGER.info('graph completed in %s seconds', chrono)
+        LOGGER.debug('graph completed in %s seconds', chrono)
         LOGGER.debug('full graph edges: %s', self._edges)
 
     def __str__(self):

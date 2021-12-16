@@ -501,7 +501,7 @@ Index: ...)"
         if self.data_key != other.data_key:
             raise ValueError('Same data_key is required to merge Browsers')
         if self.globals != other.globals:
-            LOGGER.info('globals will be updated with other values')
+            LOGGER.debug('globals will be updated with other values')
         new_glob = self.globals.copy()
         new_glob.update(other.globals)
         new_content = self.content + other.content
