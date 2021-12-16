@@ -9,23 +9,25 @@ source:
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
   string: {{ GIT_BUILD_STR }}_py{{ PY_VER }}
-  script: python setup.py install --single-version-externally-managed --record=record.txt
+  script: python3 -m pip install .
   entry_points:
     - valjean = valjean.cambronne.main:main
 
 
 requirements:
   build:
-    - python {{PY_VER}},>=3.4
-    - setuptools
-    - setuptools_scm
+    - python {{PY_VER}}
+    - poetry-core >=1.0.0
 
   run:
     - python
     - numpy
-    - pyparsing
+    - pyparsing >=3,<4
     - scipy
     - matplotlib
+    - toml
+    - h5py
+
 
 test:
   imports:
