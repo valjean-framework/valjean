@@ -169,6 +169,7 @@ envlist = py{36,37,38,39}
 skip_missing_interpreters = true
 
 [testenv]
+basepython=python3.9
 whitelist_externals = poetry
 setenv =
         COVERAGE_FILE=.coverage.{envname}
