@@ -1,4 +1,4 @@
-.. _jupyter: https://jupyter.readthedocs.io/en/latest/
+.. _jupyter: https://docs.jupyter.org/en/latest/
 
 Examples (in French)
 ====================

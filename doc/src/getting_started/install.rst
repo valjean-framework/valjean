@@ -11,7 +11,7 @@ Installing :mod:`valjean`
 .. _PEP 518: https://www.python.org/dev/peps/pep-0518/
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _anaconda: https://www.anaconda.com/products/individual
-.. _jupyter: https://jupyter.readthedocs.io/en/latest/
+.. _jupyter: https://docs.jupyter.org/en/latest/
 .. _h5py: https://docs.h5py.org/en/stable/
 
 Requirements
