@@ -11,7 +11,7 @@ Quick installation guide:
 ```
 python3 -m venv MY_VIRTUAL_ENV
 source MY_VIRTUAL_ENV/bin/activate
-pip install -U pip setuptools
+pip install -U pip
 ```
 
 ### Installation from git ###
@@ -47,10 +47,14 @@ conda install -c file://PATH/TO/valjean-VERSION.tar.bz2 --use-local valjean
 The python version of *conda* should be the same as the one used to build the
 *valjean* archive.
 
+This installation is not foreseen for development.
+
 
 ## Documentation ##
 
-The documentation can be downloaded from the *Fichiers*/*Files* area of Tuleap.
+The documentation can be found online: https://valjean.readthedocs.io/en/latest/
+
+It can also be downloaded from the *Fichiers*/*Files* area of Tuleap.
 
 ```
 tar xzf valjean-doc-*.tar.gz

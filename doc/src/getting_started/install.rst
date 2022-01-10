@@ -110,6 +110,13 @@ possible, i.e. they will come from the available ones in the local installation
 of ``conda``. The Python version of the package should probably be the default
 one of ``conda``.
 
+The conda package is not editable. If you prefer to use an editable version of
+:mod:`valjean` associated with conda it would probably be easier to use conda
+to get the python version, then install the package via ``pip`` or ``poetry``.
+Virtual environnment have to be treated carefully in that case. To get an
+editable version offline fully working it might be necessary to install all
+(direct and indirect) dependencies.
+
 Checking package integrity
 --------------------------
 
