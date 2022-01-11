@@ -35,7 +35,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "valjean"
-version = "0.6.0"
+version = "0.7.0"
 description = "VALidation, Journal d'Évolution et ANalyse"
 authors = ["Ève Le Ménédeu <eve.le-menedeu@cea.fr>",
            "Davide Mancusi <davide.mancusi@cea.fr>"]
