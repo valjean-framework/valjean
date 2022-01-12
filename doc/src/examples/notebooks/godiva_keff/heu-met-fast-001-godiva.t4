@@ -1,0 +1,59 @@
+// valjean: old_name: cristal/CL12_s001_c01_geo_simple
+COMMENT
+NEA/NSC/DOC(95)03/II HEU-MET-FAST-001
+Bare, Highly Enriched Uranium Sphere (Godiva), geometry_simple
+Resultats existes   7
+Experience                              1.0000   0.0010
+KENO (16g Hansen-Roach)                 0.9995   0.0011
+KENO (27g ENDF/B-IV)                    1.0042   0.0009
+MCNP (ENDF/B-V)                         0.9968   0.0009
+ONEDANT (27g ENDF/B-IV)                 1.0079   0.
+MONK6B (UKNDL)                          1.0054   0.0010
+KENO (299g ABBN-93)                     0.9977   0.0001
+COMMENT
+
+GEOMETRIE
+TITRE
+
+TYPE 1  SPHERE 8.7407
+VOLU 1  COMBI 1 0 0 0  FINV
+COMMENT
+GRAF 
+-10 0 -10
+1 0 0 
+0 0 1
+20 20 
+1
+COMMENT
+FING
+
+COMPOSITION
+    1
+    PONCTUAL 300  URANIUM   3
+        U234  4.9184E-4
+        U235  4.4994E-2
+        U238  2.4984E-3
+FIN_COMPO
+
+GEOMCOMP
+    URANIUM   1   1
+FIN_GEOMCOMP
+
+LIST_SOURCE 1
+SOURCE 
+    NEUTRON  PONCTUAL  0  0 0
+    ANGULAR_DISTRIBUTION   ISOTROPIC 
+    ENERGETIC_DISTRIBUTION SPECTRE   WATT_SPECTRE
+    TIME_DISTRIBUTION  DIRAC 0
+FIN_SOURCE
+FIN_LIST_SOURCE
+
+SIMULATION
+    CRITICITE DISCARD  100
+    BATCH    2100
+    SIZE      1000
+    EDITION 1050
+    ENERGY_INF NEUTRON 1.E-11
+    PARTICULES   1 NEUTRON
+    GLOBAL_SCORES
+FIN_SIMULATION
