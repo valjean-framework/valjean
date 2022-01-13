@@ -28,12 +28,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-r'''This module provides χ²-test (based on Pearson χ²) to compare dataset.
-
-
-χ² for distributions / histograms comparison
-````````````````````````````````````````````
-
+r'''
 In our case we'll use the modified χ²-test widely used in physics for comparing
 histograms. This test is also available in the **ROOT**
 `software <https://root.cern.ch/>`_. For further explanations a good desciption

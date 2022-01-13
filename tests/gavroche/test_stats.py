@@ -37,6 +37,7 @@ import pytest
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.fingerprint import fingerprint
 from valjean.eponine.dataset import Dataset
+from valjean.gavroche.stat_tests.chi2 import TestChi2
 from valjean.gavroche.stat_tests.student import TestStudent
 
 
@@ -144,6 +145,31 @@ def test_student_alpha(student_test_result_with_pvals, alpha):
     assert fingerprint(student_test_result_with_pvals.test)
 
 
+def test_student_pvalue_0(some_scalar_dataset):
+    '''Test that comparing a dataset with itself yields 1.0 with the Student
+    test.'''
+    test = TestStudent(some_scalar_dataset, some_scalar_dataset,
+                       name='A trivial Student test',
+                       description='Does this test result in a p-value of 1?')
+    stres = test.evaluate()
+    assert bool(stres)
+    assert np.isclose(stres.pvalue, 1.0)
+
+
+def test_student_pvalue_1(some_scalar_dataset):
+    '''Test that comparing x ± x with 0 and 1 degree of freedom yields a
+    p-value of 0.5 with the Student test.'''
+    some_scalar_dataset.error = some_scalar_dataset.value
+    zero_dataset = Dataset(value=0.0, error=0.0, name='zero')
+    test = TestStudent(some_scalar_dataset, zero_dataset,
+                       name='A trivial Student test',
+                       description='Does this test result in a p-value of '
+                                   '0.5?', ndf=1)
+    stres = test.evaluate()
+    assert bool(stres)
+    assert np.isclose(stres.pvalue, 0.5)
+
+
 def test_chi2(chi2_test_result):
     '''Test Chi2 test in successful case.'''
     assert bool(chi2_test_result)
@@ -156,3 +182,28 @@ def test_chi2(chi2_test_result):
 def test_chi2_fingerprint(chi2_test_result):
     '''Test serialization of TestChi2.'''
     assert fingerprint(chi2_test_result.test)
+
+
+def test_chi2_pvalue_0(some_scalar_dataset):
+    '''Test that comparing x ± x with 0 with 1 degree of freedom yields a
+    p-value of 0.317311 with the Chi2 test.'''
+    some_scalar_dataset.error = some_scalar_dataset.value
+    zero_dataset = Dataset(value=0.0, error=0.0, name='zero')
+    test = TestChi2(some_scalar_dataset, zero_dataset,
+                    name='A trivial χ² test',
+                    description='Does this test result in a p-value of '
+                    '0.317311?')
+    tres = test.evaluate()
+    assert bool(tres)
+    assert np.isclose(tres.pvalue, 0.317311)
+
+
+def test_chi2_pvalue_1(some_scalar_dataset):
+    '''Test that comparing a dataset with itself yields 1.0 with the Chi2
+    test.'''
+    test = TestChi2(some_scalar_dataset, some_scalar_dataset,
+                    name='A trivial χ² test',
+                    description='Does this test result in a p-value of 1?')
+    tres = test.evaluate()
+    assert bool(tres)
+    assert np.isclose(tres.pvalue, 1.0)

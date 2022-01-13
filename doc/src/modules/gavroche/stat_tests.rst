@@ -8,17 +8,19 @@
 Introduction
 ------------
 
-Available statistical tests are:
+The available statistical tests are:
 
-  * Student's t-test, to compare two datasets, especially generic score, in :mod:`~.student` module
-  * χ² test, for distribution (spectrum or mesh) comparisons, in :mod:`~.chi2` module
-  * Bonferroni correction and Holm-Bonferroni, to conclude from multiple hypothesis tests, in :mod:`~.bonferroni` module
+  * Student's t-test, to compare two datasets, in the :mod:`~.student` module;
+  * The χ² test, for comparing distributions (spectra or meshes), in
+    the :mod:`~.chi2` module;
+  * The Bonferroni and Holm-Bonferroni tests, to solve the problem of multiple
+    hypothesis tests, in the :mod:`~.bonferroni` module.
 
 
-Main modules
-------------
+Modules
+-------
 
-:mod:`~.student` – Student's t-test
+:mod:`~.student` — Student's t-test
 ```````````````````````````````````
 
 .. automodule:: valjean.gavroche.stat_tests.student
@@ -34,5 +36,4 @@ Main modules
 ```````````````````````````````````````````````
 
 .. automodule:: valjean.gavroche.stat_tests.bonferroni
-   :synopsis: Test for cases where multiple hypothesis tests are done using
-   			  Bonferroni correction and Holm-Bonferroni method
+   :synopsis: Tests to handle multiple comparisons

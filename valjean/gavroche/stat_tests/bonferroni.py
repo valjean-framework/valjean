@@ -28,14 +28,10 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-r'''Bonferroni methods to compare datasets from other statistical tests.
-
+r'''
 .. _family-wise: https://en.wikipedia.org/wiki/Family-wise_error_rate
 .. _Bonferroni: https://en.wikipedia.org/wiki/Bonferroni_correction
 .. _Holm-Bonferroni: https://en.wikipedia.org/wiki/Holm-Bonferroni_method
-
-Multiple hypotheses tests
-`````````````````````````
 
 In some cases we would like to interpret not only one test (like on a generic
 score in Tripoli-4) but multiple ones (in a spectrum case for example). Each
@@ -208,9 +204,9 @@ False
 >>> bool(thb_res)
 False
 >>> thb_res.nb_rejected
-[2]
+[1]
 >>> thb_res.rejected_proportion  # in percentage
-[40.0]
+[20.0]
 
 For an easier comparison, p-values, associated significance levels and the
 corresponding result from the test (rejection or not) can be printed. The
@@ -230,11 +226,11 @@ sorting order is also given for the Holm-Bonferroni method.
 ...     _ = it.iternext()
 index  | pvalue(B) |   α(B)    |  reject B | order(HB) |   α(HB)   | reject HB
 -----------------------------------------------------------------------------
-(0, 0) | 3.274e-01 | 5.000e-03 |   False   |    3      | 1.250e-02 |   False
-(0, 1) | 1.304e-02 | 5.000e-03 |   False   |    2      | 8.333e-03 |   False
-(0, 2) | 5.074e-07 | 5.000e-03 |   True    |    0      | 5.000e-03 |   True
-(0, 3) | 4.116e-01 | 5.000e-03 |   False   |    4      | 2.500e-02 |   False
-(0, 4) | 5.782e-03 | 5.000e-03 |   False   |    1      | 6.250e-03 |   True
+(0, 0) | 6.548e-01 | 5.000e-03 |   False   |    3      | 1.250e-02 |   False
+(0, 1) | 2.608e-02 | 5.000e-03 |   False   |    2      | 8.333e-03 |   False
+(0, 2) | 1.015e-06 | 5.000e-03 |   True    |    0      | 5.000e-03 |   True
+(0, 3) | 8.231e-01 | 5.000e-03 |   False   |    4      | 2.500e-02 |   False
+(0, 4) | 1.156e-02 | 5.000e-03 |   False   |    1      | 6.250e-03 |   False
 
 
 The first index corresponds to the index of the compared dataset in the
@@ -283,9 +279,9 @@ False
 >>> bool(thb_res)
 False
 >>> thb_res.nb_rejected
-[2]
+[1]
 >>> print(f'{thb_res.rejected_proportion[0]:.3f} %')
-33.333 %
+16.667 %
 
 The detailed comparison also works for multi-dimensions arrays:
 
@@ -302,12 +298,12 @@ The detailed comparison also works for multi-dimensions arrays:
 ...     _ = it.iternext()
 index     | pvalue(B) |   α(B)   | reject B | order(HB) |   α(HB)  | reject HB
 -------------------------------------------------------------------------------
-(0, 0, 0) |  3.27e-01 | 4.17e-03 |  False   |    4      | 1.25e-02 |   False
-(0, 0, 1) |  1.30e-02 | 4.17e-03 |  False   |    2      | 6.25e-03 |   False
-(0, 0, 2) |  5.07e-07 | 4.17e-03 |  True    |    0      | 4.17e-03 |   True
-(0, 1, 0) |  4.12e-01 | 4.17e-03 |  False   |    5      | 2.50e-02 |   False
-(0, 1, 1) |  4.33e-03 | 4.17e-03 |  False   |    1      | 5.00e-03 |   True
-(0, 1, 2) |  1.74e-01 | 4.17e-03 |  False   |    3      | 8.33e-03 |   False
+(0, 0, 0) |  6.55e-01 | 4.17e-03 |  False   |    4      | 1.25e-02 |   False
+(0, 0, 1) |  2.61e-02 | 4.17e-03 |  False   |    2      | 6.25e-03 |   False
+(0, 0, 2) |  1.01e-06 | 4.17e-03 |  True    |    0      | 4.17e-03 |   True
+(0, 1, 0) |  8.23e-01 | 4.17e-03 |  False   |    5      | 2.50e-02 |   False
+(0, 1, 1) |  8.66e-03 | 4.17e-03 |  False   |    1      | 5.00e-03 |   False
+(0, 1, 2) |  3.49e-01 | 4.17e-03 |  False   |    3      | 8.33e-03 |   False
 
 The first index corresponds to the index of the compared dataset in the
 ``datasets`` container in the input test (compared to ``dsref``). The next ones
