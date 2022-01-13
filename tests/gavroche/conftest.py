@@ -415,7 +415,7 @@ def holm_bonf_test_result_fail(holm_bonferroni_test_fail):
 def chi2_test(some_1d_dataset, other_1d_dataset):
     '''Return a Student test between datasets.'''
     return TestChi2(some_1d_dataset, other_1d_dataset,
-                    name='A Student test',
+                    name='A χ² test',
                     description='Do the datasets have the same mean taking '
                                 'into account the errors?')
 
