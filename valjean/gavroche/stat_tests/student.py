@@ -209,13 +209,13 @@ Are these numbers in agreement ?
 >>> from valjean.eponine.dataset import Dataset
 >>> from valjean.gavroche.stat_tests.student import TestStudent
 >>> import numpy as np
->>> ds1 = Dataset(np.float32(5.3), np.float32(0.2))
->>> ds2 = Dataset(np.float32(5.25), np.float32(0.08))
+>>> ds1 = Dataset(5.3, 0.2)
+>>> ds2 = Dataset(5.25, 0.08)
 >>> tstudent = TestStudent(ds1, ds2, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
 >>> print(f'{tstudent_res.delta[0]:.7f}')
-0.2321201
+0.2321192
 >>> print(f'{tstudent_res.test.threshold:.7f}')
 2.5758293
 >>> bool(tstudent_res)
@@ -227,13 +227,13 @@ To obtain the p-value, a number of degrees of freedom should be given:
 ...                        description="Comparison using Student's t- test")
 >>> tstudent_res = tstudent.evaluate()
 >>> print(f'{tstudent_res.delta[0]:.7f}')
-0.2321201
+0.2321192
 >>> print(f'{tstudent_res.test.threshold:.7f}')
 2.5807547
 >>> bool(tstudent_res)
 True
 >>> print(f'{tstudent_res.pvalue[0]:.7f}')
-0.4082461
+0.8164929
 >>> tstudent_res.test_pvalue()
 [True]
 

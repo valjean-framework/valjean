@@ -251,7 +251,7 @@ def nan_result(name='', what=''):
     :returns: dataset containing NaN as value and error
     '''
     LOGGER.info('Result not converged, return dataset with NaN value')
-    return Dataset(np.float_(np.nan), np.float_(np.nan), name=name, what=what)
+    return Dataset(np.nan, np.nan, name=name, what=what)
 
 
 CONVERT_IN_DATASET = {

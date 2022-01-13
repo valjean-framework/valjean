@@ -152,20 +152,19 @@ def other_1d_dataset_edges():
 @pytest.fixture
 def some_scalar_dataset():
     '''Return a scalar :class:`~.Dataset` object.'''
-    return Dataset(np.float_(1.2), np.float_(0.2), name='some scalar dataset')
+    return Dataset(1.2, 0.2, name='some scalar dataset')
 
 
 @pytest.fixture
 def other_scalar_dataset():
     '''Return an other scalar :class:`~.Dataset` object.'''
-    return Dataset(np.float_(1.0), np.float_(0.1), name='other scalar dataset')
+    return Dataset(1.0, 0.1, name='other scalar dataset')
 
 
 @pytest.fixture
 def different_scalar_dataset():
     '''Return a different scalar :class:`~.Dataset` object.'''
-    return Dataset(np.float_(4.3), np.float_(0.1),
-                   name='different scalar dataset')
+    return Dataset(4.3, 0.1, name='different scalar dataset')
 
 
 @pytest.fixture

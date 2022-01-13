@@ -209,7 +209,7 @@ def add_accessors(dict_res):
                 method = getattr(self.mbr, mbr_method_name)
                 value = method(step, *list(kwargs.values()), 0)
                 error = method(step, *list(kwargs.values()), 1)
-                return Dataset(value=np.float_(value), error=np.float_(error))
+                return Dataset(value=value, error=error)
             value_method.__doc__ = generic_docstrings(
                 'value', *list(kwargs.keys())).format(thing=name)
 
@@ -346,8 +346,8 @@ class DepletionReader:
         :returns: burnup value and error
         :rtype: Dataset
         '''
-        return Dataset(value=np.float_(self.mbr.GetBurnup(step, 0)),
-                       error=np.float_(self.mbr.GetBurnup(step, 1)))
+        return Dataset(value=self.mbr.GetBurnup(step, 0),
+                       error=self.mbr.GetBurnup(step, 1))
 
     def burnup_array(self):
         r'''Return burnup array from MeanBurnupResults object.
@@ -371,8 +371,8 @@ class DepletionReader:
         :returns: time value and error
         :rtype: Dataset
         '''
-        return Dataset(value=np.float_(self.mbr.GetTime(step, 0)),
-                       error=np.float_(self.mbr.GetTime(step, 1)))
+        return Dataset(value=self.mbr.GetTime(step, 0),
+                       error=self.mbr.GetTime(step, 1))
 
     def time_array(self):
         r'''Return time array from MeanBurnupResults object.

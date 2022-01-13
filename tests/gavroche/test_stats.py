@@ -80,9 +80,9 @@ def test_student_scalar_fail(student_test_fail_scalar):
 
 def test_student_scalar_nan():
     '''Test Student test for NaN, 0 or inf cases with scalar datasets.'''
-    numdset = Dataset(np.float_(1.2), np.float_(0.2))
-    nandset = Dataset(np.float_(np.nan), np.float_(np.nan))
-    nanerrdset = Dataset(np.float_(0.3), np.float_(np.nan))
+    numdset = Dataset(1.2, 0.2)
+    nandset = Dataset(np.nan, np.nan)
+    nanerrdset = Dataset(0.3, np.nan)
     num_res = TestStudent(numdset, numdset, name='num vs num').evaluate()
     assert bool(num_res)
     assert num_res.delta == [0]

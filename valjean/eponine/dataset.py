@@ -662,7 +662,7 @@ numpy.ndarray, i.e. (# ',' = dim-1).
     Slicing can also only be applied on :obj:`numpy.ndarray`, not on
     :obj:`numpy.generic`:
 
-    >>> ds8 = Dataset(value=np.int32(100), error=np.int32(1))
+    >>> ds8 = Dataset(value=100, error=1)
     >>> ds8[0:1]
     Traceback (most recent call last):
         [...]
@@ -735,15 +735,23 @@ class Dataset:
         '''Dataset class initialization.
 
         :param value: array of N dimensions representing the values
-        :type value: numpy.ndarray or numpy.generic
+        :type value: int or float or numpy.ndarray or numpy.generic
         :param error: array of N dimensions representing the **absolute**
           errors
-        :type error: numpy.ndarray or numpy.generic
+        :type error: int or float or numpy.ndarray or numpy.generic
         :param bins: bins corresponding to value (named optional parameter)
         :type bins: collections.OrderedDict (str, numpy.ndarray)
         :param str name: name of the dataset (used in test representation)
         :param str what: name of the quantity represented by the dataset
         '''
+        if isinstance(value, float):
+            value = np.float64(value)
+        if isinstance(error, float):
+            error = np.float64(error)
+        if isinstance(value, int):
+            value = np.int64(value)
+        if isinstance(error, int):
+            error = np.int64(error)
         if not isinstance(value, (np.ndarray, np.generic)):
             raise TypeError("value does not have the expected type "
                             "(numpy.ndarray or numpy.generic = scalar)")
