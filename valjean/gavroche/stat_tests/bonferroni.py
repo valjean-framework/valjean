@@ -175,8 +175,8 @@ True
 Failing test with Bonferroni correction and Holm-Bonferroni method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
->>> ds3 = Dataset(np.array([5.1, 5.9, 5.8, 5.3, 4.7]),
-...               np.array([0.1, 0.1, 0.05, 0.4, 0.1]))
+>>> ds3 = Dataset(np.array([5.1, 5.9, 5.8, 5.3, 4.6]),
+...               np.array([0.1, 0.1, 0.05, 0.4, 0.12]))
 >>> tstudent_13 = TestStudent(ds1, ds3, name="comp",
 ...                           description="Comparison using Student test",
 ...                           alpha=0.05, ndf=1000)
@@ -204,9 +204,9 @@ False
 >>> bool(thb_res)
 False
 >>> thb_res.nb_rejected
-[1]
+[2]
 >>> thb_res.rejected_proportion  # in percentage
-[20.0]
+[40.0]
 
 For an easier comparison, p-values, associated significance levels and the
 corresponding result from the test (rejection or not) can be printed. The
@@ -230,7 +230,7 @@ index  | pvalue(B) |   α(B)    |  reject B | order(HB) |   α(HB)   | reject HB
 (0, 1) | 2.608e-02 | 5.000e-03 |   False   |    2      | 8.333e-03 |   False
 (0, 2) | 1.015e-06 | 5.000e-03 |   True    |    0      | 5.000e-03 |   True
 (0, 3) | 8.231e-01 | 5.000e-03 |   False   |    4      | 2.500e-02 |   False
-(0, 4) | 1.156e-02 | 5.000e-03 |   False   |    1      | 6.250e-03 |   False
+(0, 4) | 5.447e-03 | 5.000e-03 |   False   |    1      | 6.250e-03 |   True
 
 
 The first index corresponds to the index of the compared dataset in the
