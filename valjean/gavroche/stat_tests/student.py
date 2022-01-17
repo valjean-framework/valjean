@@ -174,7 +174,7 @@ Are these numbers in agreement ?
 >>> tstudent = TestStudent(ds1, ds2, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> print(f'{tstudent_res.delta[0]:.7f}')
+>>> print(f'{tstudent_res.tstud[0]:.7f}')
 0.2321192
 >>> print(f'{tstudent_res.test.threshold:.7f}')
 2.5758293
@@ -186,7 +186,7 @@ To obtain the p-value, a number of degrees of freedom should be given:
 >>> tstudent = TestStudent(ds1, ds2, ndf=1000, name="comp",
 ...                        description="Comparison using Student's t- test")
 >>> tstudent_res = tstudent.evaluate()
->>> print(f'{tstudent_res.delta[0]:.7f}')
+>>> print(f'{tstudent_res.tstud[0]:.7f}')
 0.2321192
 >>> print(f'{tstudent_res.test.threshold:.7f}')
 2.5807547
@@ -243,7 +243,7 @@ the significativity can be changed via the ``alpha`` argument, as shown here:
 1.9623391
 >>> print(np.array2string(tstudent_res.oracles()))
 [[ True False False  True False]]
->>> print(f'{tstudent_res.delta[0][1]:.7f}')
+>>> print(f'{tstudent_res.tstud[0][1]:.7f}')
 -2.2283441
 
 This last value is in-between the thresholds at 1% and 5%, in magnitude, and
@@ -265,7 +265,7 @@ for datasets containing :obj:`numpy.generic`:
 >>> tstudent = TestStudent(ds6, ds7, name="comp",
 ...                        description="Comparison using Student's t-test")
 >>> tstudent_res = tstudent.evaluate()
->>> print(np.array2string(tstudent_res.delta[0],
+>>> print(np.array2string(tstudent_res.tstud[0],
 ...                       formatter={'float_kind':'{:.7f}'.format}))
 [0.2321192]
 >>> print(f'{tstudent_res.test.threshold:.7f}')
@@ -298,7 +298,7 @@ Multi-dimensional datasets are also allowed:
 >>> tstudent_res = tstudent.evaluate()
 >>> bool(tstudent_res)
 True
->>> print(np.array2string(tstudent_res.delta[0],
+>>> print(np.array2string(tstudent_res.tstud[0],
 ...                       formatter={'float_kind':'{:.7f}'.format}))
 [[0.4472136 -0.7682213 0.4472136]
  [0.2236068 0.7071068 -0.4472136]]
@@ -318,7 +318,7 @@ True
     >>> tstudent_res = tstudent.evaluate()
     >>> bool(tstudent_res)
     False
-    >>> print(np.array2string(tstudent_res.delta[0]))
+    >>> print(np.array2string(tstudent_res.tstud[0]))
     [  0.   0. -inf]
     >>> print(np.array2string(tstudent_res.oracles()))
     [[ True  True False]]
@@ -332,7 +332,7 @@ from ... import LOGGER
 class TestResultStudent(TestResult):
     '''Result from Student's t-test.'''
 
-    def __init__(self, test, delta, pvalue=None):
+    def __init__(self, test, tstud, pvalue=None):
         '''Initialisation of :class:`~.TestResultStudent`
 
         Members are lists whose length corresponds to the number of datasets
@@ -340,34 +340,34 @@ class TestResultStudent(TestResult):
 
         :param test: the TestStudent object
         :type test: :class:`~.TestStudent`
-        :param delta: Student's t-test results
-        :type delta: :class:`list` (:obj:`numpy.ndarray`)
+        :param tstud: Student's t-test results
+        :type tstud: :class:`list` (:obj:`numpy.ndarray`)
         :param pvalue: p-value or p-values depending on datasets, default is
                        None
         :type pvalue: :class:`list` (:class:`numpy.generic`)
             or :class:`list` (:class:`list` (:class:`numpy.generic`))
         '''
         super().__init__(test)
-        self.delta = delta
+        self.tstud = tstud
         self.pvalue = pvalue
 
-    def test_alpha(self, delta):
+    def test_alpha(self, tstud):
         '''Test p-value or first kind error.
 
-        :param delta: Δ to be used for comparison
-        :type delta: :obj:`numpy.generic`
+        :param tstud: value of Student's t-statistic to be used for comparison
+        :type tstud: :obj:`numpy.generic`
         :returns: bool
         '''
-        return np.less(np.fabs(delta), self.test.threshold)
+        return np.less(np.fabs(tstud), self.test.threshold)
 
     def oracles(self):
         '''Final test (if spectrum)
 
         :returns: list(bool)
         '''
-        if isinstance(self.delta, np.generic):
-            return np.array([self.test_alpha(self.delta)])
-        return self.test_alpha(self.delta)
+        if isinstance(self.tstud, np.generic):
+            return np.array([self.test_alpha(self.tstud)])
+        return self.test_alpha(self.tstud)
 
     def __bool__(self):
         '''Has this test succeeded?
@@ -384,11 +384,11 @@ class TestResultStudent(TestResult):
         reference.
         '''
         result = True
-        for delta in self.delta:
-            if isinstance(delta, np.generic):
-                result = result and bool(self.test_alpha(delta))
+        for tstud in self.tstud:
+            if isinstance(tstud, np.generic):
+                result = result and bool(self.test_alpha(tstud))
             else:
-                result = result and bool(self.test_alpha(delta).all())
+                result = result and bool(self.test_alpha(tstud).all())
         return result
 
     def test_pvalue(self):
@@ -438,12 +438,12 @@ class TestStudent(TestDataset):
 
         :returns: :class:`~.TestResultStudent`
         '''
-        deltas = []
+        tstuds = []
         for _ds in self.datasets:
             check_bins(self.dsref, _ds)
-            deltas.append(self.student_test(self.dsref, _ds))
-        pval = [self.pvalue(delta, self.ndf) for delta in deltas]
-        return TestResultStudent(self, deltas, pval)
+            tstuds.append(self.student_test(self.dsref, _ds))
+        pval = [self.pvalue(tstud, self.ndf) for tstud in tstuds]
+        return TestResultStudent(self, tstuds, pval)
 
     @staticmethod
     def student_test(ds1, ds2):
@@ -478,11 +478,11 @@ class TestStudent(TestDataset):
         return studentt
 
     @staticmethod
-    def pvalue(delta, ndf):
+    def pvalue(tstud, ndf):
         '''Calculation of the p-value (**static method**).
 
-        :param delta: Student's t-test statistic
-        :type delta: :obj:`numpy.generic` (:obj:`float`) or
+        :param tstud: Student's t-test statistic
+        :type tstud: :obj:`numpy.generic` (:obj:`float`) or
                      :obj:`numpy.ndarray` (:obj:`float`)
         :param ndf: number of degrees of freedom
         :type ndf: int or :obj:`numpy.generic` (:obj:`int`)
@@ -490,8 +490,8 @@ class TestStudent(TestDataset):
                   :obj:`numpy.ndarray` (:obj:`float`)
         '''
         if ndf is None:
-            return 2.0*norm.sf(np.fabs(delta))
-        return 2.0*t.sf(np.fabs(delta), ndf)
+            return 2.0*norm.sf(np.fabs(tstud))
+        return 2.0*t.sf(np.fabs(tstud), ndf)
 
     @staticmethod
     def student_threshold(alpha, ndf=None):

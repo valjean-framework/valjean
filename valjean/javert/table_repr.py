@@ -292,9 +292,9 @@ def repr_student(result):
     LOGGER.debug("In repr_student")
     oracles = result.oracles()
     nbins, bins = repr_bins(result.test.dsref)
-    dscols = tuple((ds.value, ds.error, delta, studbool)
-                   for ds, delta, studbool in zip(result.test.datasets,
-                                                  result.delta,
+    dscols = tuple((ds.value, ds.error, tstud, studbool)
+                   for ds, tstud, studbool in zip(result.test.datasets,
+                                                  result.tstud,
                                                   oracles))
     falses = np.full_like(result.test.dsref.value, False, dtype=bool)
     heads = _student_heads(result.test, nbins)
@@ -352,10 +352,10 @@ def repr_student_intermediate(result):
     nbins, bins = repr_bins(result.test.dsref)
     dscols = tuple((ds.value[np.where(falses_ind == 0)],
                     ds.error[np.where(falses_ind == 0)],
-                    delta[np.where(falses_ind == 0)],
+                    tstud[np.where(falses_ind == 0)],
                     studbool[np.where(falses_ind == 0)])
-                   for ds, delta, studbool in zip(result.test.datasets,
-                                                  result.delta,
+                   for ds, tstud, studbool in zip(result.test.datasets,
+                                                  result.tstud,
                                                   oracles))
     heads = _student_heads(result.test, nbins)
     falses = np.full_like(result.test.dsref.value[np.where(falses_ind == 0)],

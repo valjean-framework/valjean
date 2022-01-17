@@ -113,7 +113,7 @@ class ExtendedCompPlot():
         # self.splt[2].set_yticklabels(["0.8", "1", "1.2"])
         # self.splt[2].axhline(y=1, ls='--', lw=0.5, color='grey')
         self.splt[2].set_xlabel("Time [ns]")
-        self.splt[2].set_ylabel("Δ")
+        self.splt[2].set_ylabel(r"t_{\text{Student}}")
         self.splt[2].axhline(y=2.5755, ls='--', lw=0.5, color='red')
         self.splt[2].axhline(y=-2.5755, ls='--', lw=0.5, color='red')
         self.splt[2].axhline(y=1.960, ls='--', lw=0.5, color='green')

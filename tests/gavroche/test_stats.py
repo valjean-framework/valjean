@@ -44,7 +44,7 @@ from valjean.gavroche.stat_tests.student import TestStudent
 def test_student(student_test_result):
     '''Test Student test in successful case.'''
     assert bool(student_test_result)
-    assert isinstance(student_test_result.delta, list)
+    assert isinstance(student_test_result.tstud, list)
     oracles = student_test_result.oracles()
     assert isinstance(oracles, np.ndarray)
     assert len(oracles) == len(student_test_result.test.datasets)
@@ -53,7 +53,7 @@ def test_student(student_test_result):
 def test_student_fail(student_test_result_fail):
     '''Test Student test in failing case.'''
     assert not bool(student_test_result_fail)
-    assert isinstance(student_test_result_fail.delta, list)
+    assert isinstance(student_test_result_fail.tstud, list)
     oracles = student_test_result_fail.oracles()
     assert isinstance(oracles, np.ndarray)
     assert len(oracles) == len(student_test_result_fail.test.datasets)
@@ -64,7 +64,7 @@ def test_student_scalar(student_test_scalar):
     assert student_test_scalar.dsref.ndim == 0
     stres = student_test_scalar.evaluate()
     assert bool(stres)
-    assert isinstance(stres.delta, list)
+    assert isinstance(stres.tstud, list)
     assert isinstance(stres.oracles(), np.ndarray)
     assert stres.oracles().ndim == 1
 
@@ -74,7 +74,7 @@ def test_student_scalar_fail(student_test_fail_scalar):
     assert student_test_fail_scalar.dsref.ndim == 0
     stres = student_test_fail_scalar.evaluate()
     assert not bool(stres)
-    assert isinstance(stres.delta, list)
+    assert isinstance(stres.tstud, list)
     assert isinstance(stres.oracles(), np.ndarray)
     assert stres.oracles().ndim == 1
 
@@ -86,17 +86,17 @@ def test_student_scalar_nan():
     nanerrdset = Dataset(0.3, np.nan)
     num_res = TestStudent(numdset, numdset, name='num vs num').evaluate()
     assert bool(num_res)
-    assert num_res.delta == [0]
+    assert num_res.tstud == [0]
     numnan_res = TestStudent(numdset, nandset, name='num vs nan').evaluate()
     assert not bool(numnan_res)
-    assert np.isnan(numnan_res.delta)
+    assert np.isnan(numnan_res.tstud)
     nan_res = TestStudent(nandset, nandset, name='nan vs nan').evaluate()
     assert bool(nan_res)
-    assert nan_res.delta == [0]
+    assert nan_res.tstud == [0]
     nanerr_res = (TestStudent(nanerrdset, nanerrdset, name='nanerr vs nanerr')
                   .evaluate())
     assert bool(nanerr_res)
-    assert nanerr_res.delta == [0]
+    assert nanerr_res.tstud == [0]
 
 
 def test_student_array_nan():
@@ -107,7 +107,7 @@ def test_student_array_nan():
                     np.array([0., np.nan, np.nan, 0.5]))
     d11_res = TestStudent(dset1, dset1, name='dset1 vs dset1').evaluate()
     assert bool(d11_res)
-    assert np.array_equal(d11_res.delta, [np.array([0., 0., 0., 0.])])
+    assert np.array_equal(d11_res.tstud, [np.array([0., 0., 0., 0.])])
     d12_res = TestStudent(dset1, dset2, name='dset1 vs dset2').evaluate()
     assert not bool(d12_res)
     oracles = d12_res.oracles()

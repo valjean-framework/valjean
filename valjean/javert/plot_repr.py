@@ -434,15 +434,15 @@ def repr_student_intermediate(result):
 
     By default two :class:`~.templates.PlotTemplate` are returned in order to
     get a top plot representing the two series of values and the bottom plot
-    representing the Δ from the Student test.
+    representing Student's t-statistic.
 
     :param TestResultStudent result:  a test result.
     :rtype: list(PlotTemplate)
     '''
     rval = repr_datasets_values(result)
-    rdelta = repr_student_delta(result)
-    rstudent = [join(rvals, rdelta)
-                for rvals, rdelta in zip(rval, rdelta)]
+    rtstud = repr_student_tstud(result)
+    rstudent = [join(rvals, rtstud)
+                for rvals, rtstud in zip(rval, rtstud)]
     if not rstudent and rval:
         rstudent = rval
     return rstudent
@@ -453,24 +453,24 @@ def repr_student_full_details(result):
 
     By default two :class:`~.templates.PlotTemplate` are returned in order to
     get a top plot representing the two series of values and the bottom plot
-    representing the Δ from the Student test.
+    representing Student's t-statistic.
 
     :param TestResultStudent result:  a test result.
     :rtype: list(PlotTemplate)
     '''
     LOGGER.debug('in repr_student_full_details')
     rval = repr_datasets_values(result)
-    rdelta = repr_student_delta(result)
+    rtstud = repr_student_tstud(result)
     rpval = repr_student_pvalues(result)
-    rstudent = [join(rvals, rdelta, rpvals)
-                for rvals, rdelta, rpvals in zip(rval, rdelta, rpval)]
+    rstudent = [join(rvals, rtstud, rpvals)
+                for rvals, rtstud, rpvals in zip(rval, rtstud, rpval)]
     if not rstudent and rval:
-        rstudent = [join(rvals, rdelta) for rvals, rdelta in zip(rval, rdelta)]
+        rstudent = [join(rvals, rtstud) for rvals, rtstud in zip(rval, rtstud)]
     return rstudent
 
 
-def repr_student_delta(result):
-    '''Represent the Δ distribution from a Student test result as a plot.
+def repr_student_tstud(result):
+    '''Represent the t distribution from a Student test result as a plot.
 
     :param TestResultStudent result: a test result.
     :rtype: list(PlotTemplate)
@@ -489,14 +489,14 @@ def repr_student_delta(result):
         LOGGER.info('No plot available for %dD, no PlotTemplate built',
                     len(dab))
         return []
-    curves = [CurveElements(values=delta, legend='', bins=list(dab.values()),
+    curves = [CurveElements(values=tstud, legend='', bins=list(dab.values()),
                             index=ind+1, errors=None)
-              for ind, delta in enumerate(result.delta)]
+              for ind, tstud in enumerate(result.tstud)]
     pltemp = build_plot_template_with_dim(
         curves, axnames=list(dab.keys()) + [r'$t_{Student}$'])
     if not pltemp:
         return []
-    if result.delta[0].ndim == 1:
+    if result.tstud[0].ndim == 1:
         for splt in pltemp.subplots:
             splt.attributes.lines = [{'y': result.test.threshold},
                                      {'y': -result.test.threshold}]

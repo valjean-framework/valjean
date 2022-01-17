@@ -180,9 +180,9 @@ def test_student_edges_with_fpi(student_test_edges_result, plot_repr):
 
 
 @pytest.mark.mpl_image_compare
-def test_student_with_fpi_delta(student_test_result):
+def test_student_with_fpi_tstud(student_test_result):
     '''Test plot of Student result.'''
-    template = pltr.repr_student_delta(student_test_result)
+    template = pltr.repr_student_tstud(student_test_result)
     mplt = MplPlot(template[0])
     return mplt.draw()[0]
 
