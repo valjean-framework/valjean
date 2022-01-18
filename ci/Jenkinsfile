@@ -68,7 +68,7 @@ pipeline {
             sh """#!/bin/bash
                source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
                source "${TOX_VENV}/bin/activate"
-               ${TOX} -e docs
+               ${TOX} -e docs-py39
                 """
           }
         }
@@ -82,7 +82,7 @@ pipeline {
             sh """#!/bin/bash
                source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
                source "${TOX_VENV}/bin/activate"
-               ${TOX} -e linting valjean/ tests/ | tee "${REPORTS}/linting.out"
+               ${TOX} -e linting-py39 valjean/ tests/ | tee "${REPORTS}/linting.out"
                """
           }
         }

@@ -58,7 +58,7 @@ pipeline {
                    for script in "${NIGHTLIES}"/scripts/valjean_nightly*.py; do
                      script_base=\$(basename \${script})
                      echo "Running tests for \${script_base}"
-                     ${TOX} -e parsing -- --parsing-config-file-t4="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
+                     ${TOX} -e parsing-py39 -- --parsing-config-file-t4="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
                    done
                    """
               }

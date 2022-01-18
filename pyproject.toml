@@ -169,7 +169,6 @@ envlist = py{36,37,38,39}
 skip_missing_interpreters = true
 
 [testenv]
-basepython=python3.9
 whitelist_externals = poetry
 setenv =
         COVERAGE_FILE=.coverage.{envname}
@@ -186,10 +185,9 @@ commands = poetry install -v -E graphviz -E dev --no-root
                 --timeout=30 {posargs}
 
 [testenv:py39]
-passenv =
-        PYTHONPATH
+passenv = PYTHONPATH
 
-[testenv:docs]
+[testenv:docs-py39]
 description = invoke sphinx-build to build the HTML docs
 # be nitpicky on the HTML documentation
 commands = poetry install -v --no-root -E dev
@@ -205,7 +203,7 @@ commands = poetry install -v --no-root -E dev
                 --keep-going -b linkcheck -t tests \
                 "{toxinidir}/doc/src" "{toxworkdir}/doc/linkcheck"
 
-[testenv:linting]
+[testenv:linting-py39]
 description = invoke pylint and flake8 on the source package
 commands = poetry install -v --no-root -E dev
            poetry run pylint -f parseable --exit-zero \
@@ -213,7 +211,7 @@ commands = poetry install -v --no-root -E dev
            poetry run flake8 --config "{toxinidir}/.flake8" \
                 --exit-zero {posargs}
 
-[testenv:parsing]
+[testenv:parsing-py39]
 description = invoke pytest on the nightly parsing tests
 extras = graphviz
 commands = poetry install -v --no-root -E dev
