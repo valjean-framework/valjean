@@ -784,8 +784,6 @@ class MeshDictBuilder(KinematicDictBuilder):
     This class inherites from KinematicDictBuilder, see
     :class:`KinematicDictBuilder` for initialization and common methods.
     '''
-    itime, imu, iphi = 0, 0, 0
-
     def __init__(self, colnames, lnbins):
         '''Initialization of MeshDictBuilder.
 
@@ -801,6 +799,9 @@ class MeshDictBuilder(KinematicDictBuilder):
         LOGGER.debug("Initialisation of MeshDictBuilder")
         super().__init__(colnames, lnbins)
         self.coords = None
+        self.itime = 0
+        self.imu = 0
+        self.iphi = 0
 
     @classmethod
     def from_data(cls, data):
@@ -991,7 +992,9 @@ class SpectrumDictBuilder(KinematicDictBuilder):
     This class inherites from KinematicDictBuilder, see
     :class:`KinematicDictBuilder` for initialization and common methods.
     '''
-    itime, imu, iphi = 0, 0, 0
+    def __init__(self, colnames, lnbins):
+        super().__init__(colnames, lnbins)
+        self.itime, self.imu, self.iphi = 0, 0, 0
 
     def fill_arrays_and_bins(self, data):
         '''Fill arrays and bins for spectrum data.
