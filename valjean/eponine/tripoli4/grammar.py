@@ -519,10 +519,10 @@ _introelts = (_meanweightleak | _meanweightleakin | _edbatchnum
 intro = Group(_sourceintensity + _star_line + OneOrMore(_introelts))('intro')
 
 # Conclusion parser
-_simutime = Suppress(_simulationtime_kw + ':') + _inums('simulation_time')
+_simutime = Suppress(_simulationtime_kw + ':') + _fnums('simulation_time')
 _exploitime = (Suppress(_exploitationtime_kw + ':')
-               + _inums('exploitation_time'))
-_elapsedtime = Suppress(_elapsedtime_kw + ':') + _inums('elapsed_time')
+               + _fnums('exploitation_time'))
+_elapsedtime = Suppress(_elapsedtime_kw + ':') + _fnums('elapsed_time')
 runtime = Group(_simutime | _elapsedtime | _exploitime)('conclu')
 
 # Response parser

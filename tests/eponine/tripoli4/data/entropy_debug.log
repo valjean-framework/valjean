@@ -6,7 +6,7 @@ batch_data     Dict with keys = ['edition_batch_number', 'mean_weight_leak', 'si
         score 1.990297e+00, dtype: float64
         sigma 4.771245e-01, dtype: float64
         sigma% 2.397252e+01, dtype: float64
-      simulation_time 24, dtype: int64
+      simulation_time 2.400000e+01, dtype: float64
       source_intensity 1.000000e+00, dtype: float64
 
 keff_auto     list of 4 elements -> 
