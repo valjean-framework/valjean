@@ -770,9 +770,9 @@ class Dataset:
             if bins and len(bins) != value.ndim:
                 raise ValueError("Number of dimensions of bins does not "
                                  "correspond to number of dimensions of value")
-            if bins and any(b.size not in (s, s+1)
+            if bins and any(len(b) not in (s, s+1)
                             for b, s in zip(bins.values(), value.shape)
-                            if b.size):
+                            if len(b)):
                 _lens = [len(b) for b in bins.values()]
                 raise ValueError('Number of bins does not correspond to value '
                                  f'shape, bins={_lens}, shape={value.shape}')
