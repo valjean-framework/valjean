@@ -42,16 +42,18 @@ pipeline {
     stage('Setup') {
       steps {
         cleanWs()
-        sh """ mkdir -p "${REPORTS}" """
+        sh """#!/bin/bash
+        mkdir -p "${REPORTS}"
+        if [ "x${env.VALJEAN_SPACK_ROOT}" == x ]; then
+          echo "The VALJEAN_SPACK_ROOT environment variable is undefined. The pipeline fails here."
+          exit 1
+        fi
+        """
         dir("${SRC}") {
           checkout scm
         }
         echo "Starting build ${env.BUILD_ID} on ${env.JENKINS_URL}..."
         sh """#!/bin/bash
-           if [ "x${env.VALJEAN_SPACK_ROOT}" == x ]; then
-             echo "The VALJEAN_SPACK_ROOT environment variable is undefined. The pipeline fails here."
-             exit 1
-           fi
            source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
            python3 -m venv "${TOX_VENV}"
            source "${TOX_VENV}/bin/activate"

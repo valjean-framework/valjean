@@ -20,49 +20,52 @@ pipeline {
     stage('Setup') {
       steps {
         cleanWs()
-        sh """mkdir -p ${REPORTS}"""
+        sh """#!/bin/bash
+        if [ "x${env.VALJEAN_NIGHTLIES_GIT_URL}" == x ]; then
+          echo "The VALJEAN_NIGHTLIES_GIT_URL environment variable is undefined. The pipeline fails here."
+          exit 1
+        fi
+        if [ "x${env.VALJEAN_NIGHTLIES_GIT_CREDENTIALS_ID}" == x ]; then
+          echo "The VALJEAN_NIGHTLIES_GIT_CREDENTIALS_ID environment variable is undefined. The pipeline fails here."
+          exit 1
+        fi
+        if [ "x${env.VALJEAN_SPACK_ROOT}" == x ]; then
+          echo "The VALJEAN_SPACK_ROOT environment variable is undefined. The pipeline fails here."
+          exit 1
+        fi
+        mkdir -p ${REPORTS}"""
         dir("${SRC}") {
           checkout scm
         }
         dir("${NIGHTLIES}") {
           git(branch: 'master',
-              credentialsId: '74004654-7955-49b7-a83a-4aa4663404a2',
-              url: 'https://codev-tuleap.intra.cea.fr/plugins/git/valjean/valjean-nightly-testing.git')
+              credentialsId: env.VALJEAN_NIGHTLIES_GIT_CREDENTIALS_ID,
+              url: env.VALJEAN_NIGHTLIES_GIT_URL)
         }
-        withFolderProperties {
-          echo "Starting build ${env.BUILD_ID} on ${env.JENKINS_URL}..."
-          sh """#!/bin/bash
-          if [ "x${env.VALJEAN_SPACK_ROOT}" == x ]; then
-            echo "The VALJEAN_SPACK_ROOT environment variable is undefined. The pipeline fails here."
-            exit 1
-          fi
-          source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-          python3 -m venv "${TOX_VENV}"
-          source "${TOX_VENV}/bin/activate"
-          python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install tox poetry
-          """
-        }
+        echo "Starting build ${env.BUILD_ID} on ${env.JENKINS_URL}..."
+        sh """#!/bin/bash
+        source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+        python3 -m venv "${TOX_VENV}"
+        source "${TOX_VENV}/bin/activate"
+        python3 -m pip install --upgrade pip setuptools wheel
+        python3 -m pip install tox poetry
+        """
       }
     }
     stage('Run all parsing tests') {
       steps {
-        withFolderProperties {
-          echo 'Running parsing tests...'
-          dir("${SRC}") {
-            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-              withFolderProperties {
-                sh """#!/bin/bash
-                   source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
-                   source "${TOX_VENV}/bin/activate"
-                   for script in "${NIGHTLIES}"/scripts/valjean_nightly*.py; do
-                     script_base=\$(basename \${script})
-                     echo "Running tests for \${script_base}"
-                     ${TOX} -e parsing-py39 -- --parsing-config-file-t4="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
-                   done
-                   """
-              }
-            }
+        echo 'Running parsing tests...'
+        dir("${SRC}") {
+          catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+            sh """#!/bin/bash
+               source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
+               source "${TOX_VENV}/bin/activate"
+               for script in "${NIGHTLIES}"/scripts/valjean_nightly*.py; do
+                 script_base=\$(basename \${script})
+                 echo "Running tests for \${script_base}"
+                 ${TOX} -e parsing-py39 -- --parsing-config-file-t4="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
+               done
+               """
           }
         }
       }
