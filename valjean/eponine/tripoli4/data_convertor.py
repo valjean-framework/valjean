@@ -183,8 +183,9 @@ def result_wo_error(result, res_type, name='', what=''):
     :returns: :class:`~valjean.eponine.dataset.Dataset`
     '''
     LOGGER.debug("value without error %s", result[res_type])
-    return Dataset(result[res_type], np.full(result[res_type].shape, np.nan),
-                   name=name, what=what)
+    res = result[res_type]
+    error = 0 if np.issubdtype(res.dtype, np.integer) else np.nan
+    return Dataset(res, np.full(res.shape, error), name=name, what=what)
 
 
 def result_with_error(result, res_type, name='', what='',
