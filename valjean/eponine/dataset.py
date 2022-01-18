@@ -798,7 +798,7 @@ class Dataset:
                     f"        bins: {self.bins},\n"
                     f"        name: {self.name!r}, what: {self.what!r}")
         return (
-            f"class: {self.__class__}, data type: {self.value}\n"
+            f"class: {self.__class__}, data type: {type(self.value)}\n"
             f"value: {self.value:6e}, error: {self.error:6e}, "
             f"bins: {self.bins}\n"
             f"name: {self.name!r}, what: {self.what!r}\n"
