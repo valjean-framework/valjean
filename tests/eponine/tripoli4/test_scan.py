@@ -42,6 +42,7 @@ from ...context import valjean  # pylint: disable=unused-import
 import numpy as np
 import logging
 import pytest
+from valjean.eponine.dataset import Dataset
 from valjean.eponine.tripoli4.parse import Parser, ParserException
 from valjean.eponine.tripoli4.parse_debug import ParserDebug
 import valjean.eponine.tripoli4.data_convertor as dcv
@@ -124,6 +125,11 @@ def check_gauss_e_spectrum(resp):
                           resp["results"]['score'].bins['e'][::4])
     assert 'discarded_batches' in resp['results']
     assert 'used_batches' in resp['results']
+    batch_res = resp['results']['used_batches']
+    assert isinstance(batch_res, Dataset)
+    assert batch_res.value.dtype == np.int64
+    assert batch_res.error.dtype == np.int64
+    assert batch_res.error == 0
 
 
 def check_gauss_et_spectrum(resp):
