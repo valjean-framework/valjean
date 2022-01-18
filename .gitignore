@@ -16,3 +16,4 @@ dist
 .tox
 __t4depletion__
 .ipynb_checkpoints
+poetry.lock
