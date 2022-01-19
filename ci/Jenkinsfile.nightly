@@ -74,7 +74,6 @@ pipeline {
   post {
     always {
       dir("${REPORTS}") {
-        archiveArtifacts artifacts: "testing-*.out", fingerprint: true
         cobertura (autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'coverage-*.xml',
                    failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false,
                    sourceEncoding: 'UTF_8', zoomCoverageChart: false)
