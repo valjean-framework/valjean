@@ -213,6 +213,11 @@ commands = poetry install -v --no-root -E dev
 
 [testenv:parsing-py39]
 description = invoke pytest on the nightly parsing tests
+passenv =
+        VALJEAN_NIGHTLY_JET4_MONO_PATH
+        VALJEAN_NIGHTLY_JET4_PARA_PATH
+        VALJEAN_NIGHTLY_V10_2_PATH
+        VALJEAN_NIGHTLY_V11_0_PATH
 extras = graphviz
 commands = poetry install -v --no-root -E dev
            poetry run pytest --runslow --cov-report term-missing \
