@@ -221,15 +221,15 @@ def test_gauss_spectrum(datadir):
     assert list(t4rb.available_values('response_name')) == ['courant']
     assert len(t4rb.available_values('response_index')) == 7
     # use response 0: usual spectrum
-    selresp0 = t4rb.select_by(response_index=0, squeeze=True)
+    selresp0 = t4rb.select_by(response_index=0)
     check_gauss_e_spectrum(selresp0)
     # use response 1: spectrum in energy and time
     # speciticity: integrated result in energy per time bin
-    selresp1 = t4rb.select_by(response_index=1, squeeze=True)
+    selresp1 = t4rb.select_by(response_index=1)
     check_gauss_et_spectrum(selresp1)
     # use response 5 from score_name: spectrum in e, t, mu and phi
     # no integral available
-    selresp = t4rb.select_by(score_name='courant_Etmuphi', squeeze=True)
+    selresp = t4rb.select_by(score_name='courant_Etmuphi')
     check_gauss_etmuphi_spectrum(selresp)
     # checks on datasets not available in response result (integrals)
     resp5 = t4_res.pres['list_responses'][5]
@@ -258,7 +258,7 @@ def test_tungstene(datadir):
     assert resp0['scoring_zone_type'] == "Mesh"
     t4rb = t4_res.to_browser()
     assert t4rb.globals['simulation_time'] == 423
-    resp = t4rb.select_by(response_function='FLUX', squeeze=True)
+    resp = t4rb.select_by(response_function='FLUX')
     bd_mesh = dcv.convert_data(resp['results'], data_type='mesh')
     assert bd_mesh is None
     bd_mesh = resp['results']['score']
@@ -368,7 +368,7 @@ def check_last_entropy_result(lastres):
     t4rb = lastres.to_browser()
     assert t4rb.globals['simulation_time'] == 24
     # response_function = reaction
-    resp = t4rb.select_by(response_function='REACTION', squeeze=True)
+    resp = t4rb.select_by(response_function='REACTION')
     assert set(resp['results']) == {
         'discarded_batches', 'used_batches', 'score', 'boltzmann_entropy',
         'shannon_entropy', 'score_integrated', 'units'}
@@ -384,9 +384,9 @@ def check_last_entropy_result(lastres):
     assert np.array_equal(resp['results']['score'].bins['e'],
                           resp['results']['boltzmann_entropy'].bins['e'])
     # response_function = keff
-    resps = t4rb.select_by(response_type='keff')
+    resps = t4rb.filter_by(response_type='keff')
     assert len(resps) == 7
-    for resp in resps:
+    for resp in resps.content:
         assert set(resp['results']) == {'keff', 'correlation_keff',
                                         'used_batches'}
         assert resp['results']['keff'].shape == ()
@@ -403,9 +403,9 @@ def check_last_entropy_result(lastres):
             assert np.isclose(resp['results']['keff'].error, 7.127724e-3)
     assert 'KSTEP-KCOLL' in t4rb.available_values('keff_estimator')
     assert 'full combination' in t4rb.available_values('keff_estimator')
-    resps = t4rb.select_by(response_type='keff_auto')
+    resps = t4rb.filter_by(response_type='keff_auto')
     assert len(resps) == 4
-    for resp in resps:
+    for resp in resps.content:
         assert set(resp['results']) == {'keff', 'used_batches',
                                         'discarded_batches'}
         assert resp['response_type'] == 'keff_auto'
@@ -414,11 +414,9 @@ def check_last_entropy_result(lastres):
 
 def check_first_entropy_result(entropy_rb):
     '''Check first entropy result (not converged).'''
-    resp0 = entropy_rb.select_by(response_function='REACTION',
-                                 squeeze=True)
+    resp0 = entropy_rb.select_by(response_function='REACTION')
     assert np.isnan(resp0['results']['score_integrated'].value)
-    resp0 = entropy_rb.select_by(response_type='keff',
-                                 squeeze=True)
+    resp0 = entropy_rb.select_by(response_type='keff')
     assert set(resp0['results']) == {'used_batches', 'keff'}
     assert np.isnan(resp0['results']['keff'].value)
 
@@ -506,14 +504,13 @@ def test_ifp(datadir):
     assert last_resp['results']['used_batches'].value == 81
     t4rb = t4_res.to_browser()
     assert len(t4rb.available_values('response_function')) == 22
-    resps = t4rb.select_by(
+    resps = t4rb.filter_by(
         response_function="IFP ADJOINT WEIGHTED ROSSI ALPHA")
     assert len(resps) == 20  # number of IFP cycles
-    assert sorted(list(resps[0].keys())) == ['index', 'length',
-                                             'response_function',
-                                             'response_index', 'response_type',
-                                             'results']
-    bd_cycle = resps[0]['results']['score_generic']
+    assert sorted(list(resps.content[0].keys())) == [
+        'index', 'length', 'response_function', 'response_index',
+        'response_type', 'results']
+    bd_cycle = resps.content[0]['results']['score_generic']
     assert bd_cycle.shape == ()
     assert bd_cycle.name == ''
     assert bd_cycle.what == 'ifp adjoint weighted rossi alpha'
@@ -526,7 +523,7 @@ def test_ifp(datadir):
     assert len(rb_betai.content) == 24
     assert (sorted(list(rb_betai.available_values('nucleus')))
             == ['PU239', 'PU240', 'PU241'])
-    resp = rb_betai.select_by(family=5, nucleus='PU239', squeeze=True)
+    resp = rb_betai.select_by(family=5, nucleus='PU239')
     assert resp['response_type'] == 'adjoint'
     assert (sorted(list(resp['results'].keys()))
             == ['score_generic', 'used_batches'])
@@ -559,28 +556,28 @@ def test_ifp_adjoint_edition(datadir):
     assert (set(t4rb.keys()) == {
         'ifp_cycle_length', 'ifp_response', 'index', 'keff_estimator',
         'response_function', 'response_index', 'response_type', 'score_name'})
-    resp = t4rb.select_by(score_name='FluxAdj_1', squeeze=True)
+    resp = t4rb.select_by(score_name='FluxAdj_1')
     bd_adj = resp['results']['score']
     assert bd_adj.shape == (2, 2, 2, 1, 1, 3, 1)
     assert (list(bd_adj.bins.keys())
             == ['X', 'Y', 'Z', 'Phi', 'Theta', 'E', 'T'])
     assert bd_adj.bins['X'].size == bd_adj.shape[0]+1
-    resp = t4rb.select_by(score_name='FluxAdj_ang_1', squeeze=True)
+    resp = t4rb.select_by(score_name='FluxAdj_ang_1')
     bd_adj = resp['results']['score']
     assert bd_adj.shape == (2, 2, 2, 2, 2, 3, 1)
     assert (list(bd_adj.bins.keys())
             == ['X', 'Y', 'Z', 'Phi', 'Theta', 'E', 'T'])
-    resp = t4rb.select_by(score_name='flux_vol', squeeze=True)
+    resp = t4rb.select_by(score_name='flux_vol')
     bd_adj = resp['results']['score']
     assert bd_adj.shape == (2, 3)
     assert list(bd_adj.bins.keys()) == ['Vol', 'E']
     assert bd_adj.bins['Vol'].size == bd_adj.shape[0]
     assert np.array_equal(bd_adj.bins['Vol'], [10, 11])
-    resp = t4rb.select_by(response_type='keff_auto')
-    assert resp[-1]['results']['equivalent_keff'].value == 8.135012e-01
-    assert np.isnan(resp[-1]['results']['equivalent_keff'].error)
-    resp = t4rb.select_by(response_type='keff')
-    assert set(resp[0]['results']) == {'used_batches', 'warning'}
+    resp = t4rb.filter_by(response_type='keff_auto')
+    assert resp.content[-1]['results']['equivalent_keff'].value == 8.135012e-01
+    assert np.isnan(resp.content[-1]['results']['equivalent_keff'].error)
+    resp = t4rb.filter_by(response_type='keff')
+    assert set(resp.content[0]['results']) == {'used_batches', 'warning'}
 
 
 def test_sensitivity(datadir):
@@ -602,8 +599,7 @@ def test_sensitivity(datadir):
                 'response_type', 'sensitivity_index', 'sensitivity_nucleus',
                 'sensitivity_reaction', 'sensitivity_type'])
     resp = rb_sensitiv.select_by(sensitivity_nucleus='U235',
-                                 sensitivity_reaction='TOTAL FISSION_NU',
-                                 squeeze=True)
+                                 sensitivity_reaction='TOTAL FISSION_NU')
     assert set(resp['results']) == {'score', 'integrated', 'units',
                                     'used_batches'}
     assert resp['response_type'] == 'sensitivity'
@@ -618,8 +614,7 @@ def test_sensitivity(datadir):
     assert list(bds_int.bins.keys()) == list(bds.bins.keys())
     resp = rb_sensitiv.select_by(
         sensitivity_nucleus='U238',
-        sensitivity_reaction='SCATTERING LAW 21 (CONSTRAINED)',
-        squeeze=True)
+        sensitivity_reaction='SCATTERING LAW 21 (CONSTRAINED)')
     bds = resp['results']['score']
     assert bds.shape == (2, 3, 4)
     assert list(bds.bins.keys()) == ['einc', 'e', 'mu']
@@ -648,7 +643,7 @@ def test_kij(datadir):
     assert resp_list[14]['response_function'] == "KIJ_SOURCES"
     assert resp_list[15]['response_function'] == "KEFFS"
     t4rb = t4_res.to_browser()
-    kijmat = t4rb.select_by(response_function='KIJ_MATRIX', squeeze=True)
+    kijmat = t4rb.select_by(response_function='KIJ_MATRIX')
     assert set(kijmat['results']) == {
         'used_batches', 'kij_mkeff', 'kij_domratio', 'kij_reigenval',
         'kij_reigenvec', 'kij_matrix'}
@@ -660,7 +655,7 @@ def test_kij(datadir):
     assert kijmat['results']['kij_reigenval'].error.dtype.name == 'float64'
     assert kijmat['results']['kij_domratio'].ndim == 0
     assert kijmat['results']['kij_mkeff'].shape == ()
-    kijakeff = t4rb.select_by(response_type='kijkeff', squeeze=True)
+    kijakeff = t4rb.select_by(response_type='kijkeff')
     assert set(kijakeff['results']) == {
         'used_batches', 'kij_leigenvec', 'kij_matrix', 'space_bins',
         'kij_mkeff', 'kij_stddev_matrix', 'kij_sensibility_matrix'}
@@ -671,11 +666,9 @@ def test_kij(datadir):
     assert kijakeff['results']['kij_leigenvec'].shape == (10,)
     assert kijakeff['results']['kij_leigenvec'].what == 'kij_leigenvec'
     # check error in case of changes (no percentage for auto)
-    keffa = t4rb.select_by(response_type='keff_auto', keff_estimator='KSTEP',
-                           squeeze=True)
+    keffa = t4rb.select_by(response_type='keff_auto', keff_estimator='KSTEP')
     assert np.isclose(keffa['results']['keff'].error, 1.345008e-03)
-    keff = t4rb.select_by(response_type='keff', keff_estimator='KSTEP',
-                          squeeze=True)
+    keff = t4rb.select_by(response_type='keff', keff_estimator='KSTEP')
     assert np.isclose(keff['results']['keff'].error, 1.451522e-03)
 
 
@@ -695,7 +688,7 @@ def test_green_bands(datadir):
     assert set(t4_res.pres['list_responses'][0]['results']) == {
         'green_bands', 'discarded_batches'}
     t4rb = t4_res.to_browser()
-    resp = t4rb.select_by(response_function='FLUX', squeeze=True)
+    resp = t4rb.select_by(response_function='FLUX')
     assert set(resp['results']) == {'score', 'score/lethargy', 'units',
                                     'discarded_batches'}
     bd_gb = resp['results']['score']
@@ -753,7 +746,7 @@ def test_pertu(datadir):
         'response_type', 'score_index', 'scoring_mode', 'scoring_zone_id',
         'scoring_zone_type', 'scoring_zone_volsurf']
     pertu_vol2 = t4rb.select_by(scoring_zone_id=2,
-                                include=('perturbation_rank',), squeeze=True)
+                                include=('perturbation_rank',))
     assert pertu_vol2['response_index'] == 0
     assert pertu_vol2['score_index'] == 0
     assert pertu_vol2['response_type'] == 'score'
@@ -827,27 +820,26 @@ def test_box_dyn(datadir):
     t4b = t4p.parse_from_index().to_browser()
     assert t4b
     # mesh with energy and time bins
-    etmesh = t4b.select_by(score_name='neutron_flux_mesh_score', squeeze=True)
+    etmesh = t4b.select_by(score_name='neutron_flux_mesh_score')
     assert etmesh['energy_split_name'] == 'grid_rough'
     dsmesh = etmesh['results']['score'].squeeze()
     assert dsmesh.shape == (3, 3, 3, 2, 10)
     assert list(dsmesh.bins.keys()) == ['u', 'v', 'w', 'e', 't']
     # precursor weight
-    precweight = t4b.select_by(response_function='PRECURSOR WEIGHT')
+    precweight = t4b.filter_by(response_function='PRECURSOR WEIGHT')
     assert len(precweight) == 11
     pweight_t3 = t4b.select_by(response_function='PRECURSOR WEIGHT',
-                               time_step=3, squeeze=True)
+                               time_step=3)
     assert pweight_t3['response_type'] == 'kinetic_generic'
     # neutron weight
     # time_step = 0 corresponds to criticality source (for both weights)
     nweight_t0 = t4b.select_by(response_function='NEUTRON WEIGHT',
-                               time_step=0, squeeze=True)
+                               time_step=0)
     assert set(nweight_t0['results']) == {'used_batches', 'score_generic',
                                           'units'}
     dsnwt0 = nweight_t0['results']['score_generic']
     assert dsnwt0.shape == ()
-    dynom = t4b.select_by(response_function='DYNAMIC NORMALIZATION',
-                          squeeze=True)
+    dynom = t4b.select_by(response_function='DYNAMIC NORMALIZATION')
     assert dynom['response_type'] == 'generic'
 
 
@@ -868,12 +860,12 @@ def test_spherical_harmonics(datadir):
         'nu_fission_cross_section', 'absorption_cross_section',
         'scattering_cross_section', 'fission_cross_section',
         'scattering_matrix'}
-    fiss_spec = shb.select_by(score_name='fission_spectrum', squeeze=True)
+    fiss_spec = shb.select_by(score_name='fission_spectrum')
     assert len(fiss_spec['results']['score'].bins['l']) == 1
     assert np.array_equal(fiss_spec['results']['score'].bins['m'],
                           np.array([0]))
     assert fiss_spec['results']['score'].shape == (2, 2, 1, 1, 2, 1, 1)
-    scat_mat = shb.select_by(score_name='scattering_matrix', squeeze=True)
+    scat_mat = shb.select_by(score_name='scattering_matrix')
     assert ([len(b) for b in scat_mat['results']['score'].bins.values()]
             == [2, 2, 1, 3, 3, 3, 5])
     assert len(scat_mat['results']['score'].bins['l']) == 3
@@ -893,7 +885,7 @@ def test_spherical_harmonics(datadir):
     assert np.all(scat_mat['results']['score'].error[:1, 1:, :, 1:, 1:, 2:, :]
                   .mask.squeeze() == [False, False, False, False, False])
     assert not np.isnan(np.sum(scat_mat['results']['score'].value))
-    ang_flux = shb.select_by(score_name='angular_flux', squeeze=True)
+    ang_flux = shb.select_by(score_name='angular_flux')
     assert ang_flux['results']['score'].shape == (2, 2, 1, 1, 2, 3, 5)
     # bin ids : u=0, v=0, e=0 (1 bin in w and ie), l=1, m=1
     af_l1m1 = ang_flux['results']['score'][:1, :1, :, :, :1, 1:2, 3:4]

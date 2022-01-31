@@ -61,7 +61,7 @@ def test_rnr_a3c_api(datadir):
     assert (sum([len(g) for g in ap3b.globals['geometry'].values()])
             == len(ap3b.available_values('zone')) - 1)
     assert 'totaloutput' in ap3b.available_values('zone')
-    flux = ap3b.select_by(result_name='flux', zone='zone_1', squeeze=True)
+    flux = ap3b.select_by(result_name='flux', zone='zone_1')
     assert flux['results'].shape == (33,)
 
 
@@ -82,7 +82,7 @@ def test_mosteller(datadir):
     assert len(ap3b.available_values('output')) == 6
     assert all(o['ngroups'] == 10 for o in ap3b.globals['info'].values())
     flux = ap3b.select_by(result_name='flux', zone='totaloutput',
-                          output='output_2', squeeze=True)
+                          output='output_2')
     assert flux['results'].shape == (10,)
 
 
@@ -97,12 +97,12 @@ def test_hexarot_kinetic(datadir):
     assert len(ap3b.available_values('output')) == 3
     assert set(ap3b.available_values('result_name')) == {
         'keff', 'production', 'RelativePower', 'flux', 'nufission', 'total'}
-    relpow = ap3b.select_by(result_name='RelativePower')
+    relpow = ap3b.filter_by(result_name='RelativePower')
     assert len(relpow) == 3
     assert all(o['ngroups'] == 4 for o in ap3b.globals['info'].values())
     # why 101 ? what is the binning ?
-    assert all(r['results'].shape[0] == 101 for r in relpow)
-    assert all(r['results'].ndim == 1 for r in relpow)
+    assert all(r['results'].shape[0] == 101 for r in relpow.content)
+    assert all(r['results'].ndim == 1 for r in relpow.content)
 
 
 def test_simplest_api(datadir):
@@ -134,7 +134,7 @@ def test_minicoeur_kinetics(datadir):
     assert set(ap3b.globals.keys()) == {'info', 'geometry'}
     assert not ap3b.globals['info']
     assert not ap3b.globals['geometry']
-    keff = ap3b.select_by(result_name='SteadyState_keff', squeeze=True)
+    keff = ap3b.select_by(result_name='SteadyState_keff')
     assert isinstance(keff['results'].value, np.generic)
     assert not keff['results'].bins
     res2 = ap3b.content[2]
@@ -157,5 +157,5 @@ def test_mosteller_to_brow(datadir):
     assert len(ap3b.available_values('output')) == 6
     assert all(o['ngroups'] == 10 for o in ap3b.globals['info'].values())
     flux = ap3b.select_by(result_name='flux', zone='totaloutput',
-                          output='output_2', squeeze=True)
+                          output='output_2')
     assert flux['results'].shape == (10,)

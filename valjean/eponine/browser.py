@@ -172,40 +172,29 @@ ones are ['consumer', 'dessert', 'drink', 'index', 'menu']
 
     >>> sel_br = com_br.select_by(consumer='Graham')
     >>> type(sel_br)
-    <class 'list'>
+    <class 'dict'>
     >>> len(sel_br)
-    1
+    5
     >>> pprint(sel_br)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Graham', 'drink': 'coffee', 'index': 2, 'menu': '1', \
-'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}]
-
-  * this also work when several items correspond to the selection:
-
-    >>> sel_br = com_br.select_by(drink='beer')
-    >>> pprint(sel_br)  # doctest: +NORMALIZE_WHITESPACE
-    [{'consumer': 'Terry', 'drink': 'beer', 'index': 0, 'menu': '1', \
-'results': {'ingredients_res': ['egg', 'bacon']}}, \
-{'consumer': 'Eric', 'drink': 'beer', 'index': 3, 'menu': '3', \
-'results': {'ingredients_res': ['sausage'], 'side_res': 'baked beans'}}]
-    >>> len(sel_br)
-    2
-
-  * a *squeeze* option is also available to directly get the item (and not a
-    list of items) when **only one** item corresponds to the selection (its
-    default is at False):
-
-    >>> item = com_br.select_by(consumer='Graham', squeeze=True)
-    >>> pprint(item)  # doctest: +NORMALIZE_WHITESPACE
     {'consumer': 'Graham', 'drink': 'coffee', 'index': 2, 'menu': '1', \
 'results': [{'ingredients_res': ['spam', 'egg', 'spam']}]}
 
-  * squeeze is not possible if several results correspond to the required
-    selection
+  * this does not work when several items correspond to the selection:
 
-    >>> items = com_br.select_by(drink='beer', squeeze=True)
-    >>> # prints  WARNING     browser: Squeeze cannot be applied, more than \
-one content item corresponds to your choice
+    >>> sel_br = com_br.select_by(drink='beer')
+    Traceback (most recent call last):
+            [...]
+    valjean.eponine.browser.TooManyItemsBrowserError: Several content items \
+correspond to your choice, please refine your selection using additional \
+keywords
 
+  * if no item corresponds to the selection another exception is thrown:
+
+    >>> sel_br = com_br.select_by(menu='4')
+    Traceback (most recent call last):
+            [...]
+    valjean.eponine.browser.NoItemBrowserError: No item corresponding to the \
+selection.
 
 Module API
 ----------
@@ -597,32 +586,40 @@ Index: ...)"
         sub_br = Browser(lresp, global_vars=self.globals)
         return sub_br
 
-    def select_by(self, *, squeeze=False, include=(), exclude=(), **kwargs):
+    def select_by(self, *, include=(), exclude=(), **kwargs):
         '''Get an item or the list of items from content corresponding to
         selection from keyword arguments.
 
         :param \\**\\kwargs: keyword arguments to specify the required items.
             More than one are allowed.
-        :param bool squeeze: named parameter
         :param tuple(str) include: metadata keys required in the items but for
             which the value is not necessarly known
         :param tuple(str) exclude: metadata that should not be present in the
           items and for which the value is not necessarly known
-        :returns: first element of the list of content items if only one,
-          else list of content items matching the requirements
+        :raises NoItemBrowserError: if no item corresponds to the selection
+        :raises TooManyItemsBrowserError: if more than one item corresponds to
+          the provided keywords
+        :rtype: dict
         '''
         respids = self._filter_items_id_by(**kwargs)
         sincl, sexcl = set(include), set(exclude)
         litems = [self.content[i] for i in sorted(respids)
                   if sincl.issubset(self.content[i])
                   and not sexcl.intersection(self.content[i])]
-        if squeeze:
-            if not litems:
-                LOGGER.warning("No item corresponding to the selection.")
-                return None
-            if len(litems) > 1:
-                LOGGER.warning("Squeeze cannot be applied, several content "
-                               "items correspond to your choice")
-                return None
-            return litems[0]
-        return litems
+        if not litems:
+            raise NoItemBrowserError("No item corresponding to the selection.")
+        if len(litems) > 1:
+            raise TooManyItemsBrowserError(
+                "Several content items correspond to your choice, "
+                "please refine your selection using additional keywords")
+        return litems[0]
+
+
+class TooManyItemsBrowserError(LookupError):
+    '''Error to :class:`Browser` when too many items correspond to the
+    requested selection.
+    '''
+
+
+class NoItemBrowserError(LookupError):
+    '''Error to :class:`Browser` when no item corresponds to the selection.'''

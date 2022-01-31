@@ -36,13 +36,15 @@ various objects typically coming from parsing result.
 # pylint: disable=no-value-for-parameter
 
 import string
+import pytest
 from hypothesis import given, note, settings, HealthCheck
 from hypothesis.strategies import (integers, lists, composite, text, booleans,
                                    dictionaries, one_of, data, tuples,
                                    sampled_from)
 
 from valjean.cosette.env import Env
-from valjean.eponine.browser import Index, Browser
+from valjean.eponine.browser import (Index, Browser, TooManyItemsBrowserError,
+                                     NoItemBrowserError)
 from ..context import valjean  # pylint: disable=unused-import
 from ..conftest import CaptureLog
 
@@ -203,14 +205,24 @@ def test_selection(sampler):
         for val in lval:
             with CaptureLog(valjean.LOGGER) as caplog:
                 tmpl = [x for x in mdd if x[key] == val]
-                sbr = browser.select_by(**{key: val})
+                sbr = browser.filter_by(**{key: val})
                 assert len(tmpl) == len(sbr)
                 if not tmpl:
                     assert 'not a valid' in caplog
     # all results metadata are supposed to contain 'drink', 'ingredient' and
     # 'menu'
-    assert len(browser.select_by(include=('drink', 'ingredient'))) == len(fmdr)
-    assert not browser.select_by(exclude=('menu',))
+    assert len(browser.filter_by(include=('drink', 'ingredient'))) == len(fmdr)
+    assert not browser.filter_by(exclude=('menu',))
+    with CaptureLog(valjean.LOGGER) as caplog:
+        with pytest.raises(NoItemBrowserError):
+            browser.select_by(exclude=('menu',))
+            assert 'No item corresponding to the selection' in caplog
+    with CaptureLog(valjean.LOGGER) as caplog:
+        with pytest.raises(TooManyItemsBrowserError):
+            browser.select_by(include=('drink', 'ingredient'))
+            assert ('Several content items correspond to your choice, '
+                    'please refine your selection using additional keywords'
+                    in caplog)
 
 
 @composite

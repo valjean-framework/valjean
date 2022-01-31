@@ -198,7 +198,7 @@ un test statistique de compatibilité entre les deux.
     
         t4_out = Path(env[t4_name]['result'])
         t4_br = Parser(t4_out).parse_from_index().to_browser()
-        t4_res = t4_br.select_by(score_name='flux_score', squeeze=True)['results']
+        t4_res = t4_br.select_by(score_name='flux_score')['results']
         t4_ds = (convert_data(t4_res, 'spectrum', name=t4_name, what='flux')
                  .squeeze())
     
