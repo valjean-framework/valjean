@@ -465,6 +465,24 @@ _ifpadjvol_kw = Keyword("Vol")
 _ifpadjminmax_kw = Keyword("(min | max)")
 _ifpadjscore_kw = Keyword("score [a.u.]")
 
+# Results on spherical harmonics
+_shr_nb_space_bins_kw = Keyword('Number of space bin :')
+_shr_nb_u_space_bins_kw = Keyword('Number of space bin in u dimension:')
+_shr_nb_v_space_bins_kw = Keyword('Number of space bin in v dimension:')
+_shr_nb_w_space_bins_kw = Keyword('Number of space bin in w dimension:')
+_shr_nb_energy_bins_kw = Keyword('Number of energetic bins :')
+_shr_nb_inc_energy_bins_kw = Keyword('Number of incident energy bins :')
+_shr_lmax_kw = Keyword('Maximum L number of moments :')
+_shr_score_name_kw = Keyword('Score :')
+_shr_space_kw = Keyword('Space bin :')
+_shr_energy_kw = Keyword('Energy range (in MeV):')
+_shr_incident_energy_kw = Keyword('Outgoing data for incident energy '
+                                  'bin boundaries :')
+_shr_l_kw = Keyword('l')
+_shr_m_kw = Keyword('m')
+_shr_score_kw = Keyword('Score')
+_shr_sigma_kw = Keyword('Sigma (%)')
+
 # Perturbations
 _perturbation_kw = Keyword("================== Perturbation result edition "
                            "======================")
@@ -1240,6 +1258,32 @@ ifpadjointcriticality = (Group((_adjcrit_ed_intro + OneOrMore(_adjcritblock))
                                .setParseAction(trans.convert_ifp_adj_crit_ed))
                          ('ifp_adjoint_crit_edition'))
 
+# Spherical harmonics results
+_shr_bins = Group(Suppress(_shr_nb_space_bins_kw) + _inums('nb_sbins')
+                  + Suppress(_shr_nb_u_space_bins_kw) + _inums('nb_ubins')
+                  + Suppress(_shr_nb_v_space_bins_kw) + _inums('nb_vbins')
+                  + Suppress(_shr_nb_w_space_bins_kw) + _inums('nb_wbins')
+                  + Suppress(_shr_nb_energy_bins_kw) + _inums('nb_ebins')
+                  + Suppress(_shr_nb_inc_energy_bins_kw) + _inums('nb_iebins')
+                  + Suppress(_shr_lmax_kw) + _inums('lmax'))('nb_bins')
+_shrscore = (Suppress(_shr_score_name_kw)
+             + Group(OneOrMore(Word(printables), stopOn=LineEnd())
+             .setParseAction(' '.join))('score_name'))
+_shrspace = Suppress(_shr_space_kw) + Group(_inums + _inums + _inums)('space')
+_shrenergy = Suppress(_shr_energy_kw) + Group(_fnums + _fnums)('energy')
+_shrincenergy = (Suppress(_shr_incident_energy_kw)
+                 + Group(_fnums + _fnums)('incident_energy'))
+_shrcols = Suppress(_shr_l_kw + _shr_m_kw + _shr_score_kw + _shr_sigma_kw)
+_shrvals = Group(_inums + _inums + _fnums + _fnums)
+_shrtable = _shrenergy + _shrcols + OneOrMore(_shrvals)('values')
+_shr_ietable = Optional(_shrincenergy) + OneOrMore(Group(_shrtable))('vpie')
+_shr_spacetable = _shrspace + OneOrMore(Group(_shr_ietable))('vpspace')
+_shr_scoretable = _shrscore + OneOrMore(Group(_shr_spacetable))('score')
+shrblock = Group(_shr_bins
+                 + Group(OneOrMore(Group(_shr_scoretable)))('res')
+                 + Suppress(_star_line)
+                 ).setParseAction(trans.convert_shr)('spherical_harmonics')
+
 # Perturbations
 _perturank = Suppress(_perturank_kw) + _inums('perturbation_rank')
 _pertumethod = (Suppress(_pertumethod_kw)
@@ -1320,6 +1364,7 @@ responseblock = Group(keffblock
                       | kingres
                       | sensitivityres
                       | genericscoreblock
+                      | shrblock
                       | listscoreblock)('results')
 
 response = (Group(_star_line

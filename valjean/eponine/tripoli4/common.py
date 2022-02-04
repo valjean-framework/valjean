@@ -357,6 +357,37 @@ keys (``'array'``, ``'bins'``, ``'units'``).
 More details in :func:`convert_nu_spectrum` and :func:`convert_za_spectrum`.
 
 
+Scores on spherical harmonics
+-----------------------------
+
+These scores are foreseen to be passed to deterministic codes. They are
+calculated on real spherical harmonics, using the Schmid semi-normalized
+harmonics as described in [`SHTools \
+<https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2018GC007529>`_] to
+be consistent with Apollo3. Thus the associated functions are not only Legendre
+polynomials but also contains a factor :math:`cos(m\phi)` for :math:`m>0` and a
+factor :math:`sin(|m|\phi)` for :math:`m<0`.
+
+In practice, they are discretized on a space mesh (:math:`(u, v, w)`
+coordinates), on incident energy bins (:math:`ie`), on energy bins (:math:`e`)
+and on the order of the moments (:math:`(l, m)`). :math:`l` moments go from 0
+to :math:`L` (so there are :math:`L+1` values), :math:`m` ones go from
+:math:`-l` to :math:`l`, (:math:`2L+1` values).
+
+The eight scores available in such description are converted in a single array
+of 7 dimensions :math:`(u, v, w, ie, e, l, m)`. The forbidden :math:`(l, m)`
+pairs (:math:`m>|l|`) are set to `numpy.nan`. A
+:meth:`~valjean.eponine.dataset.Dataset.mask` is applied to the resulting
+Dataset.
+
+Note that :math:`m` ids goes from 0 to 2L+1 in slicing, corresponding to bins
+values :math:`-m` to :math:`m`.
+
+All the arrays have 7 dimensions, but incident energy bins are only
+relevant for the scattering matrix. The fission spectrum only allows
+:math:`l=0, m=0`.
+
+
 |keff| results
 ==============
 
@@ -455,7 +486,7 @@ dictionary is built with the following elements:
   numpy.array('correlations', 'combined values', 'combined sigma%')``
 
 In correlation matrix diagoanl is set to 1 and not converged values (str) are
-set to `numpy.nan`. If the full combination did not converged hte string is
+set to `numpy.nan`. If the full combination did not converged the string is
 kept.
 
 
@@ -574,6 +605,7 @@ from collections import OrderedDict
 from io import StringIO
 import numpy as np
 from ... import LOGGER
+from .data_convertor import bins_reduction
 
 
 # get profile from globals (cleaner)
@@ -2211,6 +2243,174 @@ def convert_sensitivities(res):
             resdict['used_batches_res'] = res['used_batches']
             thelist.append(resdict)
     return thelist
+
+
+class SphericalHarmonicsDictBuilder(DictBuilder):
+    '''Class specific to results on spherical harmonics.
+
+    This class inherites from DictBuilder, see :class:`DictBuilder` for
+    initialization and common methods.
+
+    Arrays are indexed by :math:`(u, v, w)` for space, :math:`ie` for incident
+    energy, :math:`e` for energy, :math:`l` for moment and :math:`m` for
+    sub_moment with :math:`L + 1` values of :math:`l` and :math:`2L + 1` values
+    of :math:`m`, :math:`L` being the maximum value of :math:`l`.
+
+    '''
+    def __init__(self, colnames, bins, corr_names):
+        '''Initialization of SphericalHarmonicsDictBuilder.
+
+        :param list(str) colnames: name of the columns/results
+           (``'score'`` and ``'sigma'`` in the current case)
+        :param collections.OrderedDict bins: :math:`(u, v, w, ie, e, l, m)`
+        :param dict corr_names: correspondence table for score names
+        '''
+        super().__init__(colnames, bins)
+        self.bins = OrderedDict([('u', []), ('v', []), ('w', []),
+                                 ('ie', []), ('e', []),
+                                 ('l', []), ('m', [])])
+        self.units = {'u': '', 'v': '', 'w': '', 'ie': 'MeV', 'e': 'MeV',
+                      'l': '', 'm': ''}
+        self.correspondence_table = corr_names
+        self.rev_correspondence_table = {v: k for k, v in corr_names.items()}
+
+    def fill_arrays_and_bins(self, data):
+        '''Fill arrays and bins for spherical harmonics results.
+
+        :param data: parsed result from *pyparsing*
+        '''
+        for res in data:
+            score = self.rev_correspondence_table[res['score_name'][0]]
+            spaceb = res['score'][0]['space'].asList()
+            for iie, spres in enumerate(res['score'][0]['vpspace']):
+                if ((len(self.bins['ie']) < self.arrays[score].shape[3]
+                     and 'incident_energy' in spres)):
+                    self.bins['ie'].append(spres['incident_energy'][0])
+                for ioe, ieres in enumerate(spres['vpie']):
+                    if len(self.bins['e']) < self.arrays['default'].shape[4]:
+                        self.bins['e'].append(ieres['energy'][0])
+                    for val in ieres['values']:
+                        index = tuple(
+                            spaceb + [iie, ioe]
+                            + [val[0], val[1]+self.arrays[score].shape[-2]-1])
+                        # print(index)
+                        self.arrays[score][index] = np.array(
+                            tuple(val[2:]), dtype=self.arrays[score].dtype)
+
+    def add_last_bins(self, data):
+        '''Add last bins in incident energy and energy.
+
+        :param dict data: last result
+        '''
+        vpspace_matrix = data['score'][-1]['vpspace'][-1]
+        self.bins['ie'].append(vpspace_matrix['vpie'][-1]['energy'][1])
+        self.bins['e'].append(vpspace_matrix['incident_energy'][1])
+
+    def fill_space_bins(self):
+        '''Fill spaces bins based on array shape.'''
+        self.bins['u'] = np.arange(self.arrays['default'].shape[0])
+        self.bins['v'] = np.arange(self.arrays['default'].shape[1])
+        self.bins['w'] = np.arange(self.arrays['default'].shape[2])
+
+    def fill_moments_bins(self):
+        '''Fill moments bins.
+
+        * :math:`l` goes from 0 to :math:`L`
+        * :math:`m` goes from :math:`-L` to :math:`L`
+        '''
+        self.bins['l'] = np.arange(self.arrays['default'].shape[5])
+        self.bins['m'] = np.arange(-self.arrays['default'].shape[5]+1,
+                                   self.arrays['default'].shape[5])
+
+    def reduced_bins(self, score):
+        '''Reduce bins according to score.
+
+        Bins are initialized with highest dimensions possible for each. This
+        method makes them match with the array shape. For example, remove
+        incident energy bins keeping first and last edges in most case.
+        A special case is done for fission_spectrum score that only has one
+        :math:`l` value, so :math:`l=0`, :math:`m=0`.
+
+        :param str score: score name
+        :returns: bins
+        :rtype: collections.OrderedDict
+        '''
+        bins = bins_reduction(
+            self.bins,
+            [d != o for d, o in zip(self.arrays['default'].shape,
+                                    self.arrays[score].shape)])
+        if score == 'fission_spectrum':
+            bins['l'] = np.array([0])
+            bins['m'] = np.array([0])
+        return bins
+
+
+def _build_shr_table(scores):
+    '''Build correspondance table of valjean names for spherical harmonics
+    results and Tripoli4 ones.
+
+    :param list scores: score names
+    :returns: correspondance table between valjean names and Tripoli-4 ones
+    :rtype: dict
+    '''
+    ctable = {}
+    for name in scores:
+        vname = name.replace('Reaction rate', '').replace(':', '')
+        vname = '_'.join(vname.split())
+        ctable[vname.lower()] = name
+    return ctable
+
+
+def _get_nb_shr_bins(res):
+    '''Extract number of bins.
+
+    :param res: parsed result from *pyparsing*
+    :rtype: list(int)
+    '''
+    lbins = list(res.values())[1:]
+    lbins[-1] += 1
+    lbins.append(2*res['lmax'] + 1)
+    return lbins
+
+
+def convert_spherical_harmonics(res, colnames=('score', 'sigma')):
+    '''Convert results on spherical harmonics to dictionary containing
+    :obj:`numpy.ndarray`.
+
+    :param res: result
+    :param list(str) colnames: name of the columns/results
+    :returns: dict containing the results and the associated metadata.
+    '''
+    LOGGER.debug('in convert_spherical_harmonics')
+    corr_names = _build_shr_table(r['score_name'][0] for r in res['res'])
+    tbins = _get_nb_shr_bins(res['nb_bins'])
+    shdb = SphericalHarmonicsDictBuilder(colnames, tbins, corr_names)
+    for iscore, score in enumerate(corr_names):
+        assert len(res['res'][iscore]['score_name']) == 1
+        assert res['res'][iscore]['score_name'][0] == corr_names[score]
+        assert len(res['res'][iscore]['score']) == 1
+        if score in ('fission_spectrum',):
+            shdb.add_array(score, colnames,
+                           tbins[:3] + [1, res['nb_bins']['nb_ebins'], 1, 1])
+        elif score in ('scattering_matrix',):
+            shdb.add_array(score, colnames, tbins)
+        else:
+            shdb.add_array(score, colnames, tbins[:3] + [1] + tbins[4:])
+    shdb.fill_space_bins()
+    shdb.fill_moments_bins()
+    shdb.fill_arrays_and_bins(res['res'])
+    shdb.add_last_bins(res['res'][-1].asDict())
+    shdb.convert_bins_to_increasing_arrays()
+    shlist = []
+    for narr, arr in shdb.arrays.items():
+        if narr == 'default':
+            continue
+        shlist.append({
+            'spherical_harmonics_res': {
+                'array': arr, 'bins': shdb.reduced_bins(narr),
+                'units': shdb.units, 'what': corr_names[narr]},
+            'score_name': narr})
+    return shlist
 
 
 def convert_list_to_tuple(liste):

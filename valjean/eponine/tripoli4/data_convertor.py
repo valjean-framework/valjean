@@ -130,6 +130,16 @@ def array_result(farray_res, res_type, name='', what='', array_key='array',
         bins=bins, name=name, what=what)
 
 
+def masked_array_result(farray_res, res_type, name='', what='',
+                        array_key='array', score='score'):
+    # pylint: disable=too-many-arguments
+    '''Mask invalid (``np.nan`` and ``np.inf``) values.'''
+    ards = array_result(farray_res, res_type, name=name, what=what,
+                        array_key=array_key, score=score)
+    mask = np.ma.masked_invalid(ards.value).mask  # pylint: disable=no-member
+    return ards.mask(mask)
+
+
 def integrated_result(result, res_type='integrated', name='', what='',
                       score='score', sigma='sigma'):
     # pylint: disable=too-many-arguments
@@ -283,6 +293,7 @@ CONVERT_IN_DATASET = {
     'adj_crit_ed': array_result,
     'integrated': integrated_result,
     'best_result': integrated_result,
+    'spherical_harmonics': masked_array_result
 }
 
 

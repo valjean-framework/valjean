@@ -851,3 +851,53 @@ def test_box_dyn(datadir):
     assert dynom['response_type'] == 'generic'
 
 
+def test_spherical_harmonics(datadir):
+    '''Use Tripoli-4 result on pincell to test spherical harmonics (reaction
+    rates for use in deterministic codes).
+    '''
+    t4p = Parser(str(datadir/"pincell.res.ceav5"))
+    assert t4p
+    t4b = t4p.parse_from_index().to_browser()
+    assert t4b
+    assert len(t4b.available_values('score_name')) == 8
+    shb = t4b.filter_by(
+        response_function='REACTION RATES OVER SPHERICAL HARMONICS')
+    assert len(shb.available_values('score_name')) == 8
+    assert set(shb.available_values('score_name')) == {
+        'angular_flux', 'fission_spectrum', 'total_cross_section',
+        'nu_fission_cross_section', 'absorption_cross_section',
+        'scattering_cross_section', 'fission_cross_section',
+        'scattering_matrix'}
+    fiss_spec = shb.select_by(score_name='fission_spectrum', squeeze=True)
+    assert len(fiss_spec['results']['score'].bins['l']) == 1
+    assert np.array_equal(fiss_spec['results']['score'].bins['m'],
+                          np.array([0]))
+    assert fiss_spec['results']['score'].shape == (2, 2, 1, 1, 2, 1, 1)
+    scat_mat = shb.select_by(score_name='scattering_matrix', squeeze=True)
+    assert ([len(b) for b in scat_mat['results']['score'].bins.values()]
+            == [2, 2, 1, 3, 3, 3, 5])
+    assert len(scat_mat['results']['score'].bins['l']) == 3
+    assert np.array_equal(scat_mat['results']['score'].bins['m'],
+                          np.arange(-2, 3))
+    assert scat_mat['results']['score'].shape == (2, 2, 1, 2, 2, 3, 5)
+    assert np.ma.is_masked(scat_mat['results']['score'].value)
+    # mask for l=0 -> only m=0 unmasked, for position 2 in reduced array
+    # for first bin in u, v, w, ie, e
+    assert np.all(scat_mat['results']['score'].value.mask[0, 0, 0, 0, 0, 0, :]
+                  == [True, True, False, True, True])
+    # mask for l=1 for bin ids u=1, v=0, w=0, ie=0, e=1
+    assert np.all(scat_mat['results']['score'][1:, :1, :, :1, 1:, 1:2, :]
+                  .squeeze().value.mask == [True, False, False, False, True])
+    assert np.ma.is_masked(scat_mat['results']['score'].error)
+    # mask for l=2 for bin ids u=0, v=1, w=0, ie=1, e=1
+    assert np.all(scat_mat['results']['score'].error[:1, 1:, :, 1:, 1:, 2:, :]
+                  .mask.squeeze() == [False, False, False, False, False])
+    assert not np.isnan(np.sum(scat_mat['results']['score'].value))
+    ang_flux = shb.select_by(score_name='angular_flux', squeeze=True)
+    assert ang_flux['results']['score'].shape == (2, 2, 1, 1, 2, 3, 5)
+    # bin ids : u=0, v=0, e=0 (1 bin in w and ie), l=1, m=1
+    af_l1m1 = ang_flux['results']['score'][:1, :1, :, :, :1, 1:2, 3:4]
+    assert np.isclose(af_l1m1.squeeze().value, 1.007)
+    # bin ids : u=0, v=0, e=0 (1 bin in w and ie), l=2, m=-1
+    af_l2mm1 = ang_flux['results']['score'][:1, :1, :, :, :1, 2:, 1:2]
+    assert np.isclose(af_l2mm1.squeeze().error, 62.1*0.01*1.088e-3)

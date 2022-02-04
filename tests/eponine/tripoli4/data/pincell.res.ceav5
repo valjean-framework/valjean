@@ -1,0 +1,1998 @@
+
+=====================================================================
+
+=====================================================================
+$Id$
+ hostname: is240409
+ pid: 2656643
+
+=====================================================================
+$Id$
+
+ HOSTNAME : is240409
+
+ PROCESS ID is : 2656643
+
+ DATE : Thu Jan 27 14:22:33 2022
+
+ Version is $Name$.
+
+ git version is 216246427556f365f7733a93b2e29c9780b9713f (DIRTY).
+
+=====================================================================
+
+ data filename = pincell_L_2.d
+ catalogname = /home/catA/aj256514/projets/tripoli/t4path.ceav512
+ execution call = tripoli4 -a -u -s NJOY -c /home/catA/aj256514/projets/tripoli/t4path.ceav512 -d pincell_L_2.d 
+
+
+ dictionary file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
+ mass file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
+ Q fission directory : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/Qfission
+ electron cross section directory : /home/tripoli4/GALILEE/GALILEE-V0-3.0/PEID/Electron_Photon
+ electron bremsstrahlung cross section directory : /home/tripoli4/tripoli4.11/tripoli4.11.0/AdditionalData/Bremsstrahlung
+ abondance file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/Standard_data/abundance
+ own evaluations directory : 
+ Warning: using format for dictionary with five columns: information on reading or computing the Q-values for energy deposition is provided
+
+  initializing geometry tables
+
+
+  reading geometry : 
+
+  building connectivity map
+
+  building optimization tables for simple volumes
+
+  checking association of compositions and volumes :  ok 
+
+
+  the old keyword REPERE should be used instead of FRAME
+
+GEOMETRIE
+ TITRE JAEA Benchmark
+  TYPE 1 CYLZ 0.4070 5.
+  TYPE 2 CYLZ 0.4770 5.
+  TYPE 3 CYLZ 0.7470 5.
+  
+  VOLU 3 COMBI 3 0. 0. 0. FINV
+  VOLU 2 COMBI 2 0. 0. 0. ECRASE 1 3 FINV
+  VOLU 1 COMBI 1 0. 0. 0. ECRASE 1 2 FINV
+
+  COLOR 3
+   GREEN 1 1
+   BLUE  1 2
+   RED   1 3
+FINGEOM
+
+/*
+Reference values for the six factor formula:
+CHI (NXN EXCESS) 1.002
+EVEN EPSILON (FAST FISSION FACTOR) 1.034
+ODD EPSILON (FAST FISSION FACTOR) 1.124
+P (RESONANCE ESCAPE PROBABILITY) 0.673
+F (THERMAL UTILIZATION FACTOR) 0.882
+ETA (THERMAL FISSION FACTOR) 1.908
+PNL (NON-LEAKAGE PROBABILITY) 1.
+K = PRODUCTION / SOURCE 1.319
+*/
+
+LIMIT 7
+ 3 REFLECTION 1
+ 3 REFLECTION 2
+        3 COSINUS 3
+ 1 REFLECTION 1
+ 1 REFLECTION 2
+ 2 REFLECTION 1
+ 2 REFLECTION 2
+FIN_LIMIT
+
+COMPOSITION 3  PONCTUEL 624 BUFFER 5 
+     H1     4.5770E-02
+     O16    2.2885E-02
+     B10    4.5754E-06
+     B11    1.8302E-05
+     ZR91   1.0492E-03
+ 
+ PONCTUEL 624 CLAD 1
+     ZR91 3.8629E-02
+
+                PONCTUEL        924      FUEL 3
+                                           U235  1.1360E-03
+                                           U238  2.1769E-02
+                                           O16   4.5810E-02
+
+FIN_COMPOSITION
+
+GEOMCOMP
+ BUFFER 1 3
+ CLAD   1 2
+ FUEL   1 1
+FIN_GEOMCOMP
+
+
+LIST_SOURCE 1 
+   NORME 1 
+   SOURCE NEUTRON   FACTORIZED  FRAME CARTESIAN  0. 0. 0.
+                   1. 0. 0.
+                   0. 1. 0.
+                   0. 0. 1.
+   VOLU 1 1 GEOMETRIC_DISTRIBUTION TABULATED  TYPE F_U_V_W
+               VAR_U X 2 -0.42  0.42
+               VAR_V Y 2 -0.42  0.42
+               VAR_W Z 2  -5.  5.
+               F_U 1.   F_V 1. F_W 1.
+         ANGULAR_DISTRIBUTION ISOTROPIC
+         ENERGETIC_DISTRIBUTION SPECTRE WATT_SPECTRE 
+  PARAM  20 1.E-11 1.02 2.286
+         TIME_DISTRIBUTION DIRAC 0.
+   FIN_SOURCE
+FIN_LIST_SOURCE
+
+LIST_DECOUPAGE 1
+     DEC_2G 3 1.00000E-11 1E-5 2.00000E+01 
+FIN_LIST_DECOUPAGE
+
+/*
+ * The reaction rate calculations decomposed over the real spherical harmonics 
+ * are requested using a block with REACTION_RATES_SPHERICAL_HARMONICS and END_REACTION_RATES_SPHERICAL_HARMONICS keywords.
+ * Then the user must specify 
+ *  - an extended mesh (1) over which the reaction rates will be computed 
+ *  - an energy binning : previously declared in the block "LIST_DECOUPAGE"
+ *  - the order of the harmonics (must be positive)
+ * 
+ *  (1) Some of the feature of the extended mesh are not yet available.
+ *      The STORE_IN_FILE, NORMALIZE and ENTROPY directives are not yet handled when calling 
+ *      an extended mesh in the DET_XS_SCORE block.
+ * 
+ * In this example, the CRITICITE simulation mode is used. 
+ * However, the REACTION_RATES_SPHERICAL_HARMONICS block can be also be used in PROTECTION simulation mode.
+ * An example of using the REACTION_RATES_SPHERICAL_HARMONICS block is given below.
+ * For now, no options are available for selecting the computed reaction rates. 
+ * They are for each mesh and energy bin : 
+ *   - Flux, fission spectrum
+ *   - Reaction rate : total, nu * fission, absorption, fission, scattering
+ *   - Scattering Matrix
+*/
+REACTION_RATES_SPHERICAL_HARMONICS
+   EXTENDED_MESH
+      WINDOW
+       -0.7470 -0.7470 -5
+        0.7470  0.7470  5
+         2 2 1
+      FRAME CARTESIAN
+        0. 0. 0.
+        1 0 0
+        0 1 0
+        0 0 1
+   ENERGY DECOUPAGE DEC_2G
+   MOMENTS 2
+FIN_REACTION_RATES_SPHERICAL_HARMONICS
+
+
+SIMULATION
+        CRITICITE
+        DISCARD 10
+        BATCH   110
+        SIZE    10000
+        EDITION 500
+        ENERGY_INF NEUTRON 1.E-11
+        ENERGY_SUP NEUTRON 20.        
+        PARTICULES   1 NEUTRON
+FIN_SIMULATION
+
+
+
+
+
+ data reading time (s): 0
+
+
+ data reading time (s): 0
+-- NJOY file format for evaluations --
+
+ reading material : 125 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.H1.bcd
+
+ reading material : 825 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.O16.bcd
+
+ reading material : 525 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.B10.bcd
+
+ reading material : 528 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.B11.bcd
+
+ reading material : 4028 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.Zr91.bcd
+
+ reading material : 9228 at 924K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.U235.bcd
+
+ reading material : 9237 at 924K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.U238.bcd
+
+ reading material : 825 at 924K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.O16.bcd
+
+ Total concentration of material BUFFER (1.E24at/cm3) is: 6.972708e-02
+
+ Total concentration of material CLAD (1.E24at/cm3) is: 3.862900e-02
+
+ Total concentration of material FUEL (1.E24at/cm3) is: 6.871500e-02
+
+
+ Loading response functions ...
+ SOURCE INITIALIZATION ...
+
+	 initializing source number : 0
+
+		 Energetic density definition intensity = 9.999997e-01
+
+		 Energetic density simulation intensity = 9.999997e-01
+
+		 Angular intensity = 1.256637e+01
+
+		 Time intensity = 1.000000e+00
+
+		 Geometric intensity = 5.204788e+00
+
+		 Calculated source simulation intensity = 6.540527e+01
+
+		 Calculated source definition intensity = 6.540527e+01
+
+	         SIMULATION INTENSITY = 6.540527e+01   BIASED SIMULATION INTENSITY = 6.540527e+01
+
+   SUM OF SIMULATION INTENSITIES = 6.540527e+01
+
+   GLOBAL NORM = 1.000000e+00   GLOBAL SIMULATION INTENSITY = 1.000000e+00
+
+   BIASED TOTAL SOURCE INTENSITY = 1.000000e+00
+
+
+ initialization time (s): 1
+
+
+ initialization time (s): 1
+
+
+ Type and parameters of random generator before batch 1 : 
+	 DRAND48_RANDOM 123 13 37  COUNTER	0
+
+
+ batch number : 1
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 2.750820e+01	 sigma_n : 1.192008e-01
+	 number of secondary particules: 14346
+	 number of fission neutrons: 14346
+
+ simulation time (s) : 1
+
+
+ batch number : 2
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.947979e+01	 sigma_n : 1.316510e-01
+	 number of secondary particules: 14423
+	 number of fission neutrons: 14423
+
+ simulation time (s) : 3
+
+
+ batch number : 3
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.915392e+01	 sigma_n : 1.303492e-01
+	 number of secondary particules: 14323
+	 number of fission neutrons: 14323
+
+  optimizing geometry neighborhood
+
+  optimizing surface geometry neighborhood
+
+
+ simulation time (s) : 5
+
+
+ batch number : 4
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.937995e+01	 sigma_n : 1.317417e-01
+	 number of secondary particules: 14463
+	 number of fission neutrons: 14463
+
+ simulation time (s) : 7
+
+
+ batch number : 5
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.919256e+01	 sigma_n : 1.308618e-01
+	 number of secondary particules: 14385
+	 number of fission neutrons: 14385
+
+ simulation time (s) : 8
+
+
+ batch number : 6
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.926910e+01	 sigma_n : 1.312341e-01
+	 number of secondary particules: 14490
+	 number of fission neutrons: 14490
+
+ simulation time (s) : 10
+
+
+ batch number : 7
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.911705e+01	 sigma_n : 1.305223e-01
+	 number of secondary particules: 14493
+	 number of fission neutrons: 14493
+
+ simulation time (s) : 12
+
+
+ batch number : 8
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.893976e+01	 sigma_n : 1.292271e-01
+	 number of secondary particules: 14270
+	 number of fission neutrons: 14270
+
+ simulation time (s) : 14
+
+
+ batch number : 9
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.936363e+01	 sigma_n : 1.305011e-01
+	 number of secondary particules: 14466
+	 number of fission neutrons: 14466
+
+ simulation time (s) : 16
+
+
+ batch number : 10
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.906470e+01	 sigma_n : 1.298973e-01
+	 number of secondary particules: 14465
+	 number of fission neutrons: 14465
+
+ simulation time (s) : 17
+
+
+ batch number : 11
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.908904e+01	 sigma_n : 1.294749e-01
+	 number of secondary particules: 14452
+	 number of fission neutrons: 14452
+
+ simulation time (s) : 21
+
+
+ batch number : 12
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.912151e+01	 sigma_n : 1.301835e-01
+	 number of secondary particules: 14503
+	 number of fission neutrons: 14503
+
+ simulation time (s) : 26
+
+
+ batch number : 13
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.928723e+01	 sigma_n : 1.302978e-01
+	 number of secondary particules: 14559
+	 number of fission neutrons: 14559
+
+ simulation time (s) : 30
+
+
+ batch number : 14
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.904032e+01	 sigma_n : 1.294784e-01
+	 number of secondary particules: 14506
+	 number of fission neutrons: 14506
+
+ simulation time (s) : 34
+
+
+ batch number : 15
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.912043e+01	 sigma_n : 1.311437e-01
+	 number of secondary particules: 14458
+	 number of fission neutrons: 14458
+
+ simulation time (s) : 38
+
+
+ batch number : 16
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.929575e+01	 sigma_n : 1.312299e-01
+	 number of secondary particules: 14630
+	 number of fission neutrons: 14630
+
+ simulation time (s) : 42
+
+
+ batch number : 17
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.901586e+01	 sigma_n : 1.302361e-01
+	 number of secondary particules: 14384
+	 number of fission neutrons: 14384
+
+ simulation time (s) : 46
+
+
+ batch number : 18
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.927955e+01	 sigma_n : 1.312647e-01
+	 number of secondary particules: 14458
+	 number of fission neutrons: 14458
+
+ simulation time (s) : 50
+
+
+ batch number : 19
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.926276e+01	 sigma_n : 1.312538e-01
+	 number of secondary particules: 14504
+	 number of fission neutrons: 14504
+
+ simulation time (s) : 55
+
+
+ batch number : 20
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.914120e+01	 sigma_n : 1.301655e-01
+	 number of secondary particules: 14707
+	 number of fission neutrons: 14707
+
+ simulation time (s) : 59
+
+
+ batch number : 21
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.892589e+01	 sigma_n : 1.301424e-01
+	 number of secondary particules: 14426
+	 number of fission neutrons: 14426
+
+  optimizing geometry neighborhood
+
+  optimizing surface geometry neighborhood
+
+
+ batch number : 22
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.899134e+01	 sigma_n : 1.308425e-01
+	 number of secondary particules: 14179
+	 number of fission neutrons: 14179
+
+ batch number : 23
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.966874e+01	 sigma_n : 1.323073e-01
+	 number of secondary particules: 14475
+	 number of fission neutrons: 14475
+
+ batch number : 24
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.903012e+01	 sigma_n : 1.306422e-01
+	 number of secondary particules: 14308
+	 number of fission neutrons: 14308
+
+ batch number : 25
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.933862e+01	 sigma_n : 1.304689e-01
+	 number of secondary particules: 14354
+	 number of fission neutrons: 14354
+
+ batch number : 26
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.925428e+01	 sigma_n : 1.317121e-01
+	 number of secondary particules: 14414
+	 number of fission neutrons: 14414
+
+ batch number : 27
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.937311e+01	 sigma_n : 1.310594e-01
+	 number of secondary particules: 14541
+	 number of fission neutrons: 14541
+
+ batch number : 28
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.903741e+01	 sigma_n : 1.292387e-01
+	 number of secondary particules: 14478
+	 number of fission neutrons: 14478
+
+ batch number : 29
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.894336e+01	 sigma_n : 1.304175e-01
+	 number of secondary particules: 14282
+	 number of fission neutrons: 14282
+
+ batch number : 30
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.936071e+01	 sigma_n : 1.311758e-01
+	 number of secondary particules: 14443
+	 number of fission neutrons: 14443
+
+ batch number : 31
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.924810e+01	 sigma_n : 1.314628e-01
+	 number of secondary particules: 14430
+	 number of fission neutrons: 14430
+
+ batch number : 32
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.923798e+01	 sigma_n : 1.311231e-01
+	 number of secondary particules: 14424
+	 number of fission neutrons: 14424
+
+ batch number : 33
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.927572e+01	 sigma_n : 1.296911e-01
+	 number of secondary particules: 14540
+	 number of fission neutrons: 14540
+
+ batch number : 34
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.921314e+01	 sigma_n : 1.300579e-01
+	 number of secondary particules: 14568
+	 number of fission neutrons: 14568
+
+ batch number : 35
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.886161e+01	 sigma_n : 1.297874e-01
+	 number of secondary particules: 14339
+	 number of fission neutrons: 14339
+
+ batch number : 36
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.931634e+01	 sigma_n : 1.310114e-01
+	 number of secondary particules: 14626
+	 number of fission neutrons: 14626
+
+ batch number : 37
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.891700e+01	 sigma_n : 1.293399e-01
+	 number of secondary particules: 14326
+	 number of fission neutrons: 14326
+
+ batch number : 38
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.922498e+01	 sigma_n : 1.313510e-01
+	 number of secondary particules: 14247
+	 number of fission neutrons: 14247
+
+ batch number : 39
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.957563e+01	 sigma_n : 1.316819e-01
+	 number of secondary particules: 14565
+	 number of fission neutrons: 14565
+
+ batch number : 40
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.900055e+01	 sigma_n : 1.299583e-01
+	 number of secondary particules: 14288
+	 number of fission neutrons: 14288
+
+ batch number : 41
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.951855e+01	 sigma_n : 1.310928e-01
+	 number of secondary particules: 14628
+	 number of fission neutrons: 14628
+
+ batch number : 42
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.885350e+01	 sigma_n : 1.297236e-01
+	 number of secondary particules: 14567
+	 number of fission neutrons: 14567
+
+ batch number : 43
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.910956e+01	 sigma_n : 1.300068e-01
+	 number of secondary particules: 14394
+	 number of fission neutrons: 14394
+
+ batch number : 44
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.939857e+01	 sigma_n : 1.307645e-01
+	 number of secondary particules: 14444
+	 number of fission neutrons: 14444
+
+ batch number : 45
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.953240e+01	 sigma_n : 1.321562e-01
+	 number of secondary particules: 14835
+	 number of fission neutrons: 14835
+
+ batch number : 46
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.874486e+01	 sigma_n : 1.293411e-01
+	 number of secondary particules: 14432
+	 number of fission neutrons: 14432
+
+ batch number : 47
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.922762e+01	 sigma_n : 1.317287e-01
+	 number of secondary particules: 14372
+	 number of fission neutrons: 14372
+
+ batch number : 48
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.950292e+01	 sigma_n : 1.292091e-01
+	 number of secondary particules: 14611
+	 number of fission neutrons: 14611
+
+ batch number : 49
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.869769e+01	 sigma_n : 1.292377e-01
+	 number of secondary particules: 14350
+	 number of fission neutrons: 14350
+
+ batch number : 50
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.918035e+01	 sigma_n : 1.312804e-01
+	 number of secondary particules: 14202
+	 number of fission neutrons: 14202
+
+ batch number : 51
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.941825e+01	 sigma_n : 1.309430e-01
+	 number of secondary particules: 14311
+	 number of fission neutrons: 14311
+
+ batch number : 52
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.934100e+01	 sigma_n : 1.307863e-01
+	 number of secondary particules: 14463
+	 number of fission neutrons: 14463
+
+ batch number : 53
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.921711e+01	 sigma_n : 1.319963e-01
+	 number of secondary particules: 14477
+	 number of fission neutrons: 14477
+
+ batch number : 54
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.922565e+01	 sigma_n : 1.303839e-01
+	 number of secondary particules: 14582
+	 number of fission neutrons: 14582
+
+ batch number : 55
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.881853e+01	 sigma_n : 1.291577e-01
+	 number of secondary particules: 14560
+	 number of fission neutrons: 14560
+
+ batch number : 56
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.914464e+01	 sigma_n : 1.306720e-01
+	 number of secondary particules: 14392
+	 number of fission neutrons: 14392
+
+ batch number : 57
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.934665e+01	 sigma_n : 1.303821e-01
+	 number of secondary particules: 14376
+	 number of fission neutrons: 14376
+
+ batch number : 58
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.933125e+01	 sigma_n : 1.306902e-01
+	 number of secondary particules: 14512
+	 number of fission neutrons: 14512
+
+ batch number : 59
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.910419e+01	 sigma_n : 1.311209e-01
+	 number of secondary particules: 14464
+	 number of fission neutrons: 14464
+
+ batch number : 60
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.913496e+01	 sigma_n : 1.317643e-01
+	 number of secondary particules: 14384
+	 number of fission neutrons: 14384
+
+ batch number : 61
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.921267e+01	 sigma_n : 1.304287e-01
+	 number of secondary particules: 14396
+	 number of fission neutrons: 14396
+
+ batch number : 62
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.922326e+01	 sigma_n : 1.312684e-01
+	 number of secondary particules: 14258
+	 number of fission neutrons: 14258
+
+ batch number : 63
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.943414e+01	 sigma_n : 1.312168e-01
+	 number of secondary particules: 14409
+	 number of fission neutrons: 14409
+
+ batch number : 64
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.911798e+01	 sigma_n : 1.308233e-01
+	 number of secondary particules: 14421
+	 number of fission neutrons: 14421
+
+ batch number : 65
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.913584e+01	 sigma_n : 1.304952e-01
+	 number of secondary particules: 14317
+	 number of fission neutrons: 14317
+
+ batch number : 66
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.930300e+01	 sigma_n : 1.313508e-01
+	 number of secondary particules: 14427
+	 number of fission neutrons: 14427
+
+ batch number : 67
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.914930e+01	 sigma_n : 1.308750e-01
+	 number of secondary particules: 14384
+	 number of fission neutrons: 14384
+
+ batch number : 68
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.944271e+01	 sigma_n : 1.321268e-01
+	 number of secondary particules: 14654
+	 number of fission neutrons: 14654
+
+ batch number : 69
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.895776e+01	 sigma_n : 1.302054e-01
+	 number of secondary particules: 14513
+	 number of fission neutrons: 14513
+
+ batch number : 70
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.895080e+01	 sigma_n : 1.302135e-01
+	 number of secondary particules: 14177
+	 number of fission neutrons: 14177
+
+ batch number : 71
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.955696e+01	 sigma_n : 1.315736e-01
+	 number of secondary particules: 14467
+	 number of fission neutrons: 14467
+
+ batch number : 72
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.922804e+01	 sigma_n : 1.308616e-01
+	 number of secondary particules: 14478
+	 number of fission neutrons: 14478
+
+ batch number : 73
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.917095e+01	 sigma_n : 1.322459e-01
+	 number of secondary particules: 14373
+	 number of fission neutrons: 14373
+
+ batch number : 74
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.932088e+01	 sigma_n : 1.312673e-01
+	 number of secondary particules: 14282
+	 number of fission neutrons: 14282
+
+ batch number : 75
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.937733e+01	 sigma_n : 1.327509e-01
+	 number of secondary particules: 14215
+	 number of fission neutrons: 14215
+
+ batch number : 76
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.943166e+01	 sigma_n : 1.320039e-01
+	 number of secondary particules: 14385
+	 number of fission neutrons: 14385
+
+ batch number : 77
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.913354e+01	 sigma_n : 1.296907e-01
+	 number of secondary particules: 14617
+	 number of fission neutrons: 14617
+
+ batch number : 78
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.898173e+01	 sigma_n : 1.299711e-01
+	 number of secondary particules: 14350
+	 number of fission neutrons: 14350
+
+ batch number : 79
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.948669e+01	 sigma_n : 1.313128e-01
+	 number of secondary particules: 14601
+	 number of fission neutrons: 14601
+
+ batch number : 80
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.902856e+01	 sigma_n : 1.319157e-01
+	 number of secondary particules: 14509
+	 number of fission neutrons: 14509
+
+ batch number : 81
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.922386e+01	 sigma_n : 1.300014e-01
+	 number of secondary particules: 14569
+	 number of fission neutrons: 14569
+
+ batch number : 82
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.900048e+01	 sigma_n : 1.293954e-01
+	 number of secondary particules: 14437
+	 number of fission neutrons: 14437
+
+ batch number : 83
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.948092e+01	 sigma_n : 1.309964e-01
+	 number of secondary particules: 14653
+	 number of fission neutrons: 14653
+
+ batch number : 84
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.884345e+01	 sigma_n : 1.285537e-01
+	 number of secondary particules: 14384
+	 number of fission neutrons: 14384
+
+ batch number : 85
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.895759e+01	 sigma_n : 1.291903e-01
+	 number of secondary particules: 14201
+	 number of fission neutrons: 14201
+
+ batch number : 86
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.930632e+01	 sigma_n : 1.309364e-01
+	 number of secondary particules: 14275
+	 number of fission neutrons: 14275
+
+ batch number : 87
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.928336e+01	 sigma_n : 1.319758e-01
+	 number of secondary particules: 14212
+	 number of fission neutrons: 14212
+
+ batch number : 88
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.959014e+01	 sigma_n : 1.321107e-01
+	 number of secondary particules: 14422
+	 number of fission neutrons: 14422
+
+ batch number : 89
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.924830e+01	 sigma_n : 1.303778e-01
+	 number of secondary particules: 14541
+	 number of fission neutrons: 14541
+
+ batch number : 90
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.921367e+01	 sigma_n : 1.304877e-01
+	 number of secondary particules: 14659
+	 number of fission neutrons: 14659
+
+ batch number : 91
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.884235e+01	 sigma_n : 1.302103e-01
+	 number of secondary particules: 14238
+	 number of fission neutrons: 14238
+
+ batch number : 92
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.950421e+01	 sigma_n : 1.302060e-01
+	 number of secondary particules: 14464
+	 number of fission neutrons: 14464
+
+ batch number : 93
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.888122e+01	 sigma_n : 1.296582e-01
+	 number of secondary particules: 14223
+	 number of fission neutrons: 14223
+
+ batch number : 94
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.937172e+01	 sigma_n : 1.308021e-01
+	 number of secondary particules: 14432
+	 number of fission neutrons: 14432
+
+ batch number : 95
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.937763e+01	 sigma_n : 1.324528e-01
+	 number of secondary particules: 14475
+	 number of fission neutrons: 14475
+
+ batch number : 96
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.920124e+01	 sigma_n : 1.315011e-01
+	 number of secondary particules: 14340
+	 number of fission neutrons: 14340
+
+ batch number : 97
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.923096e+01	 sigma_n : 1.307249e-01
+	 number of secondary particules: 14445
+	 number of fission neutrons: 14445
+
+ batch number : 98
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.916386e+01	 sigma_n : 1.310323e-01
+	 number of secondary particules: 14369
+	 number of fission neutrons: 14369
+
+ batch number : 99
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.913543e+01	 sigma_n : 1.306167e-01
+	 number of secondary particules: 14308
+	 number of fission neutrons: 14308
+
+ batch number : 100
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.946512e+01	 sigma_n : 1.310603e-01
+	 number of secondary particules: 14514
+	 number of fission neutrons: 14514
+
+ batch number : 101
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.894516e+01	 sigma_n : 1.296255e-01
+	 number of secondary particules: 14481
+	 number of fission neutrons: 14481
+
+ batch number : 102
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.907078e+01	 sigma_n : 1.306960e-01
+	 number of secondary particules: 14372
+	 number of fission neutrons: 14372
+
+ batch number : 103
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.946813e+01	 sigma_n : 1.315084e-01
+	 number of secondary particules: 14522
+	 number of fission neutrons: 14522
+
+ batch number : 104
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.889926e+01	 sigma_n : 1.287750e-01
+	 number of secondary particules: 14404
+	 number of fission neutrons: 14404
+
+ batch number : 105
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.916794e+01	 sigma_n : 1.295874e-01
+	 number of secondary particules: 14289
+	 number of fission neutrons: 14289
+
+ batch number : 106
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.951459e+01	 sigma_n : 1.305497e-01
+	 number of secondary particules: 14451
+	 number of fission neutrons: 14451
+
+ batch number : 107
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.930475e+01	 sigma_n : 1.307436e-01
+	 number of secondary particules: 14453
+	 number of fission neutrons: 14453
+
+ batch number : 108
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.916723e+01	 sigma_n : 1.314198e-01
+	 number of secondary particules: 14330
+	 number of fission neutrons: 14330
+
+ batch number : 109
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.928067e+01	 sigma_n : 1.304370e-01
+	 number of secondary particules: 14476
+	 number of fission neutrons: 14476
+
+ batch number : 110
+
+  quota sampling and descendant statistics: 
+	 mean number of collision per neutron history: 1.921891e+01	 sigma_n : 1.288861e-01
+	 number of secondary particules: 14487
+	 number of fission neutrons: 14487
+
+ KEFF at step  : 110
+ keff = 1.318932e+00 sigma : 1.164977e-03
+ number of batch used: 100
+
+
+*********************************************************
+
+ RESULTS ARE GIVEN FOR SOURCE INTENSITY : 1.000000e+00
+*********************************************************
+
+
+ Mean weight leakage = 4.024972e-01	 sigma = 6.358717e-02	 sigma% = 1.579816e+01
+
+
+ Edition after batch number : 110
+
+******************************************************************************
+RESPONSE FUNCTION : KEFFS
+******************************************************************************
+
+	ENERGY INTEGRATED RESULTS
+
+number of batches used:	100
+
+ KSTEP  1.318932e+00	8.832729e-02
+ KCOLL  1.319003e+00	8.321209e-02
+ KTRACK 1.315485e+00	1.188506e-01
+
+  	  estimators  			  correlations   	  combined values  	  combined sigma%
+  	  KSTEP <-> KCOLL  	    	  9.571460e-01  	  1.319015e+00  	  8.309984e-02
+  	  KSTEP <-> KTRACK  	    	  4.498365e-01  	  1.318075e+00  	  8.391690e-02
+  	  KCOLL <-> KTRACK  	    	  4.699412e-01  	  1.318315e+00  	  8.051917e-02
+
+  	  full combined estimator  1.318327e+00	8.041937e-02
+
+
+******************************************************************************
+
+RESPONSE FUNCTION : REACTION RATES OVER SPHERICAL HARMONICS
+
+******************************************************************************
+
+Number of space bin : 4
+Number of space bin in u dimension: 2
+Number of space bin in v dimension: 2
+Number of space bin in w dimension: 1
+Number of energetic bins : 2
+Number of incident energy bins : 2
+Maximum L number of moments : 2
+
+Score : Angular Flux
+Space bin :     0    0    0
+Energy range (in MeV): 1.000000e-11    1.000000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.009e+00     1.422e-01
+    1   -1    -2.019e-02     4.739e+00
+    1    0    -1.333e-03     7.080e+01
+    1    1     1.007e+00     1.486e-01
+    2   -2    -1.779e-02     4.278e+00
+    2   -1     1.088e-03     6.210e+01
+    2    0    -6.778e-03     1.109e+01
+    2    1    -8.273e-04     8.308e+01
+    2    2    -1.081e-04     7.000e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     8.773e+00     8.410e-02
+    1   -1     3.029e-02     7.853e+00
+    1    0     2.936e-03     9.603e+01
+    1    1     4.383e+00     9.268e-02
+    2   -2     2.429e-02     8.259e+00
+    2   -1     7.795e-04     2.443e+02
+    2    0     1.034e-02     2.177e+01
+    2    1     2.252e-03     8.922e+01
+    2    2     7.763e-04     2.798e+02
+Score : Fission Spectrum
+Space bin :     0    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0 0.000e+00     0.000e+00
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0 3.287e-01     2.172e-01
+Score : Reaction rate : Total cross section
+Space bin :     0    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.007e+00     1.395e-01
+    1   -1    -2.417e-02     3.591e+00
+    1    0    -8.883e-04     9.917e+01
+    1    1     1.005e+00     1.492e-01
+    2   -2    -2.094e-02     3.395e+00
+    2   -1     1.185e-03     5.230e+01
+    2    0    -4.010e-03     1.669e+01
+    2    1    -5.850e-04     1.084e+02
+    2    2    -1.442e-04     4.730e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.452e+00     8.092e-02
+    1   -1     5.417e-03     1.874e+01
+    1    0     9.391e-04     1.225e+02
+    1    1     2.226e+00     8.708e-02
+    2   -2     4.062e-03     2.137e+01
+    2   -1     2.170e-04     4.070e+02
+    2    0     1.245e-03     7.500e+01
+    2    1     3.696e-04     2.253e+02
+    2    2     6.016e-04     1.642e+02
+Score : Reaction rate : Nu fission cross section
+Space bin :     0    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.659e-01     2.208e-01
+    1   -1    -1.506e-03     1.751e+01
+    1    0    -6.797e-04     3.994e+01
+    1    1     1.357e-01     2.313e-01
+    2   -2    -1.324e-03     1.479e+01
+    2   -1     1.192e-04     1.926e+02
+    2    0    -7.694e-03     2.729e+00
+    2    1    -6.010e-04     3.681e+01
+    2    2     4.801e-05     4.588e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     6.236e-02     2.065e-01
+    1   -1    -5.118e-05     1.443e+02
+    1    0     1.238e-04     5.276e+01
+    1    1     3.127e-02     2.240e-01
+    2   -2     2.957e-06     2.023e+03
+    2   -1    -1.093e-04     4.685e+01
+    2    0    -9.361e-05     4.970e+01
+    2    1     6.556e-05     7.172e+01
+    2    2     9.448e-05     5.635e+01
+Score : Reaction rate : Absorption cross section
+Space bin :     0    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.725e-01     2.011e-01
+    1   -1    -6.846e-04     2.222e+01
+    1    0    -2.784e-04     5.117e+01
+    1    1     8.789e-02     2.171e-01
+    2   -2    -6.210e-04     1.848e+01
+    2   -1     1.002e-04     1.229e+02
+    2    0    -4.667e-03     2.436e+00
+    2    1    -2.489e-04     4.775e+01
+    2    2    -9.566e-07     1.266e+04
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     7.707e-02     2.430e-01
+    1   -1     3.638e-04     2.270e+01
+    1    0     4.936e-05     1.453e+02
+    1    1     3.897e-02     2.647e-01
+    2   -2     3.531e-04     1.911e+01
+    2   -1    -5.897e-05     1.028e+02
+    2    0    -1.161e-03     5.568e+00
+    2    1    -2.558e-05     1.999e+02
+    2    2     1.241e-04     4.846e+01
+Score : Reaction rate : Scattering cross section
+Space bin :     0    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.834e+00     1.399e-01
+    1   -1    -2.349e-02     3.427e+00
+    1    0    -6.099e-04     1.348e+02
+    1    1     9.168e-01     1.503e-01
+    2   -2    -2.032e-02     3.280e+00
+    2   -1     1.085e-03     5.430e+01
+    2    0     6.574e-04     9.557e+01
+    2    1    -3.360e-04     1.774e+02
+    2    2    -1.432e-04     4.507e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.375e+00     7.999e-02
+    1   -1     5.053e-03     1.958e+01
+    1    0     8.897e-04     1.288e+02
+    1    1     2.187e+00     8.625e-02
+    2   -2     3.709e-03     2.291e+01
+    2   -1     2.759e-04     3.162e+02
+    2    0     2.406e-03     3.837e+01
+    2    1     3.952e-04     2.104e+02
+    2    2     4.775e-04     2.038e+02
+Score : Reaction rate : Fission cross section
+Space bin :     0    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.092e-01     2.208e-01
+    1   -1    -6.180e-04     1.751e+01
+    1    0    -2.790e-04     3.994e+01
+    1    1     5.569e-02     2.313e-01
+    2   -2    -5.436e-04     1.479e+01
+    2   -1     4.893e-05     1.927e+02
+    2    0    -3.158e-03     2.729e+00
+    2    1    -2.467e-04     3.681e+01
+    2    2     1.971e-05     4.586e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     2.440e-02     2.106e-01
+    1   -1    -2.475e-05     1.170e+02
+    1    0     4.892e-05     5.232e+01
+    1    1     1.224e-02     2.306e-01
+    2   -2    -2.726e-06     8.642e+02
+    2   -1    -4.272e-05     4.796e+01
+    2    0    -5.224e-05     3.506e+01
+    2    1     2.604e-05     7.178e+01
+    2    2     3.911e-05     5.445e+01
+Score : Scattering Matrix
+Space bin :     0    0    0
+Outgoing data for incident energy bin boundaries :  1.000e-11     1.000e-05
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.834e+00     1.424e-01
+    1   -1    -2.078e-03     3.878e+01
+    1    0     2.892e-04     2.682e+02
+    1    1     9.168e-01     1.514e-01
+    2   -2    -2.566e-03     2.506e+01
+    2   -1     1.377e-03     4.360e+01
+    2    0     1.143e-03     5.494e+01
+    2    1     7.124e-05     8.562e+02
+    2    2     1.209e-04     4.589e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     5.545e-05     1.468e+01
+    1   -1     4.192e-06     7.950e+01
+    1    0    -3.530e-06     1.469e+02
+    1    1     2.472e-05     1.681e+01
+    2   -2     7.335e-06     3.023e+01
+    2   -1    -3.332e-06     9.033e+01
+    2    0     8.858e-06     4.209e+01
+    2    1    -3.387e-06     1.091e+02
+    2    2    -4.929e-07     5.849e+02
+Outgoing data for incident energy bin boundaries :  1.000e-05     2.000e+01
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.730e-01     2.038e-01
+    1   -1     2.422e-04     1.091e+02
+    1    0    -3.732e-04     5.847e+01
+    1    1     8.664e-02     2.379e-01
+    2   -2     1.824e-04     1.106e+02
+    2   -1     3.137e-04     6.084e+01
+    2    0    -3.166e-04     5.669e+01
+    2    1    -2.490e-05     7.110e+02
+    2    2     6.469e-05     2.887e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.203e+00     8.348e-02
+    1   -1    -4.080e-05     2.745e+03
+    1    0     1.553e-04     8.283e+02
+    1    1     2.102e+00     8.860e-02
+    2   -2    -3.235e-04     2.678e+02
+    2   -1     4.862e-06     1.891e+04
+    2    0     9.084e-04     9.571e+01
+    2    1    -5.458e-04     1.743e+02
+    2    2     1.962e-03     4.457e+01
+Score : Angular Flux
+Space bin :     0    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.010e+00     1.422e-01
+    1   -1     1.857e-02     4.706e+00
+    1    0     1.701e-04     5.849e+02
+    1    1     1.007e+00     1.447e-01
+    2   -2     1.681e-02     4.163e+00
+    2   -1    -6.499e-04     1.074e+02
+    2    0    -7.820e-03     9.062e+00
+    2    1    -2.237e-04     3.496e+02
+    2    2    -2.317e-05     2.709e+03
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     8.782e+00     7.049e-02
+    1   -1    -3.101e-02     1.034e+01
+    1    0     2.697e-03     1.103e+02
+    1    1     4.388e+00     7.434e-02
+    2   -2    -2.842e-02     8.564e+00
+    2   -1     2.466e-03     9.125e+01
+    2    0     1.007e-02     2.345e+01
+    2    1     2.377e-03     9.183e+01
+    2    2     1.458e-03     1.496e+02
+Score : Fission Spectrum
+Space bin :     0    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0 0.000e+00     0.000e+00
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0 3.301e-01     2.061e-01
+Score : Reaction rate : Total cross section
+Space bin :     0    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.007e+00     1.519e-01
+    1   -1     2.329e-02     3.395e+00
+    1    0     2.829e-05     3.289e+03
+    1    1     1.005e+00     1.525e-01
+    2   -2     2.035e-02     3.109e+00
+    2   -1    -7.884e-04     7.531e+01
+    2    0    -4.284e-03     1.592e+01
+    2    1    -2.086e-04     3.363e+02
+    2    2    -1.257e-04     4.904e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.457e+00     7.113e-02
+    1   -1    -6.066e-03     2.280e+01
+    1    0    -1.514e-04     8.864e+02
+    1    1     2.228e+00     7.083e-02
+    2   -2    -5.901e-03     1.754e+01
+    2   -1     9.043e-04     1.013e+02
+    2    0     6.870e-04     1.556e+02
+    2    1    -6.962e-05     1.353e+03
+    2    2     4.684e-04     2.043e+02
+Score : Reaction rate : Nu fission cross section
+Space bin :     0    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.673e-01     1.999e-01
+    1   -1     8.804e-04     3.612e+01
+    1    0     3.959e-04     6.421e+01
+    1    1     1.362e-01     2.177e-01
+    2   -2     8.971e-04     2.783e+01
+    2   -1     1.770e-04     1.256e+02
+    2    0    -7.864e-03     2.115e+00
+    2    1     1.812e-04     1.116e+02
+    2    2    -1.738e-04     1.106e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     6.264e-02     1.862e-01
+    1   -1     5.531e-05     1.120e+02
+    1    0    -2.284e-05     2.550e+02
+    1    1     3.133e-02     2.196e-01
+    2   -2     5.906e-05     9.020e+01
+    2   -1    -7.048e-06     7.312e+02
+    2    0    -3.331e-05     1.400e+02
+    2    1     1.015e-05     4.496e+02
+    2    2     3.102e-06     1.480e+03
+Score : Reaction rate : Absorption cross section
+Space bin :     0    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.733e-01     1.759e-01
+    1   -1     5.190e-04     3.397e+01
+    1    0     1.563e-04     9.059e+01
+    1    1     8.820e-02     1.889e-01
+    2   -2     4.972e-04     2.727e+01
+    2   -1     7.667e-05     1.665e+02
+    2    0    -4.715e-03     1.967e+00
+    2    1     6.640e-05     1.700e+02
+    2    2    -9.396e-05     1.101e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     7.736e-02     2.236e-01
+    1   -1    -4.269e-04     1.874e+01
+    1    0    -3.411e-05     2.316e+02
+    1    1     3.909e-02     2.266e-01
+    2   -2    -3.553e-04     1.838e+01
+    2   -1    -3.768e-05     1.565e+02
+    2    0    -1.208e-03     4.764e+00
+    2    1     4.993e-06     1.217e+03
+    2    2     2.568e-05     2.457e+02
+Score : Reaction rate : Scattering cross section
+Space bin :     0    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.833e+00     1.578e-01
+    1   -1     2.277e-02     3.240e+00
+    1    0    -1.280e-04     6.793e+02
+    1    1     9.163e-01     1.593e-01
+    2   -2     1.985e-02     2.923e+00
+    2   -1    -8.651e-04     6.425e+01
+    2    0     4.308e-04     1.533e+02
+    2    1    -2.750e-04     2.374e+02
+    2    2    -3.177e-05     1.886e+03
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.380e+00     7.121e-02
+    1   -1    -5.640e-03     2.396e+01
+    1    0    -1.172e-04     1.136e+03
+    1    1     2.189e+00     7.113e-02
+    2   -2    -5.545e-03     1.837e+01
+    2   -1     9.420e-04     9.662e+01
+    2    0     1.895e-03     5.564e+01
+    2    1    -7.461e-05     1.246e+03
+    2    2     4.428e-04     2.131e+02
+Score : Reaction rate : Fission cross section
+Space bin :     0    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.097e-01     1.999e-01
+    1   -1     3.614e-04     3.612e+01
+    1    0     1.625e-04     6.421e+01
+    1    1     5.592e-02     2.177e-01
+    2   -2     3.682e-04     2.783e+01
+    2   -1     7.268e-05     1.255e+02
+    2    0    -3.228e-03     2.115e+00
+    2    1     7.436e-05     1.116e+02
+    2    2    -7.134e-05     1.106e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     2.451e-02     1.867e-01
+    1   -1     2.544e-05     9.665e+01
+    1    0    -1.013e-05     2.260e+02
+    1    1     1.226e-02     2.212e-01
+    2   -2     2.783e-05     7.546e+01
+    2   -1    -3.962e-06     5.154e+02
+    2    0    -2.596e-05     7.191e+01
+    2    1     2.936e-06     6.119e+02
+    2    2    -1.163e-06     1.600e+03
+Score : Scattering Matrix
+Space bin :     0    1    0
+Outgoing data for incident energy bin boundaries :  1.000e-11     1.000e-05
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.834e+00     1.610e-01
+    1   -1     2.582e-03     2.839e+01
+    1    0    -1.900e-04     4.081e+02
+    1    1     9.162e-01     1.580e-01
+    2   -2     1.863e-03     3.061e+01
+    2   -1     2.073e-04     2.809e+02
+    2    0     3.267e-04     1.697e+02
+    2    1    -5.426e-04     1.026e+02
+    2    2    -8.475e-04     7.680e+01
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.101e-05     1.324e+01
+    1   -1    -2.261e-07     1.642e+03
+    1    0     1.059e-06     3.275e+02
+    1    1     2.099e-05     1.599e+01
+    2   -2    -2.182e-07     1.372e+03
+    2   -1    -4.786e-06     5.683e+01
+    2    0    -1.627e-06     1.422e+02
+    2    1    -1.407e-06     2.036e+02
+    2    2    -7.386e-07     3.506e+02
+Outgoing data for incident energy bin boundaries :  1.000e-05     2.000e+01
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.734e-01     2.191e-01
+    1   -1     1.973e-04     1.273e+02
+    1    0    -5.048e-04     5.541e+01
+    1    1     8.671e-02     2.496e-01
+    2   -2     6.337e-05     3.125e+02
+    2   -1    -2.228e-05     7.858e+02
+    2    0     1.144e-05     1.507e+03
+    2    1    -3.078e-04     7.192e+01
+    2    2     1.315e-05     1.303e+03
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.207e+00     7.290e-02
+    1   -1    -1.723e-03     6.962e+01
+    1    0    -1.744e-04     7.196e+02
+    1    1     2.103e+00     7.313e-02
+    2   -2    -1.776e-03     5.503e+01
+    2   -1    -4.105e-05     2.071e+03
+    2    0     2.620e-04     3.335e+02
+    2    1     2.371e-04     3.555e+02
+    2    2    -3.142e-04     2.889e+02
+Score : Angular Flux
+Space bin :     1    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.015e+00     1.440e-01
+    1   -1     2.151e-02     4.241e+00
+    1    0     9.085e-05     1.014e+03
+    1    1     1.010e+00     1.453e-01
+    2   -2     1.895e-02     3.891e+00
+    2   -1    -6.549e-04     1.055e+02
+    2    0    -6.651e-03     1.179e+01
+    2    1    -1.463e-04     5.024e+02
+    2    2    -1.855e-04     3.918e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     8.782e+00     8.178e-02
+    1   -1    -3.039e-02     8.576e+00
+    1    0    -1.468e-03     2.092e+02
+    1    1     4.386e+00     8.300e-02
+    2   -2    -2.465e-02     8.026e+00
+    2   -1    -5.799e-03     3.999e+01
+    2    0     1.074e-02     2.013e+01
+    2    1     5.739e-04     3.887e+02
+    2    2    -2.844e-03     8.239e+01
+Score : Fission Spectrum
+Space bin :     1    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0 0.000e+00     0.000e+00
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0 3.307e-01     2.341e-01
+Score : Reaction rate : Total cross section
+Space bin :     1    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.012e+00     1.445e-01
+    1   -1     2.484e-02     3.339e+00
+    1    0     2.368e-04     3.399e+02
+    1    1     1.007e+00     1.487e-01
+    2   -2     2.199e-02     2.971e+00
+    2   -1    -3.847e-04     1.591e+02
+    2    0    -3.094e-03     2.340e+01
+    2    1     9.602e-05     6.896e+02
+    2    2     8.128e-05     7.652e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.456e+00     8.109e-02
+    1   -1    -6.440e-03     1.748e+01
+    1    0    -1.831e-03     7.395e+01
+    1    1     2.227e+00     7.904e-02
+    2   -2    -4.821e-03     1.661e+01
+    2   -1    -1.651e-03     5.305e+01
+    2    0     2.077e-03     4.866e+01
+    2    1    -4.060e-04     2.450e+02
+    2    2    -1.086e-03     8.835e+01
+Score : Reaction rate : Nu fission cross section
+Space bin :     1    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.675e-01     2.056e-01
+    1   -1     1.926e-03     1.490e+01
+    1    0     2.189e-04     1.386e+02
+    1    1     1.365e-01     2.137e-01
+    2   -2     1.538e-03     1.413e+01
+    2   -1     1.057e-04     1.914e+02
+    2    0    -7.447e-03     2.732e+00
+    2    1     2.218e-05     9.977e+02
+    2    2     2.064e-04     1.002e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     6.222e-02     2.021e-01
+    1   -1    -3.029e-05     2.023e+02
+    1    0    -3.849e-05     1.759e+02
+    1    1     3.109e-02     2.285e-01
+    2   -2     2.956e-05     1.619e+02
+    2   -1    -5.844e-05     8.614e+01
+    2    0    -2.656e-05     1.652e+02
+    2    1    -1.357e-05     3.809e+02
+    2    2    -4.548e-05     1.073e+02
+Score : Reaction rate : Absorption cross section
+Space bin :     1    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.735e-01     1.837e-01
+    1   -1     1.066e-03     1.496e+01
+    1    0     9.670e-05     1.751e+02
+    1    1     8.833e-02     1.893e-01
+    2   -2     8.533e-04     1.447e+01
+    2   -1     2.042e-05     5.538e+02
+    2    0    -4.497e-03     2.494e+00
+    2    1    -1.153e-05     1.089e+03
+    2    2     6.157e-05     1.945e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     7.689e-02     2.147e-01
+    1   -1    -4.786e-04     1.623e+01
+    1    0     1.682e-06     4.341e+03
+    1    1     3.877e-02     2.409e-01
+    2   -2    -3.877e-04     1.580e+01
+    2   -1    -4.529e-05     1.223e+02
+    2    0    -1.066e-03     4.731e+00
+    2    1    -1.263e-06     4.353e+03
+    2    2    -6.986e-05     8.681e+01
+Score : Reaction rate : Scattering cross section
+Space bin :     1    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.839e+00     1.486e-01
+    1   -1     2.377e-02     3.210e+00
+    1    0     1.401e-04     5.338e+02
+    1    1     9.190e-01     1.537e-01
+    2   -2     2.114e-02     2.824e+00
+    2   -1    -4.051e-04     1.410e+02
+    2    0     1.403e-03     4.881e+01
+    2    1     1.076e-04     5.786e+02
+    2    2     1.970e-05     2.964e+03
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.379e+00     8.096e-02
+    1   -1    -5.961e-03     1.853e+01
+    1    0    -1.832e-03     7.301e+01
+    1    1     2.188e+00     7.880e-02
+    2   -2    -4.433e-03     1.775e+01
+    2   -1    -1.606e-03     5.344e+01
+    2    0     3.143e-03     3.165e+01
+    2    1    -4.048e-04     2.424e+02
+    2    2    -1.016e-03     9.235e+01
+Score : Reaction rate : Fission cross section
+Space bin :     1    0    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.098e-01     2.056e-01
+    1   -1     7.906e-04     1.490e+01
+    1    0     8.986e-05     1.386e+02
+    1    1     5.601e-02     2.136e-01
+    2   -2     6.313e-04     1.413e+01
+    2   -1     4.338e-05     1.914e+02
+    2    0    -3.057e-03     2.732e+00
+    2    1     9.111e-06     9.972e+02
+    2    2     8.473e-05     1.002e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     2.434e-02     2.046e-01
+    1   -1    -1.102e-05     2.216e+02
+    1    0    -1.116e-05     2.373e+02
+    1    1     1.217e-02     2.320e-01
+    2   -2     1.542e-05     1.224e+02
+    2   -1    -2.150e-05     9.375e+01
+    2    0    -2.336e-05     7.358e+01
+    2    1    -3.594e-06     5.645e+02
+    2    2    -1.678e-05     1.151e+02
+Score : Scattering Matrix
+Space bin :     1    0    0
+Outgoing data for incident energy bin boundaries :  1.000e-11     1.000e-05
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.838e+00     1.517e-01
+    1   -1     3.261e-03     2.372e+01
+    1    0     1.138e-04     7.369e+02
+    1    1     9.195e-01     1.528e-01
+    2   -2     2.690e-03     2.112e+01
+    2   -1     3.843e-04     1.652e+02
+    2    0     1.928e-04     3.142e+02
+    2    1     2.140e-04     2.918e+02
+    2    2     7.399e-04     7.242e+01
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.903e-05     1.421e+01
+    1   -1     8.422e-06     4.572e+01
+    1    0     8.230e-06     5.281e+01
+    1    1     2.091e-05     1.603e+01
+    2   -2     7.581e-06     3.791e+01
+    2   -1     3.753e-06     9.088e+01
+    2    0     6.382e-06     5.393e+01
+    2    1     5.894e-06     5.214e+01
+    2    2    -2.693e-06     9.555e+01
+Outgoing data for incident energy bin boundaries :  1.000e-05     2.000e+01
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.734e-01     2.246e-01
+    1   -1     2.891e-04     8.147e+01
+    1    0     1.436e-04     1.617e+02
+    1    1     8.653e-02     2.791e-01
+    2   -2     1.810e-04     1.074e+02
+    2   -1    -2.901e-04     5.009e+01
+    2    0     9.356e-05     2.084e+02
+    2    1     1.182e-05     1.419e+03
+    2    2    -1.753e-04     1.090e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.206e+00     8.085e-02
+    1   -1    -2.275e-04     5.570e+02
+    1    0    -7.032e-04     1.710e+02
+    1    1     2.103e+00     8.073e-02
+    2   -2     2.013e-04     4.788e+02
+    2   -1     1.030e-03     8.647e+01
+    2    0     8.088e-04     1.219e+02
+    2    1    -2.341e-04     3.866e+02
+    2    2    -1.095e-04     9.380e+02
+Score : Angular Flux
+Space bin :     1    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.011e+00     1.380e-01
+    1   -1    -2.017e-02     4.125e+00
+    1    0    -6.487e-04     1.428e+02
+    1    1     1.008e+00     1.403e-01
+    2   -2    -1.794e-02     3.749e+00
+    2   -1    -8.443e-05     7.782e+02
+    2    0    -6.536e-03     9.799e+00
+    2    1    -7.072e-04     1.070e+02
+    2    2    -4.160e-04     1.751e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     8.779e+00     7.538e-02
+    1   -1     3.513e-02     7.646e+00
+    1    0    -1.519e-03     1.694e+02
+    1    1     4.386e+00     7.920e-02
+    2   -2     2.633e-02     7.802e+00
+    2   -1    -1.431e-03     1.380e+02
+    2    0     7.878e-03     2.709e+01
+    2    1    -6.890e-04     2.771e+02
+    2    2    -1.556e-03     1.431e+02
+Score : Fission Spectrum
+Space bin :     1    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0 0.000e+00     0.000e+00
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0 3.294e-01     2.218e-01
+Score : Reaction rate : Total cross section
+Space bin :     1    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.009e+00     1.412e-01
+    1   -1    -2.378e-02     3.360e+00
+    1    0    -4.377e-04     2.048e+02
+    1    1     1.006e+00     1.400e-01
+    2   -2    -2.126e-02     3.117e+00
+    2   -1    -1.024e-04     5.961e+02
+    2    0    -3.797e-03     1.401e+01
+    2    1    -3.528e-04     1.947e+02
+    2    2     2.748e-05     2.336e+03
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.457e+00     7.378e-02
+    1   -1     7.615e-03     1.474e+01
+    1    0    -1.208e-03     9.918e+01
+    1    1     2.228e+00     7.760e-02
+    2   -2     5.542e-03     1.687e+01
+    2   -1    -5.451e-04     1.550e+02
+    2    0    -1.296e-04     7.257e+02
+    2    1     8.721e-05     1.034e+03
+    2    2    -2.707e-04     3.645e+02
+Score : Reaction rate : Nu fission cross section
+Space bin :     1    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     2.665e-01     2.016e-01
+    1   -1    -1.284e-03     2.180e+01
+    1    0    -1.785e-04     1.688e+02
+    1    1     1.358e-01     2.172e-01
+    2   -2    -9.899e-04     2.332e+01
+    2   -1    -2.499e-04     9.278e+01
+    2    0    -7.640e-03     2.763e+00
+    2    1    -1.226e-04     2.007e+02
+    2    2    -2.176e-04     1.039e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     6.233e-02     1.898e-01
+    1   -1     8.827e-05     6.626e+01
+    1    0    -1.801e-05     3.643e+02
+    1    1     3.115e-02     2.173e-01
+    2   -2     6.223e-05     7.350e+01
+    2   -1    -2.731e-05     1.744e+02
+    2    0     2.349e-06     2.484e+03
+    2    1     3.817e-06     1.423e+03
+    2    2    -8.282e-06     5.637e+02
+Score : Reaction rate : Absorption cross section
+Space bin :     1    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.728e-01     1.727e-01
+    1   -1    -5.821e-04     2.546e+01
+    1    0    -6.900e-05     2.487e+02
+    1    1     8.792e-02     1.905e-01
+    2   -2    -4.596e-04     2.747e+01
+    2   -1    -5.626e-05     2.337e+02
+    2    0    -4.599e-03     2.383e+00
+    2    1    -3.051e-05     4.603e+02
+    2    2    -1.464e-04     8.459e+01
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     7.676e-02     2.255e-01
+    1   -1     5.250e-04     1.369e+01
+    1    0     8.674e-05     8.671e+01
+    1    1     3.873e-02     2.354e-01
+    2   -2     4.840e-04     1.135e+01
+    2   -1     4.273e-05     1.455e+02
+    2    0    -1.056e-03     5.191e+00
+    2    1     8.229e-05     7.538e+01
+    2    2    -1.496e-05     4.088e+02
+Score : Reaction rate : Scattering cross section
+Space bin :     1    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.836e+00     1.460e-01
+    1   -1    -2.320e-02     3.218e+00
+    1    0    -3.687e-04     2.200e+02
+    1    1     9.178e-01     1.449e-01
+    2   -2    -2.080e-02     3.005e+00
+    2   -1    -4.610e-05     1.254e+03
+    2    0     8.021e-04     6.230e+01
+    2    1    -3.223e-04     1.941e+02
+    2    2     1.739e-04     3.427e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.380e+00     7.406e-02
+    1   -1     7.090e-03     1.538e+01
+    1    0    -1.294e-03     9.162e+01
+    1    1     2.190e+00     7.805e-02
+    2   -2     5.058e-03     1.817e+01
+    2   -1    -5.878e-04     1.415e+02
+    2    0     9.267e-04     9.901e+01
+    2    1     4.926e-06     1.806e+04
+    2    2    -2.557e-04     3.773e+02
+Score : Reaction rate : Fission cross section
+Space bin :     1    1    0
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.094e-01     2.016e-01
+    1   -1    -5.272e-04     2.180e+01
+    1    0    -7.327e-05     1.688e+02
+    1    1     5.576e-02     2.172e-01
+    2   -2    -4.063e-04     2.332e+01
+    2   -1    -1.026e-04     9.277e+01
+    2    0    -3.136e-03     2.763e+00
+    2    1    -5.032e-05     2.007e+02
+    2    2    -8.933e-05     1.039e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     2.439e-02     1.914e-01
+    1   -1     3.043e-05     7.489e+01
+    1    0    -9.196e-06     2.821e+02
+    1    1     1.219e-02     2.184e-01
+    2   -2     2.180e-05     8.216e+01
+    2   -1    -9.826e-06     1.925e+02
+    2    0    -1.189e-05     1.949e+02
+    2    1     9.561e-08     2.244e+04
+    2    2    -1.348e-06     1.369e+03
+Score : Scattering Matrix
+Space bin :     1    1    0
+Outgoing data for incident energy bin boundaries :  1.000e-11     1.000e-05
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.836e+00     1.507e-01
+    1   -1    -2.725e-03     2.893e+01
+    1    0    -1.220e-03     6.766e+01
+    1    1     9.175e-01     1.461e-01
+    2   -2    -2.454e-03     2.640e+01
+    2   -1    -5.259e-04     1.062e+02
+    2    0     9.831e-04     5.465e+01
+    2    1    -5.400e-04     1.114e+02
+    2    2    -2.474e-04     2.253e+02
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.623e-05     1.535e+01
+    1   -1     4.096e-06     8.035e+01
+    1    0     2.906e-06     1.173e+02
+    1    1     2.564e-05     1.559e+01
+    2   -2     1.225e-06     2.330e+02
+    2   -1     4.022e-07     6.586e+02
+    2    0    -7.858e-07     3.482e+02
+    2    1     2.689e-06     1.133e+02
+    2    2     4.553e-06     5.719e+01
+Outgoing data for incident energy bin boundaries :  1.000e-05     2.000e+01
+Energy range (in MeV):  1.000e-11     1.000e-05
+    l    m     Score         Sigma (%)
+    0    0     1.731e-01     2.284e-01
+    1   -1    -3.209e-04     6.583e+01
+    1    0     3.582e-04     6.629e+01
+    1    1     8.632e-02     2.521e-01
+    2   -2    -1.910e-04     8.599e+01
+    2   -1     4.181e-05     4.911e+02
+    2    0     1.370e-04     1.463e+02
+    2    1     2.352e-04     7.066e+01
+    2    2    -3.195e-04     4.911e+01
+Energy range (in MeV):  1.000e-05     2.000e+01
+    l    m     Score         Sigma (%)
+    0    0     4.208e+00     7.469e-02
+    1   -1     2.207e-03     5.438e+01
+    1    0    -6.264e-04     1.866e+02
+    1    1     2.103e+00     7.956e-02
+    2   -2     1.151e-03     8.274e+01
+    2   -1    -9.800e-04     9.180e+01
+    2    0    -1.990e-04     4.672e+02
+    2    1    -7.467e-04     1.209e+02
+    2    2    -5.209e-04     1.791e+02
+
+******************************************************************************
+
+
+
+	  KSTEP ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 110	 keff = 1.318896e+00	 sigma = 1.076254e-03	 sigma% = 8.160267e-02
+
+
+	  KCOLL ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 110	 keff = 1.318811e+00	 sigma = 1.021363e-03	 sigma% = 7.744579e-02
+
+
+	  KTRACK  ESTIMATOR
+	 -------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 110	 keff = 1.315743e+00	 sigma = 1.452199e-03	 sigma% = 1.103710e-01
+
+
+	  MACRO KCOLL ESTIMATOR
+	 ---------------------------- 
+
+
+ 	 best results are obtained with discarding 0 batches
+
+	 number of batch used: 110	 keff = 1.316959e+00	 sigma = 1.200055e-03	 sigma% = 9.112315e-02
+
+
+ simulation time (s) : 429
+
+
+ Type and parameters of random generator at the end of simulation: 
+	 DRAND48_RANDOM 22445 44209 57859  COUNTER	440521346
+
+
+ simulation time (s): 429
+
+
+=====================================================================
+	NORMAL COMPLETION
+=====================================================================

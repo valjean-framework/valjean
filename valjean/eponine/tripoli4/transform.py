@@ -441,6 +441,18 @@ def convert_sensitivities(toks):
     return sensitivity
 
 
+def convert_shr(toks):
+    '''Convert results on spherical harmonics to dictionary of
+    :obj:`numpy.ndarray` using :mod:`~valjean.eponine.tripoli4.common`.
+
+    :param toks: `pyparsing` element
+    :type toks: |parseres|
+    :returns: python list corresponding to input `pyparsing` list
+    '''
+    shrres = common.convert_spherical_harmonics(toks[0])
+    return shrres
+
+
 def convert_ifp_adj_crit_ed(toks):
     '''Convert IFP adjoint criticality edition in kinematic array.'''
     lced = []

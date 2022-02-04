@@ -306,6 +306,8 @@ class ParseResult:
     def _set_array_what(score, resp):
         if resp['response_type'] == 'sensitivity':
             return 'sensitivity'
+        if resp['response_type'] == 'spherical_harmonics':
+            return resp['results']['spherical_harmonics']['what']
         # score_name for adjoint criticality edition
         what = resp.get('response_function', resp.get('score_name'))
         return score.replace('score', what).lower()
@@ -350,10 +352,11 @@ class ParseResult:
             if arr in ('units', 'coordinates'):
                 tdict[arr] = res[arr]
                 continue
-            if isinstance(res[arr], str) and arr != 'not_converged':
+            if ((isinstance(res[arr], str)
+                 and arr not in ('not_converged', 'what'))):
                 tdict[arr] = res[arr]
                 continue
-            if arr in ('bins', 'sigma', 'sigma%'):
+            if arr in ('bins', 'sigma', 'sigma%', 'what'):
                 continue
             if 'array' in arr:
                 scores = [k for k in res[arr].dtype.names if k != 'sigma']
