@@ -38,19 +38,36 @@ from ..dataset import Dataset
 from ... import LOGGER
 
 
-def bins_reduction(def_bins, def_array_shape, array_shape):
+def bins_reduction(def_bins, reduced_dims):
     '''Reduce number of bins for integrated results (on one or more dimension).
+
+    For the reduced dimensions, all the bounds are suppressed except the first
+    and the last one. This is also the case if they represent center of bins.
+    The dimension is supposed to be squeezed afterwards.
 
     :param def_bins: default bins (all of them)
     :type def_bins: :obj:`collections.OrderedDict` (str, :obj:`numpy.ndarray`)
-    :param tuple(int) def_array_shape: shape of the default array
-    :param tuple(int) array_shape: shape of the integrated array
+    :param list(bool): dimensions to be reduced or not
     :returns: :obj:`collections.OrderedDict` (str, :obj:`numpy.ndarray`), i.e.
         adapted bins
+
+    >>> ibins = OrderedDict([('a', np.array([0, 1, 2, 3, 4])),
+    ...                      ('b', np.array([-10, 0, 10]))])
+    >>> dshape_1 = (5, 3)
+    >>> b11 = bins_reduction(ibins, [True, True])
+    >>> b11['a']
+    array([0, 4])
+    >>> b11['b']
+    array([-10,  10])
+    >>> b51 = bins_reduction(ibins, [False, True])
+    >>> b51['a']
+    array([0, 1, 2, 3, 4])
+    >>> b51['b']
+    array([-10,  10])
     '''
     bins = OrderedDict()
     for ibin, _bin in enumerate(def_bins.keys()):
-        if def_array_shape[ibin] != array_shape[ibin]:
+        if reduced_dims[ibin]:
             bins[_bin] = def_bins[_bin][::def_bins[_bin].size-1]
         else:
             LOGGER.debug("Keep bins from 'array'.")
@@ -102,8 +119,9 @@ def array_result(farray_res, res_type, name='', what='', array_key='array',
         return None
     bins = (array_res.get('bins') if array_key == 'array'
             else bins_reduction(array_res.get('bins'),
-                                array_res['array'].shape,
-                                array_res[array_key].shape))
+                                [o != d
+                                 for d, o in zip(array_res['array'].shape,
+                                                 array_res[array_key].shape)]))
     if score != 'score':
         return special_array(array_res, score, bins, array_key, name, what)
     return Dataset(
@@ -145,9 +163,9 @@ def integrated_result(result, res_type='integrated', name='', what='',
         LOGGER.warning('More than one result can have been integrated %s, '
                        'chosen one: %r for %r', other_res, full_res, res_type)
     ishape = tuple([1]*result[full_res]['array'].ndim)
-    bins = bins_reduction(result[full_res]['bins'],
-                          result[full_res]['array'].shape,
-                          ishape)
+    diffshape = [o != d for o, d in zip(result[full_res]['array'].shape,
+                                        ishape)]
+    bins = bins_reduction(result[full_res]['bins'], diffshape)
     return Dataset(np.full(ishape, intres[score]),
                    (np.full(ishape, intres[sigma]*intres[score]*0.01) if sigma
                     else np.full(ishape, np.float_(np.nan))),
