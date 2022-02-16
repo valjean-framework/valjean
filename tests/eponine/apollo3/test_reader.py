@@ -71,6 +71,9 @@ def test_mosteller(datadir):
     assert ap3r.res
     ap3b = ap3r.to_browser()
     assert ap3b
+    print(ap3b)
+    print({k: list(ap3b.available_values(k))
+           for k in ap3b.keys() if k != 'index'})
     assert len(ap3b.keys()) == 5
     isotopes = list(ap3b.available_values('isotope'))
     assert len(isotopes) == 17
@@ -159,3 +162,53 @@ def test_mosteller_to_brow(datadir):
     flux = ap3b.select_by(result_name='flux', zone='totaloutput',
                           output='output_2')
     assert flux['results'].shape == (10,)
+
+
+def test_full_rates_file(datadir):
+    '''Test full Apollo3 rates output, including current, surfacic flux and
+    anisotropies.'''
+    ap3b = hdf_to_browser(datadir/"full_rates.hdf")
+    assert ap3b
+    assert len(ap3b.keys()) == 5
+    isotopes = list(ap3b.available_values('isotope'))
+    assert 'macro' in isotopes
+    ngroups = ap3b.globals['info']['output_0']['ngroups']
+    assert ngroups == 26
+    rbdiffusion = ap3b.filter_by(result_name='diffusion')
+    assert len(rbdiffusion.available_values('isotope')) == 6
+    exp_res = {'Xe135': {'absorption', 'concentration', 'diffusion'},
+               'U238': {'absorption', 'concentration', 'diffusion', 'fission',
+                        'fissionspectrum', 'nexcess', 'nufission'},
+               'macro': {'absorption', 'diffusion', 'fission',
+                         'fissionspectrum', 'nexcess', 'nufission', 'total'}}
+    for iso, eres in exp_res.items():
+        rb_iso = ap3b.filter_by(isotope=iso)
+        assert len(rb_iso) == len(eres)
+        assert set(rb_iso.available_values('result_name')) == eres
+        for res in rb_iso.content:
+            if res['result_name'] == 'diffusion':
+                assert res['results'].shape == (4, ngroups)
+                assert res['results'].what == 'diffusion'
+            elif res['result_name'] == 'concentration':
+                assert res['results'].shape == ()
+            else:
+                assert res['results'].shape == (ngroups,)
+    rb_totout = ap3b.filter_by(zone='totaloutput')
+    assert len(rb_totout.available_values('result_name')) == 7
+    assert (set(rb_totout.available_values('result_name'))
+            == {'absorption', 'current', 'flux', 'keff', 'kinf', 'production',
+                'surfflux'})
+    for res in rb_totout.content:
+        if res['result_name'] in ('absorption', 'flux', 'production'):
+            assert res['results'].shape == (ngroups)
+        elif res['result_name'] in ('keff', 'kinf'):
+            assert res['results'].shape == ()
+        elif res['result_name'] == 'current':
+            assert res['results'].shape == (ngroups, 220, 2)
+            assert list(res['results'].bins.keys()) == ['groups', 'surfaces',
+                                                        'direction']
+            assert np.array_equal(res['results'].bins['direction'],
+                                  ['incoming', 'leaving'])
+        elif res['result_name'] == 'surfflux':
+            assert res['results'].shape == (ngroups, 220)
+            assert list(res['results'].bins.keys()) == ['groups', 'surfaces']

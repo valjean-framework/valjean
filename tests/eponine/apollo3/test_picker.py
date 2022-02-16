@@ -90,13 +90,14 @@ def test_mosteller(datadir):
     assert ap3p.results(output='output_2', zone='2', isotope='Zr96') == [
         'Absorption', 'concentration']
     assert (ap3p.results(output='output_1', zone='2', isotope='macro')
-            == ['Absorption', 'NuFission', 'info'])
+            == ['Absorption', 'NuFission'])
     assert ap3p.results(output='output_1', zone='1') == ['FLUX']
     flux = ap3p.pick_standard_value(output='output_0', zone='3',
                                     result_name='FLUX')
     assert flux
     assert isinstance(flux.value, np.ndarray)
     assert flux.shape == (nb_grps,)
+    assert list(flux.bins.keys()) == ['groups']
     absorp = ap3p.pick_standard_value(output='output_0', zone='1',
                                       result_name='Absorption', isotope='U238')
     assert absorp
@@ -140,3 +141,65 @@ def test_minicoeur_kinetics(datadir):
                                   result_name='SteadyState_keff')
     assert isinstance(sskeff.value, np.ndarray)
     assert sskeff.shape == (1,)
+
+
+def test_full_rates(datadir):
+    '''Test full Apollo3 rates output, including current, surfacic flux and
+    anisotropies.'''
+    ap3p = Picker(datadir/"full_rates.hdf")
+    assert ap3p.hfile
+    assert ap3p.outputs() == ['output_0']
+    ngroups = ap3p.nb_groups(output='output_0')
+    assert ngroups == 26
+    assert ap3p.zones(output='output_0') == ['q', 'totaloutput']
+    assert (ap3p.results(output='output_0', zone='totaloutput')
+            == ['ABSORPTION', 'CURRENT', 'FLUX', 'KEFF', 'KINF', 'NSURF',
+                'PRODUCTION', 'SURFFLUX'])
+    nsurf = ap3p.pick_standard_value(output='output_0', zone='totaloutput',
+                                     result_name='NSURF').value
+    assert nsurf == 220
+    for res in ap3p.results(output='output_0', zone='totaloutput'):
+        dsres = ap3p.pick_standard_value(output='output_0', zone='totaloutput',
+                                         result_name=res)
+        if res in ('KEFF', 'KINF', 'NSURF'):
+            assert dsres.shape == ()
+        elif res in ('ABSORPTION', 'FLUX', 'PRODUCTION'):
+            assert dsres.shape == (ngroups,)
+        elif res == 'SURFFLUX':
+            assert dsres.shape == (ngroups, nsurf)
+            assert list(dsres.bins.keys()) == ['groups', 'surfaces']
+            assert dsres.what == 'surfflux'
+        elif res == 'CURRENT':
+            assert dsres.shape == (ngroups, nsurf, 2)
+            assert list(dsres.bins.keys()) == ['groups', 'surfaces',
+                                               'direction']
+            assert dsres.what == 'current'
+    assert (ap3p.isotopes(output='output_0', zone='q')
+            == ['TotalResidual_reduced_chain', 'I135', 'Sm149', 'U238',
+                'Xe135', 'macro'])
+    dres = ['Absorption', 'Diffusion']
+    iso_res = {'I135': dres + ['concentration'],
+               'Sm149': dres + ['Nexcess', 'concentration'],
+               'U238': dres + ['Fission', 'FissionSpectrum', 'Nexcess',
+                               'NuFission', 'concentration'],
+               'Xe135': dres + ['concentration'],
+               'TotalResidual_reduced_chain': dres + [
+                   'Fission', 'FissionSpectrum', 'Nexcess', 'NuFission',
+                   'concentration'],
+               'macro': dres + ['Fission', 'FissionSpectrum', 'Nexcess',
+                                'NuFission', 'Total']}
+    for iso in ap3p.isotopes(output='output_0', zone='q'):
+        assert (ap3p.results(output='output_0', zone='q', isotope=iso)
+                == iso_res[iso])
+        for res in iso_res[iso]:
+            dsres = ap3p.pick_standard_value(output='output_0', zone='q',
+                                             isotope=iso, result_name=res)
+            if res == 'Diffusion':
+                assert dsres.shape == (4, ngroups)
+                assert list(dsres.bins.keys()) == ['anisotropies', 'groups']
+                assert dsres.what == 'diffusion'
+            elif res == 'concentration':
+                assert dsres.shape == ()
+                assert dsres.what == 'concentration'
+            else:
+                assert dsres.shape == (ngroups)
