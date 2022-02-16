@@ -197,11 +197,11 @@ intersphinx_mapping = {
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
     'pytest': ('https://docs.pytest.org/en/latest/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'hypothesis': ('https://hypothesis.readthedocs.io/en/latest/', None),
     'virtualenvwrapper': (
         ('https://virtualenvwrapper.readthedocs.io/en/latest/', None)),
-    'setuptools': ('https://setuptools.readthedocs.io/en/latest/', None),
+    'setuptools': ('https://setuptools.pypa.io/en/latest/', None),
     'pip': ('https://pip.pypa.io/en/stable/', None),
     'py': ('https://py.readthedocs.io/en/latest/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
