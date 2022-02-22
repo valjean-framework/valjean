@@ -199,7 +199,7 @@ def print_summary(nb_used, excluded, summary):
 
 @pytest.mark.slow
 def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
-    '''Test parsing of files configured from the ``--parsing-config-file``
+    '''Test parsing of files configured from the ``--parsing-config-file-t4``
     option.
 
     By default all files are included, independent of the mode (MONO or PARA),

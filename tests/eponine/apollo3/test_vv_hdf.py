@@ -80,7 +80,7 @@ def loop_on_files(filelist):
 
 @pytest.mark.slow
 def test_apollo3_hdf(caplog, vv_params, parsing_exclude, parsing_match):
-    '''Test reading of files configured from the ``--parsing-config-file``
+    '''Test reading of files configured from the ``--parsing-config-file-ap3``
     option.
 
     By default all files are included. Restrictions are possible from command

@@ -218,6 +218,7 @@ passenv =
         VALJEAN_NIGHTLY_JET4_PARA_PATH
         VALJEAN_NIGHTLY_V10_2_PATH
         VALJEAN_NIGHTLY_V11_0_PATH
+        VALJEAN_NIGHTLY_AP3_RATES_PATH
 extras = graphviz
 commands = poetry install -v --no-root -E dev
            poetry run pytest --runslow --cov-report term-missing \
