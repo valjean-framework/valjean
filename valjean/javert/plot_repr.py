@@ -76,15 +76,17 @@ def dimensions_and_bins(bins, array_shape):
     :type bins: collections.OrderedDict(str, numpy.ndarray)
     :param tuple(int) array_shape: shape of the **values** array from the
         results dataset
-    :returns: dimensions and bins to be used (non-trivial ones)
+    :returns: dimensions and bins to be used (non-trivial ones), or None if all
+      the dimensions are trivial
     :rtype: collections.OrderedDict
     '''
     idims = dimensions_from_array(array_shape)
     if idims is None:
         return None
-    # subd = {k: v for i, (k, v) in enumerate(bins.items()) if i in idims}
-    items = list(bins.items())
-    subd = OrderedDict(items[i] for i in idims)
+    if not bins:
+        return None
+    subd = OrderedDict(pair for i, pair in enumerate(bins.items())
+                       if i in idims)
     return subd
 
 
