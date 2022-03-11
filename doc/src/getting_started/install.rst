@@ -7,8 +7,6 @@ Installing :mod:`valjean`
 .. _sphinx: https://www.sphinx-doc.org/en/master/
 .. _pyparsing: https://pythonhosted.org/pyparsing
 .. _pip: https://pip.pypa.io/en/stable
-.. _PEP 517: https://www.python.org/dev/peps/pep-0517/
-.. _PEP 518: https://www.python.org/dev/peps/pep-0518/
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _anaconda: https://www.anaconda.com/products/individual
 .. _jupyter: https://docs.jupyter.org/en/latest/
@@ -54,7 +52,7 @@ environments is the :mod:`venv` module from the standard Python distribution::
 
         Ancient versions of ``pip`` (``<19.0``) will not be able to install
         :mod:`valjean`, because :mod:`valjean` uses a ``pyproject.toml`` file
-        to describe the build, as specified in the `PEP 517`_ and `PEP 518`_
+        to describe the build, as specified in the :pep:`517` and :pep:`518`
         formats. If you are using an old version of ``pip``, you should upgrade
         it (after activating the virtual environment) with::
 
