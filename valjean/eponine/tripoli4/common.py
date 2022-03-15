@@ -1026,6 +1026,8 @@ class SpectrumDictBuilder(KinematicDictBuilder):
     '''
     def __init__(self, colnames, lnbins):
         super().__init__(colnames, lnbins)
+        if 'vov' in colnames:
+            self.units['vov'] = ''
         self.itime, self.imu, self.iphi = 0, 0, 0
 
     def fill_arrays_and_bins(self, data):
@@ -1093,7 +1095,7 @@ class SpectrumDictBuilder(KinematicDictBuilder):
 
     def fill_score_units(self, data):
         '''Fill score units if available in data, else leave to unknown.'''
-        if 'unit' in data[0]:
+        if 'units' in data[0]:
             self.units['e'] = data[0]['units'][0]
             self.units['score'] = data[0]['units'][1]
             self.units['sigma'] = data[0]['units'][2]

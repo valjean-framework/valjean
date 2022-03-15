@@ -883,13 +883,16 @@ spectrumblock = (Group(OneOrMore
 
 
 # Spectrum with vov
-_vovspectrumcols = Suppress(_spgroupwunit_kw + _spscore_kw + _spsigma_kw
+# no unit for vov (not even a space) -> use spectrum ones with 4 fields
+_vovspectrumcols = Suppress((_spgroupwunit_kw | _spgroup_kw)
+                            + _spscore_kw + _spsigma_kw
                             + _spscovlethargy_kw + _spvov_kw)
 _vovspectrumbin = _fnums + Suppress('-') + _fnums
 _vovspectrumvals = Group(_vovspectrumbin + _fnums + _fnums + _fnums + _fnums)
 _vovspectrum = (Suppress(_spectrum_kw)
                 + _numdiscbatch
                 + _vovspectrumcols
+                + Optional(_spectrumunits)
                 + OneOrMore(_vovspectrumvals, stopOn=_endtable)
                 ('spectrum_vals'))
 vovspectrumblock = Group(Group(_vovspectrum))('vov_spectrum_res')
