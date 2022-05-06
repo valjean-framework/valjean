@@ -895,19 +895,10 @@ class MeshDictBuilder(KinematicDictBuilder):
 
         self.coords = np.loadtxt(
             StringIO(vals),
-            dtype=np.dtype([('c0', 'f8'), ('c1', 'f8'), ('c2', 'f8')]),
+            dtype=np.dtype([('u', 'f8'), ('v', 'f8'), ('w', 'f8')]),
             usecols=list(range(1, 4)),
-            converters={1: convstr, 2: convstr, 3: convstr})
-        uniq = [np.unique(self.coords['c0']),
-                np.unique(self.coords['c1']),
-                np.unique(self.coords['c2'])]
-        if all(a.size == b.size for a, b in zip(uniq, self.bins.values())):
-            LOGGER.debug("same number of bins and coords, use coords as bins")
-            self.bins['u'] = uniq[0]
-            self.bins['v'] = uniq[1]
-            self.bins['w'] = uniq[2]
-        else:
-            LOGGER.debug("not same number of bins and coords")
+            converters={1: convstr, 2: convstr, 3: convstr}).reshape(
+                self.arrays['default'].shape[:3])
 
     def _fill_mesh_array(self, meshvals, name, ebin):
         '''Fill mesh array.
