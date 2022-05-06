@@ -1278,7 +1278,7 @@ def convert_mesh(meshres):
                        [nubins, nvbins, nwbins, 1, ntbins, 1, 1])
     # integrated result (space and energy)
     if 'integrated_res' in meshres[0]:
-        vals.add_array('integrated_res', colnames,
+        vals.add_array('integrated_res', ['score', 'sigma'],
                        [1, 1, 1, 1, ntbins, 1, 1])
     # entropy results (Boltzmann and Shannon entropy come together, only in
     # results in energy range)
@@ -2091,11 +2091,11 @@ def convert_kij_keff(res):
         LOGGER.warning("Issue in number of fissile volumes "
                        "and size of eigenvector")
     spacebins = np.array(res['kij_matrix'][0])
-    if (spacebins.shape[0]  # pylint: disable=unsubscriptable-object
+    if (spacebins.shape[0]
             != len(res['kij_matrix'][1:])):
         LOGGER.warning("Strange: not the dimension in space mesh and "
                        "matrix, matrix expected to be square")
-    if (spacebins.shape[0]  # pylint: disable=unsubscriptable-object
+    if (spacebins.shape[0]
             != nbins):
         LOGGER.warning("Strange: not the same number of space bins "
                        "and eigenvectors")
