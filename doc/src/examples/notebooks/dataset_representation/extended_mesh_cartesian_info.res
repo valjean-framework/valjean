@@ -1,13 +1,13 @@
 
 =====================================================================
 $Id$
- hostname: is232540
+ hostname: 
  pid: 15954
 
 =====================================================================
 $Id$
 
- HOSTNAME : is232540
+ HOSTNAME : 
 
  PROCESS ID is : 15954
 
@@ -20,16 +20,16 @@ $Id$
 =====================================================================
 
  data filename = extended_mesh_cartesian_info.t4
- catalogname = /home/tripoli4.11/tripoli4.11.1/Env/t4path.ceav512
- execution call = tripoli4 -c /home/tripoli4.11/tripoli4.11.1/Env/t4path.ceav512 -s NJOY -a -u -d extended_mesh_cartesian_info.t4 -o extended_mesh_cartesian_info_NEW.res 
+ catalogname = t4path.ceav512
+ execution call = tripoli4 -c t4path.ceav512 -s NJOY -a -u -d extended_mesh_cartesian_info.t4 -o extended_mesh_cartesian_info_NEW.res 
 
 
- dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
- mass file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
- Q fission directory : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/Qfission
- electron cross section directory : /data/tmpuranus2/GALILEE-V0-3.0/PEID/Electron_Photon
- electron bremsstrahlung cross section directory : /home/tripoli4.11/tripoli4.11.1/AdditionalData/Bremsstrahlung
- abondance file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/abundance
+ dictionary file : ceav512.dictionary
+ mass file : mass_rmd.mas95
+ Q fission directory : Qfission
+ electron cross section directory : Electron_Photon
+ electron bremsstrahlung cross section directory : Bremsstrahlung
+ abondance file : abundance
  own evaluations directory : 
 
   reading geometry : 

@@ -1,17 +1,17 @@
 
 =====================================================================
-Warning in checkfile : could not open file "/data/tmpdm2s/dm232107/src/tripoli4/relwithdebinfo/lin-x86-64-ubu16/source_me.sh"
-Warning in checkfile : could not open file "/data/tmpdm2s/dm232107/src/tripoli4/relwithdebinfo/prerequisites/source_me.sh"
+Warning in checkfile : could not open file "lin-x86-64-ubu16/source_me.sh"
+Warning in checkfile : could not open file "prerequisites/source_me.sh"
 
 =====================================================================
 $Id$
- hostname: is241078
+ hostname: 
  pid: 4711
 
 =====================================================================
 $Id$
 
- HOSTNAME : is241078
+ HOSTNAME : 
 
  PROCESS ID is : 4711
 
@@ -24,15 +24,15 @@ $Id$
 =====================================================================
 
  data filename = box_dyn_valjean.t4
- catalogname = /home/dm232107/t4path.ceav512.brems
- execution call = tripoli4 -a -u -s NJOY -c /home/dm232107/t4path.ceav512.brems -d box_dyn_valjean.t4 
+ catalogname = t4path.ceav512.brems
+ execution call = tripoli4 -a -u -s NJOY -c t4path.ceav512.brems -d box_dyn_valjean.t4 
 
 
- dictionary file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/ceav512.dictionary
- mass file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/Standard_data/mass_rmd.mas95
- Q fission directory : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/Qfission
- electron cross section directory : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon
- abondance file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/Standard_data/abundance
+ dictionary file : ceav512.dictionary
+ mass file : mass_rmd.mas95
+ Q fission directory : Qfission
+ electron cross section directory : Electron_Photon
+ abondance file : abundance
  own evaluations directory : 
  Warning: using format for dictionary with five columns: information on reading or computing the Q-values for energy deposition is provided
 
@@ -142,7 +142,7 @@ END_SIMULATION
  data reading time (s): 0
 -- NJOY file format for evaluations --
 
- reading material : 9228 at 824K from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.neutron.U235.bcd
+ reading material : 9228 at 824K from  file : jeff311.neutron.U235.bcd
 
  Total concentration of material FUEL (1.E24at/cm3) is: 4.492500e-02
 

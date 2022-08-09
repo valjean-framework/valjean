@@ -1,13 +1,13 @@
 
 =====================================================================
-$Id: t4main.cc,v 2.141 2019/01/04 14:09:00 aj256514 Exp $
- hostname: is232540
+$Id: t4main.cc,v 2.141 2019/01/04 14:09:00  Exp $
+ hostname: 
  pid: 29419
 
 =====================================================================
-$Id: t4main.cc,v 2.141 2019/01/04 14:09:00 aj256514 Exp $
+$Id: t4main.cc,v 2.141 2019/01/04 14:09:00  Exp $
 
- HOSTNAME : is232540
+ HOSTNAME : 
 
  PROCESS ID is : 29419
 
@@ -18,15 +18,15 @@ $Id: t4main.cc,v 2.141 2019/01/04 14:09:00 aj256514 Exp $
 =====================================================================
 
  data filename = test_adjoint_small.d
- catalogname = /home/tripoli4.11/tripoli4.11.0/Env/t4path.ceav512
- execution call = tripoli4 -a -u -s NJOY -c /home/tripoli4.11/tripoli4.11.0/Env/t4path.ceav512 -d test_adjoint_small.d -o test_adjoint_small.d.res 
+ catalogname = t4path.ceav512
+ execution call = tripoli4 -a -u -s NJOY -c t4path.ceav512 -d test_adjoint_small.d -o test_adjoint_small.d.res 
 
 
- dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
- mass file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
- Q fission directory : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/Qfission
- electron cross section  directory : /data/tmpuranus2/GALILEE-V0-3.0/PEID/Electron_Photon
- abondance file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/abundance
+ dictionary file : ceav512.dictionary
+ mass file : mass_rmd.mas95
+ Q fission directory : Qfission
+ electron cross section  directory : Electron_Photon
+ abondance file : abundance
  own evaluations directory : 
 
 

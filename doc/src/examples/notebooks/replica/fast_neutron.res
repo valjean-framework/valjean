@@ -1,13 +1,13 @@
 
 =====================================================================
 $Id$
- hostname: is240402
+ hostname: 
  pid: 2694
 
 =====================================================================
 $Id$
 
- HOSTNAME : is240402
+ HOSTNAME : 
 
  PROCESS ID is : 2694
 
@@ -20,15 +20,15 @@ $Id$
 =====================================================================
 
  data filename = fast_neutron.t4
- catalogname = /home/dm232107/t4path.ceav512
- execution call = /home/dm232107/src/tripoli4/relwithdebinfo/lin-x86-64-ubu16/bin/dynamic_tripoli4-root-enabled -d fast_neutron.t4 -s NJOY -c /home/dm232107/t4path.ceav512 -o fast_neutron.res 
+ catalogname = t4path.ceav512
+ execution call = dynamic_tripoli4-root-enabled -d fast_neutron.t4 -s NJOY -c t4path.ceav512 -o fast_neutron.res 
 
 
- dictionary file : /volatile/home/dm232107/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
- mass file : /volatile/home/dm232107/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
- Q fission directory : /volatile/home/dm232107/GALILEE-V0-3.0/CEAV512/Qfission
- electron cross section directory : /volatile/home/dm232107/GALILEE-V0-3.0/PEID/Electron_Photon
- abondance file : /volatile/home/dm232107/GALILEE-V0-3.0/Standard_data/abundance
+ dictionary file : ceav512.dictionary
+ mass file : mass_rmd.mas95
+ Q fission directory : Qfission
+ electron cross section directory : Electron_Photon
+ abondance file : abundance
  own evaluations directory : 
 
 

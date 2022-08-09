@@ -279,7 +279,7 @@ def make_report(all_test_results, *, title):
 # * hard_graph contains 11 tasks
 # * soft_graph contains 11 tasks
 # * will schedule up to 4 tasks in parallel
-# * deserializing pickle environment from 'valjean.env' files in /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/output
+# * deserializing pickle environment from 'valjean.env' files in spherical_cows/output
 # * 0 environment files found and deserialized
 # * graph completed in 1.5154480934143066e-05 seconds
 # * graph completed in 1.0513700544834137e-05 seconds
@@ -306,7 +306,7 @@ def make_report(all_test_results, *, title):
 # * master: 5 tasks left
 # * master: 4 tasks left
 # * task 'comparison U235_14.0' starts
-# * Parsing /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/output/U235@14.0.t4/stdout
+# * Parsing spherical_cows/output/U235@14.0.t4/stdout
 # * Successful scan in 0.017888 s
 # * Successful parsing in 0.130465 s
 # * task 'Pu239@14.0.mcnp' completed with status TaskStatus.DONE
@@ -317,7 +317,7 @@ def make_report(all_test_results, *, title):
 # * master: 4 tasks left
 # * master: 3 tasks left
 # * task 'comparison Pu239_14.0' starts
-# * Parsing /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/output/Pu239@14.0.t4/stdout
+# * Parsing spherical_cows/output/Pu239@14.0.t4/stdout
 # * Successful scan in 0.029409 s
 # * Successful parsing in 0.129308 s
 # * task 'comparison Pu239_14.0' completed with status TaskStatus.DONE
@@ -326,7 +326,7 @@ def make_report(all_test_results, *, title):
 # * master: 3 tasks left
 # * master: 2 tasks left
 # * task 'comparison O16_14.0' starts
-# * Parsing /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/output/O16@14.0.t4/stdout
+# * Parsing spherical_cows/output/O16@14.0.t4/stdout
 # * Successful scan in 0.027760 s
 # * Successful parsing in 0.093801 s
 # * task 'comparison O16_14.0' completed with status TaskStatus.DONE
@@ -336,17 +336,17 @@ def make_report(all_test_results, *, title):
 # * task 'report-report' completed with status TaskStatus.DONE
 # * master: 1 tasks left
 # * task 'report' starts
-# * writing tree_path: /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/report/report/index
-# * writing tree_path: /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/report/report/Test results
-# * writing tree_path: /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/report/report/Test results/O16, 14.0 MeV
-# * writing tree_path: /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/report/report/Test results/Pu239, 14.0 MeV
-# * writing tree_path: /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/report/report/Test results/U235, 14.0 MeV
+# * writing tree_path: spherical_cows/report/report/index
+# * writing tree_path: spherical_cows/report/report/Test results
+# * writing tree_path: spherical_cows/report/report/Test results/O16, 14.0 MeV
+# * writing tree_path: spherical_cows/report/report/Test results/Pu239, 14.0 MeV
+# * writing tree_path: spherical_cows/report/report/Test results/U235, 14.0 MeV
 # * writing 3 plots using 4 subprocesses
-# /data/tmpdm2s/dm232107/src/valjean/valjean/gavroche/stat_tests/student.py:478: RuntimeWarning: invalid value encountered in true_divide
+# valjean/valjean/gavroche/stat_tests/student.py:478: RuntimeWarning: invalid value encountered in true_divide
 #   studentt = diff.value / diff.error
-# * drawing figure /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/report/report/figures/plot_cc240cbb3a9ae844616da16989931f4a21578e75aa8b9b3d895d36b2247ac7fd.png
-# * drawing figure /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/report/report/figures/plot_9589d583b0b1af6b1ff2ec2aefcc88deda3ee5cec98d1a25c487e247c5aeaf52.png
-# * drawing figure /data/tmpdm2s/dm232107/src/valjean-demo/spherical_cows/report/report/figures/plot_1f8ae35814f479a1b25ba26f0e810126875b2a1cfb5ce3d2bb23bcd4f2de6f9a.png
+# * drawing figure spherical_cows/report/report/figures/plot_cc240cbb3a9ae844616da16989931f4a21578e75aa8b9b3d895d36b2247ac7fd.png
+# * drawing figure spherical_cows/report/report/figures/plot_9589d583b0b1af6b1ff2ec2aefcc88deda3ee5cec98d1a25c487e247c5aeaf52.png
+# * drawing figure spherical_cows/report/report/figures/plot_1f8ae35814f479a1b25ba26f0e810126875b2a1cfb5ce3d2bb23bcd4f2de6f9a.png
 # * task 'report' completed with status TaskStatus.DONE
 # * final environment statistics:
 #      DONE: 11/11 (100.0%)

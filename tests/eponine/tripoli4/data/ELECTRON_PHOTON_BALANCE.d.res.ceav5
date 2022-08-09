@@ -3,13 +3,13 @@
 
 =====================================================================
 $Id$
- hostname: is234240
+ hostname: 
  pid: 25429
 
 =====================================================================
 $Id$
 
- HOSTNAME : is234240
+ HOSTNAME : 
 
  PROCESS ID is : 25429
 
@@ -26,12 +26,12 @@ $Id$
  execution call = tripoli4 -R -s NJOY -c ../Env/t4path.ceav5 -a -d ../qualif/input/ELECTRON_PHOTON_BALANCE.d 
 
 
- dictionary file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/ceav512.dictionary
- mass file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/Standard_data/mass_rmd.mas95
- Q fission directory : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/Qfission
- electron cross section directory : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon
- abondance file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/Standard_data/abundance
- own evaluations directory : /home/tri4test/evals/testj
+ dictionary file : ceav512.dictionary
+ mass file : mass_rmd.mas95
+ Q fission directory : Qfission
+ electron cross section directory : Electron_Photon
+ abondance file : abundance
+ own evaluations directory : testj
  Warning: using format for dictionary with five columns: information on reading or computing the Q-values for energy deposition is provided
 
   initializing geometry tables
@@ -191,73 +191,73 @@ END_SIMULATION
  data reading time (s): 0
 -- NJOY file format for evaluations --
 
- reading material : 4000 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.Zr90.bcd
+ reading material : 4000 from  file : jeff311.gamma.Zr90.bcd
 
 
- reading electron data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eedl.electron.Zr.bcd
+ reading electron data from file : eedl.electron.Zr.bcd
 
 
- reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br40
+ reading bremsstrahlung data from file: br40
 
 
- reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br40
+ reading bremsstrahlung data from file: br40
 
 
- reading atomic relaxation data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eadl.atom.Zr.bcd
+ reading atomic relaxation data from file : eadl.atom.Zr.bcd
 
 
- reading material : 800 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.O16.bcd
+ reading material : 800 from  file : jeff311.gamma.O16.bcd
 
 
- reading electron data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eedl.electron.O.bcd
+ reading electron data from file : eedl.electron.O.bcd
 
 
- reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br8
+ reading bremsstrahlung data from file: br8
 
 
- reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br8
+ reading bremsstrahlung data from file: br8
 
 
- reading atomic relaxation data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eadl.atom.O.bcd
+ reading atomic relaxation data from file : eadl.atom.O.bcd
 
 
- reading material : 100 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.H1_H2O.bcd
+ reading material : 100 from  file : jeff311.gamma.H1_H2O.bcd
 
 
- reading electron data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eedl.electron.H.bcd
+ reading electron data from file : eedl.electron.H.bcd
 
 
- reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br1
+ reading bremsstrahlung data from file: br1
 
 
- reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br1
+ reading bremsstrahlung data from file: br1
 
 
- reading atomic relaxation data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eadl.atom.H.bcd
+ reading atomic relaxation data from file : eadl.atom.H.bcd
 
 
- reading material : 800 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.O16.bcd
+ reading material : 800 from  file : jeff311.gamma.O16.bcd
 
- reading material : 9200 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.U238.bcd
-
-
- reading electron data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eedl.electron.U.bcd
+ reading material : 9200 from  file : jeff311.gamma.U238.bcd
 
 
- reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br92
+ reading electron data from file : eedl.electron.U.bcd
 
 
- reading bremsstrahlung data from file: /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/br92
+ reading bremsstrahlung data from file: br92
 
 
- reading atomic relaxation data from file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/PEID/Electron_Photon/eadl.atom.U.bcd
+ reading bremsstrahlung data from file: br92
 
 
- reading material : 9200 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.U235.bcd
+ reading atomic relaxation data from file : eadl.atom.U.bcd
 
- reading material : 9200 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.U234.bcd
 
- reading material : 800 from  file : /data/tmplepp/tri4dev/GALILEE-V0/GALILEE-V0-3.0-brems/CEAV512/T4XS-PCT/jeff311.gamma.O16.bcd
+ reading material : 9200 from  file : jeff311.gamma.U235.bcd
+
+ reading material : 9200 from  file : jeff311.gamma.U234.bcd
+
+ reading material : 800 from  file : jeff311.gamma.O16.bcd
 
  Total concentration of material GAINC (1.E24at/cm3) is: 1.930000e-02
 

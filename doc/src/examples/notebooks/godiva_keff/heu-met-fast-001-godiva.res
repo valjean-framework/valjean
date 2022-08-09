@@ -1,13 +1,13 @@
 
 =====================================================================
 $Id$
- hostname: is232540
+ hostname: 
  pid: 361
 
 =====================================================================
 $Id$
 
- HOSTNAME : is232540
+ HOSTNAME : 
 
  PROCESS ID is : 361
 
@@ -20,16 +20,16 @@ $Id$
 =====================================================================
 
  data filename = heu-met-fast-001-godiva.t4
- catalogname = /home/tripoli4.11/tripoli4.11.1/Env/t4path.ceav512
- execution call = tripoli4 -s NJOY -a -c /home/tripoli4.11/tripoli4.11.1/Env/t4path.ceav512 -d heu-met-fast-001-godiva.t4 -o heu-met-fast-001-godiva.res 
+ catalogname = t4path.ceav512
+ execution call = tripoli4 -s NJOY -a -c t4path.ceav512 -d heu-met-fast-001-godiva.t4 -o heu-met-fast-001-godiva.res 
 
 
- dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
- mass file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
- Q fission directory : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/Qfission
- electron cross section directory : /data/tmpuranus2/GALILEE-V0-3.0/PEID/Electron_Photon
- electron bremsstrahlung cross section directory : /home/tripoli4.11/tripoli4.11.1/AdditionalData/Bremsstrahlung
- abondance file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/abundance
+ dictionary file : ceav512.dictionary
+ mass file : mass_rmd.mas95
+ Q fission directory : Qfission
+ electron cross section directory : Electron_Photon
+ electron bremsstrahlung cross section directory : Bremsstrahlung
+ abondance file : abundance
  own evaluations directory : 
 
 

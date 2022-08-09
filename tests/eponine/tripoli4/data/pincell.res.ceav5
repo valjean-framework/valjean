@@ -3,13 +3,13 @@
 
 =====================================================================
 $Id$
- hostname: is240409
+ hostname: 
  pid: 2656643
 
 =====================================================================
 $Id$
 
- HOSTNAME : is240409
+ HOSTNAME : 
 
  PROCESS ID is : 2656643
 
@@ -22,16 +22,16 @@ $Id$
 =====================================================================
 
  data filename = pincell_L_2.d
- catalogname = /home/catA/aj256514/projets/tripoli/t4path.ceav512
- execution call = tripoli4 -a -u -s NJOY -c /home/catA/aj256514/projets/tripoli/t4path.ceav512 -d pincell_L_2.d 
+ catalogname = t4path.ceav512
+ execution call = tripoli4 -a -u -s NJOY -c t4path.ceav512 -d pincell_L_2.d 
 
 
- dictionary file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
- mass file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
- Q fission directory : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/Qfission
- electron cross section directory : /home/tripoli4/GALILEE/GALILEE-V0-3.0/PEID/Electron_Photon
- electron bremsstrahlung cross section directory : /home/tripoli4/tripoli4.11/tripoli4.11.0/AdditionalData/Bremsstrahlung
- abondance file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/Standard_data/abundance
+ dictionary file : ceav512.dictionary
+ mass file : mass_rmd.mas95
+ Q fission directory : Qfission
+ electron cross section directory : Electron_Photon
+ electron bremsstrahlung cross section directory : Bremsstrahlung
+ abondance file : abundance
  own evaluations directory : 
  Warning: using format for dictionary with five columns: information on reading or computing the Q-values for energy deposition is provided
 
@@ -191,21 +191,21 @@ FIN_SIMULATION
  data reading time (s): 0
 -- NJOY file format for evaluations --
 
- reading material : 125 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.H1.bcd
+ reading material : 125 at 624K from  file : jeff311.neutron.H1.bcd
 
- reading material : 825 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.O16.bcd
+ reading material : 825 at 624K from  file : jeff311.neutron.O16.bcd
 
- reading material : 525 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.B10.bcd
+ reading material : 525 at 624K from  file : jeff311.neutron.B10.bcd
 
- reading material : 528 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.B11.bcd
+ reading material : 528 at 624K from  file : jeff311.neutron.B11.bcd
 
- reading material : 4028 at 624K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.Zr91.bcd
+ reading material : 4028 at 624K from  file : jeff311.neutron.Zr91.bcd
 
- reading material : 9228 at 924K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.U235.bcd
+ reading material : 9228 at 924K from  file : jeff311.neutron.U235.bcd
 
- reading material : 9237 at 924K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.U238.bcd
+ reading material : 9237 at 924K from  file : jeff311.neutron.U238.bcd
 
- reading material : 825 at 924K from  file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/T4XS-PCT/jeff311.neutron.O16.bcd
+ reading material : 825 at 924K from  file : jeff311.neutron.O16.bcd
 
  Total concentration of material BUFFER (1.E24at/cm3) is: 6.972708e-02
 

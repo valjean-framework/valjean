@@ -8,9 +8,7 @@ class LivermoreExps():
     in fortran tests.
     '''
 
-    def __init__(self, path=("/data/tmplepp/el220326/QualTassadit/RC1/"
-                             "MONO/qualtrip_main/elem/post_processing_main/"
-                             "s10a11.res.mesure")):
+    def __init__(self, path):
         self.fname = path
         self.res = {}
         self.read_results()

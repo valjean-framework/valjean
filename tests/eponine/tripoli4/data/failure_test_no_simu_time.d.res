@@ -1,13 +1,13 @@
 
 =====================================================================
-$Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
- hostname: is232540
+$Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27  Exp $
+ hostname: 
  pid: 10170
 
 =====================================================================
-$Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
+$Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27  Exp $
 
- HOSTNAME : is232540
+ HOSTNAME : 
 
  PROCESS ID is : 10170
 
@@ -18,15 +18,15 @@ $Id: t4main.cc,v 2.117.2.6 2018/09/21 14:06:27 tv232747 Exp $
 =====================================================================
 
  data filename = failure_test_no_simu_time.d
- catalogname = ../spheresLivermore/Env/sblink_t4path.ceav5
- execution call = tripoli4 -a -u -s NJOY -d failure_test_no_simu_time.d -c ../spheresLivermore/Env/sblink_t4path.ceav5 -o failure_test_no_simu_time.d.res 
+ catalogname = sblink_t4path.ceav5
+ execution call = tripoli4 -a -u -s NJOY -d failure_test_no_simu_time.d -c sblink_t4path.ceav5 -o failure_test_no_simu_time.d.res 
 
 
- dictionary file : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
- mass file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
- Q fission directory : /data/tmpuranus2/GALILEE-V0-3.0/CEAV512/Qfission
- electron cross section  directory : /data/tmpuranus2/GALILEE-V0-3.0/PEID/Electron_Photon
- abondance file : /data/tmpuranus2/GALILEE-V0-3.0/Standard_data/abundance
+ dictionary file : ceav512.dictionary
+ mass file : mass_rmd.mas95
+ Q fission directory : Qfission
+ electron cross section  directory : Electron_Photon
+ abondance file : abundance
  own evaluations directory : 
 
 

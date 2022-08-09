@@ -1,13 +1,13 @@
 
 =====================================================================
 $Id$
- hostname: is232540.intra.cea.fr
+ hostname: 
  pid: 4203
 
 =====================================================================
 $Id$
 
- HOSTNAME : is232540.intra.cea.fr
+ HOSTNAME : 
 
  PROCESS ID is : 4203
 
@@ -20,16 +20,16 @@ $Id$
 =====================================================================
 
  data filename = box_dyn.t4
- catalogname = /home/tripoli4/tripoli4.11/tripoli4.11.1/Env/t4path.ceav512
- execution call = tripoli4 -c /home/tripoli4/tripoli4.11/tripoli4.11.1/Env/t4path.ceav512 -s NJOY -a -d box_dyn.t4 -o box_dyn.res 
+ catalogname = t4path.ceav512
+ execution call = tripoli4 -c t4path.ceav512 -s NJOY -a -d box_dyn.t4 -o box_dyn.res 
 
 
- dictionary file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/ceav512.dictionary
- mass file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/Standard_data/mass_rmd.mas95
- Q fission directory : /home/tripoli4/GALILEE/GALILEE-V0-3.0/CEAV512/Qfission
- electron cross section directory : /home/tripoli4/GALILEE/GALILEE-V0-3.0/PEID/Electron_Photon
- electron bremsstrahlung cross section directory : /home/tripoli4/tripoli4.11/tripoli4.11.1/AdditionalData/Bremsstrahlung
- abondance file : /home/tripoli4/GALILEE/GALILEE-V0-3.0/Standard_data/abundance
+ dictionary file : ceav512.dictionary
+ mass file : mass_rmd.mas95
+ Q fission directory : Qfission
+ electron cross section directory : Electron_Photon
+ electron bremsstrahlung cross section directory : Bremsstrahlung
+ abondance file : abundance
  own evaluations directory : 
 
   reading geometry : 
