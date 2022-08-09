@@ -2212,6 +2212,12 @@ def convert_sensitivities(res):
     lres = res['sensit_res']
     thelist = []
     for ires in lres:
+        if 'reaction_rate' in ires:
+            resdict = {'used_batches_res': res['used_batches']}
+            resdict['reaction_rate_ratio_res'] = ires['reaction_rate'].asDict()
+            resdict['sensitivity_ref'] = 'reaction_rate_ratio'
+            thelist.append(resdict)
+            continue
         itype = ''.join(ires['sensitivity_type'])
         for iindex in ires['res']:
             sensidb = SensitivityDictBuilder(

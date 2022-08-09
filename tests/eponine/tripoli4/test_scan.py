@@ -489,8 +489,8 @@ def test_ifp(datadir):
     assert t4p.scan_res.times['initialization_time'] == 1
     t4_res = t4p.parse_from_index(-1)
     assert t4_res.res['batch_data']['batch_number'] == 200
-    assert max([v['response_index']
-                for v in t4_res.res['list_responses']]) + 1 == 22
+    assert max(v['response_index']
+               for v in t4_res.res['list_responses']) + 1 == 22
     assert len(t4_res.res['list_responses']) == 198
     last_presp = t4_res.pres['list_responses'][-1]
     assert (last_presp['response_function']
@@ -744,7 +744,8 @@ def test_pertu(datadir):
         'perturbation_index', 'perturbation_method', 'perturbation_rank',
         'perturbation_type', 'response_function', 'response_index',
         'response_type', 'score_index', 'scoring_mode', 'scoring_zone_id',
-        'scoring_zone_type', 'scoring_zone_volsurf']
+        'scoring_zone_type', 'scoring_zone_volsurf',
+        'scoring_zone_volsurf_unit']
     pertu_vol2 = t4rb.select_by(scoring_zone_id=2,
                                 include=('perturbation_rank',))
     assert pertu_vol2['response_index'] == 0
