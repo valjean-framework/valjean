@@ -8,7 +8,7 @@ Installing :mod:`valjean`
 .. _pyparsing: https://pythonhosted.org/pyparsing
 .. _pip: https://pip.pypa.io/en/stable
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
-.. _anaconda: https://www.anaconda.com/products/individual
+.. _anaconda: https://www.anaconda.com/products/distribution
 .. _jupyter: https://docs.jupyter.org/en/latest/
 .. _h5py: https://docs.h5py.org/en/stable/
 
