@@ -1,5 +1,5 @@
 # Copyright French Alternative Energies and Atomic Energy Commission
-# Contributors: Ève le Ménédeu, Davide Mancusi (2021)
+# Contributors: valjean developers
 # eve.le-menedeu@cea.fr, davide.mancusi@cea.fr
 #
 # This software is a computer program whose purpose is to analyze and

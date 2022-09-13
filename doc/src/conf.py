@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright French Alternative Energies and Atomic Energy Commission
-# Contributors: Ève le Ménédeu, Davide Mancusi (2021)
-# eve.le-menedeu@cea.fr, davide.mancusi@cea.fr
+# Contributors: valjean developers
+# valjean-support@cea.fr
 #
 # This software is a computer program whose purpose is to analyze and
 # post-process numerical simulation results.
@@ -74,7 +74,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-author = u'Ève Le Ménédeu, Davide Mancusi'
+author = u'valjean developers'
 copyright = f'2017-{datetime.now().year}, {author}'
 project = 'valjean'
 release = get_distribution(project).version

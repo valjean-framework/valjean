@@ -1,6 +1,6 @@
 package:
   name: "valjean"
-  author: "Eve Le Ménédeu, Davide Mancusi"
+  author: "valjean developers"
   version: {{ GIT_DESCRIBE_TAG }}
 
 source:
