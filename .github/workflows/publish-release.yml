@@ -1,8 +1,8 @@
 name: Upload Python Package
 
-on:
-  release:
-    types: [published]
+on: [push]
+#  release:
+#    types: [published]
 
 permissions:
   contents: read
@@ -18,7 +18,7 @@ jobs:
       uses: pypa/gh-action-pypi-publish@v1.5.1
       with:
         # Password for your PyPI user or an access token
-        password: ${{ secrets.PYPI_UPLOAD_TOKEN }}
+        password: asdasd #${{ secrets.PYPI_UPLOAD_TOKEN }}
         # Show verbose output.
         verbose: true
         # Show hash values of files to be uploaded
