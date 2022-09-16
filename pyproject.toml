@@ -61,13 +61,16 @@ exclude = ["**/.gitignore", "doc", "tests"]
 valjean = "valjean.cambronne.main:main"
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = "^3.6.2"
 pyparsing = "^3.0"
 toml = "^0.10"
-numpy = "^1.19"
+numpy = [{version = "^1.19", python = "~3.6.2"},
+         {version = "^1.20", python = "^3.7"}]
 matplotlib = "^3.3"
-scipy = "^1.5"
-h5py = "~3.1"
+scipy = [{version = "^1.5", python = "~3.6.2"},
+         {version = "^1.6", python = "^3.7"}]
+h5py = [{version = "~3.1", python = "~3.6.2"},
+        {version = "^3.2", python = "^3.7"}]
 
 # dependencies for the [graphviz] extra
 pydot = {version = "^1.4.2", optional = true}
@@ -78,14 +81,18 @@ pytest-cov = "^3.0"
 pytest-mpl = "^0.13"
 pytest-timeout = "^2.0"
 rstcheck = "^3.3"
-Sphinx = "^4.3"
+Sphinx = [{version = "~4.0", python = ">=3.6.2,<3.8"},
+          {version = "^5.0,<5.2", python = ">=3.8"},]
 sphinx-rtd-theme = "^1.0"
 pylint = "^2.12"
-flake8 = "^4.0"
-hypothesis = {version = "^6.31", extras = ["numpy"]}
+flake8 = [{version = "~4.0", python = ">=3.6.2,<3.8"},
+          {version = "^5.0", python = ">=3.8"}]
+hypothesis = [{version = "^6.31", extras = ["numpy"], python = "~3.6.2"},
+              {version = "^6.55", extras = ["numpy"], python = "^3.7"}]
 nbsphinx = "^0.8"
 jupyter-client = "^7.1"
 ipykernel = "^5.5"
+ipython = "!=8.7.0"
 
 [tool.poetry.extras]
 graphviz = ["pydot"]
@@ -103,6 +110,7 @@ dev = [
   "nbsphinx",
   "jupyter-client",
   "ipykernel",
+  "ipython"
 ]
 
 [tool.pytest.ini_options]
@@ -161,19 +169,18 @@ legacy_tox_ini = """
 minversion = 3.17.0
 # isolated_build is required by poetry
 isolated_build = true
-envlist = py{36,37,38,39}
+envlist = py{36,37,38,39,310}
 
 [tox:jenkins]
 skip_missing_interpreters = true
 
 [testenv]
-whitelist_externals = poetry
 setenv =
         COVERAGE_FILE=.coverage.{envname}
 description = invoke pytest with coverage, XML output and mpl
 extras = graphviz
-commands = poetry install -v -E graphviz -E dev --no-root
-           poetry run pytest --basetemp="{toxworkdir}/tmp-{envname}" \
+commands = pip install -e .[dev,graphviz]
+           pytest --basetemp="{toxworkdir}/tmp-{envname}" \
                 --durations=20 --cov-report term-missing \
                 --cov-config "{toxinidir}/.coveragerc" \
                 --cov-report=xml:"{toxworkdir}/coverage-{envname}.xml" \
@@ -182,36 +189,38 @@ commands = poetry install -v -E graphviz -E dev --no-root
                 --mpl-results-path="{toxworkdir}/{envname}/mpl_image_compare" \
                 --timeout=30 {posargs}
 
-[testenv:py39]
+[testenv:py310]
 passenv = PYTHONPATH
 
-[testenv:docs-py39]
+[testenv:docs-py310]
 description = invoke sphinx-build to build the HTML docs
 # be nitpicky on the HTML documentation
-commands = poetry install -v --no-root -E dev
-           poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E \
+passenv = HOME
+commands = pip install -e .[dev]
+           sphinx-build -d "{toxworkdir}/docs_doctree" -n -E \
                 --keep-going -b html -w "{toxworkdir}/sphinx-html-notags.out" \
                 -t no_notebooks "{toxinidir}/doc/src" \
                 "{toxworkdir}/doc/html-notags"
-           poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -n -E -W \
+           sphinx-build -d "{toxworkdir}/docs_doctree" -n -E -W \
                 --keep-going -b html -w "{toxworkdir}/sphinx-html.out" \
                 -t tests "{toxinidir}/doc/src" \
                 "{toxworkdir}/doc/html"
-           poetry run sphinx-build -d "{toxworkdir}/docs_doctree" -W \
+           sphinx-build -d "{toxworkdir}/docs_doctree" -W \
                 --keep-going -b linkcheck -t tests \
                 "{toxinidir}/doc/src" "{toxworkdir}/doc/linkcheck"
 
-[testenv:linting-py39]
+[testenv:linting-py310]
 description = invoke pylint and flake8 on the source package
-commands = poetry install -v --no-root -E dev
-           poetry run pylint -f parseable --exit-zero \
+commands = pip install -e .[dev]
+           pylint -f parseable --exit-zero \
                 --rcfile "{toxinidir}/pyproject.toml" {posargs}
-           poetry run flake8 --config "{toxinidir}/.flake8" \
+           flake8 --config "{toxinidir}/.flake8" \
                 --exit-zero {posargs}
 
-[testenv:parsing-py39]
+[testenv:parsing-py310]
 description = invoke pytest on the nightly parsing tests
 passenv =
+        PYTHONPATH
         VALJEAN_NIGHTLY_JET4_MONO_PATH
         VALJEAN_NIGHTLY_JET4_PARA_PATH
         VALJEAN_NIGHTLY_JET4_EVOL_PATH
@@ -221,8 +230,8 @@ passenv =
         VALJEAN_NIGHTLY_V12_0_PATH
         VALJEAN_NIGHTLY_AP3_RATES_PATH
 extras = graphviz
-commands = poetry install -v --no-root -E dev
-           poetry run pytest --runslow --cov-report term-missing \
+commands = pip install -e .[dev]
+           pytest --runslow --cov-report term-missing \
                 --durations=20 --cov-config "{toxinidir}/.coveragerc" \
                 --cov=valjean --mpl \
                 --mpl-results-path="{toxworkdir}/{envname}/mpl_image_compare" \

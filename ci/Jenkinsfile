@@ -57,8 +57,9 @@ pipeline {
            source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
            python3 -m venv "${TOX_VENV}"
            source "${TOX_VENV}/bin/activate"
+           python3 --version
            python3 -m pip install --upgrade pip setuptools wheel
-           python3 -m pip install tox 'poetry<1.2.0'
+           python3 -m pip install tox
            """
       }
     }
@@ -70,7 +71,7 @@ pipeline {
             sh """#!/bin/bash
                source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
                source "${TOX_VENV}/bin/activate"
-               ${TOX} -e docs-py39
+               ${TOX} -e docs-py310
                 """
           }
         }
@@ -84,7 +85,7 @@ pipeline {
             sh """#!/bin/bash
                source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
                source "${TOX_VENV}/bin/activate"
-               ${TOX} -e linting-py39 valjean/ tests/ | tee "${REPORTS}/linting.out"
+               ${TOX} -e linting-py310 -- valjean/ tests/ | tee "${REPORTS}/linting.out"
                """
           }
         }
@@ -97,7 +98,7 @@ pipeline {
           sh """#!/bin/bash
              source "${SRC}/ci/spack-python.sh" "${env.VALJEAN_SPACK_ROOT}"
              source "${TOX_VENV}/bin/activate"
-             TOX_PARALLEL_NO_SPINNER=1 ${TOX} --parallel 4 -- valjean/ tests/ | tee "${REPORTS}/testing.out"
+             ${TOX} --parallel 5 --parallel-no-spinner -- valjean/ tests/ | tee "${REPORTS}/testing.out"
              """
         }
       }
@@ -122,10 +123,10 @@ pipeline {
                     sourceDirectory: "${SRC_REL}",
                     tool: sphinxBuild(name: 'Sphinx-build errors without notebooks and tests', pattern: "${REPORTS_REL}/sphinx-html-notags.out", reportEncoding: 'UTF-8', id: 'sphinx-notags'),
                     filters: [excludeFile('examples.rst'), excludeMessage("""toctree glob pattern 'notebooks/\\*/\\*' didn't match any documents""")])
-      cobertura (autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: "${REPORTS_REL}/coverage-*.xml",
+            cobertura (autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: "${REPORTS_REL}/coverage-*.xml",
                  failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false,
                  sourceEncoding: 'UTF_8', zoomCoverageChart: false)
-      junit "${REPORTS_REL}/pytest-*.xml"
+            junit "${REPORTS_REL}/pytest-*.xml"
     }
   }
 }

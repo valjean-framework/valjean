@@ -2,7 +2,7 @@ pipeline {
   options {
     skipDefaultCheckout()
     timestamps()
-    timeout(time: 2, unit: 'HOURS')
+    timeout(time: 3, unit: 'HOURS')
   }
 
   agent { label 'valjean' }
@@ -48,7 +48,7 @@ pipeline {
         python3 -m venv "${TOX_VENV}"
         source "${TOX_VENV}/bin/activate"
         python3 -m pip install --upgrade pip setuptools wheel
-        python3 -m pip install tox 'poetry<1.2.0'
+        python3 -m pip install tox
         """
       }
     }
@@ -63,7 +63,7 @@ pipeline {
                for script in "${NIGHTLIES}"/scripts/tripoli4/valjean_nightly*.py; do
                  script_base=\$(basename \${script})
                  echo "Running tests for \${script_base}"
-                 ${TOX} -e parsing-py39 -- --parsing-config-file-t4="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
+                 ${TOX} -e parsing-py310 -- --parsing-config-file-t4="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
                done
                """
           }
@@ -81,13 +81,13 @@ pipeline {
                for script in "${NIGHTLIES}"/scripts/apollo3/valjean_nightly*.py; do
                  script_base=\$(basename \${script})
                  echo "Running tests for \${script_base}"
-                 ${TOX} -e parsing-py39 -- --parsing-config-file-ap3="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
+                 ${TOX} -e parsing-py310 -- --parsing-config-file-ap3="\${script}" --junit-prefix="\${script_base}" --junit-xml="${REPORTS}/pytest-\${script_base}.xml" --cov-report=xml:"${REPORTS}/coverage-\${script_base}.xml" | tee "${REPORTS}/testing-\${script_base}.out"
                done
                """
           }
         }
       }
-    }   
+    }
   }
   post {
     always {
