@@ -70,8 +70,11 @@ designed for reaction rates, which is structured as follows:
     │            └─ geometry_idNGEO ┄
     │
     ├─ output_id1 ─┬─ totaloutput ─┬─ KEFF (float)
+    │              │               ├─ (KINF (float))
     │              │               ├─ (ABSORPTION[NG])
+    │              │               ├─ (CURRENT[NG])
     │              │               ├─ (FLUX[NG])
+    │              │               ├─ (MIGRATIONAREA (float))
     │              │               ├─ (PRODUCTION[NG])
     │              │               ├─ (NVAL)
     │              │               ├─ (LOCALVALUE[NVAL])
@@ -118,7 +121,7 @@ later for normalisation for example. Most physics quantities are given on
 ``NG`` energy groups but the group bounds are not stored in the file. Some
 quantities are given as a function of energy groups and anisotropy. The order
 of the anisotropy development is available in the ``'info'`` group, possibly in
-the ``'isotope_id`` one. Current and surfacic flux (under ``'totaloutput'``
+the ``'isotope_id`` one. Current and surfacic flux (under ``'totaloutput'``)
 have a ``surface id`` component in addition to energy groups.
 
 Some files can also contain custom values or user values, especially in some
@@ -368,7 +371,6 @@ def extract_user_values(val, error):
     locval = 'localvalue'
     lkeys = [e.decode('UTF-8').strip()
              for e in val[locval]['LOCALNAME'][...]]
-    print('local value')
     rlist = [{'result_name': k,
               'results': hdfdataset_to_dataset(val[locval][k], k, error)}
              for k in lkeys]
@@ -487,7 +489,7 @@ def make_bins(nres, vres, ngroups, anisotropies=None, nsurfaces=None):
     :rtype: dict
     :returns: dictionary of all possible number of bins
     '''
-    if nres in ('KEFF', 'KINF'):
+    if nres in ('KEFF', 'KINF', 'MIGRATIONAREA'):
         return None
     data = vres[...]
     if ngroups == data.size:
