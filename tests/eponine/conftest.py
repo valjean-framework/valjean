@@ -36,12 +36,13 @@ import os
 import sys
 import numpy as np
 import string
+import pathlib
+import itertools
 from hypothesis import note
 from hypothesis.strategies import (lists, floats, composite, just, booleans,
                                    integers, text, none, one_of)
 from hypothesis.extra.numpy import arrays, array_shapes, floating_dtypes
 from collections import OrderedDict
-from glob import glob
 
 from ..context import valjean  # pylint: disable=unused-import
 from valjean.eponine.dataset import Dataset
@@ -331,10 +332,10 @@ def parsing_match(request):
 def skip_parsing_files(vv_folder, parsing_exclude, parsing_match):
     '''Skip excluded files or not matching ones for parsing tests.'''
     if parsing_exclude:
-        if any(pat in vv_folder for pat in parsing_exclude.split(',')):
+        if any(pat in str(vv_folder) for pat in parsing_exclude.split(',')):
             pytest.skip(str(parsing_exclude)+" excluded")
     if parsing_match:
-        if not any(pat in vv_folder for pat in parsing_match.split(',')):
+        if not any(pat in str(vv_folder) for pat in parsing_match.split(',')):
             pytest.skip("No matching with '"+str(parsing_match)+"' found")
 
 
@@ -349,7 +350,8 @@ def pytest_generate_tests(metafunc):
     per folder required for comparison simplicity.
     '''
     slow_parsing_test = {"test_listing_parsing": "--parsing-config-file-t4",
-                         "test_apollo3_hdf": "--parsing-config-file-ap3"}
+                         "test_apollo3_hdf": "--parsing-config-file-ap3",
+                         "test_depletion_files": "--parsing-config-file-t4"}
     parsing_conf = slow_parsing_test.get(metafunc.function.__name__)
     if parsing_conf is None:
         return
@@ -365,17 +367,23 @@ def pytest_generate_tests(metafunc):
         except ModuleNotFoundError:
             LOGGER.error('Cannot find config file %s', cfile)
             sys.exit(1)
+        if (metafunc.function.__name__ == "test_depletion_files"
+                and not hasattr(config, "EVOL_FOLDERS")):
+            metafunc.parametrize('vv_params', list_params, ids=ids)
+            return
         if config.PER_FILE:
             for fold in config.ALL_FOLDERS:
-                tfiles = sorted(glob(
-                    os.path.join(config.PATH, fold, config.OUTPUTS,
-                                 '*.'+config.END_FILES)))
+                path = pathlib.Path(config.PATH) / fold / config.OUTPUTS
+                tfiles = sorted(itertools.chain.from_iterable(
+                    list(path.glob(f"{x.name}/*.res.{x.name}"))
+                    for x in path.iterdir() if x.is_dir()))
                 for fil in tfiles:
                     list_params.append((fil, config))
                     ids.append(os.path.join(config.__name__, fold,
-                                            os.path.basename(fil)))
+                                            fil.name))
         else:
-            list_params.extend((x, config) for x in config.ALL_FOLDERS)
+            list_params.extend((pathlib.Path(x), config)
+                               for x in config.ALL_FOLDERS)
     if not ids:
-        ids = list(config.__name__ + '/' + x for x, config in list_params)
+        ids = list(f"{config.__name__}/{x}" for x, config in list_params)
     metafunc.parametrize('vv_params', list_params, ids=ids)

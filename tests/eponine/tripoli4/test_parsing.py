@@ -56,9 +56,10 @@ Expected variables in the configuration file are:
                                   number of jobs that failed,
                                   number of files excluded from strings)
 '''
-import os
-from glob import glob
+import itertools
+import pathlib
 import logging
+from collections import namedtuple
 import pytest
 from valjean.eponine.dataset import Dataset
 from valjean.eponine.tripoli4.parse import Parser, ParserException
@@ -66,19 +67,20 @@ from ...context import valjean  # noqa: F401, pylint: disable=unused-import
 from ..conftest import skip_parsing_files, skip_excluded_files
 
 
-def result_test(t4pres):
+def result_test(t4pres, norm_end):
     '''Test content of the parsing result: presence of times, ``'results'`` key
     if ``'list_responses'`` is found in the parsing result.
 
     :param res: ParseResult
+    :param bool norm_end: if normal end is expected and checked should be True,
+        else False
 
-    :retrns: bool if time was found (but should always happen as there is an
-             assert before)
+    :returns: bool if time was found (but should always happen as there is an
+        assert before)
     '''
     # get last result (default returns list if more than one batch required)
     # elapsed_time needed for cases with PARTIAL EDITION (not correct end)
     assert any("_time" in s for s in t4pres.res['batch_data'].keys())
-    print("keys =", list(t4pres.res.keys()))
     if 'list_responses' in t4pres.res.keys():
         lresp = t4pres.res['list_responses']
         assert isinstance(lresp, list)
@@ -86,7 +88,9 @@ def result_test(t4pres):
             assert 'results' in resp
             assert isinstance(resp['results'], dict)
             assert isinstance(resp['response_type'], str)
-    return t4pres.res['run_data']['normal_end']
+    if norm_end:
+        return t4pres.res['run_data']['normal_end']
+    return True
 
 
 def check_data(responses):
@@ -133,11 +137,13 @@ def browser_test(res):
         check_data(t4rb.content)
 
 
-def loop_on_files(filelist):
+def loop_on_files(filelist, norm_end=True):
     '''Perform the loop over the file list, parse all of them and returns
     result of this parsing.
 
     :param list filelist: list of paths to the files to be read and parsed
+    :param bool norm_end: if normal end is expected and checked should be True,
+        else False, default: True
     :returns: a tuple containing
 
              * **nb_jdds_ok**, `int`: number of jdds correctly parsed
@@ -150,7 +156,8 @@ def loop_on_files(filelist):
         print("Reading:", ifile)
         try:
             res = Parser(ifile)
-        except ParserException:
+        except ParserException as pex:
+            print(f"ParserException: {pex} (probably in scan)")
             failed_jdds.append(ifile)
             continue
         if not res.check_times():
@@ -158,10 +165,11 @@ def loop_on_files(filelist):
             failed_time_jdds.append(ifile)
         try:
             pres = res.parse_from_index(-1)
-        except ParserException:
+        except ParserException as pex:
+            print(f"ParserException: {pex}")
             failed_jdds.append(ifile)
             continue
-        if result_test(pres):
+        if result_test(pres, norm_end):
             nb_jdds_ok += 1
         else:
             failed_jdds.append(ifile)
@@ -183,18 +191,85 @@ def print_summary(nb_used, excluded, summary):
     print("Jdds well passed:", summary['jdds_ok'], "/", nb_used)
     print("Failed jdds:")
     for ifile in summary['failed_jdds']:
-        print(ifile)
+        print(str(ifile))
     print("Excluded files:")
     for ifile in excluded:
-        print(ifile)
+        print(str(ifile))
     if summary['failed_time']:
         print(f"Jdds where times check failed: {len(summary['failed_time'])}")
         for ifile in summary['failed_time']:
-            print(ifile)
+            print(str(ifile))
     if summary['failed_browser']:
         print(f"Jdds where browser failed: {len(summary['failed_browser'])}")
         for ifile in summary['failed_browser']:
-            print(ifile)
+            print(str(ifile))
+
+
+Params = namedtuple('Params', ['used_files', 'excluded_files',
+                               'category', 'mode', 'norm_end'])
+
+
+def params_by_file(path):
+    '''Returns parameters (files to use, excluded ones, category, mode, ...)
+    for listings read by files (1 test by file).
+
+    :param pathlib.Path path: path to file
+    :rType: Params
+    '''
+    params = Params(used_files=[path], excluded_files=[],
+                    category=path.parts[-4], mode=path.parts[-6],
+                    norm_end=True)
+    return params
+
+
+def params_evol(path, excluded_patterns):
+    '''Returns parameters (files to use, excluded ones, category, mode, ...)
+    for depletion listings.
+
+    :param pathlib.Path path: path to folder
+    :param list excluded_patterns: list of excluded patterns
+    :rType: Params
+    '''
+    cases = [x for x in path.iterdir() if x.is_dir()]
+    excl_cases = [case for case in cases
+                  if any(pat in case.name for pat in excluded_patterns)]
+    used_cases = list(filter(lambda x: x not in excl_cases, cases))
+    all_files = []
+    for case in used_cases:
+        max_res = max(int(x.name.split('_')[-1])
+                      for x in (path/case.name).iterdir()
+                      if x.is_dir() and '_' in x.name)
+        all_files.extend((path/case.name/f"result_{max_res}").glob("*t4*"))
+    used_files = all_files
+    params = Params(used_files=used_files, excluded_files=excl_cases,
+                    category=all_files[0].parts[-5],
+                    mode=all_files[0].parts[-7],
+                    norm_end=False)
+    return params
+
+
+def params_by_folder(path, excluded_patterns, excluded_strings):
+    '''Returns parameters (files to use, excluded ones, category, mode, ...)
+    for listings read by folder.
+
+    :param pathlib.Path path: path to folder
+    :param list excluded_patterns: list of excluded patterns
+    :param list excluded_strings: list of excluded strings
+    :rType: Params
+    '''
+    all_files = sorted(itertools.chain.from_iterable(
+        list(path.glob(f"{x.name}/*.res.{x.name}"))
+        for x in path.iterdir() if x.is_dir()))
+    excluded_files = [fil for fil in all_files
+                      if any(pat in fil.name for pat in excluded_patterns)]
+    used_files = list(filter(lambda x: x not in excluded_files, all_files))
+    excluded_files = [fil for fil in excluded_files
+                      if not any(pat in fil.name for pat in excluded_strings)]
+    params = Params(used_files=used_files, excluded_files=excluded_files,
+                    category=all_files[0].parts[-4],
+                    mode=all_files[0].parts[-6],
+                    norm_end=True)
+    return params
 
 
 @pytest.mark.slow
@@ -214,35 +289,30 @@ def test_listing_parsing(caplog, vv_params, parsing_exclude, parsing_match):
     caplog.set_level(logging.WARNING, logger='valjean')
     vv_folder, vv_file = vv_params
     skip_parsing_files(vv_folder, parsing_exclude, parsing_match)
-    folder = (os.path.dirname(vv_folder) if vv_file.PER_FILE
-              else os.path.join(vv_file.PATH, vv_folder, vv_file.OUTPUTS))
+    folder = (vv_folder.parent if vv_file.PER_FILE
+              else pathlib.Path(vv_file.PATH) / vv_folder / vv_file.OUTPUTS)
     excluded_patterns = (
         vv_file.EXCLUDED_STRINGS_MONO + vv_file.EXCLUDED_STRINGS
-        if vv_file.MONO in folder
+        if vv_file.MONO in folder.parts
         else vv_file.EXCLUDED_STRINGS_PARA + vv_file.EXCLUDED_STRINGS)
     if vv_file.PER_FILE:
         skip_excluded_files(vv_folder, excluded_patterns)
-        used_files = [vv_folder]
-        excluded_files = []
+        params = params_by_file(vv_folder)
     else:
-        all_files = sorted(glob(os.path.join(folder, "*."+vv_file.END_FILES)))
-        excluded_files = [fil for fil in all_files
-                          if any(pat in fil for pat in excluded_patterns)]
-        used_files = list(filter(lambda x: x not in excluded_files, all_files))
-        excluded_files = [
-            fil for fil in excluded_files
-            if not any(pat in fil for pat in vv_file.EXCLUDED_STRINGS)]
-    summary = loop_on_files(used_files)
+        if "EVOL" in folder.parts:
+            params = params_evol(folder, excluded_patterns)
+        else:
+            params = params_by_folder(folder, excluded_patterns,
+                                      vv_file.EXCLUDED_STRINGS)
+    summary = loop_on_files(params.used_files, params.norm_end)
     if not vv_file.PER_FILE:
-        print_summary(len(used_files), excluded_files, summary)
-    category = used_files[0].split('/')[-4]
-    mode = vv_file.MONO if vv_file.MONO in folder else vv_file.PARA
+        print_summary(len(params.used_files), params.excluded_files, summary)
 
-    counts = vv_file.EXPECTED_RESULTS.get((category, mode), None)
+    counts = vv_file.EXPECTED_RESULTS.get((params.category, params.mode), None)
     if counts is not None:
-        assert len(used_files) == counts[0]
+        assert len(params.used_files) == counts[0]
         assert len(summary['failed_jdds']) == counts[1]
-        assert len(excluded_files) == counts[2]
+        assert len(params.excluded_files) == counts[2]
         if len(counts) > 3:
             assert len(summary['failed_time']) == counts[3]
             assert len(summary['failed_browser']) == counts[4]
