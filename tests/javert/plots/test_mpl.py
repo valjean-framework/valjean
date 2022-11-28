@@ -154,6 +154,8 @@ def test_plot_exception():
         mplt.draw()
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_plot(student_test_result, plot_repr):
     '''Test plot of Student result.'''
@@ -163,6 +165,8 @@ def test_student_plot(student_test_result, plot_repr):
     return fig
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_failed(student_test_result_fail, plot_repr):
     '''Test plot of a failed Student result.'''
@@ -171,6 +175,8 @@ def test_student_failed(student_test_result_fail, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_edges_with_fpi(student_test_edges_result, plot_repr):
     '''Test plot of Student result when bins are given by edges.'''
@@ -217,6 +223,8 @@ def test_fplit_cc(student_test_result, plot_repr):
             and template1.subplots[0].axnames != template2.subplots[0].axnames)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_fplit_3ds(student_test_result_3ds, plot_repr):
     '''Test concatenation of FullPlotTemplate from Student result.'''
@@ -230,6 +238,8 @@ def test_fplit_3ds(student_test_result_3ds, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_fplit_pjoin(student_test_result_with_pvals, plot_repr):
     '''Test concatenation of PlotTemplate from Student result.'''
@@ -242,6 +252,8 @@ def test_fplit_pjoin(student_test_result_with_pvals, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_adapt_range_lrbin(studentt_res_range_lrbin, plot_repr):
     '''Test with matplotlib test.'''
@@ -250,6 +262,8 @@ def test_adapt_range_lrbin(studentt_res_range_lrbin, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_adapt_range_lbin(studentt_res_range_lbin, plot_repr):
     '''Test with matplotlib test.'''
@@ -258,6 +272,8 @@ def test_adapt_range_lbin(studentt_res_range_lbin, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_adapt_range_rbin(studentt_res_range_rbin, plot_repr):
     '''Test with matplotlib test.'''
@@ -266,6 +282,8 @@ def test_adapt_range_rbin(studentt_res_range_rbin, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_noadapt_range_lrbin(studentt_res_range_lrbin, plot_no_post_repr):
     '''Test with matplotlib test.'''
@@ -274,6 +292,8 @@ def test_noadapt_range_lrbin(studentt_res_range_lrbin, plot_no_post_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_2d(studentt_res_2d, plot_repr):
     '''2D plot for Student test'''
@@ -282,6 +302,8 @@ def test_student_2d(studentt_res_2d, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_2d_range_elr(studentt_res_2d_range_elr, plot_repr):
     '''2D plot for Student test with large extreme bins in e (x-axis).'''
@@ -290,6 +312,8 @@ def test_student_2d_range_elr(studentt_res_2d_range_elr, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_2d_range_etlr(studentt_res_2d_range_etlr, plot_repr):
     '''2D plot for Studnet test with large extreme bins in e and t (both axis).
@@ -299,6 +323,8 @@ def test_student_2d_range_etlr(studentt_res_2d_range_etlr, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_2d_range_etr(studentt_res_2d_range_etr, plot_repr):
     '''2D plot for Student test with large last bins in e and t (both axis).'''
@@ -307,6 +333,8 @@ def test_student_2d_range_etr(studentt_res_2d_range_etr, plot_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_2d_no_post(studentt_res_2d, plot_no_post_repr):
     '''2D plot for Student test'''
@@ -315,6 +343,8 @@ def test_student_2d_no_post(studentt_res_2d, plot_no_post_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_2d_centbins(studentt_res_2d_cbins, plot_no_post_repr):
     '''2D plot for Student test (bins by centers).'''
@@ -323,6 +353,8 @@ def test_student_2d_centbins(studentt_res_2d_cbins, plot_no_post_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_2d_irrcbins(studentt_res_2d_irrcbins, plot_no_post_repr):
     '''2D plot for Student test (irregular bins by centers).'''
@@ -331,6 +363,8 @@ def test_student_2d_irrcbins(studentt_res_2d_irrcbins, plot_no_post_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_2d_vbins(studentt_res_2d_vbins, plot_no_post_repr):
     '''2D plot for Student test (irregular bins by edges on x-axis and centers
@@ -341,6 +375,8 @@ def test_student_2d_vbins(studentt_res_2d_vbins, plot_no_post_repr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_studentt_res_logx(studentt_res_range_lrbin):
     '''Test logarithmic x-axis with 1D plot.'''
@@ -354,6 +390,8 @@ def test_studentt_res_logx(studentt_res_range_lrbin):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_studentt_res_logy(studentt_res_range_lrbin):
     '''Test logarithmic y-axis with 1D plot.'''
@@ -367,6 +405,8 @@ def test_studentt_res_logy(studentt_res_range_lrbin):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_studentt_res_logy2(studentt_res_range_lrbin):
     '''Test logarithmic y-axis with 1D plot.'''
@@ -381,6 +421,8 @@ def test_studentt_res_logy2(studentt_res_range_lrbin):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_studentt_res_logxy(studentt_res_range_lrbin):
     '''Test logarithmic x- and y-axis with 1D plot.'''
@@ -395,6 +437,8 @@ def test_studentt_res_logxy(studentt_res_range_lrbin):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_studentt_2d_logz(studentt_res_2d):
     '''Test logarithmic colorbar with 2D plot.'''
@@ -408,6 +452,8 @@ def test_studentt_2d_logz(studentt_res_2d):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_studentt_2d_logxy(studentt_res_2d_range_etlr):
     '''Test logarithmic x- and y-axis with 2D plot.'''
@@ -423,6 +469,8 @@ def test_studentt_2d_logxy(studentt_res_2d_range_etlr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_studentt_2d_logxz(studentt_res_2d_range_etlr):
     '''Test logarithmic x-axis and colorbar with 2D plot.'''
@@ -439,6 +487,8 @@ def test_studentt_2d_logxz(studentt_res_2d_range_etlr):
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_studentt_2d_logz_cols(studentt_res_2d):
     '''Test plots with 1 row and 3 columns.'''
@@ -486,6 +536,8 @@ def test_mult_curves_equal():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_mult_curves_a_splts():
     '''Test for multiple curves on the different subplots.'''
@@ -521,6 +573,8 @@ def test_diff_binnings():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_diff_xaxes():
     '''Test of subplots with different axes.'''
@@ -536,6 +590,8 @@ def test_diff_xaxes():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_mult_curves_a_splts_join():
     '''Test of join plots with different cases.'''
@@ -587,11 +643,9 @@ def test_diff_axes_limits():
     return mplt.draw()[0]
 
 
-# This tests uses a tolerance of 10 because the plot is rendered slightly
-# differently in Python 3.6 and Python >3.6, even when using the same
-# matplotlib version. Once support for Python 3.6 is dropped, the tolerance can
-# be suppressed.
-@pytest.mark.mpl_image_compare(tolerance=10)
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
+@pytest.mark.mpl_image_compare
 def test_diff_axes_limits_2d():
     '''Test limits modifications using 2D plots.'''
     spelt1 = SubPlotElements(
@@ -626,6 +680,8 @@ def test_diff_axes_limits_2d():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_diff_axes_limits_2d_bekw():
     '''Test limits modifications using 2D plots.'''
@@ -662,6 +718,8 @@ def test_diff_axes_limits_2d_bekw():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_diff_axes_limits_2d_2():
     '''Test limits modifications using 2D plots.'''
@@ -691,6 +749,8 @@ def test_diff_axes_limits_2d_2():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_mix_1d_and_2d():
     '''Test limits modifications using 2D plots.'''
@@ -724,6 +784,8 @@ def test_mix_1d_and_2d():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_string_bins_1d_same_axes():
     '''Test for multiple curves on the same subplot.'''
@@ -743,6 +805,8 @@ def test_string_bins_1d_same_axes():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_string_bins_1d_diff_axes():
     '''Test for multiple curves on the same subplot.'''
@@ -765,6 +829,8 @@ def test_string_bins_1d_diff_axes():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_string_bins_2d():
     '''Test for multiple curves on the same subplot.'''
@@ -798,6 +864,8 @@ def test_pie_chart():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_bar_chart():
     '''Test bar chart from stat test filtered on one label.'''
@@ -818,6 +886,8 @@ def test_bar_chart():
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_comp_points(student_test_result, rfull_repr, rst_formatter,
                              rstcheck):
@@ -829,6 +899,8 @@ def test_student_comp_points(student_test_result, rfull_repr, rst_formatter,
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_comp_edges(student_test_edges_result, rfull_repr,
                             rst_formatter, rstcheck):
@@ -840,6 +912,8 @@ def test_student_comp_edges(student_test_edges_result, rfull_repr,
     return mplt.draw()[0]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason='py3.6 deprecated, matplotlib version different')
 @pytest.mark.mpl_image_compare
 def test_student_fplit_3ds(student_test_result_3ds, rfull_repr, rst_formatter,
                            rstcheck):
