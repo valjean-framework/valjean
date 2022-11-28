@@ -957,13 +957,14 @@ def keff_auto_estimation(draw, n_estim):
     sigmas = draw(lists(elements=floats(1e-4, 2e-1),
                         min_size=n_estim, max_size=n_estim))
     keff_res = []
-    for iestim, _ in enumerate(estimators):
-        keff_res.append({'keff_estimator': estimators[iestim],
-                         'best_disc_batchs': disc_batchs[iestim],
-                         'used_batches': 100 - disc_batchs[iestim],
-                         'keff': keffs[iestim],
-                         'sigma': sigmas[iestim],
-                         'sigma%': sigmas[iestim]/keffs[iestim]*100})
+    for estim, disc_batch, keff, sigma in zip(estimators, disc_batchs, keffs,
+                                              sigmas):
+        keff_res.append({'keff_estimator': estim,
+                         'best_disc_batchs': disc_batch,
+                         'used_batches': 100 - disc_batch,
+                         'keff': keff,
+                         'sigma': sigma,
+                         'sigma%': sigma/keff*100})
     return keff_res
 
 
@@ -1066,16 +1067,19 @@ def kij_results(draw, dimension):
     eivals = draw(arrays(dtype=FTYPE, shape=(rdmim), elements=floats(0, 1e-3)))
     eivals = np.append(eivals, -eivals)
     eivals = np.insert(eivals, 0, values=[0]*(dim-rdmim*2))
-    ervals = draw(arrays(dtype=FTYPE, shape=(dim-rdmim), elements=floats(0, 1),
+    ervals = draw(arrays(dtype=FTYPE, shape=(dim-rdmim),
+                         elements=floats(1e-12, 1),
                          fill=nothing()))
     if rdmim != 0:
         ervals = np.append(ervals, ervals[-rdmim:])
     assume(ervals[0] != 0)
     evals = ervals + 1j*eivals
-    evecs = draw(arrays(dtype=FTYPE, shape=(dim, dim), elements=floats(0, 1)))
+    evecs = draw(arrays(dtype=FTYPE, shape=(dim, dim),
+                        elements=floats(1e-12, 1)))
     assume(np.linalg.det(evecs) != 0)
     nevecs = evecs / np.linalg.norm(evecs, axis=1).reshape(dim, 1)
     assume(np.linalg.det(nevecs) != 0)
+    assume(not np.isnan(np.linalg.det(nevecs)))
     matrix = np.dot(np.dot(nevecs, np.diag(evals)), np.linalg.inv(nevecs))
     kijdict = draw(kij_auto_estimation(evals, matrix))
     return evals, evecs, kijdict

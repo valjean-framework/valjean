@@ -281,10 +281,10 @@ class Picker:
         if not bins:
             return Dataset(value=data, error=error, what=name.lower())
         if 'anisotropies' in bins:
-            ngroups = len(bins['groups'])
-            naniso = len(bins['anisotropies'])
-            return Dataset(value=data.reshape(naniso, ngroups),
-                           error=error.reshape(naniso, ngroups),
+            nb_groups = len(bins['groups'])
+            nb_aniso = len(bins['anisotropies'])
+            return Dataset(value=data.reshape(nb_aniso, nb_groups),
+                           error=error.reshape(nb_aniso, nb_groups),
                            what=name.lower(), bins=bins)
         if 'incident neutron groups' in bins:
             nb_groups = len(bins['groups'])

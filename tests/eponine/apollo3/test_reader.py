@@ -58,7 +58,7 @@ def test_rnr_a3c_api(datadir):
     assert len(ap3b.globals['info']) == len(ap3r.res)
     assert (len(ap3b.globals['info'])
             == len(ap3b.available_values('output')))
-    assert (sum([len(g) for g in ap3b.globals['geometry'].values()])
+    assert (sum(len(g) for g in ap3b.globals['geometry'].values())
             == len(ap3b.available_values('zone')) - 1)
     assert 'totaloutput' in ap3b.available_values('zone')
     flux = ap3b.select_by(result_name='flux', zone='zone_1')

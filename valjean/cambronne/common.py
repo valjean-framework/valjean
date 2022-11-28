@@ -67,8 +67,7 @@ class JobCommand(Command):
     '''Base class for all :program:`valjean` subcommands that take a job file
     and job arguments.'''
 
-    @staticmethod
-    def register(parser):
+    def register(self, parser):
         '''Add the `job_file` and `job_args` positional arguments to the
         parser.'''
         parser.add_argument('job_file', action='store', metavar='JOB_FILE',

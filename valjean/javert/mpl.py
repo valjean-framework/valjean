@@ -841,7 +841,7 @@ class _MplPlot1D:
         splt.set_xlabel(self.data.axnames[0])
         splt.set_ylabel(self.data.axnames[1])
         if self.data.curves[0].bins[0].dtype.kind == 'U':
-            bmax = max([len(b) for b in self.data.curves[0].bins[0]])
+            bmax = max(len(b) for b in self.data.curves[0].bins[0])
             if bmax * self.data.curves[0].bins[0].size > 60:
                 splt.tick_params(axis='x', rotation=90)
         if self.data.attributes.limits is not None:
@@ -943,7 +943,7 @@ class _MplPlot2D:
             splt.set_xticks(cbins[0])
             splt.set_xticklabels(list(curve.bins[0]))
             if curve.bins[0].dtype.kind == 'U':
-                bmax = max([len(b) for b in self.data.curves[0].bins[0]])
+                bmax = max(len(b) for b in self.data.curves[0].bins[0])
                 if bmax * self.data.curves[0].bins[0].size > 60:
                     splt.tick_params(axis='x', rotation=90)
         splt.set_ylabel(axnames[1])
@@ -980,7 +980,7 @@ class _MplPlot2D:
         if self.data.attributes.logy:
             splt.set_yscale('log')
         if self.data.curves[0].bins[0].dtype.kind == 'U':
-            bmax = max([len(b) for b in self.data.curves[0].bins[0]])
+            bmax = max(len(b) for b in self.data.curves[0].bins[0])
             if bmax * self.data.curves[0].bins[0].size > 60:
                 splt.tick_params(axis='x', rotation=90)
 

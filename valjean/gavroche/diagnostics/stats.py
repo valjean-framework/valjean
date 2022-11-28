@@ -717,7 +717,7 @@ class TestResultStatsTestsByLabels(TestResultStatsTasks):
 
         :rtype: int
         '''
-        return self.n_labels - sum([s['total'] for s in self.classify])
+        return self.n_labels - sum(s['total'] for s in self.classify)
 
 
 def classification_counts(classify, status_first):
