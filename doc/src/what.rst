@@ -13,4 +13,7 @@ suite of the `Tripoli-4®`_ Monte-Carlo particle-transport code. It includes a
 parser for Tripoli-4 calculation results, but its aim is to be more broadly
 useful to the whole community of scientific computing.
 
+:mod:`valjean` is available on `GitHub`_.
+
 .. _Tripoli-4®: https://www.cea.fr/energies/tripoli-4/
+.. _GitHub: https://github.com/valjean-framework/valjean

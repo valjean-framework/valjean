@@ -3,6 +3,7 @@
 Installing :mod:`valjean`
 =========================
 
+.. _GitHub: https://github.com/valjean-framework/valjean
 .. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.io/en/latest/
 .. _sphinx: https://www.sphinx-doc.org/en/master/
 .. _pyparsing: https://pythonhosted.org/pyparsing
@@ -15,8 +16,15 @@ Installing :mod:`valjean`
 Requirements
 ------------
 
-:mod:`valjean` requires Python >= 3.5. The package dependencies are handled by
+:mod:`valjean` requires Python >= 3.6. The package dependencies are handled by
 the build system.
+
+Getting the code
+----------------
+
+:mod:`valjean` is available on `GitHub`_. It can be downloaded using::
+
+    $ git clone https://github.com/valjean-framework/valjean.git
 
 Quick start
 -----------

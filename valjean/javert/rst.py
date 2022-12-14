@@ -36,6 +36,7 @@ syntax.
 .. _reStructuredText: https://docutils.sourceforge.io/rst.html
 .. _reStructuredText primer: https://
     docutils.sourceforge.io/docs/user/rst/quickstart.html
+.. _pkg_resources: https://setuptools.pypa.io/en/latest/pkg_resources.html
 '''
 
 
@@ -740,7 +741,7 @@ class FormattedRst:
         '''Copy a package resource to the specified destination, optionally
         formatting the resource content using :meth:`str.format`.
 
-        For more information about resources, see :doc:`pkg_resources`.
+        For more information about resources, see `pkg_resources`_.
 
         :param str resource: the name of the resource.
         :param pathlib.Path dest: the destination path.
