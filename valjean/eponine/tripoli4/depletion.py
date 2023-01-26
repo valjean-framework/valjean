@@ -265,6 +265,13 @@ class DepletionReader:
         except ImportError as ierr:
             LOGGER.error('ROOT needs to be added to PYTHONPATH')
             raise ImportError('ROOT missing') from ierr
+        if all(hasattr(ROOT, cls) for cls in ['DepletedComposition',
+                                              'BurnupResults',
+                                              'MeanBurnupResults']):
+            LOGGER.info('skipping compilation of the ROOT depletion scripts '
+                        'because they are already available')
+            return ROOT
+        LOGGER.info('attempting compilation of the ROOT depletion scripts...')
         ps_fold = 'valjean.eponine.tripoli4.resources.depletion'
         assert pkg.resource_exists(ps_fold, 'DepletedComposition.C')
         assert pkg.resource_exists(ps_fold, 'BurnupResults.C')
@@ -282,6 +289,7 @@ class DepletionReader:
         ROOT.gROOT.LoadMacro('DepletedComposition.C+')
         ROOT.gROOT.LoadMacro('BurnupResults.C+')
         ROOT.gROOT.LoadMacro('MeanBurnupResults.C+')
+        LOGGER.info('... ROOT depletion scripts have been compiled and loaded')
         return ROOT
 
     @classmethod
