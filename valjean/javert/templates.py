@@ -38,8 +38,11 @@ are handled by suitable formatting classes, such as :class:`~.Rst`.
 
 .. _numpy indexing: https://numpy.org/doc/stable/user/basics.indexing.html
 '''
+import logging
 import numpy as np
-from .. import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TableTemplate:
@@ -607,8 +610,7 @@ class SubPlotElements:
             yield aname.encode('utf-8')
         yield self.ptype.encode('utf-8')
         for curve in self.curves:
-            for data in curve.data():
-                yield data
+            yield from curve.data()
 
     def __eq__(self, other):
         '''Test of equality of `self` and another :class:`SubPlotElements`.'''

@@ -51,13 +51,15 @@ Example usage:
    >>> env = s.schedule()  # executes the tasks in the correct order
 '''
 
-
+import logging
 from .depgraph import DepGraph
 from .backends.queue import QueueScheduling
 from .env import Env
 from ..chrono import Chrono
-from .. import LOGGER
 from ..config import Config
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class SchedulerError(Exception):

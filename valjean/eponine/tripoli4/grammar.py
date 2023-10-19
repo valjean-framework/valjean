@@ -220,6 +220,7 @@ level as the response block. These parsers and the associated dictionary key
 
 '''
 
+import logging
 from pyparsing import (Word, Keyword, White, alphas, alphanums, LineEnd,
                        Suppress, Optional, CaselessKeyword, original_text_for,
                        Group, OneOrMore, ZeroOrMore, Forward,
@@ -228,7 +229,9 @@ from pyparsing import pyparsing_common as pyparscom
 from . import transform as trans
 from .transform import compose2
 from .dump import dump_in_logger
-from ... import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 _fnums = pyparscom.fnumber.set_parse_action(token_map(trans.common.FTYPE))
 _inums = pyparscom.number.set_parse_action(token_map(trans.common.ITYPE))

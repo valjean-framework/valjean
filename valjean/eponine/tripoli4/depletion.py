@@ -93,13 +93,16 @@ given composition.
 
 # pylint: disable=no-member
 
+import logging
 import re
 from collections import OrderedDict
 from pathlib import Path
 import pkg_resources as pkg
 import numpy as np
 from ..dataset import Dataset
-from ... import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def title_to_snake_case(word):

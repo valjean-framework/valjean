@@ -323,10 +323,13 @@ True
     >>> print(np.array2string(tstudent_res.oracles()))
     [[ True  True False]]
 '''
+import logging
 import numpy as np
 from scipy.stats import t, norm
 from ..test import check_bins, TestDataset, TestResult
-from ... import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TestResultStudent(TestResult):

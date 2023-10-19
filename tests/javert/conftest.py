@@ -39,11 +39,12 @@ from hypothesis.extra.numpy import arrays, array_shapes
 import string
 import pytest
 import numpy as np
+import logging
 
 from ..context import valjean  # noqa: F401
 from ..eponine.conftest import finite
 from ..gavroche.conftest import some_dataset, other_dataset, run_tasks
-from valjean import LOGGER
+
 from valjean.javert.verbosity import Verbosity
 from valjean.javert.representation import (FullRepresenter, EmptyRepresenter,
                                            FullTableRepresenter,
@@ -55,6 +56,7 @@ from valjean.javert.test_report import TestReport
 from valjean.javert.rst import Rst, RstFormatter
 
 
+LOGGER = logging.getLogger(__name__)
 ALPHABET_RST = string.ascii_letters + string.digits
 
 
@@ -329,7 +331,7 @@ def ranges(draw, min_value=None, max_value=None):
 
 @pytest.fixture(params=list(Verbosity), ids=list(v.name for v in Verbosity))
 def verb_level(request):
-    '''Return lists of valid :class:`~.Test` objects.'''
+    '''Return :class:`~valjean.javert.verbosity.Verbosity` level.'''
     return request.param
 
 

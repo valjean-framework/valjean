@@ -40,9 +40,9 @@ function, :func:`print_result` that acts directly on the
 import logging
 from collections import OrderedDict
 import numpy as np
-from ... import LOGGER
 
 
+LOGGER = logging.getLogger(__name__)
 MAX_DEPTH = 0
 MAX_DEPTH_STR = f"MAX_DEPTH = {MAX_DEPTH} reached\n"
 

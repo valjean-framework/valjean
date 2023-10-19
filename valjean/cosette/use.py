@@ -575,13 +575,16 @@ Module API
 ==========
 '''
 
+import logging
 from pathlib import Path
 from functools import update_wrapper
 
 from .task import TaskStatus
 from ..path import ensure, sanitize_filename
 from .pythontask import PythonTask
-from .. import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def from_env(*, env, task_name, key):

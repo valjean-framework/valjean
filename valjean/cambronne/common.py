@@ -34,11 +34,14 @@ from pathlib import Path
 import argparse
 import sys
 import inspect
+import logging
 
 from ..cosette.env import Env
 from ..cosette.depgraph import DepGraph
 from ..cosette.task import close_dependency_graph
-from .. import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Command:

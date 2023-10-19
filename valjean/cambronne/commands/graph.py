@@ -31,9 +31,12 @@
 '''Module for the ``graph`` subcommand.'''
 
 import os
+import logging
 
 from ..common import JobCommand, build_graphs
-from ... import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class GraphCommand(JobCommand):

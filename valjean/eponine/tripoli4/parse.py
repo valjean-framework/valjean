@@ -42,7 +42,7 @@ Some options for debugging are available (end flag).
    Change absolute imports in relative ones when main will be moved to
    :ref:`cambronne <cambronne-main>`.
 '''
-
+import logging
 import threading
 from pyparsing import ParseException, ParserElement
 
@@ -52,9 +52,9 @@ from .common import SpectrumDictBuilderException, MeshDictBuilderException
 from ...chrono import Chrono
 from ..browser import Browser
 from .data_convertor import convert_data
-from ... import LOGGER
 
 
+LOGGER = logging.getLogger(__name__)
 PYPARSING_LOCK = threading.RLock()
 
 # in Eponine, profile is a key of globals

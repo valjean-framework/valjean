@@ -39,8 +39,10 @@ import logging
 from .parse import Parser, ParseResult, ParserException
 from . import scan
 from .grammar import t4debug_gram
-from ... import LOGGER
 from ...chrono import Chrono
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ParserDebug(Parser):

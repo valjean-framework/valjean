@@ -265,9 +265,12 @@ Module API
 ----------
 '''
 
+import logging
 import copy
 from .task import Task, TaskStatus
-from .. import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TaskException(Exception):

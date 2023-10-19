@@ -123,15 +123,18 @@ Some helpers exist if needed:
   given zone from a given output folder
 '''
 
+import logging
 from functools import lru_cache
 from collections import OrderedDict
 import h5py
 import numpy as np
 
-from ... import LOGGER
 from ...chrono import Chrono
 from ..dataset import Dataset
 from ...cosette.rlist import RList
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Picker:

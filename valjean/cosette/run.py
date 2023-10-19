@@ -213,14 +213,17 @@ Module API
 
 import os
 import shlex
+import logging
 from functools import partial
 from subprocess import call
 
-from .. import LOGGER
 from ..chrono import Chrono
 from ..path import ensure, sanitize_filename
 from .task import TaskStatus, det_hash
 from .pythontask import PythonTask
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 # The following functions are helpers for RunTask, but they may be used

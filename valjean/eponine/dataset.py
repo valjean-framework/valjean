@@ -712,9 +712,12 @@ True
 True
 '''
 # pylint: enable=trailing-whitespace
+import logging
 from collections import OrderedDict
 import numpy as np
-from .. import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Dataset:

@@ -31,9 +31,9 @@
 '''Module containing all available methods to convert a test result in a table
 to be converted in rst.
 '''
+import logging
 from collections import OrderedDict
 import numpy as np
-from .. import LOGGER
 from ..cosette.task import TaskStatus
 from ..gavroche.diagnostics.stats import TestOutcome, classification_counts
 from .templates import PlotTemplate, CurveElements, SubPlotElements, join
@@ -45,6 +45,9 @@ from .verbosity import Verbosity
 # javert.representation looks for them by programmatically constructing their
 # name based on the name of the test result class, the verbosity, etc.
 # pylint: disable=invalid-name
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def dimensions_from_array(array_shape):
@@ -130,12 +133,12 @@ def trim_range(bins, max_ratio=1000):
             blimits.append(tuple(limits + [False]))
             continue
         if nbins.size < 3:
-            LOGGER.warning('Not enough bins to adapt range.')
+            LOGGER.note('Not enough bins to adapt range.')
             blimits.append(tuple(limits + [False]))
             continue
         if nbins.size < 4:
-            LOGGER.warning('Will adapt range for %d bins, '
-                           'binning might be not suitable', nbins.size)
+            LOGGER.note('Will adapt range for %d bins, '
+                        'binning might be not suitable', nbins.size)
         binw = np.ediff1d(lbins)
         if binw[0]/binw[1] > max_ratio:
             limits[0] = nbins[1]
@@ -636,7 +639,7 @@ def repr_testresultstatstestsbylabels(result, _verbosity=Verbosity.DEFAULT):
     :rtype: list(PlotTemplate)
     '''
     if len(result.test.by_labels) > 2:
-        LOGGER.info('No plot for more than 2 labels.')
+        LOGGER.note('No plot for more than 2 labels.')
         return []
     if len(result.test.by_labels) == 2:
         return repr_statstestsby2labels(result)

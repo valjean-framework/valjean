@@ -117,3 +117,18 @@ def job_config(config_tmp, tmpdir):
 def env_filename():
     '''Provide the path to a temporary file for serializing the environment.'''
     return 'valjean.env'
+
+
+@pytest.fixture(params=[logging.CRITICAL, logging.ERROR, logging.WARNING,
+                        logging.INFO, logging.NOTE, logging.DEBUG],
+                ids=["CRITICAL", "ERROR", "WARNING", "INFO", "NOTE", "DEBUG"])
+def log_level(request):
+    '''Return a logger level'''
+    return request.param
+
+
+@pytest.fixture(params=[logging.INFO, logging.NOTE, logging.DEBUG],
+                ids=["INFO", "NOTE", "DEBUG"])
+def log_level_low(request):
+    '''Return a logger level (from INFO)'''
+    return request.param

@@ -279,12 +279,15 @@ Some things you should be aware of when using :class:`DepGraph`:
   crash, but you will not get what you expect.
 '''
 
+import logging
 import itertools
 import copy
 import enum
 from .rlist import RList
-from .. import LOGGER
 from ..chrono import Chrono
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class DepGraphError(Exception):

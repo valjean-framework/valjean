@@ -43,7 +43,9 @@ from functools import partial
 
 from ..task import TaskStatus
 from ...chrono import Chrono
-from ... import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class QueueScheduling:
@@ -256,7 +258,7 @@ class QueueScheduling:
                     LOGGER.debug('worker %s: exiting', self.name)
                     break
                 LOGGER.debug('worker %s: got task %s', self.name, task)
-                LOGGER.info('task %s starts', task)
+                LOGGER.note('task %s starts', task)
 
                 start = time.time()
                 try:
@@ -277,7 +279,7 @@ class QueueScheduling:
                         env_update, status = task_result
                         LOGGER.debug('worker %s: task %s completed '
                                      'with status %s', self.name, task, status)
-                        LOGGER.info('task %s completed with status %s',
+                        LOGGER.note('task %s completed with status %s',
                                     task, status)
                         LOGGER.debug('worker %s: proposed environment update: '
                                      '%s', self.name, env_update)

@@ -205,10 +205,12 @@ import logging
 import h5py
 import numpy as np
 
-from ... import LOGGER
 from ...chrono import Chrono
 from ..browser import Browser
 from ..dataset import Dataset
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def hdf_to_browser(*args, **kwargs):

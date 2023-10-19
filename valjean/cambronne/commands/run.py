@@ -30,15 +30,18 @@
 
 '''Module for the ``run`` subcommand.'''
 
+import logging
 from pathlib import Path
 
-from ... import LOGGER
 from ..common import JobCommand, read_env, write_env, build_graphs
 from ...cosette.backends.queue import QueueScheduling
 from ...chrono import Chrono
 from ...cosette.scheduler import Scheduler
 from ...cosette.task import TaskStatus
 from ...path import ensure
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class RunCommand(JobCommand):

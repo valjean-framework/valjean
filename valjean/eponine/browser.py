@@ -200,9 +200,12 @@ Module API
 ----------
 '''
 
+import logging
 from collections import defaultdict
 from collections.abc import Mapping, Container
-from .. import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _make_defaultdict_set():

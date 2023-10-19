@@ -545,11 +545,14 @@ side-by-side bars and stacked bars.
 Module API
 ----------
 '''
+import logging
 from itertools import cycle, chain
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mplcol
-from .. import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class MplStyle:
@@ -733,7 +736,7 @@ class MplPlot:
         :param str name: name of the output file. Expected extensions: png,
             pdf, svg, eps.
         '''
-        LOGGER.info('drawing figure %s', name)
+        LOGGER.debug('drawing figure %s', name)
         fig, _ = self.draw()
         if fig is not None:
             fig.savefig(name)

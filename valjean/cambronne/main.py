@@ -37,9 +37,12 @@ import importlib
 import logging
 
 from . import commands
-from .. import LOGGER, LOG_FILE_FORMAT, __version__
+from .. import LOG_FILE_FORMAT, __version__
 from ..config import Config
 from ..path import ensure
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def main(argv=None):

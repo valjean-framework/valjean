@@ -43,6 +43,7 @@ The two tests over the test results are performed using the
 actually run.
 '''
 
+import logging
 from collections import defaultdict
 from functools import partial, update_wrapper, total_ordering
 from enum import IntEnum
@@ -53,7 +54,9 @@ from ...cosette.use import Use
 from ..test import Test, TestResult
 from ..eval_test_task import EvalTestTask
 from ...eponine.browser import Index
-from ... import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def stats_worker(test_fn, name, description, tasks, **kwargs):

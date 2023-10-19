@@ -34,6 +34,7 @@ transforms them into :class:`~.gavroche.test.TestResult` objects, which can be
 subsequently processed for inclusion in a test report.
 '''
 
+import logging
 from pathlib import Path
 
 from ..path import ensure, sanitize_filename
@@ -41,7 +42,9 @@ from ..cosette.task import TaskStatus
 from ..cosette.use import from_env
 from ..cosette.pythontask import PythonTask
 from ..gavroche.test import Test, TestResultFailed
-from .. import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def actually_eval_test(test):

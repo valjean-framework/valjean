@@ -366,24 +366,25 @@ def test_spam_repr(caplog, str_choice, rfull_repr):
     The presence of the logger messages is also checked (appearing twice in
     last test as foreseen).
     '''
-    caplog.set_level(logging.INFO, logger='valjean')
-    spam_test = TestSpam(str_choice, name='spam_test', description='desc')
-    spamres = spam_test.evaluate()
-    assert bool(spamres) == (str_choice == 'spam')
-    templates = rfull_repr(spamres)
-    assert templates == []
-    loginfo_tabrepr = "no table representer repr_testresultspam"
-    loginfo_pltrepr = "no plot representer repr_testresultspam"
-    assert loginfo_tabrepr in caplog.text
-    assert loginfo_pltrepr in caplog.text
-    tabrepresenter = TableRepresenter()
-    templates = tabrepresenter(spamres)
-    assert templates is None
-    pltrepresenter = PlotRepresenter()
-    templates = pltrepresenter(spamres)
-    assert templates is None
-    assert caplog.text.count(loginfo_tabrepr) == 2
-    assert caplog.text.count(loginfo_pltrepr) == 2
+    with caplog.at_level(logging.INFO, 'valjean'):
+        spam_test = TestSpam(str_choice, name='spam_test', description='desc')
+        spamres = spam_test.evaluate()
+        assert bool(spamres) == (str_choice == 'spam')
+        templates = rfull_repr(spamres)
+        assert templates == []
+        loginfo_tabrepr = "no table representer repr_testresultspam"
+        loginfo_pltrepr = "no plot representer repr_testresultspam"
+        assert loginfo_tabrepr in caplog.text
+        assert loginfo_pltrepr in caplog.text
+        tabrepresenter = TableRepresenter()
+        templates = tabrepresenter(spamres)
+        assert templates is None
+        pltrepresenter = PlotRepresenter()
+        templates = pltrepresenter(spamres)
+        assert templates is None
+        full_log = "".join([rec.message for rec in caplog.records])
+        assert full_log.count(loginfo_tabrepr) == 2
+        assert full_log.count(loginfo_pltrepr) == 2
 
 
 @pytest.mark.parametrize('success', [True, False])

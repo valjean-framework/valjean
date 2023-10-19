@@ -112,13 +112,12 @@ Important for the scan: results will be kept
 Module API
 ----------
 '''
-
+import logging
 from collections.abc import Mapping
 from collections import OrderedDict
 
 
-from ... import LOGGER
-
+LOGGER = logging.getLogger(__name__)
 
 # get profile from globals (cleaner)
 if 'profile' not in globals()['__builtins__']:

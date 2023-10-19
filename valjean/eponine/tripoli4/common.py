@@ -604,9 +604,10 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 from io import StringIO
 import numpy as np
-from ... import LOGGER
 from .data_convertor import bins_reduction
 
+
+LOGGER = logging.getLogger(__name__)
 
 # get profile from globals (cleaner)
 if 'profile' not in globals()['__builtins__']:

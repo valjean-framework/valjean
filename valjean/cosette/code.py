@@ -143,7 +143,9 @@ from ..chrono import Chrono
 from .run import run
 from .task import TaskStatus
 from .pythontask import PythonTask
-from .. import LOGGER
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class CheckoutTask(PythonTask):

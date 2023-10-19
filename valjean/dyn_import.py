@@ -32,9 +32,11 @@
 importing Python source files as modules.'''
 
 import sys
+import logging
 from pathlib import Path
 
-from . import LOGGER
+
+LOGGER = logging.getLogger(__name__)
 
 
 def split_module_path(file_name):

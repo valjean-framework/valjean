@@ -59,8 +59,10 @@ makes sense to run `A` even if `B` fails.
 import enum
 import json
 from abc import ABC, abstractmethod
+import logging
 
-from .. import LOGGER
+
+LOGGER = logging.getLogger(__name__)
 
 
 #: Enumeration for the task status. The possible values are:

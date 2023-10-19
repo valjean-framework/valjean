@@ -31,9 +31,9 @@
 '''Module containing all available methods to convert a test result in a table
 to be converted in rst.
 '''
+import logging
 from itertools import chain
 import numpy as np
-from .. import LOGGER
 from ..cosette.task import TaskStatus
 from ..gavroche.diagnostics.stats import TestOutcome, classification_counts
 from .templates import TableTemplate, TextTemplate
@@ -44,6 +44,9 @@ from .verbosity import Verbosity
 # javert.representation looks for them by programmatically constructing their
 # name based on the name of the test result class, the verbosity, etc.
 # pylint: disable=invalid-name
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def repr_bins(dsref):

@@ -32,12 +32,27 @@
 
 import logging
 import sys
+from contextlib import contextmanager
 from pkg_resources import get_distribution, DistributionNotFound
+
 
 try:
     __version__ = get_distribution(__name__).version
 except DistributionNotFound:
     __version__ = 'unknown'
+
+logging.NOTE = 15
+logging.addLevelName(logging.NOTE, "NOTE")
+
+
+def note(self, message, *args, **kwargs):
+    """New results level function"""
+    if self.isEnabledFor(logging.NOTE):
+        # pylint: disable=protected-access
+        self._log(logging.NOTE, message, args, **kwargs)
+
+
+logging.Logger.note = note
 
 
 class ValjeanFormatter:
@@ -47,34 +62,29 @@ class ValjeanFormatter:
     level.
     '''
 
-    def __init__(self, info_fmt, fmt):
+    def __init__(self, fmt):
         '''Initialize the formatter.
 
-        :param str info_fmt: The format string for the ``INFO`` level.
+        :param str note_fmt: The format string for the ``NOTE`` level.
         :param str fmt: The format string for the other message levels.
         '''
-        self.info_formatter = logging.Formatter(info_fmt)
         self.formatter = logging.Formatter(fmt)
 
     def format(self, record):
         '''Format the given record.'''
-        if record.levelno == logging.INFO:
-            return self.info_formatter.format(record)
         return self.formatter.format(record)
 
 
-def _configure_logger(logger):
-    default_level = logging.INFO
-    _formatter = ValjeanFormatter(LOG_INFO_CONSOLE_FORMAT, LOG_CONSOLE_FORMAT)
+def _configure_logger(logger, level=logging.INFO):
+    _formatter = ValjeanFormatter(LOG_CONSOLE_FORMAT)
     _handler = logging.StreamHandler(sys.stdout)
     _handler.setFormatter(_formatter)
-    _handler.setLevel(default_level)
+    _handler.setLevel(level)
     logger.addHandler(_handler)
-    logger.setLevel(default_level)
+    logger.setLevel(level)
 
 
-LOGGER = logging.getLogger('valjean')
-LOG_INFO_CONSOLE_FORMAT = '* %(message)s'
+LOGGER = logging.getLogger(__name__)
 LOG_CONSOLE_FORMAT = '%(levelname)9.9s %(module)12.12s: %(message)s'
 LOG_FILE_FORMAT = ('%(levelname)9.9s (%(module)10.10s/%(funcName)12.12s) '
                    '%(asctime)19s: %(message)s')
@@ -86,3 +96,41 @@ def set_log_level(level):
     LOGGER.setLevel(level)
     for handler in LOGGER.handlers:
         handler.setLevel(level)
+
+
+def get_logger(module):
+    '''Get logger for the given module'''
+    logger = logging.getLogger(module)
+    return logger
+
+
+def set_logger_level(module, level=logging.INFO):
+    '''Set the verbosity level for the required module logger.
+
+    :param str module: module name
+    :param int level: logger level (logging.DEBUG, logging.NOTE, \
+        logging.INFO, logging.WARNING, logging.ERROR)
+    '''
+    logger = get_logger(module)
+    logger.setLevel(level)
+
+
+@contextmanager
+def local_logger_level(module, level):
+    '''Set the verbosity level for the required module logger in a context
+    case.
+
+    :param str module: module name
+    :param int level: logger level (logging.DEBUG, logging.NOTE, \
+        logging.INFO, logging.WARNING, logging.ERROR)
+    '''
+    logger = get_logger(module)
+    log_level = (logger.getEffectiveLevel() if module == 'valjean'
+                 else logging.NOTSET)
+    try:
+        logger.setLevel(level)
+        for handler in logger.handlers:
+            handler.setLevel(level)
+        yield
+    finally:
+        logger.setLevel(log_level)

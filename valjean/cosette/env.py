@@ -103,12 +103,15 @@ read-and-modify trip above is implemented as follows:
     True
 """
 
+import logging
 import threading
 import pickle
 from collections.abc import MutableMapping
 
-from .. import LOGGER
 from .task import TaskStatus
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EnvError(Exception):

@@ -86,10 +86,13 @@ Thus the use of the ``Representer`` is foreseen as:
 * :mod:`valjean` calls the ``Representer`` classes through the
   :class:`Representation` class.
 '''
-from .. import LOGGER
+import logging
 from . import table_repr
 from . import plot_repr
 from .verbosity import Verbosity
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Representation:

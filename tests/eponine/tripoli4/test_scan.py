@@ -313,44 +313,45 @@ def test_debug_entropy(caplog, datadir):
     '''Use Tripoli-4 result from entropy.d to test entropy, mesh, spectrum and
     debug mode.
     '''
-    caplog.set_level(logging.DEBUG, logger='valjean')
-    t4p = ParserDebug(str(datadir/"entropy.d.res.ceav5"),
-                      end_flag="number of batches used",
-                      ofile="debug_ent.log")
-    assert t4p
-    assert t4p.scan_res.normalend
-    assert list(t4p.scan_res.keys())[-1] == 10
-    assert t4p.scan_res.times['simulation_time'][10] == 24
-    assert t4p.scan_res.times['initialization_time'] == 6
-    assert len(t4p.scan_res) == 10
-    t4_res = t4p.parse_from_index(-1)
-    assert t4_res.res['batch_data']['batch_number'] == 10
-    assert len(t4_res.res['list_responses']) == 1
-    presp0 = t4_res.pres['list_responses'][0]
-    assert presp0['response_type'] == 'score'
-    pres0 = presp0['results']
-    scorecontent = ['mesh', 'spectrum', 'integrated',
-                    'discarded_batches', 'used_batches']
-    assert {'array', 'bins', 'units', 'boltzmann_entropy_array',
-            'shannon_entropy_array'}.difference(pres0['mesh']) == set()
-    bentrop = pres0['mesh']['boltzmann_entropy_array'].squeeze()
-    assert np.isclose(bentrop['entropy'], 8.342621e-01)
-    assert sorted(list(pres0.keys())) == sorted(scorecontent)
-    resp0 = t4_res.res['list_responses'][0]
-    assert resp0['response_type'] == 'score'
-    res0 = resp0['results']
-    rescontent = ['discarded_batches', 'used_batches', 'score', 'units',
-                  'boltzmann_entropy', 'shannon_entropy', 'score_integrated']
-    bentrop2 = res0['boltzmann_entropy'].squeeze()
-    assert np.isclose(bentrop2.value, 8.342621e-01)
-    assert sorted(res0.keys()) == sorted(rescontent)
-    assert "You are running with an end flag" in caplog.text
-    assert "debug_ent.log" in os.listdir()
-    with open("debug_ent.log", encoding='utf-8') as ofile:
-        lines = ofile.readlines()
-        assert len(lines) == 124
-        assert "RESULTS ARE GIVEN FOR SOURCE INTENSITY" in lines[0]
-        assert "number of batches used" in lines[-1]
+    with caplog.at_level(logging.DEBUG, 'valjean'):
+        t4p = ParserDebug(str(datadir/"entropy.d.res.ceav5"),
+                          end_flag="number of batches used",
+                          ofile="debug_ent.log")
+        assert t4p
+        assert t4p.scan_res.normalend
+        assert list(t4p.scan_res.keys())[-1] == 10
+        assert t4p.scan_res.times['simulation_time'][10] == 24
+        assert t4p.scan_res.times['initialization_time'] == 6
+        assert len(t4p.scan_res) == 10
+        t4_res = t4p.parse_from_index(-1)
+        assert t4_res.res['batch_data']['batch_number'] == 10
+        assert len(t4_res.res['list_responses']) == 1
+        presp0 = t4_res.pres['list_responses'][0]
+        assert presp0['response_type'] == 'score'
+        pres0 = presp0['results']
+        scorecontent = ['mesh', 'spectrum', 'integrated',
+                        'discarded_batches', 'used_batches']
+        assert {'array', 'bins', 'units', 'boltzmann_entropy_array',
+                'shannon_entropy_array'}.difference(pres0['mesh']) == set()
+        bentrop = pres0['mesh']['boltzmann_entropy_array'].squeeze()
+        assert np.isclose(bentrop['entropy'], 8.342621e-01)
+        assert sorted(list(pres0.keys())) == sorted(scorecontent)
+        resp0 = t4_res.res['list_responses'][0]
+        assert resp0['response_type'] == 'score'
+        res0 = resp0['results']
+        rescontent = ['discarded_batches', 'used_batches', 'score', 'units',
+                      'boltzmann_entropy', 'shannon_entropy',
+                      'score_integrated']
+        bentrop2 = res0['boltzmann_entropy'].squeeze()
+        assert np.isclose(bentrop2.value, 8.342621e-01)
+        assert sorted(res0.keys()) == sorted(rescontent)
+        assert "You are running with an end flag" in caplog.text
+        assert "debug_ent.log" in os.listdir()
+        with open("debug_ent.log", encoding='utf-8') as ofile:
+            lines = ofile.readlines()
+            assert len(lines) == 124
+            assert "RESULTS ARE GIVEN FOR SOURCE INTENSITY" in lines[0]
+            assert "number of batches used" in lines[-1]
 
 
 def check_last_entropy_result(lastres):
@@ -465,15 +466,15 @@ def test_verbose_entropy(datadir, caplog, monkeypatch):
     '''Use Tripoli-4 result from entropy.d to test verbosity (mesh and spectrum
     in same jdd), but long.
     '''
-    caplog.set_level(logging.DEBUG, logger='valjean')
     monkeypatch.setattr("valjean.eponine.tripoli4.dump.MAX_DEPTH", 8)
-    t4p = Parser(str(datadir/"entropy.d.res.ceav5"))
-    t4_res = t4p.parse_from_index(batch_index=-1)
-    assert t4_res
-    assert t4p.scan_res.normalend
+    with caplog.at_level(logging.DEBUG, 'valjean'):
+        t4p = Parser(str(datadir/"entropy.d.res.ceav5"))
+        t4_res = t4p.parse_from_index(batch_index=-1)
+        assert t4_res
+        assert t4p.scan_res.normalend
     with open(str(datadir/"entropy_debug.log"), 'r', encoding='utf-8') as ifil:
         for line in ifil:
-            assert line in caplog.text, f"Line {line!r} not found in caplog."
+            assert line in caplog.text, f"Line {line!r} not found in log."
 
 
 def test_ifp(datadir):

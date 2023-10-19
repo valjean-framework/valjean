@@ -30,12 +30,14 @@
 
 '''Module for the ``env`` subcommand.'''
 
-
+import logging
 from pprint import pprint
 
-from ... import LOGGER
 from ..common import Command
 from ...cosette.env import Env
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EnvCommand(Command):

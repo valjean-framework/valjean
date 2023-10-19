@@ -39,7 +39,7 @@ syntax.
 .. _pkg_resources: https://setuptools.pypa.io/en/latest/pkg_resources.html
 '''
 
-
+import logging
 from datetime import datetime
 from collections import defaultdict
 from pathlib import Path
@@ -47,7 +47,6 @@ import multiprocessing as mp
 import pkg_resources as pkg
 import numpy as np
 
-from .. import LOGGER
 from ..fingerprint import fingerprint
 from ..path import ensure, sanitize_filename
 from ..cosette.task import TaskStatus
@@ -57,6 +56,9 @@ from .formatter import Formatter
 from .mpl import MplPlot
 from .test_report import TestReport, TestReportTask
 from .verbosity import Verbosity
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Rst:
@@ -674,7 +676,7 @@ class FormattedRst:
         else:
             tree_path = path / 'index'
 
-        LOGGER.info('writing tree_path: %s', tree_path)
+        LOGGER.note('writing tree_path: %s', tree_path)
         ensure(tree_path.parent, is_dir=True)
 
         subtrees = self.tree_dict[tree]
