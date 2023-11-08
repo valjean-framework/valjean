@@ -209,8 +209,8 @@ intersphinx_mapping = {
 
 
 # Ignore internal CEA links in linkcheck
-linkcheck_ignore = [r'https://.*\.intra.cea.fr/.*']
-
+linkcheck_ignore = [r'https://.*\.intra.cea.fr/.*',
+                    r'https://agupubs.onlinelibrary.wiley.com/*']
 
 # -- doctest options ------------------------------------------------------
 

@@ -4,7 +4,7 @@ Distributing the code
 =====================
 
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
-.. _anaconda: https://www.anaconda.com/products/distribution
+.. _anaconda: https://www.anaconda.com/download
 .. _Tuleap: https://codev-tuleap.intra.cea.fr/projects/valjean
 
 .. highlight:: bash
