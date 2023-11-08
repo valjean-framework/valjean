@@ -40,7 +40,7 @@ from valjean import LOGGER
 FORBIDDEN_PATH = (r'((?<!\w|\.|\/|\)|`|\'|\}|!|<|\+)'
                   r'(\/(?!path)((\\\b)|[^ \b%\|*:\n\"\\\/])+)'
                   r'+\/?(?<!\*))')
-FORBIDDEN_STR = (r'\s[a-zA-Z]{2}[0-9]{6}\s')
+FORBIDDEN_STR = r'\s[a-zA-Z]{2}[0-9]{6}\s'
 CPATH = re.compile(FORBIDDEN_PATH)
 CSTR = re.compile(FORBIDDEN_STR)
 FORBIDDEN_PATTERNS = re.compile(f'({FORBIDDEN_PATH})|({FORBIDDEN_STR})')

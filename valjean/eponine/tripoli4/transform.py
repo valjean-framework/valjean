@@ -157,7 +157,7 @@ def convert_correspondence_table(toks):
 
     :returns: tuple(tuple)
     '''
-    return tuple(set(common.convert_list_to_tuple(toks.asList())))
+    return tuple(set(common.convert_list_to_tuple(toks.as_list())))
 
 
 def convert_scoring_zone_id(toks):
@@ -166,7 +166,7 @@ def convert_scoring_zone_id(toks):
     '''
     if isinstance(toks, (np.generic, str)):
         return toks
-    cv_toks = common.convert_list_to_tuple(toks.asList())
+    cv_toks = common.convert_list_to_tuple(toks.as_list())
     return cv_toks
 
 
@@ -177,7 +177,7 @@ def convert_list_to_tuple(toks):
     list and send it to convert_list_to_tuple in
     :mod:`~valjean.eponine.tripoli4.common`.
     '''
-    ltoks = toks.asList()
+    ltoks = toks.as_list()
     # in reaction case, e.g. [[104]] while [[21, 104]] is fine
     if isinstance(ltoks[0], list) and len(ltoks) == 1 and len(ltoks[0]) == 1:
         ltoks = ltoks[0]
@@ -211,7 +211,7 @@ def convert_batch_numbers(score):
         if (('_res' in key and isinstance(score[key], Iterable)
              and key != 'green_bands_res')):
             usc = (score[key]
-                   if isinstance(score[key], dict) or score[key].asDict()
+                   if isinstance(score[key], dict) or score[key].as_dict()
                    else score[key][0])
             _extract_batch_numbers(usc, res)
             if ('used_batches_res' in res and 'discarded_batches_res' in res
@@ -251,7 +251,7 @@ def convert_score(toks):  # pylint: disable=too-many-branches
                 res[keystr] = convert_spectrum(score[key], key)
             elif key in ('integrated_res', 'uncert_integrated_res', 'vov_res',
                          'vovstar_res', 'sensibility_res', 'best_result_res'):
-                res[key] = score[key].asDict()
+                res[key] = score[key].as_dict()
             elif key == 'green_bands_res':
                 res[key] = convert_green_bands(score[key])
                 res['discarded_batches_res'] = res[key].pop(
@@ -270,8 +270,8 @@ def convert_score(toks):  # pylint: disable=too-many-branches
 def _debug_print(toks):
     print("FOUND THE POINT")
     # print(toks)
-    print("List:", toks.asList())
-    print("Dict:", toks.asDict())
+    print("List:", toks.as_list())
+    print("Dict:", toks.as_dict())
 
 
 def convert_generic_adjoint(toks):
@@ -339,7 +339,7 @@ def convert_keff(toks):
        <valjean.eponine.tripoli4.common.convert_keff>` and more generally
        :mod:`~valjean.eponine.tripoli4.common`
     '''
-    keffmat = common.convert_keff(toks['keff_res'].asDict())
+    keffmat = common.convert_keff(toks['keff_res'].as_dict())
     return keffmat
 
 
@@ -357,7 +357,7 @@ def convert_kij_sources(toks):
        <valjean.eponine.tripoli4.common.convert_kij_sources>`
        and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
-    kijs = common.convert_kij_sources(toks['kij_sources'].asDict())
+    kijs = common.convert_kij_sources(toks['kij_sources'].as_dict())
     return kijs
 
 
@@ -374,7 +374,7 @@ def convert_kij_result(toks):
        <valjean.eponine.tripoli4.common.convert_kij_result>`
        and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
-    kijm = common.convert_kij_result(toks['kij_res'].asDict())
+    kijm = common.convert_kij_result(toks['kij_res'].as_dict())
     return kijm
 
 
@@ -417,7 +417,7 @@ def convert_keff_auto(toks):
         if 'results' not in akeff:  # some warning cases
             continue
         akeffd['keff_estimator'] = akeff['keff_estimator']
-        akeffr = akeff['results'].asDict() if not is_kij else akeff['results']
+        akeffr = akeff['results'].as_dict() if not is_kij else akeff['results']
         # may not be there for not converged results
         if akeff_key in akeffr:
             akeffra = akeffr[akeff_key]
@@ -458,7 +458,7 @@ def convert_ifp_adj_crit_ed(toks):
     lced = []
     for ind, crit_ed in enumerate(toks):
         LOGGER.debug("IFP adjoint crit edition result %d", ind)
-        score_res = {'results': common.convert_crit_edition(crit_ed.asDict()),
+        score_res = {'results': common.convert_crit_edition(crit_ed.as_dict()),
                      'response_type': 'ifp_adj_crit_edition'}
         score_res.update(crit_ed['ifp_adjoint_criticality_intro'])
         lced.append(score_res)
@@ -474,7 +474,7 @@ def to_final_dict(toks):
     :type toks: |parseres|
     :returns: python dictionary corresponding to input `pyparsing` dictionary
     '''
-    res = toks.asDict()
+    res = toks.as_dict()
     res['batch_data'] = res.pop('intro')
     res['batch_data'].update(res.pop('conclu', {}))
     return res
@@ -518,7 +518,7 @@ def lod_to_dot(toks):
     for elt in toks:
         # to be able to test the method (= allow toks is already a dict and not
         # necessarly a pyparsing.ParseResults)
-        edict = elt if isinstance(elt, dict) else elt.asDict()
+        edict = elt if isinstance(elt, dict) else elt.as_dict()
         for key, val in edict.items():
             ldict.setdefault(key, []).append(val)
     ldict = {k: tuple(v) for k, v in ldict.items()}
@@ -545,16 +545,16 @@ def finalize_response_dict(s, loc, toks):
     :returns: python dict corresponding to input `pyparsing` response result
     '''
     LOGGER.debug("In finalize_response_dict")
-    assert len(toks[0]['results'].asDict()) == 1, \
-        f"More than one entry in dict: {len(toks[0]['results'].asDict())!r}"
+    assert len(toks[0]['results'].as_dict()) == 1, \
+        f"More than one entry in dict: {len(toks[0]['results'].as_dict())!r}"
     res = toks[0]['results']
     key, val = next(res.items())
     # in keff case, results are stored in a list
     if len(res) > 1:
         val = res
-    assert isinstance(val, dict) or val.asList()
-    mydict = toks[0].asDict()
-    mydict['results'] = val if isinstance(val, dict) else val.asList()
+    assert isinstance(val, dict) or val.as_list()
+    mydict = toks[0].as_dict()
+    mydict['results'] = val if isinstance(val, dict) else val.as_list()
     mydict['response_type'] = key[:-4] if '_res' in key else key
     mydict.update(mydict.pop('compos_details', {}))
     LOGGER.debug("Final response metadata: %s",
@@ -686,7 +686,7 @@ def propagate_top_metadata(ldict):
     '''
     LOGGER.debug("In propagate_top_metadata")
     if not isinstance(ldict, dict):
-        ldict = ldict.asDict()
+        ldict = ldict.as_dict()
     assert 'list_responses' in ldict
     lresps = ldict.pop('list_responses')
     for resp in lresps:
@@ -712,7 +712,7 @@ def group_to_dict(toks):
     '''
     assert len(toks) == 1
     key = next(toks.keys())
-    tmpdict = toks.asDict()
+    tmpdict = toks.as_dict()
     tmpdict.update(convert_batch_numbers(tmpdict))
     for elt in toks[0]:
         if isinstance(elt, dict):

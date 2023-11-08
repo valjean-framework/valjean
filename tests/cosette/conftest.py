@@ -458,7 +458,7 @@ class FailingTask(Task):
     '''A failing task.'''
     def do(self, env, config):
         '''Raise an exception.'''
-        raise Exception
+        raise Exception  # pylint: disable=broad-exception-raised
 
 
 @composite

@@ -1766,7 +1766,7 @@ def convert_generic_adjoint(res):
     loctype = list(res['adj_res'].keys())[0]
     index = loctype.split('_')[2:]
     adjres = res.pop('adj_res')
-    if len(adjres.asDict()) != 1:
+    if len(adjres.as_dict()) != 1:
         LOGGER.warning("Issue: more than one key for adjoint result")
     ubatch = res.get('used_batches', None)
     # deal with units (stored in all results)
@@ -1775,7 +1775,7 @@ def convert_generic_adjoint(res):
     if 'uscore' in res:
         units['uscore'] = res.pop('uscore')
         units['usigma'] = res.pop('usigma')
-    assert len(res.asDict()) == 1, \
+    assert len(res.as_dict()) == 1, \
         "used_batches should be the only remaining key in the dict"
     assert ubatch is not None, "used batches should not the None"
     for ires in adjres[loctype]:
@@ -2214,7 +2214,8 @@ def convert_sensitivities(res):
     for ires in lres:
         if 'reaction_rate' in ires:
             resdict = {'used_batches_res': res['used_batches']}
-            resdict['reaction_rate_ratio_res'] = ires['reaction_rate'].asDict()
+            resdict['reaction_rate_ratio_res'] = (
+                ires['reaction_rate'].as_dict())
             resdict['sensitivity_ref'] = 'reaction_rate_ratio'
             thelist.append(resdict)
             continue
@@ -2235,7 +2236,7 @@ def convert_sensitivities(res):
                 'array': sensidb.arrays['default'],
                 'bins': sensidb.bins,
                 'units': sensidb.units}
-            resdict = iindex['charac'].asDict()
+            resdict = iindex['charac'].as_dict()
             resdict['sensitivity_type'] = itype
             resdict['sensitivity_spectrum_res'] = datadict
             resdict['integrated_res'] = sensidb.arrays['integrated_res']
@@ -2280,7 +2281,7 @@ class SphericalHarmonicsDictBuilder(DictBuilder):
         '''
         for res in data:
             score = self.rev_correspondence_table[res['score_name'][0]]
-            spaceb = res['score'][0]['space'].asList()
+            spaceb = res['score'][0]['space'].as_list()
             for iie, spres in enumerate(res['score'][0]['vpspace']):
                 if ((len(self.bins['ie']) < self.arrays[score].shape[3]
                      and 'incident_energy' in spres)):
@@ -2398,7 +2399,7 @@ def convert_spherical_harmonics(res, colnames=('score', 'sigma')):
     shdb.fill_space_bins()
     shdb.fill_moments_bins()
     shdb.fill_arrays_and_bins(res['res'])
-    shdb.add_last_bins(res['res'][-1].asDict())
+    shdb.add_last_bins(res['res'][-1].as_dict())
     shdb.convert_bins_to_increasing_arrays()
     shlist = []
     for narr, arr in shdb.arrays.items():

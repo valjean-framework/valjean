@@ -107,7 +107,7 @@ class Scheduler:
             self.hard_graph.flatten()
         LOGGER.info('hard graph flattened in %s seconds', chrono)
         with chrono:
-            self.full_graph = (hard_graph + soft_graph)
+            self.full_graph = hard_graph + soft_graph
         LOGGER.info('full graph computed in %s seconds', chrono)
         with chrono:
             self.full_graph.flatten()

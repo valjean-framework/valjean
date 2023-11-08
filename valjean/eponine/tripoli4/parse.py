@@ -105,8 +105,7 @@ class Parser:
         except ParserException as t4pe:
             LOGGER.error(t4pe)
             raise ParserException("Scan failed.") from None
-        else:
-            LOGGER.info("Successful scan in %f s", chrono)
+        LOGGER.info("Successful scan in %f s", chrono)
 
     def _scan(self):
         '''Scan the parse the given jdd.'''

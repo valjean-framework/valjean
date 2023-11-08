@@ -392,7 +392,7 @@ def test_parse_mesh_roundtrip(array_bins):
     LOGGER.debug("shape: %s", str(array.shape))
     mesh_t4_out = make_mesh_t4_output(larray, lbins['e'], lbins['t'])
     note('mesh output:\n' + mesh_t4_out)
-    pres = pygram.scoreblock.parseString(mesh_t4_out)
+    pres = pygram.scoreblock.parse_string(mesh_t4_out)
     assert pres
     keys = {'mesh_res', 'scoring_mode', 'scoring_zone_type'}
     skeys = set(pres[0].keys())
@@ -434,11 +434,11 @@ def test_parse_mesh_roundtrip(array_bins):
 
 def score_str():
     '''Example of score preceeding spectrum results, including units.'''
-    specscore_str = ('''
+    specscore_str = '''
          scoring mode : SCORE_SURF
          scoring zone :          Frontier        volumes : 2,1
 
-''')
+'''
     return specscore_str
 
 
@@ -646,7 +646,7 @@ def test_parse_spectrum_roundtrip(array_bins, units):
     array = larray['default']
     LOGGER.debug("shape: %s", str(array.shape))
     spectrum_t4out = spectrum_t4_output(larray, bins, units)
-    pres = pygram.scoreblock.parseString(spectrum_t4out)
+    pres = pygram.scoreblock.parse_string(spectrum_t4out)
     assert pres
     keys = {'scoring_mode', 'scoring_zone_id', 'scoring_zone_type',
             'spectrum_res'}
@@ -826,7 +826,7 @@ def test_parse_greenbands_roundtrip(array_bins, disc_batch):
     '''
     array, bins = array_bins
     gb_t4_out = gb_t4_output(array, bins, disc_batch)
-    pres = pygram.scoreblock.parseString(gb_t4_out)
+    pres = pygram.scoreblock.parse_string(gb_t4_out)
     assert pres
     assert len(pres) == 1
     assert (sorted(list(pres[0].keys()))
