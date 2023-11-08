@@ -30,7 +30,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 [build-system]
-requires = ["poetry-core >= 1.0.0"]
+requires = ["poetry-core >= 1.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
@@ -64,31 +64,29 @@ valjean = "valjean.cambronne.main:main"
 python = "^3.6.2"
 pyparsing = "^3.0"
 toml = "^0.10"
-numpy = [{version = "^1.19", python = "~3.6.2"},
-         {version = "^1.20", python = "^3.7"}]
+numpy = [{version = "^1.19", python = ">=3.6,<3.7"},
+         {version = "^1.20", python = ">=3.7"}]
 matplotlib = "^3.3"
-scipy = [{version = "^1.5", python = "~3.6.2"},
-         {version = "^1.6", python = "^3.7"}]
-h5py = [{version = "~3.1", python = "~3.6.2"},
-        {version = "^3.2", python = "^3.7"}]
-
+scipy = [{version = "^1.5", python = ">=3.6,<3.7"},
+         {version = "^1.6", python = ">=3.7"}]
+h5py = [{version = "~3.1", python = ">=3.6,<3.7"},
+        {version = "^3.2", python = ">=3.7"}]
 # dependencies for the [graphviz] extra
 pydot = {version = "^1.4.2", optional = true}
 
 # dependencies for the [dev] extra
-pytest = "^6.2"
-pytest-cov = "^3.0"
-pytest-mpl = "^0.13"
+pytest = "^7.0"
+pytest-cov = "^4.0"
+pytest-mpl = "^0.16"
 pytest-timeout = "^2.0"
-rstcheck = "^3.3"
-Sphinx = [{version = "~4.0", python = ">=3.6.2,<3.8"},
-          {version = "^5.0,<5.2", python = ">=3.8"},]
+rstcheck = [{version = "^3.3", python = ">=3.6,<3.7"},
+            {version = "^6.0", python = ">=3.7"}]
+Sphinx = "~5.0"
 sphinx-rtd-theme = "^1.0"
-pylint = "^2.12"
-flake8 = [{version = "~4.0", python = ">=3.6.2,<3.8"},
-          {version = "^5.0", python = ">=3.8"}]
-hypothesis = [{version = "^6.31", extras = ["numpy"], python = "~3.6.2"},
-              {version = "^6.55", extras = ["numpy"], python = "^3.7"}]
+pylint = [{version = "^2.13", python = ">=3.6,<3.8"},
+          {version = "^3.0", python = ">=3.8"}]
+flake8 = "<6"
+hypothesis = "^6.31"
 nbsphinx = "^0.8"
 jupyter-client = "^7.1"
 ipykernel = "^5.5"
@@ -150,6 +148,8 @@ legacy_tox_ini = """
 # See doc/src/devs/tox.rst if you have questions about the tox configuration
 [tox]
 minversion = 3.17.0
+requires = virtualenv<20.22.0
+           setuptools<59.0
 # isolated_build is required by poetry
 isolated_build = true
 envlist = py{36,37,38,39,310}
@@ -160,9 +160,9 @@ skip_missing_interpreters = true
 [testenv]
 setenv =
         COVERAGE_FILE=.coverage.{envname}
+        PIP_CACHE_DIR={toxworkdir}/{envname}/pip-cache
 description = invoke pytest with coverage, XML output and mpl
-extras = graphviz
-commands = pip install -e .[dev,graphviz]
+commands = pip install .[dev,graphviz]
            pytest --basetemp="{toxworkdir}/tmp-{envname}" \
                 --durations=20 --cov-report term-missing \
                 --cov-config "{toxinidir}/.coveragerc" \
@@ -179,7 +179,7 @@ passenv = PYTHONPATH
 description = invoke sphinx-build to build the HTML docs
 # be nitpicky on the HTML documentation
 passenv = HOME
-commands = pip install -e .[dev]
+commands = pip install .[dev]
            sphinx-build -d "{toxworkdir}/docs_doctree" -n -E \
                 --keep-going -b html -w "{toxworkdir}/sphinx-html-notags.out" \
                 -t no_notebooks "{toxinidir}/doc/src" \
@@ -194,7 +194,7 @@ commands = pip install -e .[dev]
 
 [testenv:linting-py310]
 description = invoke pylint and flake8 on the source package
-commands = pip install -e .[dev]
+commands = pip install .[dev]
            pylint -f parseable --exit-zero \
                 --rcfile "{toxinidir}/pyproject.toml" {posargs}
            flake8 --config "{toxinidir}/.flake8" \
@@ -211,9 +211,9 @@ passenv =
         VALJEAN_NIGHTLY_V11_0_PATH
         VALJEAN_NIGHTLY_V11_1_PATH
         VALJEAN_NIGHTLY_V12_0_PATH
+        VALJEAN_NIGHTLY_V12_1_PATH
         VALJEAN_NIGHTLY_AP3_RATES_PATH
-extras = graphviz
-commands = pip install -e .[dev]
+commands = pip install .[dev,graphviz]
            pytest --runslow --cov-report term-missing \
                 --durations=20 --cov-config "{toxinidir}/.coveragerc" \
                 --cov=valjean --mpl \

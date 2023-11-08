@@ -285,13 +285,21 @@ def rstcheck():
         '''A wrapper class to ignore specific :mod:`rstcheck` warnings.'''
 
         IGNORE = r'(Hyperlink target .* is not referenced)'
-        RSTCHECK = pytest.importorskip('rstcheck')
+        RSTCHECK = pytest.importorskip('rstcheck_core.checker')
+        RSTCONF = pytest.importorskip('rstcheck_core.config')
 
         @classmethod
         def check(cls, rst):
             '''Call :func:`rstcheck.check` with the predefined ignore
             pattern.'''
-            return cls.RSTCHECK.check(rst, ignore={'messages': cls.IGNORE})
+            return cls.RSTCHECK.check_source(
+                rst,
+                report_level=cls.RSTCONF.ReportLevel.ERROR,
+                ignores={"directives": ["toctree"],
+                         "roles": [],
+                         "substitutions": [],
+                         "languages": [],
+                         "messages": []})
 
     return RstCheckWrapper
 
