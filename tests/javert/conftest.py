@@ -188,7 +188,6 @@ def table_templates(draw, n_columns=integers(1, 5),
 
 @composite
 def curve_elements(draw, legend=text(), index=integers(0, 10), shape=None):
-    # pylint: disable=too-many-arguments
     '''Strategy for generating :class:`~.CurveElements` objects.'''
     if shape is None:
         a_shape = draw(array_shapes())

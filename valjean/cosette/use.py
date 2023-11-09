@@ -626,6 +626,7 @@ class Use:
     @classmethod
     def from_func(cls, *, func, task, key='result', kwarg=None,
                   deps_type='hard', serialize=False):
+        # pylint: disable=too-many-arguments
         '''Create a :class:`Use` from a function.
 
         :param func: a function or a callable object.

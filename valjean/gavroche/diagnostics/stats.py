@@ -625,7 +625,6 @@ class TestStatsTestsByLabels(Test):
         :param tuple plab: previous labels
         :rtype: list(dict)
         '''
-        # pylint: disable=too-many-arguments
         label = labels[0]
         if label not in index:
             LOGGER.warning('%s not found in some test labels', label)

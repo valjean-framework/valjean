@@ -589,6 +589,7 @@ class FormattedRst:
     '''
     def __init__(self, *, author, title, version,
                  tree_dict, text_dict, plots, n_workers=None):
+        # pylint: disable=too-many-arguments
         '''Create a :class:`FormattedRst` object. The `author`, `title` and
         `version` arguments are expected to be strings and are
         self-explanatory.
@@ -764,6 +765,7 @@ class RstTestReportTask(PythonTask):
     @classmethod
     def from_tasks(cls, name, *, make_report, eval_tasks, representation,
                    author, version, kwargs=None, deps=None, soft_deps=None):
+        # pylint: disable=too-many-arguments
         '''Construct an :class:`RstTestReportTask` from a list of test
         evaluation tasks and a function to classify test results and put them
         in test reports.
@@ -777,6 +779,7 @@ class RstTestReportTask(PythonTask):
 
     def __init__(self, name, *, report_task, representation, author, version,
                  deps=None, soft_deps=None):
+        # pylint: disable=too-many-arguments
 
         def write_rst(*, env, config):
             report = env[report_task.name]['result']

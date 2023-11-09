@@ -557,7 +557,6 @@ class MplStyle:
 
     def __init__(self, style=None, colors=None, mshape=None, mfill=None,
                  legends=None):
-        # pylint: disable=too-many-arguments
         '''Initialisation of the style.
 
         :param style: style from `matplotlib styles`_ or from user one, if
@@ -922,7 +921,6 @@ class _MplPlot2D:
         return gbins, bins, cbins
 
     def itwod_plot(self, fig, splt, curve, axnames, norm):
-        # pylint: disable=too-many-arguments
         '''Draw the 2D distribution on the ith subplot.
 
         :param matplotlib.figure.Figure fig: the current figure

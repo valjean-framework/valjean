@@ -441,7 +441,6 @@ class TestResultHolmBonferroni(TestResult):
     '''Result from the Holm-Bonferroni method.'''
 
     def __init__(self, test, first_test_res, alphas_i, rejected_null_hyp):
-        # pylint: disable=too-many-arguments
         '''Initialisation of :class:`~.TestResultHolmBonferroni`
 
         :param test: the used Holm-Bonferroni test

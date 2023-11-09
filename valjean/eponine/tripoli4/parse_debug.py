@@ -47,7 +47,6 @@ class ParserDebug(Parser):
     '''Scan up to the end flag then parse. For parsing debugging.'''
 
     def __init__(self, jddname, *, end_flag="", ofile=""):
-        # pylint: disable=too-many-arguments
         '''Initialize the :class:`ParserDebug` object.
 
         :param str jddname: path to the Tripoli-4 output

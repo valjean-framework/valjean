@@ -309,7 +309,6 @@ def cmake_echo(tmpdir_factory, subdir):
 #  depgraph fixtures  #
 #######################
 
-# pylint: disable=too-many-arguments
 @composite
 def dep_dicts(draw, elements=integers(0, 10), min_deps=0, max_deps=10,
               **kwargs):
@@ -359,7 +358,6 @@ def dep_tasks(draw, names=text(min_size=1), min_deps=0, max_deps=10,
     return tasks
 
 
-# pylint: disable=too-many-arguments
 @composite
 def depgraphs(draw, elements=integers(0, 10), min_deps=0, max_deps=10,
               **kwargs):
@@ -474,7 +472,6 @@ def graphs(draw, task_strategy, dep_frac=0.0):
     return make_graph(tasks, randoms, dep_frac)
 
 
-# pylint: disable=too-many-arguments
 @composite
 def delay_tasks(draw, min_duration=1e-15, max_duration=1e-5,
                 min_size=0, max_size=None):

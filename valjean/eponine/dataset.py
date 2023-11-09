@@ -730,7 +730,6 @@ class Dataset:
 
         How to deal with bins of N values (= center of bins)
     '''
-
     def __init__(self, value, error, *, bins=None, name='', what=''):
         '''Dataset class initialization.
 

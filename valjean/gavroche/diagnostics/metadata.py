@@ -78,7 +78,6 @@ class TestMetadata(Test):
         Document the parameters...
     '''
 
-    # pylint: disable=too-many-arguments
     def __init__(self, dict_md, name, description='', labels=None,
                  exclude=('results', 'index', 'score_index', 'response_index',
                           'response_type')):

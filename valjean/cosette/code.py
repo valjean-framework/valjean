@@ -151,9 +151,9 @@ class CheckoutTask(PythonTask):
     checkout is performed when the task is executed.
     '''
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, *, repository, checkout_root=None, log_root=None,
                  flags=None, ref=None, vcs='git', deps=None, soft_deps=None):
+        # pylint: disable=too-many-arguments
         '''Construct a :class:`CheckoutTask`.
 
         :param str name: The name of this task.
@@ -254,10 +254,10 @@ class BuildTask(PythonTask):
     when the task is executed.
     '''
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, source, *, build_root=None, log_root=None,
                  targets=None, build_system='cmake', configure_flags=None,
                  build_flags=None, deps=None, soft_deps=None):
+        # pylint: disable=too-many-arguments
         '''Construct a :class:`BuildTask`.
 
         :param str name: The name of this task.

@@ -341,8 +341,8 @@ class RunTask(PythonTask):
         LOGGER.debug('  - soft_deps = %s', soft_deps)
         LOGGER.debug('  - subprocess_args = %s', subprocess_args)
 
-    # pylint: disable=unused-argument
     def run_task(self, clis_closure, name, **subprocess_args):
+        # pylint: disable=unused-argument
         '''Execute the specified command and wait for its completion.
 
         On completion, this method proposes the following updates to the
@@ -365,8 +365,8 @@ class RunTask(PythonTask):
         :type config: Config or None
         :returns: The proposed environment update.
         '''
-        # pylint: disable=too-many-locals
         def runner(*, env, config, name, clis_closure, subprocess_args):
+            # pylint: disable=too-many-locals
             '''Actually run the command lines.'''
             from pathlib import Path
 
@@ -405,6 +405,7 @@ class RunTaskFactory:
     @classmethod
     def _generic_clis_closure(cls, executable, *, env, config, default_args,
                               extra_args, **kwargs):
+        # pylint: disable=too-many-arguments
         cli = [executable]
         cli.extend(arg.format(env=env, config=config, **kwargs)
                    for arg in default_args)

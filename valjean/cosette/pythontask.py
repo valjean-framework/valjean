@@ -285,9 +285,9 @@ class TaskException(Exception):
 
 class PythonTask(Task):
     '''Task that executes specified Python code.'''
-
     def __init__(self, name, func, *, args=None, kwargs=None,
                  env_kwarg=None, config_kwarg=None, deps=None, soft_deps=None):
+        # pylint: disable=too-many-arguments
         '''Initialize the task with a function, a tuple of arguments and a
         dictionary of kwargs.
 

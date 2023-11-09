@@ -85,7 +85,7 @@ def do_test_run(*args, job_config,  # pylint: disable=too-many-arguments
 
 @requires_git
 @requires_cmake
-def test_run(job_config,  # pylint: disable=too-many-arguments
+def test_run(job_config,
              config_tmp, env_filename, subdir, job_file):
     '''Test the `run` command.'''
     do_test_run(job_config=job_config, config_tmp=config_tmp,
@@ -95,7 +95,7 @@ def test_run(job_config,  # pylint: disable=too-many-arguments
 
 @requires_git
 @requires_cmake
-def test_run_kwarg(job_config,  # pylint: disable=too-many-arguments
+def test_run_kwarg(job_config,
                    config_tmp, env_filename, subdir, job_file):
     '''Test the ``-k`` cli option.'''
     do_test_run('-k', 'what=the thing',

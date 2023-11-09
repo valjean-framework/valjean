@@ -76,7 +76,6 @@ def bins_reduction(def_bins, reduced_dims):
 
 
 def special_array(array, score, bins, array_key='array', name='', what=''):
-    # pylint: disable=too-many-arguments
     '''Convert special arrays in :class:`~.dataset.Dataset`.
 
     These special cases are typically vov results or uncertainty spectrum
@@ -100,7 +99,6 @@ def special_array(array, score, bins, array_key='array', name='', what=''):
 
 def array_result(farray_res, res_type, name='', what='', array_key='array',
                  score='score'):
-    # pylint: disable=too-many-arguments
     '''Conversion of arrays in :class:`~.dataset.Dataset`.
 
     :param dict farray_res: results dictionary containing ``res_type`` key
@@ -132,7 +130,6 @@ def array_result(farray_res, res_type, name='', what='', array_key='array',
 
 def masked_array_result(farray_res, res_type, name='', what='',
                         array_key='array', score='score'):
-    # pylint: disable=too-many-arguments
     '''Mask invalid (``np.nan`` and ``np.inf``) values.'''
     ards = array_result(farray_res, res_type, name=name, what=what,
                         array_key=array_key, score=score)
@@ -142,7 +139,6 @@ def masked_array_result(farray_res, res_type, name='', what='',
 
 def integrated_result(result, res_type='integrated', name='', what='',
                       score='score', sigma='sigma'):
-    # pylint: disable=too-many-arguments
     '''Conversion of generic score (or energy integrated result) in
     :class:`~valjean.eponine.dataset.Dataset`.
 
@@ -218,7 +214,6 @@ def result_wo_error(result, res_type, name='', what=''):
 
 def result_with_error(result, res_type, name='', what='',
                       score='score', sigma='sigma'):
-    # pylint: disable=too-many-arguments
     '''Conversion of generic score (or energy integrated result) in
     :class:`~valjean.eponine.dataset.Dataset`.
 
@@ -246,7 +241,6 @@ def result_with_error(result, res_type, name='', what='',
 
 def unbinned_result(result, res_type, name='', what='', score=None,
                     sigma=None):
-    # pylint: disable=too-many-arguments
     '''Conversion of all unbinned results in
     :class:`~valjean.eponine.dataset.Dataset`.
 

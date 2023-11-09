@@ -249,7 +249,6 @@ def stats_result(tasks_md, env):
 
 def stats_representation(sres, verb_level, full_repr, rst_formatter, rstcheck,
                          expected_plot_types=None):
-    # pylint: disable=too-many-arguments
     '''Representation of stats tests `sres` at given verbosity level.
 
     Test if table and text templates are well formatted in rst and that plot
@@ -390,7 +389,6 @@ def test_spam_repr(caplog, str_choice, rfull_repr):
 @pytest.mark.parametrize('success', [True, False])
 def test_external_repr(templates, verb_level, success,
                        full_repr, rst_formatter, rstcheck):
-    # pylint: disable=too-many-arguments
     '''Test the TestExternal representation.'''
     texternal = TestExternal(*templates, name='test_external', success=success)
     rexternal = texternal.evaluate()

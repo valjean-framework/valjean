@@ -83,6 +83,7 @@ def do_git_checkout(name, config, project, *, env=None, ref, flags):
 
 def do_cmake_build(name, config, source, *, env=None, configure_flags,
                    build_flags, targets):
+    # pylint: disable=too-many-arguments
     '''Actually perform the CMake build.'''
     # create the task and run it
     task = BuildTask(name, source,
@@ -128,7 +129,6 @@ def test_git_checkout(task_name, config_tmp, project, git_ref, git_flags):
                     ref=git_ref, flags=git_flags)
 
 
-# pylint: disable=too-many-arguments
 @requires_cmake
 def test_cmake_build(task_name, config_tmp, project, cmake_configure_flags,
                      cmake_build_flags, cmake_targets):

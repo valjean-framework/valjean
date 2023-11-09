@@ -732,10 +732,11 @@ _score_surf = (_scoresurf_kw('scoring_zone_type')
 _score_surf_sum = (
     _scoresurfsum_kw('scoring_zone_type')
     + Suppress(_scoresurfsumfront_kw + ':')
-    + delimited_list(Group(Suppress('(')
-                           + delimited_list(Word(printables, excludeChars=',()')
-                                            | _inums)
-                           + Suppress(')')), delim='+')('scoring_zone_id')
+    + delimited_list(
+        Group(Suppress('(')
+              + delimited_list(Word(printables, excludeChars=',()') | _inums)
+              + Suppress(')')),
+        delim='+')('scoring_zone_id')
     + Suppress(_scoresurfacesum_kw + ':')
     + _fnums('scoring_zone_volsurf'))
 _score_point = (_scorepoint_kw('scoring_zone_type')
