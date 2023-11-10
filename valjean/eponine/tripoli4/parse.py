@@ -341,6 +341,13 @@ class ParseResult:
         elif 'uncert' in resn:
             rname = rname.replace('uncert_', '')
             what = score
+        elif resn == 'parna_likelihood':
+            if score == 'mean':
+                rname = resn
+                what = resn
+            else:
+                rname = '_'.join((resn, score))
+                what = score
         else:
             what = resp['response_function'].lower()
         return rname, sigma, what

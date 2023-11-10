@@ -394,8 +394,28 @@ def convert_kij_keff(toks):
        <valjean.eponine.tripoli4.common.convert_kij_keff>`
        and more generally :mod:`~valjean.eponine.tripoli4.common`
     '''
-    kijkeff = common.convert_kij_keff(toks[-1].asDict())
+    kijkeff = common.convert_kij_keff(toks[-1].as_dict())
     return kijkeff
+
+
+def convert_parna_keff(pdict):
+    '''Convert Parna likelihood results to python dictionary.
+
+    This result is part of the ``keff_auto`` results.
+
+    :param pdict: parna results block to be converted in dictionary (with
+      filter).
+    :returns: dictionary
+    '''
+    plhd = {}
+    for key, val in pdict.items():
+        if isinstance(val, dict):
+            for keyd, vald in val.items():
+                if keyd != 'length':
+                    plhd[f'{key}_{keyd}'] = vald
+        else:
+            plhd[key] = val
+    return plhd
 
 
 def convert_keff_auto(toks):
@@ -404,6 +424,10 @@ def convert_keff_auto(toks):
 
     Add the ``'response_type'`` key to the dictionary with ``'keff_auto_res'``
     as associated value (to match browser and data_convertor requirements).
+
+    :param toks: `pyparsing` element
+    :type toks: |parseres|
+    :returns: python list corresponding to input `pyparsing` list
     '''
     assert len(toks) == 1, "Not correct number of elements in keff_auto toks"
     akeff_res = toks[0]
@@ -424,6 +448,9 @@ def convert_keff_auto(toks):
             akeffr['used_batches'] = akeffra.pop('used_batches')
             if 'best_disc_batchs' in akeffra:
                 akeffr['discarded_batches'] = akeffra.pop('best_disc_batchs')
+        if 'keff_auto' in akeffr and 'parna' in akeffr['keff_auto']:
+            parna = akeffr['keff_auto'].pop('parna')
+            akeffr['parna_likelihood'] = convert_parna_keff(parna)
         akeffd['results'] = akeffr
         res.append(akeffd)
     return res

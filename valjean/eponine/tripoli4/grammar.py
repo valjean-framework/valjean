@@ -357,6 +357,9 @@ _warn_fixsourcekeff_kw = (
     Keyword("In FIXED_SOURCES_CRITICITY mode, the keff result")
     + Keyword("is actually an overall multiplication factor "
               "(cf User's Guide)"))
+_parna_likelihood_kw = Keyword("parna likelihood confidence interval (on the "
+                               "mean of M = M' + 1)")
+_parna_inv_cdf_kw = Keyword("inversion of the CDF converged after")
 
 # Time steps
 _timestepnum_kw = Keyword("TIME STEP NUMBER")
@@ -1106,11 +1109,28 @@ _bestkeff = (Suppress(Keyword("keff") + '=') + _fnums('keff')
              + Suppress(Keyword("sigma") + '=') + _fnums('sigma')
              + Suppress(Keyword("sigma%") + '=') + _fnums('sigma%'))
 _equivkeff = Suppress(_equivkeff_kw) + _fnums('equivalent_keff')
+_parna_lh = (Suppress(Keyword("mean") + '=') + _fnums('mean')
+             + Suppress(Keyword("lambda") + '=') + _fnums('lambda')
+             + Suppress(Keyword("sigma") + '=') + _fnums('sigma')
+             + Suppress(Keyword("sigma%") + '=') + _fnums('sigma%'))
+_parna_proba = (Suppress(Keyword("proba") + ':') + _fnums('proba')
+                + Suppress(Keyword("lower") + '=') + _fnums('lower')
+                + Suppress(Keyword("upper") + '=') + _fnums('upper')
+                + Suppress(Keyword("length") + '=') + _fnums('length'))
+_parna_inv_cdf = Suppress(_parna_inv_cdf_kw + ":"
+                          + _inums('iterations')
+                          + Keyword('iterations'))
+_parna_likelihood = (Suppress(_parna_likelihood_kw) + _parna_lh
+                     + Group(_parna_proba + _parna_inv_cdf)('3sigma')
+                     + Group(_parna_proba + _parna_inv_cdf)('2.57sigma'))
+_parna_block = (Group(_parna_likelihood)('parna'))
 _bestkeffpestim = (Group(_notconverged_kw('not_converged')
                          | Group(Optional(_bestresdiscbatch)
                                  + _numusedbatch
                                  + _bestkeff
-                                 + Optional(_equivkeff))('keff_auto'))
+                                 + Optional(_equivkeff)
+                                 + Optional(_parna_block)
+                                 )('keff_auto'))
                    ('results'))
 _bestreskeff = Group(_bestresestim + _minus_line + _bestkeffpestim)
 _warnfixedsources = Group(Suppress(_warning_kw) + _minus_line
