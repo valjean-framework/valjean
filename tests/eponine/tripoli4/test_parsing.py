@@ -154,6 +154,10 @@ def loop_on_files(filelist, norm_end=True):
     failed_jdds, failed_time_jdds, failed_browser_jdds = [], [], []
     for ifile in filelist:
         print("Reading:", ifile)
+        if not ifile.exists():
+            print(f"File {ifile} does not exist")
+            failed_jdds.append(ifile)
+            continue
         try:
             res = Parser(ifile)
         except ParserException as pex:
