@@ -5,7 +5,7 @@ pipeline {
     timeout(time: 3, unit: 'HOURS')
   }
 
-  agent { label 'valjean' }
+  agent { label 'valjean_cen7' }
 
   environment {
     projectName = 'valjean'
