@@ -2,10 +2,10 @@ pipeline {
   options {
     skipDefaultCheckout()
     timestamps()
-    timeout(time: 3, unit: 'HOURS')
+    timeout(time: 4, unit: 'HOURS')
   }
 
-  agent { label 'valjean_cen7' }
+  agent { label 'valjean' }
 
   environment {
     projectName = 'valjean'
