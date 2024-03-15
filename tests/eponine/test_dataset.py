@@ -39,7 +39,7 @@ from collections import OrderedDict
 import re
 import numpy as np
 import pytest  # pylint: disable=unused-import
-from hypothesis import given, note, settings, HealthCheck
+from hypothesis import given, note, settings, HealthCheck, assume
 from hypothesis.strategies import data, floats, one_of
 
 from ..context import valjean  # pylint: disable=unused-import,C0411
@@ -120,6 +120,48 @@ def test_division(gds):
     note(f"error = {error}")
     note(f"sgds err = {sgds.error}")
     assert np.allclose(sgds.error, error, equal_nan=True)
+
+
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(ds=datasets(), scalar=floats(-1e5, 1e5))
+def test_radd(ds, scalar):
+    '''Test addition of a scalar with a dataset.'''
+    res1 = ds + scalar
+    res2 = scalar + ds
+    note(f"{res1 = }")
+    note(f"{res2 = }")
+    assert np.all(res1.value == res2.value)
+    assert np.all(res1.error == res2.error)
+
+
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(ds=datasets(), scalar=floats(-1e5, 1e5))
+def test_rsub(ds, scalar):
+    '''Test subtraction of a scalar with a dataset.'''
+    res = (ds - scalar) + (scalar - ds)
+    assert np.all(res.value == 0.0)
+
+
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(ds=datasets(), scalar=floats(-1e5, 1e5))
+def test_rmul(ds, scalar):
+    '''Test multiplication of a scalar with a dataset.'''
+    res1 = ds * scalar
+    res2 = scalar * ds
+    note(f"{res1 = }")
+    note(f"{res2 = }")
+    assert np.all(res1.value == res2.value)
+    assert np.all(res1.error == res2.error)
+
+
+@settings(suppress_health_check=(HealthCheck.too_slow,))
+@given(ds=datasets(), scalar=floats(-1e5, 1e5))
+def test_rtruediv(ds, scalar):
+    '''Test division of a scalar with a dataset.'''
+    assume(np.abs(scalar) > 1e-10)
+    assume(np.all(np.abs(ds.value)) > 1e-10)
+    res = scalar / (scalar / ds)
+    assert np.allclose(res.value, ds.value, equal_nan=True)
 
 
 @settings(suppress_health_check=(HealthCheck.too_slow,))

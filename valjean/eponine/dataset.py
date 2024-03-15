@@ -384,6 +384,15 @@ Example multiplication of a scalar value
 
 As expected it acts on the value and on the error. Bins are unchanged.
 
+You can also put the scalar value first:
+
+    >>> ds1m10_inv = 10 * ds1
+    >>> np.array_equal(ds1m10.value, ds1m10_inv.value)
+    True
+    >>> np.array_equal(ds1m10.error, ds1m10_inv.error)
+    True
+    >>> same_coords(ds1m10, ds1m10_inv)
+    True
 
 .. _division_by_nparray:
 
@@ -403,7 +412,7 @@ Example of division of a :obj:`numpy.ndarray`
     >>> same_coords(ds1da, ds1)
     True
 
-``a`` and ``ds1`` have the same shape to everything is fine.
+``a`` and ``ds1`` have the same shape so everything is fine.
 
     >>> ds1 / b
     Traceback (most recent call last):
@@ -905,8 +914,8 @@ class Dataset:
     def __add__(self, other):
         LOGGER.debug("in %s.__add__", self.__class__.__name__)
         if not isinstance(other, (int, float, np.ndarray, Dataset)):
-            raise TypeError("Int, float, np.array and Dataset"
-                            "accepted for the moment")
+            raise NotImplementedError("Int, float, np.array and Dataset"
+                                      "accepted for the moment")
         if not isinstance(other, Dataset):
             return Dataset(self.value + other, self.error,
                            bins=self.bins, name=self.name, what=self.what)
@@ -920,8 +929,8 @@ class Dataset:
     def __sub__(self, other):
         LOGGER.debug("in %s.__sub__", self.__class__.__name__)
         if not isinstance(other, (int, float, np.ndarray, Dataset)):
-            raise TypeError("Int, float, np.array and Dataset "
-                            "accepted for the moment")
+            raise NotImplementedError("Int, float, np.array and Dataset "
+                                      "accepted for the moment")
         if not isinstance(other, Dataset):
             return Dataset(self.value - other, self.error,
                            bins=self.bins, name=self.name, what=self.what)
@@ -960,6 +969,26 @@ class Dataset:
                         + (self.value * other.error / other.value**2)**2)
         return Dataset(value, error, bins=self.bins, name=self.name,
                        what=self.what+'/'+other.what)
+
+    def __radd__(self, other):
+        return self + other
+
+    def __rsub__(self, other):
+        return -(self - other)
+
+    def __rmul__(self, other):
+        return self * other
+
+    def __rtruediv__(self, other):
+        LOGGER.debug("in %s.__rtruediv__", self.__class__.__name__)
+        new_error = np.abs(self.error * other / self.value**2)
+        return Dataset(
+            other / self.value, new_error,
+            bins=self.bins, name=self.name, what=self.what)
+
+    def __neg__(self):
+        return Dataset(-self.value, self.error, bins=self.bins, name=self.name,
+                       what=self.what)
 
     @staticmethod
     def _get_bins_slice(index):
