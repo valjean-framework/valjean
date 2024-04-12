@@ -491,7 +491,7 @@ def make_bins(nres, vres, ngroups, anisotropies=None, nsurfaces=None):
     :rtype: dict
     :returns: dictionary of all possible number of bins
     '''
-    if nres in ('KEFF', 'KINF', 'MIGRATIONAREA'):
+    if nres in ('KEFF', 'KINF', 'MIGRATIONAREA', 'Buckling'):
         return None
     data = vres[...]
     if ngroups == data.size:

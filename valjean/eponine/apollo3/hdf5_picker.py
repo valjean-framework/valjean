@@ -335,7 +335,7 @@ class Picker:
     def pick_standard_value(self, *, output, zone, result_name, isotope=None):
         '''Pick a result according to required parameters from a standard file
         (like keff, flux or rate).'''
-        if result_name in ('KEFF', 'KINF', 'NSURF'):
+        if result_name in ('KEFF', 'KINF', 'NSURF', 'MIGRATIONAREA', 'Buckling'):
             return self._make_dataset(
                 self.hfile[output][zone][result_name][...][0], result_name)
         if not isotope:
