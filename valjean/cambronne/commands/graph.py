@@ -82,6 +82,7 @@ class GraphCommand(JobCommand):
                     LOGGER.error('you need to install pydot to use the '
                                  '--output option.')
                     raise
+                # pylint: disable-next=possibly-used-before-assignment
                 graph_pydot = graph_from_dot_data(graph_str)[0]
                 try:
                     writer = getattr(graph_pydot, 'write_' + ext[1:].lower())

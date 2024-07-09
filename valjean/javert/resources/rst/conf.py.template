@@ -18,9 +18,8 @@ nitpicky = False
 html_theme = {theme!r}
 html_theme_options = {theme_options!r}
 html_static_path = ['.static']
+html_css_files = ['valjean.css']
 htmlhelp_basename = project + 'doc'
 latex_elements = {{'papersize': 'a4paper', 'pointsize': '10pt'}}
 latex_documents = [(master_doc, project + '.tex', project, author, 'manual')]
-
-def setup(app):
-    app.add_stylesheet('valjean.css')
+language = 'en'

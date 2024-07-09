@@ -726,6 +726,8 @@ class MplPlot:
                 mpl_plot = _MplBar(sdat, self.style)
             elif sdat.ptype == 'barstack':
                 mpl_plot = _MplBarStack(sdat, self.style)
+            else:
+                raise ValueError("Unimplemented plot type: {sdat.ptype}")
             mpl_plot.draw(fig, splt, fmts=fmts)
         self.finalize_figure(splts)
         return fig, splts

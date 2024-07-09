@@ -114,7 +114,7 @@ def process_options(args):
     '''Process the parsed options.
 
     :returns: The configuration.'''
-
+    # pylint: disable=possibly-used-before-assignment
     # configuration file
     if args.config is not None:
         config = Config.from_file(args.config)
