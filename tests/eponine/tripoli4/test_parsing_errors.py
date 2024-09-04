@@ -77,6 +77,13 @@ def test_no_a_t4_opt_no_spectrum(datadir, caplog):
     assert ("Parsing error in spectrum (_spectrumvals), "
             "please check you run Tripoli-4 with '-a' option"
             in caplog.text)
+    assert len(caplog.records) == 7
+    assert all(rec.module in ("scan", "parse")
+               for rec in caplog.records if rec.levelno == logging.INFO)
+    assert all(rec.module in ("transform", "parse")
+               for rec in caplog.records if rec.levelno == logging.ERROR)
+    assert ("Parsing error located at line: 9, col: 1"
+            in caplog.records[5].getMessage())
 
 
 def test_no_a_t4_opt_bad_bins(datadir, caplog):
@@ -144,11 +151,21 @@ def test_no_normal_completion(datadir, caplog):
     '''
     t4p = Parser(str(datadir/"failure_test_no_normal_completion.d.res"))
     assert t4p
-    assert ("Tripoli-4 listing did not finish with NORMAL COMPLETION."
-            in caplog.text)
+    assert len(caplog.records) == 5
+    info_recs = [rec for rec in caplog.records if rec.levelno == logging.INFO]
+    assert len(info_recs) == 4
+    assert all(rec.module in ("parse", "scan") for rec in info_recs)
+    assert (info_recs[1].getMessage()
+            == "Edition batch (-1) different from current batch (37)")
+    warn_recs = [rec for rec in caplog.records
+                 if rec.levelno == logging.WARNING]
+    assert len(warn_recs) == 1
+    assert (warn_recs[0].getMessage()
+            == "Tripoli-4 listing did not finish with NORMAL COMPLETION.")
     assert t4p.scan_res.normalend is False
     assert t4p.scan_res.partial is True
     t4_res = t4p.parse_from_index(-1, name='bad end')
+    assert len(caplog.records) == 6
     assert t4_res.res['batch_data']['batch_number'] == 37
     assert t4_res.res['batch_data']['name'] == 'bad end'
     t4rb = t4_res.to_browser()

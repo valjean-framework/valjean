@@ -96,8 +96,10 @@ given composition.
 import logging
 import re
 from collections import OrderedDict
-from pathlib import Path
-import pkg_resources as pkg
+try:
+    from importlib.resources import files
+except ImportError:
+    from importlib_resources import files
 import numpy as np
 from ..dataset import Dataset
 
@@ -261,13 +263,17 @@ class DepletionReader:
         '''Initialize postscripts from ROOT macros.
 
         ROOT macros are in the `resources/depletion` folder. They are compiled
-        in the `__t4depletion__` folder to used afterwards.
+        in the `root_build/__t4depletion__` folder to be used afterwards.
+        Thus it is recommended to give a `root_build` path in order to avoid
+        the default one, in :mod:`valjean` folder where the user may not have
+        write permissions.
         '''
         try:
             import ROOT
         except ImportError as ierr:
             LOGGER.error('ROOT needs to be added to PYTHONPATH')
             raise ImportError('ROOT missing') from ierr
+        LOGGER.info("root_build: %s", root_build)
         if all(hasattr(ROOT, cls) for cls in ['DepletedComposition',
                                               'BurnupResults',
                                               'MeanBurnupResults']):
@@ -276,17 +282,16 @@ class DepletionReader:
             return ROOT
         LOGGER.info('attempting compilation of the ROOT depletion scripts...')
         ps_fold = 'valjean.eponine.tripoli4.resources.depletion'
-        assert pkg.resource_exists(ps_fold, 'DepletedComposition.C')
-        assert pkg.resource_exists(ps_fold, 'BurnupResults.C')
-        assert pkg.resource_exists(ps_fold, 'MeanBurnupResults.C')
-        fname = pkg.resource_filename(ps_fold, 'DepletedComposition.C')
-        path_fname = Path(fname)
-        ROOT.gROOT.SetMacroPath(str(path_fname.parent))
+        script_dir = files(ps_fold)
+        assert script_dir.joinpath('DepletedComposition.C').is_file()
+        assert script_dir.joinpath('BurnupResults.C').is_file()
+        assert script_dir.joinpath('MeanBurnupResults.C').is_file()
         if not root_build:
-            LOGGER.warning('T4 depletion postscripts ROOT libraries will be '
-                           'compiled in valjean folder, permissions might not '
-                           'be granted.')
-            root_build = path_fname.parent / "__t4depletion__"
+            LOGGER.warning(
+                'T4 depletion postscripts ROOT libraries will be compiled '
+                'in valjean folder, permissions might not be granted.')
+            root_build = script_dir / "__t4depletion__"
+        ROOT.gROOT.SetMacroPath(str(script_dir))
         ROOT.gSystem.MakeDirectory(str(root_build))
         ROOT.gSystem.SetBuildDir(str(root_build), True)
         ROOT.gROOT.LoadMacro('DepletedComposition.C+')

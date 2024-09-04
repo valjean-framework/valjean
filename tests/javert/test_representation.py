@@ -318,7 +318,7 @@ def test_full_concatenation(student_test_result, student_test_result_fail,
     for it1, it2 in zip(templ1, templ2):
         if isinstance(it1, PlotTemplate):
             assert isinstance(it1, PlotTemplate)
-            assert type(it1) == type(it2)  # pylint: disable=C0123
+            assert type(it1) is type(it2)
             conc = join(it1, it2)
             assert conc.nb_plots == it1.nb_plots + it2.nb_plots
 

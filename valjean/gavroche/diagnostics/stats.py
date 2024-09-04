@@ -46,7 +46,7 @@ actually run.
 import logging
 from collections import defaultdict
 from functools import partial, update_wrapper, total_ordering
-from enum import IntEnum
+from enum import Enum, auto
 
 from ...fingerprint import fingerprint
 from ...cosette.task import TaskStatus, close_dependency_graph
@@ -218,7 +218,7 @@ class TestResultStatsTasks(TestResult):
         return TaskStatus.DONE in self.classify and len(self.classify) == 1
 
 
-class TestOutcome(IntEnum):
+class TestOutcome(Enum):
     '''An enumeration that represents the possible outcomes of a test:
 
     `SUCCESS`
@@ -234,10 +234,10 @@ class TestOutcome(IntEnum):
         represents tasks that did not generate a :class:`~.TestResult` object
         as a result;
     '''
-    SUCCESS = 0
-    FAILURE = 1
-    MISSING = 2
-    NOT_A_TEST = 3
+    SUCCESS = auto()
+    FAILURE = auto()
+    MISSING = auto()
+    NOT_A_TEST = auto()
     __test__ = False
 
 
@@ -319,8 +319,8 @@ def test_stats(*, name, description='', labels=None, tasks):
     >>> for task in [create_tests_task, create_stats, stats]:
     ...     env_up, status = task.do(env=env, config=config)
     ...     env.apply(env_up)
-    >>> print(status)
-    TaskStatus.DONE
+    >>> print(f"Task status: {status.name}")
+    Task status: DONE
 
     The results are stored in a :class:`list` under the key ``'result'``:
 

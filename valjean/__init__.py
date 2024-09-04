@@ -33,13 +33,15 @@
 import logging
 import sys
 from contextlib import contextmanager
-from pkg_resources import get_distribution, DistributionNotFound
+from importlib.metadata import distribution
 
 
-try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
-    __version__ = 'unknown'
+__version__ = distribution(__name__).version
+
+# Get the major and minor version of Python
+major_version = sys.version_info.major
+minor_version = sys.version_info.minor
+LOG_STACK_LEVEL = 2 if (major_version, minor_version) >= (3, 10) else 1
 
 logging.NOTE = 15
 logging.addLevelName(logging.NOTE, "NOTE")
@@ -49,7 +51,8 @@ def note(self, message, *args, **kwargs):
     """New results level function"""
     if self.isEnabledFor(logging.NOTE):
         # pylint: disable=protected-access
-        self._log(logging.NOTE, message, args, **kwargs)
+        self._log(logging.NOTE, message, args, **kwargs,
+                  stacklevel=LOG_STACK_LEVEL)
 
 
 logging.Logger.note = note
@@ -127,10 +130,12 @@ def local_logger_level(module, level):
     logger = get_logger(module)
     log_level = (logger.getEffectiveLevel() if module == 'valjean'
                  else logging.NOTSET)
+    _formatter = ValjeanFormatter(LOG_CONSOLE_FORMAT)
     try:
         logger.setLevel(level)
         for handler in logger.handlers:
             handler.setLevel(level)
+            handler.setFormatter(_formatter)
         yield
     finally:
         logger.setLevel(log_level)

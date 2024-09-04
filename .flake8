@@ -1,7 +1,11 @@
 [flake8]
 exclude = data, .eggs, doc, setup.py
 ignore =
-        F401  # unused import
-        F811  # redefined from outer scope
-        E226  # whitespace around operators
-        W503  # line break before binary operator
+       # unused import
+       F401
+       # redefined from outer scope
+       F811
+       # whitespace around operators
+       E226
+       # line break before binary operato
+       W503

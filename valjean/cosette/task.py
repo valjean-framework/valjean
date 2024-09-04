@@ -73,8 +73,8 @@ LOGGER = logging.getLogger(__name__)
 #: * ``FAILED`` (the task was executed and it failed)
 #: * ``SKIPPED`` (the task was skipped by the scheduler; this may happen, for
 #:   instance, if the one of the task dependencies was not successful)
-TaskStatus = enum.IntEnum('TaskStatus',  # pylint: disable=invalid-name
-                          'WAITING PENDING DONE FAILED SKIPPED')
+TaskStatus = enum.Enum('TaskStatus',  # pylint: disable=invalid-name
+                       'WAITING PENDING DONE FAILED SKIPPED')
 
 
 class TaskError(Exception):

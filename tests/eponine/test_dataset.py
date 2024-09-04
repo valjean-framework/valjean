@@ -128,8 +128,8 @@ def test_radd(ds, scalar):
     '''Test addition of a scalar with a dataset.'''
     res1 = ds + scalar
     res2 = scalar + ds
-    note(f"{res1 = }")
-    note(f"{res2 = }")
+    note(f"{res1=}")
+    note(f"{res2=}")
     assert np.all(res1.value == res2.value)
     assert np.all(res1.error == res2.error)
 
@@ -148,8 +148,8 @@ def test_rmul(ds, scalar):
     '''Test multiplication of a scalar with a dataset.'''
     res1 = ds * scalar
     res2 = scalar * ds
-    note(f"{res1 = }")
-    note(f"{res2 = }")
+    note(f"{res1=}")
+    note(f"{res2=}")
     assert np.all(res1.value == res2.value)
     assert np.all(res1.error == res2.error)
 

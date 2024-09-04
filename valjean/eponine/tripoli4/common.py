@@ -136,7 +136,7 @@ should be 7 as we have 7 dimensison.
    >>> db = DictBuilder(['score', 'sigma'], [1,2,3,4,5,6,7])
    Traceback (most recent call last):
        [...]
-   TypeError: Can't instantiate abstract class DictBuilder with ...
+   TypeError: Can't instantiate abstract class DictBuilder ...
    >>> mdb = MeshDictBuilder(['score', 'sigma'], [1,2,3,4,5,6,7])
    >>> mdb = MeshDictBuilder(['result', 'sigma'], [1,2,3,4,5,6,7])
    >>> sdb = SpectrumDictBuilder(['score', 'sigma', 'score/lethargy'],

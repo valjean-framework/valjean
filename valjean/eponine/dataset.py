@@ -1102,7 +1102,7 @@ class Dataset:
                        name=self.name, what=self.what)
 
     # pylint: disable=too-many-arguments,too-many-return-statements
-    def equals(self, other, shape=True, value=True, error=True, bins=True,
+    def equals(self, other, *, shape=True, value=True, error=True, bins=True,
                name=False, what=False, equal_nan=False):
         '''Compare two datasets
 

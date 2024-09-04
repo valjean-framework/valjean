@@ -195,7 +195,7 @@ def test_custom_epjav1(caplog, datadir, rst_full, tmpdir):
     '''Test logger with a high level first (``WARNING``) and low one next
     (``DEBUG``).
     '''
-    with local_logger_level('valjean.eponine', logging.WARNING),\
+    with local_logger_level('valjean.eponine', logging.WARNING), \
          local_logger_level('valjean.javert.plot_repr', logging.DEBUG):
         greport = gauss_report(datadir)
         fmt_report = rst_full.format_report(
@@ -213,7 +213,8 @@ def test_custom_epjav2(caplog, datadir, rst_full, tmpdir):
     '''Test logger with a low level first (``DEBUG``) and high one next
     (``WARNING``).
     '''
-    with local_logger_level('valjean.eponine.tripoli4.common', logging.DEBUG),\
+    with local_logger_level('valjean.eponine.tripoli4.common',
+                            logging.DEBUG), \
          local_logger_level('valjean.javert', logging.WARNING):
         greport = gauss_report(datadir)
         fmt_report = rst_full.format_report(

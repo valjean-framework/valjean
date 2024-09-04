@@ -44,7 +44,10 @@ from datetime import datetime
 from collections import defaultdict
 from pathlib import Path
 import multiprocessing as mp
-import pkg_resources as pkg
+try:
+    from importlib.resources import files
+except ImportError:
+    from importlib_resources import files
 import numpy as np
 
 from ..fingerprint import fingerprint
@@ -752,9 +755,9 @@ class FormattedRst:
         :param dict kwargs: any additional keyword arguments will be passed to
                             the formatting.
         '''
-        assert pkg.resource_exists('valjean.javert.resources.rst', resource)
-        res_template = pkg.resource_string('valjean.javert.resources.rst',
-                                           resource).decode('utf-8')
+        rst_resource = files('valjean.javert.resources.rst').joinpath(resource)
+        assert rst_resource.is_file()
+        res_template = rst_resource.read_text(encoding='utf-8')
         res_str = res_template.format(**kwargs) if formatting else res_template
         with dest.open('w') as res_file:
             res_file.write(res_str)
