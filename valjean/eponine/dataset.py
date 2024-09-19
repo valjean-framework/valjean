@@ -485,10 +485,67 @@ About the division by ``0``, ``nan`` or ``inf``, it acts like in the
 multiplication or division by a :obj:`numpy.ndarray`, see
 :ref:`division_by_nparray` (warnings and ``nan``, ``inf``, etc.)
 
->>> np.isnan((ds1/ds1).value[0][0])
-True
->>> np.isinf(((ds1+1)/ds1).value[0][0])
-True
+    >>> np.isnan((ds1/ds1).value[0][0])
+    True
+    >>> np.isinf(((ds1+1)/ds1).value[0][0])
+    True
+
+
+Comparisons
+-----------
+
+There are many possible criteria to compare :class:`Dataset` objects. For
+instance, one might consider that datasets are equal if they hold the same
+values, regardless of the bins or the errors, or one might consider that even
+metadata such as names should influence the comparison. For these reasons, the
+use of the ``==`` operator (as defined in ``__eq__``) is not recommended.
+
+To accommodate all these possibilities, there is a method called
+:meth:`~Dataset.equals`, which can be customized to include or exclude various
+parts of the :class:`Dataset` from the comparison. For example:
+
+    >>> ds = Dataset(value=np.arange(20, 30).reshape(2, 5),
+    ...              error=np.array([0.4]*10).reshape(2, 5),
+    ...              bins=bins, name='dataset', what='spam')
+    >>> ds2 = ds.copy()
+    >>> ds.equals(ds2)
+    True
+
+By default, :meth:`~Dataset.equals` compares the following dataset attributes:
+
+* shape
+* value
+* error
+* bins
+
+Any of these attributes can be excluded from the comparison using the flag of
+the same name. For instance:
+
+    >>> ds2.value = ds.value + 1
+    >>> ds.equals(ds2)
+    False
+    >>> ds.equals(ds2, value=False)  # we exclude value
+    True
+
+Likewise, ``name`` and ``what`` can be included in the comparison:
+
+    >>> ds2 = ds.copy()
+    >>> ds2.name = 'sblinda'
+    >>> ds.equals(ds2)   # with default options, we don't compare ``name``
+    True
+    >>> ds.equals(ds2, name=True)   # but we can!
+    False
+
+`NaN` values are not treated as equal by default:
+
+    >>> ds = Dataset(value=np.arange(20, 30).reshape(2, 5),
+    ...              error=np.array([0.4]*10).reshape(2, 5),
+    ...              bins=bins, name='dataset', what='spam')
+    >>> ds.error[0, 2] = np.nan
+    >>> ds.equals(ds)
+    False
+    >>> ds.equals(ds, equal_nan=True)
+    True
 
 
 Indexing and slicing
@@ -1044,13 +1101,51 @@ class Dataset:
                        bins=self.bins.copy(),
                        name=self.name, what=self.what)
 
+    # pylint: disable=too-many-arguments,too-many-return-statements
+    def equals(self, other, shape=True, value=True, error=True, bins=True,
+               name=False, what=False, equal_nan=False):
+        '''Compare two datasets
+
+        :param Dataset other: the :class:`Dataset` to compare
+        :param bool shape: whether dataset shapes should be compared
+        :param bool value: whether dataset values should be compared
+        :param bool error: whether dataset errors should be compared
+        :param bool bins: whether dataset bins should be compared
+        :param bool name: whether dataset names should be compared
+        :param bool what: whether dataset `whats` should be compared
+        :param bool equal_nan: whether NaN values should be considered equal;
+            it works like the parameter with the same name in
+            :func:`numpy.array_equal`
+        :rtype: bool
+        :return: whether the two arrays are equal
+        '''
+        if not isinstance(other, Dataset):
+            raise TypeError("equals() can only be used between Dataset object,"
+                            f" got {type(other)}")
+
+        if shape and not consistent_datasets(self, other):
+            return False
+        if value and not np.array_equal(self.value, other.value,
+                                        equal_nan=equal_nan):
+            return False
+        if error and not np.array_equal(self.error, other.error,
+                                        equal_nan=equal_nan):
+            return False
+        if bins and not same_coords(self, other, equal_nan=equal_nan):
+            return False
+        if name and self.name != other.name:
+            return False
+        if what and self.what != other.what:
+            return False
+        return True
+
 
 def consistent_datasets(dss1, dss2):
     '''Return `True` if datasets are consistent = same shape.'''
     return dss1.shape == dss2.shape
 
 
-def same_coords(ds1, ds2):
+def same_coords(ds1, ds2, equal_nan=False):
     '''Return `True` if coordinates (bins) are compatible.
 
     :param ds1: the first array of coordinate arrays.
@@ -1062,5 +1157,6 @@ def same_coords(ds1, ds2):
         return False
     if len(ds1.bins) != len(ds2.bins):
         return False
-    return all((s == o and np.array_equal(ds1.bins[s], ds2.bins[o]))
+    return all((s == o and np.array_equal(ds1.bins[s], ds2.bins[o],
+                                          equal_nan=equal_nan))
                for s, o in zip(ds1.bins, ds2.bins))
